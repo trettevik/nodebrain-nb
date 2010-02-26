@@ -174,6 +174,8 @@
 * 2005-06-09 eat 0.6.3  Change long to int for 64 bit machines
 * 2008-11-11 eat 0.7.3  Changed failure exit code to NB_EXITCODE_FAIL
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
+* 2010-02-26 eat 0.7.9  Fixed bug in vlidiv - not yet tested
 *=============================================================================
 */
 //#include "nb.h"
@@ -720,7 +722,8 @@ unsigned int vlidiv(x,m,q) vliWord *x,*m,*q; {
     for(cG=G+1;cG<eG;cG++) *cG=0;
     *cG=f;
     if((f=f>>16)>0){
-      *cG++;
+      // 2010-02-26 eat 0.7.9 - changed from *cg++ to cG++
+      cG++;
       *cG=f;
       }
     *G=cG-G;
@@ -851,10 +854,10 @@ void vliputb(x,b,l) vliWord *x; unsigned char *b; unsigned int l; {
 *    This can be modified to use much larger powers of ten.
 *    It should use several digits at a time.
 */
-void vligetd(x,s) vliWord *x; unsigned char *s; {
+void vligetd(vliWord *x,unsigned char *s){
   vliWord *P,ten[2],digit[2];
 
-  P=(vliWord *)malloc(4+strlen(s)); /* this could be refined to use less space */
+  P=(vliWord *)malloc(4+strlen((char *)s)); /* this could be refined to use less space */
   *ten=1;
   *(ten+1)=10;
   *digit=1;
@@ -884,7 +887,7 @@ void vliputd(x,s) vliWord *x; unsigned char *s; {
   *ten=1;
   *(ten+1)=10;
   if(*x==0){
-    strcpy(s,"0");
+    strcpy((char *)s,"0");
     return;
     }
   ds=(unsigned char *)malloc((*x*5+1));
@@ -903,7 +906,7 @@ void vliputd(x,s) vliWord *x; unsigned char *s; {
     vlicopy(X,Q);
     }
   c++;
-  strcpy(s,c);
+  strcpy((char *)s,(char *)c);
   free(ds);
   free(Q);
   free(X);

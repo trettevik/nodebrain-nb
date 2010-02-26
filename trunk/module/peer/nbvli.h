@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -33,7 +33,8 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2003/03/15 eat 0.5.1  Created to conform to new makefile
+* 2003-03-15 eat 0.5.1  Created to conform to new makefile
+* 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 *=============================================================================
 */
 #ifndef _NB_VLI_H_
@@ -76,7 +77,7 @@ void vlisqr();
 void vlipow();
 void vligetb();
 void vliputb();
-void vligetd();
+void vligetd(vliWord *x,unsigned char *s);
 void vliputd();
 void vliputx();
 void vlipprime();

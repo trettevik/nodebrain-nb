@@ -56,6 +56,7 @@
 * 2005-04-09 eat 0.6.2  adapted to API changes
 * 2005-05-14 eat 0.6.3  consoleBind() modified to accept moduleHandle
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 *=====================================================================
 */
 #include "config.h"
@@ -124,7 +125,7 @@ void consoleCmdHandler(nbCELL context,NB_MOD_ConsoleSession *session,char *curso
 */
 void consoleService(nbCELL context,int socket,void *handle){
   NB_MOD_ConsoleSession *session=handle;
-  unsigned char buffer[NB_BUFSIZE];
+  char buffer[NB_BUFSIZE];
   int  len;
   NB_IpChannel *channel=session->channel;
 

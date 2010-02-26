@@ -293,6 +293,7 @@
 * 2008-11-06 eat 0.7.3  Converted to PCRE's native API
 * 2008-11-11 eat 0.7.3  Change failure exit code to NB_EXITCODE_FAIL
 * 2010-02-25 eat 0.7.9  cleaned up to remove -Wall warning messages
+* 2010-02-26 eat 0.7.9  cleaned up to remove -Wall warning messages (gcc 4.1.2)
 *=============================================================================
 */
 #include "nbi.h"
@@ -333,7 +334,7 @@ struct REGEXP_STACK{
 *    the index number, which is equally valid syntax.
 */
 void nbProjectionShowWithNames(NB_Projection *projection,struct REGEXP_STACK *reStackP){
-  unsigned char *cursor=projection->code;
+  unsigned char *cursor;
   char text[NB_BUFSIZE],*textcur=text;
   int index,expDec,reIndex,foundname,namecount,namesize;
   unsigned char exp,charF,charT,*nameentry;
@@ -344,10 +345,10 @@ void nbProjectionShowWithNames(NB_Projection *projection,struct REGEXP_STACK *re
     outPut("%s",((NB_String *)projection)->value);
     return;
     }
-  cursor=projection->code;
+  cursor=(unsigned char *)projection->code;
   while(*cursor!=PROJECTION_STOP){
     if(*cursor<PROJECTION_INDEX){
-      strncpy(textcur,cursor+1,*cursor);
+      strncpy(textcur,(char *)cursor+1,*cursor);
       textcur+=*cursor;
       cursor+=*cursor+1;
       }
@@ -410,7 +411,7 @@ void nbProjectionShowWithNames(NB_Projection *projection,struct REGEXP_STACK *re
 *    alternative to display subexpression names instead of numbers.
 */
 void nbProjectionShow(NB_Projection *projection){
-  unsigned char *cursor=projection->code;
+  unsigned char *cursor;
   char text[NB_BUFSIZE],*textcur=text;
   int index;
   unsigned char exp,charF,charT;
@@ -419,10 +420,10 @@ void nbProjectionShow(NB_Projection *projection){
     outPut("%s",((NB_String *)projection)->value);
     return;
     }
-  cursor=projection->code;
+  cursor=(unsigned char *)projection->code;
   while(*cursor!=PROJECTION_STOP){
     if(*cursor<PROJECTION_INDEX){
-      strncpy(textcur,cursor+1,*cursor);
+      strncpy(textcur,(char *)cursor+1,*cursor);
       textcur+=*cursor;
       cursor+=*cursor+1;
       }

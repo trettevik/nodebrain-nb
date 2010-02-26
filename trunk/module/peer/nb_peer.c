@@ -98,6 +98,7 @@
 * 2007/06/23 eat 0.6.8  Structured node module around old NBP listener code
 * 2008/03/07 eat 0.6.9  Moved parsing for self identity to nbBrainNew()
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 *=====================================================================
 */
 //#include "config.h"
@@ -188,7 +189,7 @@ nbServer *newServer(nbCELL context,char *cursor,char *oar,char *msg){
       free(server);
       return(NULL);
       }
-    *cursor++;
+    cursor++;
     inCursor=cursor;
     while(*cursor>='0' && *cursor<='9') cursor++;
     if(*cursor!=0){
@@ -780,18 +781,18 @@ int serviceCmdIdentify(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL 
   char filename[512];
 
   savecursor=cursor;
-  symid=nbParseSymbol(identityName,&cursor);
+  symid=nbParseSymbol((char *)identityName,&cursor);
   if(symid!='t'){
     nbLogMsg(context,0,'E',"Expecting identity name at [%s].",savecursor);
     return(1);
     }
-  if(nbpGetPeerKey(identityName)!=NULL){
+  if(nbpGetPeerKey((char *)identityName)!=NULL){
     nbLogMsg(context,0,'E',"Identity \"%s\" already defined.",identityName);
     return(1);
     }
-  symid=nbParseSymbol(bitsStr,&cursor);
+  symid=nbParseSymbol((char *)bitsStr,&cursor);
   if(symid=='i'){
-    bits=atoi(bitsStr);
+    bits=atoi((char *)bitsStr);
     if(bits>1024){
       nbLogMsg(context,0,'E',"Keys greater then 1024 bits not supported.");
       return(1);
@@ -806,7 +807,7 @@ int serviceCmdIdentify(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL 
   vliputx(e,se);
   vliputx(n,sn);
   vliputx(d,sd);
-  sprintf(s,"%s %s.%s.%s.0;",identityName,se,sn,sd); /* format declaration */
+  sprintf((char *)s,"%s %s.%s.%s.0;",identityName,se,sn,sd); /* format declaration */
   nbLogPut(context,"%s\n",s);
   sprintf(filename,"%s/nb_peer.keys",nbGetUserDir());
   if((file=fopen(filename,"a"))==NULL){

@@ -85,6 +85,7 @@
 * 2009-12-13 Ed Trettevik - original prototype version 0.7.7
 * 2009-12-30 eat 0.7.7  Organized into producer/consumer/server/client/peer skills
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 *===================================================================================
 */
 #include "config.h"
@@ -274,7 +275,7 @@ int *producerCommand(nbCELL context,void *skillHandle,nbModProducer *producer,nb
   if(producer->trace){
     nbLogMsg(context,0,'T',"nb_message:producerCommand() text=[%s]\n",text);
     }
-  if(producer->msglog) nbMsgLogWriteString(context,producer->msglog,text);
+  if(producer->msglog) nbMsgLogWriteString(context,producer->msglog,(unsigned char *)text);
   else nbLogMsg(context,0,'E',"nb_message:producerCommand():message log not open");
   return(0);
   }
@@ -685,7 +686,7 @@ int *clientCommand(nbCELL context,void *skillHandle,nbModClient *client,nbCELL a
     nbLogMsg(context,0,'T',"nb_message:clientCommand() text=[%s]\n",text);
     }
   nbCmd(context,text,1);
-  if(client->msgclient->msglog) nbMsgLogWriteString(context,client->msgclient->msglog,text);
+  if(client->msgclient->msglog) nbMsgLogWriteString(context,client->msgclient->msglog,(unsigned char *)text);
   else nbLogMsg(context,0,'E',"nb_message:clientCommand():message log file not open");
   return(0);
   }

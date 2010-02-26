@@ -94,6 +94,7 @@
 * 2007/12/26 eat 0.6.8  included process closer exit for session cleanup
 * 2008/09/30 eat 0.7.2  included medulla thread support
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010/02/26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 *=============================================================================
 */
 #define NB_INTERNAL
@@ -1351,7 +1352,7 @@ int nbMedullaParseFileSpec(char filename[512],char **cursorP,char *msgbuf){
       }
     while(*cursor==' ') cursor++;
     if(*cursor=='"'){
-      *cursor++;
+      cursor++;
       delim=strchr(cursor,'"');
       if(delim==NULL){
         sprintf(msgbuf,"Unbalanced quotes '\"' on output file name\n");

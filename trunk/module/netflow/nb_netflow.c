@@ -72,6 +72,7 @@
 * 2005-05-01 eat 0.6.2  updated conditionals for FREEBSD
 * 2005-05-14 eat 0.6.3  netflowBind() modified to accept moduleHandle
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 *=====================================================================
 */
 #include <config.h>
@@ -472,7 +473,7 @@ void setSeq(NB_MOD_Netflow *netflow,unsigned int address,unsigned char engineid,
     device=malloc(sizeof(struct NB_MOD_NETFLOW_DEVICE));
     device->address=address;
     device->engineid=engineid;
-    nbIpGetName(address,device->name,sizeof(device->name));
+    nbIpGetName(address,(char *)device->name,sizeof(device->name));
     device->v5pkts=0;
     device->v7pkts=0;
     device->pkts=1;
@@ -963,7 +964,7 @@ void netflowRead(nbCELL context,int serverSocket,void *handle){
   size_t buflen=NB_BUFSIZE;
   int  len;
   unsigned short rport;
-  unsigned char daddr[40],raddr[40];
+  char daddr[40],raddr[40];
   struct nfv5hdr *hdr=(void *)buffer;
   //struct nfv5flow *flow=(void *)(buffer+24);
 

@@ -72,6 +72,7 @@
 *            The long range plan is to convert this protocol into a skill module
 *            and deprecate the old listener concept.
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 *=============================================================================
 */
 #include "config.h"
@@ -443,7 +444,7 @@ nbServer *smtpServer(nbCELL context,char *cursor,char *qDir,char *msg){
     free(server);
     return(NULL);
     }
-  *cursor++;
+  cursor++;
   inCursor=cursor;
   while(*cursor>='0' && *cursor<='9') cursor++;
   if(*cursor!=0){

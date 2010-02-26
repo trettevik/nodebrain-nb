@@ -117,6 +117,7 @@
 * ---------- -----------------------------------------------------------------
 * 2010/01/07 Ed Trettevik (original prototype)
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010/02/26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 *==============================================================================
 */
 #include <nb.h>
@@ -130,7 +131,8 @@
 */ 
 static void nbPeerWriter(nbCELL context,int sd,void *handle){
   nbPeer *peer=(nbPeer *)handle;
-  int len,size;
+  int len;
+  size_t size;
   int code;
 
   nbLogMsg(context,0,'T',"nbPeerWriter: called for sd=%d",sd);
@@ -141,7 +143,7 @@ static void nbPeerWriter(nbCELL context,int sd,void *handle){
     //peer->flags&=0xff-NB_PEER_FLAG_WRITE_WAIT;
     //return;
     //}
-    len=nbTlsWrite(peer->tls,peer->wbuf,size);
+    len=nbTlsWrite(peer->tls,(char *)peer->wbuf,size);
     if(len<0){
       nbLogMsg(context,0,'E',"nbPeerWriter: nbTlsWrite failed - %s",strerror(errno));
       peer->flags|=NB_PEER_FLAG_WRITE_ERROR;
@@ -173,7 +175,8 @@ static void nbPeerWriter(nbCELL context,int sd,void *handle){
 */
 static void nbPeerReader(nbCELL context,int sd,void *handle){
   nbPeer *peer=(nbPeer *)handle;
-  int len,size;
+  int len;
+  size_t size;
   nbTLS *tls=peer->tls;
   unsigned char *bufcur,*dataend;
   int code;
@@ -185,7 +188,7 @@ static void nbPeerReader(nbCELL context,int sd,void *handle){
     peer->flags&=0xff-NB_PEER_FLAG_READ_WAIT;
     }
   size=NB_PEER_BUFLEN-(peer->rloc-peer->rbuf);
-  len=nbTlsRead(tls,peer->rloc,size);
+  len=nbTlsRead(tls,(char *)peer->rloc,size);
   if(len<=0){
     if(len==0) nbLogMsg(context,0,'I',"nbPeerReader: Peer %d %s has shutdown connection",sd,tls->uriMap[tls->uriIndex].uri);
     else nbLogMsg(context,0,'E',"nbPeerReader: Peer %d %s unable to read - %s",sd,tls->uriMap[tls->uriIndex].uri,strerror(errno));

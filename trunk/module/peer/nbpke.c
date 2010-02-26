@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -91,6 +91,7 @@
 *             3) Increased temp vli variables from 512 bit to 2048 bit.
 *
 * 2008-11-11 eat 0.7.3  Change failure exit code to NB_EXITCODE_FAIL
+* 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 *=============================================================================
 */
 #include "nbi.h"
@@ -248,11 +249,11 @@ void pkeTestCipher(e,n,d) vli e,n,d; {
   unsigned int len,slen;
   unsigned char s[256],t[256];
     
-  strcpy(s,"abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ~!@#$%^&*()_+{}[]`,./<>?;':|\\\"");
-  slen=strlen(s);
+  strcpy((char *)s,"abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ~!@#$%^&*()_+{}[]`,./<>?;':|\\\"");
+  slen=strlen((char *)s);
   slen=rand()%slen;
   *(s+slen)=0;
-  strcpy(t,s); 
+  strcpy((char *)t,(char *)s); 
   len=pkeEncrypt(ciphertext,e,n,s,slen);
   len=pkeDecrypt(ciphertext,d,n,s,slen);
   if(len!=slen){
@@ -261,7 +262,7 @@ void pkeTestCipher(e,n,d) vli e,n,d; {
     exit(NB_EXITCODE_FAIL);
     }
   *(s+slen)=0;  
-  if(strcmp(t,s)>0){
+  if(strcmp((char *)t,(char *)s)>0){
     printf("NB000E String encryption error on first try.\n");
     printf("in : %s\n",t);
     exit(NB_EXITCODE_FAIL);
@@ -269,7 +270,7 @@ void pkeTestCipher(e,n,d) vli e,n,d; {
   pkeEncrypt(ciphertext,d,n,s,slen);
   pkeDecrypt(ciphertext,e,n,s,slen);
   *(s+slen)=0;
-  if(strcmp(t,s)>0){
+  if(strcmp((char *)t,(char *)s)>0){
     printf("NB000E String encryption error on second try.\n");
     printf("in : %s\n",t);
     exit(NB_EXITCODE_FAIL);
@@ -373,7 +374,7 @@ void pkeTestKey(c,e,n,d) int c; vli e,n,d; {
 /*
 * Generate key with an l bit modulus
 */
-void pkeGenKey(l,e,n,d) unsigned int l; vli e,n,d; {    
+void pkeGenKey(unsigned int l,vli e,vli n,vli d){    
   unsigned int b;
   vli2048 p,q,m;
   static long seed=0;

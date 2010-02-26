@@ -116,6 +116,7 @@
 *                         r1 = ! == on(0);
 *                       Is:
 *                         r1 = ! == on(!([]a)); 
+* 2010/02/26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 *==============================================================================
 */
 #include "nbi.h"
@@ -1141,7 +1142,7 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
         outMsg(0,'E',"Expecting ')' at end of parameter list.");
         return(NULL);
         }
-      *cursor++;
+      cursor++;
       }
     while(*cursor==' ') cursor++;   /* allow white space */
     *curP=cursor;

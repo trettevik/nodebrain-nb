@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -46,6 +46,7 @@
 * ---------- -----------------------------------------------------------------
 * 2005/10/10 Ed Trettevik (split out from nbspawn.c in 0.6.3)
 * 2005/12/12 eat 0.6.4  included options parameter to nbChild
+* 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 *=============================================================================
 */
 //#include "nbstd.h"
@@ -335,7 +336,7 @@ nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cld
       }
     if(options&NB_CHILD_SHELL){
       if(pgm==NULL || *pgm==0) pgm="/bin/sh";
-      execl(pgm,pgm,"-c",parms,0);
+      execl(pgm,pgm,"-c",parms,NULL);
       }
     else{  // parse the program and parameters and build argv[]
       if(pgm==NULL || *pgm==0) pgm="/usr/local/bin/nb";

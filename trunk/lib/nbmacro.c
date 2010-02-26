@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -72,7 +72,8 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2003/11/17 Ed Trettevik (original prototype version)
+* 2003-11-17 Ed Trettevik (original prototype version)
+* 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 *=============================================================================
 */
 #include "nbi.h"
@@ -167,7 +168,7 @@ NB_Macro *nbMacroParse(nbCELL context,char **source){
       return(NULL);
       }
     if(*cursor==':'){
-      *cursor++;
+      cursor++;
       defaults=grabObject(nbParseAssertion(localContext,(NB_Term *)context,&cursor));
       }
     if(*cursor!=')'){

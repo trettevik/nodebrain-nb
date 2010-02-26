@@ -209,6 +209,7 @@
 * 2009-02-20 eat 0.7.5  Included test for NULL from readline and changed nbGetCmdInteractive return codes
 * 2009-12-28 eat 0.7.7  Include traceMessage and notraceMessage options
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 *==============================================================================
 */
 #include "nbi.h"
@@ -770,7 +771,7 @@ void nbCmdUse(nbCELL contextCell,char *verb,char *cursor){
           }
         }
       }
-    *cursor++;
+    cursor++;
     while(*cursor==' ') cursor++;
     }
   if(*cursor==':'){
@@ -866,9 +867,9 @@ void nbCmdSet(nbCELL context,char *verb,char *cursor){
       /* let's tolerate strings without quotes for the command line */
       if(*cursor!='"' && (*cursor<'0' || *cursor>'9')){
         strcur=token;
-        for(strcur=token;*cursor!=' ' && *cursor!=',' && *cursor!=';' && *cursor!=0;*strcur++){
+        for(strcur=token;*cursor!=' ' && *cursor!=',' && *cursor!=';' && *cursor!=0;strcur++){
           *strcur=*cursor;
-          *cursor++;
+          cursor++;
           } 
         *strcur=0;
         symid='s';

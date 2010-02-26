@@ -105,6 +105,7 @@
 *            We now allow for up to three separate uri values in a
 *            string so failover values can be specified. 
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 *==================================================================================
 */
 #include <stdio.h>
@@ -258,7 +259,7 @@ nbTLSX *nbTlsCreateContext(int option,void *handle,int timeout,char *keyFile,cha
       fprintf(stderr,"nbTlsCreateContext: Unable to create SSL context using SSL_CTX_new()\n");
       return(NULL);
       }
-    if(!SSL_CTX_set_session_id_context(ctx,ctxContext,strlen(ctxContext))){
+    if(!SSL_CTX_set_session_id_context(ctx,(unsigned char *)ctxContext,strlen(ctxContext))){
       fprintf(stderr,"nbTlsCreateContext: Unable to SSL_CTX_set_session_id_context()\n");
       SSL_CTX_free(ctx);
       return(NULL);

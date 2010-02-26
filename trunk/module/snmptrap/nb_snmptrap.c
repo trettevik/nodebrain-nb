@@ -244,6 +244,7 @@
 *            The handler node is invoked as follows.
 *              myhandler:'1.3.6.1.4.1.6101.141.0.0':<variable bindings>
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 *=====================================================================
 */
 #include "config.h"
@@ -458,7 +459,7 @@ static char *translateValue(unsigned char **cursorP,unsigned char *bufend,char *
       else{
         *cmdcur='"';
         cmdcur++;
-        strncpy(cmdcur,cursor,objlen);
+        strncpy(cmdcur,(char *)cursor,objlen);
         translateUnquoteString(cmdcur,objlen);
         cmdcur+=objlen;
         *cmdcur='"';
@@ -715,7 +716,7 @@ static void serverRead(nbCELL context,int serverSocket,void *handle){
   size_t buflen=NB_BUFSIZE;
   int  len;
   unsigned short rport;
-  unsigned char daddr[40],raddr[40];
+  char daddr[40],raddr[40];
   char cmd[NB_BUFSIZE];
   size_t cmdlen=NB_BUFSIZE;
   char *msg;

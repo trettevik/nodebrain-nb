@@ -72,6 +72,7 @@
 * ---------- ---------------------------------------------------------
 * 2009/06/28 Ed Trettevik - original prototype version 0.7.6
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010/02/26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 *=====================================================================
 */
 #include "config.h"
@@ -127,11 +128,11 @@ typedef struct NB_MOD_UDP_SERVER{  /* UDP server node descriptor */
 */
 static void serverRead(nbCELL context,int serverSocket,void *handle){
   NB_MOD_Server *server=handle;
-  unsigned char buffer[NB_BUFSIZE],*cursor;
+  char buffer[NB_BUFSIZE],*cursor;
   size_t buflen=NB_BUFSIZE;
   int  len;
   unsigned short rport;
-  unsigned char daddr[40],raddr[40];
+  char daddr[40],raddr[40];
   int havedata=1;
   fd_set rfds;
   struct timeval tv;
@@ -139,7 +140,7 @@ static void serverRead(nbCELL context,int serverSocket,void *handle){
   while(havedata){
     strcpy(buffer,server->prefix);
     cursor=strchr(buffer,0);
-    len=nbIpGetDatagram(context,serverSocket,&server->sourceAddr,&rport,cursor,buflen-strlen(buffer));
+    len=nbIpGetDatagram(context,serverSocket,&server->sourceAddr,&rport,(unsigned char *)cursor,buflen-strlen(buffer));
     if(server->trace){
       nbIpGetSocketAddrString(serverSocket,daddr);
       nbLogMsg(context,0,'I',"Datagram %s:%5.5u -> %s len=%d",nbIpGetAddrString(raddr,server->sourceAddr),rport,daddr,len);

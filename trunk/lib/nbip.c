@@ -48,6 +48,7 @@
 * 2008-03-25 eat 0.7.0  Transitioning nbchannel routines without encryption support to here
 * 2008-11-11 eat 0.7.3  Replaced a couple exit calls with return(-1)
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 *=====================================================================
 */
 #include "nbi.h"
@@ -61,7 +62,7 @@
 char *nbIpGetName(unsigned int ipaddr,char *name,int len){
   struct hostent *host;
   char addr[16];
-  unsigned char *ipad=(char *)&ipaddr;
+  unsigned char *ipad=(unsigned char *)&ipaddr;
 
   sprintf(addr,"%u.%u.%u.%u",*ipad,*(ipad+1),*(ipad+2),*(ipad+3));
   if((host=gethostbyaddr((char *)&ipaddr,sizeof(ipaddr),AF_INET))==NULL){
@@ -261,7 +262,7 @@ unsigned int nbIpGetUdpServerSocket(NB_Cell *context,char *addr,unsigned short p
 */
 int nbIpGetDatagram(NB_Cell *context,int socket,unsigned int *raddr,unsigned short *rport,unsigned char *buffer,size_t length){
   struct sockaddr_in client;
-  int sockaddrlen;
+  socklen_t sockaddrlen;
   int len;
 
   sockaddrlen=sizeof(client);
@@ -303,7 +304,7 @@ char *nbIpGetAddrByName(char *hostname){
 
 int nbIpGetSocketIpAddrString(int socket,char *ipaddr){
   struct sockaddr_in addr;
-  int sockaddrlen;
+  socklen_t sockaddrlen;
   sockaddrlen=sizeof(addr);
   if(getsockname(socket,(struct sockaddr *)&addr,&sockaddrlen)<0){
     outMsg(0,'E',"Unable to get socket name.");
@@ -315,7 +316,7 @@ int nbIpGetSocketIpAddrString(int socket,char *ipaddr){
 
 int nbIpGetSocketAddrString(int socket,char *ipaddr){
   struct sockaddr_in addr;
-  int sockaddrlen;
+  socklen_t sockaddrlen;
   sockaddrlen=sizeof(addr);
   if(getsockname(socket,(struct sockaddr *)&addr,&sockaddrlen)<0){
     outMsg(0,'E',"Unable to get socket name.");

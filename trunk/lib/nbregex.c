@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -60,10 +60,11 @@
 *
 *    Date    Name/Change
 * ---------- ------------------------------------------------------------------
-* 2001/07/15 eat 0.2.8  Pulled from main routine.
-* 2003/03/15 eat 0.5.1  Split *.h and *.c for new make file
-* 2008/10/06 eat 0.7.2  Included support for regex compile flags
-* 2008/11/06 eat 0.7.3  Converted to PCRE's native API
+* 2001-07-15 eat 0.2.8  Pulled from main routine.
+* 2003-03-15 eat 0.5.1  Split *.h and *.c for new make file
+* 2008-10-06 eat 0.7.2  Included support for regex compile flags
+* 2008-11-06 eat 0.7.3  Converted to PCRE's native API
+* 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 *===============================================================================
 */
 #include <nbi.h>
@@ -77,7 +78,7 @@ struct REGEXP *freeRegexp; /* free structure pool */
 */
 static void *hashRegexp(struct HASH *hash,struct STRING *value,int flags){ 
   unsigned long *h,k;
-  h=(long *)&value;
+  h=(unsigned long *)&value;
   k=*h;
   k+=flags;
   return(&(hash->vect[k%hash->modulo]));

@@ -125,6 +125,7 @@
 * ---------- -----------------------------------------------------------------
 * 2009-12-12 Ed Trettevik (original prototype)
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 *==============================================================================
 */
 #include <ctype.h>
@@ -1386,7 +1387,7 @@ int nbMsgLogWrite(nbCELL context,nbMsgLog *msglog,int msglen){
 int nbMsgLogWriteString(nbCELL context,nbMsgLog *msglog,unsigned char *text){
   unsigned short msglen;
   nbMsgRec *msgrec=(nbMsgRec *)(msglog->msgbuf+sizeof(nbMsgUdpPrefix));
-  unsigned short datalen=strlen(text)+1; // include null char delimiter
+  unsigned short datalen=strlen((char *)text)+1; // include null char delimiter
   nbMsgId *msgid=&msgrec->si;
   time_t utime;
   int node=msglog->node;

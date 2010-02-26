@@ -143,6 +143,7 @@
 * 2005-05-14 eat 0.6.3  syslogBind() updated for moduleHandle
 * 2006-10-30 eat 0.6.6  Modified to use NodeBrain Translator
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 *=====================================================================
 */
 #include "config.h"
@@ -256,14 +257,14 @@ typedef struct NB_MOD_SYSLOG NB_MOD_Syslog;
 */
 void syslogRead(nbCELL context,int serverSocket,void *handle){
   NB_MOD_Syslog *syslog=handle;
-  unsigned char buffer[NB_BUFSIZE];
+  char buffer[NB_BUFSIZE];
   size_t buflen=NB_BUFSIZE;
   int  len;
   unsigned short rport;
-  unsigned char daddr[40],raddr[40];
+  char daddr[40],raddr[40];
 
   nbIpGetSocketAddrString(serverSocket,daddr);
-  len=nbIpGetDatagram(context,serverSocket,&syslog->sourceAddr,&rport,buffer,buflen);
+  len=nbIpGetDatagram(context,serverSocket,&syslog->sourceAddr,&rport,(unsigned char *)buffer,buflen);
 	if(syslog->trace) nbLogMsg(context,0,'I',"Datagram %s:%5.5u -> %s len=%d",nbIpGetAddrString(raddr,syslog->sourceAddr),rport,daddr,len);
   if(syslog->dump) nbLogDump(context,buffer,len);
   *(buffer+len)=0;  // make sure we have a null terminator

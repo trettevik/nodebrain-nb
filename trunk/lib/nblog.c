@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -116,6 +116,7 @@
 *
 * 2005/03/26 eat 0.6.2  Included nbLogDump()
 * 2008/11/11 eat 0.7.3  Changed "bail" exit code to 255.
+* 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 *=============================================================================
 */
 #include "nbi.h"
@@ -638,7 +639,7 @@ int nbLogDump(nbCELL context,void *data,int len){
   int word;
 
   while(cursor<dataend){
-    strcpy(str,"................");
+    strcpy((char *)str,"................");
     strcur=str;
     //nbLogPut(context,"%8.8x %4.4x ",cursor,cursor-(unsigned char *)data);
     nbLogPut(context,"%16.16x %4.4x ",cursor,cursor-(unsigned char *)data);

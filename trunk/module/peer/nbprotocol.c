@@ -259,6 +259,7 @@
 * 2008-03-07 eat 0.6.9  Included support for portrayed identity override
 * 2008-03-25 eat 0.7.0  Upgraded bootstrap and minimum version to 1
 * 2008-11-11 eat 0.7.3  Changed failure exit code to NB_EXITCODE_FAIL
+* 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 *=============================================================================
 */
 #include "nbi.h"
@@ -501,8 +502,8 @@ unsigned int comAuthEncode(
   for(k=0;k<4;k++) secretkey[k]=htonl(cipher[k]);         /* pass in network byte order */
   for(k=0;k<keylen;k++) secretkey[k+4]=htonl(keydata[k]); /* pass in network byte order */
   bufcur+=pkeEncrypt(bufcur,identity->exponent,identity->modulus,secretkey,(k+4)*4);
-  nbClockToBuffer(timeStamp);
-  sprintf(randstr,"%5.5d",rand());        /* generate time stamp */
+  nbClockToBuffer((char *)timeStamp);
+  sprintf((char *)randstr,"%5.5d",rand());        /* generate time stamp */
   *(timeStamp+4)=*(randstr+0);
   *(timeStamp+7)=*(randstr+1);
   *(timeStamp+10)=*(randstr+2);
@@ -511,10 +512,10 @@ unsigned int comAuthEncode(
   *(timeStamp+19)=*(randstr+0);
   *(timeStamp+20)=0;
   memcpy(secretdata,timeStamp,20);        /* put time stamp in secret data */
-  memcpy(secretdata+5,text,strlen(text)+1);
-  words=6+strlen(text)/4;                 /* words of secret data */
+  memcpy(secretdata+5,text,strlen((char *)text)+1);
+  words=6+strlen((char *)text)/4;                 /* words of secret data */
   stext=(unsigned char *)secretdata;      /* pad last data word */ 
-  for(cursor=stext+strlen(stext)+1;cursor<stext+words*4;cursor++)
+  for(cursor=stext+strlen((char *)stext)+1;cursor<stext+words*4;cursor++)
     *cursor=rand();
   secretblocks=words/4+1;                 /* number of 16 byte blocks */
   for(k=words;k<(secretblocks*4-1);k++){  /* pad with random words */
@@ -584,7 +585,7 @@ unsigned int comAuthDecode(buffer,cipher,key,timeStamp,text,identity,blocklen)
     cursor++;
     }
   *cursor=0;
-  return(strlen(text)); 
+  return(strlen((char *)text)); 
   }
 
 /**********************************************************************************
@@ -751,7 +752,7 @@ struct NBP_SESSION *nbpOpen(int nbp,NB_Term *peer,char *context){
   //  *bufcur=2; bufcur++;         /* set authentication format 2 - new to version 0.2.4 */
   //  }
   *bufcur=nbp; bufcur++;         /* set client capable specification */
-  bufcur+=comAuthEncode(bufcur,deCipher,&deKey,clientTime,((struct STRING *)session->selfIdentity->node.key)->value,identity,1);
+  bufcur+=comAuthEncode((unsigned char *)bufcur,deCipher,&deKey,clientTime,(unsigned char *)((struct STRING *)session->selfIdentity->node.key)->value,identity,1);
   len=(bufcur-buffer);
 
   if(chopen(channel,ipaddr,callport)!=0){
@@ -795,7 +796,7 @@ struct NBP_SESSION *nbpOpen(int nbp,NB_Term *peer,char *context){
           nbpClose(session);
           return(NULL);
           }
-        if(strcmp(password,clientTime)!=0){ /* server authentication failure */
+        if(strcmp((char *)password,(char *)clientTime)!=0){ /* server authentication failure */
           nbLogMsgI(0,'E',"Peer %s identity %s authentication failed.",brainName,nbIdentityGetActive(NULL)->name->value);
           nbpClose(session);
           return(NULL);
@@ -803,7 +804,7 @@ struct NBP_SESSION *nbpOpen(int nbp,NB_Term *peer,char *context){
         /* worry about clock syncronization here if you want */
         nbLogFlush(NULL);
         chkey(channel,&enKey,&deKey,enCipher,deCipher);  /* start cipher text */
-        strcpy(session->server_nonce,serverTime); /* make available to message routines */
+        strcpy(session->server_nonce,(char *)serverTime); /* make available to message routines */
         session->status=NBP_SERVER_AUTH;          /* we have authenticated the server */
      
         if(trace) nbLogMsgI(0,'T',"NBP%u negotiated",session->version);
@@ -1331,7 +1332,7 @@ int nbpServeAuth(struct NBP_SESSION *session,struct NBP_MESSAGE *msgbuf,int len)
   *(msgbuf->text)=nbpversion;       /* negotiated specification */
   if(trace) nbLogMsgI(0,'T',"NBP%u session selected",nbpversion);
   bufcur=msgbuf->text+1;
-  bufcur+=comAuthEncode(bufcur,deCipher,&clientDeKey,serverTime,clientTime,clientKey,1);
+  bufcur+=comAuthEncode((unsigned char *)bufcur,deCipher,&clientDeKey,(unsigned char *)serverTime,(unsigned char *)clientTime,clientKey,1);
   len=bufcur-buffer;
   len=chput(channel,buffer,len);  /* send reply/challenge */
   if(len<0){
