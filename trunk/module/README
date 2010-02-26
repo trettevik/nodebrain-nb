@@ -1,0 +1,38 @@
+2009-02-09 eat
+
+This package contains a set of NodeBrain Module packages.  Each
+module is packaged in a subdirectory of this package.  Although
+this requires duplication of overhead scripts, it helps
+to separate out the special configuration and checkout requirements
+of each module.  It also makes it easy to spin off a new project
+using an existing module as an example.
+
+To help manage the redundancy, a common structure is used along
+with some helper scripts.
+
+--------------------------------------------------------------
+make model           - syncronize module directories with model directory
+newmod.sh            - create new module directory based on model 
+
+--------------------------------------------------------------
+module/model files    (model directory for new module directories)
+
+configure.ac         - Model autoconf configure.ac file 
+Makefile.am          - Common Makefile.am used for each module
+Makefile.nm          - Model module specify make file
+
+caboodle/bin/nb      - symbolic link to appropriate nb
+caboodle/bin/nbcheck - script to check 
+caboodle/check       - check directory used by nbcheck
+caboodle/*           - other caboodle directories to support checkout
+
+
+--------------------------------------------------------------
+module/<module> files
+                     *-automated
+Makefile.am          * copied from Makefile.am.mod above
+Makefile.nm          - maintained uniquely at this level
+caboodle             - caboodle directory for checkout
+caboodle/bin/nb      * link to nb program
+caboodle/bin/nbcheck * script to run each nb check script
+caboodle/check       - directory of nb check script

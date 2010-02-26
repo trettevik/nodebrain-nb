@@ -1,0 +1,38 @@
+body        {font-family: verdana; font-size: 12px;}
+table       {font-size: 12px;}
+table.small {font-size: 10px;}
+table.fill  {background-color: #c0c0c0;}
+tr          {text-align: left; vertical-align: top;}
+tr td.navbar { padding: 1px 0px 2px 0px; background: #A5A39E; font-family: verdana, sans-serif; font-size: 9px;}
+tr td.navbar a:link { color:#000000; text-decoration: none; }
+tr td.navbar a:visited { color:#000000; text-decoration: none; }
+tr td.navbar a:hover { color:#ffffff; background-color: #a5a39e; }
+tr.odd      {background-color: #d0d0d0;}
+tr.even     {background-color: #e0e0e0;}
+tr.marker   {background-color: #b0c0b0;}
+th          {font-weight: normal; background-color: #606060; color: #ffffff;}
+h1          {font-size: 14px; font-weight: bold}
+h3          {font-size: 12px;}
+h3          {font-size: 12px;}
+pre         {font-size: 12px;}
+select      {font-family: verdana; font-size: 10px;}
+optgroup    {font-family: verdana; font-size: 10px;}
+textarea    {font-family: verdana; font-size: 10px;}
+input       {font-family: verdana; font-size: 10px;}
+img.bar     {align:left;}
+a:link      {color: #0000FF;}
+a:visited   {color: #404040;}
+a:active    {color: #FF0000;}
+a:hover     {color: #ffffff; background-color: #666666; text-decoration: none;} 
+a           {text-decoration: underline;}
+a.plain     {text-decoration: none;}
+a.plain:hover {text-decoration: none; color=#ffffff; background-color: #000000;}
+a.table     {text-decoration: none;}
+a.th        {color: white;}
+a.th:hover  {color: black; background-color: white;}
+.fill       {background-color: #c0c0c0;}
+.foot       {font-size: 10px;}
+.text       {font-size: 12px;}
+.title      {font-size: 14px;}
+.cabTitle   {font-size: 28px; font-family: arial, sans-serif; color: white;}
+.cabVersion {font-size: 10px; color: white;}

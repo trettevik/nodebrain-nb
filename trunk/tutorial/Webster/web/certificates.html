@@ -1,0 +1,202 @@
+<html>
+<head>
+<title>Webster Tutorial</title>
+<link rel='icon' HREF='nb.ico'>
+<link rel='stylesheet' title="tutorial_style" href="style/tutorial.css" type="text/css">
+<meta http-equiv="Default-Style" content="tutorial_style">
+</head>
+<body> 
+<body marginwidth='0' marginheight='0' leftmargin='0' topmargin='0'>
+<table width='100%' cellspacing=0 border=0 cellpadding=0 bgcolor='#000000'>
+<tr><td width='46' valign='middle' bgcolor='#000000'>
+<table cellpadding='0' bgcolor='#000000'>
+<tr><td colspan=2><span style='font-size: 2px;'>&nbsp;</span></td></tr>
+<tr><td><span style='font-size: 6px;'>&nbsp;</span></td><td valign='middle'><img src='/nb32.gif' align='absmiddle' height='32' width='32'></td></tr>
+<tr><td colspan=2><span style='font-size: 2px;'>&nbsp;</span></td></tr>
+</table>
+</td>
+<td valign='middle'>
+<table cellpadding=0 cellspacing=0>
+<tr>
+<td><span style='font-size: 21px; font-family: arial, sans-serif; color: white'>NodeBrain</td>
+<td valign='top'><span style='font-size: 8px; color: white'>TM</td>
+<td valign='bottom'><span style='font-size: 16px; color: white'>Webster Module Tutorial<span></td>
+</tr>
+</table>
+</td>
+</tr>
+<tr><td class='navbar' colspan=2>&nbsp;</tr>
+<tr><td height=1 colspan=2 bgcolor='#000000'/></tr>
+</table>
+<table cellpadding='5px'><tr><td>
+
+<p><big><b>Certificate Authentication</b></big>
+<p>
+Certificates provide the best level of security with Webster.
+Since Webster is intended for NodeBrain application administrators,
+it extends the full rights of the native caboodle account for issuing shell commands.
+For this reason, Webster insists on user authentication, and we strongly recommend
+that you use certificates for this purpose.
+If you elect to use passwords for user authentication, then it is very important that
+you use HTTPS, which requires a server certificate.
+
+<p><big><b>Configure Server Certificate</b></big>
+<p>
+You obtain a server certificate for Webster the same way you would obtain a server
+certificate for an Apache web server, or many other applications that use TLS/SSL.
+You will need the openssl command.
+Change to the security directory for this section.
+
+<ul>
+<pre>
+cd tutorial/Webster/security
+</pre>
+</ul>
+
+Start by generating a private key. (Note: We are using Webster's default file names in this
+section to avoid having to configure the options that tell Webster to use different names, so use the exact
+names shown.)
+
+<ul>
+<pre>
+openssl genrsa -out ServerKey.pem 1024
+</pre>
+</ul>
+
+Then you need to generate a certificate signing request.
+Enter your server's fully qualified host name as the "Common Name".
+
+<ul>
+<pre>
+openssl req -new -key ServerKey.pem -out CertificateRequest.csr
+</pre>
+</ul>
+
+Next send the certificate signing request to a certificate authority (e.g. VeriSign) and store
+the returned certificate as tutorial/Webster/security/ServerCertificate.pem. 
+<p>
+To save time for this tutorial, let's generate a self signed certificate.
+
+<ul>
+<pre>
+cd tutorial/Webster/Security
+openssl x509 -req -days 90 -in CertificateRequest.csr -signkey ServerKey.pem -out ServerCertificate.pem
+</pre>
+</ul>
+
+Now kill your webster2 process and execute webster3.
+The webster3 script looks like this.
+<ul>
+<pre>
+#!/usr/local/bin/nb -d
+# File: tutorial/Webster/webster3
+-rm log/webster.log
+set log="log/webster.log";
+define webster node webster("default@0.0.0.0:62443");
+webster. define Protocol     cell "<b>HTTPS</b>"; # Default is "HTTPS"
+webster. define Authenticate cell "password";   # Default is "yes"
+webster. define AccessList   cell "security/AccessList.conf";
+webster. define DocumentRoot cell "web";    # Default is "web"
+</pre>
+</ul>
+
+Change the URL in your browser to use HTTPS instead of HTTP.
+<ul>
+https://<i>hostname</i>:62443/certificates.html
+</ul>
+
+When using a self signed certificate,
+your browser will not recognize your server certificate as having been signed by a trusted certificate authority,
+so you will need to respond to your browser's complaints and tell it to trust your certificate.
+You should view the certificate displayed by your browser before accepting it.
+<p>
+Now let's clean up our script by removing default parameters.
+Kill your webster3 process and start webster4, which looks like this.
+
+<ul>
+<pre>
+#!/usr/local/bin/nb -d
+# File: tutorial/Webster/webster4
+-rm log/webster.log
+set log="log/webster.log";
+define webster node webster("default@0.0.0.0:62443");
+webster. define Authenticate cell "password";   # Default is "yes"
+</pre>
+</ul>
+
+Now you have a secure configuration. Still using passwords for user authentication, but at least
+now the passwords are encrypted when sent to the server.
+
+<p><big><b>Configuring Client Certificates</b></big>
+<p>
+There are two requirements for using client certificates:
+1) you must install a client certificate in your browser, and
+2) you must configure Webster to trust the signer of your browser certificate.
+
+<p>
+For this tutorial, we're going to take the easy path.  We'll start by making our server
+certificate our "trusted certificate".  This just means we will trust client certificates
+that have been signed by our server key.  We do this by copying our ServerCertificate.pem to a
+file named TrustedCertificates.pem.
+
+<ul>
+cd tutorial/Webster/security
+<br>cp ServerCertificate.pem TrustedCertificates.pem
+</ul>
+
+Now we need to create a client certificate for our browser.
+What you pick for a "Common Name" when creating the certificate signing request must uniquely
+identify the user of the certificate.
+
+<ul>
+<pre>
+openssl genrsa -out browser.key 1024
+openssl req -new -key browser.key -out browser.csr
+openssl x509 -req -days 90 -in browser.csr -signkey ServerKey.pem -out browser.crt
+openssl pkcs12 -export -in browser.crt -out browser.p12 -inkey ServerKey.pem -name "My Cert"
+</pre>
+</ul>
+
+Import browser.p12 into your browser following the instructions for your browser.
+
+<p>
+Now you can kill your webster4 process and run webster5.  It looks like this.
+
+<ul>
+<pre>
+#!/usr/local/bin/nb -d
+# File: tutorial/Webster/webster5
+-rm log/webster.log
+set log="log/webster.log";
+<b>define webster node webster("default@0.0.0.0:62443");</b>
+</pre>
+</ul>
+
+Now you can configure your tutorial/Webster/security/AccessList.conf file to accept certificates or passwords.
+User's without a valid certificate are prompted for a user and password.
+If there is no match in the access list, access is denied.
+
+<ul>
+<pre>
+# Webster Access List
+# Format:
+#
+#   role,userid; [# comment]
+#
+#   role: a - administrator
+#         b - browser
+#
+#a,d2Vic3RlcjoydG9yaWFs; # webster:2torial
+a,<i>common-name</i>;
+</pre>
+</ul>
+
+
+<hr>
+<span class='foot'>NodeBrain(TM) is a trademark of The Boeing Company.<br>
+Copyright &copy; 2009  The Boeing Company<br>
+</span>
+
+</td></tr></table>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<html>
+<head>
+<title>Webster Tutorial</title>
+<link rel='icon' HREF='nb.ico'>
+<link rel='stylesheet' title="tutorial_style" href="style/tutorial.css" type="text/css">
+<meta http-equiv="Default-Style" content="tutorial_style">
+</head>
+<body marginwidth='0' marginheight='0' leftmargin='0' topmargin='0'>
+<table width='100%' cellspacing=0 border=0 cellpadding=0 bgcolor='#000000'>
+<tr><td width='46' valign='middle' bgcolor='#000000'>
+<table cellpadding='0' bgcolor='#000000'>
+<tr><td colspan=2><span style='font-size: 2px;'>&nbsp;</span></td></tr>
+<tr><td><span style='font-size: 6px;'>&nbsp;</span></td><td valign='middle'><img src='/nb32.gif' align='absmiddle' height='32' width='32'></td></tr>
+<tr><td colspan=2><span style='font-size: 2px;'>&nbsp;</span></td></tr>
+</table>
+</td>
+<td valign='middle'>
+<table cellpadding=0 cellspacing=0>
+<tr>
+<td><span style='font-size: 21px; font-family: arial, sans-serif; color: white'>NodeBrain</td>
+<td valign='top'><span style='font-size: 8px; color: white'>TM</td>
+<td valign='bottom'><span style='font-size: 16px; color: white'>Webster Module Tutorial<span></td>
+</tr>
+</table>
+</td>
+</tr>
+<tr><td class='navbar' colspan=2>&nbsp;</tr>
+<tr><td height=1 colspan=2 bgcolor='#000000'/></tr>
+</table>
+<table cellpadding='5px'><tr><td>
+
+<p><big><b>Issuing NodeBrain Commands</b></big>
+<ul>
+http[s]://<i>hostname</i>:<i>port</i>/<b>:</b><i>request</i>
+</ul>
+<p>To select the page for entering commands to Webster's host NodeBrain, the request is "nb".
+&nbsp; You can view the command entry page in a new window or tab using the link below.
+<ul>
+<a href=':nb' target='_blank'>nb</a>
+</ul>
+To issue a command bypassing the command entry page, the request looks like this.
+<ul>
+<p>nb?<i>command</i>
+</ul>
+Try this list of commands by selecting them one at a time in sequence.
+&nbsp; Use your browser's back button to return to this page after each selection.
+<ul>
+<li><p><a href=':nb?-ls+-al'>-ls -al</a>
+<li><p><a href=':nb?define+rDoLs+on%28a%3D1+and+b%3D2%29%3A-ls+-al'>define rDoLs on(a=1 and b=2):-ls -al</a>
+<li><p><a href=':nb?assert+a%3D1%2Cb%3D7%3B'>assert a=1,b=7;</a>
+<li><p><a href=':nb?show -t'>show -t</a>
+<li><p><a href=':nb?assert+b%3D2%3B'>assert b=2;</a>
+</ul>
+If you selected the links in sequence, the result of the last command link should have looked a lot like the first.
+&nbsp;  If you understand the second command, you know why.
+&nbsp;  If not, you should return to the <i>NodeBrain Tutorial</i> document and review the tutorials up to and including the <i>Rules</i> tutorial.
+<p>
+In the window or tab opened by the first link on this page, <a href=':nb' target='_blank'>nb</a>, take some time to experiment by entering more NodeBrain commands.
+
+<hr>
+<span class='browsing'>NodeBrain(TM) is a trademark of The Boeing Company.<br>
+Copyright &copy; 2009 The Boeing Company<br>
+</span>
+
+</td></tr></table>
+</body>
+</html>

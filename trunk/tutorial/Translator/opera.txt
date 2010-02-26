@@ -1,0 +1,13 @@
+# File: tutorial/Translator/opera.txt
+#
+# Mother Goose Nursery Rhyme - The Man Who Had Naught
+#
+There was a man and he had naught,
+  And robbers came to rob him;
+He crept up to the chimney pot,
+  And then they thought they had him.
+
+But he got down on t'other side,
+  And then they could not find him;
+He ran fourteen miles in fifteen days,
+  And never looked behind him.

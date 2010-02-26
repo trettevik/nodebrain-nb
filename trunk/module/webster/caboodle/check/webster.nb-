@@ -1,0 +1,4 @@
+declare webster module {"../.libs"};
+define fred node webster("default@0.0.0.0:55000");
+enable fred;
+

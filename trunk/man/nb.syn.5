@@ -1,0 +1,445 @@
+.\" Process this file with "groff -man -Tascii foo.1" or "nbman2ht foo.1"
+.\" See NodeBrain Developer Guide for project standards
+.\"
+.TH nb.syn 5 "February 2009" "NodeBrain 0.7.4" "NodeBrain Administrator Guide"
+.SH NAME
+nb.syn - NodeBrain Syntax
+.SH SYNOPSIS
+\fIcommand\fP ::= [\fIcontext\fP\fB. \fP] \fIverb\fP \fIbody\fP [\fB;\fP]
+
+\fIverb\fP ::= \fBdeclare\fP | \fBdefine\fP | \fBassert\fP | \fBalert\fP | \fBsource\fP | ...
+
+\fBdeclare\fP \fIterm\fP \fIdecType\fP \fIdeclaration\fP
+
+\fIdecType\fP ::= \fBidentity\fP | \fBmodule\fP | \fBskill\fP | \fBcalendar\fP
+
+\fBdefine\fP \fIterm\fP \fIdefType\fP \fIdefinition\fP
+
+\fIdefType\fP ::= \fBcell\fP | \fBnode\fP | \fBon\fP | \fBif\fP | \fBwhen\fP | \fBmacro\fP | ...
+
+\fBdefine\fP \fIterm\fP \fBcell\fP [\fIcellExpression\fP]
+
+\fBdefine\fP \fIterm\fP \fBnode\fP [\fInodeSpecification\fP]
+
+\fBdefine\fP \fIterm\fP (\fBon\fP|\fBwhen\fP|\fBif\fP)\fB(\fP\fIcellExpression\fP\fB)\fP ...
+
+(\fBassert\fP|\fBalert\fP) \fIterm\fP\fB=\fP\fIcellExpression\fP[\fB,\fP ... ]
+.SH DESCRIPTION
+This manual page introduces the syntax and structure of the NodeBrain language used
+in configuration files and event streams.  From this, you should be able to read a
+configuration file or event stream and get a general idea of the information it conveys to NodeBrain.
+However, if you need to create or maintain complicated
+rule sets, you will need to reference the documents 
+available at http://www.nodebrain.org.  Here we will try not to be rigorous, relying mostly on
+examples to give you the general idea.
+.SH PURPOSE
+NodeBrain is a declarative language, in contrast to a procedural language like most programming languages
+you know.  This means you would not want to use NodeBrain for most tasks you can perform easily with
+your favorite scripting language.  For example, you would NOT use NodeBrain to read a file,
+extract information, and
+produce a report.  Instead, the NodeBrain language is intended simply to provide
+rules and assertions to a NodeBrain agent.
+.SH COMMANDS
+To some degree, it is helpful to think of NodeBrain commands as "transactions", because commands
+may come from multiple sources (peers, queues, FIFO's, etc.) as individual units of work.
+The interpreter processes commands
+in whatever order they arrive from these command streams.
+The \fBSOURCE\fP command provides a way to process a complete file of commands as a single
+unit of work, but you should think of a \fBSOURCE\fP command as a single transaction.  
+
+Commands are all coded as a single line of text.  There is no provision for extending a command
+beyond the end of one line and onto the next.  We sometimes break a command into multiple lines
+in examples for readability, but this is not supported by the interpreter.
+.SH CELL EXPRESSIONS
+You can think of NodeBrain cells somewhat like the cells in a spreadsheet.  They have definitions (formulas)
+and values.  The major difference is the way in which cells are referenced.  In a spreadsheet, cells are
+referenced by absolute or relative row and column.  In NodeBrain, a cell is referenced by name, or by the expression (formula)
+that determines the value.  In fact, a named cell is really two cells---one that references another.
+The following example uses 11 cells: a, 1, b, 2, c, 3, x, b*c, a+b*c, y, and b*c+3.
+It is important to understand there is only one b*c cell, and there are two cells that reference it: a+b*c and b*c+3. 
+
+  define a cell 1;
+  define b cell 2;
+  define c cell 3;
+  define x cell a+b*c;
+  define y cell b*c+3;
+
+When the value of a cell changes, the new value is "published" to the referencing cells that have "subscribed" to
+its value. Let's look at what happens when we assert a new value for c.
+
+  assert c=4;
+
+If we assume all terms have subscribed to the values of their defining formulas (we will not go into alternatives here),
+then the value of x and y automatically change from 7 and 9 respectively to 9 and 11 respectively.  There is an
+intermediate step where the value of the cell b*c changes from 6 to 8.  This should give you an idea of how NodeBrain
+cells are defined by expressions, and how they respond to changes.  This is important because the whole goal of NodeBrain
+is to be able to respond appropriately to new information given a set of existing knowledge.
+
+We used an arithmetic example above, but NodeBrain is perhaps more interested in logical expressions.
+
+  define a cell 1;
+  define b cell 0;
+  define c cell a and b;  # c=0; 
+  define d cell a or b;   # d=1;
+  define e cell not a;    # e=0;
+
+Parentheses are used to control the order of precedence on the operators.  It is best to use them when it may be unclear
+which operation will be performed first.
+
+  define x cell (((a+b)*c)>5 or a*b>20) and d;
+
+A cell may have a real number value (e.g. 1, 1.78), a character string value (e.g. "abc", "this is fun"), or an unknown
+value ("?").  In all three cases, a cell has a logical value.  This is because all known values other than 0 are 
+interpreted as "true" by logical operators (e.g. AND, OR, NOT), and because the logical operators recognize three states:
+true, false, and unknown.  Here are some examples.
+.IP
+.\"ht table
+.nf
+Expression     Value
+------------ - -----
+1 and 0      =   0
+1 and 1      =   1
+1 and "abc"  =   1
+0 and 1.3    =   0
+1 and ??     =   ??
+0 and ??     =   0
+1 or  0      =   1
+0 or  33.2   =   1
+0 or  "abc"  =   1
+1 or  ??     =   1
+0 or  ??     =   ??
+.fi
+.P
+
+NodeBrain also has time expressions "~(...)" that evaluate to true or false at any given second in time based on the system
+clock.  This is based on standard notions of a calendar and units or intervals of time, and a kind of algebra for manipulation
+of sets of "line" segments.  We won't go into it here, but the following examples illustrate the general idea.
+.IP
+.\"ht table
+.nf
+Expression         True during (False otherwise)
+-----------------  -------------------------------------------------
+~(mo,we)           Monday or Wednesday
+~(fr.d(1))         Fridays falling on the first day of a month
+~(h(14).su)        Hour 14 (14:00) on Sunday
+~(h(8).fr.d(15))   Hour 8 (08:00) of Fridays falling on the 15th
+~(mo[1]month)      First Monday of a month
+~(tu[-2]month)     Second to last Tuesday of a month
+.fi
+.P
+
+A "node condition" is another form of cell expression that looks like a function call. You can think of
+it as a function call that executes whenever one of the argument cell expressions changes.    
+
+  define mystuff node tree;  # create node with skill provided by the "tree" module
+  define r1 on(x=40 and \fBmystuff(a,b,c+7)\fP) a=b+2;
+
+The way in which mystuff(a,b,c+7) is evaluated is determined by the skill "tree" associated with
+the  mystuff node.  This skill is provided by a "node module" (NodeBrain plugin). Evaluation
+of a node condition is just one of the methods that may be
+implemented by a node module.
+.SH SKILL METHODS
+A node module implements one or more skills.  For each skill, it implements methods defined by the NodeBrain Node Module C API.
+Each line in the command examples below illustrates a reference to a different skill method.
+
+  declare names module {"."}names;
+  declare nickname skill \fBnames.nick(...):...\fP  # initialize skill
+  define mynicks node \fBnickname("builtin")\fP;  # construct node
+  assert \fBmynicks("Ry","Ryan")\fP,\fBmynicks("Tay","Taylor")\fP; # assert nicknames
+  define isnick cell \fBmynicks(name)\fP; # node condition
+  show \fBmynicks\fP;   # display knowledge associated with mynick
+  \fBmynicks(2,a+5)\fP; # node command
+
+We know from the syntax what method within the node module is invoked in each reference to the
+node "mynicks", but we would need documentation on the node module \fInames\fP and its skill \fInick\fP to
+know how the arguments are processed.  The arguments can be any cell expression in general,
+but the domain of valid values may be restricted by the node module.
+
+The DECLARE commands shown above are normally not required when using installed node modules
+with default options.  Here's an example using the tree module, which does not implement the command method.
+
+  define mynicks node \fBtree\fP;  # construct node
+  assert \fBmynicks("Ry")="Ryan"\fP,\fBmynicks("Tay")="Taylor"\fP; # assert nicknames
+  define isnick cell \fBmynicks(name)\fP; # node condition
+  show \fBmynicks\fP;   # display knowledge associated with mynick
+
+.SH ASSERTIONS
+An assertion is used to convey new information to an executing instance of the NodeBrain
+interpreter.  (We sometimes refer to an executing instance of the NodeBrain interpreter as a "skull.")
+Simple assertions are like assignment statements with a cell name on the left and a cell expression
+on the right.
+
+  assert x=a*b+c,y=a+b*c;
+
+When the value of a named cell changes as a result of the assertion, NodeBrain reacts to the change
+by re-evaluating cells that reference the modified cell.  We say the cell "publishes" changes to the
+"subscriber" cells.  When re-evaluation of subscriber cells change their value, they in term publish
+their changes to subscriber cells.  This can percolate all the way up the subscriber hierarchy as long
+as re-evaluation produces a change.
+
+  define x cell a+b;
+  define y cell a>b; # 1 if a greater than b, 0 otherwise
+  define z cell x+y;
+  define r on(z>20):-echo hello
+  assert a=13,b=7; # this triggers rule r because z=21
+  # next line causes re-evaluation of x and y (subscribers of a and b)
+  assert a=12,b=8;
+  assert a=2;      # this causes re-evaluation of x, y, z, and r
+
+Notice the difference in our comments for the second and last assertions above?  The reason the
+last assertion caused re-evaluation of z is because x and/or y changed. Then r was re-evaluated
+because z changed.
+
+Because assertions are common in NodeBrain, as are assignments in other languages, NodeBrain
+has a shorthand notation using a back-tick to mean ASSERT.
+(We insist on a verb, or a symbol that represents a verb.)
+
+  \`x=a+b;
+  assert x=a+b;
+
+We can assert values using "=" or definitions using "==".  The following examples give the same
+definition to a cell named x.       
+
+.nf
+  define x cell a+b;    # define x as a+b
+  assert x==a+b;        # define x as a+b
+.fi
+
+The DEFINE command in this example defines a new cell named x.  The ASSERT command with "=="
+is the same if x is not already defined.  If x is already defined, the DEFINE command will fail
+while the ASSERT command with redefine x.  In the ASSERT command it is also possible for x to
+be in a parent context (explained later).
+
+.nf
+  assert x==a+b;  # define x
+  assert x==a*b;  # redefine x
+  define x cell a+b;  # fails because x is already defined.
+.fi
+
+An ALERT command is just like an ASSERT command, except it enables IF rules as you will see
+in the next section.
+
+.nf
+  alert a=13,b=7;  # assert a=13 and b=7 with IF rules enabled.
+.fi
+.SH RULES
+To respond to specific conditions or events, NodeBrain needs rules that tell it what to watch for
+and what action to take if the condition is true.
+
+.nf
+  define r1 on(a=b) x=2;
+  define r2 if(a=b):-ps -ef | grep nb 
+  define r3 when(a=b):-echo hello
+.fi
+
+An ON rule fires whenever the condition transitions from False or Unknown to True.
+
+.nf
+  define r1 on(a=b) x=2;
+  assert a=7,b=7;   # r1 fires
+  assert a=2;       # r1 transitions to False
+  assert a=7;       # r1 fires
+  assert a=5,b=5;   # r1 remains true and does not fire
+  assert b=??;      # r1 transitions to Unknown
+  assert ?b;        # an easier way to assert that b has an unknown value
+  assert a=2,b=2;   # r1 fires
+.fi
+
+An IF rule fires when True after an ALERT command.  Notice we didn't say "transitions to True."
+It will fire on an ALERT even when conditions remains True.
+ 
+.nf
+  define r2 if(a=b):-ps -ef | grep nb
+  assert a=7,b=7;   # r2 does not fire because IF rules ignore ASSERT
+  alert a=2,b=2;    # r2 fires
+  alert a=2,b=2;    # r2 fires
+  alert a=1,b=1;    # r2 fires
+  alert a=0,b=4;    # r2 does not fire because the condition is false
+  alert b=0;        # r2 fires because the condition is true
+  alert c=5;        # r2 fires because the condition is still true
+.fi
+
+The ON rule is used for state monitoring and responds to both the ASSERT and ALERT commands.
+Although it can be used for state monitoring and event monitoring it only responds to state changes.
+The IF rule is used for event monitoring and responds only to ALERT commands. (See COMMAND
+PREFIX section below for further restrictions.)  It treats every
+ALERT command as an event, where the named cells are event attributes.  An ALERT with the same
+parameters as the previous ALERT is recognized by the IF rule as a new event---even when none
+of the cells it monitors are referenced in the ALERT, as shown in the last line of the example
+above.  The ON rule sees alerts as non-events when they don't change the monitored state.
+
+The last rule we want to talk about here is the WHEN rule.  It is identical to the ON rule, 
+except it only fires one time and "undefines" itself.  The WHEN rule applies equally to the
+ASSERT and ALERT commands, so it can be used for both state and event monitoring.
+
+There is also a thing called a "sequence rule."  We are not going to talk about the details
+here but will show you what it looks like. It can appear as a command or a cell expression.
+The thing to know is that it looks like "{...}" and it monitors for a sequence of events,
+can change its own value, and can pass commands to the interpreter.
+
+.nf
+  # this is a sequence rule that acts like a WHEN rule
+  {on(a=7)\`b="abc";}
+  # this is like two WHEN rules that apply in sequence 
+  {on(a=b)\`x=2;on(a>7)\`x=5;}
+  # this is a rule for changing the value of a cell
+  assert y=={=5;*{on(a=2);=4;on(a=5);=3}};
+.fi
+
+In the last example above, the value of y is initially 5.  It then alternates between 4 and
+3 as "a" transitions to 2 and 5 respectively.
+.SH CONTEXT
+NodeBrain commands are interpreted within the context of a set of terms and rules called a "node".
+A term may have a different meaning in a different context.  In the following example we define
+a node, "connie", and define three terms within the associated context. 
+
+.nf
+  define connie node;
+  connie. define a cell 1;
+  connie. define b cell a+5;
+  connie. define hi on(a+b>3):-echo hello
+.fi
+
+The context prefix "connie." (the period is important) on the DEFINE commands
+tells the interpreter how to interpret the commands.  This same example, without the context
+prefix would look like this.
+
+.nf
+  define connie node;
+  define connie.a cell 1;
+  define connie.b cell connie.a+5;
+  define connie.hi on(connie.a+connie.b>3):-echo hello
+.fi
+
+Referenced terms may be resolved at a higher level context if not defined in the target context.
+
+.nf
+  define connie node;
+  connie. define tex node;
+  connie. define a cell 1;
+  connie.tex. define b cell a+5;
+  # "a" is connie.a because there is no connie.tex.a
+  # but "b" is connie.tex.b because we are defining it in connie.tex
+.fi
+
+Undefined terms that are referenced in a cell expression are implicitly defined in the target context.
+
+.nf
+  define connie node;
+  connie. define b cell a+5; # "a" is implicitly defined
+.fi
+
+The next example shows the equivalent explicit definition of "a".
+
+.nf
+  define connie node;
+  connie. define a cell ?; # connie.a is a cell with an unknown value
+  connie. define b cell a+5;
+.fi
+
+You can reference an undefined term in the target context when there is a defined term in a  
+parent context.  This is done by putting a period (".") in front of the term.
+
+.nf
+  define connie node;
+  connie. define tex node;
+  connie. define a cell 1
+  connie.tex. define b cell .a+5;
+  # ".a" is connie.tex.a, not connie.a 
+  # The implicit definition is "define connie.txt.a cell ?;"
+.fi
+
+An ALERT command only applies to IF rules defined in the target context.
+
+.nf
+  define connie node;
+  connie. define r if(a) x=2;
+  alert a=1;          # this does NOT cause connie.r to fire.
+  alert connie.a=1;   # this does NOT cause connie.r to fire.
+  connie. alert a=1;  # this DOES cause connie.r to fire.
+.fi
+  
+.SH INCLUDES
+The %INCLUDE directive and
+SOURCE command are important to understand because they are frequently used in one
+file to include commands from another like, the source command in a 
+shell script or an include directive in a C program.
+ 
+.nf
+  # include commands from myExtraRules.nb
+  %include myExtraFules.nb,a=2,context="abc";
+          - or -
+  source myExtraFules.nb,a=2,context="abc";
+.fi
+
+There is no difference between the INCLUDE directive and SOURCE command.  The INCLUDE
+directive may seem more appropriate within a rule file, while the SOURCE command may
+seem more appropriate in interactive mode or as a transaction to an agent.
+
+The parameters a=2 and context="abc" are available within myExtraRules.nb for
+controlling conditional processing and symbolic substitution.
+
+.nf
+  % define %{context} node;
+  %if(a>1);
+  % %{context}. define r0 on(x>21):-mail fred@flintstone.com < myap.log
+  %endif;
+  % %{context}. define r1 on(x=17) m=0;
+.fi
+
+Again, we've only provided enough information here to help you read NodeBrain
+rule files, not enough to prepare you to write them.  Refer to the online
+documentation for that.
+.SH BUGS
+See
+.\"ht page
+\fBnb\fP(1).  NodeBrain prototype releases, those starting with a 0 like
+0.7.4, should be used for experimental purposes only, unless you are able to
+verify they are reliable for your application from your own testing.  The author uses these
+releases in production applications, but makes no claim they will work as
+expected in your applications. 
+But please experiment and report bugs by linking to the project page from the home page, 
+http://www.nodebrain.org, or send email to <bugs@nodebrain.org>.
+.SH AUTHOR
+Ed Trettevik <eat@nodebrain.org>
+.SH "SEE ALSO"
+.\"ht page
+\fBnb\fP(1),
+.\"ht page
+\fBnb.man\fP(7),
+.\"ht page
+\fBnb.cfg\fP(5),
+.\"ht page
+\fBnb.mod\fP(7),
+.\"ht page
+\fBnb.lib\fP(3)
+
+.\"ht doc
+[1]
+.I NodeBrain Home Page 
+- http://www.nodebrain.org 
+
+.\"ht doc
+[2]
+.I NodeBrain Tutorial 
+- http://www.nodebrain.org 
+
+.\"ht doc
+[3]
+.I NodeBrain User Guide 
+- http://www.nodebrain.org 
+
+.\"ht doc
+[4]
+.I NodeBrain Language Reference
+- http://www.nodebrain.org 
+
+.\"ht doc
+[5]
+.I NodeBrain Module Reference
+- http://www.nodebrain.org 
+
+.\"ht doc
+[6]
+.I NodeBrain API Reference
+- http://www.nodebrain.org 

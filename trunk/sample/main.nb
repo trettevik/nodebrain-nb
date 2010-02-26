@@ -1,0 +1,2 @@
+portray default;
+declare nbDaemon brain default@127.0.0.1:50000;

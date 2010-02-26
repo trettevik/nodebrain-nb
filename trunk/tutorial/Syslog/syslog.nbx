@@ -1,0 +1,28 @@
+# File: tutorial/Audit/syslog.nbx
+([a-zA-Z]+ +\d+ \d\d:\d\d:\d\d [^ ]+ ){
+  (^-- MARK --)
+  (^\/USR\/SBIN\/CRON\[\d+\]: [^ ]+ CMD)
+  (^last message repeated \d+ times)
+  (^kernel: ){
+    (^z90crypt: probe_crypto_domain -> Unable to find crypto domain: No devices found)
+    (^end_request: I\/O error)
+    (^dasd_erp.*:Perform logging requested)
+    (^dasd:.*:ERP successful)
+    :syslog. assert ("syslog","syslog","OS","","","normal","SYS0000 kernel: $[=]");
+    }
+  (^su: ){
+    (^pam_unix2: session (started|finished) for user (nobody|root|wwwadm|cyrus), service su)
+    (^\(to (nobody|cyrus)\) root on none)
+    :syslog. assert ("syslog","syslog","OS","","","normal","SYS0000 su: $[=]");
+    }
+  (^sshd\[\d+\]: ){
+    (^Accepted password for myuser from ::ffff:.* port \d+ ssh2)
+    (^Accepted publickey for myuser from ::ffff:.* port \d+ ssh2)
+    (^error: Could not get shadow information for NOUSER)
+    (^(?'preport'.*port) \d+ ){
+      :syslog. assert ("syslog","syslog","OS","","","normal","SYS0000 sshd[*]: $[preport]port * $[=]");
+      }
+    :syslog. assert ("syslog","syslog","OS","","","normal","SYS0000 sshd[*]: $[=]");
+    }
+  }
+():syslog. assert ("syslog","syslog","OS","","","critical","SYS0000 $[-]");

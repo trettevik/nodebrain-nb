@@ -1,0 +1,12 @@
+\input texinfo   @c -*-texinfo-*-
+@c %**start of header
+@setfilename nb.info
+@include version-nb.texi
+@settitle NodeBrain Documents
+@c %**end of header
+
+@node Top
+NodeBrain is a program for monitoring state and events.
+@ifinfo
+@inforef{Top,fun,nbTutorial.info}
+@end ifinfo

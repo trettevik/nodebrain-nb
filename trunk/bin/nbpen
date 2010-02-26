@@ -1,0 +1,142 @@
+#!/bin/sh
+#
+# File:   nbpen
+#
+# Title:  NodeBrain Compile Farm Source Distribution Test Script
+#
+# Function:
+#
+#   This script is used to extract, configure, make and verify a
+#   NodeBrain source distribution file on a single server in a
+#   compile farm.  If the source distribution checks out, nbpen
+#   continues on to test the creation of a binary distribution.
+#   
+# Synopsis:
+#
+#   nbpen <option> <release> <pen>
+#
+#     <option>   - option to pass on to nbpen
+#
+#                  build   - just verify that the release file
+#                            will build in the pen using
+#                            "build-nb".
+#
+#                  package - make a binary distribution
+#
+#                  verify  - After making a binary distribution,
+#                            verify that it can be used to
+#                            create a source distribution that
+#                            can be used to create a binary
+#                            distribution.
+#
+#     <release> - Release number (e.g. "nb-0.6.1")
+#
+#     <pen>     - Work directory (e.g. "x86-openbsd")
+#
+# Example:
+#
+#   1) local
+#      $ ./nbpen compile nb-0.6.1 x86-freebsd1
+#
+#   2) remote
+#      $ ssh x86-openbsd1 "cd nodebrain;./nbpen compile nb-0.6.1 x86-openbsd1 > out/nb-0.6.1-x86-openbsd1-nbpen.out 2>&1 &" 
+#
+# Description:
+#
+#   This script is designed for remote execution by nbfarm from a
+#   farm shell server. 
+#
+#   We make the following assumptions about the directory structure.
+#
+#     o  <release>.tar.gz exits as a file in the current directory
+#
+#     o  farm/<pen>/ is a subdirectory
+#
+#     o  dist/ is a subdirectory
+#
+#   The directory structure is designed to work in an environment
+#   like the SourceForge Compile Farm where a shared file system is
+#   used. However, this structure may also be used in environments
+#   without shared file systems---it will just seem unnecessarily
+#   complex.
+#   
+#====================================================================
+
+echo "nbpen starting"
+
+opt=$1
+rel=$2
+pen=$3
+
+if test  "x$opt" = "x" -o "x$rel" = "x" -o "x$pen" = "x"; then
+  echo "usage:   nbpen {compile|package|verify} <release> <pen>\n"
+  echo "example: nbpen compile nb-0.6.1 x86-openbsd1\n"
+  exit 1
+  fi 
+
+echo "option=$opt, release=$rel, pen=$pen"
+
+cd farm/$pen; if test $? -ne 0; then echo "Unable to cd to farm/$pen": exit 1; fi
+
+if test -d $rel; then
+  rm -fr $rel
+  fi
+
+
+gunzip -c ../../${rel}.tar.gz | tar -xf -; if test $? -ne 0; then echo "nbpen: extract failed"; exit 1; fi
+
+cd $rel; if test $? -ne 0; then echo "Unable to cd to farm/$pen/$rel"; exit 1; fi
+
+# Remove exiting binary to ensure we test a new one
+
+if test -f nb; then
+  rm nb; if test $? -ne  0; then echo "nbpen: unable to remove nb"; exit 1; fi
+  fi
+
+./build-nb; if test $? -ne 0; then echo "nbpen: build-nb failed"; exit 1; fi
+
+echo "nbpen: build was successful"
+if test "x$opt" = "xbuild"; then
+  cd ..
+  rm -fr $rel
+  exit 0
+  fi
+echo "nbpen: continuing ..."
+
+# Fuss with the path before doing make---and after making sure build-nb fussed for itself
+
+if test -x "/opt/sfw/bin/gmake"; then
+  make=gmake
+  PATH=$PATH:/opt/sfw/bin
+  export PATH
+else
+  make=make
+fi
+if test -x "/opt/sfw/bin/gcc"; then PATH=$PATH:/opt/sfw/bin; export PATH; fi
+if test -x "/usr/ccs/bin/ar"; then PATH=$PATH:/usr/ccs/bin; export PATH; fi
+
+# Try to make a  new binary distribution from source
+
+${make} bindist; if test $? -ne 0; then echo "nbpen: make bindist failed"; exit 1; fi
+
+# Move binary distribution file to the distribution directory
+
+mv $rel-bindist.tar.gz ../../../dist/$rel-$pen.tar.gz
+if test $? -ne 0; then echo "nbpen: package failed"; exit 1; fi
+
+echo "nbpen: package was successful"
+if test "x$opt" = "xpackage"; then
+  cd ..
+  rm -fr $rel
+  exit 0
+  fi
+echo "nbpen: continuing ..."
+
+# Try to make a source release
+
+${make} srcdist; if test $? -ne 0; then echo "nbpen: make srcdist failed"; exit 1; fi
+
+cd ..; if test $? -ne 0; then echo "nbpen: cd up to farm/$pen failed"; exit 1; fi
+rm -fr $rel; if test $? -ne 0; then echo "nbpen: unable to remove farm/$pen/$rel"; exit 1; fi
+
+echo "nbpen: verify was successful"

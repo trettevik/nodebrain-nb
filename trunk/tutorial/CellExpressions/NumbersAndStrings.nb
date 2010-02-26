@@ -1,0 +1,5 @@
+#!/usr/local/bin/nb
+define a cell 5;
+define b cell "abc";
+show a
+show b
