@@ -1,0 +1,230 @@
+#!../nb/nb
+~ > #!../nb/nb
+#
+~ > #
+# File:# cellStaticRelFalse.nb 
+~ > # File:# cellStaticRelFalse.nb 
+#
+~ > #
+# Test cell static expression - relational False
+~ > # Test cell static expression - relational False
+#=======================================================
+~ > #=======================================================
+
+# Define rule to enable 8 cells
+~ > # Define rule to enable 8 cells
+
+define r1 on(e1 and e2 and e3 and e4 and e5 and e6 and e7 and e8);
+~ > define r1 on(e1 and e2 and e3 and e4 and e5 and e6 and e7 and e8);
+
+# Test with 0 and 1
+~ > # Test with 0 and 1
+
+assert e1==(0=1);
+~ > assert e1==(0=1);
+assert e2==(1=0);
+~ > assert e2==(1=0);
+assert e3==(0<0);
+~ > assert e3==(0<0);
+assert e4==(1<0);
+~ > assert e4==(1<0);
+assert e5==(1<=0);
+~ > assert e5==(1<=0);
+assert e6==(0>0);
+~ > assert e6==(0>0);
+assert e7==(0>1);
+~ > assert e7==(0>1);
+assert e8==(0>=1);
+~ > assert e8==(0>=1);
+
+show -cells;
+~ > show -cells;
+~ @ = ! == node 
+~ r1 = ! == on(e1&(e2&(e3&(e4&(e5&(e6&(e7&e8)))))));
+~ e8 = 0 == (0>=1)
+~ e7 = 0 == (0>1)
+~ e6 = 0 == (0>0)
+~ e5 = 0 == (1<=0)
+~ e4 = 0 == (1<0)
+~ e3 = 0 == (0<0)
+~ e2 = 0 == (1=0)
+~ e1 = 0 == (0=1)
+
+# Test with real numbers
+~ > # Test with real numbers
+
+assert e1==(0.5=1.5);
+~ > assert e1==(0.5=1.5);
+assert e2==(1.5=0.5); 
+~ > assert e2==(1.5=0.5); 
+assert e3==(0.5<0.5);
+~ > assert e3==(0.5<0.5);
+assert e4==(1.5<0.5);
+~ > assert e4==(1.5<0.5);
+assert e5==(1.5<=0.5);
+~ > assert e5==(1.5<=0.5);
+assert e6==(0.5>0.5);
+~ > assert e6==(0.5>0.5);
+assert e7==(0.5>1.5);
+~ > assert e7==(0.5>1.5);
+assert e8==(0.5>=1.5);
+~ > assert e8==(0.5>=1.5);
+
+show -cells;
+~ > show -cells;
+~ @ = ! == node 
+~ r1 = ! == on(e1&(e2&(e3&(e4&(e5&(e6&(e7&e8)))))));
+~ e8 = 0 == (0.5>=1.5)
+~ e7 = 0 == (0.5>1.5)
+~ e6 = 0 == (0.5>0.5)
+~ e5 = 0 == (1.5<=0.5)
+~ e4 = 0 == (1.5<0.5)
+~ e3 = 0 == (0.5<0.5)
+~ e2 = 0 == (1.5=0.5)
+~ e1 = 0 == (0.5=1.5)
+
+# Test with strings
+~ > # Test with strings
+
+assert e1==("a"="b");
+~ > assert e1==("a"="b");
+assert e2==("b"="a");
+~ > assert e2==("b"="a");
+assert e3==("a"<"a");
+~ > assert e3==("a"<"a");
+assert e4==("b"<"a");
+~ > assert e4==("b"<"a");
+assert e5==("b"<="a");
+~ > assert e5==("b"<="a");
+assert e6==("a">"a");
+~ > assert e6==("a">"a");
+assert e7==("a">"b");
+~ > assert e7==("a">"b");
+assert e8==("a">="b");
+~ > assert e8==("a">="b");
+
+show -cells;
+~ > show -cells;
+~ @ = ! == node 
+~ r1 = ! == on(e1&(e2&(e3&(e4&(e5&(e6&(e7&e8)))))));
+~ e8 = 0 == ("a">="b")
+~ e7 = 0 == ("a">"b")
+~ e6 = 0 == ("a">"a")
+~ e5 = 0 == ("b"<="a")
+~ e4 = 0 == ("b"<"a")
+~ e3 = 0 == ("a"<"a")
+~ e2 = 0 == ("b"="a")
+~ e1 = 0 == ("a"="b")
+
+# Test with variables
+~ > # Test with variables
+
+assert a="a";
+~ > assert a="a";
+assert b="b";
+~ > assert b="b";
+
+assert e1==(a=b);
+~ > assert e1==(a=b);
+assert e2==(b=a);
+~ > assert e2==(b=a);
+assert e3==(a<a);
+~ > assert e3==(a<a);
+assert e4==(b<a);
+~ > assert e4==(b<a);
+assert e5==(b<=a);
+~ > assert e5==(b<=a);
+assert e6==(a>a);
+~ > assert e6==(a>a);
+assert e7==(a>b);
+~ > assert e7==(a>b);
+assert e8==(a>=b);
+~ > assert e8==(a>=b);
+
+show -cells;
+~ > show -cells;
+~ @ = ! == node 
+~ b = "b"
+~ a = "a"
+~ r1 = ! == on(e1&(e2&(e3&(e4&(e5&(e6&(e7&e8)))))));
+~ e8 = 0 == (a>=b)
+~ e7 = 0 == (a>b)
+~ e6 = 0 == (a>a)
+~ e5 = 0 == (b<=a)
+~ e4 = 0 == (b<a)
+~ e3 = 0 == (a<a)
+~ e2 = 0 == (b=a)
+~ e1 = 0 == (a=b)
+
+# Test with left variables
+~ > # Test with left variables
+
+assert e1==(a="b");
+~ > assert e1==(a="b");
+assert e2==(b="a");
+~ > assert e2==(b="a");
+assert e3==(a<"a");
+~ > assert e3==(a<"a");
+assert e4==(b<"a");
+~ > assert e4==(b<"a");
+assert e5==(b<="a");
+~ > assert e5==(b<="a");
+assert e6==(a>"a");
+~ > assert e6==(a>"a");
+assert e7==(a>"b");
+~ > assert e7==(a>"b");
+assert e8==(a>="b");
+~ > assert e8==(a>="b");
+
+show -cells;
+~ > show -cells;
+~ @ = ! == node 
+~ b = "b"
+~ a = "a"
+~ r1 = ! == on(e1&(e2&(e3&(e4&(e5&(e6&(e7&e8)))))));
+~ e8 = 0 == (a>="b")
+~ e7 = 0 == (a>"b")
+~ e6 = 0 == (a>"a")
+~ e5 = 0 == (b<="a")
+~ e4 = 0 == (b<"a")
+~ e3 = 0 == (a<"a")
+~ e2 = 0 == (b="a")
+~ e1 = 0 == (a="b")
+
+# Test with right variables
+~ > # Test with right variables
+
+assert e1==("a"=b);
+~ > assert e1==("a"=b);
+assert e2==("b"=a);
+~ > assert e2==("b"=a);
+assert e3==("a"<a);
+~ > assert e3==("a"<a);
+assert e4==("b"<a);
+~ > assert e4==("b"<a);
+assert e5==("b"<=a);
+~ > assert e5==("b"<=a);
+assert e6==("a">a);
+~ > assert e6==("a">a);
+assert e7==("a">b);
+~ > assert e7==("a">b);
+assert e8==("a">=b);
+~ > assert e8==("a">=b);
+
+show -cells;
+~ > show -cells;
+~ @ = ! == node 
+~ b = "b"
+~ a = "a"
+~ r1 = ! == on(e1&(e2&(e3&(e4&(e5&(e6&(e7&e8)))))));
+~ e8 = 0 == ("a">=b)
+~ e7 = 0 == ("a">b)
+~ e6 = 0 == ("a">a)
+~ e5 = 0 == ("b"<=a)
+~ e4 = 0 == ("b"<a)
+~ e3 = 0 == ("a"<a)
+~ e2 = 0 == ("b"=a)
+~ e1 = 0 == ("a"=b)
+
+# Verify that all e1-e8 cells listed above have values of 0
+~ > # Verify that all e1-e8 cells listed above have values of 0
