@@ -1314,11 +1314,11 @@ nodebrain:
 	ln -s lib/nb nb
 
 install-exec-hook:
-	cd @bindir@ && mv -f nodebrain nb-$(VERSION)$(EXEEXT)
-	cd $(bindir) && if test ! -f nb -a ! -h nb; then ln -s nb-$(VERSION)$(EXEEXT) nb; fi
+	cd ${DESTDIR}@bindir@ && mv -f nodebrain nb-$(VERSION)$(EXEEXT)
+	cd ${DESTDIR}@bindir@ && if test ! -f nb -a ! -h nb; then ln -s nb-$(VERSION)$(EXEEXT) nb; fi
 
 uninstall-local:
-	rm $(bindir)/nb-$(VERSION)$(EXEEXT)
+	rm @bindir@/nb-$(VERSION)$(EXEEXT)
 
 #.PHONY: check
 #check: all

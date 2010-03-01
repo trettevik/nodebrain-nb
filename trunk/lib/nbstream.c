@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -67,8 +67,9 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2004/12/02 Ed Trettevik (original prototype version)
-* 2005/04/07 eat 0.6.2  enhanced nbStreamClose()
+* 2004-12-02 Ed Trettevik (original prototype version)
+* 2005-04-07 eat 0.6.2  Enhanced nbStreamClose()
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -87,7 +88,7 @@ NB_StreamSubscription *nb_StreamSubscriptionFree;
 */        
 void nbStreamPrint(NB_Stream *stream){
   outPut("Stream ");
-  printObject(stream);
+  printObject((NB_Object *)stream);
   } 
 
 void nbStreamDestroy(NB_Stream *Stream){
@@ -125,7 +126,7 @@ void *nbStreamProducerOpen(
 
   for(stream=nb_StreamList;stream!=NULL && strcmp(stream->name->value,streamName)!=0;stream=(NB_Stream *)stream->object.next);
   if(stream==NULL){  
-    stream=(NB_Stream *)newObject(nb_StreamType,&nb_StreamFree,sizeof(NB_Stream));
+    stream=(NB_Stream *)newObject(nb_StreamType,(void **)&nb_StreamFree,sizeof(NB_Stream));
     stream->name=grabObject(useString(streamName));
     stream->producer=NULL;
     stream->sub=NULL;
@@ -135,7 +136,7 @@ void *nbStreamProducerOpen(
     }
   for(producer=stream->producer;producer!=NULL && (producer->handle!=handle || producer->handler!=handler);producer=(NB_StreamProducer *)producer->object.next);
   if(producer==NULL){
-    producer=(NB_StreamProducer *)newObject(nb_StreamProducerType,&nb_StreamProducerFree,sizeof(NB_StreamProducer));
+    producer=(NB_StreamProducer *)newObject(nb_StreamProducerType,(void **)&nb_StreamProducerFree,sizeof(NB_StreamProducer));
     producer->stream=stream;
     producer->handle=handle;
     producer->handler=handler;

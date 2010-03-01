@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -35,9 +35,10 @@
 * Date       Name/Change
 * ---------- -----------------------------------------------------------------
 * 2003/03/15 eat 0.5.1  New header after renamed old one to nbiconv.c
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 extern unsigned char NB_A2E[];
 extern unsigned char NB_E2A[];
 
-void nbiconv();
+void nbiconv(unsigned char buf1[],unsigned char buf2[],unsigned char table[],int len);

@@ -84,28 +84,29 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2003/04/22 eat 0.5.4  Introduced prototype
-* 2003/07/22 eat 0.5.4  Included Mac OS X support
-* 2003/07/22 eat 0.5.4  Included HP-UX support
-* 2003/03/31 eat 0.6.0  Prefixed symbols with "_" on OS X.    
-* 2004/10/08 eat 0.6.1  Qualified error with const to eliminate warning on BSD
-* 2004/10/11 eat 0.6.1  Support wild module suffix (e.g. nb_mod_tree.?)
+* 2003-04-22 eat 0.5.4  Introduced prototype
+* 2003-07-22 eat 0.5.4  Included Mac OS X support
+* 2003-07-22 eat 0.5.4  Included HP-UX support
+* 2003-03-31 eat 0.6.0  Prefixed symbols with "_" on OS X.    
+* 2004-10-08 eat 0.6.1  Qualified error with const to eliminate warning on BSD
+* 2004-10-11 eat 0.6.1  Support wild module suffix (e.g. nb_mod_tree.?)
 *                       This was included to make scripts that reference
 *                       skill modules portable to a variety of platforms that
 *                       use different suffixes.
-* 2005/04/09 eat 0.6.2  changed name of INIT() function to nbBind()
-* 2005/05/14 eat 0.6.3  fixed bug in path separator on Windows
-* 2005/05/14 eat 0.6.3  added support for ";" as platform independent path separator
-* 2005/05/14 eat 0.6.3  included path in search for unique module definitions
-* 2005/05/14 eat 0.6.3  included args and text in search for unique module definitions
-* 2005/05/14 eat 0.6.3  fixed bug in module print method
-* 2005/05/14 eat 0.6.3  nbModuleSymbol modified to return moduleHandle
-* 2007/07/26 eat 0.6.8  Included nbModuleLoad() export option for preloading shared libraries for modules
-* 2008/10/30 eat 0.7.3  Module names changed from nb_mod_<module>.<suffix> to nb_<module>.<suffix>
-* 2008/11/01 eat 0.7.3  Replaced NB_MOD_SUFFIX with LT_MODULE_EXT
-* 2009/02/13 eat 0.7.4  Fixed error message when loading modules on OS X 
-* 2009/02/13 eat 0.7.4  Fixed bug in "show +m" on OS X
-* 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2005-04-09 eat 0.6.2  changed name of INIT() function to nbBind()
+* 2005-05-14 eat 0.6.3  fixed bug in path separator on Windows
+* 2005-05-14 eat 0.6.3  added support for ";" as platform independent path separator
+* 2005-05-14 eat 0.6.3  included path in search for unique module definitions
+* 2005-05-14 eat 0.6.3  included args and text in search for unique module definitions
+* 2005-05-14 eat 0.6.3  fixed bug in module print method
+* 2005-05-14 eat 0.6.3  nbModuleSymbol modified to return moduleHandle
+* 2007-07-26 eat 0.6.8  Included nbModuleLoad() export option for preloading shared libraries for modules
+* 2008-10-30 eat 0.7.3  Module names changed from nb_mod_<module>.<suffix> to nb_<module>.<suffix>
+* 2008-11-01 eat 0.7.3  Replaced NB_MOD_SUFFIX with LT_MODULE_EXT
+* 2009-02-13 eat 0.7.4  Fixed error message when loading modules on OS X 
+* 2009-02-13 eat 0.7.4  Fixed bug in "show +m" on OS X
+* 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 #include <nbi.h>
@@ -270,11 +271,11 @@ void printModule(struct NB_MODULE *module){
     outPut("%s ",module->object.type->name);
     if(module->path!=NULL && *(module->path->value)!=0){
       outPut("{");
-      printObject(module->path);
+      printObject((NB_Object *)module->path);
       outPut("}");
       }
-    printObject(module->name);
-    if(module->args!=NULL) printObject(module->args);
+    printObject((NB_Object *)module->name);
+    if(module->args!=NULL) printObject((NB_Object *)module->args);
     if(module->text!=NULL){
       outPut(":");
       printStringRaw(module->text);
@@ -296,7 +297,7 @@ void destroyModule(struct NB_MODULE *mod){
 static struct NB_MODULE *newModule(char *path,char *name,NB_List *args,char *text){
   struct NB_MODULE *module;
 
-  module=(struct NB_MODULE *)newObject(moduleType,&nb_ModuleFree,sizeof(struct NB_MODULE));
+  module=(struct NB_MODULE *)newObject(moduleType,(void **)&nb_ModuleFree,sizeof(struct NB_MODULE));
   module->path=useString(path);
   module->name=useString(name);
   module->args=args;

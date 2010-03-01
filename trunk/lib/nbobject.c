@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -178,6 +178,7 @@
 *
 * 2003/11/18 eat 0.5.5  Merged nbtype.c into nbobject.c
 * 2008/01/22 eat 0.6.9  Improved management of object memory
+* 2008-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -601,7 +602,7 @@ struct TYPE *newType(NB_Stem *stem,char *name,struct HASH *hash,int  attributes,
 
 // Show Types
 
-void nbObjectShowTypes(){
+void nbObjectShowTypes(void){
   struct TYPE *type;
   struct NB_TYPE_SHIM *shim;
   outPut("Type\tAlarm\tAlert\tEval\n");

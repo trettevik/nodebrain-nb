@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -64,8 +64,6 @@ typedef struct NB_LISTENER{
   void             *session; /* session handle */
   void             (*handler)(struct NB_CELL *context,int fildes,void *session);
   } NB_Listener;
-
-void nbListenerInit();
 
 #endif // NB_INTERNAL
 

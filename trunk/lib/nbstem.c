@@ -46,6 +46,7 @@
 * 2008-03-08 eat 0.7.0  Removed support for skull_socket, serveipaddr, and serveoar
 * 2008-11-11 eat 0.7.3  Changed failure exit codes to NB_EXITCODE_FAIL
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *============================================================================*/
 #include "nbi.h"
 #include "nbmedulla.h"
@@ -59,7 +60,7 @@ char *nb_cmd_prompt;
   char   myuserdir[1024];
 #endif
 
-char *nbGetUserDir(){
+char *nbGetUserDir(void){
   return(myuserdir);
   }
 

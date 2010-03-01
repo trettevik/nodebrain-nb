@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -33,7 +33,8 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2003/03/16 eat 0.5.2  Created to help with modular compiling.
+* 2003-03-16 eat 0.5.2  Created to help with modular compiling.
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #ifndef _NB_SERVICE_H_
@@ -46,7 +47,7 @@ void nbwCommand(struct NB_CELL *context,char *cmdverb,char *cursor);
 #endif
 
 void nbwServiceStopped(void);
-void daemonize();
+void daemonize(void);
 
 #endif // NB_INTERNAL
 

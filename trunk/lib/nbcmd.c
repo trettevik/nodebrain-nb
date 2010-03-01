@@ -210,6 +210,7 @@
 * 2009-12-28 eat 0.7.7  Include traceMessage and notraceMessage options
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *==============================================================================
 */
 #include "nbi.h"
@@ -288,7 +289,7 @@ int nbGetCmdInteractive(char *cmd){
 /*
 *  Print version for --version option
 */
-void printVersion(){
+void printVersion(void){
   printf("nb %s\n\n",PACKAGE_VERSION);
   printf("N o d e B r a i n\n");
   printf("Copyright (C) 1998-2009 The Boeing Company\n");
@@ -298,7 +299,7 @@ void printVersion(){
 /*
 *  Print help for --help option
 */
-void printHelp(){
+void printHelp(void){
   printVersion();
   printf("This is free software that you may copy and redistribute under\n");
   printf("the terms of the GPL license.\n");
@@ -341,24 +342,24 @@ char *aboutText=
     "See http://www.nodebrain.org for more information.\n\n"
     "Author: Ed Trettevik <eat@nodebrain.org>\n\n";
 
-void printAbout(){
+void printAbout(void){
   printVersion();
   printf(aboutText);
   }
 
-void showVersion(){
+void showVersion(void){
   outPut("\nN o d e B r a i n   %s (Dunce) %s\n\n",PACKAGE_VERSION,NB_RELEASE_DATE);
   outPut("Compiled %s %s %s\n\n",__DATE__,__TIME__,NB_COMPILE_PLATFORM);
   }
 
-void showCopyright(){
+void showCopyright(void){
   showVersion();
   outPut("Copyright (C) 1998-2009 The Boeing Company\n");
   outPut("GNU General Public License\n");
   outPut("----------------------------------------------------------------\n\n");
   }
 
-void showHeading(){
+void showHeading(void){
   showCopyright();
   outPut("%s\n\n",mycommand);
   outPut("Date       Time     Message\n");
@@ -368,7 +369,7 @@ void showHeading(){
   outFlush(); 
   }  
 
-void showAbout(){
+void showAbout(void){
   showCopyright();
 
   outPut(
@@ -428,7 +429,7 @@ void nbCmdShow(nbCELL context,char *verb,char * cursor){
         if(NULL==(def=(NB_Cell *)nbParseCell((NB_Term *)context,&cursor,0))) return;
         grabObject(def);
         ref=def;
-        val=(NB_Cell *)nbCellCompute_((NB_Object *)def);
+        val=(NB_Cell *)nbCellCompute_(def);
         cursor++;
         }
       else if(symid=='t'){
@@ -453,16 +454,16 @@ void nbCmdShow(nbCELL context,char *verb,char * cursor){
         if(symid=='t')  nbTermShowReport(term);
         else{
           outPut("() = ");
-          printObject(val);
+          printObject((NB_Object *)val);
           outPut(" == ");
-          printObject(def);
+          printObject((NB_Object *)def);
           outPut("\n");
           }
         }
       else if(strncmp(ident,"subscribers",len)==0) nbCellShowSub(ref);
       else if(strncmp(ident,"impact",len)==0) nbCellShowImpact(ref);
-      else if(strncmp(ident,"value",len)==0) printObject(val);
-      else if(strncmp(ident,"definition",len)==0) printObject(def);
+      else if(strncmp(ident,"value",len)==0) printObject((NB_Object *)val);
+      else if(strncmp(ident,"definition",len)==0) printObject((NB_Object *)def);
       else{
         if(strcmp(ident,"?")!=0) outMsg(0,'E',"Option \"%s\" not recognized.",ident);
         outPut("\nTo show information about a term in the active context:\n\n",ident);
@@ -1112,7 +1113,7 @@ void iLet(char *cursor,NB_Term *context,int mode){
     if(found==0 || mode==0){
       if(strcmp(operator,"==")==0) nbTermAssign(term,object);
       else{
-        nbTermAssign(term,nbCellCompute((NB_Cell *)context,(NB_Cell *)object));
+        nbTermAssign(term,(NB_Object *)nbCellCompute((NB_Cell *)context,(NB_Cell *)object));
         dropObject(term->def); /* 2004/08/28 eat */
         }
       }
@@ -2376,7 +2377,7 @@ void nbCmd(nbCELL context,char *cursor,int cmdopt){
         NB_Object *object,*cell;
         if(NULL==(cell=nbParseCell((NB_Term *)context,&cursor,0))) return;
         grabObject(cell);
-        object=nbCellCompute_(cell);
+        object=nbCellCompute_((NB_Cell *)cell);
         printObject(object);
         outPut("\n");
         dropObject(object);

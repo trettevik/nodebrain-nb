@@ -46,10 +46,11 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2003/10/31 Ed Trettevik (started original C prototype)
-* 2004/08/28 eat 0.6.1 included drop after compute for IF statement
-* 2007/07/22 eat 0.6.8 corrected rule assertion and command firing sequence error
-* 2010/02/25 eat 0.7.9 Cleaned up -Wall warning messages
+* 2003-10-31 Ed Trettevik (started original C prototype)
+* 2004-08-28 eat 0.6.1  Included drop after compute for IF statement
+* 2007-07-22 eat 0.6.8  Corrected rule assertion and command firing sequence error
+* 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -562,7 +563,7 @@ NB_Plan *nbRuleParsePlan(nbCELL context,int opt,char **source,char *msg){
   struct NB_PLAN *plan;
 
   while(*cursor==' ') cursor++;
-  plan=newObject(nb_PlanType,&nb_PlanFree,sizeof(NB_Plan));
+  plan=newObject(nb_PlanType,(void **)&nb_PlanFree,sizeof(NB_Plan));
   plan->codeBegin=NULL;
   plan->codeEnd=NULL;
   plan->objects=NULL;
@@ -656,7 +657,7 @@ NB_Rule *nbRuleExec(nbCELL context,char *source){
   return(rule);
   }
 
-void nbRuleDouse(){
+void nbRuleDouse(void){
   struct ACTION *action,*nextact;
   if(NULL!=(action=ashList)){
     ashList=NULL;
@@ -790,7 +791,7 @@ void nbRuleAct(struct ACTION *action){
 *  This function is called after processing a single external input and after
 *  processing a single second of scheduled activity.
 */
-void nbRuleReact(){
+void nbRuleReact(void){
   struct ACTION *action,*nextact;
   NB_Rule *rule,*ready;
   NB_Term *symContextSave;
@@ -915,7 +916,7 @@ NB_Rule **nbRuleFind(NB_Rule *rule){
   }
 
 /* print all rules */
-void nbRuleShowAll(){
+void nbRuleShowAll(void){
   NB_Rule *rule,**ruleP;
   long v;
   int i;
@@ -926,7 +927,7 @@ void nbRuleShowAll(){
       outPut("H[%u,%d]",v,i);
       outPut("R[%u]",rule->cell.object.refcnt); 
       outPut("L(%d) ",rule->cell.level);
-      printObjectItem(rule);
+      printObjectItem((NB_Object *)rule);
       outPut("\n");
       i++;
       }
@@ -958,7 +959,7 @@ void nbRuleShowItem(NB_Rule *rule){
   outPut("%8.8x.%3.3d = ",rule,rule->id);
   printObject(rule->cell.object.value);
   outPut(" == ");
-  printObject(rule);
+  printObject((NB_Object *)rule);
   }
 
 void destroyPlan(struct NB_PLAN *plan){

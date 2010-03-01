@@ -95,6 +95,7 @@
 * 2008/09/30 eat 0.7.2  included medulla thread support
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010/02/26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
+* 2010/02/28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 #define NB_INTERNAL
@@ -511,7 +512,7 @@ int nbMedullaOpen(void *session,int (*scheduler)(void *session),int (*processHan
 
 // Close a medulla
 
-int nbMedullaClose(){
+int nbMedullaClose(void){
   return(0);
   }
 
@@ -772,14 +773,14 @@ int nbMedullaPulse(int serve){
 
 // Set flag to return from nbMedullaPulse()
 
-int nbMedullaStop(){
+int nbMedullaStop(void){
   nb_medulla->serving=0;
   //fprintf(stderr,"nbMedullaStop() called\n");
   //fflush(stderr);
   return(0);
   }
 
-int nbMedullaServing(){
+int nbMedullaServing(void){
   return(nb_medulla->serving);
   }
 
@@ -1939,7 +1940,7 @@ nbPROCESS nbMedullaProcessFind(int pid){
 //=======================================================================================
 
 
-nbQUEUE nbMedullaQueueOpen(){
+nbQUEUE nbMedullaQueueOpen(void){
   nbQUEUE queue;
   //fprintf(stderr,"nbMedullaQueueOpen\n");
   queue=malloc(sizeof(struct NB_MEDULLA_QUEUE));

@@ -176,6 +176,7 @@
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2010-02-26 eat 0.7.9  Fixed bug in vlidiv - not yet tested
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 //#include "nb.h"
@@ -184,7 +185,7 @@
 /*
 *  Print vli x (for debugging only)
 */
-void vliprint(x,label) vliWord *x; unsigned char *label; {
+void vliprint(vliWord *x,char *label){
   vliWord *cx,*ex=x+*x;    /* cursors */
 
   if(*x==0){
@@ -201,7 +202,7 @@ void vliprint(x,label) vliWord *x; unsigned char *label; {
 /*
 *  Allocate a vli large enough to hold an l bit number.
 */
-vli vlinew(l) unsigned int l; {
+vli vlinew(unsigned int l){
   unsigned int bytes;
   vliWord *x;
   
@@ -217,7 +218,7 @@ vli vlinew(l) unsigned int l; {
 /*
 *  Allocate a string large enough to hold a decimal representation of an l bit number
 */  
-char *vlistr(l) unsigned int l; {
+char *vlistr(unsigned int l){
   char *s;
 
   if((s=(char *)malloc(6+l/3))==NULL){
@@ -230,14 +231,14 @@ char *vlistr(l) unsigned int l; {
 /*
 *  Get size of a vli in bytes
 */
-unsigned int vlisize(x) vliWord *x; {
+unsigned int vlisize(vliWord *x){
   return((unsigned int)*x*sizeof(vliWord));
   }
 
 /*
 *  Get size of a vli in used bytes.
 */
-unsigned int vlibytes(x) vli x; {
+unsigned int vlibytes(vli x){
   
   if(*(x+*x)>0xff) return(*x*sizeof(vliWord));
   else return(*x*sizeof(vliWord)-1);
@@ -246,7 +247,7 @@ unsigned int vlibytes(x) vli x; {
 /*
 *  Get size of a vli in used bits.
 */
-unsigned int vlibits(x) vli x; {
+unsigned int vlibits(vli x){
   unsigned int i,m=0x8000;
   
   for(i=0;i<16 && (*(x+*x)&m)==0;i++) m=m>>1;
@@ -258,7 +259,7 @@ unsigned int vlibits(x) vli x; {
 *
 *  The random number is from  2^(l-1) to 2^l-1
 */
-void vlirand(x,l) vliWord *x; unsigned int l; {
+void vlirand(vliWord *x,unsigned int l){
   unsigned int i;
   unsigned short m=0xffff;
   vliWord *ex;
@@ -277,8 +278,7 @@ void vlirand(x,l) vliWord *x; unsigned int l; {
 /*
 *  Assign vli x from y
 */
-void vlicopy(x,y) vliWord *x,*y; {
-
+void vlicopy(vliWord *x,vliWord *y){
   memcpy(x,y,(size_t)((*y+1)*sizeof(vliWord)));
   }
 
@@ -286,7 +286,7 @@ void vlicopy(x,y) vliWord *x,*y; {
 *  Make a vli number x from an unsigned int l
 *
 */
-void vligeti(x,l) vliWord *x; unsigned int l; {
+void vligeti(vliWord *x,unsigned int l){
   unsigned int a=l;
 
   *(x+1)=a;
@@ -301,7 +301,7 @@ void vligeti(x,l) vliWord *x; unsigned int l; {
 /*
 *  Divide a vli x by 2  (shift right 1 bit)
 */ 
-void vlihlf(x) vliWord *x; {
+void vlihlf(vliWord *x){
   unsigned int a;
   vliWord *cx=x+1,*ex=x+*x;
 
@@ -320,7 +320,7 @@ void vlihlf(x) vliWord *x; {
 /*
 *  Increment vli x by 1 
 */
-void vliinc(x) vliWord *x; {
+void vliinc(vliWord *x){
 //  unsigned long a=1;          /* accumulator */
   unsigned int a=1;          /* accumulator */
   vliWord *cx=x+1,*ex=x+*x+1; /* cursors */
@@ -338,7 +338,7 @@ void vliinc(x) vliWord *x; {
 /*
 *  Add vli y to x (result in x)
 */
-void vliadd(x,y) vliWord *x,*y; {
+void vliadd(vliWord *x,vliWord *y){
 //  unsigned long a=0;          /* accumulator */
   unsigned int a=0;          /* accumulator */
   vliWord *cx=x+1,*cy=y+1,*ex=x+*x+1,*ey=y+*y+1,*eb=ex; /* cursors */
@@ -375,7 +375,7 @@ void vliadd(x,y) vliWord *x,*y; {
 /*
 *  Decrement vli x (result in x)
 */
-void vlidec(x) vliWord *x; {
+void vlidec(vliWord *x){
   vliWord *cx=x+1,*ex=x+*x+1;   /* cursors */
 
   if(*x==0) return;  /* don't dec zero value */
@@ -393,7 +393,7 @@ void vlidec(x) vliWord *x; {
 /*
 *  Subtract vli y from x (result in x)
 */
-void vlisub(x,y) vliWord *x,*y; {
+void vlisub(vliWord *x,vliWord *y){
   unsigned int a,m,b=0;  /* accumulator, minus value and borrow */
   vliWord *cx=x+1,*cy=y+1,*ex=x+*x+1,*ey=y+*y+1; /* cursors */
 
@@ -426,7 +426,7 @@ void vlisub(x,y) vliWord *x,*y; {
 *  Multiply vli x by y (result in p)
 *
 */  
-void vlimul(x,y,p) vliWord *x,*y,*p; {
+void vlimul(vliWord *x,vliWord *y,vliWord *p){
   vliWord *cx,*cy,*c=p+1,*cp;             /* vli product and cursors */
   vliWord *ex=x+*x+1,*ey=y+*y+1,*ep=p+*x+*y+1;        /* end cursors */
   unsigned int a=0,b;                       /* accumulator, register */
@@ -455,7 +455,7 @@ void vlimul(x,y,p) vliWord *x,*y,*p; {
 *  Square vli x (result in p)
 *    This cuts off about 1/3 of the time for vlimul(x,x,p);
 */  
-void vlisqr(x,p) vliWord *x,*p; {
+void vlisqr(vliWord *x,vliWord *p){
   vliWord *cx,*cy,*c=p+1,*cp;        /* vli product and cursors */
   vliWord *ex=x+*x+1,*ep=p+*x*2+1;   /* end cursors */
   unsigned int a=0,b,C;              /* accumulator, register, carry */
@@ -497,7 +497,7 @@ void vlisqr(x,p) vliWord *x,*p; {
 /*
 *  Mod function x=x mod n
 */
-unsigned int vlimod(x,n) vli x,n; {
+unsigned int vlimod(vli x,vli n){
   unsigned short xl=*x,nl=*n,*xc,*nc,*xh=x+*x,*nh=n+*n;
 //  unsigned long a,b,ah,m,d=*(n+*n)+1,p,loop=0,w;
   unsigned int a,b,ah,m,d=*(n+*n)+1,p,loop=0,w;
@@ -593,7 +593,7 @@ unsigned int vlimod(x,n) vli x,n; {
 *
 */  
   
-unsigned int vlidiv(x,m,q) vliWord *x,*m,*q; {
+unsigned int vlidiv(vliWord *x,vliWord *m,vliWord *q){
   vli2048 P2048,G2048;
   vliWord *P=P2048,*G=G2048,*cG,*eG,*cx,*cm;   /* product, guess and cursors */
   unsigned int nx,nm,rx,rm,f=0;
@@ -748,7 +748,7 @@ unsigned int vlidiv(x,m,q) vliWord *x,*m,*q; {
 *
 *     x^(a*b) mod m = ((x^a mod m) * (x^b mod m)) mod m 
 */    
-void vlipow(x,m,e) vliWord *x,*m,*e; {
+void vlipow(vliWord *x,vliWord *m,vliWord *e){
   vli2048 X2048,P2048;
   vliWord *X=X2048,*P=P2048,*ce=e+*e;
   unsigned int n;
@@ -803,7 +803,7 @@ void vlipow(x,m,e) vliWord *x,*m,*e; {
 *
 *    [least_significant_byte]...[most_significant_byte]
 */
-void vligetb(x,b,l) vliWord *x; unsigned char *b; unsigned int l; {
+void vligetb(vliWord *x,unsigned char *b,unsigned int l){
   vliWord a,*cx=x+1;
   unsigned char *eb=b+l-1;
 
@@ -827,7 +827,7 @@ void vligetb(x,b,l) vliWord *x; unsigned char *b; unsigned int l; {
 *
 *    [least_significant_byte]...[most_significant_byte]
 */
-void vliputb(x,b,l) vliWord *x; unsigned char *b; unsigned int l; {
+void vliputb(vliWord *x,unsigned char *b,unsigned int l){
   vliWord a,*cx=x+1,*ex=x+*x+1;  /* accumulator and cursors */
   unsigned char *eb=b+l-1;       /* end of byte array */
 
@@ -880,7 +880,7 @@ void vligetd(vliWord *x,unsigned char *s){
 *    This can be modified to use much larger powers of ten.
 *    It should use several digits at a time.
 */
-void vliputd(x,s) vliWord *x; unsigned char *s; {
+void vliputd(vliWord *x,unsigned char *s){
   vliWord ten[2],*Q,*X;
   unsigned char *c,*ds,*es;
   
@@ -916,7 +916,7 @@ void vliputd(x,s) vliWord *x; unsigned char *s; {
 *  Convert a hexidecimal string s to vli number x
 *
 */
-int vligetx(x,s) vliWord *x; unsigned char *s; {
+int vligetx(vliWord *x,unsigned char *s){
   vliWord a,b,*cx=x+1;     /* accumulator and cursor */
   unsigned short i;      /* nibble counter */
 
@@ -940,7 +940,7 @@ int vligetx(x,s) vliWord *x; unsigned char *s; {
 *  Convert a vli number x to a hexidecimal string
 *
 */
-void vliputx(x,s) vliWord *x; char *s; {
+void vliputx(vliWord *x,char *s){
   vliWord a,*cx=x+1,*ex=x+*x+1;    /* accumulator and cursors */
   unsigned short i;                /* nibble counter */
 
@@ -1003,7 +1003,7 @@ void vlipprime(vli x){
 /*
 *  vlirprime: Find the next relative prime.
 */
-void vlirprime(x,y) vli x,y; {
+void vlirprime(vli x,vli y){
   vli2048 a,b,r;  
 
   vliinc(x);

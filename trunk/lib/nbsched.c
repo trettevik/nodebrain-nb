@@ -120,6 +120,7 @@
 *                   nbtime.h and this set of routines can probably merge
 *                   into nbtime.h.
 * 2003/03/15 eat 0.5.1  Split out nbsched.h and nbsched.c for make file
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -148,19 +149,18 @@ struct HASH *schedH;      /* hash of schedule entries */
 *  Schedule Functions
 */    
   
-void schedPrintDump(sched)
-  struct SCHED *sched; {
+void schedPrintDump(struct SCHED *sched){
   outPut("%s schedule ~%u-%u ",sched->symbol->value,sched->period.start,
     sched->period.end);
   outPut("interval=%d,duration=%d)\n",sched->interval,sched->duration);
   }
       
 /* change to printSched */
-void schedPrint(sched) struct SCHED *sched;{
+void schedPrint(struct SCHED *sched){
   outPut("%s",sched->symbol->value);
   } 
 
-void destroySched(sched) struct SCHED *sched;{
+void destroySched(struct SCHED *sched){
   /*
   outMsg(0,'L',"This is where we would destroy a schedule.");
   */

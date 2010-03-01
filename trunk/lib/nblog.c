@@ -117,6 +117,7 @@
 * 2005/03/26 eat 0.6.2  Included nbLogDump()
 * 2008/11/11 eat 0.7.3  Changed "bail" exit code to 255.
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -159,7 +160,7 @@ void outStd(char *buffer){
 *    0 - Called previously
 *    1 - Successful
 */
-int outInit(){
+int outInit(void){
   if(nb_OutBuffer!=NULL) return(0);
   nb_OutLine=(char *)malloc(NB_BUFSIZE);
   nb_OutBuffer=(char *)malloc(NB_BUFSIZE);
@@ -184,7 +185,7 @@ int outInit(){
 *               to build it into this routine.
 *               
 */
-void outFlush(){
+void outFlush(void){
   struct NB_OUTPUT_HANDLER *outputHandler;
   if(nb_OutCursor==nb_OutBuffer) return;
   *nb_OutCursor=0;
@@ -363,7 +364,7 @@ void outStream(int stream,void (*handler)(char *buffer)){
 /*
 *  Print date and time stamp to output streams
 */
-void outStamp() {
+void outStamp(void){
   time_t systemTime;
   struct tm  *localTime;
 
@@ -543,7 +544,7 @@ void nbLogMsgI(int msgid,char msgclass,char *format,...){
 /*
 *
 */
-void outBar(){
+void outBar(void){
   outPut("---------- --------\n");
   }
 

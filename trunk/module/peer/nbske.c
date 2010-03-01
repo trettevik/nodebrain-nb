@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -242,8 +242,8 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2000/10/04 Ed Trettevik - prototype revision of Rijndael code posted by NIST.
-* 2000/10/12 eat - version 0.2.2 
+* 2000-10-04 Ed Trettevik - prototype revision of Rijndael code posted by NIST.
+* 2000-10-12 eat 0.2.2 
 *             1) Major revision of all code to improve my own understanding.  The
 *                Rijndael algorithm is still used, but the code looks quite
 *                different.
@@ -251,12 +251,13 @@
 *             3) The translation of the 128-bit cipher key to a 32-bit cipher key
 *                has been improved to cause a more complete disturbance of the
 *                buffer with a 1-bit change to the cipher key. 
-* 2000/10/16 eat - version 0.2.2
+* 2000-10-16 eat 0.2.2
 *             1) Changed state from char array to int array, to make it 
 *                architecture independent.  
-* 2001/02/11 eat - version 0.2.4
+* 2001-02-11 eat 0.2.4
 *             1) Included skeSeedCipher, skeRandCipher, and skeKeyData routines
 *                for generation of random keys.        
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 //#include "nb.h"
@@ -734,7 +735,7 @@ int rounds[8]={0,1,3,6,10,11,12,13};
 /*
 *  Generate random CBC key
 */
-void skeSeedCipher(cipher) unsigned int cipher[4]; {
+void skeSeedCipher(unsigned int cipher[4]){
   unsigned int w,k;
   
   for(k=0;k<4;k++){
@@ -753,7 +754,7 @@ void skeSeedCipher(cipher) unsigned int cipher[4]; {
 *    billion calls to get a repeat because the number we are adding is prime
 *    relative to 2^32. 
 */  
-void skeRandCipher(cipher) unsigned int cipher[4]; {
+void skeRandCipher(unsigned int cipher[4]){
   static unsigned int m=(unsigned int)1646979893+(unsigned int)1646979894;
   cipher[0]+=m;
   }
@@ -761,7 +762,7 @@ void skeRandCipher(cipher) unsigned int cipher[4]; {
 /*
 *  Generate random Rijndael key data
 */
-void skeKeyData(keySize,keyData) unsigned int keySize; unsigned int keyData[]; {
+void skeKeyData(unsigned int keySize,unsigned int keyData[]){
   unsigned int w,k;
   
   for(k=0;k<keySize;k++){
@@ -777,11 +778,7 @@ void skeKeyData(keySize,keyData) unsigned int keySize; unsigned int keyData[]; {
 *    abs()      0 - no encryption, 1 - cheap , 2-8, secure
 * 
 */
-void skeKey(key,keySize,keyData)
-  skeKEY *key;
-  int keySize;
-  unsigned int keyData[];{
-
+void skeKey(skeKEY *key,int keySize,unsigned int keyData[]){
   int w;
   unsigned char *rptr;
   unsigned int word,*wptr,*wptrPrior;
@@ -819,13 +816,13 @@ void skeKey(key,keySize,keyData)
 
 /*
 *  Encrypt/Decrypt a buffer of 128-bit blocks using Cipher Block Chaining (CBC) mode.
+*
+*    buffer - plain text to encrypt
+*    blocks - number of blocks
+*    cipher - CBC xor key
+*    key    - encryption/decryption key
 */
-void skeCipher(buffer,blocks,cipher,key)
-  unsigned int *buffer;    /* plain text to encrypt */
-  unsigned int blocks;     /* number of blocks */
-  unsigned int cipher[4];  /* CBC xor key */
-  skeKEY *key;{            /* encryption/decryption key */
-
+void skeCipher(unsigned int *buffer,unsigned int blocks,unsigned int cipher[4],skeKEY *key){
   unsigned int *b=buffer;
   int r,rounds=key->rounds;
   unsigned int state[4];   /* temporary state array */

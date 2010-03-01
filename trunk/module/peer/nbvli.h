@@ -34,7 +34,7 @@
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
 * 2003-03-15 eat 0.5.1  Created to conform to new makefile
-* 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 #ifndef _NB_VLI_H_
@@ -61,32 +61,31 @@ typedef vliWord vli512[33];
 typedef vliWord vli1024[65];
 typedef vliWord vli2048[129];
 
-int vligetx();
-void vliputx();
+int vligetx(vliWord *x,unsigned char *s);
 
-void vlirand();
-void vlicopy();
-void vligeti();
-void vlihlf();
-void vliinc();
-void vliadd();
-void vlidec();
-void vlisub();
-void vlimul();
-void vlisqr();
-void vlipow();
-void vligetb();
-void vliputb();
+void vlirand(vliWord *x,unsigned int l);
+void vlicopy(vliWord *x,vliWord *y);
+void vligeti(vliWord *x,unsigned int l);
+void vlihlf(vliWord *x);
+void vliinc(vliWord *x);
+void vliadd(vliWord *x,vliWord *y);
+void vlidec(vliWord *x);
+void vlisub(vliWord *x,vliWord *y);
+void vlimul(vliWord *x,vliWord *y,vliWord *p);
+void vlisqr(vliWord *x,vliWord *p);
+void vlipow(vliWord *x,vliWord *m,vliWord *e);
+void vligetb(vliWord *x,unsigned char *b,unsigned int l);
+void vliputb(vliWord *x,unsigned char *b,unsigned int l);
 void vligetd(vliWord *x,unsigned char *s);
-void vliputd();
-void vliputx();
-void vlipprime();
-void vlirprime();
+void vliputd(vliWord *x,unsigned char *s);
+void vliputx(vliWord *x,char *s);
+void vlipprime(vli x);
+void vlirprime(vli x,vli y);
 
-void vliprint();
+void vliprint(vliWord *x,char *label);
 
-unsigned int vlibits();
-unsigned int vlibytes();
-unsigned int vlidiv();
+unsigned int vlibits(vli x);
+unsigned int vlibytes(vli x);
+unsigned int vlidiv(vliWord *x,vliWord *m,vliWord *q);
 
 #endif

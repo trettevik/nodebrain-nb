@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -32,11 +32,15 @@
 *============================================================================
 * Change History:
 *
-*    Date     Name/Change
-* ----------  ---------------------------------------------------------------
-* 2002/09/07  Ed Trettevik (split out in 0.4.1)
+*    Date    Name/Change
+* ---------- ----------------------------------------------------------------
+* 2002/09/07 Ed Trettevik (split out in 0.4.1)
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *============================================================================
 */
+#ifndef _NB_CONDITION_H_
+#define _NB_CONDITION_H_
+
 struct COND {               /* Condition Object - one or two operands */
   /* This object is pointed to by the TERMs and the left and right
   *  fields of COND.  The operands may also be other object types,
@@ -89,18 +93,20 @@ extern struct TYPE *condTypeChange;
 /*
 *  Public methods
 */
-void initCondition();
-struct COND *useCondition();
-void *hashCond();
-void destroyCondition();
+void initCondition(NB_Stem *stem);
+struct COND *useCondition(int not,struct TYPE *type,void *left,void *right);
+void *hashCond(struct HASH *hash,struct TYPE *type,void *left,void *right);
+void destroyCondition(struct COND *cond);
 
-void condSchedule();
-void condUnschedule();
+void condSchedule(struct COND *cond,NB_Object *value);
+void condUnschedule(struct COND *cond);
 
-void condPrintAll();
+void condPrintAll(int sel);
 
-void condChangeReset();
+void condChangeReset(void);
 
 // This will probably become a cell method - if so we will not need to define here
 NB_Object *reduceAnd(NB_Object *lobject,NB_Object *robject);
 NB_Object *reduceOr(NB_Object *lobject,NB_Object *robject);
+
+#endif

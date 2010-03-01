@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -61,8 +61,9 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2001/07/21 Ed Trettevik (original prototype version 0.2.8)
+* 2001-07-21 Ed Trettevik (original prototype version 0.2.8)
 *             1) This code has been pulled from nodebrain.c.
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -85,7 +86,7 @@ struct IDENTITY *clientIdentity;    /* client identity */
 *******************************************************************************/
 struct IDENTITY * nbIdentityNew(char *name,unsigned char authority){
   struct IDENTITY *identity;
-  identity=(struct IDENTITY *)newObject(identityType,&nb_IdentityFree,sizeof(struct IDENTITY));
+  identity=(struct IDENTITY *)newObject(identityType,(void **)&nb_IdentityFree,sizeof(struct IDENTITY));
   identity->name=grabObject(useString(name));
   identity->authority=authority;  /* set authority */
   return(identity);

@@ -49,6 +49,7 @@
 * 2008-11-11 eat 0.7.3  Replaced a couple exit calls with return(-1)
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=====================================================================
 */
 #include "nbi.h"
@@ -471,7 +472,7 @@ int nbIpGetUdpSocketPair(int *socket1,int *socket2){
 /*
 *  Allocate channel descriptor (used by client before call to chopen)
 */
-struct IP_CHANNEL *nbIpAlloc(){
+struct IP_CHANNEL *nbIpAlloc(void){
   NB_IpChannel *channel;
 
   channel=malloc(sizeof(NB_IpChannel));

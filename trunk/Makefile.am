@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 ## =============================================================================
 ##
-## Copyright (C) 1998-2009 The Boeing Company
+## Copyright (C) 1998-2010 The Boeing Company
 ##                         Ed Trettevik <eat@nodebrain.org>
 ##
 ## NodeBrain is free software; you can redistribute it and/or modify
@@ -65,6 +65,7 @@
 ## 2008/06/26 eat 0.7.1  Modified to install as "nodebrain" and rename as nb-$(VERSION)
 ## 2008/10/17 eat 0.7.2  Modified for LIBTOOL
 ## 2008/10/24 eat 0.7.3  Moving modules down to a sub-package in "module" directory
+## 2010/02/27 eat 0.7.9  Included DESTDIR
 ##=============================================================================
 
 SUBDIRS = lib . module
@@ -151,13 +152,13 @@ nodebrain_SOURCES =
 ## Rename nodebrain to nb-x.x.x and create symbolic link from nb if not already defined
 
 install-exec-hook:
-	cd @bindir@ && mv -f nodebrain nb-$(VERSION)$(EXEEXT)
-	cd $(bindir) && if test ! -f nb -a ! -h nb; then ln -s nb-$(VERSION)$(EXEEXT) nb; fi
+	cd ${DESTDIR}@bindir@ && mv -f nodebrain nb-$(VERSION)$(EXEEXT)
+	cd ${DESTDIR}@bindir@ && if test ! -f nb -a ! -h nb; then ln -s nb-$(VERSION)$(EXEEXT) nb; fi
 
 ## Remove $(bindir)/nb-x.x.x program and $(libdir)/nb/x.x.x directory
 
 uninstall-local:
-	rm $(bindir)/nb-$(VERSION)$(EXEEXT)
+	rm @bindir@/nb-$(VERSION)$(EXEEXT)
 
 ## Run a set of tests to check out a build
 

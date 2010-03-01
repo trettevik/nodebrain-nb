@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -33,6 +33,7 @@
 * 2005/04/08 eat 0.6.2  API function definitions moved to nbapi.h
 * 2005/05/14 eat 0.6.3  Added module handle in NB_SKILL_BIND
 * 2007/07/16 eat 0.6.8  change name from "expert" to "node"
+* 2010/02/28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 #ifndef _NB_NODE_H_
@@ -40,6 +41,7 @@
 
 #if defined(NB_INTERNAL)
 
+#include <nbstem.h>
 #include <nblist.h>
 
 /*
@@ -70,8 +72,7 @@ typedef struct NB_NODE NB_Node;
 /*******************************************************************************
 *  Node/Context Methods
 *******************************************************************************/
-NB_Node *nbNodeNew();
-void alertContext();
+NB_Node *nbNodeNew(void);
 void contextAlert(NB_Term *term);
 
 /*******************************************************************************
@@ -163,7 +164,7 @@ extern struct NB_TERM *nb_SkillGloss;
 
 /* Functions */
 
-void nbNodeInit();
+void nbNodeInit(NB_Stem *stem);
 struct NB_SKILL     *nbSkillParse(NB_Term *context,char *cursor);
 struct NB_LIST      *nbSkillArgs(NB_Term *context,char **curptr);
 struct NB_SKILLCOND *nbSkillCondUse(NB_Term *context,char **cursor,char *msg);

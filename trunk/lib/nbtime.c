@@ -154,6 +154,7 @@
 * 2003/11/01 eat 0.5.5  Added time procedures (plan based time conditions)
 * 2008/02/08 eat 0.6.9  Removed calendar hash
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010/02/28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 #define _USE_32BIT_TIME_T
@@ -230,7 +231,7 @@ void tcPrintTime(long timer){
   outPut("%4.4d/%2.2d/%2.2d %2.2d:%2.2d:%2.2d\n",timeTm->tm_year+1900,timeTm->tm_mon+1,timeTm->tm_mday,timeTm->tm_hour,timeTm->tm_min,timeTm->tm_sec);
   }
 
-long tcTime(){
+long tcTime(void){
   time_t ltime;
   time(&ltime);
   return(ltime);
@@ -1544,7 +1545,7 @@ tcq tcQueueNew(tc tcdef,long begin,long end){
 *      contained within the domain.  This is necessary to make sure that normalization
 *      has fully extended the interval.  
 */  
-long tcQueueTrue(queue,begin,end) tcq queue; long begin,end;{
+long tcQueueTrue(tcq queue,long begin,long end){
   bfi interval;
   
   if(trace) outMsg(0,'T',"tcQueueTrue: called begin=%d,  end=%d.",begin,end);
@@ -1567,7 +1568,7 @@ long tcQueueTrue(queue,begin,end) tcq queue; long begin,end;{
 /*
 *  Get time of next false state
 */  
-long tcQueueFalse(queue) tcq queue;{
+long tcQueueFalse(tcq queue){
   return(queue->set->next->end);
   } 
 
@@ -1619,7 +1620,7 @@ NB_Term *nbTimeDeclareCalendar(nbCELL context,char *ident,char **source,char *ms
     dropObject(text);
     return(NULL);
     }
-  calendar=grabObject(newObject(nb_TimeCalendarType,&nb_TimeCalendarFree,sizeof(NB_Calendar)));
+  calendar=grabObject(newObject(nb_TimeCalendarType,(void **)&nb_TimeCalendarFree,sizeof(NB_Calendar)));
   calendar->tcdef=tcDef;
   calendar->text=text;
   term=nbTermNew(nb_TimeCalendarContext,ident,calendar);

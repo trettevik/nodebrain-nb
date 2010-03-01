@@ -101,6 +101,7 @@
 *            Unknown value.  Was incorrectly allowing redefinition of terms defined
 *            to have the Unknown value.
 * 2008-11-11 eat 0.7.3  Changed failure exit code to NB_EXITCODE_FAIL
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -207,7 +208,7 @@ void termPrintConditions(NB_Term *term){
   NB_TREE_ITERATE(treeIterator,treeNode,((NB_Cell *)term)->sub){
     cell=(NB_Cell *)treeNode->key;
     outPut("\n  ");
-    printObject(cell);
+    printObject((NB_Object *)cell);
     NB_TREE_ITERATE_NEXT(treeIterator,treeNode)
     }
   outPut("\n");
@@ -285,7 +286,7 @@ void solveTerm(NB_Term *term){
   if(trace){
     outMsg(0,'T',"solveTerm(): called");
     outPut("Term: ");
-    printObject(term);
+    printObject((NB_Object *)term);
     outPut("\n");
     }
   if(term->def==nb_Unknown) termResolve(term);
@@ -533,7 +534,7 @@ NB_Term *makeTerm(NB_Term *context,NB_String *word){
   NB_Term *term;
 
   if(trace) outMsg(0,'T',"makeTerm calling nbCellNew");
-  term=nbCellNew(termType,&termFree,sizeof(NB_Term));
+  term=nbCellNew(termType,(void **)&termFree,sizeof(NB_Term));
   term->context=context; 
   term->terms=NULL;                       /* change to term->gloss */
   term->def=nb_Undefined;  
@@ -576,7 +577,7 @@ void nbTermAssign(NB_Term *term,NB_Object *new){
   if(new->value!=new){         /* cell */
     if(((NB_Cell *)new)->level>=term->cell.level){
       term->cell.level=((NB_Cell *)new)->level+1;
-      nbCellLevel(term);       /* adjust level */
+      nbCellLevel((NB_Cell *)term);       /* adjust level */
       }
     if(term->cell.sub==NULL){  /* disable if no subscribers */
       term->cell.object.value=nb_Disabled;
@@ -621,7 +622,7 @@ NB_Term *nbTermNew(NB_Term *context,char *ident,void *def){
     if(trace){
       outMsg(0,'T',"nbTermNew() called for \"%s\" with context.",ident);
       outPut("Context is ");
-      printObject(context);
+      printObject((NB_Object *)context);
       outPut("\n");
       }
     cursor=ident;
@@ -710,7 +711,7 @@ void termUndef(NB_Term *term){
   }
 
 
-void termUndefAll() {
+void termUndefAll(void){
   /*
   *  Undefine all terms.
   *
@@ -783,7 +784,7 @@ void nbTermShowItem(NB_Term *term){
     outMsg(0,'L',"termPrintGlossTree: term address calculation error");
     exit(NB_EXITCODE_FAIL);
     }
-  printObject(term);
+  printObject((NB_Object *)term);
   outPut(" ");
   outPut("= ");
   printObject(term->cell.object.value);

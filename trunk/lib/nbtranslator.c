@@ -294,6 +294,7 @@
 * 2008-11-11 eat 0.7.3  Change failure exit code to NB_EXITCODE_FAIL
 * 2010-02-25 eat 0.7.9  cleaned up to remove -Wall warning messages
 * 2010-02-26 eat 0.7.9  cleaned up to remove -Wall warning messages (gcc 4.1.2)
+* 2010-02-28 eat 0.7.9  cleaned up to remove -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -458,7 +459,7 @@ void nbProjectionShow(NB_Projection *projection){
   outPut("%s",text);
   }
 
-void nbProjectionShowAll(){
+void nbProjectionShowAll(void){
   NB_Object *object,**objectP;
   long v;
   int i,saveshowcount=showcount;
@@ -1594,7 +1595,7 @@ nbCELL nbTranslatorCompile(nbCELL context,char *filename){
     nbTranslatorFreeList(xi);
     return(NULL);
     }
-  translator=newObject(nb_TranslatorType,&nb_TranslatorFree,sizeof(NB_Translator));
+  translator=newObject(nb_TranslatorType,(void **)&nb_TranslatorFree,sizeof(NB_Translator));
   translator->xi=xi;
   translator->filename=grabObject(filenameObject);
   translator->depth=depth;

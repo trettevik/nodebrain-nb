@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -70,9 +70,10 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2004/12/02 Ed Trettevik (original prototype version introduced in 0.6.2)
-* 2007/07/21 eat 0.6.8  Modified to simplify use within skill modules.
-* 2008/05/24 eat 0.7.0  Modified to include nbSynapseSetTimer function
+* 2004-12-02 Ed Trettevik (original prototype version introduced in 0.6.2)
+* 2007-07-21 eat 0.6.8  Modified to simplify use within skill modules.
+* 2008-05-24 eat 0.7.0  Modified to include nbSynapseSetTimer function
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -104,7 +105,7 @@ NB_Cell *nbSynapseOpen(NB_Cell *context,void *skillHandle,void *nodeHandle,NB_Ce
   void (*handler)(NB_Cell *context,void *skillHandle,void *nodeHandle,NB_Cell *cell)){
 
   NB_Synapse *synapse;
-  synapse=newObject(nb_SynapseType,&nb_SynapsePool,sizeof(struct NB_SYNAPSE));
+  synapse=newObject(nb_SynapseType,(void **)&nb_SynapsePool,sizeof(struct NB_SYNAPSE));
   synapse->context=context;
   synapse->skillHandle=skillHandle;
   synapse->nodeHandle=nodeHandle;

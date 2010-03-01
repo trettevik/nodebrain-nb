@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -33,13 +33,16 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2003/03/15 eat 0.5.1  Created to conform to new makefile
+* 2003-03-15 eat 0.5.1  Created to conform to new makefile
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #ifndef _NB_IDENTITY_H_
 #define _NB_IDENTITY_H_
 
 #if defined(NB_INTERNAL)
+
+#include <nbstem.h>
 
 typedef struct IDENTITY {
   struct NB_OBJECT object;   /* object header */
@@ -81,9 +84,9 @@ extern struct IDENTITY *clientIdentity;    /* client identity */
 #define AUTH_OWNER   255  /* unlimited permissions */
 
 /* functions */
-void initIdentity();
+void initIdentity(NB_Stem *stem);
 struct IDENTITY *nbIdentityNew(char *name,unsigned char authority);
-struct IDENTITY *getIdentity();
+struct IDENTITY *getIdentity(char *identity);
 
 //typedef struct IDENTITY *nbIDENTITY;
 // temporary export until 0.7.0

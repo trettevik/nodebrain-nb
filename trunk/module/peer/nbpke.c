@@ -92,6 +92,7 @@
 *
 * 2008-11-11 eat 0.7.3  Change failure exit code to NB_EXITCODE_FAIL
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -112,7 +113,7 @@
 *  we don't need to understand it here.
 */
 
-void pkePrint(ciphertext) unsigned char *ciphertext; {
+void pkePrint(unsigned char *ciphertext){
   unsigned char *cursor=ciphertext;
   unsigned short len;
   
@@ -140,9 +141,7 @@ void pkePrint(ciphertext) unsigned char *ciphertext; {
 *       >0 - modulus does not match the ciphertext block length
 *    
 */  
-unsigned int pkeCipher(ciphertext,exponent,modulus)
-  unsigned char *ciphertext;
-  vli exponent,modulus; {
+unsigned int pkeCipher(unsigned char *ciphertext,vli exponent,vli modulus){
   vli2048 T;
   unsigned char *cursor=ciphertext+1,*lastblock;
   unsigned int blocksize;	
@@ -157,7 +156,6 @@ unsigned int pkeCipher(ciphertext,exponent,modulus)
     }
   return(lastblock+blocksize-cursor);  
   }
-
 
 /*
 *  Encrypt a text message and return the total length of the ciphertext
@@ -178,11 +176,7 @@ unsigned int pkeCipher(ciphertext,exponent,modulus)
 *    called to encrypt the complete buffer (set of blocks).
 *
 */
-unsigned int pkeEncrypt(ciphertext,exponent,modulus,plaintext,length)
-  vli exponent,modulus;
-  unsigned char *ciphertext,*plaintext;
-  unsigned int length; {
-  
+unsigned int pkeEncrypt(unsigned char *ciphertext,vli exponent,vli modulus,unsigned char *plaintext,unsigned int length){
   unsigned char *in,*out,*end;
   unsigned int blocksize,len,inblocksize;
 
@@ -214,11 +208,7 @@ unsigned int pkeEncrypt(ciphertext,exponent,modulus,plaintext,length)
 *  Decrypt a cipher text buffer into plaintext (binary) and return the plaintext length.
 *
 */
-unsigned int pkeDecrypt(ciphertext,exponent,modulus,plaintext,length)
-  vli exponent,modulus;
-  unsigned char *ciphertext,*plaintext;
-  unsigned int length; {
-
+unsigned int pkeDecrypt(unsigned char *ciphertext,vli exponent,vli modulus,unsigned char *plaintext,unsigned int length){
   unsigned char *ct=ciphertext+1,*clastblock,*pt=plaintext,*pend;
   unsigned int cblocksize,pblocksize,part;
 
@@ -244,7 +234,7 @@ unsigned int pkeDecrypt(ciphertext,exponent,modulus,plaintext,length)
 /*
 *  Test the encryption and decryption routines for a given key.
 */    
-void pkeTestCipher(e,n,d) vli e,n,d; {
+void pkeTestCipher(vli e,vli n,vli d){
   unsigned char ciphertext[1024];
   unsigned int len,slen;
   unsigned char s[256],t[256];
@@ -281,7 +271,6 @@ void pkeTestCipher(e,n,d) vli e,n,d; {
 *  Routines to calculate encryption and decryption exponents using
 *  the Extended Euclid's Algorithm.
 *********************************************************************/  
-void pkegetk();
 /*
 *  Get decryption key d for given encryption key e and modulus m.
 *
@@ -292,7 +281,7 @@ void pkegetk();
 *    x is e
 *    y is m
 */ 
-void pkegetj(j,x,y) vli j,x,y; {
+void pkegetj(vli j,vli x,vli y){
   /* (xj-1)/y is an integer */
   /* j=(y/x)k+((y%x)k+1)/x */
   vli2048 f,k,r,p;
@@ -316,7 +305,7 @@ void pkegetj(j,x,y) vli j,x,y; {
   vliadd(j,f);            /* j=f*k+(y*k+1)/x; */  
   }
   
-void pkegetk(k,x,y) vli k,x,y; {
+void pkegetk(vli k,vli x,vli y){
   /* (xk+1)/y is an integer */ 
   /* (xk+1)=yj */
   /* xk=yj-1 */
@@ -346,7 +335,7 @@ void pkegetk(k,x,y) vli k,x,y; {
 /*
 *  Test encryption key on random vli numbers
 */  
-void pkeTestKey(c,e,n,d) int c; vli e,n,d; {  
+void pkeTestKey(int c,vli e,vli n,vli d){  
   vli2048 x,X;
   vliWord *cX,*cx,*ex;
   int i,l;

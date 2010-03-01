@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -35,11 +35,12 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2002/09/04 Ed Trettevik (split out in 0.4.1)
-* 2002/09/08 eat - version 0.4.1 A2
+* 2002-09-04 Ed Trettevik (split out in 0.4.1)
+* 2002-09-08 eat - version 0.4.1 A2
 *             1) The value pointer has been moved from NB_CELL to NB_OBJECT.
-* 2003/11/03 eat 0.5.5  Renamed a lot of functions and variables.
-* 2005/04/09 eat 0.6.2  API function definitions moved to nbapi.h
+* 2003-11-03 eat 0.5.5  Renamed a lot of functions and variables.
+* 2005-04-09 eat 0.6.2  API function definitions moved to nbapi.h
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 #ifndef _NB_CELL_H_
@@ -67,18 +68,29 @@ struct NB_CELL{            /* Function object header */
 typedef struct NB_CELL NB_Cell;
 typedef NB_Cell *nbCELL;
 
-void nbCellInit();
-void nbCellType();
-void nbCellTypeSub();
-void *nbCellNew();
+void nbCellInit(struct NB_STEM *stem);
+void nbCellType(
+  NB_Type *type,
+  void (*solve)(),
+  NB_Object * (*eval)(),
+  void (*enable)(),
+  void (*disable)());
+void nbCellTypeSub(
+  NB_Type *type,
+  int reg,
+  NB_Object *(*parse)(),
+  NB_Object *(*construct)(),
+  double (*evalDouble)(),
+  char *(*evalString)());
+void *nbCellNew(NB_Type *type,void **pool,int length);
 NB_Object *nbCellSolve_(NB_Cell *cell);
-NB_Object *nbCellCompute_();
+NB_Object *nbCellCompute_(NB_Cell *cell);
 void nbCellPublish(NB_Cell *pub);
 void nbCellShowSub(NB_Cell *cell);
 void nbCellShowImpact(NB_Cell *cell);
-void nbCellLevel();
+void nbCellLevel(NB_Cell *pub);
 void nbCellAlert(NB_Cell *cell);
-void nbCellReact();
+void nbCellReact(void);
 
 #else  // !NB_INTERNAL (exernal interface)
 

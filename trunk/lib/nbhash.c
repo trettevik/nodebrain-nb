@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -71,7 +71,8 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2002/08/31 Ed Trettevik (split out in 0.4.1)
+* 2002-08-31 Ed Trettevik (split out in 0.4.1)
+* 2010-02-28 eat 0.4.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -128,7 +129,7 @@ void printHash(struct HASH *hash,char *label,NB_Type *type){
 /*
 *  Hash destructor
 */
-void destroyHash(object) NB_Object object; {
+void destroyHash(NB_Object object){
   /* call dropObject for every object in the hash */
   }
  

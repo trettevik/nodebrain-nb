@@ -301,27 +301,28 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2001/07/08 Ed Trettevik (original prototype version introduced in 0.2.8)
+* 2001-07-08 Ed Trettevik (original prototype version introduced in 0.2.8)
 *             1) This code is a generalization of code previously imbedded
 *                in nodebrain.c
 *             2) split out from nbobject.h
-* 2002/08/20 eat - version 0.4.0
+* 2002-08-20 eat - version 0.4.0
 *             1) nbCellType now sets the object type alert method to
 *                nbCellAlert().  This was done to conform to a more general
 *                model for object alerting.
-* 2002/08/25 eat - version 0.4.0
+* 2002-08-25 eat - version 0.4.0
 *             1) moved MEMBER handling code to nblist.h
-* 2003/11/03 eat 0.5.5  Renamed functions and variables and fixed some bugs.
+* 2003-11-03 eat 0.5.5  Renamed functions and variables and fixed some bugs.
 *            1) nbCellDisable was disabling terms in error.
-* 2005/05/08 eat 0.6.2  Enabled an object to subscribe multiple times to a cell
+* 2005-05-08 eat 0.6.2  Enabled an object to subscribe multiple times to a cell
 *            It is silly to burden an object with worrying about how many times
 *            it has subscribed to a cell.  If an object subscribes to a cell
 *            multiple times, we now assume it has a good reason and will
 *            unsubscribe multiple times as well.  For example, addition (a+a)
 *            will subscribe to "a" twice and unsubscribe twice.
-* 2006/12/21 eat 0.6.6  Included loop protection in nbCellEnable() and nbCellLevel()
-* 2007/01/02 eat 0.6.6  Slight enhancement to loop protection in nbCellLevel()
-* 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2006-12-21 eat 0.6.6  Included loop protection in nbCellEnable() and nbCellLevel()
+* 2007-01-02 eat 0.6.6  Slight enhancement to loop protection in nbCellLevel()
+* 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -367,7 +368,7 @@ NB_Object *NB_OBJECT_TRUE;
 /*
 *  Initialization Cells 
 */
-void nbCellInit(){
+void nbCellInit(NB_Stem *stem){
   NB_OBJECT_TRUE=(NB_Object *)useReal((double)1);
   NB_OBJECT_TRUE->refcnt=(unsigned int)-1;         /* flag as perminent object */
   NB_OBJECT_FALSE=(NB_Object *)useReal((double)0);
@@ -394,7 +395,7 @@ void nbCellAlarmTrace(NB_Cell *cell){
   ticks=tms_times.tms_utime;
   cell->object.type->shim->alarm(cell);
   outPut("Shim trace Alarm %s(",cell->object.type->name);
-  printObject(cell);
+  printObject((NB_Object *)cell);
   outPut(") ");
   times(&tms_times);
   ticks=tms_times.tms_utime-ticks;
@@ -415,7 +416,7 @@ void nbCellAlertTrace(NB_Cell *cell){
   ticks=tms_times.tms_utime;
   cell->object.type->shim->alert(cell);
   outPut("Shim trace Alert %s(",cell->object.type->name);
-  printObject(cell);
+  printObject((NB_Object *)cell);
   outPut(") ");
   times(&tms_times);
   ticks=tms_times.tms_utime-ticks;
@@ -436,7 +437,7 @@ NB_Object *nbCellEvalTrace(NB_Cell *cell){
   ticks=tms_times.tms_utime;
   value=cell->object.type->shim->eval(cell);
   outPut("Shim trace Eval %s(",cell->object.type->name);
-  printObject(cell);
+  printObject((NB_Object *)cell);
   outPut(")=> ");
   printObject(value);
   times(&tms_times);
@@ -483,10 +484,12 @@ void nbCellType(NB_Type *type,void (*solve)(),NB_Object * (*eval)(),void (*enabl
 *     For example, a bunch of two parameter math functions
 *     can share some methods but need different eval sub
 *     methods.
+*
+*   reg=1 if the function is to be registered
 */
 void nbCellTypeSub(
   NB_Type *type,
-  int reg,                      /* 1 if the function is to be registered */
+  int reg,                      
   NB_Object *(*parse)(),
   NB_Object *(*construct)(),
   double (*evalDouble)(),
@@ -520,7 +523,7 @@ NB_Object *nbCellSolve_(NB_Cell *cell){
   if(trace || queryTrace) {
     if(trace) outMsg(0,'T',"nbCellSolve_() called");
     outPut("cell:");
-    printObject(cell);
+    printObject((NB_Object *)cell);
     outPut("\n");
     }
   if(trace) outMsg(0,'T',"nbCellSolve_() calling cell's \"solve\" method.");
@@ -528,7 +531,7 @@ NB_Object *nbCellSolve_(NB_Cell *cell){
   if(trace || queryTrace) {  
     if(trace) outMsg(0,'T',"nbCellSolve_() returning");
     outPut("cell: ");
-    printObject(cell);
+    printObject((NB_Object *)cell);
     outPut("\nSolution: ");
     printObject(cell->object.value);   
     outPut("\n");
@@ -584,10 +587,10 @@ void nbCellEnable(NB_Cell *pub,NB_Cell *sub){
   if(trace){
     outMsg(0,'T',"nbCellEnable() called - linking subscriber");
     outPut("subscriber: ");
-    printObject(sub);
+    printObject((NB_Object *)sub);
     outPut("\n"); 
     outPut("publisher : ");
-    printObject(pub);
+    printObject((NB_Object *)pub);
     outPut(" = ");
     printObject(pub->object.value);
     outPut("\n");
@@ -617,7 +620,7 @@ void nbCellEnable(NB_Cell *pub,NB_Cell *sub){
   if(trace){
     outMsg(0,'T',"nbCellEnable() returning");
     outPut("Function: ");
-    printObject(pub);
+    printObject((NB_Object *)pub);
     outPut("\nResult:");
     printObject(pub->object.value);
     outPut("\n"); 
@@ -636,7 +639,7 @@ void nbCellDisable(NB_Cell *pub,NB_Cell *sub){
   //NB_Link **listP;
   if(trace){
     outMsg(0,'T',"nbCellDisable() called");
-    printObject(pub);
+    printObject((NB_Object *)pub);
     outPut("\n");
     }
   if(pub->object.value==(NB_Object *)pub) return; /* static object */
@@ -673,7 +676,7 @@ void nbCellPublish(NB_Cell *pub){
   NB_TreeNode *treeNode;
   if(trace){
     outMsg(0,'T',"nbCellPublish() called");
-    printObject(pub);
+    printObject((NB_Object *)pub);
     outPut("\n");
     }
   if(pub->object.value==(NB_Object *)pub) return; /* static object */
@@ -787,7 +790,7 @@ void nbCellShowImpact(NB_Cell *cell){
             if(level<=v) outMsg(0,'L',"Cell level error in following cell.");
             else outMsg(0,'L',"Cell level is too high to continue up.");
             outPut("[%d]: ",level);
-            printObject(cell->object);
+            printObject((NB_Object *)cell);
             outPut("\n");
             }
           NB_TREE_ITERATE_NEXT(treeIterator,treeNode)
@@ -847,7 +850,7 @@ void nbCellAlert(NB_Cell *sub){
 * by the values of "something" we wouldn't have to test them all.
 * Some method of bounding the change may be appropriate.
 */
-void nbCellReact(){
+void nbCellReact(void){
   NB_TreeIterator treeIterator;
   NB_TreeNode *treeNode,**treeNodeP,*freeNode;
   NB_Cell *cell;
@@ -861,7 +864,7 @@ void nbCellReact(){
       if(trace){
         outMsg(0,'T',"nbCellReact() calling object's eval method."); 
         outPut("Function:");
-        printObject(cell);
+        printObject((NB_Object *)cell);
         outPut("\n");
         }
       value=cell->object.type->eval(cell);
@@ -945,7 +948,7 @@ void nbCellPub(NB_Cell *context,NB_Cell *cell){
 void nbCellShow(NB_Cell *context,NB_Cell *cell){
   NB_Term *addrContextSave=addrContext;
   addrContext=(NB_Term *)context;
-  printObject(cell);
+  printObject((NB_Object *)cell);
   addrContext=addrContextSave;
   }
 

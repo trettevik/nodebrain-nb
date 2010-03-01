@@ -95,7 +95,7 @@ int nbpSetIdentity(NB_PeerKey *peerKey,char *key){
   if(len<1 || *cursor!='.') part=1;
   else{
     *cursor=0;
-    vligetx(peerKey->exponent,value);
+    vligetx(peerKey->exponent,(unsigned char *)value);
     *cursor='.';
     value=cursor+1;
     len=strspn(value,"0123456789abcdef");
@@ -103,7 +103,7 @@ int nbpSetIdentity(NB_PeerKey *peerKey,char *key){
     if(len<1 || *cursor!='.') part=2;
     else{
       *cursor=0;
-      vligetx(peerKey->modulus,value);
+      vligetx(peerKey->modulus,(unsigned char *)value);
       *cursor='.';
       value=cursor+1;
       len=strspn(value,"0123456789abcdef");
@@ -111,7 +111,7 @@ int nbpSetIdentity(NB_PeerKey *peerKey,char *key){
       if(len<1 || *cursor!='.') part=3;  
       else{
         *cursor=0;
-        vligetx(peerKey->private,value);
+        vligetx(peerKey->private,(unsigned char *)value);
         *cursor='.';
         value=cursor+1;
         len=strspn(value,"0123456789");

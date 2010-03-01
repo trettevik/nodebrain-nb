@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -52,26 +52,26 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2002/09/30 Ed Trettevik (original prototype version introduced in 0.4.1)
+* 2002-09-30 Ed Trettevik (original prototype version introduced in 0.4.1)
 *
-* 2003/03/08 eat 0.5.1  Recognize "type" as replacement for "protocol".
+* 2003-03-08 eat 0.5.1  Recognize "type" as replacement for "protocol".
 *            Still recognize "protocol" for old code.
 *
-* 2003/03/08 eat 0.5.1  Recognize "interface" and "command" as "address".
+* 2003-03-08 eat 0.5.1  Recognize "interface" and "command" as "address".
 *            Different parameter names go with different listener types.
 *
-* 2003/03/08 eat 0.5.1  Implemented LOG listener to conform to documentation.
+* 2003-03-08 eat 0.5.1  Implemented LOG listener to conform to documentation.
 *
-* 2003/03/08 eat 0.5.1  Included a symbolic context for a listener.
+* 2003-03-08 eat 0.5.1  Included a symbolic context for a listener.
 *            For now this is only used with translators.  It enables a
 *            listener to maintain independent state information.
 *
-* 2003/05/22 eat 0.5.3  Included closeListeners() function for spawned processes
-* 2003/10/13 eat 0.5.5  Set clientIdentity before alerting listener
-* 2004/04/13 eat 0.6.0  nbListenerAdd/Remove/Start/Stop() added
-* 2005/04/25 eat 0.6.2  nbListenerEnableOnDaemon() added
-* 2005/05/27 eat 0.6.3  changed port assignment to (unsigned short) for cygwin
-* 2005/12/18 eat 0.6.4  Started converting to "Medulla" interface for managing I/O
+* 2003-05-22 eat 0.5.3  Included closeListeners() function for spawned processes
+* 2003-10-13 eat 0.5.5  Set clientIdentity before alerting listener
+* 2004-04-13 eat 0.6.0  nbListenerAdd/Remove/Start/Stop() added
+* 2005-04-25 eat 0.6.2  nbListenerEnableOnDaemon() added
+* 2005-05-27 eat 0.6.3  changed port assignment to (unsigned short) for cygwin
+* 2005-12-18 eat 0.6.4  Started converting to "Medulla" interface for managing I/O
 *            The strategy is to start using the medulla interface as a layer
 *            below the "listener" interface.  This enables skill modules to use
 *            the medulla interface directly without using the listener interface.
@@ -81,9 +81,10 @@
 *
 *            As a first step, we will modify listener functions to call
 *            medulla functions.
-* 2008/03/09 eat 0.7.0  Removed old listener stuff
+* 2008/03-09 eat 0.7.0  Removed old listener stuff
 * 2008-11-11 eat 0.7.3  Changed failure exit code to NB_EXITCODE_FAIL
-* 2010/01/02 eat 0.7.7  Included type to enable separate read and write listeners
+* 2010-01-02 eat 0.7.7  Included type to enable separate read and write listeners
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"

@@ -136,6 +136,7 @@
 * 2004/10/06 eat 0.6.1  Conditionals for FreeBSD, OpenBSD, and NetBSD
 * 2008-11-11 eat 0.7.3  Changed failure exit code to NB_EXITCODE_FAIL
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -158,7 +159,7 @@
 *  Returns: -1 - error, 0 - busy, 1 - lock obtained or released
 */
 #if defined(WIN32)
-int nbQueueLock(file,option,type) HANDLE file; int option; int type; {
+int nbQueueLock(HANDLE file,int option,int type){
   OVERLAPPED olap;
   olap.Offset=type;
   olap.OffsetHigh=0;
@@ -171,7 +172,7 @@ int nbQueueLock(file,option,type) HANDLE file; int option; int type; {
   return(1);
   }
 #else
-int nbQueueLock(file,option,type) int file; int option; int type;{
+int nbQueueLock(int file,int option,int type){
   struct flock lock;
 
   lock.l_type=F_WRLCK;
@@ -426,7 +427,7 @@ int nbQueueGetNewFileName(char *qname,char *directory,int option,char type){
 *
 *    00000000000.000000.00000%x  00000000000.000000.00000.x
 */
-void nbQueueCommit(filename) char *filename;{
+void nbQueueCommit(char *filename){
   char *cursor,newname[512];
 
   strcpy(newname,filename);

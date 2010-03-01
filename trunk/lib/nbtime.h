@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -33,11 +33,15 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2003/03/15 eat 0.5.1  Created to conform to new make file
+* 2003-03-15 eat 0.5.1  Created to conform to new make file
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #ifndef _NBTIME_H_
 #define _NBTIME_H_       /* never again */
+
+#include <nbstem.h>
+
 extern long maxtime;
 /*
 *  Time Condition Definition
@@ -123,14 +127,14 @@ struct tcParm{
   };
 
 tc tcParse(NB_Cell *context,char **source,char *msg);
-tcq tcQueueNew();
-long tcQueueTrue();
-long tcQueueFalse();
+tcq tcQueueNew(tc tcdef,long begin,long end);
+long tcQueueTrue(tcq queue,long begin,long end);
+long tcQueueFalse(tcq queue);
 
-void tcPrintSeg();
-long tcTime();
+void tcPrintSeg(long start,long stop,char *label);
+long tcTime(void);
 
-void nbTimeInit();
+void nbTimeInit(NB_Stem *stem);
 NB_Term *nbTimeDeclareCalendar(NB_Cell *context,char *ident,char **source,char *msg);
 NB_Term *nbTimeLocateCalendar(char *ident);
 

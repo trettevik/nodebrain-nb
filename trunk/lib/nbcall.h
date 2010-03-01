@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -33,9 +33,15 @@
 *
 *    Date     Name/Change
 * ----------  ---------------------------------------------------------------
-* 2002/09/07  Ed Trettevik (original prototype)
+* 2002-09-07  Ed Trettevik (original prototype)
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning message. (gcc 4.5.0)
 *============================================================================
 */
+#ifndef _NB_CALL_H_
+#define _NB_CALL_H_
+
+#include <nbstem.h>
+
 /* 
 * NOTE: 
 *
@@ -51,4 +57,6 @@ struct CALL{                /* Call cell - one or two operands */
   };
 
 extern struct TYPE *callTypeMod;
-void initCall();
+void initCall(NB_Stem *stem);
+
+#endif

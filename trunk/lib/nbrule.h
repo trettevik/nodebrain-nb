@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -33,16 +33,19 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2002/09/19 Ed Trettevik (split out in 0.4.1)
-* 2003/10/31 eat 0.5.5  Started modifications to support rule procedures {...}
-* 2004/09/25 eat 0.6.1  removed run list and added status
-* 2005/05/15 eat 0.6.3  changed priority to signed char - not default on some platforms
+* 2002-09-19 Ed Trettevik (split out in 0.4.1)
+* 2003-10-31 eat 0.5.5  Started modifications to support rule procedures {...}
+* 2004-09-25 eat 0.6.1  removed run list and added status
+* 2005-05-15 eat 0.6.3  changed priority to signed char - not default on some platforms
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #ifndef _NB_RULE_H_
 #define _NB_RULE_H_
 
 #if defined(NB_INTERNAL)
+
+#include <nbstem.h>
 
 // the ACTION structure may be simplified by converting all rules to the NB_RULE structure 
 // We need to keep parts of it for the nbAction() API function
@@ -207,7 +210,7 @@ extern NB_Rule *nb_RuleReady;  /* Ready rule list - ready to take action */
 
 /***********************************************/
 
-void       nbRuleInit();
+void       nbRuleInit(NB_Stem *stem);
 void       nbPlanPrint(struct NB_PLAN *plan);
 
 
@@ -217,7 +220,7 @@ void       nbPlanTest(char *source);
 
 void       nbRuleShowExpr(struct NB_RULE *thread);
 void       nbRuleShowItem(struct NB_RULE *thread);
-void       nbRuleShowAll();
+void       nbRuleShowAll(void);
 NB_Rule   **nbRuleFind(NB_Rule *thread);
 NB_Rule   *nbRuleParse(NB_Cell *context,int opt,char **source,char *msg);
 NB_Plan   *nbRuleParsePlan(NB_Cell *context,int opt,char **source,char *msg);
@@ -227,9 +230,9 @@ NB_Object *nbRuleEval(NB_Rule *thread);
 NB_Object *nbRuleStep(NB_Rule *thread);
 NB_Rule   *nbRuleExec(NB_Cell *context,char *source);
 
-void       nbRuleDouse();
+void       nbRuleDouse(void);
 
-void       nbRuleSolve();
+void       nbRuleSolve(NB_Term *term);
 
 bfi tcPlan(long begin,long end,NB_Plan *plan,NB_Rule *thread);
 
@@ -256,6 +259,6 @@ extern void nbAction(nbCELL context,nbSET assertion,char *cmd,int option);
 #if defined(WIN32)
 _declspec (dllexport)
 #endif
-extern void nbRuleReact();
+extern void nbRuleReact(void);
 
 #endif

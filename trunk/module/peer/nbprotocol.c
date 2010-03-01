@@ -211,16 +211,16 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2001/02/10 Ed Trettevik (prototype version extracted from nodebrain.c)
-* 2001/03/06 eat - version 0.2.4
+* 2001-02-10 Ed Trettevik (prototype version extracted from nodebrain.c)
+* 2001-03-06 eat - version 0.2.4
 *             1) Fixed bug in secret key translation to and from network byte
 *                order.
 *             2) Include checksum in authentication request packet.
-* 2001/02/18 eat - version 0.3.0
+* 2001-02-18 eat - version 0.3.0
 *             1) Started to move the protocol code from nodebrain.c into this
 *                header to better organize it.  Only the client part has been
 *                completely moved.
-* 2002/05/04 eat - version 0.3.2
+* 2002-05-04 eat - version 0.3.2
 *             1) Including support for a "skull" session.  When a skull session
 *                is requested, the listener spawns a new nodebrain process to
 *                handle the session.  A skull is "empty" unless the client
@@ -231,23 +231,23 @@
 *                session is upgraded.  When all servers are at 0.3.2 or later,
 *                clients can request "1" in the connection request and special
 *                support for version "0" can be dropped.
-* 2002/05/13 eat - version 0.3.2 A4
+* 2002-05-13 eat - version 0.3.2 A4
 *             1) Included prototype nbpCopy function and supporting
 *                PUTFILE transaction.
-* 2002/05/14 eat - version 0.3.2 A4
+* 2002-05-14 eat - version 0.3.2 A4
 *             1) Included ASCII and BINARY options for nbpCopy
 *
-* 2002/10/01 eat - version 0.4.1 A6
+* 2002-10-01 eat - version 0.4.1 A6
 *             1) We have introduced the notion of listener objects.  Methods
 *                have been included at the bottom of this file to support NBP
 *                listeners.  This general scheme allows for multiple NBP listeners
 *                (i.e. multiple TCP ports) as well as FIFO, NBQ and other types
 *                of listeners.   See nblistener.c for more info.
-* 2002/11/14 eat - version 0.4.2 B1
+* 2002-11-14 eat - version 0.4.2 B1
 *             1) Revised options for transmitting files to queues.
-* 2002/11/19 eat - version 0.4.2 B2
+* 2002-11-19 eat - version 0.4.2 B2
 *             1) Changed NBP$* to NBP_* to compile MVS/USS
-* 2003/01/18 eat - version 0.4.4 B2
+* 2003-01-18 eat - version 0.4.4 B2
 *             1) Modified nbqServePutFile() to use nbQueueGetFile() and the existing
 *                call to nbQueueCommit().  This simplifies the processing of a
 *                message queue by non-nb programs (like Perl scripts) because
@@ -260,6 +260,7 @@
 * 2008-03-25 eat 0.7.0  Upgraded bootstrap and minimum version to 1
 * 2008-11-11 eat 0.7.3  Changed failure exit code to NB_EXITCODE_FAIL
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -501,7 +502,7 @@ unsigned int comAuthEncode(
   skeKeyData(keylen,keydata);  /* generate random Rijndael key data */  
   for(k=0;k<4;k++) secretkey[k]=htonl(cipher[k]);         /* pass in network byte order */
   for(k=0;k<keylen;k++) secretkey[k+4]=htonl(keydata[k]); /* pass in network byte order */
-  bufcur+=pkeEncrypt(bufcur,identity->exponent,identity->modulus,secretkey,(k+4)*4);
+  bufcur+=pkeEncrypt(bufcur,identity->exponent,identity->modulus,(unsigned char *)&secretkey[0],(k+4)*4);
   nbClockToBuffer((char *)timeStamp);
   sprintf((char *)randstr,"%5.5d",rand());        /* generate time stamp */
   *(timeStamp+4)=*(randstr+0);
@@ -557,7 +558,7 @@ unsigned int comAuthDecode(buffer,cipher,key,timeStamp,text,identity,blocklen)
 
   if((unsigned)(*bufcur+16)>blocklen) return(0);      /* doesn't leave room for any secret text */  
   blocklen-=*bufcur;                        /* length of secret_text */
-  len=pkeDecrypt(bufcur,identity->private,identity->modulus,secretkey,96);
+  len=pkeDecrypt(bufcur,identity->private,identity->modulus,(unsigned char *)&secretkey[0],96);
   bufcur+=*bufcur;
   if(len<20 || (len & 0x03)!=0) return(0);  /* key length < 20 or doesn't divid by 4 */
   if((blocklen & 0x0f)!=0) return(0);       /* secret text must divid by 16 */
@@ -631,11 +632,7 @@ int nbpFreeSessionHandle(struct NBP_SESSION *session){
 *
 *    This should be revised to use a session handle instead of a channel handle
 */
-int nbpMsg(session,trancode,msgcode,text,len)
-  struct NBP_SESSION *session;
-  char trancode,msgcode,*text;
-  int len;{
-
+int nbpMsg(struct NBP_SESSION *session,char trancode,char msgcode,char *text,int len){
   struct CHANNEL *channel=session->channel;
   struct NBP_MESSAGE *msgbuf;
   char buffer[NB_BUFSIZE];
@@ -943,8 +940,7 @@ int nbpPut(struct NBP_SESSION *session,char *command){
   return(0);
   }
 
-void nbpStop(session)
-  struct NBP_SESSION *session; {
+void nbpStop(struct NBP_SESSION *session){
   chstop(session->channel);
   }         
 
@@ -985,11 +981,7 @@ int nbpSend(int nbp,struct NB_TERM *brainTerm,char *context,char *command){
 *  Begin a transaction with a peer
 *    Must be called by a client on an open session in READY state
 */
-int nbpBegin(session,trancode,text)
-  struct NBP_SESSION *session;
-  char trancode;
-  char *text; {
-
+int nbpBegin(struct NBP_SESSION *session,char trancode,char *text){
   int len;
   struct NBP_MESSAGE *msgbuf=(struct NBP_MESSAGE *)session->buffer;
 
@@ -1017,12 +1009,7 @@ int nbpBegin(session,trancode,text)
 /*
 *  nbpOpenTran - Open a session and begin a transaction
 */
-struct NBP_SESSION *nbpOpenTran(nbp,brainTerm,trancode,text)
-  char nbp;
-  NB_Term *brainTerm;
-  char trancode;
-  char *text; {
-
+struct NBP_SESSION *nbpOpenTran(char nbp,NB_Term *brainTerm,char trancode,char *text){
   struct NBP_SESSION *session;
 
   if((session=nbpOpen(nbp,brainTerm,"@"))==NULL){   /* request skull brain */
@@ -1041,10 +1028,7 @@ struct NBP_SESSION *nbpOpenTran(nbp,brainTerm,trancode,text)
 
 /* End a transaction without closing the session 
 */
-int nbpEnd(session,trancode)
-  struct NBP_SESSION *session;
-  char trancode; {
-
+int nbpEnd(struct NBP_SESSION *session,char trancode){
   int len;
   struct NBP_MESSAGE *msgbuf=(struct NBP_MESSAGE *)session->buffer;
 
@@ -1072,10 +1056,7 @@ int nbpEnd(session,trancode)
   return(0);
   }
 
-int nbpCloseTran(session,trancode)
-  struct NBP_SESSION *session;
-  char trancode; {
-
+int nbpCloseTran(struct NBP_SESSION *session,char trancode){
   int len;
   struct NBP_MESSAGE *msgbuf=(struct NBP_MESSAGE *)session->buffer;
 
@@ -1440,10 +1421,7 @@ void nbpServeExecute(struct LISTENER *ear,struct NBP_SESSION *session,struct NBP
 *     t - text
 *     p - package
 */
-void nbpServePutFile(session,msgbuf)
-  struct NBP_SESSION *session;
-  struct NBP_MESSAGE *msgbuf; {
- 
+void nbpServePutFile(struct NBP_SESSION *session,struct NBP_MESSAGE *msgbuf){
   FILE *file;
   int len;
   size_t size;
@@ -1528,10 +1506,7 @@ void nbpServePutFile(session,msgbuf)
 *     t - text
 *     p - package
 */
-void nbpServeGetFile(session,msgbuf)
-  struct NBP_SESSION *session;
-  struct NBP_MESSAGE *msgbuf; {
-
+void nbpServeGetFile(struct NBP_SESSION *session,struct NBP_MESSAGE *msgbuf){
   FILE *file;
   int len=1;
   struct CHANNEL *channel=session->channel;

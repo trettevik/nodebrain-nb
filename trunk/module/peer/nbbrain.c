@@ -40,8 +40,8 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2002/10/06 Ed Trettevik (split out from nb.c in 0.4.1)
-* 2002/10/21 eat - version 0.4.1 A8
+* 2002-10-06 Ed Trettevik (split out from nb.c in 0.4.1)
+* 2002-10-21 eat - version 0.4.1 A8
 *            1) Included skullTarget brain name.  This is passed to a peer's
 *               skull when we are copying files to a queue.  The target is
 *               optional in the syntax below.  For compatibility with existing
@@ -49,42 +49,44 @@
 *
 *               declare <term> brain id@host:port(queue,target);
 *
-* 2002/12/09 eat - version 0.4.3 B3
+* 2002-12-09 eat - version 0.4.3 B3
 *            1) Added queue management parameters (qsec,qfsize,qsize)
 *
 *               declare <term> brain <id>@<host>:<port><queue_definition>
 *
 *               <queue_definition> :=  (queue(qsec,qfsize,qsize),target)
 *
-* 2003/10/06 eat 0.5.5  Included support for holding open sessions
+* 2003-10-06 eat 0.5.5  Included support for holding open sessions
 *            declare <term> brain <id>@<host>:<port>{holdtime}<queue_def>;
 *            This is experimental and will be finished later.
 *
-* 2006/05/25 eat 0.6.6  Included support for local domain socket paths
+* 2006-05-25 eat 0.6.6  Included support for local domain socket paths
 *            declare <term> brain <id>@"<socket_path>"{holdtime}<queue_def>;
 *            This is experimental.
 *
-* 2007/07/01 eat 0.6.8  Modified to support local domain socket without quotes
+* 2007-07-01 eat 0.6.8  Modified to support local domain socket without quotes
 *            declare <term> brain <id>@socket_path{holdtime}<queue_def>;
 *            This support brain specifications as parameters to NBP nodes
 *            which are replacing brain declarations.
 *
-* 2007/03/07 eat 0.6.9  Included support for portrayed identity override
+* 2007-03-07 eat 0.6.9  Included support for portrayed identity override
 *            declare <term> brain [<myid>~]<id>@...
 *            When myid is specified, it overrides the identity set with PORTRAY command
-* 2009/07/01 eat 0.7.6  Using ip address as hostname when gethostbyaddr() doesn't resolve it
+* 2009-07-01 eat 0.7.6  Using ip address as hostname when gethostbyaddr() doesn't resolve it
 *            This fixes a defect where hostname and ip address were defaulting
 *            to localhost and 127.0.0.1 when hostname was not resolved.
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 #include <nbi.h>
 #include "nbvli.h"
 #include "nbprotokey.h"
 #include "nbbrain.h"
+#include "nbchannel.h"
 
-char *chgetaddr();     /* in nbchannel.c */
-char *chgetname();     /* in nbchannel.c */
+//char *chgetaddr();     /* in nbchannel.c */
+//char *chgetname();     /* in nbchannel.c */
 
 NB_Term   *brainC;         /* brain context */
 //struct HASH   *brainH;         /* brain hash */
@@ -95,20 +97,6 @@ struct BRAIN *nb_BrainFree;
 
 /*
 *  Brain object routines 
-*/
-/*
-*  Initialize the schedule hash
-*    Must be called before newSched
-*/
-/*
-void nbBrainInit(NB_Stem *stem,long n){
-  nbLogMsgI(0,'T',"nbBrainInit() called");
-  nb_BrainFree=NULL;
-  //brainH=newHash(313);     // initialize brain hash 
-  brainC=nbTermNew(NULL,"brain",nbNodeNew());
-  //brainC->terms=(NB_Term *)brainH;
-  nb_BrainType=newType(stem,"brain",NULL,0,printBrain,destroyBrain);
-  }
 */
 
 void printBrain(struct BRAIN *brain){

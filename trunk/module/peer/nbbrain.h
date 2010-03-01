@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -35,13 +35,14 @@
 *
 *    Date     Name/Change
 * ---------- -----------------------------------------------------------------
-* 2002/10/06 Ed Trettevik (code moved here in version 0.4.1 A6)
-* 2002/12/09 eat - version 0.4.3 B3
+* 2002-10-06 Ed Trettevik (code moved here in version 0.4.1 A6)
+* 2002-12-09 eat - version 0.4.3 B3
 *            1) added queue management parameters (qsec,qfsize,qsize)
-* 2003/10/06 eat 0.5.5 Added session handle to BRAIN structure.
+* 2003-10-06 eat 0.5.5 Added session handle to BRAIN structure.
 *            Intended for brains that hold a session open.
-* 2008/03/07 eat 0.6.9 Added myId and myIdentity to BRAIN.
-* 2009/04/19 eat 0.7.5 Added context to support copy to queue
+* 2008-03-07 eat 0.6.9 Added myId and myIdentity to BRAIN.
+* 2009-04-19 eat 0.7.5 Added context to support copy to queue
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 #ifndef _NB_BRAIN_H_
@@ -82,11 +83,10 @@ extern struct HASH *brainH;        /* brain hash */
 
 /* methods */
 
-void nbBrainInit();
-void printBrain();
-void destroyBrain();
+void printBrain(struct BRAIN *brain);
+void destroyBrain(struct BRAIN *brain);
 
-NB_Term *getBrainTerm();
+NB_Term *getBrainTerm(char *ident);
 
 #if defined(WIN32)
 _declspec (dllexport)

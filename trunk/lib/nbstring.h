@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -33,9 +33,15 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2002/08/31 Ed Trettevik (split out in version 0.4.1)
+* 2002-08-31 Ed Trettevik (split out in version 0.4.1)
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
+#ifndef _NBSTRING_H_
+#define _NBSTRING_H_       /* never again */
+
+#include <nbstem.h>
+
 struct STRING{
   struct NB_OBJECT object;    /* object header */
   char value[1];              /* length determined when created */
@@ -47,10 +53,12 @@ extern struct HASH *strH;
 extern NB_Type *strType;
 extern struct STRING *stringFree;  /* this pointer should remain null */
 
-void *hashStr();
-void initString();
-void printStringRaw();
-void printString();
-void printStringAll();
-void destroyString();
-struct STRING *useString();
+void *hashStr(struct HASH *hash,char *cursor);
+void initString(NB_Stem *stem);
+void printStringRaw(struct STRING *string);
+void printString(struct STRING *string);
+void printStringAll(void);
+void destroyString(struct STRING *str);
+struct STRING *useString(char *value);
+
+#endif

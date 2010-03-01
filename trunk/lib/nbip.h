@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -38,9 +38,10 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2005/03/26 Ed Trettevik (original prototype 0.6.2)
-* 2005/04/08 eat 0.6.2  Moved API functions definitions to nbapi.h
-* 2008/03/24 eat 0.7.0  Started IP_CHANNEL structure as alternative to NBP CHANNEL
+* 2005-03-26 Ed Trettevik (original prototype 0.6.2)
+* 2005-04-08 eat 0.6.2  Moved API functions definitions to nbapi.h
+* 2008-03-24 eat 0.7.0  Started IP_CHANNEL structure as alternative to NBP CHANNEL
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #ifndef _NB_IP_H_
@@ -101,7 +102,7 @@ extern int nbIpGetSocketAddrString(int socket,char *ipaddr);
 #if defined(WIN32)
 _declspec (dllexport)
 #endif
-extern struct IP_CHANNEL *nbIpAlloc();
+extern struct IP_CHANNEL *nbIpAlloc(void);
 
 #if defined(WIN32)
 _declspec (dllexport)

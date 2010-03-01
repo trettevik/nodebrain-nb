@@ -667,14 +667,14 @@ moddiff:
 #
 install-exec-hook:
 	minor=`echo $(VERSION) | sed 's/\([0-9]*.[0-9]*\).[^ ]*/\1/'`; \
-	if test ! -d "@libdir@/nb/$$minor"; then mkdir -p @libdir@/nb/$$minor; fi; \
+	if test ! -d "${DESTDIR}@libdir@/nb/$$minor"; then mkdir -p ${DESTDIR}@libdir@/nb/$$minor; fi; \
 	ext=`grep LT_MODULE_EXT config.h | sed 's/[^"]*"\([^"]*\)"/\1/'`; \
 	major=`echo $$minor | sed 's/\([0-9]*\).[^ ]*/\1/'`; \
 	list="$(SUBDIRS)"; \
 	for subdir in $$list; do \
 	  module=`ls -al $$subdir/.libs/nb_$$subdir$$ext | sed 's/.*nb_[^ ]*.*\(nb\_.*\)/\1/'`; \
-	  test -h "@libdir@/nb/$$minor/nb_$$subdir$$ext.$$major" && rm @libdir@/nb/$$minor/nb_$$subdir$$ext.$$major; \
-	  ln -s ../$$module @libdir@/nb/$$minor/nb_$$subdir$$ext.$$major; \
+	  test -h "${DESTDIR}@libdir@/nb/$$minor/nb_$$subdir$$ext.$$major" && rm ${DESTDIR}@libdir@/nb/$$minor/nb_$$subdir$$ext.$$major; \
+	  ln -s ../$$module ${DESTDIR}@libdir@/nb/$$minor/nb_$$subdir$$ext.$$major; \
 	  done
 
 uninstall-local:

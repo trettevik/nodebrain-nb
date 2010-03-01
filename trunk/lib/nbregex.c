@@ -65,6 +65,7 @@
 * 2008-10-06 eat 0.7.2  Included support for regex compile flags
 * 2008-11-06 eat 0.7.3  Converted to PCRE's native API
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *===============================================================================
 */
 #include <nbi.h>
@@ -117,7 +118,7 @@ struct REGEXP *newRegexp(char *expression,int flags){
     outMsg(0,'E',"Regular expression syntax error in \"%s\".",expression);
     return(NULL);
     }
-  re=newObject(regexpType,&freeRegexp,sizeof(struct REGEXP));
+  re=newObject(regexpType,(void **)&freeRegexp,sizeof(struct REGEXP));
   re->string=grabObject(string);
   re->flags=flags;
   re->re=preg;
@@ -135,8 +136,8 @@ struct REGEXP *newRegexp(char *expression,int flags){
 /*
 *  Print a regular expression
 */
-void printRegexp(regexp) struct REGEXP *regexp;{
-  printObject(regexp->string);
+void printRegexp(struct REGEXP *regexp){
+  printObject((NB_Object *)regexp->string);
   }
 
 /*

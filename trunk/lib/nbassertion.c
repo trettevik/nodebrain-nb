@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -49,11 +49,12 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2002/09/07 Ed Trettevik (original version introduced in 0.4.1)
-* 2004/08/28 eat 0.6.1  object grab/drop modified for compute method change
-* 2004/09/25 eat 0.6.1  node assertions limited to owner
-* 2005/04/27 eat 0.6.2  included alert method support for cache module
-* 2007/06/26 eat 0.6.8  Changed "expert" terminology to "node".
+* 2002-09-07 Ed Trettevik (original version introduced in 0.4.1)
+* 2004-08-28 eat 0.6.1  object grab/drop modified for compute method change
+* 2004-09-25 eat 0.6.1  node assertions limited to owner
+* 2005-04-27 eat 0.6.2  included alert method support for cache module
+* 2007-06-26 eat 0.6.8  Changed "expert" terminology to "node".
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #include <nbi.h>

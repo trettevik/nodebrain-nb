@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 ## =============================================================================
 ##
-## Copyright (C) 1998-2009 The Boeing Company
+## Copyright (C) 1998-2010 The Boeing Company
 ##                         Ed Trettevik <eat@nodebrain.org>
 ##
 ## NodeBrain is free software; you can redistribute it and/or modify
@@ -80,9 +80,10 @@
 ## Date       Name/Change
 ## ---------- -----------------------------------------------------------------
 ## 2008/10/18 Ed Trettevik (version 0.7.2)
+## 2010/02/27 eat 0.7.9  Included DESTDIR
 ##=============================================================================
 
-nblibdir = ${libdir}/nb
+nblibdir = @libdir@/nb
 include Makefile.nm
 
 EXTRA_DIST += \

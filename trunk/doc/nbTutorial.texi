@@ -3,6 +3,10 @@
 @setfilename nbTutorial.info
 @include version-nbTutorial.texi
 @settitle NodeBrain Tutorial
+@dircategory NodeBrain Agent
+@direntry
+* Tutorial: (nodebrain).       NodeBrain Tutorial
+@end direntry
 @c %**end of header
 
 @finalout

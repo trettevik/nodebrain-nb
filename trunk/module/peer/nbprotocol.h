@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -34,16 +34,16 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2001/02/10 Ed Trettevik (prototype version extracted from nodebrain.c)
-* 2001/03/06 eat - version 0.2.4
+* 2001-02-10 Ed Trettevik (prototype version extracted from nodebrain.c)
+* 2001-03-06 eat - version 0.2.4
 *             1) Fixed bug in secret key translation to and from network byte
 *                order.
 *             2) Include checksum in authentication request packet.
-* 2001/02/18 eat - version 0.3.0
+* 2001-02-18 eat - version 0.3.0
 *             1) Started to move the protocol code from nodebrain.c into this
 *                header to better organize it.  Only the client part has been
 *                completely moved.
-* 2002/05/04 eat - version 0.3.2
+* 2002-05-04 eat - version 0.3.2
 *             1) Including support for a "skull" session.  When a skull session
 *                is requested, the listener spawns a new nodebrain process to
 *                handle the session.  A skull is "empty" unless the client
@@ -54,16 +54,17 @@
 *                session is upgraded.  When all servers are at 0.3.2 or later,
 *                clients can request "1" in the connection request and special
 *                support for version "0" can be dropped.
-* 2002/05/13 eat - version 0.3.2 A4
+* 2002-05-13 eat - version 0.3.2 A4
 *             1) Included prototype nbpCopy function and supporting
 *                PUTFILE transaction.
-* 2002/05/14 eat - version 0.3.2 A4
+* 2002-05-14 eat - version 0.3.2 A4
 *             1) Included ASCII and BINARY options for nbpCopy
-* 2002/11/19 eat - version 0.4.2 B2
+* 2002-11-19 eat - version 0.4.2 B2
 *             1) changed NBP$* to NBP_* to compile on MVS/USS
 *
-* 2003/03/15 eat 0.5.1  Modified to work with new make file
-* 2008/03/24 eat 0.7.0  Added includes for supporting headers removed from nb.h
+* 2003-03-15 eat 0.5.1  Modified to work with new make file
+* 2008-03-24 eat 0.7.0  Added includes for supporting headers removed from nb.h
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbske.h"
@@ -210,31 +211,22 @@ extern struct LISTENER *listenerFree; /* free listener list */
 
 /* functions */
 
-int nbpMsg();
-struct NBP_SESSION *nbpOpen();
-int nbpClose();
-int nbpPut(); 
-void nbpStop();
+int nbpMsg(struct NBP_SESSION *session,char trancode,char msgcode,char *text,int len);
+struct NBP_SESSION *nbpOpen(int nbp,NB_Term *peer,char *context);
+int nbpClose(struct NBP_SESSION *session);
+int nbpPut(struct NBP_SESSION *session,char *command); 
+void nbpStop(struct NBP_SESSION *session);
 
-int nbpBegin();
-int nbpEnd();
-struct NBP_SESSION *nbpOpenTran();
-int nbpCloseTran();
+int nbpBegin(struct NBP_SESSION *session,char trancode,char *text);
+int nbpEnd(struct NBP_SESSION *session,char trancode);
+struct NBP_SESSION *nbpOpenTran(char nbp,NB_Term *brainTerm,char trancode,char *text);
+int nbpCloseTran(struct NBP_SESSION *session,char trancode);
 
-int nbpServeAuth();
-void nbpServeExecute();
-void nbpServePutFile();
-void nbpServeGetFile();
-void nbpServeSession();
-
-
-
-
-NB_Object *nbpConstructListener();
-void nbpAlertListener();
-void nbpAlertSession();
-void nbpEnableListener();
-void nbpDisableListener();
+int nbpServeAuth(struct NBP_SESSION *session,struct NBP_MESSAGE *msgbuf,int len);
+void nbpServeExecute(struct LISTENER *ear,struct NBP_SESSION *session,struct NBP_MESSAGE *msgbuf);
+void nbpServePutFile(struct NBP_SESSION *session,struct NBP_MESSAGE *msgbuf);
+void nbpServeGetFile(struct NBP_SESSION *session,struct NBP_MESSAGE *msgbuf);
+void nbpServeSession(struct LISTENER *ear,struct NBP_SESSION *session,struct NBP_MESSAGE *msgbuf,int len);
 
 #if defined(WIN32)
 void CALLBACK winAlarmTimeout();

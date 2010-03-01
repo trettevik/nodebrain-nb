@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -76,8 +76,9 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2002/08/31 eat 0.4.1  Introduced prototype
-* 2003/03/15 eat 0.5.1  Modified to conform to make file
+* 2002-08-31 eat 0.4.1  Introduced prototype
+* 2003-03-15 eat 0.5.1  Modified to conform to make file
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -122,7 +123,7 @@ void printReal(struct REAL *real){
 /*
 *  Print all real constants
 */
-void printRealAll(){
+void printRealAll(void){
   printHash(realType->hash,"Numbers",NULL);
   }
 
@@ -157,7 +158,7 @@ void initReal(NB_Stem *stem){
 struct REAL *newReal(double value){
   struct REAL *real;
 
-  real=(struct REAL *)newObject(realType,&realFree,sizeof(struct REAL));
+  real=(struct REAL *)newObject(realType,(void **)&realFree,sizeof(struct REAL));
   real->object.next=NULL;
   real->value=value;
   return(real);

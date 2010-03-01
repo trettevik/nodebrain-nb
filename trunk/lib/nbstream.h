@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -33,8 +33,9 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2004/12/02 Ed Trettevik (original prototype)
-* 2005/04/08 eat 0.6.2  API function definitions moved to nbapi.h
+* 2004-12-02 Ed Trettevik (original prototype)
+* 2005-04-08 eat 0.6.2  API function definitions moved to nbapi.h
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #ifndef _NB_STREAM_H_
@@ -71,7 +72,7 @@ struct NB_STREAM_SUBSCRIPTION{
 
 typedef struct NB_STREAM_SUBSCRIPTION NB_StreamSubscription;
   
-void nbStreamInit();
+void nbStreamInit(NB_Stem *stem);
 
 #endif // NB_INTERNAL
 

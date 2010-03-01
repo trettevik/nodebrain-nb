@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -36,6 +36,11 @@
 * 2002/08/31 Ed Trettevik (original prototype)
 *=============================================================================
 */
+#ifndef _NBREAL_H_
+#define _NBREAL_H_       /* never again */
+
+#include <nbstem.h>
+
 struct REAL{
   struct NB_OBJECT object;   /* object header */
   double value;              /* real number value */
@@ -46,13 +51,14 @@ typedef struct REAL NB_Real;
 extern struct HASH *realH;
 extern struct TYPE *realType;
 
-void *hashReal();
-void initReal();
-void printReal();
-void printRealAll();
-void destroyReal();
-struct REAL *parseReal();
+void *hashReal(struct HASH *hash,double n);
+void initReal(NB_Stem *stem);
+void printReal(struct REAL *real);
+void printRealAll(void);
+void destroyReal(struct REAL *real);
+struct REAL *parseReal(char *source);
 
-extern struct REAL *useReal();
-struct REAL *newReal();
+extern struct REAL *useReal(double value);
+struct REAL *newReal(double value);
 
+#endif

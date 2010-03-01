@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -54,7 +54,8 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2002/09/07 Ed Trettevik (original version introduced in 0.4.1)
+* 2002-09-07 Ed Trettevik (original version introduced in 0.4.1)
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning message. (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -68,7 +69,7 @@ void printCall(call) struct CALL *call;{
   if(call==NULL) outPut("(?)");
   else{
     outPut("%s",call->cell.object.type->name);
-    printObject(call->list);
+    printObject((NB_Object *)call->list);
     }
   }
 

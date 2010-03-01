@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -41,6 +41,7 @@
 * 2003/02/24 eat - version 0.5.0 
 *            1) cleaned up a bit to reduce compiler warning messages
 * 2009/02/14 eat 0.7.5 exported functions and made part of the nb library
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 #ifndef _NB_QUEUE_H_
@@ -125,12 +126,14 @@ extern int nbQueueGetNewFileName(char *qname,char *directory,int option,char typ
 #if defined(WIN32)
 _declspec (dllexport)
 #endif
-extern void nbQueueCommit();
+extern void nbQueueCommit(char *filename);
 
 #if defined(WIN32)
 _declspec (dllexport)
+extern int nbQueueLock(HANDLE file,int option,int type);
+#else
+extern int nbQueueLock(int file,int option,int type);
 #endif
-extern int nbQueueLock();
 
 #if defined(WIN32)
 _declspec (dllexport)

@@ -121,6 +121,7 @@
 * 2008-05-24 eat 0.7.0  Included nbClockSetTimerInterval() function
 * 2008-11-11 eat 0.7.3  Change failure exit code to NB_EXITCODE_FAIL
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h" 
@@ -137,7 +138,7 @@ NB_Timer *nb_timerFree;  /* free timers */
 /*
 *  Initialize clock timer structures
 */ 
-void nbClockInit(){
+void nbClockInit(NB_Stem *stem){
   time(&nb_ClockTime);
   nb_timerQueue=NULL;
   nb_timerFree=NULL;
@@ -202,7 +203,7 @@ void nbClockSetTimerInterval(int seconds,NB_Cell *object){
 *
 */
 int nb_ClockAlerting=0;
-int nbClockAlert(){
+int nbClockAlert(void){
   static long maxNap=NB_MAXNAP;
   int nap;
   NB_Timer *timer;

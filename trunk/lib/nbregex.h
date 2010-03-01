@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -35,13 +35,17 @@
 *
 *    Date    Name/Change
 * ---------- ------------------------------------------------------------------
-* 2003/03/15 eat 0.5.1  Split out *.h and *.c files for new make file
-* 2003/03/17 eat 0.5.2  Condition out Windows here instead of at include
-* 2004/10/02 eat 0.6.1  Preparing to support on Windows - not really yet  
-* 2008/10/06 eat 0.7.2  Included flags to support different compile options
-* 2008/11/06 eat 0.7.3  Converting to PCRE's native API
+* 2003-03-15 eat 0.5.1  Split out *.h and *.c files for new make file
+* 2003-03-17 eat 0.5.2  Condition out Windows here instead of at include
+* 2004-10-02 eat 0.6.1  Preparing to support on Windows - not really yet  
+* 2008-10-06 eat 0.7.2  Included flags to support different compile options
+* 2008-11-06 eat 0.7.3  Converting to PCRE's native API
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *===============================================================================
 */
+#ifndef _NB_REGEX_H_
+#define _NB_REGEX_H_
+
 #include <pcre.h>           // Perl Compatible Regular Expression (PCRE) Library
 
 extern struct HASH *regexpH;      /* regular expression hash */
@@ -58,6 +62,8 @@ struct REGEXP{              // Regular expression
   };
   
 struct REGEXP *newRegexp(char *expression,int flags);
-void printRegexp();
-void destroyRegexp();
-void initRegexp();
+void printRegexp(struct REGEXP *regexp);
+void destroyRegexp(struct REGEXP *regexp);
+void initRegexp(NB_Stem *stem);
+
+#endif

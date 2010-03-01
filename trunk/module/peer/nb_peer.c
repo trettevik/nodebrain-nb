@@ -209,8 +209,6 @@ nbServer *newServer(nbCELL context,char *cursor,char *oar,char *msg){
 //
 // Handle connection requests
 //
-//   this routine replaces nbpAlertListener
-//
 void serverAccept(nbCELL context,int serverSocket,void *handle){
   nbServer *server=handle;
   struct NBP_SESSION *session;
@@ -221,7 +219,7 @@ void serverAccept(nbCELL context,int serverSocket,void *handle){
     }
   if(chaccept(session->channel,(int)server->socket)<0){
     if(errno!=EINTR){
-      nbLogMsg(context,0,'E',"nbpAlertListener() chaccept failed errno=%d",errno);
+      nbLogMsg(context,0,'E',"serverAccept: chaccept failed errno=%d",errno);
       return;
       }
     nbpFreeSessionHandle(session);
@@ -804,9 +802,9 @@ int serviceCmdIdentify(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL 
     return(1);
     }
   pkeGenKey(bits,e,n,d);    /* generate encryption key */
-  vliputx(e,se);
-  vliputx(n,sn);
-  vliputx(d,sd);
+  vliputx(e,(char *)se);
+  vliputx(n,(char *)sn);
+  vliputx(d,(char *)sd);
   sprintf((char *)s,"%s %s.%s.%s.0;",identityName,se,sn,sd); /* format declaration */
   nbLogPut(context,"%s\n",s);
   sprintf(filename,"%s/nb_peer.keys",nbGetUserDir());

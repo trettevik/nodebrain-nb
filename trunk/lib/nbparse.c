@@ -117,6 +117,7 @@
 *                       Is:
 *                         r1 = ! == on(!([]a)); 
 * 2010/02/26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
+* 2010/02/26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *==============================================================================
 */
 #include "nbi.h"
@@ -125,7 +126,7 @@ int parseTrace=0;        /* debugging trace flag for parsing routines */
 
 unsigned char nb_CharClass[256];  // see nbparse.h for definitions
 
-void nbParseInit(){
+void nbParseInit(void){
   unsigned int i;
   char *numChar="0123456789";
   char *alphaChar="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -156,8 +157,7 @@ void nbParseInit(){
 *  compile this program for the Sequent platform.  This routine is a
 *  work around.  It only supports a single delimiter character.
 */
-char *my_strtok_r(cursor,delim,newcur)
-  char *cursor,*delim,**newcur; {
+char *my_strtok_r(char *cursor,char *delim,char **newcur){
   char *mycursor;
   while(*cursor==*delim){
     cursor++;

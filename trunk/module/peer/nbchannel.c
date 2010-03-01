@@ -154,6 +154,7 @@
 * 2003/07/19 eat 0.5.4  Set server socket to uninheritable for Windows.
 * 2006/05/25 eat 0.6.6  chlisten() and chopen() modified to support local (unix) domain sockets
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -169,7 +170,7 @@
 #if defined(WIN32)
 _declspec (dllexport)
 #endif
-extern struct CHANNEL *challoc(){
+extern struct CHANNEL *challoc(void){
   struct CHANNEL *channel;
    
   channel=malloc(sizeof(struct CHANNEL));
@@ -186,11 +187,7 @@ extern struct CHANNEL *challoc(){
 *    The AES encryption is optional.
 */
 
-void chkey(channel,enKey,deKey,enCipher,deCipher)
-  struct CHANNEL *channel;
-  skeKEY *enKey,*deKey;
-  unsigned int enCipher[4],deCipher[4]; {
-
+void chkey(struct CHANNEL *channel,skeKEY *enKey,skeKEY *deKey,unsigned int enCipher[4],unsigned int deCipher[4]){
   memcpy(&(channel->enKey),enKey,sizeof(skeKEY));
   memcpy(&(channel->deKey),deKey,sizeof(skeKEY));
   memcpy(channel->enCipher,enCipher,16);

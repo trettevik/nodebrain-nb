@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -33,9 +33,10 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2003/03/16 Ed Trettevik - (split out from nb.c in 0.5.2)
-* 2004/08/29 eat 0.6.1  Included command option flags
-* 2005/04/09 eat 0.6.2  Move API function nbcmd() definition to nbapi.h
+* 2003-03-16 Ed Trettevik - (split out from nb.c in 0.5.2)
+* 2004-08-29 eat 0.6.1  Included command option flags
+* 2005-04-09 eat 0.6.2  Move API function nbcmd() definition to nbapi.h
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #ifndef _NB_CMD_H_
@@ -45,16 +46,16 @@
 
 #if defined(NB_INTERNAL) 
 
-void printVersion();
-void printHelp();
+void printVersion(void);
+void printHelp(void);
 
-void showVersion();
-void showCopyright();
-void showHeading();
+void showVersion(void);
+void showCopyright(void);
+void showHeading(void);
 void nbCmdUse(struct NB_CELL *context,char *verb,char *cursor);
 void nbCmdSet(struct NB_CELL *context,char *verb,char *cursor);
 void nbCmdQuery(struct NB_CELL *context,char *verb,char *cursor);
-void nbParseArgAssertion();
+void nbParseArgAssertion(char *cursor);
 
 void nbParseStdin(int prompt);
 
@@ -72,7 +73,7 @@ char *nbSymCmd(NB_Cell *context,char *source,char *style);
 
 char *nbSymSource(NB_Cell *context,char *source);
 void nbCmdInit(struct NB_STEM *stem);
-void printAbout();
+void printAbout(void);
 
 #endif // !NB_INTERNAL (external API)
 

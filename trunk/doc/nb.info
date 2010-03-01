@@ -1,4 +1,11 @@
-This is doc/nb.info, produced by makeinfo version 4.13 from ./doc/nb.texi.
+This is doc/nb.info, produced by makeinfo version 4.8 from
+./doc/nb.texi.
+
+INFO-DIR-SECTION NodeBrain Agent
+START-INFO-DIR-ENTRY
+* NodeBrain: (nodebrain).	State and Event Monitoring Agent
+* nb: (nodebrain).	NodeBrain command
+END-INFO-DIR-ENTRY
 
 
 File: nb.info,  Node: Top,  Up: (dir)
@@ -9,6 +16,6 @@ File: nb.info,  Node: Top,  Up: (dir)
 
 
 Tag Table:
-Node: Top0
+Node: Top245
 
 End Tag Table

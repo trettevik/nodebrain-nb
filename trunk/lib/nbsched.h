@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -33,9 +33,14 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2003/03/15 eat 0.5.1  Split out from nbsched.c for make file.
+* 2003-03-15 eat 0.5.1  Split out from nbsched.c for make file.
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
+#ifndef _NB_SCHED_H_
+#define _NB_SCHED_H_
+
+#include <nbstem.h>
 
 extern struct TYPE *schedTypeTime;
 extern struct TYPE *schedTypePulse;
@@ -61,9 +66,11 @@ struct SCHED{
   struct tcQueue *queue;   /* Time queue */
   };
   
-void schedPrintDump();
-void schedPrint();
-void destroySched();
-void schedInit();
+void schedPrintDump(struct SCHED *sched);
+void schedPrint(struct SCHED *sched);
+void destroySched(struct SCHED *sched);
+void schedInit(NB_Stem *stem,long n);
 struct SCHED *newSched(NB_Cell *context,char symid,char *source,char **delim,char *msg,int reuse);
-time_t schedNext();
+time_t schedNext(time_t floor,struct SCHED *sched);
+
+#endif

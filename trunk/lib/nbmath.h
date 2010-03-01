@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -33,10 +33,14 @@
 *
 *    Date    Name/Change
 * ---------- ---------------------------------------------------------------
-* 2002/08/31 Ed Trettevik (original prototype)
-* 2003/03/15 eat 0.5.1  Modified for make file
+* 2002-08-31 Ed Trettevik (original prototype)
+* 2003-03-15 eat 0.5.1  Modified for make file
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *============================================================================
 */
+#ifndef _NB_MATH_H_
+#define _NB_MATH_H_
+
 /* NOTE: we depend on MATH conforming to COND */
 struct MATH{                 /* Math Function Object - one or two operands */
   struct NB_CELL   cell;     /* cell header */
@@ -53,9 +57,10 @@ extern struct TYPE *mathTypeSub;
 extern struct TYPE *mathTypeMul;
 extern struct TYPE *mathTypeDiv;
 
-void *hashMath();
-void initMath();
-void destroyMath();
-struct MATH *useMath();
+void initMath(NB_Stem *stem);
+void destroyMath(struct MATH *math);
+struct MATH *useMath(int inverse,struct TYPE *type,NB_Object *left,NB_Object *right);
 
-void printMathAll();
+void printMathAll(void);
+
+#endif

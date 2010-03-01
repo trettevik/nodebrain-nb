@@ -386,7 +386,7 @@ static void nbPeerAccepter(nbCELL context,int sd,void *handle){
   if(!tls){
     nbLogMsg(context,0,'T',"nbPeerAccepter: nbTlsAccept failed");
     nbListenerRemove(context,sd);
-    peer->flags&=0xff-NB_PEER_FLAG_READ_WAIT;
+    lpeer->flags&=0xff-NB_PEER_FLAG_READ_WAIT;
     }
   nbLogMsg(context,0,'T',"nbPeerAccepter: nbTlsAccept succeeded");
   peer=(nbPeer *)nbAlloc(sizeof(nbPeer));

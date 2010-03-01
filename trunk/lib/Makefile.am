@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 ## =============================================================================
 ##
-## Copyright (C) 1998-2008 The Boeing Company
+## Copyright (C) 1998-2010 The Boeing Company
 ##                         Ed Trettevik <eat@nodebrain.org>
 ##
 ## NodeBrain is free software; you can redistribute it and/or modify
@@ -42,7 +42,7 @@
 ##
 ## Date       Name/Change
 ## ---------- -----------------------------------------------------------------
-## 2008/10/27  Ed Trettevik (version 0.7.3 - split out from nb package)
+## 2008/10/27 Ed Trettevik (version 0.7.3 - split out from nb package)
 ##=============================================================================
      
 LIBTOOL_DEPS = @LIBTOOL_DEPS@

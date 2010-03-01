@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -33,16 +33,19 @@
 *
 *    Date    Name/Change
 * ---------- ----------------------------------------------------------------
-* 2003/04/22 eat 0.5.4  Introduced prototype
-* 2005/04/22 eat 0.6.2  Included suffix parameter to nbModuleSymbol()
-* 2005/04/24 eat 0.6.2  Included path option and NB_MODULE_PATH environment variable
-* 2005/05/14 eat 0.6.3  module handle renamed address and added new handle
+* 2003-04-22 eat 0.5.4  Introduced prototype
+* 2005-04-22 eat 0.6.2  Included suffix parameter to nbModuleSymbol()
+* 2005-04-24 eat 0.6.2  Included path option and NB_MODULE_PATH environment variable
+* 2005-05-14 eat 0.6.3  module handle renamed address and added new handle
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *============================================================================
 */
 #ifndef _NB_MODULE_H_
 #define _NB_MODULE_H_
 
 #if defined(NB_INTERNAL)
+
+#include <nbstem.h>
 
 struct NB_MODULE{            /* module object */
   struct NB_OBJECT object;   /* object header */
@@ -57,7 +60,7 @@ struct NB_MODULE{            /* module object */
 extern struct TYPE *moduleType;
 extern struct NB_TERM *moduleC;
 
-void nbModuleInit();
+void nbModuleInit(NB_Stem *stem);
 NB_Term *nbModuleDeclare(NB_Term *context,char *name,char *cursor);
 void *nbModuleSymbol(NB_Term *context,char *ident,char *suffix,void **moduleHandleP,char *msg);
 

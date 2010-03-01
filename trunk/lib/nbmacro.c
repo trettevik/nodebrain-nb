@@ -74,6 +74,7 @@
 * ---------- -----------------------------------------------------------------
 * 2003-11-17 Ed Trettevik (original prototype version)
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -210,7 +211,7 @@ NB_Macro *nbMacroParse(nbCELL context,char **source){
       }
     }
   *bufcur=0;
-  macro=(NB_Macro *)newObject(nb_MacroType,&nb_MacroFree,sizeof(NB_Macro));
+  macro=(NB_Macro *)newObject(nb_MacroType,(void **)&nb_MacroFree,sizeof(NB_Macro));
   macro->context=localContext;
   macro->parms=parms;
   macro->defaults=defaults;
@@ -256,7 +257,7 @@ char *nbMacroSub(nbCELL context,char **cursorP){
     parm=macro->parms;
     arg=newMember((NB_Term *)context,&cursor);
     while(parm!=NULL && arg!=NULL){
-      nbTermAssign(parm->object,arg->object->value);
+      nbTermAssign((NB_Term *)parm->object,(NB_Object *)arg->object->value);
       parm=parm->next;
       arg=arg->next;
       }

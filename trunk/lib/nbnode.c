@@ -89,6 +89,7 @@
 * 2007/06/26 eat 0.6.8  Changing terminology ("expert" is now "node")
 * 2007/07/16 eat 0.6.8  renamed from nbexpert.c to nbnode.c
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2010/02/28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -104,9 +105,9 @@ NB_Node *nb_NodeFree=NULL; /* free nodes */
 /*
 *  Context object constructor
 */
-NB_Node *nbNodeNew(){
+NB_Node *nbNodeNew(void){
   NB_Node *node;
-  node=nbCellNew(nb_NodeType,&nb_NodeFree,sizeof(NB_Node));
+  node=nbCellNew(nb_NodeType,(void **)&nb_NodeFree,sizeof(NB_Node));
   node->context=NULL;          /* handle for this context - name and glossary */
   node->reference=NULL;       /* reference term   this=.=that  */
   node->owner=clientIdentity; /* owner's identity */
@@ -127,7 +128,7 @@ void contextAlert(NB_Term *term){
   if(trace) outMsg(0,'T',"contextAlert() called.");
   if(node->cell.object.type!=nb_NodeType){
     outMsg(0,'L',"contextAlert() called with term not defined as node.");
-    printObject(term);
+    printObject((NB_Object *)term);
     outPut("\n");
     return;
     }
@@ -232,7 +233,7 @@ void printSkill(struct NB_SKILL *skill){
   outFlush(); // debug
   printStringRaw(skill->ident);
   outFlush(); // debug
-  if(skill->args!=NULL) printObject(skill->args);
+  if(skill->args!=NULL) printObject((NB_Object *)skill->args);
   if(skill->text!=NULL && *(skill->text->value)!=0){
     outPut(":");
     printStringRaw(skill->text);
@@ -242,8 +243,8 @@ void printSkill(struct NB_SKILL *skill){
 void nbNodeCellShow(struct NB_CALL *call){
   if(call==NULL) outPut("(?)");
   else{
-    printObject(call->term);
-    printObject(call->args);
+    printObject((NB_Object *)call->term);
+    printObject((NB_Object *)call->args);
     }
   }
 
@@ -262,7 +263,7 @@ void nbNodeShowReport(struct NB_NODE *node){
   if(node->skill!=NULL) (*node->facet->show)(node->context,node->skill->handle,node->knowledge,NB_SHOW_REPORT);
   if(node->source!=NULL && node->source!=(void *)nb_Unknown){
     outPut("\n  source: ");
-    printObject(node->source);
+    printObject((NB_Object *)node->source);
     outPut("\n");
     }
   }
@@ -657,7 +658,7 @@ int nbNodeSetLevel(nbCELL context,nbCELL cell){
 
   level=cell->level+1;
   if(level>node->cell.level) node->cell.level=level;
-  nbCellLevel(node);
+  nbCellLevel((NB_Cell *)node);
   return(level);
   }
 

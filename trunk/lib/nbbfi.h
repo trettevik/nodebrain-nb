@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -35,13 +35,14 @@
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
 * 2003/03/15 eat 0.5.1  Created to conform to new make file
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 /**************************************************************************
 * Index Data Structure
 **************************************************************************/
 
-struct bfiindex {
+struct bfiindex{
   struct bfiindex *next;
   int type;
   int from;
@@ -54,8 +55,8 @@ struct bfiindex {
 #define Range     2
 #define Span      3
 
-struct bfiindex *bfiIndexParse();
-void   bfiIndexPrint();
+struct bfiindex *bfiIndexParse(char *s);
+void   bfiIndexPrint(struct bfiindex *index);
 
 /*************************************************************************
 * Segment Data Structure
@@ -71,39 +72,39 @@ struct bfiseg {            /* bfi segment, where f(i) is truth */
 typedef struct bfiseg *bfi;
 extern bfi bfifree;
 
-bfi bfiAlloc();
-bfi bfiNew();
-bfi bfiDomain();
-void bfiInsert();
-void bfiInsertUnique();
-bfi bfiRemove();
-bfi bfiDispose();
-bfi bfiCopy();
-int bfiEval();
-int bfiCompare();
-void bfiPrint();
-bfi bfiParse();
-bfi bfiKnow();
-bfi bfiUntil_();
-bfi bfiYield_();
-bfi bfiConflict_();
-bfi bfiOr_();
-bfi bfiOre_();
-bfi bfiAnd_();
-bfi bfiNot_();
-bfi bfiXor_();
-bfi bfiXore_();
-bfi bfiIndexOne();
-bfi bfiIndex();
-bfi bfiReject();
-bfi bfiSelect();
-bfi bfiIndexedSelect();
-bfi bfiUnion();
-bfi bfiUntil();
-bfi bfiYield();
-bfi bfiAnd();
-bfi bfiOre();
-bfi bfiOr();
-bfi bfiXor();
-bfi bfiXore();
+bfi bfiAlloc(void);
+bfi bfiNew(long start,long end);
+bfi bfiDomain(bfi g,bfi h);
+void bfiInsert(bfi f,long start,long end);
+void bfiInsertUnique(bfi f,long start,long end);
+bfi bfiRemove(bfi s);
+bfi bfiDispose(bfi f);
+bfi bfiCopy(bfi g);
+int bfiEval(bfi f,long i);
+int bfiCompare(bfi g,bfi h);
+void bfiPrint(bfi f,char *label);
+bfi bfiParse(char *s);
+bfi bfiKnow(bfi g);
+bfi bfiUntil_(bfi g);
+bfi bfiYield_(bfi g);
+bfi bfiConflict_(bfi g);
+bfi bfiOr_(bfi g);
+bfi bfiOre_(bfi g);
+bfi bfiAnd_(bfi g);
+bfi bfiNot_(bfi g);
+bfi bfiXor_(bfi g);
+bfi bfiXore_(bfi g);
+bfi bfiIndexOne(bfi g,int i);
+bfi bfiIndex(bfi g,struct bfiindex *index);
+bfi bfiReject(bfi g,bfi h);
+bfi bfiSelect(bfi g,bfi h);
+bfi bfiIndexedSelect(bfi g,bfi h,struct bfiindex *index);
+bfi bfiUnion(bfi g,bfi h);
+bfi bfiUntil(bfi g,bfi h);
+bfi bfiYield(bfi g,bfi h);
+bfi bfiAnd(bfi g,bfi h);
+bfi bfiOre(bfi g,bfi h);
+bfi bfiOr(bfi g,bfi h);
+bfi bfiXor(bfi g,bfi h);
+bfi bfiXore(bfi g,bfi h);
 

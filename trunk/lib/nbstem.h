@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -61,6 +61,7 @@
 * 2005/04/11 Ed Trettevik (split out in 0.6.2)
 * 2005/12/30 eat 0.6.4  childmode removed - see nb_opt_servant
 * 2008/03/24 eat 0.7.0  Removed parentChannel
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *============================================================================
 */
 #ifndef _NB_STEM_H_
@@ -116,6 +117,6 @@ extern int nbStop(nbCELL context);
 #if defined(WIN32)
 __declspec(dllexport)
 #endif
-extern char *nbGetUserDir();
+extern char *nbGetUserDir(void);
 
 #endif

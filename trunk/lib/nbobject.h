@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2008 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -51,18 +51,21 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2002/08/31 Ed Trettevik (split out in version 0.4.1)
-* 2002/09/08 eat - version 0.4.1 A2
+* 2002-08-31 Ed Trettevik (split out in version 0.4.1)
+* 2002-09-08 eat - version 0.4.1 A2
 *             1) Included value pointer in object structure so it is common
 *                to all objects.  Object types that don't compute values
 *                can just point to themselves.  This makes it simple for 
 *                methods to grab a value pointer from an object, at the
 *                expense of a little memory.
-* 2005/04/08 eat 0.6.2  API functions definitions move to nbapi.h
+* 2005-04-08 eat 0.6.2  API functions definitions move to nbapi.h
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #ifndef _NB_OBJECT_H_
 #define _NB_OBJECT_H_
+
+//#include <nbstem.h>
 
 #if defined(NB_INTERNAL)
 
@@ -172,21 +175,21 @@ extern NB_Type *nb_DefinedType;  /* Special object type */
 extern NB_Type *nb_TypeType;  /* Type object type */
 
 struct TYPE *newType(struct NB_STEM *stem,char *name,struct HASH *hash,int  attributes,void (*showExpr)(),void (*destroy)());
-void enableBug();
-void disableBug();
+void enableBug(NB_Object *object);
+void disableBug(NB_Object *object);
 
 
-void *newObject();
+void *newObject(struct TYPE *type,void **pool,int size);
 void *grabObject(void *object);
 void *grabObjectNull(void *object);
 void *dropObject(void *object);
 void *dropObjectNull(void *object);
-void printObject();
-void printObjectItem();
-void printObjectReport();
+void printObject(NB_Object *object);
+void printObjectItem(NB_Object *object);
+void printObjectReport(NB_Object *object);
 
-void nbObjectPrintSpecial();
-void nbObjectInit();
+//void nbObjectPrintSpecial();
+void nbObjectInit(struct NB_STEM *stem);
 
 #if defined(WIN32)
 __declspec(dllexport)
@@ -202,7 +205,7 @@ extern void nbFree(void *object,int size);
 #if defined(WIN32)
 __declspec(dllexport)
 #endif
-extern void nbObjectShowTypes();
+extern void nbObjectShowTypes(void);
 
 #endif // NB_INTERNAL
 

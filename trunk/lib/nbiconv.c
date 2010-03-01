@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -46,8 +46,9 @@
 *
 * Date       Name/Change
 * ---------- -----------------------------------------------------------------
-* 2002/11/19 eat 0.4.1  Introduced when porting to IBM USS environment.
-* 2003/03/15 eat 0.5.1  Renamed to nbiconv.c and created new nbiconv.h
+* 2002-11-19 eat 0.4.1  Introduced when porting to IBM USS environment.
+* 2003-03-15 eat 0.5.1  Renamed to nbiconv.c and created new nbiconv.h
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 unsigned char NB_A2E[256]={
@@ -90,10 +91,7 @@ unsigned char NB_E2A[256]={
 *    This should be replaced with a function that
 *    does a machine level translate instruction
 */
-void nbiconv(buf1,buf2,table,len)
-  unsigned char buf1[],buf2[],table[];
-  int len;{
-
+void nbiconv(unsigned char buf1[],unsigned char buf2[],unsigned char table[],int len){
   while(len>0){
     buf2[len]=table[buf1[len]];
     len--;

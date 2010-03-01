@@ -1,5 +1,10 @@
-This is doc/nbTutorial.info, produced by makeinfo version 4.13 from
+This is doc/nbTutorial.info, produced by makeinfo version 4.8 from
 ./doc/nbTutorial.texi.
+
+INFO-DIR-SECTION NodeBrain Agent
+START-INFO-DIR-ENTRY
+* Tutorial: (nodebrain).       NodeBrain Tutorial
+END-INFO-DIR-ENTRY
 
 NodeBrain Tutorial
 March, 2009
@@ -53,8 +58,8 @@ File: nbTutorial.info,  Node: Top,  Next: Invoking NodeBrain,  Up: (dir)
 NodeBrain Tutorial 0.7.9
 ************************
 
-This tutorial is for NodeBrain (version 0.7.9, 5 March 2009), an open
-source agent for state and event monitoring.
+This tutorial is for NodeBrain (version 0.7.9, 28 February 2010), an
+open source agent for state and event monitoring.
 
 Copyright (C) 2006, 2007, 2008, 2009 The Boeing Company
 
@@ -1645,8 +1650,8 @@ watching NodeBrain obey them.
 NodeBrain `on', `when' and `if' rules have almost identical syntax.
 Their conditional cell expressions are resolved by the same cell
 evaluation algorithm.  Yet they respond differently to new information.
-You can study these differences using rules that have no action.  Start
-by creating the following script called rules.nb.
+You can study these differences using rules that have no action.
+Start by creating the following script called rules.nb.
 
      # File: tutorial/RuleTypes/rules.nb
      definer0 when(a=1 and b=2);
@@ -3908,45 +3913,45 @@ Index
 
 
 Tag Table:
-Node: Top1693
-Node: Invoking NodeBrain3209
-Node: Interactive Mode3742
-Node: Starting and Ending an Interactive Session4263
-Node: Assertions5828
-Node: On Rules6582
-Node: Shell Commands8510
-Node: Consulting Servant Scripts10172
-Node: Rule Actions11337
-Node: Action Servant Scripts12114
-Node: Rule Files13166
-Node: Batch Mode15372
-Node: Servant Mode22749
-Node: Agent Mode27307
-Node: Cell Expressions32887
-Node: Numbers and Strings34180
-Node: Arithmetic34611
-Node: Logic36354
-Node: Time Conditions38553
-Node: Node Conditions43135
-Node: Complex Expressions45167
-Node: Ignorance46429
-Node: True False Unknown47538
-Node: Closed World Assumption50071
-Node: Reactive Mode53887
-Node: Query Mode54677
-Node: Rules60373
-Node: Syntax Surprises65018
-Node: Tree69045
-Node: Cache76230
-Node: Servant90637
-Node: Translator94336
-Node: Audit103603
-Node: Syslog113113
-Node: Snmptrap115343
-Node: Pipe117260
-Node: Peer122774
-Node: Webster133814
-Node: GNU Free Documentation License135800
-Node: Index158199
+Node: Top1816
+Node: Invoking NodeBrain3336
+Node: Interactive Mode3869
+Node: Starting and Ending an Interactive Session4390
+Node: Assertions5955
+Node: On Rules6709
+Node: Shell Commands8637
+Node: Consulting Servant Scripts10299
+Node: Rule Actions11464
+Node: Action Servant Scripts12241
+Node: Rule Files13293
+Node: Batch Mode15499
+Node: Servant Mode22876
+Node: Agent Mode27434
+Node: Cell Expressions33014
+Node: Numbers and Strings34307
+Node: Arithmetic34738
+Node: Logic36481
+Node: Time Conditions38680
+Node: Node Conditions43262
+Node: Complex Expressions45294
+Node: Ignorance46556
+Node: True False Unknown47665
+Node: Closed World Assumption50198
+Node: Reactive Mode54014
+Node: Query Mode54804
+Node: Rules60500
+Node: Syntax Surprises65144
+Node: Tree69171
+Node: Cache76356
+Node: Servant90763
+Node: Translator94462
+Node: Audit103729
+Node: Syslog113239
+Node: Snmptrap115469
+Node: Pipe117386
+Node: Peer122900
+Node: Webster133940
+Node: GNU Free Documentation License135926
+Node: Index158325
 
 End Tag Table

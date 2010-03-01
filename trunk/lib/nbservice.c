@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -107,6 +107,7 @@
 * 2003-03-16 eat 0.5.2  Moved daemonize() here and moved alternate main() out.
 * 2004-10-06 eat 0.6.1  Conditionals for FreeBSD, OpenBSD, and NetBSD
 * 2008-11-11 eat 0.7.3  Change failure exit code to NB_EXITCODE_FAIL
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -490,7 +491,7 @@ int nbService(int (*serviceMain)(int argc,char *argv[]),int argc,char *argv[]){
 * Turn into a daemon
 */
 #if defined(WIN32)
-void daemonize(){
+void daemonize(void){
   char *log=outLogName(NULL);
   FILE *file;
 

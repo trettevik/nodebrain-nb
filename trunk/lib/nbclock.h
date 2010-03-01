@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -42,12 +42,15 @@
 *            issuing the wait that cleans up the zombie (defunct) child.  By
 *            using a shorter MAXNAP we are able to shorten the time a child is
 *            a zombie.  See nbmedulla.c for process handling.
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 #ifndef _NB_CLOCK_H_
 #define _NB_CLOCK_H_
 
 #if defined(NB_INTERNAL)
+
+#include <nbstem.h>
 
 #if defined(HPUX)      // use short nap time on systems where SIGCHLD doesn't interrupt select()
 #define NB_MAXNAP 10       // maximum nap time - 10 seconds*/
@@ -73,11 +76,11 @@ struct NB_TIMER{
 
 typedef struct NB_TIMER NB_Timer;
 
-void       nbClockInit();
+void       nbClockInit(NB_Stem *stem);
 
 struct tm *nbClockGetTm(int clock,time_t utc);
 char      *nbClockToString(time_t utc,char *buffer);
-void       nbClockShowTimers();
+void       nbClockShowTimers(char *cursor);
 void       nbClockShowProcess(char *cursor);
 
 #endif // NB_INTERNAL
@@ -93,7 +96,7 @@ extern void nbClockSetTimer(time_t time,nbCELL object);
 #if defined(WIN32)
 _declspec (dllexport)
 #endif
-extern int nbClockAlert();
+extern int nbClockAlert(void);
 
 #if defined(WIN32)
 _declspec (dllexport)

@@ -373,9 +373,9 @@ int cacheAssertParse();
 void cacheFreeNode();
 void cacheEmptyNode();
 void cacheRemoveNode();
-void cacheDecNode();
+void cacheDecNode(nbCELL context,struct CACHE *cache,struct CACHE_NODE *entry,struct CACHE_ATTR *attr);
 int cacheRemove();
-void cacheEmpty();
+void cacheEmpty(nbCELL context,struct CACHE *cache);
 void freeCache();
 
 /*

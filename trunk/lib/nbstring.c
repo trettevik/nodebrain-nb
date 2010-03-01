@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -89,6 +89,7 @@
 *            don't hash the same, the order in which the terms display is
 *            different.  Using int avoids that problem.
 * 2008-01-22 eat 0.6.9  Modified string allocation scheme
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -127,11 +128,11 @@ void printStringRaw(struct STRING *string){
   else outPut("%s",string->value);
   }
  
-void printString(string) struct STRING *string;{
+void printString(struct STRING *string){
   outPut("\"%s\"",string->value);
   }
 
-void printStringAll(){
+void printStringAll(void){
   struct STRING *string,**stringP;
   long v;
   int i,saveshowcount=showcount;
@@ -143,7 +144,7 @@ void printStringAll(){
     i=0;
     for(string=*stringP;string!=NULL;string=(struct STRING *)string->object.next){
       outPut("[%u,%d]",v,i);
-      printObject(string);
+      printObject((NB_Object *)string);
       outPut("\n");
       i++;
       }
@@ -152,7 +153,7 @@ void printStringAll(){
   showcount=saveshowcount;  
   }
 
-void destroyString(str) struct STRING *str;{
+void destroyString(struct STRING *str){
   struct STRING *string,**stringP,**freeStringP;
   char *cursor,*value;
   int r=1;  /* temp relation <0, 0, >0 */
@@ -214,7 +215,7 @@ struct STRING *useString(char *value){
   size=sizeof(struct STRING)+strlen(value)+1;
   if(size>NB_OBJECT_MANAGED_SIZE) freeStringP=NULL;
   else freeStringP=&nb_StringPool->vector[(size+7)/8]; 
-  string=(struct STRING *)newObject(strType,freeStringP,sizeof(struct STRING)+size);
+  string=(struct STRING *)newObject(strType,(void **)freeStringP,sizeof(struct STRING)+size);
   string->object.next=(NB_Object *)*stringP;     
   *stringP=string;  
   strcpy(string->value,value);

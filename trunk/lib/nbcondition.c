@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -122,6 +122,7 @@
 *
 *                This bug was not detected by our applications because we had no rule
 *                conditions of this type.
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -272,7 +273,7 @@ void condPrintChange(cond) struct COND *cond; {
   outPut(")");
   }
     
-void condPrintAll(sel) int sel; {
+void condPrintAll(int sel){
   /*
   *  Print selected conditions
   *    0 - all conditions except rules
@@ -297,7 +298,7 @@ void condPrintAll(sel) int sel; {
         outPut(" = ");
         printObject(cond->cell.object.value);
         outPut(" == ");
-        printObject(cond);
+        printObject((NB_Object *)cond);
         outPut("\n");
         }
       i++;
@@ -365,7 +366,7 @@ void alertRule(NB_Cell *rule){
 
   if(trace){
     outMsg(0,'T',"alertRule called %u",rule);
-    printObject(rule);
+    printObject((NB_Object *)rule);
     outPut("\n");
     } 
   action=((struct COND *)rule)->right;         
@@ -572,13 +573,13 @@ NB_Object *evalXor(cond) struct COND *cond; {
 NB_Object *evalAndCapture(struct COND *cond){
   NB_Object *lobject=((NB_Object *)cond->left)->value;
   if(lobject==NB_OBJECT_FALSE || lobject==nb_Unknown) return(cond->cell.object.value);
-  return(nbCellCompute_((NB_Object *)cond->right));
+  return(nbCellCompute_((NB_Cell *)cond->right));
   }
 
 NB_Object *evalOrCapture(struct COND *cond){
   NB_Object *lobject=((NB_Object *)cond->left)->value;
   if(lobject!=NB_OBJECT_FALSE) return(cond->cell.object.value);
-  return(nbCellCompute_((NB_Object *)cond->right));
+  return(nbCellCompute_((NB_Cell *)cond->right));
   }
 
 NB_Object *evalFlipFlop(struct COND *cond){
@@ -730,7 +731,7 @@ NB_Object *evalChange(struct COND *cond){
   return(NB_OBJECT_TRUE);
   }
 
-void condChangeReset(){
+void condChangeReset(void){
   NB_Link *list;
   struct COND *cond;
   for(list=change;list!=NULL;list=change){
@@ -961,7 +962,7 @@ struct COND * useCondition(int not,struct TYPE *type,void *left,void *right){
     if(cond->left==left && cond->right==right && cond->cell.object.type==type) return(cond);
     condP=(struct COND **)&cond->cell.object.next;  
     }
-  cond=nbCellNew(type,&condFree,sizeof(struct COND));
+  cond=nbCellNew(type,(void **)&condFree,sizeof(struct COND));
   cond->cell.object.next=(NB_Object *)*condP;
   *condP=cond;
   cond->left=grabObject(left);
@@ -996,11 +997,10 @@ struct COND * useCondition(int not,struct TYPE *type,void *left,void *right){
 /*
 *  Schedule/Unschedule Time Condition Changes
 */
-void condSchedule(cond,value)
-  struct COND *cond; NB_Object *value; {
+void condSchedule(struct COND *cond,NB_Object *value){
   if(trace){
     outMsg(0,'T',"condSchedule:");
-    printObject(cond);
+    printObject((NB_Object *)cond);
     outPut("\n");
     outFlush();
     }
@@ -1016,7 +1016,7 @@ void condSchedule(cond,value)
   else {
     outMsg(0,'L',"condSchedule: scheduled value for delay timer must be false.");
     outPut("object:");
-    printObject(cond);
+    printObject((NB_Object *)cond);
     outPut("\nvalue:");
     printObject(value);
     outFlush();
@@ -1024,8 +1024,7 @@ void condSchedule(cond,value)
   if(trace) outMsg(0,'T',"condSchedule complete.");
   }
   
-void condUnschedule(cond)
-  struct COND *cond; {
+void condUnschedule(struct COND *cond){
   /* This layer can probably be removed after the event routines are stable */
   if(!(cond->cell.object.type->attributes&TYPE_IS_TIME)){
     outMsg(0,'L',"condUnschedule: cond must be time condition.");

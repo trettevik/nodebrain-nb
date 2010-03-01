@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -36,12 +36,14 @@
 * 2002/08/31 Ed Trettevik (original split out from other components)
 * 2005/04/08 eat 0.6.2  API function definitions moved to nbapi.h
 * 2008/02/08 eat 0.6.9  Glossary of terms changed to a binary tree
+* 2010/02/28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
 #ifndef _NB_TERM_H_
 #define _NB_TERM_H_
 
 #include <nbcell.h>
+#include <nbstem.h>
 
 #if defined(NB_INTERNAL)
 
@@ -70,11 +72,11 @@ extern struct TYPE *termType;
 extern NB_Term *addrContext;
 extern NB_Term *symContext;
 
-void initTerm();
-void termPrintName();
-void nbTermAssign();
-void nbTermShowItem();
-void nbTermShowReport();
+void initTerm(NB_Stem *stem);
+void termPrintName(NB_Term *term);
+void nbTermAssign(NB_Term *term,NB_Object *new);
+void nbTermShowItem(NB_Term *term);
+void nbTermShowReport(NB_Term *term);
 void termPrintGloss(NB_Term *gloss,NB_Type *type,int attr);
 void termPrintGlossHome(NB_Term *gloss,NB_Type *type,int attr);
 
@@ -86,13 +88,13 @@ NB_Term *nbTermFindDot(NB_Term *term,char **qualifier);
 
 NB_Term *nbTermNew(NB_Term *context,char *ident,void *def);
 
-void termUndef();
-void termUndefAll();
+void termUndef(NB_Term *term);
+void termUndefAll(void);
 void termResolve(NB_Term *term);
 
-void termGetName();
-void termPrintName();
-void termPrintFullName();
+void termGetName(char *name,NB_Term *term,NB_Term *refContext);
+void termPrintName(NB_Term *term);
+void termPrintFullName(NB_Term *term);
 void nbTermPrintLongName(NB_Term *term);
 
 #endif  // NB_INTERNAL

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -42,6 +42,7 @@
 * 2005/03/26 eat 0.6.2  Included nbLogDump()
 * 2005/04/08 eat 0.6.2  API function definitions moved to nbapi.h
 * 2009-02-22 eat 0.7.5  Renamed from nbout.h to nblog.h
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #ifndef _NB_OUT_H_
@@ -66,14 +67,14 @@ struct NB_OUTPUT_HANDLER{
 #define NB_CHECK_LINE  1  /* Line of check script */
 #define NB_CHECK_STOP  2  /* End of check script */
 
-void outStd();
-int  outInit();
-void outFlush();
-void outStream();
-void outStamp();
-void outData();
+void outStd(char *buffer);
+int  outInit(void);
+void outFlush(void);
+void outStream(int stream,void (*handler)(char *buffer));
+void outStamp(void);
+void outData(char *data,int len);
 void outPut(char *format,...);
-void outHex();
+void outHex(unsigned int l,void *buf);
 //#if defined(WIN32)
 //_declspec (dllexport)
 //#else
@@ -81,8 +82,8 @@ void outHex();
 //#endif
 void outMsg(int msgid,char msgclass,char *format,...);
 void outMsgHdr(int msgid,char msgclass,char *format,...);
-void outBar();
-int  outCheck();
+void outBar(void);
+int  outCheck(int option,char *cursor);
 char *outDirName(char *);
 char *outLogName(char *);
 char *outUserDir(char *);

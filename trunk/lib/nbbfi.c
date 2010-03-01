@@ -183,9 +183,10 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2000/06/09 Ed Trettevik (started original C prototype version)
-* 2003/10/27 eat 0.5.5  Included bfiConflict_ function.
-* 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages.
+* 2000-06-09 Ed Trettevik (started original C prototype version)
+* 2003-10-27 eat 0.5.5  Included bfiConflict_ function.
+* 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages.
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -193,7 +194,7 @@
 /**************************************************************************
 * Index Routines
 **************************************************************************/       
-struct bfiindex *bfiIndexParse(s) char *s; {
+struct bfiindex *bfiIndexParse(char *s){
   int type,min=32000,max=-32000;
   struct bfiindex *top=NULL,*entry;  
   char *cursor=s,*comma,element[60],sfrom[20],sto[20];
@@ -245,7 +246,7 @@ struct bfiindex *bfiIndexParse(s) char *s; {
   return(top);        
   }
   
-void bfiIndexPrint(index) struct bfiindex *index; {
+void bfiIndexPrint(struct bfiindex *index){
   struct bfiindex *cursor;
 
   printf("[");  
@@ -270,7 +271,7 @@ bfi bfifree=NULL;
 /*
 *  Allocate a block of 256 free segment cells and return 1.
 */
-bfi bfiAlloc(){
+bfi bfiAlloc(void){
   bfi s;
   
   bfifree=(bfi)malloc(256*sizeof(struct bfiseg));
@@ -285,7 +286,7 @@ bfi bfiAlloc(){
 /* 
 *  Allocate a new function/set (domain segment)
 */
-bfi bfiNew(start,end) long start,end; {
+bfi bfiNew(long start,long end){
   bfi f=bfifree;
 
   if(f==NULL) f=bfiAlloc();
@@ -307,7 +308,7 @@ bfi bfiNew(start,end) long start,end; {
 *  Allocate a new function/set domain based on two existing sets.
 *
 */
-bfi bfiDomain(g,h) bfi g,h; {
+bfi bfiDomain(bfi g,bfi h){
   long start,end;
   
   if(g->end>=h->end) start=g->end;     /* maximum start */
@@ -321,7 +322,7 @@ bfi bfiDomain(g,h) bfi g,h; {
 /* 
 *  Add a segment to a function/set
 */
-void bfiInsert(f,start,end) bfi f; long start,end; {
+void bfiInsert(bfi f,long start,long end){
   bfi s,t;
   
   for(s=f->prior;s!=f && (start<s->start || (start==s->start && end<s->end));s=s->prior);
@@ -340,7 +341,7 @@ void bfiInsert(f,start,end) bfi f; long start,end; {
 /* 
 *  Add a unique segment to a function/set
 */
-void bfiInsertUnique(f,start,end) bfi f; long start,end; {
+void bfiInsertUnique(bfi f,long start,long end){
   bfi s,t;
   
   for(s=f->prior;s!=f && (start<s->start || (start==s->start && end<s->end));s=s->prior);
@@ -359,7 +360,7 @@ void bfiInsertUnique(f,start,end) bfi f; long start,end; {
 /* 
 *  Remove a segment from a function/set and return prior segment.
 */
-bfi bfiRemove(s) bfi s; {
+bfi bfiRemove(bfi s){
   bfi prior=s->prior;
 
   s->prior->next=s->next;
@@ -372,7 +373,7 @@ bfi bfiRemove(s) bfi s; {
 /*
 *  Dispose of a function/set. 
 */
-bfi bfiDispose(f) bfi f; {
+bfi bfiDispose(bfi f){
  
   if(f==NULL) return(NULL);
   if(f->prior==NULL) return(NULL);
@@ -385,7 +386,7 @@ bfi bfiDispose(f) bfi f; {
 *  Copy a function/set.
 *
 */
-bfi bfiCopy(g) bfi g; {
+bfi bfiCopy(bfi g){
   bfi f,s;
   
   f=bfiNew(g->start,g->end);
@@ -402,7 +403,7 @@ bfi bfiCopy(g) bfi g; {
 /*
 *  Evaluate a bfi for a given integer
 */
-int bfiEval(f,i) bfi f; long i; {
+int bfiEval(bfi f,long i){
   bfi s;
 
   if(i<=f->end || i>f->start) return(0);  
@@ -416,7 +417,7 @@ int bfiEval(f,i) bfi f; long i; {
 /*
 *  Compare two functions/sets
 */
-int bfiCompare(g,h) bfi g,h; {
+int bfiCompare(bfi g,bfi h){
   bfi s,t=h->next;
   
   if(g->start!=h->start || g->end!=h->end) return(0);
@@ -447,7 +448,7 @@ void bfiPrint(bfi f,char *label){
 /*
 *  Parse a bfi definition string for debugging
 */
-bfi bfiParse(s) char *s; {
+bfi bfiParse(char *s){
   bfi f;
   char *comma,*colon,*bar;
   long start,end;
@@ -496,7 +497,7 @@ bfi bfiParse(s) char *s; {
 *               |----    |--------    |---   |--- 
 *                |-  |-      |------        |-- 
 */
-bfi bfiKnown(g) bfi g; {
+bfi bfiKnown(bfi g){
   bfi f,s;  
 
   f=bfiNew(g->start,g->end);     
@@ -532,7 +533,7 @@ bfi bfiKnown(g) bfi g; {
 *    Result     ================================= 
 *               |--------|---|--------|---------- 
 */
-bfi bfiUntil_(g) bfi g; {
+bfi bfiUntil_(bfi g){
   bfi f,s;
   
   f=bfiNew(g->start,g->end);
@@ -559,7 +560,7 @@ bfi bfiUntil_(g) bfi g; {
 *    Result     ================================= 
 *             |------    |---|------  |---   |---------   |------ 
 */
-bfi bfiYield_(g) bfi g; {
+bfi bfiYield_(bfi g){
   bfi f,s;
   
   f=bfiNew(g->start,g->end);
@@ -613,7 +614,7 @@ bfi bfiConflict_(bfi g){
 *    Result     ================================= 
 *             |------    |--------    |------   |---------------- 
 */
-bfi bfiOr_(g) bfi g; {
+bfi bfiOr_(bfi g){
   bfi f,s=g->next;
   
   f=bfiNew(g->start,g->end);
@@ -637,7 +638,7 @@ bfi bfiOr_(g) bfi g; {
 *    Result     ================================= 
 *             |------|-  |----------  |---  |----------   |------ 
 */
-bfi bfiOre_(g) bfi g; {
+bfi bfiOre_(bfi g){
   bfi f,s=g->next;
   
   f=bfiNew(g->start,g->end);
@@ -661,7 +662,7 @@ bfi bfiOre_(g) bfi g; {
 *    Result     ================================= 
 *                            |----                  |--   |--- 
 */
-bfi bfiAnd_(g) bfi g; {
+bfi bfiAnd_(bfi g){
   bfi f,h,s,t;
   long end;
   
@@ -691,7 +692,7 @@ bfi bfiAnd_(g) bfi g; {
 *
 *  NOTE: The NOT operation works within the defined domain only.
 */
-bfi bfiNot_(g) bfi g; {
+bfi bfiNot_(bfi g){
   bfi f,h,s;
   
   f=bfiNew(g->start,g->end);
@@ -719,7 +720,7 @@ bfi bfiNot_(g) bfi g; {
 *    Result     ================================= 
 *             |--------- |---     |-  |---   |------   |--    |-- 
 */
-bfi bfiXor_(g) bfi g; {
+bfi bfiXor_(bfi g){
   bfi f,s;
   long start=g->next->start;
   long end=g->next->end;
@@ -756,7 +757,7 @@ bfi bfiXor_(g) bfi g; {
 *    Result     ================================= 
 *             |------|-  |---     |-  |---   |------   |--    |-- 
 */
-bfi bfiXore_(g) bfi g; {
+bfi bfiXore_(bfi g){
   bfi f,s;
   long start=g->next->start;
   long end=g->next->end;
@@ -794,7 +795,7 @@ bfi bfiXore_(g) bfi g; {
 *    Result n=-1  ================================= 
 *                                              |--------- 
 */
-bfi bfiIndexOne(g,i) bfi g; int i; {
+bfi bfiIndexOne(bfi g,int i){
   //int count=0,n=1;
   int count=0;
   bfi f,s;
@@ -838,7 +839,7 @@ bfi bfiIndexOne(g,i) bfi g; int i; {
 *    Result n=-1  ================================= 
 *                                              |--------- 
 */
-bfi bfiIndex(g,index) bfi g; struct bfiindex *index; {
+bfi bfiIndex(bfi g,struct bfiindex *index){
   int J,K,n=0;
   bfi f,s,*array,*Jseg,*Kseg;
   struct bfiindex *range;
@@ -913,7 +914,7 @@ bfi bfiIndex(g,index) bfi g; struct bfiindex *index; {
 *    Result     ================================= 
 *             |------                 |--- 
 */
-bfi bfiReject(g,h) bfi g,h; {
+bfi bfiReject(bfi g,bfi h){
   bfi f,s=g->next,t,H;
 
   if(s==g || h->next==h) return(bfiCopy(g));
@@ -943,7 +944,7 @@ bfi bfiReject(g,h) bfi g,h; {
 *    Result     ================================= 
 *                        |--------           |---------   |------ 
 */  
-bfi bfiSelect(g,h) bfi g,h; {
+bfi bfiSelect(bfi g,bfi h){
   bfi f,s=g->next,t,H;
   
   f=bfiDomain(g,h);
@@ -971,7 +972,7 @@ bfi bfiSelect(g,h) bfi g,h; {
 *    Result     ================================= 
 *                        |--------           |---------   |------ 
 */  
-bfi bfiIndexedSelect(g,h,index) bfi g,h; struct bfiindex *index; {
+bfi bfiIndexedSelect(bfi g,bfi h,struct bfiindex *index){
   bfi f,F,s,t;
   long start=g->start,end=g->end;
   
@@ -1006,7 +1007,7 @@ bfi bfiIndexedSelect(g,h,index) bfi g,h; struct bfiindex *index; {
 *                        |-----    |---   |---------   |------ 
 *                            |------            |--------- 
 */
-bfi bfiUnion(g,h) bfi g,h; {
+bfi bfiUnion(bfi g,bfi h){
   bfi f,s=g->next,t=h->next;
   
   f=bfiDomain(g,h);
@@ -1053,7 +1054,7 @@ bfi bfiUnion(g,h) bfi g,h; {
 *             |----------             |----  |---------- 
 *                        |----------------- 
 */
-bfi bfiUntil(g,h) bfi g,h; {
+bfi bfiUntil(bfi g,bfi h){
   bfi f,s=g->next,t=h->next;
   
   f=bfiDomain(g,h);
@@ -1080,7 +1081,7 @@ bfi bfiUntil(g,h) bfi g,h; {
 *    Result     ================================= 
 *             |----      |--------    |---   |-------     |------
 */
-bfi bfiYield(g,h) bfi g,h; {
+bfi bfiYield(bfi g,bfi h){
   bfi f,s=g->next,t=h->next;
   
   f=bfiDomain(g,h);
@@ -1110,7 +1111,7 @@ bfi bfiYield(g,h) bfi g,h; {
 *    Result     ================================= 
 *                        |-----       |      |----   |-   |- 
 */
-bfi bfiAnd(g,h) bfi g,h; {
+bfi bfiAnd(bfi g,bfi h){
   bfi f,F,G,H;
 
   G=bfiOr_(g);
@@ -1135,7 +1136,7 @@ bfi bfiAnd(g,h) bfi g,h; {
 *             |------    |-------- |------  |-------------------- 
 *                    |- 
 */
-bfi bfiOre(g,h) bfi g,h; {
+bfi bfiOre(bfi g,bfi h){
   bfi f,F;
 
   F=bfiUnion(g,h);  
@@ -1155,7 +1156,7 @@ bfi bfiOre(g,h) bfi g,h; {
 *    Result     ================================= 
 *             |--------  |-------- |------  |-------------------- 
 */
-bfi bfiOr(g,h) bfi g,h; {
+bfi bfiOr(bfi g,bfi h){
   bfi f,F;
 
   F=bfiUnion(g,h);  
@@ -1175,7 +1176,7 @@ bfi bfiOr(g,h) bfi g,h; {
 *    Result     ================================= 
 *             |--------        |-- |-- |--  |     |--  |--  |---- 
 */
-bfi bfiXor(g,h) bfi g,h; {
+bfi bfiXor(bfi g,bfi h){
   bfi f,F,G,H;
 
   G=bfiOr_(g);
@@ -1199,7 +1200,7 @@ bfi bfiXor(g,h) bfi g,h; {
 *    Result     ================================= 
 *             |------|-        |-- |-- |--  |     |--  |--  |---- 
 */
-bfi bfiXore(g,h) bfi g,h; {
+bfi bfiXore(bfi g,bfi h){
   bfi f,F,G,H;
 
   G=bfiOre_(g);

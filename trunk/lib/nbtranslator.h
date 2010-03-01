@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -34,14 +34,15 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2003/03/16 eat 0.5.1  Split nbxtr.c off nbxtr.h for make file
-* 2003/03/17 eat 0.5.2  Conditioning out Windows here instead of at include
-* 2005/04/04 eat 0.6.2  Renamed and modified for use in the API for modules
-* 2005/04/08 eat 0.6.2  API function definitions moved to nbapi.h
-* 2006/05/09 eat 0.6.6  Included symbolic context
-* 2008/10/04 eat 0.7.2  Removed symbolic context
-* 2008/10/06 eat 0.7.2  Modified to use NodeBrain's API for regular expressions
-* 2008/10/14 eat 0.7.2  Modified to make projection a NodeBrain object
+* 2003-03-16 eat 0.5.1  Split nbxtr.c off nbxtr.h for make file
+* 2003-03-17 eat 0.5.2  Conditioning out Windows here instead of at include
+* 2005-04-04 eat 0.6.2  Renamed and modified for use in the API for modules
+* 2005-04-08 eat 0.6.2  API function definitions moved to nbapi.h
+* 2006-05-09 eat 0.6.6  Included symbolic context
+* 2008-10-04 eat 0.7.2  Removed symbolic context
+* 2008-10-06 eat 0.7.2  Modified to use NodeBrain's API for regular expressions
+* 2008-10-14 eat 0.7.2  Modified to make projection a NodeBrain object
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #ifndef _NB_TRANSLATOR_H_
@@ -111,7 +112,7 @@ struct NB_XI{
 extern struct TYPE *nb_TranslatorType;
 
 void nbTranslatorInit(NB_Stem *stem);
-void nbProjectionShowAll();
+void nbProjectionShowAll(void);
 
 #endif // NB_INTERNAL
 

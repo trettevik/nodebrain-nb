@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -33,9 +33,13 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2003/11/17 Ed Trettevik (original prototype)
+* 2003-11-17 Ed Trettevik (original prototype)
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
+#ifndef _NB_MACRO_H_
+#define _NB_MACRO_H_
+
 struct NB_MACRO{
   struct NB_OBJECT  object;      /* object header */
   struct NB_TERM   *context;     /* local context */
@@ -48,8 +52,10 @@ typedef struct NB_MACRO NB_Macro;
 
 extern struct TYPE *nb_MacroType;
 
-void nbMacroInit();
+void nbMacroInit(NB_Stem *stem);
 NB_Macro *nbMacroParse(NB_Cell *context,char **source);
 NB_Link *nbMacroParseTermList(NB_Cell *context,char **source);
 char *nbMacroSub(NB_Cell *context,char **cursorP);
 NB_String *nbMacroString(NB_Cell *context,char **source);
+
+#endif

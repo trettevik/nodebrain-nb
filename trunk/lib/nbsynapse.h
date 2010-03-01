@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -36,12 +36,15 @@
 * ---------- -----------------------------------------------------------------
 * 2004/12/02 Ed Trettevik (original prototype introduced in 0.6.2)
 * 2005/04/08 eat 0.6.2  API function definitions moved to nbapi.h
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #ifndef _NB_SYNAPSE_H_
 #define _NB_SYNAPSE_H_
 
 #if defined(NB_INTERNAL)
+
+#include <nbstem.h>
 
 /* condition function values
 */
@@ -61,7 +64,7 @@ extern NB_Synapse  *nb_SynapsePool;
 
 extern struct TYPE *nb_SynapseType;
 
-void nbSynapseInit();
+void nbSynapseInit(NB_Stem *stem);
 
 #endif // NB_INTERNAL
 

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -61,13 +61,13 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2002/08/25 Ed Trettevik (original prototype version introduced in 0.4.0)
+* 2002-08-25 Ed Trettevik (original prototype version introduced in 0.4.0)
 *             1) Some of this code was split out from nbcell.h
-* 2002/09/08 eat - version 0.4.1
+* 2002-09-08 eat - version 0.4.1
 *             1) Included code to set list function level.
-* 2003/12/09 eat 0.6.0  Included API Functions
-* 2004/08/28 eat 0.6.1  modified grabs associated with compute method
-* 2005/05/01 eat 0.6.2  refined handling of empty lists
+* 2003-12-09 eat 0.6.0  Included API Functions
+* 2004-08-28 eat 0.6.1  modified grabs associated with compute method
+* 2005-05-01 eat 0.6.2  refined handling of empty lists
 *            An empty list () must be recognized as different from a list
 *            with an Unknown entry (??) or a list with a placeholder.  The
 *            Unknown value does not make a good placeholder, so we are
@@ -81,6 +81,7 @@
 *               mynode(a,_,b) - list with placeholder for second member 
 *               mynode(a,,b)  - alternate syntax using implicit placeholder
 *            
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #include <nbi.h>
@@ -92,8 +93,7 @@ NB_List *nb_ListNull=NULL; /* null list pointer */
 struct HASH   *listH;           /* hash of known lists */
 struct TYPE   *nb_ListType;
 
-void listInsert(memberP,object)
-  NB_Link **memberP; void *object; {
+void listInsert(NB_Link **memberP,void *object){
   /*
   *  Insert object in unordered list.
   */
@@ -134,8 +134,7 @@ void nbListFree(NB_Link *member){
   member->next=free;  
   } 
   
-void listRemove(memberP,object)
-  NB_Link **memberP; void *object; {
+void listRemove(NB_Link **memberP,void *object){
   /* 
   *  Remove object from unordered list.
   */
@@ -268,7 +267,7 @@ NB_List *useList(NB_Link *member){
       }
     }
   /* didn't find it, get a new one */
-  list=nbCellNew(nb_ListType,&nb_ListFree,sizeof(NB_List));
+  list=nbCellNew(nb_ListType,(void **)&nb_ListFree,sizeof(NB_List));
   list->cell.object.value=nb_Disabled;
   list->link=member; 
   list->cell.object.next=(NB_Object *)*listP;  /* insert in hash list */
@@ -337,7 +336,7 @@ void printList(NB_List *list){
   outPut(")");
   }
 
-void nbListShowAll(){
+void nbListShowAll(void){
   printHash(nb_ListType->hash,"Lists",NULL);
   }
 
@@ -412,7 +411,7 @@ void listInit(NB_Stem *stem,long n){
   nb_ListType=newType(stem,"list",listH,0,printList,destroyList);
   nb_ListType->apicelltype=NB_TYPE_LIST;
   nbCellType(nb_ListType,solveList,evalList,enableList,disableList);
-  nb_ListNull=nbCellNew(nb_ListType,&nb_ListFree,sizeof(NB_List));
+  nb_ListNull=nbCellNew(nb_ListType,(void **)&nb_ListFree,sizeof(NB_List));
   nb_ListNull->cell.object.value=nb_Disabled;
   nb_ListNull->link=NULL;
   nb_ListNull->cell.object.next=NULL;  /* don't insert in hash list */
@@ -429,7 +428,7 @@ void listInit(NB_Stem *stem,long n){
 nbCELL nbListCreate(nbCELL context,char **cursorP){
   NB_List *list;
   if(cursorP==NULL){
-    list=nbCellNew(nb_ListType,&nb_ListFree,sizeof(NB_List));
+    list=nbCellNew(nb_ListType,(void **)&nb_ListFree,sizeof(NB_List));
     list->link=NULL;
     }
   else list=parseList((NB_Term *)context,cursorP); 

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -33,9 +33,10 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2005/12/10 Ed Trettevik (introduced in 0.6.4)
-* 2007/05/04 eat 0.6.7 - increased command buffer size
-* 2008/09/30 eat 0.7.1 - included thread pointer in medulla structure
+* 2005-12-10 Ed Trettevik (introduced in 0.6.4)
+* 2007-05-04 eat 0.6.7  Increased command buffer size
+* 2008-09-30 eat 0.7.1  Included thread pointer in medulla structure
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #ifndef _NB_MEDULLA_H_
@@ -194,9 +195,9 @@ typedef NB_Buffer *nbBUFFER;
 
 int nbMedullaOpen(void *session,int (*scheduler)(void *session),int (*processHandler)(nbPROCESS process,int pid,char *exittype,int exitcode));
 int nbMedullaPulse(int serve);
-int nbMedullaStop();
-int nbMedullaServing();
-int nbMedullaClose();
+int nbMedullaStop(void);
+int nbMedullaServing(void);
+int nbMedullaClose(void);
 
 // Object/File functions
 
@@ -259,10 +260,10 @@ int nbMedullaProcessHandler(int wait);
 
 // Queue functions
 
-nbQUEUE nbMedullaQueueOpen();
+nbQUEUE nbMedullaQueueOpen(void);
 int nbMedullaQueuePut(nbQUEUE queue,char *msg,size_t size);
 int nbMedullaQueueGet(nbQUEUE queue,char *msg,size_t size);
-nbQUEUE nbMedullaQueueClose();
+nbQUEUE nbMedullaQueueClose(nbQUEUE queue);
 
 NB_MedullaFile *nbMedullaFileOpen(int option,nbFILE file,void *session,int (*handler)(void *medFile));
 int nbMedullaFileReader(NB_MedullaFile *medfile,void *session,int (*consumer)(void *session,char *msg));

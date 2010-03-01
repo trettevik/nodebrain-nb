@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -70,13 +70,14 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2002/08/31 Ed Trettevik (original prototype version introduced in 0.4.1)
-* 2004/01/08 eat 0.6.0  Removed imbedded REAL from MATH structure.
+* 2002-08-31 Ed Trettevik (original prototype version introduced in 0.4.1)
+* 2004-01-08 eat 0.6.0  Removed imbedded REAL from MATH structure.
 *            This change makes math a bit less efficient because computed
 *            values must be looked up by useReal() instead of simply being
 *            stuffed in the imbedded structure.  But it simplifies the
 *            management of "grabs" on non-imbedded reals and the recognition
 *            of value changes via address changes.
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #include "nbi.h"
@@ -152,7 +153,7 @@ void printMathXY(struct MATH *math){
 /*
 *  Math destructor
 */
-void destroyMath(math) struct MATH *math;{
+void destroyMath(struct MATH *math){
   struct MATH *lmath,**mathP;
 
   if(trace) outMsg(0,'T',"destroyMath() called");
@@ -382,11 +383,7 @@ void initMath(NB_Stem *stem){
 /*
 *  Math constructor
 */
-struct MATH * useMath(inverse,type,left,right)
-  int inverse;
-  struct TYPE *type;
-  NB_Object *left;
-  NB_Object *right; {
+struct MATH * useMath(int inverse,struct TYPE *type,NB_Object *left,NB_Object *right){
   /*
   *  This routine returns a pointer to a math object.  If the
   *  expression is already defined, the existing structure is returned.
@@ -403,14 +400,14 @@ struct MATH * useMath(inverse,type,left,right)
   if(trace) outMsg(0,'T',"useMath called");
   if(inverse){
     lmath=useMath(0,type,left,right);
-    return(useMath(0,mathTypeInv,lmath,NULL));
+    return(useMath(0,mathTypeInv,(NB_Object *)lmath,NULL));
     }
   mathP=hashCond(mathH,type,left,right);
   for(math=*mathP;math!=NULL;math=*mathP){
     if(math->left==left && math->right==right && math->cell.object.type==type) return(math);
     mathP=(struct MATH **)&math->cell.object.next;
     }
-  math=nbCellNew(type,&mathFree,sizeof(struct MATH));
+  math=nbCellNew(type,(void **)&mathFree,sizeof(struct MATH));
   math->cell.object.next=(NB_Object *)*mathP;
   *mathP=math;
   math->left=grabObject(left);
@@ -424,6 +421,6 @@ struct MATH * useMath(inverse,type,left,right)
   return(math);
   }
 
-void printMathAll(){
+void printMathAll(void){
   printHash(mathH,"Math Table",NULL);
   }

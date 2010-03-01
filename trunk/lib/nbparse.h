@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2010 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -29,8 +29,9 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2002/08/25 Ed Trettevik (original version split out of nblogic.c)
-* 2005/04/08 eat 0.6.2  API function definitions moved to nbapi.h
+* 2002-08-25 Ed Trettevik (original version split out of nblogic.c)
+* 2005-04-08 eat 0.6.2  API function definitions moved to nbapi.h
+* 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
 #ifndef _NB_PARSE_H_
@@ -62,19 +63,18 @@ extern unsigned char nb_CharClass[256];
 #define NB_ISCELLDELIM(CHAR) (nb_CharClass[CHAR]==NB_CHAR_DELIM || nb_CharClass[CHAR]==NB_CHAR_END)
 #define NB_ISSYMDELIM(CHAR) (CHAR==' ' || nb_CharClass[CHAR]==NB_CHAR_DELIM || nb_CharClass[CHAR]==NB_CHAR_END)
 
-void nbParseInit();
+void nbParseInit(void);
 NB_Object *nbParseObject(NB_Term *context,char **cursor);
 NB_Object *nbParseRel(NB_Term *context,char **cursor);
 NB_Object *nbParseCell(NB_Term *context,char **cursor,int level);
 struct NB_LINK *nbParseAssertion(NB_Term *leftContext,NB_Term *rightContext,char **curP);
 
 
-char *my_strtok_r();
+char *my_strtok_r(char *cursor,char *delim,char **newcur);
 int isAlpha(char c);
 int isNumeric(char c);
 int isAlphaNumeric(char c);
-int  getQual();
-char *getQualifier();
+char *getQualifier(char *qCursor,char *sCursor);
 
 #endif // NB_INTERNAL
 
