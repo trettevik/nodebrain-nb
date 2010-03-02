@@ -52,6 +52,7 @@
 # ---------- -----------------------------------------------------------------
 # 2008-11-02 Ed Trettevik (version 0.7.3)
 # 2009-02-20 eat 0.7.5 port to other platforms (windows plus others)
+# 2010-02-26 John Ellson - fix libtoolize warning
 #=============================================================================
 
 AC_PREREQ(2.62)
@@ -74,7 +75,6 @@ AC_SUBST([LIBTOOL_DEPS])
 
 AC_PROG_CC
 AC_PROG_CXX
-AC_PROG_RANLIB
 
 # Figure out which nb program to use with "make check".
 #   If we are in a Nodebrain distribution, we'll use

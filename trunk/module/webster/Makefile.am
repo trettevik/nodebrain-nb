@@ -80,11 +80,14 @@
 ## Date       Name/Change
 ## ---------- -----------------------------------------------------------------
 ## 2008/10/18 Ed Trettevik (version 0.7.2)
+## 2010/02/26 John Ellson - fix libtoolize warnings
 ## 2010/02/27 eat 0.7.9  Included DESTDIR
 ##=============================================================================
 
 nblibdir = @libdir@/nb
 include Makefile.nm
+
+ACLOCAL_AMFLAGS = -I m4
 
 EXTRA_DIST += \
   README \

@@ -1,0 +1,83 @@
+Summary: A declarative rule-based language for state and event monitoring
+Name: @PACKAGE_NAME@
+Version: @PACKAGE_VERSION@
+Release: 1%{?dist}
+License: GPLv2
+Group: Applications/Engineering
+Source: @PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.gz
+URL: http://www.nodebrain.org/
+
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+
+BuildRequires: readline-devel pcre-devel openssl-devel
+
+%prep
+%setup -q 
+
+%build
+%configure 
+make
+
+%install
+rm -rf $RPM_BUILD_ROOT
+make DESTDIR=%{buildroot} \
+    docdir=%{buildroot}%{_docdir}/%{name} \
+    pkgconfigdir=%{_libdir}/pkgconfig \
+    install
+find %{buildroot} -type f -name "*.la" -exec rm -f {} ';'
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%description
+NodeBrain is an interpreter of a declarative rule-based language designed for construction of
+state and event monitoring applications. It interacts with other monitoring components to
+perform simple element state monitoring or complex event correlation based on user specified
+rules. It is extended through the development of node modules (plug-ins) using NodeBrain's
+C API, and servants (programs written in any language) that interact with NodeBrain via stdin,
+stdout, and stderr. A small set of plug-ins are distributed with NodeBrain to provide commonly
+needed features such as peer-to-peer communication, log monitoring, event caching, and a
+web browser interface for administrators. 
+
+%files
+%defattr(-,root,root,-)
+%doc AUTHORS COPYING ChangeLog NEWS README THANKS
+%{_bindir}/nb
+%{_bindir}/nb-%{version}
+%{_libdir}/libnb-%{version}.so
+%{_libdir}/libnb.so
+%{_libdir}/nb/*.so.*
+%{_libdir}/nb/*/*.so.*
+%exclude %{_libdir}/*.a
+%exclude %{_libdir}/*/*.a
+%{_mandir}/man1/*.1*
+%{_mandir}/man5/*.5*
+%{_mandir}/man7/*.7*
+%{_infodir}/*.info*
+%exclude %{_infodir}/dir
+
+#-- nodebrain-devel rpm --------------------------------------------------
+
+%package devel
+Group:          Development/Libraries
+Summary:        Development package for nodebrain
+Requires:       pkgconfig
+Requires:       nodebrain = %{version}-%{release}
+
+%description devel
+This package contains development files for nodebrain.
+
+%files devel
+%defattr(-,root,root,-)
+%{_includedir}/nb
+%{_libdir}/*.so
+%{_libdir}/*/*.so
+%{_libdir}/pkgconfig/*.pc
+%{_mandir}/man3/*.3.gz
+
+
+#-------------------------------------------------------------------------
+
+%changelog
+* Fri Feb 26 2010 John Ellson <ellson@research.att.com> - @PACKAGE_VERSION@-1
+- First rpm packaging.

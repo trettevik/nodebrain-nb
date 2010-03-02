@@ -113,9 +113,15 @@ noinst_DATA = \
 
 ##NB_MOD_SUFFIX = so
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = nb.pc
+
 EXTRA_DIST = \
   LICENSE.txt \
   Readme.txt \
+  nodebrain.spec.in \
+  nodebrain.spec \
+  nb.pc.in \
   build-nb \
   install-nb \
   bin/README \
@@ -195,3 +201,8 @@ srcdist: check dist
 	cd ${distdir}; ${MAKE} bindist
 	rm -fr ${distdir}
 	mv ${distdir}.tar.gz ${distdir}-source.tar.gz
+
+.PHONY: rpm
+rpm: dist
+	rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
+

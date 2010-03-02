@@ -75,9 +75,9 @@
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([nb],[0.7.9],[bugs@nodebrain.org])
+AC_INIT([nodebrain],[0.7.9],[bugs@nodebrain.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SUBDIRS([lib module])
 AM_INIT_AUTOMAKE
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile nodebrain.spec nb.pc])
 AC_OUTPUT
