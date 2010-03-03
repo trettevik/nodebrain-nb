@@ -9,7 +9,9 @@ URL: http://www.nodebrain.org/
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-BuildRequires: readline-devel pcre-devel openssl-devel
+BuildRequires: readline-devel pcre-devel openssl-devel gettext
+Requires(post): /sbin/install-info
+Requires(preun): /sbin/install-info
 
 %prep
 %setup -q 
@@ -25,23 +27,42 @@ make DESTDIR=%{buildroot} \
     pkgconfigdir=%{_libdir}/pkgconfig \
     install
 find %{buildroot} -type f -name "*.la" -exec rm -f {} ';'
+rm -f %{buildroot}/%{_infodir}/dir
+
+%post
+if [ -f %{_infodir}/nb.info.gz ]; then # for --excludedocs
+   /sbin/install-info %{_infodir}/nb.info.gz --dir-file=%{_infodir}/dir ||:
+   /sbin/install-info %{_infodir}/nbTutorial.info.gz --dir-file=%{_infodir}/dir ||:
+fi
+
+%preun
+if [ $1 = 0 ]; then
+    if [ -f %{_infodir}/nb.info.gz ]; then # for --excludedocs
+        /sbin/install-info --delete %{_infodir}/nb.info.gz %{_infodir}/dir ||:
+        /sbin/install-info --delete %{_infodir}/nbTutorial.info.gz %{_infodir}/dir ||:
+    fi
+fi
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %description
-NodeBrain is an interpreter of a declarative rule-based language designed for construction of
-state and event monitoring applications. It interacts with other monitoring components to
-perform simple element state monitoring or complex event correlation based on user specified
-rules. It is extended through the development of node modules (plug-ins) using NodeBrain's
-C API, and servants (programs written in any language) that interact with NodeBrain via stdin,
-stdout, and stderr. A small set of plug-ins are distributed with NodeBrain to provide commonly
-needed features such as peer-to-peer communication, log monitoring, event caching, and a
-web browser interface for administrators. 
+NodeBrain is an interpreter of a declarative rule-based language designed
+for construction of state and event monitoring applications. It interacts
+with other monitoring components to perform simple element state monitoring
+or complex event correlation based on user specified rules. It is extended
+through the development of node modules (plug-ins) using NodeBrain's C API,
+and servants (programs written in any language) that interact with
+NodeBrain via stdin, stdout, and stderr. A small set of plug-ins are
+distributed with NodeBrain to provide commonly needed features such as
+peer-to-peer communication, log monitoring, event caching, and a web
+browser interface for administrators. 
 
 %files
 %defattr(-,root,root,-)
 %doc AUTHORS COPYING ChangeLog NEWS README THANKS
+%dir %{_libdir}/nb
+%dir %{_libdir}/nb/0.7
 %{_bindir}/nb
 %{_bindir}/nb-%{version}
 %{_libdir}/libnb-%{version}.so
@@ -54,7 +75,6 @@ web browser interface for administrators.
 %{_mandir}/man5/*.5*
 %{_mandir}/man7/*.7*
 %{_infodir}/*.info*
-%exclude %{_infodir}/dir
 
 #-- nodebrain-devel rpm --------------------------------------------------
 
@@ -69,11 +89,28 @@ This package contains development files for nodebrain.
 
 %files devel
 %defattr(-,root,root,-)
+%dir %{_includedir}/nb
 %{_includedir}/nb
 %{_libdir}/*.so
 %{_libdir}/*/*.so
 %{_libdir}/pkgconfig/*.pc
-%{_mandir}/man3/*.3.gz
+%{_mandir}/man3/*.3*
+
+
+#-- nodebrain-static rpm --------------------------------------------------
+
+%package static
+Group:          Development/Libraries
+Summary:        Static libraries for nodebrain
+Requires:       nodebrain-devel = %{version}-%{release}
+
+%description static
+This package contains static libraies for nodebrain.
+
+%files static
+%defattr(-,root,root,-)
+%{_libdir}/*.a
+%{_libdir}/*/*.a
 
 
 #-------------------------------------------------------------------------
