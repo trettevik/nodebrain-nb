@@ -69,10 +69,11 @@
 # 2009/12/03 eat 0.7.7  New release
 # 2010/02/04 eat 0.7.8  New release
 # 2010/02/25 eat 0.7.9  New release 
+# 2010/05/06 eat 0.8.0  New release - multiple master message log support
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([libnb],[0.7.9],[bugs@nodebrain.org])
+AC_INIT([libnb],[0.8.0],[bugs@nodebrain.org])
 AC_CONFIG_SRCDIR([nb.h])
 AC_CONFIG_HEADER([nbcfg.h])
 AC_CONFIG_AUX_DIR(config)
@@ -81,7 +82,7 @@ AM_INIT_AUTOMAKE
 # define module directory variables
 
 AC_DEFINE_UNQUOTED(NB_API_VERSION,"0",[NodeBrain API version])
-NB_MODULE_PATH=".nb:/usr/local/lib/nb/0.7:/usr/local/lib/nb"
+NB_MODULE_PATH=".nb:/usr/local/lib/nb/0.8:/usr/local/lib/nb"
 NB_MODULE_PATH_SEPARATOR=":"
 AC_DEFINE_UNQUOTED(NB_MODULE_PATH,"${NB_MODULE_PATH}",[Module path])
 AC_DEFINE_UNQUOTED(NB_MODULE_PATH_SEPARATOR,'${NB_MODULE_PATH_SEPARATOR}',[Module path separator])
@@ -99,7 +100,7 @@ LT_SYS_MODULE_EXT
 LT_FUNC_DLSYM_USCORE
 
 # define a release date variable
-AC_DEFINE(NB_RELEASE_DATE,"2010/02/25",[Define release date])
+AC_DEFINE(NB_RELEASE_DATE,"2010/05/06",[Define release date])
 
 # Checks for programs.
 AC_PROG_CC
