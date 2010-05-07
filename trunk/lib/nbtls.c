@@ -131,8 +131,13 @@ nbTLS *nbTlsLoadListener(nbCELL context,nbCELL tlsContext,char *defaultUri,void 
   tlsx=nbTlsLoadContext(context,tlsContext,handle);
   uri=nbTermOptionString(tlsContext,"uri",defaultUri);
   tls=nbTlsCreate(tlsx,uri);
+  if(!tls){
+    nbLogMsg(context,0,'E',"nbTlsListener: Syntax error in uri=\"%s\"",uri);
+    return(NULL); 
+    }
+  else nbLogMsg(context,0,'T',"nbTlsListener: Parsed uri=\"%s\"",uri);
   if(nbTlsListen(tls)<0){
-    nbLogMsg(context,0,'E',"Unable to start listener - %s",tls->uriMap[0].uri);
+    nbLogMsg(context,0,'E',"nbTlsListener: Unable to start listener - %s",tls->uriMap[0].uri);
     }
   nbLogMsg(context,0,'T',"nbTlsLoadListener: uri=\"%s\" sd=%d",uri,tls->socket);
   return(tls);

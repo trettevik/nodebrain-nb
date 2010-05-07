@@ -195,7 +195,7 @@ void *nbTreeFindValue(
   return(NULL);
   }
 
-// nbTreeFindString()    - Binary tree search function
+// Find String - Case Sensitive
 //
 //   key       - pointer to key used for comparison
 //   root      - pointer to root node
@@ -215,6 +215,25 @@ void *nbTreeFindString(char *key,NB_TreeNode *root){
   return(NULL);
   }
 
+// Find String Case Insensitive
+//
+//   key       - pointer to key used for comparison
+//   root      - pointer to root node
+//
+// Returns node ptr when found, otherwise NULL.
+//
+void *nbTreeFindStringCase(char *key,NB_TreeNode *root){
+  int cmp;
+  NB_TreeNode *node=root;
+
+  while(node!=NULL){
+    //fprintf(stderr,"nbTreeFindString key=%s node->key=%s\n",key,(char *)node->key);
+    if((cmp=strcasecmp(key,node->key))==0) return(node);
+    if(cmp>0) node=node->right;
+    else node=node->left;
+    }
+  return(NULL);
+  }
 
 // nbTreeFindFloor()   - Binary tree search for max node less than or equal to key
 //
@@ -291,7 +310,7 @@ void *nbTreeLocateValue(NB_TreePath *path,void *key,NB_TreeNode **rootP,
   return(node);
   }
 
-// nbTreeLocateValue()  - AVL tree node location function
+// Locate String - case sensitive
 //
 void *nbTreeLocateString(NB_TreePath *path,char *key,NB_TreeNode **rootP){
   NB_TreeNode *node;     // Node poiter
@@ -321,6 +340,38 @@ void *nbTreeLocateString(NB_TreePath *path,char *key,NB_TreeNode **rootP){
   //else fprintf(stderr,"nbTreeLocateString: node=%x key=%s\n",node,node->key);
   return(node);
   }
+
+// Locate String Case Insensitive 
+//
+void *nbTreeLocateStringCase(NB_TreePath *path,char *key,NB_TreeNode **rootP){
+  NB_TreeNode *node;     // Node poiter
+  NB_TreeNode **nodeP;   // Address of node pointer
+  int depth=0;     // index into path
+  int cmp;         // comparison result
+
+  //fprintf(stderr,"nbTreeLocateString: called keyat=%p key=%s rootP=%x *rootP=%x\n",key,key,rootP,*rootP);
+  //if(*rootP!=NULL) fprintf(stderr,"nbTreeLocateString: root keyat=%x key=%s\n",&(*rootP)->key,(*rootP)->key);
+  path->key=key;   // save key for insertions
+  path->rootP=nodeP=path->balanceP=rootP;
+  path->balanceDepth=1;
+  path->node[depth]=(NB_TreeNode *)rootP; // this is a trick that depend on the left pointer
+  path->step[depth++]=0;            // being the first element of the node structure
+  for(node=*rootP;node!=NULL;node=*nodeP){
+    //fprintf(stderr,"nbTreeLocateString: key=%s node->keyat=%x node->key=%s\n",key,&node->key,(char *)node->key);
+    if((cmp=strcasecmp(key,(char *)node->key))==0) break;
+    cmp=cmp>0;          // 0 left, 1 right
+    if(node->balance!=0) path->balanceP=nodeP, path->balanceDepth=depth;
+    path->node[depth]=node;
+    if((path->step[depth++]=cmp)) nodeP=&node->right;
+    else nodeP=&node->left;
+    }
+  path->nodeP=nodeP;
+  path->depth=depth;
+  //if(node==NULL) fprintf(stderr,"nbTreeLocateString: node=%x\n",node);
+  //else fprintf(stderr,"nbTreeLocateString: node=%x key=%s\n",node,node->key);
+  return(node);
+  }
+
 
 
 // nbTreeInsert()  - AVL tree node insertion function

@@ -156,6 +156,11 @@ extern void *nbTreeFindString(char *key,NB_TreeNode *root);
 #if defined(WIN32)
 _declspec (dllexport)
 #endif
+extern void *nbTreeFindStringCase(char *key,NB_TreeNode *root);
+
+#if defined(WIN32)
+_declspec (dllexport)
+#endif
 extern void *nbTreeFindValue(
      void *key,
      NB_TreeNode *root,
@@ -180,6 +185,11 @@ extern void *nbTreeLocate(NB_TreePath *path,void *key,NB_TreeNode **rootP);
 _declspec (dllexport)
 #endif
 extern void *nbTreeLocateString(NB_TreePath *path,char *key,NB_TreeNode **rootP);
+
+#if defined(WIN32)
+_declspec (dllexport)
+#endif
+extern void *nbTreeLocateStringCase(NB_TreePath *path,char *key,NB_TreeNode **rootP);
 
 #if defined(WIN32)
 _declspec (dllexport)

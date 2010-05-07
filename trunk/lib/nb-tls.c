@@ -196,7 +196,7 @@ int nbTlsUriParse(nbTlsUriMap *uriMap,int n,char *uriList){
     while(*uricur==' ') uricur++;
     cursor=uriMap->uri;
     if(strncmp(cursor,"file://",7)==0) uriMap->scheme=NB_TLS_SCHEME_FILE,cursor+=7;
-    if(strncmp(cursor,"unix://",7)==0) uriMap->scheme=NB_TLS_SCHEME_UNIX,cursor+=7;
+    else if(strncmp(cursor,"unix://",7)==0) uriMap->scheme=NB_TLS_SCHEME_UNIX,cursor+=7;
     else if(strncmp(cursor,"tcp://",6)==0) uriMap->scheme=NB_TLS_SCHEME_TCP,cursor+=6;
     else if(strncmp(cursor,"tls://",6)==0) uriMap->scheme=NB_TLS_SCHEME_TLS,cursor+=6;
     else if(strncmp(cursor,"https://",8)==0) uriMap->scheme=NB_TLS_SCHEME_HTTPS,cursor+=8;
@@ -336,16 +336,18 @@ int nbTlsFreeContext(nbTLSX *tlsx){
 */
 nbTLS *nbTlsCreate(nbTLSX *tlsx,char *uri){
   nbTLS *tls;
+  int uriCount;
 
   tls=(nbTLS *)malloc(sizeof(nbTLS));
   memset(tls,0,sizeof(nbTLS));
   tls->tlsx=tlsx;
   if(tlsx) tls->handle=tlsx->handle;
-  tls->uriCount=nbTlsUriParse(tls->uriMap,3,uri);
-  if(tls->uriCount<1){
+  uriCount=nbTlsUriParse(tls->uriMap,3,uri);
+  if(uriCount<1){
     free(tls);
     return(NULL);
     }
+  tls->uriCount=uriCount;
   // NOTE: The tls->option of NB_TLS_OPTION_TLS should not be referenced in the future
   // Instead we need to look at tls->uriMap[tls->uriIndex].scheme
   if(tls->uriMap[0].scheme==NB_TLS_SCHEME_TLS || tls->uriMap[0].scheme==NB_TLS_SCHEME_HTTPS) tls->option|=NB_TLS_OPTION_TLS;

@@ -292,7 +292,7 @@ int nbGetCmdInteractive(char *cmd){
 void printVersion(void){
   printf("nb %s\n\n",PACKAGE_VERSION);
   printf("N o d e B r a i n\n");
-  printf("Copyright (C) 1998-2009 The Boeing Company\n");
+  printf("Copyright (C) 1998-2010 The Boeing Company\n");
   printf("GNU General Public License\n\n");
   }
 
@@ -330,7 +330,8 @@ void printHelp(void){
   printf("also available on the web at www.nodebrain.org.\n");
   }
 
-char *aboutText=
+void printAbout(void){
+  char *aboutText=
     "NodeBrain is an open source rule engine for state and event\n"
     "monitoring applications.  It is an interpreter of a small\n"
     "declarative rule language extended by node modules (plug-ins)\n"
@@ -342,9 +343,8 @@ char *aboutText=
     "See http://www.nodebrain.org for more information.\n\n"
     "Author: Ed Trettevik <eat@nodebrain.org>\n\n";
 
-void printAbout(void){
   printVersion();
-  printf(aboutText);
+  printf("%s",aboutText);
   }
 
 void showVersion(void){
@@ -354,7 +354,7 @@ void showVersion(void){
 
 void showCopyright(void){
   showVersion();
-  outPut("Copyright (C) 1998-2009 The Boeing Company\n");
+  outPut("Copyright (C) 1998-2010 The Boeing Company\n");
   outPut("GNU General Public License\n");
   outPut("----------------------------------------------------------------\n\n");
   }

@@ -159,7 +159,7 @@ static void nbPeerWriter(nbCELL context,int sd,void *handle){
     if((code=(*peer->producer)(context,peer,peer->handle))){  // call producer for more data
       nbPeerShutdown(context,peer,code);
       }
-    if(peer->wloc==peer->wbuf){  // if we didn't get more data, stop waiting to write
+    if(peer->wloc==peer->wbuf){  // if we don't have more data to write, stop waiting to write
       nbListenerRemoveWrite(context,sd);
       peer->flags&=0xff-NB_PEER_FLAG_WRITE_WAIT;
       }

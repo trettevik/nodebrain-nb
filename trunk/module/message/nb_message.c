@@ -50,9 +50,10 @@
 *
 *   A producer (in term of this module) is defined as follows.
 *
-*     define <term> node message.producer("<cabal>",<node>);
-*     # <cabal>    - name given to a set of cooperating nodes
-*     # <node>     - number of this node within the cabal
+*     define <term> node message.producer("<cabal>","<nodeName>"[,<nodeNumber>]);
+*     # <cabal>      - name given to a set of cooperating nodes
+*     # <nodeName>   - name of node within the cabal
+      # <nodeNumber> - number of node within the cabal
 *     <term>. define filesize cell <filesize>; # maximum file size
 *
 *   Messages can be initiated via the node command.
@@ -86,6 +87,7 @@
 * 2009-12-30 eat 0.7.7  Organized into producer/consumer/server/client/peer skills
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
+* 2010-04-26 eat 0.7.9  Included optional node number argument to message.producer
 *===================================================================================
 */
 #include "config.h"
@@ -131,7 +133,7 @@ typedef struct NB_MOD_PRODUCER{    // message.producer node descriptor
 /*
 *  construct() method
 *
-*    define <term> node message.producer("<cabal>","<node>");
+*    define <term> node message.producer("<cabal>","<node>",<number>);
 */
 void *producerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   nbModProducer *producer;
@@ -141,6 +143,7 @@ void *producerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *te
   char cabalName[32];
   char nodeName[32];
   int cabalNode=0;
+  double cabalNodeReal;
   int type,trace=0,dump=0,echo=1;
   char *str;
 
@@ -174,15 +177,31 @@ void *producerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *te
     }
   str=nbCellGetString(context,cell);
   if(strlen(str)>sizeof(nodeName)-1){
-    nbLogMsg(context,0,'E',"Second argument must node exceed %d characters",sizeof(nodeName)-1);
+    nbLogMsg(context,0,'E',"Second argument must not exceed %d characters",sizeof(nodeName)-1);
     return(NULL);
     }
   strcpy(nodeName,str);  // size checked
   nbCellDrop(context,cell);
+  // optional node number
   cell=nbListGetCellValue(context,&argSet);
   if(cell!=NULL){
-    nbLogMsg(context,0,'E',"The message.producer skill only accepts two arguments.");
-    return(NULL);
+    type=nbCellGetType(context,cell);
+    if(type!=NB_TYPE_REAL){
+      nbLogMsg(context,0,'E',"Third argument must be number identifying node");
+      return(NULL);
+      }
+    cabalNodeReal=nbCellGetReal(context,cell);
+    cabalNode=(int)cabalNodeReal;
+    if((float)cabalNode!=cabalNodeReal || cabalNode<0 || cabalNode>255){
+      nbLogMsg(context,0,'E',"Third argument must be integer node number from 0 to 255");
+      return(NULL);
+      }
+    nbCellDrop(context,cell);
+    cell=nbListGetCellValue(context,&argSet);
+    if(cell!=NULL){
+      nbLogMsg(context,0,'E',"The message.producer skill only accepts three arguments.");
+      return(NULL);
+      }
     }
   while(*cursor==' ') cursor++;
   while(*cursor!=';' && *cursor!=0){
@@ -562,7 +581,7 @@ int clientMessageHandler(nbCELL context,void *handle,nbMsgRec *msgrec){
 /*
 *  construct() method
 *
-*    define <term> node message.peer("<cabal>",<node>,<port>);
+*    define <term> node message.peer("<cabal>","<nodeName>");
 *    <term>. define filelines cell <filelines>; # number of lines per file
 */
 void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
@@ -656,9 +675,13 @@ int clientEnable(nbCELL context,void *skillHandle,nbModClient *client){
   // We call nbMsgCabalClient with a NULL message state to let the message log
   // define our state.  For other applications we may want to set the message state
   // from another source, and reprocess message from the log to resynchronize.
-  if(!client->msgclient) client->msgclient=nbMsgCabalClient(context,client->cabalName,client->nodeName,NULL,client,clientMessageHandler);
+  if(!client->msgclient) client->msgclient=nbMsgCabalClient(context,client->cabalName,client->nodeName,client,clientMessageHandler);
   if(!client->msgclient){
     nbLogMsg(context,0,'E',"Unable to instantiate message client for cabal \"%s\" node \"%s\"",client->cabalName,client->nodeName);
+    return(1);
+    }
+  if(nbMsgCabalClientSync(context,client->msgclient,NULL)){
+    nbLogMsg(context,0,'E',"Unable to synchronize message client for cabal \"%s\" node \"%s\"",client->cabalName,client->nodeName);
     return(1);
     }
   nbMsgCabalEnable(context,client->msgclient);

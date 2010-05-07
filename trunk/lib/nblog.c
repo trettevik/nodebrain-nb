@@ -606,9 +606,9 @@ int nbLogMsg(nbCELL context,int msgNumber,char msgType,char *format,...){
   nb_OutCursor++;
   /* note: msgclass='C' is reserved for outMsg above */
   if(msgType=='T') outFlush();
-  else if((msgType=='E' || msgType=='L') && nb_opt_bail==1){
+  else if(msgType=='E' || msgType=='L'){
     outFlush();
-    outBail();
+    if(nb_opt_bail==1) outBail();
     }
   return(0);
   }
