@@ -193,6 +193,7 @@ typedef struct NB_MSG_CACHE_SUBSCRIBER{
 #define NB_MSG_CACHE_FLAG_PAUSE   1 // subscriber is not ready - wait for subscriber to call nbMsgCachePublish 
 #define NB_MSG_CACHE_FLAG_MSGLOG  2 // reading from message log
 #define NB_MSG_CACHE_FLAG_INBUF   4 // next message is in the msglog buffer
+#define NB_MSG_CACHE_FLAG_AGAIN   8 // next message in cache should be processed
 
 typedef struct NB_MSG_CACHE{      // message cache structure
   nbMsgCacheSubscriber *msgsub;   // list of subscribers
@@ -281,7 +282,8 @@ typedef struct NB_MSG_CABAL{
 
 extern nbMsgCabal *nbMsgCabalOpen(nbCELL context,int mode,char *cabalName,char *nodeName,nbMsgState *msgstate,void *handle,int (*handler)(nbCELL context,void *handle,nbMsgRec *msgrec));
 extern nbMsgCabal *nbMsgCabalServer(nbCELL context,char *cabal,char *nodeName);
-extern nbMsgCabal *nbMsgCabalClient(nbCELL context,char *cabal,char *nodeName,nbMsgState *msgstate,void *handle,int (*handler)(nbCELL context,void *handle,nbMsgRec *msgrec));
+extern nbMsgCabal *nbMsgCabalClient(nbCELL context,char *cabal,char *nodeName,void *handle,int (*handler)(nbCELL context,void *handle,nbMsgRec *msgrec));
+extern int nbMsgCabalClientSync(nbCELL context,nbMsgCabal *msgcabal,nbMsgState *msgstate);
 extern int nbMsgCabalEnable(nbCELL context,nbMsgCabal *msgcabal);
 extern int nbMsgCabalDisable(nbCELL context,nbMsgCabal *msgcabal);
 extern int nbMsgCabalFree(nbCELL context,nbMsgCabal *msgcabal);

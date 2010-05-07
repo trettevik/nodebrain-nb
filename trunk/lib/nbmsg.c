@@ -1502,21 +1502,26 @@ int nbMsgCachePublish(nbCELL context,nbMsgCacheSubscriber *msgsub){
   unsigned char *cachePtr;
 
   nbLogMsg(context,0,'T',"nbMsgCachePublish: called with flags=%2.2x",msgsub->flags);
-  if(msgsub->flags&NB_MSG_CACHE_FLAG_MSGLOG){
+  //if(msgsub->flags&NB_MSG_CACHE_FLAG_MSGLOG){
+  // 2010-05-06 eat - msglog could have hit end of file, so we need to check FLAG_INBUF without first checking FLAG_MSGLOG
     if(msgsub->flags&NB_MSG_CACHE_FLAG_INBUF){
+      nbLogMsg(context,0,'T',"nbMsgCachePublish: calling subscription handler for messaging remaining in message log buffer");
       if((*msgsub->handler)(context,msgsub->handle,msgsub->msglog->msgrec)) return(0);
       else{
+        nbLogMsg(context,0,'T',"nbMsgCachePublish: turning FLAG_INBUF off");
         msgsub->flags&=0xff-NB_MSG_CACHE_FLAG_INBUF;
         messages++;
         }
       }
-    msgsub->flags&=0xff-NB_MSG_CACHE_FLAG_PAUSE;  // turn off pause flag - subscriber may have called us
+     msgsub->flags&=0xff-NB_MSG_CACHE_FLAG_PAUSE;  // turn off pause flag - subscriber may have called us
+  if(msgsub->flags&NB_MSG_CACHE_FLAG_MSGLOG){
     nbLogMsg(context,0,'T',"nbMsgCachePublish: msgsub=%p msgsub->msglog=%p",msgsub,msgsub->msglog);
     while(!(state&NB_MSG_STATE_LOGEND)){
       state=nbMsgLogRead(context,msgsub->msglog);
       nbLogMsg(context,0,'T',"nbMsgCachePublish: nbMsgLogRead returned state=%d",state);
       if(state&NB_MSG_STATE_PROCESS){
         if((*msgsub->handler)(context,msgsub->handle,msgsub->msglog->msgrec)){
+          nbLogMsg(context,0,'T',"nbMsgCachePublish: turning FLAG_INBUF and FLAG_PAUSE on");
           msgsub->flags|=NB_MSG_CACHE_FLAG_INBUF|NB_MSG_CACHE_FLAG_PAUSE;
           return(messages);
           }
@@ -1549,10 +1554,16 @@ int nbMsgCachePublish(nbCELL context,nbMsgCacheSubscriber *msgsub){
         nbLogMsg(context,0,'L',"Fatal error in message cache - invalid message record type %u - terminating",msgrec->type);
         exit(1);
         }
-      state=nbMsgLogSetState(context,msgsub->msglog,msgrec);
+      if(msgsub->flags&NB_MSG_CACHE_FLAG_AGAIN) state=NB_MSG_STATE_PROCESS;
+      else state=nbMsgLogSetState(context,msgsub->msglog,msgrec);
       if(state&NB_MSG_STATE_PROCESS){
+        msgsub->flags&=0xff-NB_MSG_CACHE_FLAG_AGAIN;
+        nbLogMsg(context,0,'T',"nbMsgCachePublish: calling handler");
         if((*msgsub->handler)(context,msgsub->handle,msgrec)){
-          msgsub->flags|=NB_MSG_CACHE_FLAG_INBUF|NB_MSG_CACHE_FLAG_PAUSE;
+          nbLogMsg(context,0,'T',"nbMsgCachePublish: calling handler");
+          // 2010-05-06 eat - doesn't seem like we should set INBUF here
+          //msgsub->flags|=NB_MSG_CACHE_FLAG_INBUF|NB_MSG_CACHE_FLAG_PAUSE;
+          msgsub->flags|=NB_MSG_CACHE_FLAG_PAUSE|NB_MSG_CACHE_FLAG_AGAIN;
           msgsub->cachePtr=cachePtr;
           return(messages);
           }
@@ -1886,7 +1897,9 @@ static int nbMsgPeerConsumer(nbCELL context,nbPeer *peer,void *handle,void *data
   nbLogMsg(context,0,'T',"nbMsgPeerConsumer: calling nbMsgLogWriteReplica msgrec=%p",msgrec);
   state=nbMsgLogWriteReplica(context,msgnode->msgcabal->msglog,msgrec);
   if(state&NB_MSG_STATE_PROCESS){
-    nbLogMsg(context,0,'T',"nbMsgPeerConsumer: calling client message handler");
+    nbLogMsg(context,0,'T',"nbMsgPeerConsumer: calling client message handler msgnode=%p",msgnode);
+    nbLogMsg(context,0,'T',"nbMsgPeerConsumer: calling client message handler msgnode->msgcabal=%p",msgnode->msgcabal);
+    nbLogMsg(context,0,'T',"nbMsgPeerConsumer: calling client message handler msgnode->msgcabal->handler=%p",msgnode->msgcabal->handler);
     rc=(*msgnode->msgcabal->handler)(context,msgnode->msgcabal->handle,msgrec);
     nbLogMsg(context,0,'T',"nbMsgPeerConsumer: rc=%d from client message handler",rc);
     }
@@ -2124,16 +2137,11 @@ nbMsgNode *nbMsgNodeCreate(nbCELL context,char *cabalName,char *nodeName,nbCELL 
     }
   nbLogMsg(context,0,'T',"calling nbTermOptionString");
   uri=nbTermOptionString(nodeContext,serviceName,"");
-  nbLogMsg(context,0,'T',"back from nbTermOptionString uri=%p",uri);
   nbLogMsg(context,0,'T',"back from nbTermOptionString uri=%s",uri);
-  nbLogMsg(context,0,'T',"really");
   if(!uri || !*uri){
-    nbLogMsg(context,0,'T',"rally");
     nbLogMsg(context,0,'W',"Cabal \"%s\" node \"%s\" %s not defined",cabalName,nodeName,serviceName);
-    nbLogMsg(context,0,'T',"ralph");
     return(NULL);
     }
-  nbLogMsg(context,0,'T',"allocating");
   msgnode=(nbMsgNode *)nbAlloc(sizeof(nbMsgNode));
   memset(msgnode,0,sizeof(nbMsgNode)); 
   msgnode->prior=msgnode;
@@ -2336,42 +2344,55 @@ nbMsgCabal *nbMsgCabalServer(nbCELL context,char *cabalName,char *nodeName){
 *    When called without a message state, the state is defined by the message log
 *    and we don't pass any messages from the log to the message handler.
 */
-nbMsgCabal *nbMsgCabalClient(nbCELL context,char *cabalName,char *nodeName,nbMsgState *msgstate,void *handle,int (*handler)(nbCELL context,void *handle,nbMsgRec *msgrec)){
+nbMsgCabal *nbMsgCabalClient(nbCELL context,char *cabalName,char *nodeName,void *handle,int (*handler)(nbCELL context,void *handle,nbMsgRec *msgrec)){
   nbMsgCabal *msgcabal;
-  //nbMsgState *msgstate;
-  nbMsgLog *msglog;
-  int state;
-  int rc;
 
+  nbLogMsg(context,0,'T',"nbMsgCabalClient: called");
   msgcabal=nbMsgCabalAlloc(context,cabalName,nodeName,NB_MSG_CABAL_MODE_CLIENT); // 1 for client
   if(!msgcabal) return(NULL);
   msgcabal->handle=handle;
   msgcabal->handler=handler;
-  //msgstate=nbMsgStateCreate(context);
   nbLogMsg(context,0,'T',"msgcabal->node->number=%d",msgcabal->node->number);
-  msglog=nbMsgLogOpen(context,cabalName,nodeName,msgcabal->node->number,"",NB_MSG_MODE_PRODUCER,msgstate);
+  return(msgcabal);
+  }
+
+/*
+*  Synchronize client with own message log
+*
+*        nbMsgCabalFree(context,msgcabal);
+*/
+int nbMsgCabalClientSync(nbCELL context,nbMsgCabal *msgcabal,nbMsgState *msgstate){
+  nbMsgLog *msglog;
+  int state;
+  int rc;
+
+  if(!msgcabal){
+    nbLogMsg(context,0,'E',"nbMsgCabalClientSync: called with null msgcabal");
+    return(-1);
+    }
+  msglog=nbMsgLogOpen(context,msgcabal->cabalName,msgcabal->node->name,msgcabal->node->number,"",NB_MSG_MODE_PRODUCER,msgstate);
+  if(!msglog){
+    nbLogMsg(context,0,'E',"nbMsgCabalClientSync: msgcabal has null msglog");
+    return(-1);
+    }
   msgcabal->msglog=msglog;
-  if(msglog){
-    while(!((state=nbMsgLogRead(context,msglog))&NB_MSG_STATE_LOGEND)){
-      //nbLogMsg(context,0,'T',"nbMsgCabalClient: return from nbMsgLogRead state=%d",state);
-      if(msgstate && state&NB_MSG_STATE_PROCESS){  // handle new message records
-        nbLogMsg(context,0,'T',"nbMsgCabalClient: calling message handler");
-        // consider using the root node's handle and handler
-        if((rc=(*msgcabal->handler)(context,msgcabal->handle,msglog->msgrec))!=0){
-          nbLogMsg(context,0,'I',"Message handler return code=%d",rc);
-          nbMsgCabalFree(context,msgcabal);
-          return(NULL);
-          }
+  while(!((state=nbMsgLogRead(context,msglog))&NB_MSG_STATE_LOGEND)){
+    //nbLogMsg(context,0,'T',"nbMsgCabalClientSync: return from nbMsgLogRead state=%d",state);
+    if(msgstate && state&NB_MSG_STATE_PROCESS){  // handle new message records
+      nbLogMsg(context,0,'T',"nbMsgCabalClientSync: calling message handler");
+      // consider using the root node's handle and handler
+      if((rc=(*msgcabal->handler)(context,msgcabal->handle,msglog->msgrec))!=0){
+        nbLogMsg(context,0,'I',"Message handler return code=%d",rc);
+        return(-1);
         }
       }
-    if(nbMsgLogProduce(context,msglog,10*1024*1024)!=0){
-      nbLogMsg(context,0,'E',"nbMsgCabalClient: Unable to switch to producer mode");
-      nbMsgCabalFree(context,msgcabal);
-      return(NULL);
-      }
-    nbLogMsg(context,0,'T',"nbMsgCabalClient: End of log - cabal=%s node=%s",cabalName,nodeName);
     }
-  return(msgcabal);
+  if(nbMsgLogProduce(context,msglog,10*1024*1024)!=0){
+    nbLogMsg(context,0,'E',"nbMsgCabalClient: Unable to switch to producer mode");
+    return(-1);
+    }
+  nbLogMsg(context,0,'T',"nbMsgCabalClient: End of log - cabal=%s node=%s",msgcabal->cabalName,msgcabal->node->name);
+  return(0);
   }
 
 /*
