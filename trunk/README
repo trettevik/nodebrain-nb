@@ -1,16 +1,16 @@
-N o d e B r a i n   0.7.9
+N o d e B r a i n   0.8.0
 
 ========================================================================
 
-File:        README for nb-0.7.9 release files
+File:        README for nb-0.8.0 release files
 
 Package:     NodeBrain (nb)
 
-Version:     0.7 - Dunce
+Version:     0.8 - Dopey
 
-Release:     0.7.9  [NOT RELEASED]
+Release:     0.8.0  
 
-Date:        February 26, 2010
+Date:        May 7, 2010
 
 Reference:   http://www.nodebrain.org
                1) Online documentation
@@ -18,16 +18,17 @@ Reference:   http://www.nodebrain.org
 
 See NEWS for a list of changes in this release.
 
-NOTE: This version is incompatible with rules coded for 0.6.x and prior
-versions.  You will need to modify existing rules for use with 0.7.x.
+NOTE: This version is compatible with rules coded for 0.7.x versions,
+but not 0.6.x and prior versions.  When upgrading from versions prior
+to 0.7.x, you will need to modify our rule files.
 ======================================================================== 
 
 Installation Instructions for Unix/Linux Platforms
 
 a) From source code distribution - install to standard directories
 
-     $ tar -xzf nb-0.7.9.tar.gz
-     $ cd nb-0.7.9
+     $ tar -xzf nb-0.8.0.tar.gz
+     $ cd nb-0.8.0
      $ ./configure
      $ make
      $ make check
@@ -35,20 +36,14 @@ a) From source code distribution - install to standard directories
 
 b) From source code distribution - install to /tmp/nodebrain
 
-     $ tar -xzf nb-0.7.9.tar.gz
-     $ cd nb-0.7.9
+     $ tar -xzf nb-0.8.0.tar.gz
+     $ cd nb-0.8.0
      $ mkdir /tmp/nodebrain
      $ ./configure --prefix=/tmp/nodebrain
      $ make
      $ make check
      $ make install
 
-c) From binary distribution (none available at time of initial release)
-
-     $ tar -xzf nb-0.7.9-<distribution>.tar.gz
-     $ cd nb-0.7.9
-     $ ./install-nb
-   
 ======================================================================== 
 Unix/Linux Platforms
 
@@ -59,7 +54,7 @@ OS            Hardware
 -----------   ----------------------------------------------------
 GNU/Linux
   Suse        IBM s390
-  Red Hat 5.2 HP x86
+  Red Hat 5.4 HP x86
 
 Previous version of NodeBrain built ok on the following platforms, but
 have not been tried with this release.  We relied on the SourceForge
@@ -90,7 +85,7 @@ UNIX
 
 Installation Instructions for Windows
 
-Version 0.7 has not been ported to Windows yet.  You will need to use
+Version 0.8 has not been ported to Windows yet.  You will need to use
 0.6.5 on Windows and follow these instrucutions.
 
 The best way to install on a Windows platform is to obtain a Windows
