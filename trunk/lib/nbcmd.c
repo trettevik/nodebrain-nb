@@ -1737,7 +1737,7 @@ void nbCmdExit(nbCELL context,char *verb,char *cursor){
 /*
 *  Get command from stdin
 */
-char *nbGets(int file,char *strbuf,size_t strlen){
+char *nbGets(int file,char *strbuf,size_t strbuflen){
   char *strcur=strbuf;
   static char *buf=NULL;
   static char *bufcur;
@@ -1754,7 +1754,7 @@ char *nbGets(int file,char *strbuf,size_t strlen){
     }
   while((bufnew=memchr(bufcur,'\n',bufend-bufcur))==NULL){
      seglen=bufend-bufcur;
-     if(strlen<=(size_t)(strcur+seglen-strbuf)) seglen=strbuf+strlen-strcur;
+     if(strbuflen<=(size_t)(strcur+seglen-strbuf)) seglen=strbuf+strbuflen-strcur;
      strncpy(strcur,bufcur,seglen);
      strcur+=seglen;
      buflen=read(file,buf,NB_BUFSIZE);
@@ -1769,7 +1769,7 @@ char *nbGets(int file,char *strbuf,size_t strlen){
      bufend=buf+buflen;
      }
   seglen=bufnew-bufcur;
-  if(strlen<=(size_t)(strcur+seglen-strbuf)) seglen=strbuf+strlen-strcur;
+  if(strbuflen<=(size_t)(strcur+seglen-strbuf)) seglen=strbuf+strbuflen-strcur;
   strncpy(strcur,bufcur,seglen);
   strcur+=seglen;
   *strcur=0; /* insert end of string */
