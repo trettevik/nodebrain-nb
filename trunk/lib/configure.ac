@@ -70,10 +70,12 @@
 # 2010/02/04 eat 0.7.8  New release
 # 2010/02/25 eat 0.7.9  New release 
 # 2010/05/06 eat 0.8.0  New release - multiple master message log support
+# 2010/05/11 eat 0.8.1  Fix to defects in message cabal feature 
+# 2010/05/21 eat 0.8.2  Fix more defects in message cabal feature 
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([libnb],[0.8.0],[bugs@nodebrain.org])
+AC_INIT([libnb],[0.8.2],[bugs@nodebrain.org])
 AC_CONFIG_SRCDIR([nb.h])
 AC_CONFIG_HEADER([nbcfg.h])
 AC_CONFIG_AUX_DIR(config)
@@ -100,7 +102,7 @@ LT_SYS_MODULE_EXT
 LT_FUNC_DLSYM_USCORE
 
 # define a release date variable
-AC_DEFINE(NB_RELEASE_DATE,"2010/05/06",[Define release date])
+AC_DEFINE(NB_RELEASE_DATE,"2010/05/21",[Define release date])
 
 # Checks for programs.
 AC_PROG_CC

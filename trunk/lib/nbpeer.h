@@ -62,7 +62,7 @@ typedef struct NB_PEER{
 
 // API
 
-extern nbPeer *nbPeerConstruct(nbCELL context,char *uriName,char *uri,nbCELL tlsContext,void *handle,
+extern nbPeer *nbPeerConstruct(nbCELL context,int client,char *uriName,char *uri,nbCELL tlsContext,void *handle,
   int (*producer)(nbCELL context,nbPeer *peer,void *handle),
   int (*consumer)(nbCELL context,nbPeer *peer,void *handle,void *data,int len),
   void (*shutdown)(nbCELL context,nbPeer *peer,void *handle,int code));

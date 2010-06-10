@@ -4,7 +4,7 @@
 #include <nb-tls.h>
 #include <nb.h>
 
-nbTLSX *nbTlsLoadContext(nbCELL context,nbCELL tlsContext,void *handle);
+nbTLSX *nbTlsLoadContext(nbCELL context,nbCELL tlsContext,void *handle,int client);
 extern nbTLS *nbTlsLoadListener(nbCELL context,nbCELL tlsContext,char *defaultUri,void *handle);
 extern int nbTlsConnectNonBlockingAndSchedule(nbCELL context,nbTLS *tls,void *handle,void (*handler)(nbCELL context,int sd,void *handle));
 

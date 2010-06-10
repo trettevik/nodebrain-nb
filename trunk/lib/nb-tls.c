@@ -307,7 +307,7 @@ nbTLSX *nbTlsCreateContext(int option,void *handle,int timeout,char *keyFile,cha
         }
       }
     else SSL_CTX_set_verify(ctx,SSL_VERIFY_NONE,NULL);
-    // debugging
+    // 2010-05-31 eat - commented out the following debugging line
     SSL_CTX_set_verify(ctx,SSL_VERIFY_NONE,NULL);
     }
   tlsx=malloc(sizeof(nbTLSX)); 
@@ -382,6 +382,7 @@ int nbTlsConnected(nbTLS *tls){
       SSL_shutdown(tls->ssl);
       close(tls->socket);
       SSL_free(tls->ssl);
+      tls->ssl=NULL;
       return(error);
       }
     }
@@ -395,6 +396,11 @@ int nbTlsConnected(nbTLS *tls){
 
 /*
 *  Connect non-blocking
+*
+*  Returns:  return code from connect()
+*     -1 - error (see errno set by connect())
+*      0 - connecting (errno==EINPROGRESS)
+*      1 - connected
 */  
 int nbTlsConnectNonBlocking(nbTLS *tls){
   int sd,rc;
@@ -427,15 +433,21 @@ int nbTlsConnectNonBlocking(nbTLS *tls){
     fprintf(stderr,"nbTlsConnectNonBlocking: setsockopt SO_SNDTIMEO failed: %s\n",strerror(errno));
     return(-1);
     }
-  fcntl(sd,F_SETFD,fcntl(sd,F_GETFD)|O_NONBLOCK);
+  // 2010-06-06 eat - seeing if blocking IO will work
+  //fcntl(sd,F_SETFL,fcntl(sd,F_GETFL)|O_NONBLOCK);
   rc=connect(sd,(struct sockaddr*)&sa,sizeof(sa));
   if(rc<0){
-    fprintf(stderr,"nbTlsConnect: connect failed: %s\n",strerror(errno));
+    if(errno==EINPROGRESS){
+      tls->socket=sd;
+      fprintf(stderr,"nbTlsConnectNonBlocking: connecting\n");
+      return(0);
+      }
+    fprintf(stderr,"nbTlsConnectNonBlocking: connect failed: %s\n",strerror(errno));
     close(sd);
     return(-1);
     }
   tls->socket=sd;
-  return(0);
+  return(1);
   }
 
 /*
@@ -517,8 +529,24 @@ int nbTlsConnect(nbTLS *tls){
 */
 int nbTlsHandshakeNonBlocking(nbTLS *tls){
   int rc,error;
+  nbTLSX *tlsx=tls->tlsx;
+  SSL *ssl=NULL;
 
-  if(!tls->ssl) return(0);
+  fprintf(stderr,"nbTlsHandshakeNonBlocking: tls->option=%d tls->tlsx=%p tls->ssl=%p\n",tls->option,tls->tlsx,tls->ssl);
+  if(!tls->option) return(0);
+  if(!tlsx){
+    fprintf(stderr,"nbTlsHandshakeNonBlocking: Logic error - should not be called will null tlsx - terminating\n");
+    exit(1);
+    }
+  fprintf(stderr,"nbTlsHandshakeNonBlocking: tls->tlsx->ctx=%p\n",tlsx->ctx);
+  ssl=SSL_new(tlsx->ctx);
+  if(!ssl){
+    fprintf(stderr,"nbTlsHandshakeNonBLocking: SSL_new failed\n");
+    return(-1);
+    }
+  SSL_set_fd(ssl,tls->socket);
+  tls->ssl=ssl;
+  fprintf(stderr,"nbTlsHandshakeNonBlocking: tls->socket=%u ssl=%p\n",tls->socket,ssl);
   rc=SSL_connect(tls->ssl);
   if(rc!=1){
     error=SSL_get_error(tls->ssl,rc); // get error code
@@ -528,6 +556,7 @@ int nbTlsHandshakeNonBlocking(nbTLS *tls){
     SSL_shutdown(tls->ssl);
     close(tls->socket);
     SSL_free(tls->ssl);
+    tls->ssl=NULL;
     return(error);
     }
   return(0);
@@ -753,6 +782,11 @@ int nbTlsRead(nbTLS *tls,char *buffer,size_t size){
     }
   fprintf(stderr,"nbTlsRead: calling SSL_read\n");
   len=SSL_read(tls->ssl,buffer,size);
+  if(len<0){
+    fprintf(stderr,"nbTlsRead: SSL_read rc=%d code=%d\n",len,SSL_get_error(tls->ssl,len));
+    ERR_print_errors_fp(stderr);
+    }
+  fprintf(stderr,"nbTlsRead: SSL_read len=%d\n",len);
   return(len);
   }
 
@@ -761,19 +795,21 @@ int nbTlsRead(nbTLS *tls,char *buffer,size_t size){
 */
 int nbTlsWrite(nbTLS *tls,char *buffer,size_t size){
   int len;
-  fprintf(stderr,"nbTlsWrite: size=%d\n",(int)size);
+  //fprintf(stderr,"nbTlsWrite: size=%d\n",(int)size);
   if(!tls->ssl){
-    fprintf(stderr,"nbTlsWrite: calling clear send - socket=%d\n",tls->socket);
+    //fprintf(stderr,"nbTlsWrite: calling clear send - socket=%d\n",tls->socket);
     len=send(tls->socket,buffer,size,0);
     while(len==-1 && errno==EINTR) len=send(tls->socket,buffer,size,0);
-    fprintf(stderr,"nbTlsWrite: wrote len=%d\n",len);
+    //fprintf(stderr,"nbTlsWrite: wrote len=%d\n",len);
     return(len);
     }
-  fprintf(stderr,"nbTlsWrite: calling SSL_write - ssl=%p\n",tls->ssl);
+  //fprintf(stderr,"nbTlsWrite: calling SSL_write - ssl=%p\n",tls->ssl);
   len=SSL_write(tls->ssl,buffer,size);
   if(len<0){
+    fprintf(stderr,"nbTlsWrite: SSL_write rc=%d code=%d\n",len,SSL_get_error(tls->ssl,len));
     ERR_print_errors_fp(stderr);
     }
+  fprintf(stderr,"nbTlsWrite: SSL_write len=%d\n",len);
   return(len);
   }
 
@@ -787,6 +823,7 @@ int nbTlsClose(nbTLS *tls){
   if(tls->ssl){
     SSL_shutdown(tls->ssl);
     SSL_free(tls->ssl);
+    tls->ssl=NULL;
     }
   if(tls->socket){
 #if defined(WIN32)
@@ -794,6 +831,7 @@ int nbTlsClose(nbTLS *tls){
 #else
     rc=close(tls->socket);
 #endif
+    tls->socket=0;
     }
   return(rc);
   }

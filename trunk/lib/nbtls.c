@@ -80,23 +80,28 @@
 * Date       Name/Change
 * ---------- -----------------------------------------------------------------
 * 2009/06/01 Ed Trettevik (version 0.7.7)
+* 2010/06/06 eat 0.8.2  included client parameter to nbTlsLoadContext
 *=============================================================================
 */
 #include <nb.h>
 #include <nb-tls.h>
 #include <nbtls.h>
 
-nbTLSX *nbTlsLoadContext(nbCELL context,nbCELL tlsContext,void *handle){
+/*
+*  Create a TLS/SSL context from NodeBrain glossary
+*/
+nbTLSX *nbTlsLoadContext(nbCELL context,nbCELL tlsContext,void *handle,int client){
   nbTLSX *tlsx;
   char *optionStr,*keyFile,*certFile,*trustedCertsFile;
-  int option,timeout;
+  int option=0,timeout;
 
+  if(client) option=NB_TLS_OPTION_CLIENT;
   optionStr=nbTermOptionString(tlsContext,"option","certs");
-  if(strcmp(optionStr,"certs")==0) option=NB_TLS_SERVER_CERTS;
-  else if(strcmp(optionStr,"cert")==0) option=NB_TLS_SERVER_CERT;
-  else if(strcmp(optionStr,"keys")==0) option=NB_TLS_SERVER_KEYS;
-  else if(strcmp(optionStr,"tls")==0) option=NB_TLS_SERVER_TLS;
-  else if(strcmp(optionStr,"tcp")==0) option=NB_TLS_SERVER_TCP;
+  if(strcmp(optionStr,"certs")==0) option|=NB_TLS_SERVER_CERTS;
+  else if(strcmp(optionStr,"cert")==0) option|=NB_TLS_SERVER_CERT;
+  else if(strcmp(optionStr,"keys")==0) option|=NB_TLS_SERVER_KEYS;
+  else if(strcmp(optionStr,"tls")==0) option|=NB_TLS_SERVER_TLS;
+  else if(strcmp(optionStr,"tcp")==0) option|=NB_TLS_SERVER_TCP;
   else{
     nbLogMsg(context,0,'E',"nbTlsLoadContext: Option '%s' not recognized.",optionStr);
     return(NULL);
@@ -128,7 +133,7 @@ nbTLS *nbTlsLoadListener(nbCELL context,nbCELL tlsContext,char *defaultUri,void 
   char *uri;
 
   nbLogMsg(context,0,'T',"nbTlsLoadListener: called");
-  tlsx=nbTlsLoadContext(context,tlsContext,handle);
+  tlsx=nbTlsLoadContext(context,tlsContext,handle,0);
   uri=nbTermOptionString(tlsContext,"uri",defaultUri);
   tls=nbTlsCreate(tlsx,uri);
   if(!tls){
@@ -149,8 +154,8 @@ nbTLS *nbTlsLoadListener(nbCELL context,nbCELL tlsContext,char *defaultUri,void 
 *
 *  Returns: 
 *    -1 - error - see errno
-*     0 - connect make immediately and handler called
-*    >0 - socket that has been scheduled to call handler when connection is made
+*     0 - connecting
+*     1 - connection made immediately and handler called
 */
 int nbTlsConnectNonBlockingAndSchedule(nbCELL context,nbTLS *tls,void *handle,void (*handler)(nbCELL context,int sd,void *handle)){
   int rc;
@@ -163,17 +168,14 @@ int nbTlsConnectNonBlockingAndSchedule(nbCELL context,nbTLS *tls,void *handle,vo
   nbLogMsg(context,0,'T',"nbTlsConnectNonBlockingAndSchedule: tls->uriMap[tls->uriIndex].addr=%s",tls->uriMap[tls->uriIndex].addr);
   nbLogMsg(context,0,'T',"nbTlsConnectNonBlockingAndSchedule: tls->uriMap[tls->uriIndex].port=%d",tls->uriMap[tls->uriIndex].port);
   rc=nbTlsConnectNonBlocking(tls);
-  if(rc==0){
-    nbLogMsg(context,0,'I',"Success on non-blocking connect %s",tls->uriMap[tls->uriIndex].uri);
+  if(rc==1){
+    nbLogMsg(context,0,'I',"Success on non-blocking connect sd=%d %s",tls->socket,tls->uriMap[tls->uriIndex].uri);
     (*handler)(context,tls->socket,handle);
-    return(0);
     }
-  else nbLogMsg(context,0,'T',"nbTlsConnectNonBlockingAndSchedule: %s - %s",tls->uriMap[tls->uriIndex].uri,strerror(errno));
-  if(rc==-1 && errno==EINPROGRESS){
-    nbLogMsg(context,0,'I',"nbTlsConnectNonBlockingAndSchedule: in progress - %s",tls->uriMap[tls->uriIndex]);
+  else if(rc==0){
+    nbLogMsg(context,0,'I',"nbTlsConnectNonBlockingAndSchedule: in progress - sd=%d %s",tls->socket,tls->uriMap[tls->uriIndex].uri);
     nbListenerAddWrite(context,tls->socket,handle,handler); 
-    return(tls->socket);
     } 
-  nbLogMsg(context,0,'T',"nbTlsConnectNonBlockingAndSchedule: connect failed - %s",strerror(errno));
+  else nbLogMsg(context,0,'T',"nbTlsConnectNonBlockingAndSchedule: connect failed - %s - %s",tls->uriMap[tls->uriIndex].uri,strerror(errno));
   return(rc);
   }

@@ -118,6 +118,7 @@
 * 2010/01/07 Ed Trettevik (original prototype)
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010/02/26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
+* 2010/06/06 eat 0.8.2  Added client parameter to nbTlsLoadContext parameter
 *==============================================================================
 */
 #include <nb.h>
@@ -193,15 +194,6 @@ static void nbPeerReader(nbCELL context,int sd,void *handle){
     if(len==0) nbLogMsg(context,0,'I',"nbPeerReader: Peer %d %s has shutdown connection",sd,tls->uriMap[tls->uriIndex].uri);
     else nbLogMsg(context,0,'E',"nbPeerReader: Peer %d %s unable to read - %s",sd,tls->uriMap[tls->uriIndex].uri,strerror(errno));
     peer->flags|=NB_PEER_FLAG_WRITE_ERROR;
-    if(errno==EINPROGRESS){ // check for unexpected in progress state
-      nbLogMsg(context,0,'L',"nbPeerReader: Fatal error - got here because socket was read to read but now in progress?");
-      exit(1);
-      }
-    // Let shutdown handle the shutdown
-    //nbListenerRemove(context,sd);
-    //nbTlsClose(tls);
-    //peer->tls=NULL;
-    peer->flags|=NB_PEER_FLAG_WRITE_ERROR;
     if(len==0) nbPeerShutdown(context,peer,0);
     else nbPeerShutdown(context,peer,-1);
     return;
@@ -239,7 +231,7 @@ static void nbPeerReader(nbCELL context,int sd,void *handle){
       return;
       }
     // call the consumer
-    nbLogMsg(context,0,'T',"nbPeerReader: calling the consumer exit");
+    nbLogMsg(context,0,'T',"nbPeerReader: calling the consumer exit - peer->handle=%p",peer->handle);
     if((code=(*peer->consumer)(context,peer,peer->handle,bufcur+2,len-2))){
       nbLogMsg(context,0,'T',"nbPeerReader: Peer %d %s shutting down by consumer request",sd,tls->uriMap[tls->uriIndex].uri);
       nbListenerRemove(context,sd); // shutdown should do this for us
@@ -319,10 +311,11 @@ static void nbPeerHandshakeWriter(nbCELL context,int sd,void *handle){
     peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
     return;
     }
-  // 2010-02-03 eat - this was commented out, but I'm trying to get it working
+  // 2010-05-31 eat - uncommented this get TLS option working
+  // had been commented out because of problems elsewhere
   //if(peer->tls->option && !peer->tls->ssl){
   //  nbLogMsg(context,0,'T',"nbPeerHandshakeWriter: calling nbTlsConnected");
-  //  if(nbTlsConnected(peer->tls)<0){
+  //  if(nbTlsConnected(peer->tls)!=0){
   //    nbLogMsg(context,0,'T',"nbPeerHandshakeWriter: Unable to set ssl  - terminating");
   //    exit(1);
   //    }
@@ -334,10 +327,12 @@ static void nbPeerHandshakeWriter(nbCELL context,int sd,void *handle){
     return;
     }
   else if(rc==SSL_ERROR_WANT_WRITE){
+    nbLogMsg(context,0,'T',"nbPeerHandshakeWriter: SSL_ERROR_WANT_WRITE");
     nbListenerAddWrite(context,sd,peer,nbPeerHandshakeWriter);
     peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
     }
   else if(rc==SSL_ERROR_WANT_READ){
+    nbLogMsg(context,0,'T',"nbPeerHandshakeWriter: SSL_ERROR_WANT_READ");
     nbListenerAdd(context,sd,peer,nbPeerHandshakeReader);
     peer->flags|=NB_PEER_FLAG_READ_WAIT;
     }
@@ -355,14 +350,18 @@ static void nbPeerHandshakeReader(nbCELL context,int sd,void *handle){
   nbListenerRemove(context,sd);
   peer->flags&=0xff-NB_PEER_FLAG_READ_WAIT;
   if((rc=nbTlsHandshakeNonBlocking(peer->tls))==0){
+    nbLogMsg(context,0,'T',"nbPeerHandshakeReader: handing off to nbPeerConnecter 3");
+    nbListenerAddWrite(context,sd,peer,nbPeerConnecter);
     nbListenerAddWrite(context,sd,peer,nbPeerConnecter);
     peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
     }
   else if(rc==SSL_ERROR_WANT_WRITE){
+    nbLogMsg(context,0,'T',"nbPeerHandshakeReader: SSL_ERROR_WANT_WRITE");
     nbListenerAddWrite(context,sd,peer,nbPeerHandshakeWriter);
     peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
     }
   else if(rc==SSL_ERROR_WANT_READ){
+    nbLogMsg(context,0,'T',"nbPeerHandshakeReader: SSL_ERROR_WANT_READ");
     nbListenerAdd(context,sd,peer,nbPeerHandshakeReader);
     peer->flags|=NB_PEER_FLAG_READ_WAIT;
     }
@@ -385,8 +384,10 @@ static void nbPeerAccepter(nbCELL context,int sd,void *handle){
   tls=nbTlsAccept(lpeer->tls);
   if(!tls){
     nbLogMsg(context,0,'T',"nbPeerAccepter: nbTlsAccept failed");
-    nbListenerRemove(context,sd);
-    lpeer->flags&=0xff-NB_PEER_FLAG_READ_WAIT;
+    // 2010-05-31 eat - we don't want to stop listening just because one accept failed
+    //nbListenerRemove(context,sd);
+    //lpeer->flags&=0xff-NB_PEER_FLAG_READ_WAIT;
+    return;
     }
   nbLogMsg(context,0,'T',"nbPeerAccepter: nbTlsAccept succeeded");
   peer=(nbPeer *)nbAlloc(sizeof(nbPeer));
@@ -402,14 +403,19 @@ static void nbPeerAccepter(nbCELL context,int sd,void *handle){
   //  nbLogMsg(context,0,'T',"nbPeerAccepter: handler want's to bail");
   //  nbPeerDestroy(context,peer);
   //  }
-  if(tls->option==NB_TLS_OPTION_TCP){
+  // 2010-05-31 eat - we're good to go at this point
+  //   have a problem above with nbTlsAccept though
+  //   it can fail if non blocking - but I don't think it is
+  //   returning a non-block socket anyway
+  //if(tls->option==NB_TLS_OPTION_TCP){
     nbListenerAdd(context,tls->socket,peer,nbPeerReader);
     nbListenerAddWrite(context,tls->socket,peer,nbPeerWriter);
-    }
-  else{
-    nbListenerAdd(context,tls->socket,peer,nbPeerHandshakeReader);
-    nbListenerAddWrite(context,tls->socket,peer,nbPeerHandshakeWriter);
-    }
+  //  }
+  //else{
+  //  nbListenerAdd(context,tls->socket,peer,nbPeerHandshakeReader);
+  //  nbListenerAddWrite(context,tls->socket,peer,nbPeerHandshakeWriter);
+  //  }
+  // 2010-05-31 eat end mod
   peer->flags|=NB_PEER_FLAG_WRITE_WAIT|NB_PEER_FLAG_READ_WAIT;
   nbLogMsg(context,0,'T',"nbPeerAccepter: returning");
   }
@@ -424,7 +430,7 @@ static void nbPeerAccepter(nbCELL context,int sd,void *handle){
 *
 *    Buffers are not allocated until a connection is established.
 */
-nbPeer *nbPeerConstruct(nbCELL context,char *uriName,char *uri,nbCELL tlsContext,void *handle,
+nbPeer *nbPeerConstruct(nbCELL context,int client,char *uriName,char *uri,nbCELL tlsContext,void *handle,
   int (*producer)(nbCELL context,nbPeer *peer,void *handle),
   int (*consumer)(nbCELL context,nbPeer *peer,void *handle,void *data,int len),
   void (*shutdown)(nbCELL context,nbPeer *peer,void *handle,int code)){
@@ -442,7 +448,7 @@ nbPeer *nbPeerConstruct(nbCELL context,char *uriName,char *uri,nbCELL tlsContext
   peer->shutdown=shutdown;
   uri=nbTermOptionString(tlsContext,uriName,uri);
   nbLogMsg(context,0,'T',"nbPeerConstruct: configured uri=%s",uri);
-  tlsx=nbTlsLoadContext(context,tlsContext,peer);
+  tlsx=nbTlsLoadContext(context,tlsContext,peer,client);
   peer->tls=nbTlsCreate(tlsx,uri);
   if(peer->tls) nbLogMsg(context,0,'T',"nbPeerCreate: called uri=%s",uri);
   else nbLogMsg(context,0,'T',"nbPeerConstruct: unable to create tls for uri=%s",uri);
@@ -465,7 +471,8 @@ int nbPeerListen(nbCELL context,nbPeer *peer){
     nbLogMsg(context,0,'E',"Unable to listener - %s",peer->tls->uriMap[0].uri);
     return(-1);
     }
-  fcntl(peer->tls->socket,F_SETFD,fcntl(peer->tls->socket,F_GETFD)|O_NONBLOCK);
+  // 2010-06-06 eat - seeing if blocking IO will work
+  //fcntl(peer->tls->socket,F_SETFL,fcntl(peer->tls->socket,F_GETFL)|O_NONBLOCK);
   nbListenerAdd(context,peer->tls->socket,peer,nbPeerAccepter);
   peer->flags|=NB_PEER_FLAG_READ_WAIT;
   nbLogMsg(context,0,'T',"nbPeerListen: things look good");
@@ -478,6 +485,12 @@ int nbPeerListen(nbCELL context,nbPeer *peer){
 *    Buffers are allocated under the assumption that the connection will
 *    be successful, now or in the future.  The buffers are freed when
 *    a peer is shutdown or destroyed.
+*
+*  Returns:
+*
+*     -1 - connection failed
+*      0 - connecting
+*      1 - connected successfully
 */
 int nbPeerConnect(nbCELL context,nbPeer *peer,void *handle,
   int (*producer)(nbCELL context,nbPeer *peer,void *handle),
@@ -499,10 +512,13 @@ int nbPeerConnect(nbCELL context,nbPeer *peer,void *handle,
   if(rc<0){
     nbLogMsg(context,0,'E',"nbPeerConnect: Unable to connect - %s",strerror(errno));
     nbPeerShutdown(context,peer,-1);
-    return(-1);
     }
-  nbLogMsg(context,0,'T',"nbPeerConnect: returning - good luck waiting for a connection");
-  return(0);
+  else if(rc==1) nbLogMsg(context,0,'T',"nbPeerConnect: returning - connected");
+  else{
+    peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
+    nbLogMsg(context,0,'T',"nbPeerConnect: returning - good luck waiting for a connection");
+    }
+  return(rc);
   }
 
 /*
@@ -517,14 +533,9 @@ int nbPeerConnect(nbCELL context,nbPeer *peer,void *handle,
 int nbPeerSend(nbCELL context,nbPeer *peer,void *data,int size){
   int mysize=size+2;
   nbLogMsg(context,0,'T',"nbPeerSend: called with peer=%p size=%d flags=%x",peer,size,peer->flags);
-  nbLogMsg(context,0,'T',"nbPeerSend: peer->wloc=%p",peer->wloc);
-  nbLogMsg(context,0,'T',"nbPeerSend: peer->wbuf=%p",peer->wbuf);
   if(peer->flags&NB_PEER_FLAG_WRITE_ERROR) return(-1);
-  nbLogMsg(context,0,'T',"nbPeerSend: after flag check");
   if(size>NB_PEER_BUFLEN-2) return(-1);
-  nbLogMsg(context,0,'T',"nbPeerSend: after length check");
   if(peer->wloc+size+2>peer->wbuf+NB_PEER_BUFLEN) return(1);
-  nbLogMsg(context,0,'T',"nbPeerSend: after full buffer check");
   // put message in buffer
   memcpy(peer->wloc+2,data,size);
   *peer->wloc=mysize>>8;
@@ -532,8 +543,6 @@ int nbPeerSend(nbCELL context,nbPeer *peer,void *data,int size){
   *peer->wloc=mysize&0xff;
   peer->wloc++;
   peer->wloc+=size;
-  nbLogMsg(context,0,'T',"nbPeerSend: inserting - recsize=%d wbuf size=%d",size,peer->wloc-peer->wbuf);
-
   if(!(peer->flags&NB_PEER_FLAG_WRITE_WAIT)){
     nbListenerAddWrite(context,peer->tls->socket,peer,nbPeerWriter);
     peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
@@ -583,14 +592,13 @@ void nbPeerModify(nbCELL context,nbPeer *peer,void *handle,
 *  Shutdown peer connection
 *
 *    If it would be helpful for the producer and consumer to receive
-*    a reason for the shutdown, there a couple options.  The caller
+*    a reason for the shutdown, there are a couple options.  The caller
 *    could set a code in the peer structure before calling nbPeerShutdown,
 *    or an additional int parameter can be added to nbPeerShutdown.
 */
 int nbPeerShutdown(nbCELL context,nbPeer *peer,int code){
   nbLogMsg(context,0,'T',"nbPeerShutdown: %s code=%d",peer->tls->uriMap[peer->tls->uriIndex].uri,code);
   if(peer->shutdown) (*peer->shutdown)(context,peer,peer->handle,code);
-  if(peer->tls) nbTlsClose(peer->tls);
   if(peer->flags&NB_PEER_FLAG_WRITE_WAIT){
     nbListenerRemoveWrite(context,peer->tls->socket);
     peer->flags&=0xff-NB_PEER_FLAG_WRITE_WAIT;
@@ -599,6 +607,7 @@ int nbPeerShutdown(nbCELL context,nbPeer *peer,int code){
     nbListenerRemove(context,peer->tls->socket);
     peer->flags&=0xff-NB_PEER_FLAG_READ_WAIT;
     }
+  if(peer->tls) nbTlsClose(peer->tls); // do this after the removes because it clears the socket
   peer->flags&=0xff-NB_PEER_FLAG_WRITE_ERROR;
   if(peer->wbuf) free(peer->wbuf);
   peer->wbuf=NULL;

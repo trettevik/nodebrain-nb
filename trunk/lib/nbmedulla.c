@@ -721,9 +721,27 @@ int nbMedullaPulse(int serve){
     //fprintf(stderr,"select returned readyfd=%d\n",readyfd);
     if(readyfd<0){
       if(errno!=EINTR){   // interrupt is ok
+        int flags;
+        int bail=1;
         perror("select() returned error");
-        fprintf(stderr,"Terminating on error.\n");
-        exit(NB_EXITCODE_FAIL);
+        for(handler=nb_medulla->handler;handler!=NULL;handler=handler->next){
+          switch(handler->type){
+            case 0: setP=&nb_medulla->readfds;   break;
+            case 1: setP=&nb_medulla->writefds;  break;
+            case 2: setP=&nb_medulla->exceptfds; break;
+            }
+          flags=fcntl(handler->fildes,F_GETFL);
+          if(flags==-1 && errno==EBADF){
+             bail=0;
+             handler->close=1;
+             fprintf(stderr,"fd=%d is bad - removing from fd set, but we need to let the handler know\n",handler->fildes);
+             }
+          fprintf(stderr,"fd=%d FLAGS=%d\n",handler->fildes,flags);
+          }
+        if(bail){
+          fprintf(stderr,"Terminating on error.\n");
+          exit(NB_EXITCODE_FAIL);
+          }
         }
       }
     else if(readyfd>0){             // invoke file handlers if any are set

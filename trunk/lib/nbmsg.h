@@ -33,7 +33,9 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2009/12/12 eat 0.7.7  (original prototype) 
+* 2009-12-12 eat 0.7.7  (original prototype) 
+* 2010-05-11 eat 0.8.1  Included msglog fileJumper method (for message cache)
+* 2010-06-07 eat 0.8.2  Included cursorFile fileOffset for cursor mode reading
 *=============================================================================
 */
 #ifndef _NBMSG_H_
@@ -88,10 +90,19 @@ typedef struct NB_MSG_STATE{
   nbMsgNum msgnum[NB_MSG_NODE_MAX];
   } nbMsgState;
 
-typedef struct NB_MSG_UDP_PREFIX{      // Unix domain UDP packet prefix
+/*
+*  A message cursor points to a position within a message log.  It is passed in UDP
+*  packets from producer (writer) to consumer (reader) pointing to the position where
+*  the next message will be written.  For consumers in cursor mode (NB_MSG_MODE_CURSOR)
+*  the cursor is writen to a cursor file when message are read from the log or the
+*  UDP socket.
+*/
+typedef struct NB_MSG_CURSOR{          // Message log cursorUnix domain UDP packet prefix
   uint32_t fileCount;                  // number of message log file where this message was written
   uint32_t fileOffset;                 // offset in message log file where this message was written
-  } nbMsgUdpPrefix;
+  uint32_t recordTime;                 // last record time
+  uint32_t recordCount;                // last record count
+  } nbMsgCursor;
 
 typedef struct NB_MSG_LOG{
   char cabal[32];                      // name of message cabal - group of nodes
@@ -102,7 +113,9 @@ typedef struct NB_MSG_LOG{
   int  state;                          // state used to control operation sequence
   int  file;
   int  socket;                         // socket for UDP communication between producer and consumer
+  int  cursorFile;
   struct sockaddr_un un_addr;          // unix domain socket address
+  uint32_t fileOffset;                 // offset of next message maintained in cursor mode
   uint32_t filesize;                   // file position (size when writing)
   uint32_t maxfilesize;                // maximum filesize - new message log file started at this size
   uint32_t fileTime;                   // starting time of current file 
@@ -117,11 +130,15 @@ typedef struct NB_MSG_LOG{
   nbMsgRec *msgrec;                    // pointer within msgbuf when reading (same as msgbuf for writing)
   void     *handle;                    // handle and handler when in "accept" mode 
   int (*handler)(nbCELL context,void *handle,nbMsgRec *msgrec);
+  void (*fileJumper)(nbCELL context,void *handle,uint32_t fileOffset);
   } nbMsgLog;
 
-#define NB_MSG_MODE_CONSUMER  0        // may call nbMsgLogConsume after open
+#define NB_MSG_MODE_CONSUMER  0        // state aware consumer - calls nbMsgLogConsume after open
 #define NB_MSG_MODE_SINGLE    1        // single file reader
 #define NB_MSG_MODE_PRODUCER  2        // may call nbMsgLogProduce after reading to end of log
+#define NB_MSG_MODE_NOUDP     4        // set with PRODUCER to avoid sending UDP packets
+#define NB_MSG_MODE_SPOKE     (NB_MSG_MODE_PRODUCER&NB_MSG_MODE_NOUDP)
+#define NB_MSG_MODE_CURSOR    8        // state unaware consumer - cursor file used as alternative
 
 #define NB_MSG_STATE_INITIAL  0        // initial start of msglog structure
 #define NB_MSG_STATE_PROCESS  1        // program needs to process the last record
@@ -150,6 +167,7 @@ extern int nbMsgStateSet(nbMsgState *state,int node,uint32_t time,uint32_t count
 extern nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *filename,int mode,nbMsgState *pgmState);
 extern int nbMsgLogClose(nbCELL context,nbMsgLog *msglog);
 extern int nbMsgLogRead(nbCELL context,nbMsgLog *msglog);
+extern int nbMsgLogCursorWrite(nbCELL context,nbMsgLog *msglog);
 extern int nbMsgLogConsume(nbCELL context,nbMsgLog *msglog,void *handle,int (*handler)(nbCELL context,void *handle,nbMsgRec *msgrec));
 
 extern int nbMsgLogProduce(nbCELL context,nbMsgLog *msglog,unsigned int maxfileSize);
@@ -206,6 +224,8 @@ typedef struct NB_MSG_CACHE{      // message cache structure
   nbMsgState    *endState;
   nbMsgLog      *msglog;
   uint32_t      endCount;         // message count of last message in cache
+  uint32_t      fileCount;        // file count at start of queue - maintained to set subscriber msglog position as required
+  uint32_t      fileOffset;       // file offset at start of queue
   } nbMsgCache;
 
 // Message Cache API
@@ -236,7 +256,7 @@ typedef struct NB_MSG_NODE{
   unsigned char       order;
   int                 downTime;    // time of last disconnect
   char               *dn;
-  nbPeer             *peer4Connect;// medel peer for initiating a connection
+  nbPeer             *peer4Connect;// model peer for initiating a connection
   nbPeer             *peer;        // peer connected by either party       
   nbMsgCacheSubscriber *msgsub;    // message cache subscriber 
   nbMsgState         *msgstate;    // state vector for server nodes (NULL for root node)
@@ -249,10 +269,13 @@ typedef struct NB_MSG_NODE{
 
 #define NB_MSG_NODE_TYPE_CLIENT  1 // Consumes messages
 #define NB_MSG_NODE_TYPE_SERVER  2 // Serves messages
-#define NB_MSG_NODE_TYPE_HUB     4 // Responsible for self only. Otherwise HUB - special responsibility
-// not using the next two yet
-#define NB_MSG_NODE_TYPE_SINK    8 // Consumes but doesn't produce or share
-#define NB_MSG_NODE_TYPE_SOURCE 16 // Produces but doesn't consume
+#define NB_MSG_NODE_TYPE_HUB     4 // Responsible for forming a ring with other hubs (may be server or client or both)
+#define NB_MSG_NODE_TYPE_SPOKE   8 // Consumes but doesn't produce or share - connects to one hub node
+#define NB_MSG_NODE_TYPE_SINK   16 // Consumes but doesn't produce or share - connects to all source nodes
+#define NB_MSG_NODE_TYPE_SOURCE 32 // Produces but doesn't consume - lets sink inodes initiate connection
+// The following types are used for testing
+#define NB_MSG_NODE_TYPE_RING   12 // Rink topology hub (client and/or server) and spoke (client)
+#define NB_MSG_NODE_TYPE_FAN    48 // Fan topology - sink (client) and source (server)
 
 #define NB_MSG_NODE_BUFLEN 64*1024  // 64K buffer
 

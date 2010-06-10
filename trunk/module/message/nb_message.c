@@ -341,6 +341,7 @@ typedef struct NB_MOD_CONSUMER{  // message.consumer node descriptor
   char           cabalName[32];    // cabal name identifies a group of nodes
   char           nodeName[32];     // name of node within cabal
   int            cabalNode;        // number of node within cabal
+  char           name[32];         // consumer name
   nbMsgState    *msgstate;         // consumer message state
   nbMsgLog      *msglog;           // msglog structure
   unsigned char  trace;            // trace option 
@@ -384,7 +385,9 @@ void *consumerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *te
   char *cursor=text,*delim,saveDelim;
   char cabalName[32];
   char nodeName[32];
+  char consumerName[32];
   int cabalNode=0;
+  double cabalNodeReal;
   int type,trace=0,dump=0,echo=1;
   char *str;
 
@@ -424,9 +427,47 @@ void *consumerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *te
     }
   strcpy(nodeName,str);  // size checked
   nbCellDrop(context,cell);
+
+  // node number
+  cell=nbListGetCellValue(context,&argSet);
+  if(cell==NULL){
+    nbLogMsg(context,0,'E',"Node number required as third argument");
+    return(NULL);
+    }
+  type=nbCellGetType(context,cell);
+  if(type!=NB_TYPE_REAL){
+    nbLogMsg(context,0,'E',"Third argument must be number identifying node");
+    return(NULL);
+    }
+  cabalNodeReal=nbCellGetReal(context,cell);
+  cabalNode=(int)cabalNodeReal;
+  if((float)cabalNode!=cabalNodeReal || cabalNode<0 || cabalNode>255){
+    nbLogMsg(context,0,'E',"Third argument must be integer node number from 0 to 255");
+    return(NULL);
+    }
+  nbCellDrop(context,cell);
+
+  cell=nbListGetCellValue(context,&argSet);
+  if(cell==NULL){
+    nbLogMsg(context,0,'E',"Consumer name required as forth argument");
+    return(NULL);
+    }
+  type=nbCellGetType(context,cell);
+  if(type!=NB_TYPE_STRING){
+    nbLogMsg(context,0,'E',"Fourth argument must be string identifying a consumer");
+    return(NULL);
+    }
+  str=nbCellGetString(context,cell);
+  if(strlen(str)>sizeof(consumerName)-1){
+    nbLogMsg(context,0,'E',"Fourth argument must not exceed %d characters",sizeof(nodeName)-1);
+    return(NULL);
+    }
+  strcpy(consumerName,str);  // size checked
+  nbCellDrop(context,cell);
+
   cell=nbListGetCellValue(context,&argSet);
   if(cell!=NULL){
-    nbLogMsg(context,0,'E',"The message.consumer skill only accepts three arguments.");
+    nbLogMsg(context,0,'E',"The message.consumer skill only accepts two arguments.");
     return(NULL);
     }
   while(*cursor==' ') cursor++;
@@ -453,6 +494,8 @@ void *consumerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *te
   strcpy(consumer->cabalName,cabalName);
   strcpy(consumer->nodeName,nodeName);
   consumer->cabalNode=cabalNode;
+  strcpy(consumer->name,consumerName);
+  consumer->cabalNode=cabalNode;
   consumer->trace=trace;
   consumer->dump=dump;
   consumer->echo=echo;
@@ -467,10 +510,11 @@ void *consumerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *te
 *    enable <node>
 */
 int consumerEnable(nbCELL context,void *skillHandle,nbModConsumer *consumer){
-  consumer->msgstate=nbMsgStateCreate(context);
-  consumer->msglog=nbMsgLogOpen(context,consumer->cabalName,consumer->nodeName,consumer->cabalNode,"",NB_MSG_MODE_CONSUMER,consumer->msgstate);
+  //consumer->msgstate=nbMsgStateCreate(context);
+  //consumer->msglog=nbMsgLogOpen(context,consumer->cabalName,consumer->nodeName,consumer->cabalNode,"",NB_MSG_MODE_CONSUMER,consumer->msgstate);
+  consumer->msglog=nbMsgLogOpen(context,consumer->cabalName,consumer->nodeName,consumer->cabalNode,consumer->name,NB_MSG_MODE_CURSOR,NULL);
   if(!consumer->msglog){
-    nbLogMsg(context,0,'E',"nbMsgCacheOpen: Unable to open message log for cabal \"%s\" node %d",consumer->cabalName,consumer->cabalNode);
+    nbLogMsg(context,0,'E',"consumerEnable: Unable to open message log for cabal \"%s\" node %d",consumer->cabalName,consumer->cabalNode);
     return(1);
     }
   if(nbMsgLogConsume(context,consumer->msglog,consumer,consumerMessageHandler)!=0){

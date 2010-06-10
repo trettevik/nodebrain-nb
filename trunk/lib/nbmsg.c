@@ -126,6 +126,15 @@
 * 2009-12-12 Ed Trettevik (original prototype)
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
+* 2010-05-11 eat 0.8.1  Included msglog fileJumper method for message cache
+* 2010-05-21 eat 0.8.2  Modified sequence of switching back from msglog to UDP queue
+*            After a dropped packet we now read from the message queue,
+*            drain the UDP queue and then read from the message log again.
+*            This is intended to avoid a timing situation where there are
+*            new messages in the message log but no UDP packet to trigger
+*            a read of the message log.
+* 2010-05-23 eat 0.8.2  Included logic in nbMsgCabalEnable needed to shutdown extra connections
+* 2010-06-07 eat 0.8.2  Included support for cursor mode message log reading
 *==============================================================================
 */
 #include <ctype.h>
@@ -398,7 +407,7 @@ int nbMsgLogSetState(nbCELL context,nbMsgLog *msglog,nbMsgRec *msgrec){
   msglog->state&=0xffffffff-(NB_MSG_STATE_LOG|NB_MSG_STATE_PROCESS|NB_MSG_STATE_SEQLOW|NB_MSG_STATE_SEQHIGH);
   if(msgrec->pi.node==msglog->node){ // called while reading own log
     msgid=&msgrec->pi;
-    recordTime=ntohl(*(uint32_t *)msgid->count);
+    recordTime=ntohl(*(uint32_t *)msgid->time);
     recordCount=ntohl(*(uint32_t *)msgid->count);
     if(recordCount!=msglog->recordCount+1){  // make sure record count increments by 1
       if((rc=nbMsgCountCompare(recordCount,msglog->recordCount))<=0){
@@ -451,7 +460,7 @@ int nbMsgLogSetState(nbCELL context,nbMsgLog *msglog,nbMsgRec *msgrec){
       }
     }
   else if(logStateFlag&NB_MSG_STATE_LOG) pgmStateFlag|=NB_MSG_STATE_PROCESS;
-  msgid+=2+msgrec->msgids;
+  //msgid+=2+msgrec->msgids;
   msglog->state|=pgmStateFlag&logStateFlag;
   return(pgmStateFlag|logStateFlag);
   }
@@ -698,6 +707,7 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
       nbLogMsg(context,0,'E',"nbMsgLogRead: Unable to open file %s - %s",filename,strerror(errno));
       return(-1);
       }
+    //if((pos=lseek(msglog->file,msglog->fileOffset,SEEK_SET))<0){
     if((pos=lseek(msglog->file,msglog->filesize,SEEK_SET))<0){
       nbLogMsg(context,0,'E',"nbMsgLogRead: Unable to seek file %s to offset %u - %s",filename,msglog->filesize,strerror(errno));
       return(-1);
@@ -740,12 +750,16 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
     msglog->state&=0xff-NB_MSG_STATE_FILEND;
     // do something here to validate header relative to log state - have a validate function
     cursor=(unsigned char *)msglog->msgbuf;
-    cursor+=(*cursor<<8)|*(cursor+1);  // step to next record
+    msglog->fileOffset=(*cursor<<8)|*(cursor+1); // set file offset just past header
+    fprintf(stderr,"nbMsgLogRead: 1 msglog->fileOffset=%d\n",msglog->fileOffset);
+    cursor+=(*cursor<<8)|*(cursor+1);  // step to next record - over header
     msglog->msgrec=(nbMsgRec *)cursor;
     }
   else{
     cursor=(unsigned char *)msglog->msgrec;
     if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogRead: Step to next record at %p *cursor=%2.2x%2.2x",cursor,*cursor,*(cursor+1));
+    msglog->fileOffset+=(*cursor<<8)|*(cursor+1);  // update file offset
+    fprintf(stderr,"nbMsgLogRead: 2 msglog->fileOffset=%d\n",msglog->fileOffset);
     cursor+=(*cursor<<8)|*(cursor+1);  // step to next record
     msglog->msgrec=(nbMsgRec *)cursor;
     }
@@ -807,6 +821,10 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
     msglog->state|=NB_MSG_STATE_FILEND;
     return(NB_MSG_STATE_FILEND);
     }
+  if(msglog->mode==NB_MSG_MODE_CURSOR && nbMsgLogCursorWrite(context,msglog)<0){
+    nbLogMsg(context,0,'T',"nbMsgLogRead: Unable to update cursor for cabal '%s' node '%s' - terminating",msglog->cabal,msglog->nodeName);
+    exit(1);
+    }
   return(nbMsgLogSetState(context,msglog,msglog->msgrec));
   }
 
@@ -825,9 +843,15 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
 *
 *  mode:
 *
-*    0 - normal reader
-*    1 - single file reader - file basename passed as parameter
-*    2 - writer - will switch to writing via nbMsgLogProduce()
+*    NB_MSG_MODE_CONSUMER  - normal log reader (e.g. message.server)
+*    NB_MSG_MODE_SINGLE    - single file reader - file basename passed as parameter
+*    NB_MSG_MODE_PRODUCER  - writer - will switch to writing via nbMsgLogProduce()
+*    NB_MSG_MODE_SPOKE     - writer that doesn't send UDP packets (for spoke nodes)
+*    NB_MSG_MODE_CURSOR    - reader that reads from a cursor file to establish the
+*                            the starting position and updates the cursor file for
+*                            every message read.  This is used by consumers that
+*                            have no other means of storing their state.  When this
+*                            mode is used, the pgmState must be NULL. 
 *
 *  pgmState:
 *
@@ -837,10 +861,17 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
 *    are the same.  One of the impacts is that a client mode peer will not be passed
 *    anything from the log at startup.  The log will still be read at startup to
 *    initialize the state. 
+*
+*  basename:
+*
+*    For SINGLE mode this is the basename of the file to be read.  For CURSOR
+*    mode it is the basename of the cursor file.
+*
 */
 nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *basename,int mode,nbMsgState *pgmState){
   nbMsgLog *msglog;
   char filename[128];
+  char cursorFilename[128];
   unsigned short int msglen;
   int msgbuflen;
   char *errStr;
@@ -848,7 +879,18 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
   char linkname[128];
   char linkedname[32];
   int linklen;
+  nbMsgCursor msgcursor;
 
+  if(pgmState && mode==NB_MSG_MODE_CURSOR){
+    nbLogMsg(context,0,'L',"nbMsgLogOpen: Cabal '%s' node '%s' open with non-null pgmState incompatible with cursor mode - terminating",cabal,nodeName);
+    nbLogFlush(context);
+    exit(1);
+    }
+  if((!basename || !*basename) && (mode==NB_MSG_MODE_CURSOR || mode==NB_MSG_MODE_SINGLE)){
+    nbLogMsg(context,0,'L',"nbMsgLogOpen: Cabal '%s' node '%s' open with null basename incompatible with cursor or single mode - terminating",cabal,nodeName);
+    nbLogFlush(context);
+    exit(1);
+    }
   if(node>NB_MSG_NODE_MAX){
     fprintf(stderr,"nbMsgLogOpen: Node number %d exceeds limit of %d\n",node,NB_MSG_NODE_MAX);
     return(NULL);
@@ -862,7 +904,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
     return(NULL);
     }
   // Get the file name to start with
-  if(mode==1){
+  if(mode==NB_MSG_MODE_SINGLE){
     fprintf(stderr,"nbMsgLogOpen: called with option 1\n");
     if(strlen(basename)>sizeof(linkedname)-1){
       fprintf(stderr,"nbMsgLogOpen: file name length %d exceeds limit of %d\n",(int)strlen(basename),(int)sizeof(linkedname)-1);
@@ -873,7 +915,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
     }
   else{
     sprintf(linkname,"message/%s/%s/m.nbm",cabal,nodeName);
-    // change this to retry in a loop for a few times if not mode 2 because nbMsgLogFileCreate may be removing and creating link
+    // change this to retry in a loop for a few times if not mode PRODUCER because nbMsgLogFileCreate may be removing and creating link
     linklen=readlink(linkname,linkedname,sizeof(linkedname));
     if(linklen<0){
       fprintf(stderr,"nbMsgLogOpen: Unable to read link %s - %s\n",linkname,strerror(errno));
@@ -895,10 +937,12 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
   strcpy(msglog->filename,linkedname);
   msglog->mode=mode;
   msglog->state=NB_MSG_STATE_INITIAL;
-  msglog->file=0;
-  msglog->maxfilesize=0;
-  msglog->fileTime=0;
-  msglog->fileCount=0;
+  //msglog->file=0;
+  //msglog->maxfilesize=0;
+  //msglog->fileTime=0;
+  //msglog->fileCount=0;
+  //msglog->fileOffset=0;
+  //msglog->filesize=0;
   msglog->logState=nbMsgStateCreate(context);
   if(pgmState) msglog->pgmState=pgmState;
   else msglog->pgmState=msglog->logState;
@@ -906,7 +950,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
   msglog->msgbuf=(unsigned char *)malloc(NB_MSG_BUF_LEN);
   //msglog->msgrec=(nbMsgRec *)msglog->msgbuf;
   msglog->msgrec=NULL;  // no record yet
-  if(strcmp(linkedname,"empty")==0 && mode==2){
+  if(strcmp(linkedname,"empty")==0 && mode&NB_MSG_MODE_PRODUCER){  // PRODUCER (includes SPOKE)
     if(nbMsgLogFileCreate(context,msglog)!=0){
       nbLogMsg(context,0,'E',"nbMsgLogOpen: Unable to create file for cabal \"%s\" node %d",msglog->cabal,msglog->node);
       free(msglog->msgbuf);
@@ -914,6 +958,36 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
       return(NULL);
       }
     }
+  // If in CURSOR mode, we position by cursor if cursor file exists.
+  if(mode==NB_MSG_MODE_CURSOR){
+    sprintf(cursorFilename,"message/%s/%s/%s.cursor",cabal,nodeName,basename);
+    if((msglog->cursorFile=open(cursorFilename,O_RDWR))<0){ // have a cursor file
+      nbLogMsg(context,0,'I',"Cursor file '%s' not found. Assuming offset of zero.",cursorFilename);
+      }
+    else{
+      if(lseek(msglog->cursorFile,0,SEEK_SET)<0){
+        nbLogMsg(context,0,'E',"nbMsgLogOpen: Unable to seek file %s to offset %u - %s",cursorFilename,0,strerror(errno));
+        return(NULL);
+        }
+      if((msgbuflen=read(msglog->cursorFile,(void *)&msgcursor,(size_t)sizeof(msgcursor)))<0){
+        nbLogMsg(context,0,'E',"nbMsgLogopen: Unable to read file %s - %s",cursorFilename,strerror(errno));
+        return(NULL);
+        }
+      if(msgbuflen!=sizeof(msgcursor)){
+        nbLogMsg(context,0,'E',"nbMsgLogopen: Cursor file '%s' is corrupted read=%d expecting %d - terminating",cursorFilename,msgbuflen,(int)sizeof(msgcursor));
+        exit(1);
+        }
+      msglog->fileCount=msgcursor.fileCount;
+      msglog->fileOffset=msgcursor.fileOffset;
+      msglog->recordTime=msgcursor.recordTime;
+      msglog->recordCount=msgcursor.recordCount;
+      fprintf(stderr,"nbMsgLogOpen: from cursor fileCount=%d fileOffset=%d\n",msglog->fileCount,msglog->fileOffset);
+      msglog->filesize=msgcursor.fileOffset;
+      msglog->state|=NB_MSG_STATE_LOGEND;
+      return(msglog);
+      }
+    }
+
   sprintf(filename,"message/%s/%s/%s",cabal,nodeName,msglog->filename);
   if((msglog->file=open(filename,O_RDONLY))<0){
     fprintf(stderr,"nbMsgLogOpen: Unable to open file %s - %s\n",filename,strerror(errno));
@@ -921,7 +995,8 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
     nbFree(msglog,sizeof(nbMsgLog));
     return(NULL);
     }
-  msglog->filesize=0;
+
+  // If not in CURSOR mode, or in cursor mode without a cursor, we need to position by state.
   fprintf(stderr,"nbMsgLogOpen: Reading header record cabal \"%s\" node %u fildes=%d file %s\n",msglog->cabal,msglog->node,msglog->file,filename);
   if((msgbuflen=read(msglog->file,msglog->msgbuf,NB_MSG_BUF_LEN))<0){
     fprintf(stderr,"nbMsgLogOpen: Unable to read file %s - %s\n",filename,strerror(errno));
@@ -930,9 +1005,12 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
     return(NULL);
     }
   fprintf(stderr,"nbMsgLogOpen: msgbuflen=%d\n",msgbuflen);
-  msglog->filesize+=msgbuflen;
+  //msglog->filesize+=msgbuflen;
+  msglog->filesize=msgbuflen;
   msglog->msgbuflen=msgbuflen;
   msglen=ntohs(*(uint16_t *)msglog->msgbuf);
+  msglog->fileOffset=msglen;
+  fprintf(stderr,"nbMsgLogOpen: 1 msglog->fileOffset=%d\n",msglog->fileOffset);
   msglog->msgrec=(nbMsgRec *)msglog->msgbuf;
   errStr=nbMsgHeaderExtract(msglog->msgrec,node,&tranTime,&tranCount,&recordTime,&recordCount,&fileTime,&fileCount); 
   if(errStr){
@@ -947,7 +1025,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
   msglog->recordCount=recordCount;
   //fprintf(stderr,"nbMsgLogOpen: Extracted header time=%u count=%u fileTime=%u fileCount=%u\n",mTime,mCount,fileTime,fileCount);
   while(!nbMsgIncludesState(msglog)){
-    //fprintf(stderr,"nbMsgLogOpen: File %s does not include requested state\n",filename);
+    fprintf(stderr,"nbMsgLogOpen: File %s does not include requested state\n",filename);
     close(msglog->file);
     msglog->filesize=0;
     sprintf(filename,"message/%s/%s/m%10.10u.nbm",cabal,nodeName,fileCount-1);
@@ -967,6 +1045,8 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
     msglog->msgbuflen=msgbuflen;
     //fprintf(stderr,"msglog->msgbuflen=%d\n",msglog->msgbuflen);
     msglen=ntohs(*(uint16_t *)msglog->msgbuf);
+    msglog->fileOffset=msglen;
+    fprintf(stderr,"nbMsgLogOpen: 2 msglog->fileOffset=%d\n",msglog->fileOffset);
     msglog->msgrec=(nbMsgRec *)msglog->msgbuf;
     errStr=nbMsgHeaderExtract(msglog->msgrec,node,&tranTime,&tranCount,&recordTime,&recordCount,&fileTime,&fileCount);
     if(errStr){
@@ -980,11 +1060,31 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
     msglog->recordTime=recordTime;
     msglog->recordCount=recordCount;
     }
+  if(mode==NB_MSG_MODE_CURSOR){
+    msgcursor.fileCount=msglog->fileCount;
+    msgcursor.fileOffset=msglog->fileOffset;    // point over header
+    msgcursor.recordTime=msglog->recordTime;   
+    msgcursor.recordCount=msglog->recordCount;   
+    fprintf(stderr,"nbMsgLogOpen: 3 msglog->fileOffset=%d\n",msglog->fileOffset);
+    if((msglog->cursorFile=open(cursorFilename,O_RDWR|O_CREAT,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP))<0){ // have a cursor file
+      nbLogMsg(context,0,'E',"nbMsgLogOpen: Unable to create file '%s'",cursorFilename);
+      free(msglog->msgbuf);
+      nbFree(msglog,sizeof(nbMsgLog));
+      return(NULL);
+      }
+    if(write(msglog->cursorFile,(void *)&msgcursor,sizeof(msgcursor))<0){
+      nbLogMsg(context,0,'E',"nbMsgLogOpen: Unable to write cursor to file %s - %s\n",filename,strerror(errno));
+      free(msglog->msgbuf);
+      nbFree(msglog,sizeof(nbMsgLog));
+      return(NULL);
+      }
+    }
+  msglog->fileOffset=0; // reset for now because nbMsgLogRead will step over header 
   // Include code here to figure out what to do if the log doesn't satisfy the requested state
   // For example, if it doesn't go back far enough for a given node, we shouldn't provide any
   // messages for that node.
   sprintf(msglog->filename,"m%10.10u.nbm",msglog->fileCount);
-  //fprintf(stderr,"nbMsgLogOpen: Returning open message log file %s\n",filename);
+  fprintf(stderr,"nbMsgLogOpen: Returning open message log file %s\n",filename);
   return(msglog); 
   }
 
@@ -997,6 +1097,32 @@ int nbMsgLogClose(nbCELL context,nbMsgLog *msglog){
     close(msglog->socket);
 #endif
     msglog->socket=0;
+    }
+  if(msglog->cursorFile){
+    close(msglog->cursorFile);
+    msglog->cursorFile=0;
+    }
+  return(0);
+  }
+
+/*
+*  Update message log cursor
+*/
+int nbMsgLogCursorWrite(nbCELL context,nbMsgLog *msglog){
+  nbMsgCursor msgcursor;
+
+  msgcursor.fileCount=msglog->fileCount;
+  msgcursor.fileOffset=msglog->fileOffset;
+  msgcursor.recordTime=msglog->recordTime;
+  msgcursor.recordCount=msglog->recordCount;
+  fprintf(stderr,"nbMsgLogCursorWrite: msgcursor.fileOffset=%u msglog->fileOffset=%d\n",msgcursor.fileOffset,msglog->fileOffset);
+  if(lseek(msglog->cursorFile,0,SEEK_SET)<0){
+    nbLogMsg(context,0,'E',"nbMsgLogCursorWrite: Unable to seek cursor file %d to offset %u - %s",msglog->cursorFile,0,strerror(errno));
+    return(-1);
+    }
+  if(write(msglog->cursorFile,(void *)&msgcursor,sizeof(msgcursor))<0){
+    nbLogMsg(context,0,'E',"nbMsgLogCursorWrite: Unable to write cursor to file %d - %s\n",msglog->cursorFile,strerror(errno));
+    return(-1);
     }
   return(0);
   }
@@ -1013,42 +1139,63 @@ void nbMsgUdpRead(nbCELL context,int serverSocket,void *handle){
   //unsigned short rport;
   //unsigned char daddr[40],raddr[40];
   //unsigned int sourceAddr;
-  nbMsgUdpPrefix *msgudp=(nbMsgUdpPrefix *)buffer;
-  nbMsgRec *msgrec=(nbMsgRec *)(buffer+sizeof(nbMsgUdpPrefix));
+  nbMsgCursor *msgudp=(nbMsgCursor *)buffer;
+  nbMsgRec *msgrec=(nbMsgRec *)(buffer+sizeof(nbMsgCursor));
   int state;
   int rc;
-  //int limit=500; // limit the number of messages handled at one time
-  int limit=1; // limit the number of messages handled at one time
+  int limit=500; // limit the number of messages handled at one time
 
-  //fcntl(msglog->socket,F_SETFD,fcntl(msglog->socket,F_GETFD)|O_NONBLOCK); // make it non-blocking
-  //nbIpGetSocketAddrString(msglog->socket,daddr);
-  //len=nbIpGetDatagram(context,msglog->socket,&sourceAddr,&rport,buffer,buflen);
   len=recvfrom(msglog->socket,buffer,buflen,0,NULL,0);
-  nbLogMsg(context,0,'T',"nbMsgUdpRead: first recvfrom len=%d - %s",len,strerror(errno));
-  while(len>0 || (len==-1 && errno==EINTR)){
-    //if(msgTrace){
-    if(1){
+  while(len==-1 && errno==EINTR) len=recvfrom(msglog->socket,buffer,buflen,0,NULL,0);
+  if(len<0) nbLogMsg(context,0,'T',"nbMsgUdpRead: first recvfrom len=%d - errno=%d %s",len,errno,strerror(errno));
+  while(len>0){
+    if(msgTrace){
       nbLogMsg(context,0,'T',"Datagram len=%d",len);
       nbLogDump(context,buffer,len);
       nbLogMsg(context,0,'T',"nbMsgUdpRead: fileCount=%u fileOffset=%u",msgudp->fileCount,msgudp->fileOffset); 
       }
     msglen=ntohs(*(unsigned short *)msgrec);
-    if(msglen+sizeof(nbMsgUdpPrefix)!=len){
-      nbLogMsg(context,0,'E',"packet len=%d not the same as msglen=%u+%u",len,msglen,sizeof(nbMsgUdpPrefix));
+    if(msglen+sizeof(nbMsgCursor)!=len){
+      nbLogMsg(context,0,'E',"packet len=%d not the same as msglen=%u+%u",len,msglen,sizeof(nbMsgCursor));
       return;
       }
-    if(msgTrace) nbMsgPrint(stderr,msgrec);
+    //if(msgTrace) nbMsgPrint(stderr,msgrec);
+    nbLogMsg(context,0,'T',"nbMsgUdpRead: recvfrom len=%d",len);
+    nbMsgPrint(stderr,msgrec);
     state=nbMsgLogSetState(context,msglog,msgrec);
     if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: state=%d",state);
     if(state&NB_MSG_STATE_SEQLOW){
-      if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: Ignoring message already seen");
-      return;
+      //if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: Ignoring message already seen");
+      nbLogMsg(context,0,'T',"nbMsgUdpRead: Ignoring message already seen");
+      //return;
       }
     else if(state&NB_MSG_STATE_SEQHIGH){
-      if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: UDP packet lost - reading from message log");
-      // first drain the queue - len will go negative and errno EAGAIN when the queue is empty
-      // would it be better to close and reopen the socket?
-      //while(len>0) len=recvfrom(msglog->socket,buffer,buflen,0,NULL,0);
+      nbLogMsg(context,0,'T',"nbMsgUdpRead: UDP packet lost - reading from message log");
+      if(!(msglog->state&NB_MSG_STATE_LOGEND)){
+        nbLogMsg(context,0,'L',"nbMsgUdpRead: Udp packet lost when not in LOGEND state - terminating");
+        exit(1);
+        }
+      // Read from the message log
+      while(!((state=nbMsgLogRead(context,msglog))&NB_MSG_STATE_LOGEND)){
+        if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: return from nbMsgLogRead state=%d",state);
+        if(state&NB_MSG_STATE_PROCESS){  // handle new message records
+          if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: calling message handler\n");
+          if((rc=(*msglog->handler)(context,msglog->handle,msglog->msgrec))!=0){
+            nbLogMsg(context,0,'I',"UDP message handler return code=%d",rc);
+            //return;  // Need to figure out if there is really anything the handler needs to communicate back
+            }
+          limit--;
+          }
+        else if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: not processing record - state=%d",state);
+        }
+      // drain the udp queue
+      nbLogMsg(context,0,'T',"nbMsgUdpRead: flushing UDP stream - fd=%d",msglog->socket);
+      while(len>0){
+        len=recvfrom(msglog->socket,buffer,buflen,0,NULL,0);
+        while(len==-1 && errno==EINTR) len=recvfrom(msglog->socket,buffer,buflen,0,NULL,0);
+        }
+      nbLogMsg(context,0,'T',"nbMsgUdpRead: UDP stream flushed");
+      // Read the message log again
       while(!((state=nbMsgLogRead(context,msglog))&NB_MSG_STATE_LOGEND)){
         if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: return from nbMsgLogRead state=%d",state);
         if(state&NB_MSG_STATE_PROCESS){  // handle new message records
@@ -1063,22 +1210,35 @@ void nbMsgUdpRead(nbCELL context,int serverSocket,void *handle){
         }
       }
     else{
+      if(msgudp->fileCount>msglog->fileCount){
+        msglog->fileCount=msgudp->fileCount;
+        msglog->filesize=msgudp->fileOffset;
+        msglog->filesize-=(msgrec->len[0]<<8)+msgrec->len[1];  // adjust offset to start of first message in new file
+        if(msglog->fileJumper) (*msglog->fileJumper)(context,msglog->handle,msglog->filesize);
+        }
       if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: calling nbMsgCacheInsert");
       if((rc=(*msglog->handler)(context,msglog->handle,msgrec))!=0){
         nbLogMsg(context,0,'I',"UDP message handler return code=%d",rc);
         //return;
         }
-      msglog->fileCount=msgudp->fileCount;
-      msglog->filesize=msgudp->fileOffset;
+      msglog->filesize=msgudp->fileOffset;  // now adjust offset to next message location
+      msglog->fileOffset=msgudp->fileOffset;  // now adjust offset to next message location
+      fprintf(stderr,"nbMsgUdpRead: msglog->fileOffset=%d\n",msglog->fileOffset);
+      if(msglog->mode==NB_MSG_MODE_CURSOR && nbMsgLogCursorWrite(context,msglog)<0){
+        nbLogMsg(context,0,'T',"Unable to update cursor for cabal '%s' node '%s' - terminating",msglog->cabal,msglog->nodeName);
+        exit(1);
+        }
       limit--;
       }
-    if(limit<=0) return; // we can't spend all our time filling the cache - need a chance to send also
-    nbLogMsg(context,0,'T',"nbMsgUdpRead: calling loop recvfrom");
+    if(limit<=0){ // we can't spend all our time filling the cache - need a chance to send also
+      nbLogMsg(context,0,'T',"nbMsgUdpRead: hit limit of uninterrupted reads - returning to allow writes");
+      return; 
+      }
     len=recvfrom(msglog->socket,buffer,buflen,0,NULL,0);
-    nbLogMsg(context,0,'T',"nbMsgUdpRead: loop recvfrom len=%d - %s",len,strerror(errno));
+    while(len==-1 && errno==EINTR) len=recvfrom(msglog->socket,buffer,buflen,0,NULL,0);
     }
   if(len==-1 && errno!=EAGAIN){
-    nbLogMsg(context,0,'E',"nbMsgLogUpdRead: recvfrom error - %s",strerror(errno));
+    nbLogMsg(context,0,'E',"nbMsgLogUdpRead: recvfrom error - %s",strerror(errno));
     }
   }
 
@@ -1110,7 +1270,9 @@ int nbMsgLogConsume(nbCELL context,nbMsgLog *msglog,void *handle,int (*handler)(
     }
   msglog->handle=handle;
   msglog->handler=handler;
-  fcntl(msglog->socket,F_SETFD,fcntl(msglog->socket,F_GETFD)|O_NONBLOCK); // make it non-blocking
+  nbLogMsg(context,0,'T',"nbMsgLogConsumer: set fd=%d to non-blocking",msglog->socket);
+  fcntl(msglog->socket,F_SETFL,fcntl(msglog->socket,F_GETFL)|O_NONBLOCK); // make it non-blocking
+  nbLogMsg(context,0,'T',"nbMsgLogConsumer: F_GETFL return=%d",fcntl(msglog->socket,F_GETFL));
   nbListenerAdd(context,msglog->socket,msglog,nbMsgUdpRead);
   nbLogMsg(context,0,'I',"Listening for UDP datagrams as %s",filename);
   return(0);
@@ -1263,14 +1425,13 @@ int nbMsgLogProduce(nbCELL context,nbMsgLog *msglog,unsigned int maxfilesize){
     }
   msglog->maxfilesize=maxfilesize;
   msglog->msgrec=(nbMsgRec *)msglog->msgbuf;
-  //
-  sprintf(filename,"message/%s/%s/s.nbm",msglog->cabal,msglog->nodeName);
-  //msglog->socket=nbIpGetUdpClientSocket(0,filename,0);
-  nbMsgUdpLocalClientSocket(msglog);
-  if(msglog->socket<0){
-    fprintf(stderr,"nbMsgLogProduce: Unable to open local domain socket %s for UDP output\n",filename);
-    msglog->socket=0;
-    return(-1);
+  if(msglog->mode!=NB_MSG_MODE_SPOKE){
+    nbMsgUdpLocalClientSocket(msglog);
+    if(msglog->socket<0){
+      fprintf(stderr,"nbMsgLogProduce: Unable to open local domain socket message/%s/%s/s.nbm for UDP output\n",msglog->cabal,msglog->nodeName);
+      msglog->socket=0;
+      return(-1);
+      }
     }
 //  optlen=sizeof(int);
 //  optval=512*1024;
@@ -1306,13 +1467,14 @@ int nbMsgLogProduce(nbCELL context,nbMsgLog *msglog,unsigned int maxfilesize){
 int nbMsgLogWrite(nbCELL context,nbMsgLog *msglog,int msglen){
   time_t utime;
   int node=msglog->node;
-  nbMsgUdpPrefix *msgudp=(nbMsgUdpPrefix *)msglog->msgbuf;
-  nbMsgRec *msgrec=(nbMsgRec *)(msglog->msgbuf+sizeof(nbMsgUdpPrefix));
+  nbMsgCursor *msgudp=(nbMsgCursor *)msglog->msgbuf;
+  nbMsgRec *msgrec=(nbMsgRec *)(msglog->msgbuf+sizeof(nbMsgCursor));
   nbMsgRec *hdrrec;
   nbMsgId *msgid;
   int footerfile;
   int footerlen;
   int i;
+  struct timeval tv;
 
   msgrec->len[0]=msglen>>8;    // save lenth in network byte order
   msgrec->len[1]=msglen&0xff; 
@@ -1351,7 +1513,8 @@ int nbMsgLogWrite(nbCELL context,nbMsgLog *msglog,int msglen){
   msglog->recordCount++;  // let it wrap - zero is not a special value here
   nbMsgIdStuff(msgid,node,utime,msglog->recordCount);
   // write to message log file
-  nbLogMsg(context,0,'T',"nbMsgLogWrite: writing message");
+  gettimeofday(&tv,NULL); // get seconds an microseconds
+  nbLogMsg(context,0,'T',"nbMsgLogWrite: writing message %10.10lu.%6.6u",tv.tv_sec,tv.tv_usec);
   nbMsgPrint(stderr,msgrec);
   // Let's make sure it is well formed first - at least for now
   if(msgrec->type!=NB_MSG_REC_TYPE_MESSAGE){
@@ -1377,7 +1540,7 @@ int nbMsgLogWrite(nbCELL context,nbMsgLog *msglog,int msglen){
     return(-1);
     }
   // write to UPD socket
-  if(msglog->socket) nbMsgUdpClientSend(context,msglog,msgudp,msglen+sizeof(nbMsgUdpPrefix)); // don't care what happens
+  if(msglog->socket) nbMsgUdpClientSend(context,msglog,msgudp,msglen+sizeof(nbMsgCursor)); // don't care what happens
   return(0);
   }
 
@@ -1386,7 +1549,7 @@ int nbMsgLogWrite(nbCELL context,nbMsgLog *msglog,int msglen){
 */
 int nbMsgLogWriteString(nbCELL context,nbMsgLog *msglog,unsigned char *text){
   unsigned short msglen;
-  nbMsgRec *msgrec=(nbMsgRec *)(msglog->msgbuf+sizeof(nbMsgUdpPrefix));
+  nbMsgRec *msgrec=(nbMsgRec *)(msglog->msgbuf+sizeof(nbMsgCursor));
   unsigned short datalen=strlen((char *)text)+1; // include null char delimiter
   nbMsgId *msgid=&msgrec->si;
   time_t utime;
@@ -1396,7 +1559,7 @@ int nbMsgLogWriteString(nbCELL context,nbMsgLog *msglog,unsigned char *text){
     nbLogMsg(context,0,'E',"nbMsgLogWriteOriginal: Data length %u exceeds max of %u",datalen,NB_MSG_REC_MAX-sizeof(nbMsgRec));
     return(-1);
     }
-  memcpy(msglog->msgbuf+sizeof(nbMsgUdpPrefix)+sizeof(nbMsgRec),text,datalen);
+  memcpy(msglog->msgbuf+sizeof(nbMsgCursor)+sizeof(nbMsgRec),text,datalen);
   msglen=sizeof(nbMsgRec)+datalen;
   msgrec->type=NB_MSG_REC_TYPE_MESSAGE;
   msgrec->datatype=NB_MSG_REC_DATA_CHAR;
@@ -1419,7 +1582,7 @@ int nbMsgLogWriteString(nbCELL context,nbMsgLog *msglog,unsigned char *text){
 */
 int nbMsgLogWriteData(nbCELL context,nbMsgLog *msglog,void *data,unsigned short datalen){
   unsigned short msglen;
-  nbMsgRec *msgrec=(nbMsgRec *)(msglog->msgbuf+sizeof(nbMsgUdpPrefix));
+  nbMsgRec *msgrec=(nbMsgRec *)(msglog->msgbuf+sizeof(nbMsgCursor));
   nbMsgId *msgid=&msgrec->si;
   time_t utime;
   int node=msglog->node;
@@ -1428,7 +1591,7 @@ int nbMsgLogWriteData(nbCELL context,nbMsgLog *msglog,void *data,unsigned short 
     nbLogMsg(context,0,'E',"nbMsgLogWriteOriginal: Data length %u exceeds max of %u",datalen,NB_MSG_REC_MAX-sizeof(nbMsgRec)); 
     return(-1);
     }
-  memcpy(msglog->msgbuf+sizeof(nbMsgUdpPrefix)+sizeof(nbMsgRec),data,datalen);
+  memcpy(msglog->msgbuf+sizeof(nbMsgCursor)+sizeof(nbMsgRec),data,datalen);
   msglen=sizeof(nbMsgRec)+datalen; 
   msgrec->type=NB_MSG_REC_TYPE_MESSAGE;
   msgrec->datatype=NB_MSG_REC_DATA_BIN;
@@ -1458,7 +1621,7 @@ int nbMsgLogWriteData(nbCELL context,nbMsgLog *msglog,void *data,unsigned short 
 int nbMsgLogWriteReplica(nbCELL context,nbMsgLog *msglog,nbMsgRec *msgin){
   int state;
   unsigned short int msglen;
-  nbMsgRec *msgrec=(nbMsgRec *)(msglog->msgbuf+sizeof(nbMsgUdpPrefix));
+  nbMsgRec *msgrec=(nbMsgRec *)(msglog->msgbuf+sizeof(nbMsgCursor));
 
   nbLogMsg(context,0,'T',"nbMsgLogWriteReplica: called");
   nbMsgPrint(stderr,msgin);
@@ -1504,16 +1667,16 @@ int nbMsgCachePublish(nbCELL context,nbMsgCacheSubscriber *msgsub){
   nbLogMsg(context,0,'T',"nbMsgCachePublish: called with flags=%2.2x",msgsub->flags);
   //if(msgsub->flags&NB_MSG_CACHE_FLAG_MSGLOG){
   // 2010-05-06 eat - msglog could have hit end of file, so we need to check FLAG_INBUF without first checking FLAG_MSGLOG
-    if(msgsub->flags&NB_MSG_CACHE_FLAG_INBUF){
-      nbLogMsg(context,0,'T',"nbMsgCachePublish: calling subscription handler for messaging remaining in message log buffer");
-      if((*msgsub->handler)(context,msgsub->handle,msgsub->msglog->msgrec)) return(0);
-      else{
-        nbLogMsg(context,0,'T',"nbMsgCachePublish: turning FLAG_INBUF off");
-        msgsub->flags&=0xff-NB_MSG_CACHE_FLAG_INBUF;
-        messages++;
-        }
+  if(msgsub->flags&NB_MSG_CACHE_FLAG_INBUF){
+    nbLogMsg(context,0,'T',"nbMsgCachePublish: calling subscription handler for messaging remaining in message log buffer");
+    if((*msgsub->handler)(context,msgsub->handle,msgsub->msglog->msgrec)) return(0);
+    else{
+      nbLogMsg(context,0,'T',"nbMsgCachePublish: turning FLAG_INBUF off");
+      msgsub->flags&=0xff-NB_MSG_CACHE_FLAG_INBUF;
+      messages++;
       }
-     msgsub->flags&=0xff-NB_MSG_CACHE_FLAG_PAUSE;  // turn off pause flag - subscriber may have called us
+    }
+  msgsub->flags&=0xff-NB_MSG_CACHE_FLAG_PAUSE;  // turn off pause flag - subscriber may have called us
   if(msgsub->flags&NB_MSG_CACHE_FLAG_MSGLOG){
     nbLogMsg(context,0,'T',"nbMsgCachePublish: msgsub=%p msgsub->msglog=%p",msgsub,msgsub->msglog);
     while(!(state&NB_MSG_STATE_LOGEND)){
@@ -1558,7 +1721,6 @@ int nbMsgCachePublish(nbCELL context,nbMsgCacheSubscriber *msgsub){
       else state=nbMsgLogSetState(context,msgsub->msglog,msgrec);
       if(state&NB_MSG_STATE_PROCESS){
         msgsub->flags&=0xff-NB_MSG_CACHE_FLAG_AGAIN;
-        nbLogMsg(context,0,'T',"nbMsgCachePublish: calling handler");
         if((*msgsub->handler)(context,msgsub->handle,msgrec)){
           nbLogMsg(context,0,'T',"nbMsgCachePublish: calling handler");
           // 2010-05-06 eat - doesn't seem like we should set INBUF here
@@ -1598,14 +1760,9 @@ nbMsgCacheSubscriber *nbMsgCacheSubscribe(nbCELL context,nbMsgCache *msgcache,nb
   msgsub->next=msgcache->msgsub;
   msgsub->msgcache=msgcache;
   msgsub->flags=NB_MSG_CACHE_FLAG_MSGLOG;
-//  *buffer=0;       // set buffer length to zero
-//  *(buffer+1)=0;
-//  msgsub->buffer=buffer;
-//  msgsub->buflen=buflen;
   msgsub->handle=handle;
   msgsub->handler=handler;
   msgcache->msgsub=msgsub;
-  
   // for now let's just read from log
   cabalName=msgcache->msglog->cabal;
   nodeName=msgcache->msglog->nodeName;
@@ -1637,6 +1794,100 @@ int nbMsgCacheCancel(nbCELL context,nbMsgCacheSubscriber *msgsub){
   }
 
 /*
+*  Stomp on messages in queue if necessary to create room for new entry
+*
+*    This function determines if any messages not yet used by a subscriber will be overwritten
+*    by a new message or log file jump marker.  If so, the subscriber(s) are switched to a mode
+*    where they read the message log independently until they can use the message cache again.
+*/
+unsigned char *nbMsgCacheStomp(nbCELL context,nbMsgCache *msgcache,int msglen){
+  nbMsgCacheSubscriber *msgsub;
+  unsigned char *msgqrec,*msgqstop;
+  int qmsglen;
+  int looking=1;
+
+  msgqrec=msgcache->end;   // start at end
+  msgqstop=msgqrec+1+msglen;  // where new entry would stop
+  while(1){
+    if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCacheStomp: Looking in cache bufS=%p bufE=%p s=%p e=%p r=%p stop=%p",msgcache->bufferStart,msgcache->bufferEnd,msgcache->start,msgcache->end,msgqrec,msgqstop);
+    if(msgqrec>msgcache->start){ // watch out for the buffer end
+      if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCacheStomp: end>start");
+      if(msgqstop<msgcache->bufferEnd) return(msgqrec); // we have room
+      if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCacheStomp: stop>=bufEnd");
+      msgqrec=msgcache->bufferStart;
+      msgqstop=msgqrec+1+msglen;
+      }
+    else if(msgqstop>=msgcache->start){  // we are in front of start and going to overlay it
+      if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCacheInsert: stop>=start");
+      if(*msgcache->start==0x80){   // handle file marker - update file count and offset to jump to next file
+        msgcache->fileCount++;
+        msgcache->fileOffset=*(uint32_t *)(msgcache->start+1);
+        msgcache->start+=sizeof(nbMsgCacheFileMarker);
+        nbLogMsg(context,0,'T',"nbMsgCacheStomp: filecount=%d fileOffset=%d",msgcache->fileCount,msgcache->fileOffset);
+        }
+      else if(*msgcache->start!=0xff){
+        if(msgTrace){
+          nbLogMsg(context,0,'T',"nbMsgCacheStomp: Have to make room for new record - *start=%2.2x",*msgcache->start);
+          nbMsgPrint(stderr,(nbMsgRec *)(msgcache->start+1));
+          }
+        // before stomping on the start record we need to see if any subscribers
+        // will need to switch to msglog mode
+        // if we save stomp=msgcache->start this can be handled in the spin below
+        for(msgsub=msgcache->msgsub;msgsub;msgsub=msgsub->next){
+          if(msgsub->cachePtr==msgcache->start && !(msgsub->flags&NB_MSG_CACHE_FLAG_MSGLOG)){
+            msgsub->flags|=NB_MSG_CACHE_FLAG_MSGLOG;
+            msgsub->cachePtr=NULL;
+            msgsub->msglog->fileCount=msgcache->fileCount;    // position message log for reading
+            msgsub->msglog->filesize=msgcache->fileOffset;
+            }
+          }
+        // set state of cache start
+        if(nbMsgStateSetFromMsgId(context,msgcache->startState,&((nbMsgRec *)(msgcache->start+1))->si)<0){
+          nbLogMsg(context,0,'E',"nbMsgCacheStomp: Sequence error at start of message cache");
+          return(NULL);
+          }
+        qmsglen=(*(msgcache->start+1)<<8)+*(msgcache->start+2); // get length of message we are stomping on
+        msgcache->fileOffset+=qmsglen;  // maintain offset of queue start in message log file
+        msgcache->start+=1+qmsglen; // step to next record
+        if(msgTrace) nbLogMsg(context,0,'E',"nbMsgCacheStomp: msgcache->start=%p",msgcache->start);
+        if(*msgcache->start==0xff){
+          if(msgcache->start==msgcache->end){
+            msgqrec=msgcache->bufferStart;
+            msgqstop=msgqrec+1+msglen;
+            if(msgqstop>=msgcache->bufferEnd){
+              nbLogMsg(context,0,'E',"nbMsgCacheStomp: Message too large for message cache buffer - make cache size 256KB or more");
+              return(NULL);
+              }
+            looking=0;
+            }
+          msgcache->start=msgcache->bufferStart;
+          }
+        }
+      else return(msgqrec);
+      }
+    else return(msgqrec);
+    }
+  }
+
+/*
+*  Place a file marker in the cache buffer to track position across log files
+*/
+void nbMsgCacheMarkFileJump(nbCELL context,void *handle,uint32_t fileOffset){
+  nbMsgCache *msgcache=handle;
+  unsigned char *msgqrec;
+
+  nbLogMsg(context,0,'T',"nbMsgCacheMarkFileJump: call with offset=%u",fileOffset);
+  msgqrec=nbMsgCacheStomp(context,msgcache,sizeof(nbMsgCacheFileMarker)); // where do we put it?
+  *msgqrec=0x80; msgqrec++;
+  *msgqrec=fileOffset>>24; msgqrec++;
+  *msgqrec=(fileOffset>>16)&0xff; msgqrec++;
+  *msgqrec=(fileOffset>>8)&0xff; msgqrec++;
+  *msgqrec=fileOffset&0xff; msgqrec++;
+  *msgqrec=0xff;
+  msgcache->end=msgqrec;
+  }
+
+/*
 *  Insert message in cache
 *
 *    This function is a msglog message handler (consumer), so the parameters
@@ -1647,7 +1898,6 @@ int nbMsgCacheCancel(nbCELL context,nbMsgCacheSubscriber *msgsub){
 *      0 - ok
 *      1 - File message sequence error
 *
-*  We need to worry about generating the file marker records
 */
 int nbMsgCacheInsert(nbCELL context,void *handle,nbMsgRec *msgrec){
   nbMsgCache *msgcache=handle;
@@ -1656,7 +1906,6 @@ int nbMsgCacheInsert(nbCELL context,void *handle,nbMsgRec *msgrec){
   nbMsgId *msgid;
   int msglen;
   uint32_t recordCount;
-  int looking;
 
   if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCacheInsert: buffer start=%2.2x%2.2x%2.2x",*msgcache->bufferStart,*(msgcache->bufferStart+1),*(msgcache->bufferStart+2));
   msglen=(msgrec->len[0]<<8)|msgrec->len[1];
@@ -1678,66 +1927,10 @@ int nbMsgCacheInsert(nbCELL context,void *handle,nbMsgRec *msgrec){
     if(msgTrace) nbLogMsg(context,0,'I',"nbMsgCacheInsert: Ignoring message we've seen before\n");
     return(0);
     }
-  msgqrec=msgcache->end;
-  // figure out where the new record would stop
-  msgqstop=msgqrec+1+msglen;
-  looking=1;  //
-  while(looking){
-    if(msgTrace) nbLogMsg(context,0,'T',"Looking in cache bufS=%p bufE=%p s=%p e=%p r=%p stop=%p",msgcache->bufferStart,msgcache->bufferEnd,msgcache->start,msgcache->end,msgqrec,msgqstop);
-    if(msgqrec>msgcache->start){ // watch out for the buffer end
-      if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCacheInsert: end>start");
-      if(msgqstop>=msgcache->bufferEnd){ //wrap end around to start
-        if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCacheInsert: stop>=bufEnd");
-        msgqrec=msgcache->bufferStart;
-        msgqstop=msgqrec+1+msglen;
-        // keep looking
-        }
-      else looking=0;
-      }
-    else if(msgqstop>=msgcache->start){  // we are in front of start and going to overlay it
-      if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCacheInsert: stop>=start");
-      if(*msgcache->start!=0xff){
-        if(msgTrace){
-          nbLogMsg(context,0,'T',"nbMsgCacheInsert: Have to make room for new record - *start=%2.2x",*msgcache->start);
-          nbMsgPrint(stderr,(nbMsgRec *)(msgcache->start+1));
-          }
-        // before stomping on the start record we need to see if any subscribers
-        // will need to switch to msglog mode
-        // if we save stomp=msgcache->start this can be handled in the spin below
-        for(msgsub=msgcache->msgsub;msgsub;msgsub=msgsub->next){
-          if(msgsub->cachePtr==msgcache->start && !(msgsub->flags&NB_MSG_CACHE_FLAG_MSGLOG)){
-            msgsub->flags|=NB_MSG_CACHE_FLAG_MSGLOG;
-            msgsub->cachePtr=NULL;
-            }
-          }
-        // set state of cache start
-        if(nbMsgStateSetFromMsgId(context,msgcache->startState,&((nbMsgRec *)(msgcache->start+1))->si)<0){
-          nbLogMsg(context,0,'E',"nbMsgCacheInsert: Sequence error at start of message cache");
-          return(-1);
-          }
-        // step to next record - this depends on the length being the first two bytes of nbMsgRec
-        msgcache->start+=1+(*(msgcache->start+1)<<8)+*(msgcache->start+2);  
-        if(msgTrace) nbLogMsg(context,0,'E',"nbMsgCacheInsert: msgcache->start=%p",msgcache->start);
-        if(*msgcache->start==0xff){
-          if(msgcache->start==msgcache->end){
-            msgqrec=msgcache->bufferStart;
-            msgqstop=msgqrec+1+msglen;
-            if(msgqstop>=msgcache->bufferEnd){
-              nbLogMsg(context,0,'E',"nbMsgCacheInsert: Message too large for message cache buffer - make cache size 256KB or more");
-              return(-1);
-              }
-            looking=0;  
-            }
-          msgcache->start=msgcache->bufferStart;
-          }
-        }
-      else looking=0;
-      }
-    else looking=0;
-    }
-  // once we have room
+  msgqrec=nbMsgCacheStomp(context,msgcache,msglen);  // stomp a place into the cache
   *msgqrec=0;
   memcpy(msgqrec+1,msgrec,msglen);
+  msgqstop=msgqrec+1+msglen;
   *msgqstop=0xff;     // flag new end of cache
   msgcache->end=msgqstop;
   if(msgTrace) nbLogMsg(context,0,'T',"Found   in cache area bufS=%p bufE=%p s=%p e=%p r=%p stop=%p",msgcache->bufferStart,msgcache->bufferEnd,msgcache->start,msgcache->end,msgqrec,msgqstop);
@@ -1749,7 +1942,7 @@ int nbMsgCacheInsert(nbCELL context,void *handle,nbMsgRec *msgrec){
   
   // spin through subscribers and notify anyone that needs notification
   for(msgsub=msgcache->msgsub;msgsub;msgsub=msgsub->next){
-    if(!(msgsub->flags&NB_MSG_CACHE_FLAG_PAUSE)){
+    if(!(msgsub->flags&(NB_MSG_CACHE_FLAG_PAUSE|NB_MSG_CACHE_FLAG_MSGLOG))){
       if(nbMsgCachePublish(context,msgsub)) msgsub->flags&=0xff-NB_MSG_CACHE_FLAG_PAUSE; 
       }
     }
@@ -1795,9 +1988,12 @@ nbMsgCache *nbMsgCacheAlloc(nbCELL context,char *cabal,char *nodeName,int node,i
     }
   msgcache->msglog=msglog;
   msgcache->endCount=msglog->recordCount;
+  msgcache->fileCount=msglog->fileCount;   // initialize file count and offset
+  msgcache->fileOffset=msglog->filesize;
   if(nbMsgLogConsume(context,msglog,msgcache,nbMsgCacheInsert)!=0){
     nbMsgCacheFree(context,msgcache);
     }
+  msglog->fileJumper=nbMsgCacheMarkFileJump; // provide method to create file markers in the message cache
   return(msgcache);
   }
 
@@ -1856,7 +2052,7 @@ static int nbMsgPeerProducer(nbCELL context,nbPeer *peer,void *handle){
 
   nbLogMsg(context,0,'T',"nbMsgPeerProducer: called");
   if(!(msgcabal->mode&NB_MSG_CABAL_MODE_SERVER)){ // 
-    nbLogMsg(context,0,'W',"nbMsgCabalCabalProducer: Cabal not in server mode - not expecting request for messages - ignoring for now");
+    nbLogMsg(context,0,'W',"nbMsgPeerProducer: Cabal not in server mode - not expecting request for messages - ignoring for now");
     return(0);
     }
   if(!msgnode->msgsub){
@@ -2059,20 +2255,20 @@ static int nbMsgCabalAcceptHelloConsumer(nbCELL context,nbPeer *peer,void *handl
     nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloConsumer: unexpected size of node record - %d - expecting %d",len,sizeof(nbMsgNodeRec));
     return(-1);
     }
-  nbLogMsg(context,0,'T',"nbMsgCabaAcceptHelloConsumer: data=%p",data);
+  nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloConsumer: data=%p",data);
   nodeName=(char *)data;
-  nbLogMsg(context,0,'T',"nbMsgCabaAcceptHelloConsumer: nodeName=%s",nodeName);
+  nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloConsumer: nodeName=%s",nodeName);
 
   // look up the node here and then switch to using the node as the session handle
   // check for reasonable data - this will change to a more structured record anyway
-  for(msgnode=msgcabal->node->next;msgnode && msgnode!=msgcabal->node && strcmp(msgnode->name,nodeName);msgnode=msgnode->next);
+  for(msgnode=msgcabal->node->next;msgnode && msgnode!=msgcabal->node && (strcmp(msgnode->name,nodeName) || (msgcabal->mode&NB_MSG_CABAL_MODE_SERVER && msgnode->type&NB_MSG_NODE_TYPE_SERVER) || (msgcabal->mode&NB_MSG_CABAL_MODE_CLIENT && msgnode->type&NB_MSG_NODE_TYPE_CLIENT));msgnode=msgnode->next);
   if(!msgnode || msgnode==msgcabal->node){
     nbLogMsg(context,0,'E',"nbMsgCabalAcceptHelloConsumer: Unable to locate connecting node %s",(char *)data);
     return(-1);
     }
   if(msgnode->state!=NB_MSG_NODE_STATE_DISCONNECTED){
     nbLogMsg(context,0,'E',"nbMsgCabalAcceptHelloConsumer: Node %s is not in a disconnected state - %d - shutting down new connection",msgnode->name,msgnode->state);
-    //return(-1);  //accept them for now
+    return(-1);
     }
   nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloConsumer: Node %s connecting",msgnode->name);
   // should check to make sure we aren't stomping on an old peer here
@@ -2098,7 +2294,7 @@ static int nbMsgCabalAcceptHelloConsumer(nbCELL context,nbPeer *peer,void *handl
 *
 *  serviceName  - "peer", "server", or "client"
 *
-*  type - "hub" or "spoke"
+*  type - "hub", "spoke", "source", "sink"
 *
 */
 nbMsgNode *nbMsgNodeCreate(nbCELL context,char *cabalName,char *nodeName,nbCELL nodeContext,char *serviceName){
@@ -2123,8 +2319,11 @@ nbMsgNode *nbMsgNodeCreate(nbCELL context,char *cabalName,char *nodeName,nbCELL 
     nbLogMsg(context,0,'E',"Cabal \"%s\" node \"%s\" type not define in context",cabalName,nodeName);
     return(NULL);
     }
-  if(strcmp(nodeType,"hub")==0) type=NB_MSG_NODE_TYPE_HUB;
-  else if(strcmp(nodeType,"spoke")!=0){
+  if(strcmp(nodeType,"sink")==0) type=NB_MSG_NODE_TYPE_SINK;
+  else if(strcmp(nodeType,"source")==0) type=NB_MSG_NODE_TYPE_SOURCE;
+  else if(strcmp(nodeType,"hub")==0) type=NB_MSG_NODE_TYPE_HUB;
+  else if(strcmp(nodeType,"spoke")==0) type=NB_MSG_NODE_TYPE_SPOKE;
+  else{
     nbLogMsg(context,0,'E',"Cabal \"%s\" node \"%s\" type \"%s\" not recognized",cabalName,nodeName,nodeType);
     return(NULL);
     }
@@ -2137,8 +2336,7 @@ nbMsgNode *nbMsgNodeCreate(nbCELL context,char *cabalName,char *nodeName,nbCELL 
     }
   nbLogMsg(context,0,'T',"calling nbTermOptionString");
   uri=nbTermOptionString(nodeContext,serviceName,"");
-  nbLogMsg(context,0,'T',"back from nbTermOptionString uri=%s",uri);
-  if(!uri || !*uri){
+  if(!*uri && type&(NB_MSG_NODE_TYPE_HUB|NB_MSG_NODE_TYPE_SOURCE)){  // hub or source need to provide uri
     nbLogMsg(context,0,'W',"Cabal \"%s\" node \"%s\" %s not defined",cabalName,nodeName,serviceName);
     return(NULL);
     }
@@ -2152,8 +2350,8 @@ nbMsgNode *nbMsgNodeCreate(nbCELL context,char *cabalName,char *nodeName,nbCELL 
   msgnode->type=type;
   msgnode->order=0xff;
   msgnode->dn=NULL;
-  // construct a peer strucutre for connecting later 
-  msgnode->peer4Connect=nbPeerConstruct(context,serviceName,"",nodeContext,msgnode,nbMsgPeerHelloProducer,NULL,nbMsgPeerShutdown);
+  // construct a peer structure for connecting later 
+  msgnode->peer4Connect=nbPeerConstruct(context,1,serviceName,"",nodeContext,msgnode,nbMsgPeerHelloProducer,NULL,nbMsgPeerShutdown);
   msgnode->peer=msgnode->peer4Connect;  // will be replaced when we accept a connection from a peer
   if(!msgnode->peer){
     nbLogMsg(context,0,'E',"nbMsgNodeCreate: Unable to construct peer");
@@ -2233,7 +2431,6 @@ nbMsgCabal *nbMsgCabalAlloc(nbCELL context,char *cabalName,char *nodeName,int mo
     }
   msgcabal->node->msgcabal=msgcabal;
   msgcabal->nodeCount=0;  
-  msgcabal->synapse=nbSynapseOpen(context,NULL,msgcabal,NULL,nbMsgCabalRetry);
   cursor=ring;
   while(*cursor){
     delim=strchr(cursor,',');
@@ -2282,34 +2479,36 @@ nbMsgCabal *nbMsgCabalAlloc(nbCELL context,char *cabalName,char *nodeName,int mo
       }
     msgcabal->nodeCount++;
     }
-
   nbMsgCabalPrint(stderr,msgcabal);
-
-  // It is my beleive that if we modify nbMsgNodeCreate to support the
-  // a uriName parameter, we can use the root node's peer and not need
-  // to create one here.
-
-  // Set up and register listener for TLS connections
-  tlsContext=nbTermLocate(context,"server");
-  if(!tlsContext){
-    nbLogMsg(context,0,'E',"nbMsgCabalAlloc: Term \"server\" not defined");
-    nbMsgCabalFree(context,msgcabal);
-    return(NULL);
+  // some types of nodes need to listen for a connection - source (server) and hub (client and server)
+  if(msgcabal->node->type&(NB_MSG_NODE_TYPE_HUB|NB_MSG_NODE_TYPE_SOURCE)){ 
+    // It is my beleive that if we modify nbMsgNodeCreate to support the
+    // a uriName parameter, we can use the root node's peer and not need
+    // to create one here.
+  
+    // Set up and register listener for TLS connections
+    tlsContext=nbTermLocate(context,"server");
+    if(!tlsContext){
+      nbLogMsg(context,0,'E',"nbMsgCabalAlloc: Term \"server\" not defined");
+      nbMsgCabalFree(context,msgcabal);
+      return(NULL);
+      }
+  
+    // construct a listening peer structure - should the consumer be null here?
+    msgcabal->peer=nbPeerConstruct(context,0,"uri","",tlsContext,msgcabal,nbMsgCabalAcceptHelloProducer,nbMsgCabalAcceptHelloConsumer,nbMsgPeerAcceptShutdown);
+    if(!msgcabal->peer){
+      nbLogMsg(context,0,'E',"nbMsgCabalAlloc: Peer structure to listen was not created");
+      nbMsgCabalFree(context,msgcabal);
+      return(NULL);
+      }
+    if(nbPeerListen(context,msgcabal->peer)!=0){ // start listening
+      nbLogMsg(context,0,'E',"nbMsgCabalAlloc: Unable to listen to peer");
+      nbMsgCabalFree(context,msgcabal);
+      return(NULL);
+      }
+    nbLogMsg(context,0,'I',"Listening on %s",msgcabal->peer->tls->uriMap[0].uri);
     }
-
-  // construct a listening peer strucutre - should the consumer be null here?
-  msgcabal->peer=nbPeerConstruct(context,"uri","",tlsContext,msgcabal,nbMsgCabalAcceptHelloProducer,nbMsgCabalAcceptHelloConsumer,nbMsgPeerAcceptShutdown);
-  if(!msgcabal->peer){
-    nbLogMsg(context,0,'E',"nbMsgCabalAlloc: Peer structure to listen was not created");
-    nbMsgCabalFree(context,msgcabal);
-    return(NULL);
-    }
-  if(nbPeerListen(context,msgcabal->peer)!=0){ // start listening
-    nbLogMsg(context,0,'E',"nbMsgCabalAlloc: Unable to listen to peer");
-    nbMsgCabalFree(context,msgcabal);
-    return(NULL);
-    }
-  nbLogMsg(context,0,'I',"Listening on %s",msgcabal->peer->tls->uriMap[0].uri);
+  msgcabal->synapse=nbSynapseOpen(context,NULL,msgcabal,NULL,nbMsgCabalRetry);
   return(msgcabal);
   }
 
@@ -2335,6 +2534,11 @@ nbMsgCabal *nbMsgCabalServer(nbCELL context,char *cabalName,char *nodeName){
     return(NULL);
     }
   msgcabal->msgcache=nbMsgCacheAlloc(context,cabalName,nodeName,msgcabal->node->number,2*1024*1024);
+  if(!msgcabal->msgcache){
+    nbLogMsg(context,0,'T',"nbMsgCabalServer: Unable to alloc cache for cabal '%s' node '%s' - terminating",cabalName,nodeName);
+    nbLogFlush(context);
+    exit(1);
+    }
   return(msgcabal);
   }
 
@@ -2507,93 +2711,157 @@ int nbMsgPeerCacheMsgHandler(nbCELL context,void *handle,nbMsgRec *msgrec){
 /*
 *  Enable peer connections
 *
-*    We need to enhance this to figure out what connections
-*    should be established
+*    This function is called to get the cabal connections in a preferred
+*    state.  Once in a preferred state, we don't need to call this function
+*    unless a connection is lost.
+*
+*    We are using a simplified strategy for dropping extra connections. If we
+*    establish a "more preferred" connection, we shutdown any "less preferred"
+*    connection that we established.  We leave it to peers to decide when to
+*    shutdown connections they establish.
 *
 */
 int nbMsgCabalEnable(nbCELL context,nbMsgCabal *msgcabal){
-  int rc;
-  //int timeout=5;
   nbMsgNode *msgnode;
   int count=0;
-  int limit=255; 
-  int found;
+  int limit=255;      // avoid infinite loop in node list
+  int connected;      // -1 - found no connected or connecting peer, 0 - found connecting peer, 1 - found connected peer 
   int expirationTime;
   int preferred=1;    // assume we are in a prefered state
-  int satisfied=1;    // assume we are in a satisfied state
+  int satisfied=1;    // assume we are in a satisfied state (used for ring topology only)
   time_t utime;
 
-  nbLogMsg(context,0,'T',"nbMsgCabalEnable: called for cabal %s node %s mode=%2.2x",msgcabal->cabalName,msgcabal->node->name,msgcabal->mode);
+  nbLogMsg(context,0,'T',"nbMsgCabalEnable: called for cabal %s node %s mode=%2.2x type=%2.2x",msgcabal->cabalName,msgcabal->node->name,msgcabal->mode,msgcabal->node->type);
   nbMsgCabalPrint(stderr,msgcabal);
 
+  nbClockSetTimer(0,msgcabal->synapse); // cancel previous timer if set
   time(&utime);
   expirationTime=utime;
-  expirationTime-=60;  // wait one minutes before connecting after a disconnect
-  // In server or peer mode we try to connect to one hub node in front of us
-  if(msgcabal->mode&NB_MSG_CABAL_MODE_SERVER){  // server tries to connect to clients
-    nbLogMsg(context,0,'T',"nbMsgCabalEnable: server for cabal %s node %s",msgcabal->cabalName,msgcabal->node->name);
-    count=0;
-    for(found=0,msgnode=msgcabal->node->next;!found && msgnode!=msgcabal->node && count<limit;msgnode=msgnode->next){
-      if(msgnode->type&NB_MSG_NODE_TYPE_HUB && msgnode->type&NB_MSG_NODE_TYPE_CLIENT){
-        if(msgnode->state==NB_MSG_NODE_STATE_CONNECTED) found=1;
-        else if(msgnode->state==NB_MSG_NODE_STATE_DISCONNECTED && msgnode->downTime<expirationTime){
-          // we only want to connect from a disconnected state that has aged sufficiently
-          nbLogMsg(context,0,'T',"nbMsgCabalEnable: calling nbPeerConnect for cabal %s server node %s to client node %s",msgcabal->cabalName,msgcabal->node->name,msgnode->name);
-          if(msgnode->peer!=msgnode->peer4Connect){
-            nbPeerDestroy(context,msgnode->peer);
-            msgnode->peer=msgnode->peer4Connect;
+  expirationTime-=30;  // wait 30 seconds before connecting after a disconnect
+
+  // Handle web topology sink (client) and source (server)
+  if(msgcabal->node->type&NB_MSG_NODE_TYPE_FAN){
+    if(msgcabal->node->type&NB_MSG_NODE_TYPE_SOURCE){
+      nbLogMsg(context,0,'T',"nbMsgCabalEnable: source node waits for connection from sink nodes");
+      return(0);
+      }
+    // A sink node tries to connect to all source nodes (we don't connect to hubs---thats what spoke nodes do)
+    if(msgcabal->node->type&NB_MSG_NODE_TYPE_SINK){
+      nbLogMsg(context,0,'T',"nbMsgCabalEnable: sink client for cabal %s node %s",msgcabal->cabalName,msgcabal->node->name);
+      for(count=0,msgnode=msgcabal->node->next;msgnode!=msgcabal->node && count<limit;msgnode=msgnode->next){
+        if(msgnode->type&NB_MSG_NODE_TYPE_SOURCE && msgnode->type&NB_MSG_NODE_TYPE_SERVER){
+          if(msgnode->state!=NB_MSG_NODE_STATE_CONNECTED) preferred=0;
+          if(msgnode->state==NB_MSG_NODE_STATE_DISCONNECTED && msgnode->downTime<expirationTime){
+            // we only want to connect from a disconnected state 
+            nbLogMsg(context,0,'T',"nbMsgCabalEnable: calling nbPeerConnect for cabal %s sink node %s to source node %s",msgcabal->cabalName,msgcabal->node->name,msgnode->name);
+            if(msgnode->peer!=msgnode->peer4Connect){
+              nbPeerDestroy(context,msgnode->peer);
+              msgnode->peer=msgnode->peer4Connect;
+              }
+            msgnode->state=NB_MSG_NODE_STATE_CONNECTING;
+            connected=nbPeerConnect(context,msgnode->peer,msgnode,nbMsgPeerHelloProducer,NULL,nbMsgPeerShutdown);
+            if(connected<0){
+              nbLogMsg(context,0,'T',"nbMsgCabalEnable: nbPeerConnect failed for cabal %s sink node %s to source node %s",msgcabal->cabalName,msgcabal->node->name,msgnode->name);
+              msgnode->state=NB_MSG_NODE_STATE_DISCONNECTED;
+              msgnode->downTime=utime;
+              preferred=0;
+              }
+            else if(connected==1) msgnode->state=NB_MSG_NODE_STATE_CONNECTED;
+            else preferred=0;
+            count++;
             }
-          msgnode->state=NB_MSG_NODE_STATE_CONNECTING;
-          rc=nbPeerConnect(context,msgnode->peer,msgnode,nbMsgPeerHelloProducer,NULL,nbMsgPeerShutdown);
-          if(rc){
-            nbLogMsg(context,0,'T',"nbMsgCabalEnable: nbPeerConnect returned %d",rc);
-            msgnode->state=NB_MSG_NODE_STATE_DISCONNECTED;
-            msgnode->downTime=utime;
-            }
-          else found=1;
-          count++;
           }
-        else preferred=0;
         }
       }
-    if(!found) satisfied=0;
     }
-  // In client or peer mode we try to connect one hub node behind us
-  if(msgcabal->mode&NB_MSG_CABAL_MODE_CLIENT){ // client tries to connect to server in reverse order
-    nbLogMsg(context,0,'T',"nbMsgCabalEnable: client for cabal %s node %s",msgcabal->cabalName,msgcabal->node->name);
-    count=0;
-    for(found=0,msgnode=msgcabal->node->prior;!found && msgnode!=msgcabal->node && count<limit;msgnode=msgnode->prior){
-      if(msgnode->type&NB_MSG_NODE_TYPE_HUB && msgnode->type&NB_MSG_NODE_TYPE_SERVER){
-        if(msgnode->state==NB_MSG_NODE_STATE_CONNECTED) found=1;
-        else if(msgnode->state==NB_MSG_NODE_STATE_DISCONNECTED && msgnode->downTime<expirationTime){
-          // we only want to connect from a disconnected state 
-          nbLogMsg(context,0,'T',"nbMsgCabalEnable: calling nbPeerConnect for cabal %s client node %s to server node %s",msgcabal->cabalName,msgcabal->node->name,msgnode->name);
-          if(msgnode->peer!=msgnode->peer4Connect){
-            nbPeerDestroy(context,msgnode->peer);
-            msgnode->peer=msgnode->peer4Connect;
+  // Handle ring topology hub (client and/or server) and spoke (client)
+  if(msgcabal->node->type&NB_MSG_NODE_TYPE_RING){
+    // In server or peer mode we try to connect to one hub node in front of us
+    if(msgcabal->mode&NB_MSG_CABAL_MODE_SERVER){  // server tries to connect to clients
+      nbLogMsg(context,0,'T',"nbMsgCabalEnable: hub server for cabal %s node %s",msgcabal->cabalName,msgcabal->node->name);
+      for(count=0,connected=-1,msgnode=msgcabal->node->next;connected==-1 && msgnode!=msgcabal->node && count<limit;msgnode=msgnode->next){
+        if(msgnode->type&NB_MSG_NODE_TYPE_HUB && msgnode->type&NB_MSG_NODE_TYPE_CLIENT){
+          if(msgnode->state==NB_MSG_NODE_STATE_CONNECTED) connected=1;
+          else if(msgnode->state==NB_MSG_NODE_STATE_CONNECTING) connected=0;
+          else if(msgnode->state==NB_MSG_NODE_STATE_DISCONNECTED && msgnode->downTime<expirationTime){
+            // we only want to connect from a disconnected state that has aged sufficiently
+            nbLogMsg(context,0,'T',"nbMsgCabalEnable: calling nbPeerConnect for cabal %s server node %s to client node %s",msgcabal->cabalName,msgcabal->node->name,msgnode->name);
+            if(msgnode->peer!=msgnode->peer4Connect){
+              nbPeerDestroy(context,msgnode->peer);
+              msgnode->peer=msgnode->peer4Connect;
+              }
+            msgnode->state=NB_MSG_NODE_STATE_CONNECTING;
+            connected=nbPeerConnect(context,msgnode->peer,msgnode,nbMsgPeerHelloProducer,NULL,nbMsgPeerShutdown);
+            if(connected<0){
+              nbLogMsg(context,0,'T',"nbMsgCabalEnable: nbPeerConnect failed for cabal %s client node %s to server node %s",msgcabal->cabalName,msgcabal->node->name,msgnode->name);
+              msgnode->state=NB_MSG_NODE_STATE_DISCONNECTED;
+              msgnode->downTime=utime;
+              preferred=0;
+              }
+            else if(connected==1) msgnode->state=NB_MSG_NODE_STATE_CONNECTED;
+            else preferred=0;
+            count++;
             }
-          msgnode->state=NB_MSG_NODE_STATE_CONNECTING;
-          rc=nbPeerConnect(context,msgnode->peer,msgnode,nbMsgPeerHelloProducer,NULL,nbMsgPeerShutdown);
-          if(rc){
-            nbLogMsg(context,0,'T',"nbMsgCabalEnable: nbPeerConnect returned %d",rc);
-            msgnode->state=NB_MSG_NODE_STATE_DISCONNECTED;
-            msgnode->downTime=utime;
-            }
-          else found=1;
-          count++;
+          else preferred=0;
           }
-        else preferred=0;
+        }
+      if(connected<1) satisfied=0;
+      else{  // continue through list of nodes and disconnect any less prefered connection we initiated
+        for(;msgnode!=msgcabal->node;msgnode=msgnode->next){
+          if(msgnode->type&NB_MSG_NODE_TYPE_HUB && msgnode->type&NB_MSG_NODE_TYPE_CLIENT){
+            if(msgnode->state==NB_MSG_NODE_STATE_CONNECTED && msgnode->peer==msgnode->peer4Connect){ // we initiated the less preferred connection
+              nbPeerShutdown(context,msgnode->peer,0);  // drop the extra connection - let peer re-establish if needed
+              }
+            }
+          }
         }
       }
-    if(!found) satisfied=0;
+    // In client or peer mode we try to connect to one hub node behind us
+    if(msgcabal->mode&NB_MSG_CABAL_MODE_CLIENT){ // client tries to connect to server in reverse order
+      nbLogMsg(context,0,'T',"nbMsgCabalEnable: client for cabal %s node %s",msgcabal->cabalName,msgcabal->node->name);
+      for(count=0,connected=-1,msgnode=msgcabal->node->prior;connected==-1 && msgnode!=msgcabal->node && count<limit;msgnode=msgnode->prior){
+        if(msgnode->type&NB_MSG_NODE_TYPE_HUB && msgnode->type&NB_MSG_NODE_TYPE_SERVER){
+          if(msgnode->state==NB_MSG_NODE_STATE_CONNECTED) connected=1;
+          else if(msgnode->state==NB_MSG_NODE_STATE_CONNECTING) connected=0;
+          else if(msgnode->state==NB_MSG_NODE_STATE_DISCONNECTED && msgnode->downTime<expirationTime){
+            // we only want to connect from a disconnected state 
+            nbLogMsg(context,0,'T',"nbMsgCabalEnable: calling nbPeerConnect for cabal %s client node %s to server node %s",msgcabal->cabalName,msgcabal->node->name,msgnode->name);
+            if(msgnode->peer!=msgnode->peer4Connect){
+              nbPeerDestroy(context,msgnode->peer);
+              msgnode->peer=msgnode->peer4Connect;
+              }
+            msgnode->state=NB_MSG_NODE_STATE_CONNECTING;
+            connected=nbPeerConnect(context,msgnode->peer,msgnode,nbMsgPeerHelloProducer,NULL,nbMsgPeerShutdown);
+            if(connected<0){
+              nbLogMsg(context,0,'T',"nbMsgCabalEnable: nbPeerConnect failed for cabal %s client node %s to server node %s",msgcabal->cabalName,msgcabal->node->name,msgnode->name);
+              msgnode->state=NB_MSG_NODE_STATE_DISCONNECTED;
+              msgnode->downTime=utime;
+              preferred=0;
+              }
+            else if(connected==1) msgnode->state=NB_MSG_NODE_STATE_CONNECTED;
+            else preferred=0;
+            count++;
+            }
+          else preferred=0;
+          }
+        }
+      if(connected<1) satisfied=0;
+      else{  // continue through list of nodes and disconnect any less prefered connection we initiated
+        for(;msgnode!=msgcabal->node;msgnode=msgnode->prior){
+          if(msgnode->type&NB_MSG_NODE_TYPE_HUB && msgnode->type&NB_MSG_NODE_TYPE_SERVER){
+            if(msgnode->state==NB_MSG_NODE_STATE_CONNECTED && msgnode->peer==msgnode->peer4Connect){ // we initiated the less preferred connection
+              nbPeerShutdown(context,msgnode->peer,0);  // drop the extra connection - let peer re-establish if needed
+              }
+            }
+          }
+        }
+      }
     }
   if(count>=256){
     nbLogMsg(context,0,'L',"nbMsgCabalEnable: Corrupted node list - terminating");
     exit(1);
     }
-  if(!satisfied || !preferred){  // let's set a medulla timer using synapse to check again later
-    nbClockSetTimer(0,msgcabal->synapse); // cancel previous timer
-    nbSynapseSetTimer(context,msgcabal->synapse,30);
-    }
+  // If not in a preferred state let's set a medulla timer using synapse to check again later
+  if(!preferred) nbSynapseSetTimer(context,msgcabal->synapse,15);
   return(0);
   }

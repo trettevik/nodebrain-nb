@@ -348,7 +348,7 @@ void printAbout(void){
   }
 
 void showVersion(void){
-  outPut("\nN o d e B r a i n   %s (Dunce) %s\n\n",PACKAGE_VERSION,NB_RELEASE_DATE);
+  outPut("\nN o d e B r a i n   %s (Dopey) %s\n\n",PACKAGE_VERSION,NB_RELEASE_DATE);
   outPut("Compiled %s %s %s\n\n",__DATE__,__TIME__,NB_COMPILE_PLATFORM);
   }
 
