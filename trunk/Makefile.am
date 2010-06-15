@@ -70,7 +70,7 @@
 
 SUBDIRS = lib . module
 
-info_TEXINFOS = doc/nb.texi doc/nbTutorial.texi
+info_TEXINFOS = doc/nb.texi doc/nbTutorial/nbTutorial.texi
 doc_nbTutorial_TEXINFOS = doc/fdl.texi
 
 dist_man_MANS = \

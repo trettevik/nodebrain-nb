@@ -118,6 +118,11 @@
 *                         r1 = ! == on(!([]a)); 
 * 2010/02/26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2010/02/26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2010-06-12 eat 0.8.2  Included grapObject call in "value of" $() parsing
+*                       This avoids a bad destroyReal() call on this:
+*                       define a cell x+y;
+*                       assert x,y;
+*                       define z cell c and $(a);
 *==============================================================================
 */
 #include "nbi.h"
@@ -812,12 +817,13 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
       */
       if(object->value==nb_Disabled){
         object->type->enable(object);
-        object->value=object->type->eval(object);
+        objhold=object->type->eval(object);
         object->type->disable(object);
         }
-      if(object->value->type==realType)
-        object->value=(NB_Object *)useReal(((struct REAL *)object->value)->value);
-      objhold=object->value;
+      else objhold=object->value;
+      if(objhold->type==realType){
+        objhold=(NB_Object *)useReal(((struct REAL *)objhold)->value);
+        }
       if(object->refcnt==0) object->type->destroy(object);
       return(objhold); 
     case '{':

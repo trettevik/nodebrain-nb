@@ -1,12 +1,8 @@
 \input texinfo   @c -*-texinfo-*-
 @c %**start of header
 @setfilename nbTutorial.info
-@include version-nbTutorial.texi
+@include version.texi
 @settitle NodeBrain Tutorial
-@dircategory NodeBrain Agent
-@direntry
-* Tutorial: (nodebrain).       NodeBrain Tutorial
-@end direntry
 @c %**end of header
 
 @finalout
@@ -113,6 +109,7 @@ Release 0.7.4
 Release 0.7.5
 @itemize @bullet
 @item Refined for PDF format
+@item Several minor corrections
 @end itemize
 
 @end multitable
@@ -524,11 +521,11 @@ Here's a session that uses a rule that invokes our alarmMe.pl script as a servan
 
 @example
 $ nb
-> define alarmRule on(a):-alarmMe.pl 1 "Things aren't looking good"
+> define alarmRule on(a):-./alarmMe.pl 1 "Things aren't looking good"
 > assert a;
 2008/06/05 12:31:42 NB000I Rule alarmRule fired
-: -alarmMe.pl 1 "Things aren't looking good"
-[17571] Started: -alarmMe.pl 1 "Things aren't looking good"
+: -./alarmMe.pl 1 "Things aren't looking good"
+[17571] Started: -./alarmMe.pl 1 "Things aren't looking good"
 [17571] Exit(0)
 > quit
 $
@@ -568,16 +565,27 @@ To tell NodeBrain we want an interactive session after the file is processed, we
 
 @example
 $ nb roger.nb -
-2008/06/05 14:40:32 NB000I Argument [1] roger.nb
+2009/03/16 11:32:35 NB000I Argument [1] roger.nb
 > # roger.nb
 > define myProcessRule1 on(processes>200):-./alarmMe.pl 1 "dang - more than 200 processes."
 > define myProcessRule2 on(processes<100):-./alarmMe.pl 2 "ok - under 100 processes."
 > define myProcessRule3 on(a=1 and b=2):-:./processCount.pl
-2008/06/05 14:40:32 NB000I Source file "roger.nb" included. size=246
-2008/06/05 14:40:32 NB000I Argument [2] -
-2008/06/05 14:40:32 NB000I Reading from standard input.
+2009/03/16 11:32:35 NB000I Source file "roger.nb" included. size=243
+2009/03/16 11:32:35 NB000I Argument [2] -
+2009/03/16 11:32:35 NB000I Reading from standard input.
 ---------- --------
->
+> @b{assert a,b=2;}
+2009/03/16 11:32:48 NB000I Rule myProcessRule3 fired
+: -:./processCount.pl
+[3515] Started: -:./processCount.pl
+[3515: assert processes=74;
+2009/03/16 11:32:48 NB000I Rule myProcessRule2 fired
+: -./alarmMe.pl 2 "ok - under 100 processes."
+[3519] Started: -./alarmMe.pl 2 "ok - under 100 processes."
+[3519] Exit(0)
+[3515] Exit(0)
+> @b{quit}
+2009/03/16 11:32:52 NB000I NodeBrain nb[3514] terminating - exit code=0
 @end example
 
 @node Batch Mode
@@ -1558,7 +1566,7 @@ Now we'll create a new rule file called @code{illnessConsult.nb} to consult our 
 
 @example
 # File: tutorial/Ignorance/illnessConsult.nb
-@b{use: illnessConsult.pl}
+@b{use : ./illnessConsult.pl}
 defineCommonCold on(cough and soreThroat);
 defineFlu on(fever and achy and upsetStomach);
 @b{query;}
@@ -1570,15 +1578,15 @@ Now we can diagnose an illness in batch mode.
 $ nb illnessConsult.nb
 2008/06/1016:12:25 NB000I Argument [1] illnessConsult.nb
 > # File: tutorial/Ignorance/illnessConsult.nb
-> use : illnessConsult.pl
+> use : ./illnessConsult.pl
 > define CommonCold on(cough and soreThroat);
 > define Flu on(fever and achy and upsetStomach);
 > query;
-2008/06/1016:12:25 NB000T Resolving "fever" via command : illnessConsult.pl "fever"
+2008/06/1016:12:25 NB000T Resolving "fever" via command : ./illnessConsult.pl "fever"
 Value=(0)
-2008/06/1016:12:25 NB000T Resolving "cough" via command : illnessConsult.pl "cough"
+2008/06/1016:12:25 NB000T Resolving "cough" via command : ./illnessConsult.pl "cough"
 Value=(1)
-2008/06/1016:12:25 NB000T Resolving "soreThroat" via command :illnessConsult.pl "soreThroat"
+2008/06/1016:12:25 NB000T Resolving "soreThroat" via command : ./illnessConsult.pl "soreThroat"
 Value=(1)
 2008/06/1016:12:25 NB000I @b{Rule CommonCold fired}
 2008/06/1016:12:25 NB000I Source file "illnessConsult.nb" included. size=149
@@ -1605,10 +1613,10 @@ NodeBrain @code{on}, @code{when} and @code{if} rules have almost identical synta
 
 @example
 # File: tutorial/RuleTypes/rules.nb
-definer0 when(a=1 and b=2);
-definer1 on(a=1 and b=2);
-definer2 on(a=2 and b=2);
-definer3 if(a=1 and b=2);
+define r0 when(a=1 and b=2);
+define r1 on(a=1 and b=2);
+define r2 on(a=2 and b=2);
+define r3 if(a=1 and b=2);
 assert a=1,b=2;
 assert a=1,b=2;
 assert a=2;
@@ -2757,7 +2765,7 @@ You can configure your syslog node to listen on UDP port 514 on a server that do
 However, if you need (or want) more flexibility, we recommend that you use NodeBrain in combination with syslog-ng.
 In that case, you configure NodeBrain to listen on a different port and configure syslog-ng to forward all or selected syslog entries to NodeBrain.
 
-The example below is configure to listen on UDP port 1514, assuming syslog-ng is used to forward syslog to NodeBrain.
+The example below is configured to listen on UDP port 1514, assuming syslog-ng is used to forward syslog to NodeBrain.
 
 @example
 #!/usr/local/bin/nb -d
@@ -3005,7 +3013,7 @@ bar 7.b49ad9bfb68a97b8.fab67908064b5cb3.0;
 --- Anonymous
 @end quotation
 
-A peer server node is alert to give service, if fact, it can even give service to alerts.
+A peer server node is alert to give service, in fact, it can even give service to alerts.
 It provides a method for a peer client to send any command to a NodeBrain agent: alerts, assertions, new rule definitions, etc.
 It accepts TCP/IP socket connections from clients and issues received commands in the context of the server node.  The @code{server} file in the tutorial/Peer directory looks like this.
 
@@ -3037,9 +3045,9 @@ $ ./server
 > setout=".",log="server.log";
 2008/06/11 10:27:58 NB000I NodeBrain nb will log to server.log
 > declare buddy identity owner;
-> @b{define myServer nodepeer.server("buddy@@./socket");}         # Unix domain
+> @b{define myServer node peer.server("buddy@@./socket");}         # Unix domain
 2008/06/11 10:27:58 NB000I Peer keys loaded.
-> #define myServer nodepeer.server("buddy@@127.0.0.1:12345"); # local
+> #define myServer node peer.server("buddy@@127.0.0.1:12345"); # local
 > #define myServer node peer.server("buddy@@0.0.0.0:12345");   # remote
 > myServer. define r1 on(a=1 and b=2);
 2008/06/11 10:27:58 NB000I Source file "./server" included. size=493
@@ -3066,9 +3074,9 @@ The @file{client} file in the tutorial/Peer directory looks like this.
 #!/usr/local/bin/nb
 # File: tutorial/Peer/client
 @b{declare buddy identity;}
-@b{define myClient nodepeer.client("buddy@@./socket");}         # Unix domain
-#define myClient nodepeer.client("buddy@@localhost:12345"); # local
-#define myClient nodepeer.client("buddy@@myhost.mydomain:12345"); # remote
+@b{define myClient node peer.client("buddy@@./socket");}         # Unix domain
+#define myClient node peer.client("buddy@@localhost:12345"); # local
+#define myClient node peer.client("buddy@@myhost.mydomain:12345"); # remote
 @b{myClient:assert a=1,b=2;}
 @b{myClient:stop;}
 @end example
@@ -3087,9 +3095,9 @@ $ ./client
 > #!/usr/local/bin/nb
 > # File: tutorial/Peer/client
 > declare buddy identity;
-> @b{define myClient nodepeer.client("buddy@@./socket");}         # Unix domain
-> #define myClient nodepeer.client("buddy@@localhost:12345"); # local
-> #define myClient nodepeer.client("buddy@@myhost.mydomain:12345"); # remote
+> @b{define myClient node peer.client("buddy@@./socket");}         # Unix domain
+> #define myClient node peer.client("buddy@@localhost:12345"); # local
+> #define myClient node peer.client("buddy@@myhost.mydomain:12345"); # remote
 > @b{myClient:assert a=1,b=2;}
 2008/06/11 10:28:00 NB000I Peer keys loaded.
 2008/06/11 10:28:00 NB000I Peer b0000=buddy@@./socket
@@ -3151,7 +3159,7 @@ The iclient script looks like this.
 #!/usr/local/bin/nb -`myClient:
 # File: iclient
 declare buddy identity;
-define myClient nodepeer.client("buddy@@./socket");         # Unix domain
+define myClient node peer.client("buddy@@./socket");         # Unix domain
 @end example
 
 The strange looking she-bang line has an argument that supplies an interactive command prefix and enables an option to automatically go into interactive mode after processing all command arguments.  This causes your prompt to look like this.
@@ -3169,7 +3177,7 @@ $ ./iclient
 > #!/usr/local/bin/nb -'myClient:
 > # File: tutorial/Peer/iclient
 > declare buddy identity;
-> define myClient nodepeer.client("buddy@@./socket");         # Unix domain
+> define myClient node peer.client("buddy@@./socket");         # Unix domain
 2008/06/11 16:48:39 NB000I Source file "./iclient" included. size=209
 2008/06/11 16:48:39 NB000I Reading from standard input.
 ---------- --------

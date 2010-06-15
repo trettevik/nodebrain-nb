@@ -1148,7 +1148,7 @@ void nbMsgUdpRead(nbCELL context,int serverSocket,void *handle){
   len=recvfrom(msglog->socket,buffer,buflen,0,NULL,0);
   while(len==-1 && errno==EINTR) len=recvfrom(msglog->socket,buffer,buflen,0,NULL,0);
   if(len<0) nbLogMsg(context,0,'T',"nbMsgUdpRead: first recvfrom len=%d - errno=%d %s",len,errno,strerror(errno));
-  while(len>0){
+  else while(len>0){
     if(msgTrace){
       nbLogMsg(context,0,'T',"Datagram len=%d",len);
       nbLogDump(context,buffer,len);
@@ -1707,7 +1707,7 @@ int nbMsgCachePublish(nbCELL context,nbMsgCacheSubscriber *msgsub){
   while(cachePtr!=msgcache->end){
     // make this a switch instead
     if(*cachePtr==0xff) cachePtr=msgcache->bufferStart; // wrap on stop if not at end
-    else if(*cachePtr==0x80) *cachePtr+=sizeof(nbMsgCacheFileMarker);
+    else if(*cachePtr==0x80) cachePtr+=sizeof(nbMsgCacheFileMarker);
     // we can ignore file markers here because nbMsgCacheInsert will
     // adjust the file position in the msglog if it has to switch this
     // subscriber back to msglog mode
@@ -1747,7 +1747,6 @@ int nbMsgCachePublish(nbCELL context,nbMsgCacheSubscriber *msgsub){
 /*
 *  Register message cache subscriber
 */
-//nbMsgCacheSubscriber *nbMsgCacheSubscribe(nbCELL context,nbMsgCache *msgcache,unsigned char *buffer,int buflen,nbMsgState *msgstate,void *handle,int (*handler)(nbCELL context,void *handle,nbMsgRec *msgrec)){
 nbMsgCacheSubscriber *nbMsgCacheSubscribe(nbCELL context,nbMsgCache *msgcache,nbMsgState *msgstate,void *handle,int (*handler)(nbCELL context,void *handle,nbMsgRec *msgrec)){
   nbMsgCacheSubscriber *msgsub;
   nbMsgLog *msglog;

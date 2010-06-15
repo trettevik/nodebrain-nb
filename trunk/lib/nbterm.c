@@ -330,10 +330,10 @@ void destroyTerm(NB_Term *term){
   NB_TreeNode *treeNode;
 
   if(trace) outMsg(0,'T',"destroyTerm() called for %s",term->word->value);
-  if(term->def!=NULL) dropObject(term->def);
+  if(term->def!=NULL) term->def=dropObject(term->def);
+  if(term->cell.object.value!=NULL) term->cell.object.value=dropObject(term->cell.object.value);  // 2006-01-13
   if(term->terms!=NULL){
-    if(term->cell.object.value!=NULL) dropObject(term->cell.object.value);  // 2006-01-13
-    if(term->def!=NULL) dropObject(term->def);                // 2006-01-13
+    //if(term->def!=NULL) dropObject(term->def);                // 2006-01-13
     term->cell.object.value=nb_Disabled;
     term->def=nb_Undefined;
     return;
@@ -343,7 +343,7 @@ void destroyTerm(NB_Term *term){
     if(treeNode==NULL) outMsg(0,'L',"destroyTerm() Term \"%s\" not found in context.",term->word->value);  
     else nbTreeRemove(&treePath);
     }
-  dropObject(term->word);
+  term->word=dropObject(term->word);
   term->cell.object.next=(NB_Object *)termFree;
   termFree=term;
   if(trace) outMsg(0,'T',"destroyTerm() returning");
@@ -662,9 +662,7 @@ NB_Term *nbTermNew(NB_Term *context,char *ident,void *def){
       //  nbCellLevel(term);       /* adjust level */
       //  }
       // 2006-12-22 eat - when ready, investigate the following condition
-      if(term->cell.object.value!=nb_Disabled){
-        nbCellEnable(def,(NB_Cell *)term);
-        }
+      if(term->cell.object.value!=nb_Disabled) nbCellEnable(def,(NB_Cell *)term);
       }
     else{
       outMsg(0,'L',"Term \"%s\" may not be redefined.",ident);

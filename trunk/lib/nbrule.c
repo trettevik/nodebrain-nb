@@ -694,10 +694,14 @@ struct ACTION *newAction(NB_Cell *context,NB_Term *term,struct COND *cond,char p
   action=nbAlloc(sizeof(struct ACTION));
   // for some reason we are not using the action cell yet
   action->nextAct=NULL;
-  action->term=grabObjectNull(term);
+  // 2010-06-12 eat 0.8.2 - we don't grab the term in nbcmd.c when defining a rule, so we shouldn't grap it here
+  //action->term=grabObjectNull(term);
+  action->term=term;
   action->cond=grabObjectNull(cond);        // plug the condition pointer into the action 
   action->assert=assertion;
-  action->context=grabObjectNull(context);
+  // 2010-06-12 eat 0.8.2 - we don't grab the context in nbcmd.c when defining a rule, so we shouldn't grap it here
+  //action->context=grabObjectNull(context);
+  action->context=context;
   action->command=grabObjectNull(cmd);      // action command is rest of line
   action->cmdopt=option|NB_CMDOPT_RULE;     // command option
   action->status='R';                       // ready 
@@ -707,9 +711,13 @@ struct ACTION *newAction(NB_Cell *context,NB_Term *term,struct COND *cond,char p
   }
 
 void destroyAction(struct ACTION *action){
-  action->term=dropObjectNull(action->term);
+  // 2010-06-12 eat 0.8.2 - we didn't grab action->term - we shouldn't drop it
+  //action->term=dropObjectNull(action->term);
+  action->term=NULL;
   action->cond=dropObjectNull(action->cond);
-  action->context=dropObjectNull(action->context);
+  // 2010-06-12 eat 0.8.2 - we didn't grab action->context - we shouldn't drop it
+  //action->context=dropObjectNull(action->context);
+  action->context=NULL;
   action->command=dropObjectNull(action->command);
   action->assert=dropMember(action->assert);
   nbFree(action,sizeof(struct ACTION));

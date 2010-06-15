@@ -217,7 +217,7 @@ int nbTlsUriParse(nbTlsUriMap *uriMap,int n,char *uriList){
         }
       else{
         delim=nbTlsGetAddrByName(cursor); 
-        if(strlen(delim)>sizeof(uriMap->addr)-1) return(-2);
+        if(!delim || strlen(delim)>sizeof(uriMap->addr)-1) return(-2);
         strcpy(uriMap->addr,delim); // size checked
         }
       }
@@ -362,7 +362,7 @@ int nbTlsConnected(nbTLS *tls){
   nbTLSX *tlsx=tls->tlsx;
   int rc,error;
 
-  fprintf(stderr,"nbTlsConnected: tlsx=%p tlsx->option=%d\n",tlsx,tlsx->option);
+  //fprintf(stderr,"nbTlsConnected: tlsx=%p tlsx->option=%d\n",tlsx,tlsx->option);
   if(tlsx && (tls->uriMap[tls->uriIndex].scheme==NB_TLS_SCHEME_TLS || tls->uriMap[tls->uriIndex].scheme==NB_TLS_SCHEME_HTTPS)){
     ssl=SSL_new(tlsx->ctx);
     if(!ssl){
