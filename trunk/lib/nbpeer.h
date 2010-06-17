@@ -62,6 +62,8 @@ typedef struct NB_PEER{
 
 // API
 
+extern int peerTrace;          // debugging trace flag for TLS routines
+
 extern nbPeer *nbPeerConstruct(nbCELL context,int client,char *uriName,char *uri,nbCELL tlsContext,void *handle,
   int (*producer)(nbCELL context,nbPeer *peer,void *handle),
   int (*consumer)(nbCELL context,nbPeer *peer,void *handle,void *data,int len),

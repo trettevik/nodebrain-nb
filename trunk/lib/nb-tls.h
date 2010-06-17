@@ -34,10 +34,6 @@ typedef struct NB_TLS_HANDLE{   // TLS Handle
   unsigned char uriIndex;       // uri we are using
   unsigned char uriCount;       // number of uri values
   nbTlsUriMap uriMap[4];        // uri mapping - this will replace the next 4 attributes
-//  char *uri;                    // tls://host:port
-//  char *host;                   // 
-//  char *ipaddr;                 // 
-//  int port;                     
   nbTLSX *tlsx;
   SSL *ssl;
   void *handle;                 // user data handle
@@ -70,6 +66,8 @@ typedef struct NB_TLS_HANDLE{   // TLS Handle
 #define NB_TLS_CLIENT_CERTS  29  // Server and client certificates
 
 // API Functions
+
+extern int tlsTrace;          // debugging trace flag for TLS routines
 
 extern nbTLSX *nbTlsCreateContext(int option,void *handle,int timeout,char *keyFile,char *certFile,char *trustedCertsFile);
 extern int nbTlsFreeContext(nbTLSX *tlsx);

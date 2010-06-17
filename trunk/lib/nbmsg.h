@@ -128,6 +128,7 @@ typedef struct NB_MSG_LOG{
   nbMsgRec *hdrbuf;                    // buffer for file header record
   unsigned char *msgbuf;               // message buffer - size defined by NB_MSG_BUF_LEN
   nbMsgRec *msgrec;                    // pointer within msgbuf when reading (same as msgbuf for writing)
+  nbCELL   synapse;                    // synapse for polling of msglog by consumer
   void     *handle;                    // handle and handler when in "accept" mode 
   int (*handler)(nbCELL context,void *handle,nbMsgRec *msgrec);
   void (*fileJumper)(nbCELL context,void *handle,uint32_t fileOffset);
@@ -169,6 +170,7 @@ extern int nbMsgLogClose(nbCELL context,nbMsgLog *msglog);
 extern int nbMsgLogRead(nbCELL context,nbMsgLog *msglog);
 extern int nbMsgLogCursorWrite(nbCELL context,nbMsgLog *msglog);
 extern int nbMsgLogConsume(nbCELL context,nbMsgLog *msglog,void *handle,int (*handler)(nbCELL context,void *handle,nbMsgRec *msgrec));
+void nbMsgLogPoll(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL cell);
 
 extern int nbMsgLogProduce(nbCELL context,nbMsgLog *msglog,unsigned int maxfileSize);
 extern int nbMsgLogWriteString(nbCELL context,nbMsgLog *msglog,unsigned char *text);

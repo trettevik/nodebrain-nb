@@ -123,6 +123,7 @@
 */
 #include <nb.h>
 
+int peerTrace;          // debugging trace flag for peer routines
 /*********************************************************************
 * Medulla Event Handlers
 *********************************************************************/
@@ -136,7 +137,7 @@ static void nbPeerWriter(nbCELL context,int sd,void *handle){
   size_t size;
   int code;
 
-  nbLogMsg(context,0,'T',"nbPeerWriter: called for sd=%d",sd);
+  if(peerTrace) nbLogMsg(context,0,'T',"nbPeerWriter: called for sd=%d",sd);
   size=peer->wloc-peer->wbuf;
   nbLogMsg(context,0,'T',"nbPeerWriter: called for sd=%d size=%d",sd,size);
   if(size){
@@ -182,7 +183,7 @@ static void nbPeerReader(nbCELL context,int sd,void *handle){
   unsigned char *bufcur,*dataend;
   int code;
   
-  nbLogMsg(context,0,'T',"nbPeerReader: called for sd=%d",sd);
+  if(peerTrace) nbLogMsg(context,0,'T',"nbPeerReader: called for sd=%d",sd);
   if(!peer->consumer){  // this should not happen
     nbLogMsg(context,0,'T',"nbPeerReader: data available but no consumer - removing wait");
     nbListenerRemove(context,sd);
@@ -268,7 +269,7 @@ static void nbPeerConnecter(nbCELL context,int sd,void *handle){
   nbPeer *peer=(nbPeer *)handle;
   int code;
 
-  nbLogMsg(context,0,'T',"nbPeerConnecter: Peer %d flags=%x",sd,peer->flags);
+  if(peerTrace) nbLogMsg(context,0,'T',"nbPeerConnecter: Peer %d flags=%x",sd,peer->flags);
   if(peer->producer){
     if((code=(*peer->producer)(context,peer,peer->handle))){
       nbPeerShutdown(context,peer,code);
@@ -299,7 +300,7 @@ static void nbPeerHandshakeWriter(nbCELL context,int sd,void *handle){
   nbPeer *peer=(nbPeer *)handle;
   int rc;
 
-  nbLogMsg(context,0,'T',"nbPeerHandshakeWriter: Peer %d flags=%x",sd,peer->flags);
+  if(peerTrace) nbLogMsg(context,0,'T',"nbPeerHandshakeWriter: Peer %d flags=%x",sd,peer->flags);
   if(peer->flags&NB_PEER_FLAG_WRITE_WAIT){
     nbLogMsg(context,0,'T',"nbPeerHandshakeWriter: ready after CONNECTING_WRITE_WAIT");
     nbListenerRemoveWrite(context,sd);
@@ -346,7 +347,7 @@ static void nbPeerHandshakeReader(nbCELL context,int sd,void *handle){
   nbPeer *peer=(nbPeer *)handle;
   int rc;
 
-  nbLogMsg(context,0,'T',"nbPeerHandshakeReader: called");
+  if(peerTrace) nbLogMsg(context,0,'T',"nbPeerHandshakeReader: called");
   nbListenerRemove(context,sd);
   peer->flags&=0xff-NB_PEER_FLAG_READ_WAIT;
   if((rc=nbTlsHandshakeNonBlocking(peer->tls))==0){
@@ -380,7 +381,7 @@ static void nbPeerAccepter(nbCELL context,int sd,void *handle){
   nbPeer *peer,*lpeer=(nbPeer *)handle;
   nbTLS *tls;
 
-  nbLogMsg(context,0,'T',"nbPeerAccepter: called for sd=%d",sd);
+  if(peerTrace) nbLogMsg(context,0,'T',"nbPeerAccepter: called for sd=%d",sd);
   tls=nbTlsAccept(lpeer->tls);
   if(!tls){
     nbLogMsg(context,0,'T',"nbPeerAccepter: nbTlsAccept failed");
@@ -438,7 +439,7 @@ nbPeer *nbPeerConstruct(nbCELL context,int client,char *uriName,char *uri,nbCELL
   nbPeer *peer;
   nbTLSX  *tlsx;
 
-  nbLogMsg(context,0,'T',"nbPeerConstruct: called uri=%s",uri);
+  if(peerTrace) nbLogMsg(context,0,'T',"nbPeerConstruct: called uri=%s",uri);
   // allocate a peer structure
   peer=(nbPeer *)nbAlloc(sizeof(nbPeer));
   memset(peer,0,sizeof(nbPeer));
@@ -466,7 +467,7 @@ nbPeer *nbPeerConstruct(nbCELL context,int client,char *uriName,char *uri,nbCELL
 *    
 */
 int nbPeerListen(nbCELL context,nbPeer *peer){
-  nbLogMsg(context,0,'T',"nbPeerListen: called uri=%s",peer->tls->uriMap[0].uri);
+  if(peerTrace) nbLogMsg(context,0,'T',"nbPeerListen: called uri=%s",peer->tls->uriMap[0].uri);
   if(nbTlsListen(peer->tls)<0){
     nbLogMsg(context,0,'E',"Unable to listener - %s",peer->tls->uriMap[0].uri);
     return(-1);
@@ -499,7 +500,7 @@ int nbPeerConnect(nbCELL context,nbPeer *peer,void *handle,
 
   int rc;
 
-  nbLogMsg(context,0,'T',"nbPeerConnect: called uri=%s",peer->tls->uriMap[0].uri);
+  if(peerTrace) nbLogMsg(context,0,'T',"nbPeerConnect: called uri=%s",peer->tls->uriMap[0].uri);
   if(!peer->wbuf) peer->wbuf=(unsigned char *)malloc(NB_PEER_BUFLEN);
   peer->wloc=peer->wbuf;
   if(!peer->rbuf) peer->rbuf=(unsigned char *)malloc(NB_PEER_BUFLEN);
@@ -532,7 +533,7 @@ int nbPeerConnect(nbCELL context,nbPeer *peer,void *handle,
 */
 int nbPeerSend(nbCELL context,nbPeer *peer,void *data,int size){
   int mysize=size+2;
-  nbLogMsg(context,0,'T',"nbPeerSend: called with peer=%p size=%d flags=%x",peer,size,peer->flags);
+  //nbLogMsg(context,0,'T',"nbPeerSend: called with peer=%p size=%d flags=%x",peer,size,peer->flags);
   if(peer->flags&NB_PEER_FLAG_WRITE_ERROR) return(-1);
   if(size>NB_PEER_BUFLEN-2) return(-1);
   if(peer->wloc+size+2>peer->wbuf+NB_PEER_BUFLEN) return(1);
@@ -597,7 +598,7 @@ void nbPeerModify(nbCELL context,nbPeer *peer,void *handle,
 *    or an additional int parameter can be added to nbPeerShutdown.
 */
 int nbPeerShutdown(nbCELL context,nbPeer *peer,int code){
-  nbLogMsg(context,0,'T',"nbPeerShutdown: %s code=%d",peer->tls->uriMap[peer->tls->uriIndex].uri,code);
+  if(peerTrace) nbLogMsg(context,0,'T',"nbPeerShutdown: %s code=%d",peer->tls->uriMap[peer->tls->uriIndex].uri,code);
   if(peer->shutdown) (*peer->shutdown)(context,peer,peer->handle,code);
   if(peer->flags&NB_PEER_FLAG_WRITE_WAIT){
     nbListenerRemoveWrite(context,peer->tls->socket);
@@ -620,7 +621,7 @@ int nbPeerShutdown(nbCELL context,nbPeer *peer,int code){
   }
 
 int nbPeerDestroy(nbCELL context,nbPeer *peer){
-  nbLogMsg(context,0,'T',"nbPeerDestroy: called");
+  if(peerTrace) nbLogMsg(context,0,'T',"nbPeerDestroy: called");
   if(peer->tls) nbLogMsg(context,0,'T',"nbPeerDestroy: uri=%s",peer->tls->uriMap[0].uri);
   if(peer->tls) nbTlsFree(peer->tls);
   if(peer->wbuf) free(peer->wbuf);

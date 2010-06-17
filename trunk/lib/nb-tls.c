@@ -106,6 +106,8 @@
 *            string so failover values can be specified. 
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
+* 2010-06-16 eat 0.8.2  Included timeout in connect function
+* 2010-06-16 eat 0.8.2  Put debug messages under tlsTrace option
 *==================================================================================
 */
 #include <stdio.h>
@@ -130,6 +132,8 @@
 #include <openssl/err.h>
 
 #include <nb-tls.h>
+
+int tlsTrace;          // debugging trace flag for TLS routines
 
 /*
 *  Look up the ipaddr of a host
@@ -499,16 +503,16 @@ int nbTlsConnect(nbTLS *tls){
       if(tls->tlsx) tv.tv_sec=tls->tlsx->timeout;
       else tv.tv_sec=5;
       tv.tv_usec=0;
-      //rc=setsockopt(sd,SOL_SOCKET,SO_RCVTIMEO,(void *)&tv,sizeof(tv));
-      //if(rc==-1){
-      //  fprintf(stderr,"nbTlsConnect: setsockopt SO_RCVTIMEO failed: %s\n",strerror(errno));
-      //  return(-1);
-      //  } 
-      //rc=setsockopt(sd,SOL_SOCKET,SO_SNDTIMEO,(void *)&tv,sizeof(tv));
-      //if(rc==-1){
-      //  fprintf(stderr,"nbTlsConnect: setsockopt SO_SNDTIMEO failed: %s\n",strerror(errno));
-      //  return(-1);
-      //  } 
+      rc=setsockopt(sd,SOL_SOCKET,SO_RCVTIMEO,(void *)&tv,sizeof(tv));
+      if(rc==-1){
+        fprintf(stderr,"nbTlsConnect: setsockopt SO_RCVTIMEO failed: %s\n",strerror(errno));
+        return(-1);
+        } 
+      rc=setsockopt(sd,SOL_SOCKET,SO_SNDTIMEO,(void *)&tv,sizeof(tv));
+      if(rc==-1){
+        fprintf(stderr,"nbTlsConnect: setsockopt SO_SNDTIMEO failed: %s\n",strerror(errno));
+        return(-1);
+        } 
       rc=connect(sd,(struct sockaddr*)&sa,sizeof(sa));
       }
     if(rc<0) close(sd);
@@ -532,13 +536,13 @@ int nbTlsHandshakeNonBlocking(nbTLS *tls){
   nbTLSX *tlsx=tls->tlsx;
   SSL *ssl=NULL;
 
-  fprintf(stderr,"nbTlsHandshakeNonBlocking: tls->option=%d tls->tlsx=%p tls->ssl=%p\n",tls->option,tls->tlsx,tls->ssl);
+  if(tlsTrace) fprintf(stderr,"nbTlsHandshakeNonBlocking: tls->option=%d tls->tlsx=%p tls->ssl=%p\n",tls->option,tls->tlsx,tls->ssl);
   if(!tls->option) return(0);
   if(!tlsx){
     fprintf(stderr,"nbTlsHandshakeNonBlocking: Logic error - should not be called will null tlsx - terminating\n");
     exit(1);
     }
-  fprintf(stderr,"nbTlsHandshakeNonBlocking: tls->tlsx->ctx=%p\n",tlsx->ctx);
+  if(tlsTrace) fprintf(stderr,"nbTlsHandshakeNonBlocking: tls->tlsx->ctx=%p\n",tlsx->ctx);
   ssl=SSL_new(tlsx->ctx);
   if(!ssl){
     fprintf(stderr,"nbTlsHandshakeNonBLocking: SSL_new failed\n");
@@ -546,7 +550,7 @@ int nbTlsHandshakeNonBlocking(nbTLS *tls){
     }
   SSL_set_fd(ssl,tls->socket);
   tls->ssl=ssl;
-  fprintf(stderr,"nbTlsHandshakeNonBlocking: tls->socket=%u ssl=%p\n",tls->socket,ssl);
+  if(tlsTrace) fprintf(stderr,"nbTlsHandshakeNonBlocking: tls->socket=%u ssl=%p\n",tls->socket,ssl);
   rc=SSL_connect(tls->ssl);
   if(rc!=1){
     error=SSL_get_error(tls->ssl,rc); // get error code
@@ -733,7 +737,7 @@ nbTLS *nbTlsAccept(nbTLS *tlsListener){
   strcpy(tls->uriMap[0].addr,inet_ntoa(client.sin_addr));
 #endif
   tls->uriMap[0].port=ntohs(client.sin_port);
-  fprintf(stderr,"nbTlsAccept: tls->option=%d\n",tls->option);
+  if(tlsTrace) fprintf(stderr,"nbTlsAccept: tls->option=%d\n",tls->option);
   if(tls->tlsx && tls->option&NB_TLS_OPTION_TLS){
     protocol="tls";
     tls->ssl=SSL_new(tls->tlsx->ctx);
@@ -745,7 +749,7 @@ nbTLS *nbTlsAccept(nbTLS *tlsListener){
     SSL_set_fd(tls->ssl,sd);
     //SSL_set_ex_data(ssl,0,session);  // make session structure available to verify callback function
 
-    fprintf(stderr,"nbTlsAccept: Issuing SSL_accept on socket %d\n",sd);
+    if(tlsTrace) fprintf(stderr,"nbTlsAccept: Issuing SSL_accept on socket %d\n",sd);
     if((rc=SSL_accept(tls->ssl))!=1){
       char errbuf[121];
       SSL_load_error_strings();
@@ -755,10 +759,10 @@ nbTLS *nbTlsAccept(nbTLS *tlsListener){
       nbTlsFree(tls);
       return(NULL);
       }
-    fprintf(stderr,"nbTlsAccept: SSL connection using %s\n",SSL_get_cipher(tls->ssl));
+    if(tlsTrace) fprintf(stderr,"nbTlsAccept: SSL connection using %s\n",SSL_get_cipher(tls->ssl));
     }
   else{
-    fprintf(stderr,"nbTlsAccept: using clear tcp instead of tls\n");
+    if(tlsTrace) fprintf(stderr,"nbTlsAccept: using clear tcp instead of tls\n");
     protocol="tcp";
     tls->ssl=NULL;
     }
@@ -772,21 +776,21 @@ nbTLS *nbTlsAccept(nbTLS *tlsListener){
 */
 int nbTlsRead(nbTLS *tls,char *buffer,size_t size){
   int len;
-  fprintf(stderr,"nbTlsRead: size=%d\n",(int)size);
+  if(tlsTrace) fprintf(stderr,"nbTlsRead: size=%d\n",(int)size);
   if(!tls->ssl){
-    fprintf(stderr,"nbTlsRead: calling clear recv\n");
+    if(tlsTrace) fprintf(stderr,"nbTlsRead: calling clear recv\n");
     len=recv(tls->socket,buffer,size,0);
     while(len==-1 && errno==EINTR) len=recv(tls->socket,buffer,size,0);
-    fprintf(stderr,"nbTlsRead: read len=%d\n",len);
+    if(tlsTrace) fprintf(stderr,"nbTlsRead: read len=%d\n",len);
     return(len);
     }
-  fprintf(stderr,"nbTlsRead: calling SSL_read\n");
+  if(tlsTrace) fprintf(stderr,"nbTlsRead: calling SSL_read\n");
   len=SSL_read(tls->ssl,buffer,size);
   if(len<0){
     fprintf(stderr,"nbTlsRead: SSL_read rc=%d code=%d\n",len,SSL_get_error(tls->ssl,len));
     ERR_print_errors_fp(stderr);
     }
-  fprintf(stderr,"nbTlsRead: SSL_read len=%d\n",len);
+  if(tlsTrace) fprintf(stderr,"nbTlsRead: SSL_read len=%d\n",len);
   return(len);
   }
 
@@ -795,21 +799,21 @@ int nbTlsRead(nbTLS *tls,char *buffer,size_t size){
 */
 int nbTlsWrite(nbTLS *tls,char *buffer,size_t size){
   int len;
-  //fprintf(stderr,"nbTlsWrite: size=%d\n",(int)size);
+  if(tlsTrace) fprintf(stderr,"nbTlsWrite: size=%d\n",(int)size);
   if(!tls->ssl){
-    //fprintf(stderr,"nbTlsWrite: calling clear send - socket=%d\n",tls->socket);
+    if(tlsTrace) fprintf(stderr,"nbTlsWrite: calling clear send - socket=%d\n",tls->socket);
     len=send(tls->socket,buffer,size,0);
     while(len==-1 && errno==EINTR) len=send(tls->socket,buffer,size,0);
-    //fprintf(stderr,"nbTlsWrite: wrote len=%d\n",len);
+    if(tlsTrace) fprintf(stderr,"nbTlsWrite: wrote len=%d\n",len);
     return(len);
     }
-  //fprintf(stderr,"nbTlsWrite: calling SSL_write - ssl=%p\n",tls->ssl);
+  if(tlsTrace) fprintf(stderr,"nbTlsWrite: calling SSL_write - ssl=%p\n",tls->ssl);
   len=SSL_write(tls->ssl,buffer,size);
   if(len<0){
     fprintf(stderr,"nbTlsWrite: SSL_write rc=%d code=%d\n",len,SSL_get_error(tls->ssl,len));
     ERR_print_errors_fp(stderr);
     }
-  fprintf(stderr,"nbTlsWrite: SSL_write len=%d\n",len);
+  if(tlsTrace) fprintf(stderr,"nbTlsWrite: SSL_write len=%d\n",len);
   return(len);
   }
 

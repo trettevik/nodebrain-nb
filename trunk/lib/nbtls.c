@@ -79,8 +79,9 @@
 *
 * Date       Name/Change
 * ---------- -----------------------------------------------------------------
-* 2009/06/01 Ed Trettevik (version 0.7.7)
-* 2010/06/06 eat 0.8.2  included client parameter to nbTlsLoadContext
+* 2009-06-01 Ed Trettevik (version 0.7.7)
+* 2010-06-06 eat 0.8.2  included client parameter to nbTlsLoadContext
+* 2010-06-16 eat 0.8.2  put debug messages under tlsTrace option
 *=============================================================================
 */
 #include <nb.h>
@@ -132,7 +133,7 @@ nbTLS *nbTlsLoadListener(nbCELL context,nbCELL tlsContext,char *defaultUri,void 
   nbTLSX *tlsx;
   char *uri;
 
-  nbLogMsg(context,0,'T',"nbTlsLoadListener: called");
+  if(tlsTrace) nbLogMsg(context,0,'T',"nbTlsLoadListener: called");
   tlsx=nbTlsLoadContext(context,tlsContext,handle,0);
   uri=nbTermOptionString(tlsContext,"uri",defaultUri);
   tls=nbTlsCreate(tlsx,uri);
@@ -144,7 +145,7 @@ nbTLS *nbTlsLoadListener(nbCELL context,nbCELL tlsContext,char *defaultUri,void 
   if(nbTlsListen(tls)<0){
     nbLogMsg(context,0,'E',"nbTlsListener: Unable to start listener - %s",tls->uriMap[0].uri);
     }
-  nbLogMsg(context,0,'T',"nbTlsLoadListener: uri=\"%s\" sd=%d",uri,tls->socket);
+  if(tlsTrace) nbLogMsg(context,0,'T',"nbTlsLoadListener: uri=\"%s\" sd=%d",uri,tls->socket);
   return(tls);
   }
 
@@ -160,20 +161,19 @@ nbTLS *nbTlsLoadListener(nbCELL context,nbCELL tlsContext,char *defaultUri,void 
 int nbTlsConnectNonBlockingAndSchedule(nbCELL context,nbTLS *tls,void *handle,void (*handler)(nbCELL context,int sd,void *handle)){
   int rc;
 
-  nbLogMsg(context,0,'T',"nbTlsConnectNonBlockingAndSchedule: called");
-  nbLogMsg(context,0,'T',"nbTlsConnectNonBlockingAndSchedule: tls=%p",tls);
-  nbLogMsg(context,0,'T',"nbTlsConnectNonBlockingAndSchedule: tls->uriIndex=%d",tls->uriIndex);
-  nbLogMsg(context,0,'T',"nbTlsConnectNonBlockingAndSchedule: tls->uriMap[tls->uriIndex].uri=%s",tls->uriMap[tls->uriIndex].uri);
-  nbLogMsg(context,0,'T',"nbTlsConnectNonBlockingAndSchedule: tls->uriMap[tls->uriIndex].name=%s",tls->uriMap[tls->uriIndex].name);
-  nbLogMsg(context,0,'T',"nbTlsConnectNonBlockingAndSchedule: tls->uriMap[tls->uriIndex].addr=%s",tls->uriMap[tls->uriIndex].addr);
-  nbLogMsg(context,0,'T',"nbTlsConnectNonBlockingAndSchedule: tls->uriMap[tls->uriIndex].port=%d",tls->uriMap[tls->uriIndex].port);
+  if(tlsTrace){
+    nbLogMsg(context,0,'T',"nbTlsConnectNonBlockingAndSchedule: called");
+    //nbLogMsg(context,0,'T',"nbTlsConnectNonBlockingAndSchedule: tls=%p",tls);
+    //nbLogMsg(context,0,'T',"nbTlsConnectNonBlockingAndSchedule: tls->uriIndex=%d",tls->uriIndex);
+    nbLogMsg(context,0,'T',"nbTlsConnectNonBlockingAndSchedule: tls->uriMap[tls->uriIndex].uri=%s name=%s addr=%s port=%d",tls->uriMap[tls->uriIndex].uri,tls->uriMap[tls->uriIndex].name,tls->uriMap[tls->uriIndex].addr,tls->uriMap[tls->uriIndex].port);
+    }
   rc=nbTlsConnectNonBlocking(tls);
   if(rc==1){
-    nbLogMsg(context,0,'I',"Success on non-blocking connect sd=%d %s",tls->socket,tls->uriMap[tls->uriIndex].uri);
+    if(tlsTrace) nbLogMsg(context,0,'I',"Success on non-blocking connect sd=%d %s",tls->socket,tls->uriMap[tls->uriIndex].uri);
     (*handler)(context,tls->socket,handle);
     }
   else if(rc==0){
-    nbLogMsg(context,0,'I',"nbTlsConnectNonBlockingAndSchedule: in progress - sd=%d %s",tls->socket,tls->uriMap[tls->uriIndex].uri);
+    if(tlsTrace) nbLogMsg(context,0,'I',"nbTlsConnectNonBlockingAndSchedule: in progress - sd=%d %s",tls->socket,tls->uriMap[tls->uriIndex].uri);
     nbListenerAddWrite(context,tls->socket,handle,handler); 
     } 
   else nbLogMsg(context,0,'T',"nbTlsConnectNonBlockingAndSchedule: connect failed - %s - %s",tls->uriMap[tls->uriIndex].uri,strerror(errno));

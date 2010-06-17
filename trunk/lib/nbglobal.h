@@ -33,11 +33,11 @@
 *
 *    Date    Name/Change
 * ---------- ---------------------------------------------------------------
-* 2003/03/15 eat 0.5.2  Created to simplify code restructuring.
-* 2003/10/07 eat 0.5.5  Removed definition of nbin - see nbGets().
-* 2006/05/12 eat 0.6.6  Included servejail, servedir, and serveuser.
-* 2008/03/08 eat 0.7.0  removed serveipaddr
-* 2009/12/28 eat 0.7.7  included msgTrace
+* 2003-03-15 eat 0.5.2  Created to simplify code restructuring.
+* 2003-10-07 eat 0.5.5  Removed definition of nbin - see nbGets().
+* 2006-05-12 eat 0.6.6  Included servejail, servedir, and serveuser.
+* 2008-03-08 eat 0.7.0  removed serveipaddr
+* 2009-12-28 eat 0.7.7  included msgTrace
 *============================================================================
 */
 #ifndef _NB_GLOBAL_H_
@@ -72,6 +72,7 @@ extern int sourceTrace;       /* debugging trace flag for source input */
 extern int symbolicTrace;     /* debugging trace flag for symbolic sub */
 extern int queryTrace;        /* debugging trace flag for query mode */
 extern int msgTrace;          // debugging trace flag for message API
+//extern int tlsTrace; see nb-tls.h  // debugging trace flag for TLS routines
 // extern int echo;           /* display resolved statements before executing */
 
 //extern char serveipaddr[16];  /* ip address */

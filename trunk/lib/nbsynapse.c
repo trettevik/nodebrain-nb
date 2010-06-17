@@ -74,6 +74,7 @@
 * 2007-07-21 eat 0.6.8  Modified to simplify use within skill modules.
 * 2008-05-24 eat 0.7.0  Modified to include nbSynapseSetTimer function
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2010-06-16 eat 0.8.2  Modified nbSynapseSetTimer to cancel timer when interval is zero
 *=============================================================================
 */
 #include "nbi.h"
@@ -122,12 +123,15 @@ NB_Cell *nbSynapseOpen(NB_Cell *context,void *skillHandle,void *nodeHandle,NB_Ce
 *   You can schedule a synapse to fire after zero seconds to cause it to fire 
 *   immediately after giving other events an opportunity to fire.
 *
+* 2010-06-16 eat 0.8.2 - modified to cancel timer when seconds is zero
 */
 void nbSynapseSetTimer(nbCELL context,nbCELL synapse,int seconds){
   time_t at;
-  time(&at);
-  at+=seconds;
-  nbClockSetTimer(at,synapse);
+  if(seconds){
+    time(&at);
+    seconds+=at;
+    }
+  nbClockSetTimer(seconds,synapse);
   }
 
 /*

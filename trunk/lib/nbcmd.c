@@ -211,6 +211,8 @@
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2010-06-16 eat 0.8.2  Included traceTls/notraceTls option (tlsTrace)
+* 2010-06-16 eat 0.8.2  Included tracePeer/notracePeer option (peerTrace)
 *==============================================================================
 */
 #include "nbi.h"
@@ -982,8 +984,12 @@ void nbCmdSet(nbCELL context,char *verb,char *cursor){
       else if(strcmp(ident,"shim")==0); /* this option is processed earlier */
       else if(strcmp(ident,"t")==0 || strcmp(ident,"trace")==0)   trace=1;
       else if(strcmp(ident,"T")==0 || strcmp(ident,"noTrace")==0) trace=0;
+      else if(strcmp(ident,"traceTls")==0) tlsTrace=1;
+      else if(strcmp(ident,"notraceTls")==0) tlsTrace=0;
       else if(strcmp(ident,"traceParse")==0) parseTrace=1;
       else if(strcmp(ident,"notraceParse")==0) parseTrace=0;
+      else if(strcmp(ident,"tracePeer")==0) peerTrace=1;
+      else if(strcmp(ident,"notracePeer")==0) peerTrace=0;
       //else if(strcmp(ident,"traceFile")==0) fileTrace=1;
       //else if(strcmp(ident,"notraceFile")==0) fileTrace=0;
       else if(strcmp(ident,"traceMessage")==0) msgTrace=1;

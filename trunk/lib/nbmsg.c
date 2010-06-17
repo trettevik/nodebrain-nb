@@ -707,7 +707,7 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
       nbLogMsg(context,0,'E',"nbMsgLogRead: Unable to open file %s - %s",filename,strerror(errno));
       return(-1);
       }
-    //if((pos=lseek(msglog->file,msglog->fileOffset,SEEK_SET))<0){
+    fprintf(stderr,"nbMsgLogRead: 0 msglog->fileOffset=%d msglog->filesize=%d\n",msglog->fileOffset,msglog->filesize);
     if((pos=lseek(msglog->file,msglog->filesize,SEEK_SET))<0){
       nbLogMsg(context,0,'E',"nbMsgLogRead: Unable to seek file %s to offset %u - %s",filename,msglog->filesize,strerror(errno));
       return(-1);
@@ -943,6 +943,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
   //msglog->fileCount=0;
   //msglog->fileOffset=0;
   //msglog->filesize=0;
+  if(mode==NB_MSG_MODE_CONSUMER) msglog->synapse=nbSynapseOpen(context,NULL,msglog,NULL,nbMsgLogPoll);
   msglog->logState=nbMsgStateCreate(context);
   if(pgmState) msglog->pgmState=pgmState;
   else msglog->pgmState=msglog->logState;
@@ -1127,6 +1128,61 @@ int nbMsgLogCursorWrite(nbCELL context,nbMsgLog *msglog){
   return(0);
   }
 
+
+/*
+*  Process messages from msglog
+*
+*    Here we are expecting a zero return code from the handler and will terminate
+*    if we get a non-zero return code.  
+*
+*  Returns:
+*    int>=0  - Number of messages processed
+*    exit(1) - non-zero return code from message handler
+*    
+*/
+int nbMsgLogProcess(nbCELL context,nbMsgLog *msglog){
+  int processed=0;
+  int state;
+  int rc;
+
+  while(!((state=nbMsgLogRead(context,msglog))&NB_MSG_STATE_LOGEND)){
+    if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogProcess: return from nbMsgLogRead state=%d",state);
+    nbMsgPrint(stderr,msglog->msgrec);
+    if(state&NB_MSG_STATE_PROCESS){  // handle new message records
+      if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogProcess: calling message handler\n");
+      if((rc=(*msglog->handler)(context,msglog->handle,msglog->msgrec))!=0){
+        nbLogMsg(context,0,'I',"UDP message handler return code=%d",rc);
+        exit(1);
+        }
+      processed++;
+      }
+    //else if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogProcess: not processing record - state=%d",state);
+    else{  // no tolerance for error here
+      nbLogMsg(context,0,'T',"nbMsgLogProcess: not processing record - state=%d - terminating",state);
+      exit(1);
+      }
+    }
+  return(processed);
+  }
+
+/*
+*  Poll message log.
+*
+*    This is a scheduled routine to process a message log.  We use this for cases where one or more UDP
+*    packets are lost, but no additional packets alert us to that fact.
+*
+*  
+*/
+void nbMsgLogPoll(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL cell){
+  nbMsgLog *msglog=(nbMsgLog *)nodeHandle;
+  int processed;
+
+  nbLogMsg(context,0,'T',"nbMsgLogPoll: called");
+  processed=nbMsgLogProcess(context,msglog);
+  if(processed) nbSynapseSetTimer(context,msglog->synapse,5);
+  else nbSynapseSetTimer(context,msglog->synapse,60);  // this should not be required - an experiment
+  }
+
 /*
 *  Read incoming packets for message handler
 *
@@ -1144,10 +1200,15 @@ void nbMsgUdpRead(nbCELL context,int serverSocket,void *handle){
   int state;
   int rc;
   int limit=500; // limit the number of messages handled at one time
+  int processed;
 
+  nbSynapseSetTimer(context,msglog->synapse,0);  // cancel the timer
   len=recvfrom(msglog->socket,buffer,buflen,0,NULL,0);
   while(len==-1 && errno==EINTR) len=recvfrom(msglog->socket,buffer,buflen,0,NULL,0);
-  if(len<0) nbLogMsg(context,0,'T',"nbMsgUdpRead: first recvfrom len=%d - errno=%d %s",len,errno,strerror(errno));
+  if(len<0){
+    nbLogMsg(context,0,'T',"nbMsgUdpRead: first recvfrom len=%d - errno=%d %s - terminating",len,errno,strerror(errno));
+    exit(1);
+    }
   else while(len>0){
     if(msgTrace){
       nbLogMsg(context,0,'T',"Datagram len=%d",len);
@@ -1156,60 +1217,43 @@ void nbMsgUdpRead(nbCELL context,int serverSocket,void *handle){
       }
     msglen=ntohs(*(unsigned short *)msgrec);
     if(msglen+sizeof(nbMsgCursor)!=len){
-      nbLogMsg(context,0,'E',"packet len=%d not the same as msglen=%u+%u",len,msglen,sizeof(nbMsgCursor));
-      return;
+      nbLogMsg(context,0,'E',"packet len=%d not the same as msglen=%u+%u - terminating",len,msglen,sizeof(nbMsgCursor));
+      exit(1);
       }
     //if(msgTrace) nbMsgPrint(stderr,msgrec);
     nbLogMsg(context,0,'T',"nbMsgUdpRead: recvfrom len=%d",len);
     nbMsgPrint(stderr,msgrec);
     state=nbMsgLogSetState(context,msglog,msgrec);
     if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: state=%d",state);
-    if(state&NB_MSG_STATE_SEQLOW){
-      //if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: Ignoring message already seen");
-      nbLogMsg(context,0,'T',"nbMsgUdpRead: Ignoring message already seen");
-      //return;
+    while(len>0 && state&NB_MSG_STATE_SEQLOW){
+      if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: Ignoring message already seen");
+      len=recvfrom(msglog->socket,buffer,buflen,0,NULL,0);
+      while(len==-1 && errno==EINTR) len=recvfrom(msglog->socket,buffer,buflen,0,NULL,0);
+      if(len>0) state=nbMsgLogSetState(context,msglog,msgrec);
       }
-    else if(state&NB_MSG_STATE_SEQHIGH){
+    while(len>0 && state&NB_MSG_STATE_SEQHIGH){
       nbLogMsg(context,0,'T',"nbMsgUdpRead: UDP packet lost - reading from message log");
       if(!(msglog->state&NB_MSG_STATE_LOGEND)){
         nbLogMsg(context,0,'L',"nbMsgUdpRead: Udp packet lost when not in LOGEND state - terminating");
         exit(1);
         }
-      // Read from the message log
-      while(!((state=nbMsgLogRead(context,msglog))&NB_MSG_STATE_LOGEND)){
-        if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: return from nbMsgLogRead state=%d",state);
-        if(state&NB_MSG_STATE_PROCESS){  // handle new message records
-          if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: calling message handler\n");
-          if((rc=(*msglog->handler)(context,msglog->handle,msglog->msgrec))!=0){
-            nbLogMsg(context,0,'I',"UDP message handler return code=%d",rc);
-            //return;  // Need to figure out if there is really anything the handler needs to communicate back
-            }
-          limit--;
-          }
-        else if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: not processing record - state=%d",state);
+      processed=nbMsgLogProcess(context,msglog);
+      if(!processed){
+        nbLogMsg(context,0,'L',"nbMsgUdpRead: Lost message not found in message log - terminating");
+        exit(1);
         }
+      limit-=processed;
       // drain the udp queue
-      nbLogMsg(context,0,'T',"nbMsgUdpRead: flushing UDP stream - fd=%d",msglog->socket);
-      while(len>0){
+      nbLogMsg(context,0,'T',"nbMsgUdpRead: flushing UDP stream - sd=%d",msglog->socket);
+      state|=NB_MSG_STATE_SEQLOW;
+      while(len>0 && state&NB_MSG_STATE_SEQLOW){
         len=recvfrom(msglog->socket,buffer,buflen,0,NULL,0);
         while(len==-1 && errno==EINTR) len=recvfrom(msglog->socket,buffer,buflen,0,NULL,0);
+        if(len>0) state=nbMsgLogSetState(context,msglog,msgrec);
         }
       nbLogMsg(context,0,'T',"nbMsgUdpRead: UDP stream flushed");
-      // Read the message log again
-      while(!((state=nbMsgLogRead(context,msglog))&NB_MSG_STATE_LOGEND)){
-        if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: return from nbMsgLogRead state=%d",state);
-        if(state&NB_MSG_STATE_PROCESS){  // handle new message records
-          if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: calling message handler\n");
-          if((rc=(*msglog->handler)(context,msglog->handle,msglog->msgrec))!=0){
-            nbLogMsg(context,0,'I',"UDP message handler return code=%d",rc);
-            //return;  // Need to figure out if there is really anything the handler needs to communicate back
-            }
-          limit--;
-          }
-        else if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: not processing record - state=%d",state);
-        }
       }
-    else{
+    if(len>0){
       if(msgudp->fileCount>msglog->fileCount){
         msglog->fileCount=msgudp->fileCount;
         msglog->filesize=msgudp->fileOffset;
@@ -1218,8 +1262,8 @@ void nbMsgUdpRead(nbCELL context,int serverSocket,void *handle){
         }
       if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: calling nbMsgCacheInsert");
       if((rc=(*msglog->handler)(context,msglog->handle,msgrec))!=0){
-        nbLogMsg(context,0,'I',"UDP message handler return code=%d",rc);
-        //return;
+        nbLogMsg(context,0,'I',"UDP message handler return code=%d - terminating",rc);
+        exit(1);
         }
       msglog->filesize=msgudp->fileOffset;  // now adjust offset to next message location
       msglog->fileOffset=msgudp->fileOffset;  // now adjust offset to next message location
@@ -1232,6 +1276,7 @@ void nbMsgUdpRead(nbCELL context,int serverSocket,void *handle){
       }
     if(limit<=0){ // we can't spend all our time filling the cache - need a chance to send also
       nbLogMsg(context,0,'T',"nbMsgUdpRead: hit limit of uninterrupted reads - returning to allow writes");
+      nbSynapseSetTimer(context,msglog->synapse,5);
       return; 
       }
     len=recvfrom(msglog->socket,buffer,buflen,0,NULL,0);
@@ -1240,6 +1285,7 @@ void nbMsgUdpRead(nbCELL context,int serverSocket,void *handle){
   if(len==-1 && errno!=EAGAIN){
     nbLogMsg(context,0,'E',"nbMsgLogUdpRead: recvfrom error - %s",strerror(errno));
     }
+  nbSynapseSetTimer(context,msglog->synapse,5);
   }
 
 /*
@@ -1274,6 +1320,7 @@ int nbMsgLogConsume(nbCELL context,nbMsgLog *msglog,void *handle,int (*handler)(
   fcntl(msglog->socket,F_SETFL,fcntl(msglog->socket,F_GETFL)|O_NONBLOCK); // make it non-blocking
   nbLogMsg(context,0,'T',"nbMsgLogConsumer: F_GETFL return=%d",fcntl(msglog->socket,F_GETFL));
   nbListenerAdd(context,msglog->socket,msglog,nbMsgUdpRead);
+  nbSynapseSetTimer(context,msglog->synapse,5);
   nbLogMsg(context,0,'I',"Listening for UDP datagrams as %s",filename);
   return(0);
   }
@@ -1717,10 +1764,12 @@ int nbMsgCachePublish(nbCELL context,nbMsgCacheSubscriber *msgsub){
         nbLogMsg(context,0,'L',"Fatal error in message cache - invalid message record type %u - terminating",msgrec->type);
         exit(1);
         }
-      if(msgsub->flags&NB_MSG_CACHE_FLAG_AGAIN) state=NB_MSG_STATE_PROCESS;
+      if(msgsub->flags&NB_MSG_CACHE_FLAG_AGAIN){
+        state=NB_MSG_STATE_PROCESS;
+        msgsub->flags&=0xff-NB_MSG_CACHE_FLAG_AGAIN;
+        }
       else state=nbMsgLogSetState(context,msgsub->msglog,msgrec);
       if(state&NB_MSG_STATE_PROCESS){
-        msgsub->flags&=0xff-NB_MSG_CACHE_FLAG_AGAIN;
         if((*msgsub->handler)(context,msgsub->handle,msgrec)){
           nbLogMsg(context,0,'T',"nbMsgCachePublish: calling handler");
           // 2010-05-06 eat - doesn't seem like we should set INBUF here
@@ -2512,6 +2561,7 @@ nbMsgCabal *nbMsgCabalAlloc(nbCELL context,char *cabalName,char *nodeName,int mo
   }
 
 int nbMsgCabalDisable(nbCELL context,nbMsgCabal *msgcabal){
+  nbSynapseSetTimer(context,msgcabal->synapse,0);
   return(0);
   }
 
@@ -2691,7 +2741,7 @@ int nbMsgPeerCacheMsgHandler(nbCELL context,void *handle,nbMsgRec *msgrec){
   int msgids;
   int size;
 
-  nbLogMsg(context,0,'T',"nbMsgPeerCacheMsgHandler: called");
+  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgPeerCacheMsgHandler: called");
   size=(msgrec->len[0]<<8)|msgrec->len[1];
   if(!size){
     nbLogMsg(context,0,'L',"nbMsgPeerCacheMsgHandler: we should not receive a zero length record - terminating");
@@ -2733,7 +2783,8 @@ int nbMsgCabalEnable(nbCELL context,nbMsgCabal *msgcabal){
   nbLogMsg(context,0,'T',"nbMsgCabalEnable: called for cabal %s node %s mode=%2.2x type=%2.2x",msgcabal->cabalName,msgcabal->node->name,msgcabal->mode,msgcabal->node->type);
   nbMsgCabalPrint(stderr,msgcabal);
 
-  nbClockSetTimer(0,msgcabal->synapse); // cancel previous timer if set
+  //nbClockSetTimer(0,msgcabal->synapse); // cancel previous timer if set
+  nbSynapseSetTimer(context,msgcabal->synapse,0);
   time(&utime);
   expirationTime=utime;
   expirationTime-=30;  // wait 30 seconds before connecting after a disconnect
