@@ -1157,7 +1157,7 @@ int nbMsgLogProcess(nbCELL context,nbMsgLog *msglog){
       processed++;
       }
     //else if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogProcess: not processing record - state=%d",state);
-    else{  // no tolerance for error here
+    else if(!(state&NB_MSG_STATE_FILEND)){  // no tolerance for error here
       nbLogMsg(context,0,'T',"nbMsgLogProcess: not processing record - state=%d - terminating",state);
       exit(1);
       }
