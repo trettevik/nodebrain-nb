@@ -62,6 +62,17 @@
 * 2005/12/30 eat 0.6.4  childmode removed - see nb_opt_servant
 * 2008/03/24 eat 0.7.0  Removed parentChannel
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2010-06-19 eat 0.8.2  Included glossary of verbs
+*            This is intended as a replacement for the verbTree, which used
+*            a different tree structure.  The new glossary uses the same
+*            tree structure as we use for other glossaries so we can use
+*            common logic to navigate and maintain the tree structure.  The
+*            primary motive for this is to provide a simple method for node
+*            modules to provide additional commands to be referenced as a
+*            dot separated identifier starting with the module name.
+*
+*              peer.identify 
+*              message.export  
 *============================================================================
 */
 #ifndef _NB_STEM_H_
@@ -73,11 +84,9 @@
 
 typedef struct NB_STEM{
   void *type;                     // reserved for stem cell type pointer
-  //struct CHANNEL *parentChannel;  // channel for communicating with parent process
   int exitcode;                   // exit code to use when we terminate
   struct NB_Todo *todo;           // todo list (commands to execute)
-  struct NB_VERB *verbTree;       // verb definition tree
-  int verbCount;                  // number of verbs defined
+  struct NB_TERM *verbs;          // verb dictionary
   } NB_Stem;
 
 extern char *nb_cmd_prefix;

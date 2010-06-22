@@ -91,5 +91,6 @@
 #include <nbtls.h>         // TLS routines
 #include <nbpeer.h>        // peer routines
 #include <nbmsg.h>         // message routines
+#include <nbverb.h>        /* verb structure */
 
 #endif // _NB_H_

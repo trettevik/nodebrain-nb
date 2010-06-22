@@ -61,7 +61,7 @@
 
 #include <nbstd.h>         // define some standard system stuff
 #include <nbhash.h>        /* hash table of objects */
-#include <nbverb.h>        /* verb structure */
+//#include <nbverb.h>        /* verb structure */
 #include <nbstring.h>      /* string object */
 
 #include <nbglobal.h>      /* global variables */

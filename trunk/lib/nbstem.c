@@ -47,6 +47,7 @@
 * 2008-11-11 eat 0.7.3  Changed failure exit codes to NB_EXITCODE_FAIL
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2010-06-19 eat 0.8.2  Included support for commands provided by modules
 *============================================================================*/
 #include "nbi.h"
 #include "nbmedulla.h"
@@ -87,6 +88,8 @@ void nbStemInit(NB_Stem *stem){
   //nbBrainInit(stem);
   nbMacroInit(stem);
   nbStreamInit(stem);
+  // 2010-06-19 eat - creating a glossary of verbs
+  nbVerbInit(stem);
   nbCmdInit(stem);
   }
 
@@ -96,7 +99,7 @@ void nbStartParseArgs(nbCELL context,struct NB_STEM *stem,int argc,char *argv[])
   for(i=1;i<argc;i++){
     if(*argv[i]=='+'){
       outMsg(0,'I',"Argument [%u] %s",i,argv[i]);
-      nbCmdSet(context,"set",argv[i]);
+      nbCmdSet(context,stem,"set",argv[i]);
       }
     }
   }
@@ -133,7 +136,7 @@ void nbServeParseArgs(nbCELL context,struct NB_STEM *stem,int argc,char *argv[])
             nb_opt_prompt=1;  // turn on prompt option
             }
           }
-        else nbCmdSet(context,"set",cursor-1);
+        else nbCmdSet(context,stem,"set",cursor-1);
         break;
       case '=': nbParseSource(context,argv[i]); nb_flag_input=1; break;
       case ':': nbCmd(context,cursor+1,1); nb_flag_input=1; break;
@@ -308,6 +311,7 @@ nbCELL nbStart(int argc,char *argv[]){
 *  Create the stem cell
 */
   stem=(NB_Stem *)malloc(sizeof(NB_Stem)); /* pass to all init(init) functions who pass to all newType() calls */
+  memset(stem,0,sizeof(NB_Stem));
   //stem->parentChannel=NULL;
   stem->exitcode=0; 
   nbMedullaOpen(stem,medullaScheduler,medullaProcessHandler);
@@ -501,7 +505,7 @@ int nbServe(nbCELL context,int argc,char *argv[]){
 
   if(!nb_opt_servant && (nb_opt_prompt || !nb_flag_input)) nbParseSource(context,"-");
   if(nb_opt_query){
-    nbCmdQuery(context,"query","");
+    nbCmdQuery(context,stem,"query","");
     nbRuleReact(); /* let rules fire */  
     }
 

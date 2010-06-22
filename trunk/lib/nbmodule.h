@@ -61,6 +61,7 @@ extern struct TYPE *moduleType;
 extern struct NB_TERM *moduleC;
 
 void nbModuleInit(NB_Stem *stem);
+void nbModuleBind(nbCELL context,char *name,char *msg);
 NB_Term *nbModuleDeclare(NB_Term *context,char *name,char *cursor);
 void *nbModuleSymbol(NB_Term *context,char *ident,char *suffix,void **moduleHandleP,char *msg);
 

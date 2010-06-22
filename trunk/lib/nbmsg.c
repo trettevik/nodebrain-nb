@@ -490,14 +490,14 @@ int nbMsgIncludesState(nbMsgLog *msglog){
   mTime=ntohl(*(uint32_t *)msgid->time);
   mCount=ntohl(*(uint32_t *)msgid->count);
   if(mTime>pgmState->msgnum[node].time) return(0);
-  else if(mTime==logState->msgnum[node].time && mCount>logState->msgnum[node].count) return(0);
+  else if(mTime==logState->msgnum[node].time && nbMsgCountCompare(mCount,logState->msgnum[node].count)>0) return(0);
   msgid+=2;
   for(msgids=msgrec->msgids;msgids;msgids--){
     node=msgid->node;
     mTime=ntohl(*(uint32_t *)msgid->time);
     mCount=ntohl(*(uint32_t *)msgid->count);
     if(mTime>pgmState->msgnum[node].time) return(0);
-    else if(mTime==pgmState->msgnum[node].time && mCount>pgmState->msgnum[node].count) return(0);
+    else if(mTime==pgmState->msgnum[node].time && nbMsgCountCompare(mCount,pgmState->msgnum[node].count)>0) return(0);
     msgid++;
     }
   return(1);  
@@ -759,7 +759,7 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
     cursor=(unsigned char *)msglog->msgrec;
     if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogRead: Step to next record at %p *cursor=%2.2x%2.2x",cursor,*cursor,*(cursor+1));
     msglog->fileOffset+=(*cursor<<8)|*(cursor+1);  // update file offset
-    fprintf(stderr,"nbMsgLogRead: 2 msglog->fileOffset=%d\n",msglog->fileOffset);
+    fprintf(stderr,"nbMsgLogRead: 2 msglog->fileCount=%d msglog->fileOffset=%d\n",msglog->fileCount,msglog->fileOffset);
     cursor+=(*cursor<<8)|*(cursor+1);  // step to next record
     msglog->msgrec=(nbMsgRec *)cursor;
     }
@@ -880,6 +880,10 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
   char linkedname[32];
   int linklen;
   nbMsgCursor msgcursor;
+  int flags;
+
+  flags=mode;
+  mode&=0xff;
 
   if(pgmState && mode==NB_MSG_MODE_CURSOR){
     nbLogMsg(context,0,'L',"nbMsgLogOpen: Cabal '%s' node '%s' open with non-null pgmState incompatible with cursor mode - terminating",cabal,nodeName);
@@ -1025,7 +1029,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
   msglog->recordTime=recordTime;
   msglog->recordCount=recordCount;
   //fprintf(stderr,"nbMsgLogOpen: Extracted header time=%u count=%u fileTime=%u fileCount=%u\n",mTime,mCount,fileTime,fileCount);
-  while(!nbMsgIncludesState(msglog)){
+  if(mode!=NB_MSG_MODE_SINGLE && msglog->logState!=msglog->pgmState && !flags&NB_MSG_MODE_LASTFILE) while(!nbMsgIncludesState(msglog)){
     fprintf(stderr,"nbMsgLogOpen: File %s does not include requested state\n",filename);
     close(msglog->file);
     msglog->filesize=0;
@@ -1729,6 +1733,7 @@ int nbMsgCachePublish(nbCELL context,nbMsgCacheSubscriber *msgsub){
     while(!(state&NB_MSG_STATE_LOGEND)){
       state=nbMsgLogRead(context,msgsub->msglog);
       nbLogMsg(context,0,'T',"nbMsgCachePublish: nbMsgLogRead returned state=%d",state);
+      nbMsgPrint(stderr,msgsub->msglog->msgrec);
       if(state&NB_MSG_STATE_PROCESS){
         if((*msgsub->handler)(context,msgsub->handle,msgsub->msglog->msgrec)){
           nbLogMsg(context,0,'T',"nbMsgCachePublish: turning FLAG_INBUF and FLAG_PAUSE on");
@@ -1760,8 +1765,10 @@ int nbMsgCachePublish(nbCELL context,nbMsgCacheSubscriber *msgsub){
     // subscriber back to msglog mode
     else if(*cachePtr==0){
       msgrec=(nbMsgRec *)(cachePtr+1);
+      nbMsgPrint(stderr,msgrec);
       if(msgrec->type!=NB_MSG_REC_TYPE_MESSAGE){
         nbLogMsg(context,0,'L',"Fatal error in message cache - invalid message record type %u - terminating",msgrec->type);
+        nbLogFlush(context);
         exit(1);
         }
       if(msgsub->flags&NB_MSG_CACHE_FLAG_AGAIN){
@@ -1770,8 +1777,8 @@ int nbMsgCachePublish(nbCELL context,nbMsgCacheSubscriber *msgsub){
         }
       else state=nbMsgLogSetState(context,msgsub->msglog,msgrec);
       if(state&NB_MSG_STATE_PROCESS){
+        nbLogMsg(context,0,'T',"nbMsgCachePublish: calling handler");
         if((*msgsub->handler)(context,msgsub->handle,msgrec)){
-          nbLogMsg(context,0,'T',"nbMsgCachePublish: calling handler");
           // 2010-05-06 eat - doesn't seem like we should set INBUF here
           //msgsub->flags|=NB_MSG_CACHE_FLAG_INBUF|NB_MSG_CACHE_FLAG_PAUSE;
           msgsub->flags|=NB_MSG_CACHE_FLAG_PAUSE|NB_MSG_CACHE_FLAG_AGAIN;
@@ -1785,6 +1792,7 @@ int nbMsgCachePublish(nbCELL context,nbMsgCacheSubscriber *msgsub){
       }
     else{
       nbLogMsg(context,0,'L',"Fatal error in message cache - invalid entry type %x - terminating",*cachePtr);
+      nbLogFlush(context);
       exit(1);
       }
     }
@@ -1961,8 +1969,8 @@ int nbMsgCacheInsert(nbCELL context,void *handle,nbMsgRec *msgrec){
   recordCount=ntohl(*(uint32_t *)&msgid->count);
   if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCacheInsert: msglen=%d recordCount=%u msgcache->endCount=%u",msglen,recordCount,msgcache->endCount);
   if(recordCount!=msgcache->endCount+1){
-    if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCacheInsert: returning out of sequence code - recordCount=%u endCount=%u",recordCount,msgcache->endCount);
-    return(1);  // out of sequence
+    nbLogMsg(context,0,'T',"nbMsgCacheInsert: out of sequence code - recordCount=%u endCount=%u - terminating",recordCount,msgcache->endCount);
+    exit(1);
     }
   msgcache->endCount=recordCount;
   if(msgTrace){ // (msgTrace) info
@@ -2028,12 +2036,13 @@ nbMsgCache *nbMsgCacheAlloc(nbCELL context,char *cabal,char *nodeName,int node,i
   msgcache->startState=nbMsgStateCreate(context);
   msgcache->endState=nbMsgStateCreate(context);
 
-  msglog=nbMsgLogOpen(context,cabal,nodeName,node,"",NB_MSG_MODE_CONSUMER,msgcache->endState);
+  msglog=nbMsgLogOpen(context,cabal,nodeName,node,"",NB_MSG_MODE_CONSUMER|NB_MSG_MODE_LASTFILE,msgcache->endState);
   if(!msglog){
     nbLogMsg(context,0,'E',"nbMsgCacheOpen: Unable to open message log for cabal \"%s\" node %d",cabal,node);
     nbMsgCacheFree(context,msgcache);
     return(NULL);
     }
+  msglog->fileJumper=nbMsgCacheMarkFileJump; // provide method to create file markers in the message cache
   msgcache->msglog=msglog;
   msgcache->endCount=msglog->recordCount;
   msgcache->fileCount=msglog->fileCount;   // initialize file count and offset
@@ -2041,7 +2050,6 @@ nbMsgCache *nbMsgCacheAlloc(nbCELL context,char *cabal,char *nodeName,int node,i
   if(nbMsgLogConsume(context,msglog,msgcache,nbMsgCacheInsert)!=0){
     nbMsgCacheFree(context,msgcache);
     }
-  msglog->fileJumper=nbMsgCacheMarkFileJump; // provide method to create file markers in the message cache
   return(msgcache);
   }
 
@@ -2247,7 +2255,7 @@ static int nbMsgPeerHelloConsumer(nbCELL context,nbPeer *peer,void *handle,void 
   // if bad return -1
   nbLogMsg(context,0,'T',"verify msgcabal=%p",msgcabal);
   nbLogMsg(context,0,'T',"verify msgcabal->mode=%p",msgcabal->mode);
-  nbLogMsg(context,0,'T',"verify msgcabal->mode=%2.2.x",msgcabal->mode);
+  nbLogMsg(context,0,'T',"verify msgcabal->mode=%2.2x",msgcabal->mode);
   if(msgcabal->mode&NB_MSG_CABAL_MODE_CLIENT){ // client
     nbLogMsg(context,0,'T',"nbMsgPeerHelloConsumer: Handing client off to nbMsgPeerStateProducer");
     nbPeerModify(context,peer,msgnode,nbMsgPeerStateProducer,nbMsgPeerConsumer,nbMsgPeerShutdown);
@@ -2789,7 +2797,7 @@ int nbMsgCabalEnable(nbCELL context,nbMsgCabal *msgcabal){
   expirationTime=utime;
   expirationTime-=30;  // wait 30 seconds before connecting after a disconnect
 
-  // Handle web topology sink (client) and source (server)
+  // Handle fan topology sink (client) and source (server)
   if(msgcabal->node->type&NB_MSG_NODE_TYPE_FAN){
     if(msgcabal->node->type&NB_MSG_NODE_TYPE_SOURCE){
       nbLogMsg(context,0,'T',"nbMsgCabalEnable: source node waits for connection from sink nodes");

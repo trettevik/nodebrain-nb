@@ -37,6 +37,7 @@
 * ---------- -----------------------------------------------------------------
 * 2005-11-22 Ed Trettevik (Introduced in version 0.6.4)
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2010-06-19 eat 0.8.2  Made verbs objects so we can manage them with API
 *=============================================================================
 */
 #ifndef _NB_VERB_H_
@@ -46,29 +47,34 @@
 
 #include <nbcell.h>
 
+extern struct TYPE *nb_verbType;
+
 struct NB_VERB{
-  char verb[12];              // verb
+  struct NB_OBJECT object;    // object
+  struct NB_TERM *term;       // term defined by this verb
   int  authmask;              // authority mask
   int  flags;                 // flag bits
   char *syntax;               // syntax description
-  void (*parse)(struct NB_CELL *context,char *verb,char *cursor);
-  struct NB_VERB *lower;      // lower verb
-  struct NB_VERB *higher;     // higher verb
+  void *handle;               // module handle
+  int (*parse)(struct NB_CELL *context,void *handle,char *verb,char *cursor);
+  //void (*parse)(struct NB_CELL *context,char *verb,char *cursor);
   };
 
 #define NB_VERB_LOCAL 1   // verb is interpreted locally - not sent to peers
 
-void nbVerbPrint(struct NB_VERB *verbEntry);
-void nbVerbPrintAll(struct NB_VERB *verbEntry);
-int nbVerbDefine(
-  struct NB_STEM *stem,
+void nbVerbPrint(struct NB_VERB *verb);
+void nbVerbPrintAll(nbCELL context);
+
+struct NB_VERB *nbVerbFind(nbCELL context,char *verb);
+
+#endif // NB_INTERNAL
+
+int nbVerbDeclare(
+  nbCELL context,
   char *verb,
   int authmask,
   int flags,
-  void (*parse)(struct NB_CELL *context,char *verb,char *cursor),char *syntax);
-struct NB_VERB *nbVerbBalance(struct NB_VERB *verbEntry,int n);
-struct NB_VERB *nbVerbFind(struct NB_VERB *verbEntry,char *verb);
-
-#endif // NB_INTERNAL
+  void *handle,
+  int(*parse)(nbCELL context,void *handle,char *verb,char *cursor),char *syntax);
 
 #endif

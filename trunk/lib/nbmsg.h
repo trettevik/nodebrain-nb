@@ -140,6 +140,8 @@ typedef struct NB_MSG_LOG{
 #define NB_MSG_MODE_NOUDP     4        // set with PRODUCER to avoid sending UDP packets
 #define NB_MSG_MODE_SPOKE     (NB_MSG_MODE_PRODUCER&NB_MSG_MODE_NOUDP)
 #define NB_MSG_MODE_CURSOR    8        // state unaware consumer - cursor file used as alternative
+                                       // 256 and above are used by nbMsgLogOpen, but masked out in the structure
+#define NB_MSG_MODE_LASTFILE  256      // only read the last file
 
 #define NB_MSG_STATE_INITIAL  0        // initial start of msglog structure
 #define NB_MSG_STATE_PROCESS  1        // program needs to process the last record
@@ -161,6 +163,7 @@ extern int nbMsgLogStateToRecord(nbCELL context,nbMsgLog *msglog,unsigned char *
 extern nbMsgState *nbMsgLogStateFromRecord(nbCELL context,nbMsgRec *msgrec);
 
 extern void *nbMsgData(nbCELL context,nbMsgRec *msgrec,int *datalen);
+extern int nbMsgPrint(FILE *file,nbMsgRec *msgrec);
 
 extern nbMsgState *nbMsgStateCreate(nbCELL context);
 extern int nbMsgStateSet(nbMsgState *state,int node,uint32_t time,uint32_t count);

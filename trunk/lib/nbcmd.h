@@ -52,9 +52,9 @@ void printHelp(void);
 void showVersion(void);
 void showCopyright(void);
 void showHeading(void);
-void nbCmdUse(struct NB_CELL *context,char *verb,char *cursor);
-void nbCmdSet(struct NB_CELL *context,char *verb,char *cursor);
-void nbCmdQuery(struct NB_CELL *context,char *verb,char *cursor);
+int nbCmdUse(struct NB_CELL *context,void *handle,char *verb,char *cursor);
+int nbCmdSet(struct NB_CELL *context,void *handle,char *verb,char *cursor);
+int nbCmdQuery(struct NB_CELL *context,void *handle,char *verb,char *cursor);
 void nbParseArgAssertion(char *cursor);
 
 void nbParseStdin(int prompt);

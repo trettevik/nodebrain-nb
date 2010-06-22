@@ -491,6 +491,28 @@ NB_Term *nbModuleDeclare(NB_Term *context,char *ident,char *cursor){
   return(term);
   }
 
+void nbModuleBind(nbCELL context,char *name,char *msg){
+  struct NB_MODULE *module;
+  struct NB_TERM *term;
+  void *(*symbol)();
+
+  if((term=nbTermFind(moduleC,name))==NULL){
+    // implicitly declare the module if necessary
+    term=nbModuleDeclare((struct NB_TERM *)context,name,name);
+    if(term==NULL){
+      sprintf(msg,"Module \"%s\" not declared and not found",name);
+      return;
+      }
+    }
+  module=(struct NB_MODULE *)(term->def);
+  if(module->address!=NULL) return; // commands are already declared
+  module->address=nbModuleSearch(module->path->value,module->name->value,msg);
+  if(!module->address) return;
+  symbol=nbModuleSym(module->address,"nbBind",msg);
+  if(!symbol) return;
+  module->handle=(*symbol)(nb_SkillGloss,name,module->args,module->text->value);
+  }
+
 /*
 *  Locate a symbol in a module
 *

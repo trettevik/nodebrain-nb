@@ -213,6 +213,21 @@
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2010-06-16 eat 0.8.2  Included traceTls/notraceTls option (tlsTrace)
 * 2010-06-16 eat 0.8.2  Included tracePeer/notracePeer option (peerTrace)
+* 2010-06-20 eat 0.8.2  Modified command/verb arguments and return value
+*            Commands may now be defined by modules using the API function
+*            nbVerbDeclare.  To better support this, a handle parameter has been
+*            added to commands.  The handle can be used to provide commands with
+*            access to a module specific structure.  For built-in commands we
+*            use the stem structure for the handle.  Commands are now also
+*            expected to provide a return code.
+*
+*               0 - success
+*               1 - failure
+*
+*            Modifications to command functions to provide a return code may not
+*            be 100% correct.  The modifications focused on "return" statements,
+*            but some "failure" conditions may still flow out the end of a
+*            function where a "return(0)" has been included.
 *==============================================================================
 */
 #include "nbi.h"
@@ -416,7 +431,7 @@ void showProcessList(){
 *  Interpret Statements
 *  
 */
-void nbCmdShow(nbCELL context,char *verb,char * cursor){
+int nbCmdShow(nbCELL context,void *handle,char *verb,char * cursor){
   char symid,optid,ident[1024],*cursave;
   NB_Term *term;
   NB_Cell *ref,*def,*val;
@@ -428,7 +443,7 @@ void nbCmdShow(nbCELL context,char *verb,char * cursor){
     symid=nbParseSymbol(ident,&cursor);
     if(symid=='t' || symid=='('){
       if(symid=='('){ /* compute a cell expression */
-        if(NULL==(def=(NB_Cell *)nbParseCell((NB_Term *)context,&cursor,0))) return;
+        if(NULL==(def=(NB_Cell *)nbParseCell((NB_Term *)context,&cursor,0))) return(1);
         grabObject(def);
         ref=def;
         val=(NB_Cell *)nbCellCompute_(def);
@@ -443,7 +458,7 @@ void nbCmdShow(nbCELL context,char *verb,char * cursor){
             }
           else{
             outMsg(0,'E',"Term \"%s\" not defined.",ident);
-            return;
+            return(1);
             }
           }
         ref=(NB_Cell *)term;
@@ -494,7 +509,7 @@ void nbCmdShow(nbCELL context,char *verb,char * cursor){
       outPut("A partial SHOW command displays a menu (e.g. \"show -\").\n\n");
       outPut("Use \"?\" in place of options [<...>] for more information.\n");
       }
-    return;
+    return(0);
     }
   symid=*cursor;
   cursor++;
@@ -549,7 +564,8 @@ void nbCmdShow(nbCELL context,char *verb,char * cursor){
       }
     else if(strncmp(ident,"processes",len)==0) showProcessList();
     else if(strncmp(ident,"types",len)==0) termPrintGloss(nb_TypeGloss,NULL,0);
-    else if(strncmp(ident,"verbs",len)==0) nbVerbPrintAll(context->object.type->stem->verbTree);
+    //else if(strncmp(ident,"verbs",len)==0) nbVerbPrintAll(context->object.type->stem->verbTree);
+    else if(strncmp(ident,"verbs",len)==0) nbVerbPrintAll(context);
     else{
       if(strcmp(ident,"?")!=0) outMsg(0,'E',"Expecting name space option at \"%s\".",cursave);
       outPut("\nTo show all terms in an alternate dictionary (name space):\n\n");
@@ -650,37 +666,39 @@ void nbCmdShow(nbCELL context,char *verb,char * cursor){
       outPut("\n");
       }
     }
+  return(0);
   }
 
-void nbCmdQuery(nbCELL context,char *verb,char *cursor){
+int nbCmdQuery(nbCELL context,void *handle,char *verb,char *cursor){
   char symid,ident[256];
   NB_Term *term;
   NB_Object *object;
   if(!(clientIdentity->authority&AUTH_CONTROL)){
     outMsg(0,'E',"Identity \"%s\" does not have authority to query.",clientIdentity->name->value);
-    return;
+    return(1);
     }
   if(strcmp(verb,"solve")==0) outMsg(0,'W',"The 'solve' command is deprecated, use 'query' instead.");
     
   symid=nbParseSymbol(ident,&cursor);
   if(symid==';'){
      nbRuleSolve((NB_Term *)context);
-     return;
+     return(0);
      }
   term=nbTermFind((NB_Term *)context,ident);
   if(term==NULL){
     outMsg(0,'E',"Term \"%s\" not defined.",ident);
-    return;
+    return(1);
     }
   if(((NB_Object *)term->def)->type==nb_NodeType){
     nbRuleSolve(term);
-    return;
+    return(0);
     }
   object=nbCellSolve_((NB_Cell *)term);
   outPut("Result: ");
   outPut("%s ",object->type->name);
   printObject(object);
   outPut("\n");
+  return(0);
   }         
   
 
@@ -729,17 +747,17 @@ void nbParseArgAssertion(char *cursor){
 *    <context>. use[(<option_list>)][:<consultant>];
 *
 */
-void nbCmdUse(nbCELL contextCell,char *verb,char *cursor){
+int nbCmdUse(nbCELL contextCell,void *handle,char *verb,char *cursor){
   NB_Term *context=(NB_Term *)contextCell;  // goof around with type---we assume contextCell is an NB_Term
   char *optcur;
   int optlen;
   if(!(clientIdentity->authority&AUTH_CONTROL)){
     outMsg(0,'E',"Identity \"%s\" not authorized to set control values.",clientIdentity->name->value);
-    return;
+    return(1);
     }
   if(((NB_Node *)context->def)->owner!=clientIdentity){
     outMsg(0,'E',"Identity \"%s\" not owner of \"%s\" node.",clientIdentity->name->value,context->word->value);
-    return;
+    return(1);
     }
   while(*cursor==' ') cursor++;
   if(*cursor=='('){
@@ -750,7 +768,7 @@ void nbCmdUse(nbCELL contextCell,char *verb,char *cursor){
       while(*cursor!=',' && *cursor!=')' && *cursor!=0) cursor++;
       if(*cursor==0){
         outMsg(0,'E',"Unbalanced parentheses in option list - end of line reached");
-        return;
+        return(1);
         }
       if(*optcur=='!'){  // set option off
         optcur++;
@@ -760,7 +778,7 @@ void nbCmdUse(nbCELL contextCell,char *verb,char *cursor){
         else if(strncmp(optcur,"trace",optlen)==0)((NB_Node *)context->def)->cmdopt&=255-NB_CMDOPT_TRACE;
         else{
           outMsg(0,'E',"Option not recognized at: %s",optcur);
-          return;
+          return(1);
           }
         }
       else{              // set option on
@@ -770,7 +788,7 @@ void nbCmdUse(nbCELL contextCell,char *verb,char *cursor){
         else if(strncmp(optcur,"trace",optlen)==0)((NB_Node *)context->def)->cmdopt|=NB_CMDOPT_TRACE;
         else{
           outMsg(0,'E',"Option not recognized at: %s",optcur);
-          return;
+          return(1);
           }
         }
       }
@@ -785,6 +803,7 @@ void nbCmdUse(nbCELL contextCell,char *verb,char *cursor){
   else if(*cursor!=';' && *cursor!='\n' && *cursor!=0){
     outMsg(0,'E',"Unexpected character '%c' at:  %s",*cursor,cursor);
     }
+  return(0);
   }
 
 // Set option string safely
@@ -809,7 +828,7 @@ void nbSetOptStr(char *option,char *buf,char *value,size_t bufsize){
 *    --<logonOption>         
 *    option="value",...
 */    
-void nbCmdSet(nbCELL context,char *verb,char *cursor){
+int nbCmdSet(nbCELL context,void *handle,char *verb,char *cursor){
   /* Assign a new value to an option */
   //struct NB_STEM *stem=context->object.type->stem;
   char ident[256],operator[256],token[256];
@@ -818,7 +837,7 @@ void nbCmdSet(nbCELL context,char *verb,char *cursor){
   char symid=',';
   if(!(clientIdentity->authority&AUTH_CONTROL)){
     outMsg(0,'E',"Identity \"%s\" not authorized to set control values.",clientIdentity->name->value);
-    return;
+    return(1);
     }
   cursave=cursor;
   if(*cursor=='-' || *cursor=='+'){
@@ -848,22 +867,22 @@ void nbCmdSet(nbCELL context,char *verb,char *cursor){
         default:
           outMsg(0,'E',"Switch option '%c' not recognized.",*cursor);
           outPut("Usage:  nb -aAbBdDpPqQsS\n");
-          return;
+          return(1);
         }
       cursor++;
       }
-    if(*cursor==0 || *cursor==';') return;
+    if(*cursor==0 || *cursor==';') return(0);
     if(*cursor=='-' || *cursor==',') cursor++,symid=',';
     else{
       outMsg(0,'E',"Unrecognized symbol '%c' in switch option: %s",*cursor,cursave);
-      return;
+      return(1);
       }
     }
   while(symid==','){
     symid=nbParseSymbol(ident,&cursor);
     if(symid!='t'){
       outMsg(0,'E',"Expecting term \"%s\".",ident);
-      return;
+      return(1);
       }    
     symid=nbParseSymbol(operator,&cursor);
     if(symid=='='){ /* non-boolean option */
@@ -915,7 +934,7 @@ void nbCmdSet(nbCELL context,char *verb,char *cursor){
         else if(strcmp(ident,"user")==0) nbSetOptStr(ident,serveuser,token,sizeof(serveuser)); // 2006-05-12 eat 0.6.6
         else{
           outMsg(0,'E',"Unrecognized string option \"%s\".",ident);
-          return;
+          return(1);
           }
         }
       else if(symid=='i'){ /* integer */
@@ -943,12 +962,12 @@ void nbCmdSet(nbCELL context,char *verb,char *cursor){
         else if(strcmp(ident,"processLimit")==0) nbMedullaProcessLimit(i);
         else{
           outMsg(0,'E',"Unrecognized integer option \"%s\".",ident);
-          return;
+          return(1);
           }
         }       
       else{
         outMsg(0,'E',"Unrecognized value [%s] for \"%s\".",token,ident);
-        return;
+        return(1);
         }
       symid=nbParseSymbol(ident,&cursor);  
       }
@@ -1033,20 +1052,21 @@ void nbCmdSet(nbCELL context,char *verb,char *cursor){
       else if(strcmp(ident,"noshowCount")==0) showcount=0;
       else{
         outMsg(0,'E',"Unrecognized Boolean option \"%s\".",ident);
-        return;
+        return(1);
         }
       }
     else{
       outMsg(0,'E',"Unexpected symbol \"%c\" before \"%s\".",symid,cursor);
-      return;
+      return(1);
       }
     }
+  return(0);
   }
 
 /*
 *  Assert (or alert)
 */
-void nbCmdAssert(nbCELL context,char *verb,char *cursor){
+int nbCmdAssert(nbCELL context,void *handle,char *verb,char *cursor){
   /* assert a new value for a variable */
   /* Note: nbTermFind will locate variables in */
   /* class definitions and peer contexts.  It seems odd to allow assertions */
@@ -1063,7 +1083,7 @@ void nbCmdAssert(nbCELL context,char *verb,char *cursor){
   if(*cursor!=';' && *cursor!=0){
     outMsg(0,'E',"Unrecognized at-->%s",cursor);
     dropMember(assertion);
-    return;
+    return(1);
     }
   if(assertion!=NULL){
     assert(assertion,alert);  // assert or alert
@@ -1075,7 +1095,7 @@ void nbCmdAssert(nbCELL context,char *verb,char *cursor){
     nbRuleReact(); // react to changing conditions
     if(alertCount==((NB_Node *)((NB_Term *)context)->def)->alertCount) contextAlert((NB_Term *)context);
     }
-  return;
+  return(0);
   }
 
 /*
@@ -1136,29 +1156,29 @@ void iLet(char *cursor,NB_Term *context,int mode){
 /*
 *  Enable or disable an object
 */           
-void nbCmdEnable(nbCELL context,char *verb,char *cursor){ 
+int nbCmdEnable(nbCELL context,void *handle,char *verb,char *cursor){ 
   char ident[256],symid,*cursave;
   NB_Term *term;
   NB_Cell *cell;
 
   if(!(clientIdentity->authority&AUTH_DEFINE)){
     outMsg(0,'E',"Identity \"%s\" does not have enable/disable authority.",clientIdentity->name->value);
-    return;
+    return(1);
     }
   cursave=cursor;
   symid=nbParseSymbol(ident,&cursor);
   if(symid!='t'){
     outMsg(0,'E',"Expecting term at \"%s\"",cursave);
-    return;
+    return(1);
     }
   if((term=nbTermFind((NB_Term *)context,ident))==NULL){
     outMsg(0,'E',"Term \"%s\" not defined.",ident);
-    return;
+    return(1);
     }
   cell=(NB_Cell *)term->def;
   if(!(cell->object.type->attributes&TYPE_ENABLES)){
     outMsg(0,'E',"Term \"%s\" does not qualify for enable/disable command",ident);
-    return;
+    return(1);
     }
   if(*verb=='e'){  // enable
     if(cell->object.value==nb_Disabled){
@@ -1172,6 +1192,7 @@ void nbCmdEnable(nbCELL context,char *verb,char *cursor){
     cell->object.value=nb_Disabled;
     }
   else outMsg(0,'I',"Term \"%s\" is already disabled",ident);
+  return(0);
   }
 
 //struct SCHED *iSchedule(cursor) char **cursor; {
@@ -1191,7 +1212,7 @@ void nbCmdEnable(nbCELL context,char *verb,char *cursor){
 //  return(sched);
 //  }
   
-void nbCmdArchive(nbCELL context,char *verb,char *cursor){
+int nbCmdArchive(nbCELL context,void *handle,char *verb,char *cursor){
   char prefix[100],target[100];
   size_t len;
   time_t systemTime;
@@ -1201,15 +1222,15 @@ void nbCmdArchive(nbCELL context,char *verb,char *cursor){
 
   if(!(clientIdentity->authority&AUTH_CONTROL)){
     outMsg(0,'E',"Identity \"%s\" not authorized to archive the log file.",clientIdentity->name->value);
-    return;
+    return(1);
     }
   if(!agent){
     outMsg(0,'E',"archive command only supported in daemon mode"); 
-    return;
+    return(1);
     } 
   if(*(outLogName(NULL))==0){
     outMsg(0,'E',"Daemon log file not defined.");
-    return;
+    return(1);
     }
   /* rename log file */
   logname=outLogName(NULL);
@@ -1257,6 +1278,7 @@ void nbCmdArchive(nbCELL context,char *verb,char *cursor){
 #endif
   if(rc) outMsg(0,'E',"Unable to rename log file \"%s\" to \"%s\", errno=%d - %s",logname,target,errno,strerror(errno));
   else showHeading();
+  return(0);
   }
 
 struct IDENTITY *iIdentity(char **cursorP){
@@ -1286,7 +1308,7 @@ unsigned char nbGetAuthMask(char *rank){
   return(0);
   }
 
-void nbCmdRank(nbCELL context,char *verb,char *cursor){
+int nbCmdRank(nbCELL context,void *handle,char *verb,char *cursor){
   /*   rank <identity> <rank>;  */
   char symid,*cursave;
   char ident[256];
@@ -1294,32 +1316,35 @@ void nbCmdRank(nbCELL context,char *verb,char *cursor){
   unsigned char authmask;
 
   identity=iIdentity(&cursor);
-  if(identity==NULL) return;
+  if(identity==NULL) return(1);
   
   cursave=cursor;
   symid=nbParseSymbol(ident,&cursor); 
   if(symid!='t'){
     outMsg(0,'E',"Expecting permission name at [%s].",cursave);
-    return;
+    return(1);
     }
   authmask=nbGetAuthMask(ident);
   if(authmask) identity->authority=authmask;
   else{
     outMsg(0,'E',"Permission \"%s\" not recognized.",ident);
-    return;
+    return(1);
     }
   outMsg(0,'I',"Identity \"%s\" ranked as \"%s\".",identity->name->value,ident);
+  return(0);
   }
   
-void nbCmdGrant(nbCELL context,char *verb,char *cursor){
+int nbCmdGrant(nbCELL context,void *handle,char *verb,char *cursor){
   outMsg(0,'E',"Statement not yet implemented.");
+  return(1);
   } 
    
-void nbCmdDeny(nbCELL context,char *verb,char *cursor){
+int nbCmdDeny(nbCELL context,void *handle,char *verb,char *cursor){
   outMsg(0,'E',"Statement not yet implemented.");
+  return(1);
   }  
 
-void nbCmdDeclare(nbCELL context,char *verb,char *cursor){  
+int nbCmdDeclare(nbCELL context,void *handle,char *verb,char *cursor){  
   /*   declare <identity> identity modulus.exponent+exponent.user; */   
   /*   declare <brain> brain <host>:<port>/identity; */
   /*   declare <module> module <filename>; */
@@ -1332,25 +1357,25 @@ void nbCmdDeclare(nbCELL context,char *verb,char *cursor){
 
   if(!(clientIdentity->authority&AUTH_DECLARE)){
     outMsg(0,'E',"Identity \"%s\" not authorized to declare control objects.",clientIdentity->name->value);
-    return;
+    return(1);
     }
   cursave=cursor;
   symid=nbParseSymbol(ident,&cursor); 
   if(symid!='t'){
     outMsg(0,'E',"Expecting term identifier at [%s].",cursave);
-    return;
+    return(1);
     }
   while(*cursor==' ') cursor++;
   cursave=cursor;
   symid=nbParseSymbol(type,&cursor);
   if(symid!='t'){
     outMsg(0,'E',"Expecting term identitier at [%s].",cursave);
-    return;
+    return(1);
     }
   if(strcmp(type,"identity")==0){
     if(nbTermFind(identityC,ident)!=NULL){
       outMsg(0,'E',"Identity \"%s\" already defined.",ident);
-      return;
+      return(1);
       }
     while(*cursor==' ') cursor++;
     string=cursor;
@@ -1362,7 +1387,7 @@ void nbCmdDeclare(nbCELL context,char *verb,char *cursor){
       }
     if((identity=nbIdentityNew(ident,0))==NULL){
       outMsg(0,'E',"Identity declaration failed.");
-      return;
+      return(1);
       }
     identity->authority=authmask;
     nbTermNew(identityC,ident,identity);
@@ -1380,11 +1405,12 @@ void nbCmdDeclare(nbCELL context,char *verb,char *cursor){
     }
   else{
     outMsg(0,'E',"Expecting {identity|module|calendar} at [%s].",cursave);
-    return;
+    return(1);
     }
+  return(0);
   }
          
-void nbCmdDefine(nbCELL context,char *verb,char *cursor){
+int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
   char ident[256],type[256];
   //char ident[256],type[256],token[256];
   //NB_Term *term,*typeTerm,*context=(NB_Term *)contextCell;  // goof with context type
@@ -1405,23 +1431,23 @@ void nbCmdDefine(nbCELL context,char *verb,char *cursor){
 
   if(!(clientIdentity->authority&AUTH_DEFINE)){
     outMsg(0,'E',"Identity \"%s\" not authorized to define terms.",clientIdentity->name->value);
-    return;
+    return(1);
     }
   cursave=cursor;
   symid=nbParseSymbol(ident,&cursor);
   if(symid!='t'){
     outMsg(0,'E',"Expecting term identifier at [%s].",cursave);
-    return;
+    return(1);
     }
   if(*ident=='$' || *ident=='_'){
     outMsg(0,'E',"Terms starting with '$' or '_' may not be user defined.");
-    return;
+    return(1);
     } 
   if(*ident=='@'){
     if(*(ident+1)=='.') context=(nbCELL)locGloss;
     else{
       outMsg(0,'E',"Terms starting '@' may not be user defined.");
-      return;
+      return(1);
       }
     } 
   if(*ident=='%') context=(nbCELL)symContext;
@@ -1429,13 +1455,13 @@ void nbCmdDefine(nbCELL context,char *verb,char *cursor){
   //if(NULL!=(term=nbTermFindDown((NB_Term *)context,ident)) && term->def!=nb_Disabled){
   if(NULL!=(term=nbTermFindDown((NB_Term *)context,ident)) && term->def!=nb_Undefined){
     outMsg(0,'E',"Term \"%s\" already defined.",ident);
-    return;
+    return(1);
     }
   cursave=cursor;
   symid=nbParseSymbol(type,&cursor);
   if(symid!='t'){
     outMsg(0,'E',"Expecting type identifier at \"%s\"",cursave);
-    return;
+    return(1);
     }
 
   // check for deprecated types
@@ -1444,140 +1470,141 @@ void nbCmdDefine(nbCELL context,char *verb,char *cursor){
     strcpy(type,"node");
     }
 
-  if((typeTerm=nbTermFind(nb_TypeGloss,type))==NULL)
+  if((typeTerm=nbTermFind(nb_TypeGloss,type))==NULL){
     outMsg(0,'E',"Type \"%s\" not defined.",type);
-  else {
-    strcpy(type,((struct STRING *)typeTerm->def)->value);
-    if(type==NULL) outMsg(0,'L',"nbCmdDefine typeTerm->value=NULL.");
-    if(strcmp(type,"on")==0 || strcmp(type,"if")==0 || strcmp(type,"when")==0) {
-      while(*cursor==' ') cursor++;
-      if(*cursor=='('){
-        standardRule=1; /* candidate for parsed assertions */
-        cursor++;
-        }
-      else outMsg(0,'I',"Deprecated syntax - Conditions should be enclosed in parentheses.");
-      /* Note: In the future, we will require the parenthesis. */
-      if((object=nbParseCell((NB_Term *)context,&cursor,0))==NULL){
-        outMsg(0,'E',"Rule not understood.");
-        return;
-        }
-      if(standardRule){
-        if(*cursor!=')'){
-          outMsg(0,'E',"Expecting ')' at [%s]",cursor);
-          return;
-          }
-        cursor++; /* step over paren */
-        while(*cursor==' ') cursor++;
-        if(*cursor=='['){   /* get priority */
-          cursor++;
-          cursave=cursor;
-          symid=nbParseSymbol(rulePrtyStr,&cursor);
-          if(symid=='+' || symid=='-'){
-            rulePrtySign=symid;
-            symid=nbParseSymbol(rulePrtyStr,&cursor);
-            }
-          if(symid!='i'){
-            outMsg(0,'E',"Expecting integer priority at \"%s\"",cursave);
-            return;
-            }
-          rulePrty=atoi(rulePrtyStr);
-          if(rulePrtySign=='-') rulePrty=-rulePrty;
-          if(rulePrty<-128 || rulePrty>127){
-            outMsg(0,'E',"Expecting priority from -128 to 127, not %d",rulePrty);
-            return;
-            }
-          while(*cursor==' ') cursor++;
-          if(*cursor!=']'){
-            outMsg(0,'E',"Expecting ']' at \"%s\"",cursor);
-            return;
-            }
-          cursor++;
-          while(*cursor==' ') cursor++;
-          }
-        if(*cursor==':' || *cursor==';' || *cursor==0) assertions=NULL;
-        else{
-          assertions=nbParseAssertion((NB_Term *)context,(NB_Term *)context,&cursor);
-          if(assertions==NULL) return;
-          }
-        }
-      if(*cursor!=':' && *cursor!=';' && *cursor!=0){
-        outMsg(0,'E',"Expecting ':', ';' or end of line at [%s].",cursor);
-        return;
-        }
-      action=malloc(sizeof(struct ACTION));
-      action->nextAct=NULL;
-      action->priority=rulePrty;
-      if(strcmp(type,"on")==0) rule_type=condTypeOnRule;
-      else if(strcmp(type,"when")==0) rule_type=condTypeWhenRule; 
-      else rule_type=condTypeIfRule;
-      action->assert=assertions;
-      action->command=NULL;
-      action->cmdopt=NB_CMDOPT_RULE;     /* do not suppress symbolic substitution */
-      action->status='R';   /* ready */
-      ruleCond=useCondition(0,rule_type,object,action);
-      action->cond=ruleCond; /* plug the condition pointer into the action */
-      term=nbTermNew((NB_Term *)context,ident,ruleCond);
-      action->term=term;
-      action->context=(NB_Term *)context;
-      action->type='R';
-      /* If a reused term already has subscribers, enable term and adjust levels */
-      if(term->cell.sub!=NULL){
-        nbCellEnable((NB_Cell *)ruleCond,(NB_Cell *)term);
-        nbCellLevel((NB_Cell *)term);
-        }
-      if(rule_type==condTypeIfRule){
-        if(trace) outMsg(0,'T',"nbCmdDefine() linking if rule to context list");
-        action->cell.object.next=(NB_Object *)((NB_Node *)((NB_Term *)context)->def)->ifrule;
-        ((NB_Node *)((NB_Term *)context)->def)->ifrule=action;
-        }
-      if(*cursor!=':') return;
-      cursor++; /* step over ':' delimiter */
-      while(*cursor==' ') cursor++;
-      if(*cursor==';') return;
-      action->command=grabObject(useString(strtok(cursor,"\n"))); /* action is rest of line */ 
-      }
-    else if(strcmp(type,"nerve")==0){
-      object=nbParseCell((NB_Term *)context,&cursor,0);
-      if(*cursor!=';' && *cursor!=0){
-        outMsg(0,'E',"Expecting ';' at [%s].",cursor);
-        return;
-        }
-      term=nbTermNew((NB_Term *)context,ident,nb_Unknown);
-      ruleCond=useCondition(0,condTypeNerve,object,(struct STRING *)term->word);
-      term->def=(NB_Object *)ruleCond;
-      }
-    else if(strcmp(type,"cell")==0) {
-      object=nbParseCell((NB_Term *)context,&cursor,0);
-      if(*cursor!=';' && *cursor!=0){
-        outMsg(0,'E',"Expecting ';' at [%s].",cursor);
-        return;
-        }
-      if(object==NULL) object=nb_Unknown; /* perhaps nbParseCell should return it, but...*/
-      nbTermNew((NB_Term *)context,ident,object);
-      }
-    else if(strcmp(type,"translator")==0){
-      NB_Translator *translator;
-      while(*cursor==' ') cursor++;
-      delim=cursor;
-      while(*delim!=0 && *delim!=';') delim++;
-      *delim=0;
-      translator=(NB_Translator *)nbTranslatorCompile(context,cursor);
-      outFlush();
-      if(translator!=NULL) nbTermNew((NB_Term *)context,ident,translator);
-      }
-    else if(strcmp(type,"node")==0){
-      nbNodeParse((NB_Term *)context,ident,cursor);
-      }
-    else if(strcmp(type,"macro")==0){
-      NB_Macro *macro;
-      if(NULL!=(macro=nbMacroParse(context,&cursor)))
-        nbTermNew((NB_Term *)context,ident,macro);
-      }
-    else outMsg(0,'E',"Type \"%s\" not recognized.",type);
+    return(1);
     }
+  strcpy(type,((struct STRING *)typeTerm->def)->value);
+  if(type==NULL) outMsg(0,'L',"nbCmdDefine typeTerm->value=NULL.");
+  if(strcmp(type,"on")==0 || strcmp(type,"if")==0 || strcmp(type,"when")==0) {
+    while(*cursor==' ') cursor++;
+    if(*cursor=='('){
+      standardRule=1; /* candidate for parsed assertions */
+      cursor++;
+      }
+    else outMsg(0,'I',"Deprecated syntax - Conditions should be enclosed in parentheses.");
+    /* Note: In the future, we will require the parenthesis. */
+    if((object=nbParseCell((NB_Term *)context,&cursor,0))==NULL){
+      outMsg(0,'E',"Rule not understood.");
+      return(1);
+      }
+    if(standardRule){
+      if(*cursor!=')'){
+        outMsg(0,'E',"Expecting ')' at [%s]",cursor);
+        return(1);
+        }
+      cursor++; /* step over paren */
+      while(*cursor==' ') cursor++;
+      if(*cursor=='['){   /* get priority */
+        cursor++;
+        cursave=cursor;
+        symid=nbParseSymbol(rulePrtyStr,&cursor);
+        if(symid=='+' || symid=='-'){
+          rulePrtySign=symid;
+          symid=nbParseSymbol(rulePrtyStr,&cursor);
+          }
+        if(symid!='i'){
+          outMsg(0,'E',"Expecting integer priority at \"%s\"",cursave);
+          return(1);
+          }
+        rulePrty=atoi(rulePrtyStr);
+        if(rulePrtySign=='-') rulePrty=-rulePrty;
+        if(rulePrty<-128 || rulePrty>127){
+          outMsg(0,'E',"Expecting priority from -128 to 127, not %d",rulePrty);
+          return(1);
+          }
+        while(*cursor==' ') cursor++;
+        if(*cursor!=']'){
+          outMsg(0,'E',"Expecting ']' at \"%s\"",cursor);
+          return(1);
+          }
+        cursor++;
+        while(*cursor==' ') cursor++;
+        }
+      if(*cursor==':' || *cursor==';' || *cursor==0) assertions=NULL;
+      else{
+        assertions=nbParseAssertion((NB_Term *)context,(NB_Term *)context,&cursor);
+        if(assertions==NULL) return(1);
+        }
+      }
+    if(*cursor!=':' && *cursor!=';' && *cursor!=0){
+      outMsg(0,'E',"Expecting ':', ';' or end of line at [%s].",cursor);
+      return(1);
+      }
+    action=malloc(sizeof(struct ACTION));
+    action->nextAct=NULL;
+    action->priority=rulePrty;
+    if(strcmp(type,"on")==0) rule_type=condTypeOnRule;
+    else if(strcmp(type,"when")==0) rule_type=condTypeWhenRule; 
+    else rule_type=condTypeIfRule;
+    action->assert=assertions;
+    action->command=NULL;
+    action->cmdopt=NB_CMDOPT_RULE;     /* do not suppress symbolic substitution */
+    action->status='R';   /* ready */
+    ruleCond=useCondition(0,rule_type,object,action);
+    action->cond=ruleCond; /* plug the condition pointer into the action */
+    term=nbTermNew((NB_Term *)context,ident,ruleCond);
+    action->term=term;
+    action->context=(NB_Term *)context;
+    action->type='R';
+    /* If a reused term already has subscribers, enable term and adjust levels */
+    if(term->cell.sub!=NULL){
+      nbCellEnable((NB_Cell *)ruleCond,(NB_Cell *)term);
+      nbCellLevel((NB_Cell *)term);
+      }
+    if(rule_type==condTypeIfRule){
+      if(trace) outMsg(0,'T',"nbCmdDefine() linking if rule to context list");
+      action->cell.object.next=(NB_Object *)((NB_Node *)((NB_Term *)context)->def)->ifrule;
+      ((NB_Node *)((NB_Term *)context)->def)->ifrule=action;
+      }
+    if(*cursor!=':') return(1);
+    cursor++; /* step over ':' delimiter */
+    while(*cursor==' ') cursor++;
+    if(*cursor==';') return(1);
+    action->command=grabObject(useString(strtok(cursor,"\n"))); /* action is rest of line */ 
+    }
+  else if(strcmp(type,"nerve")==0){
+    object=nbParseCell((NB_Term *)context,&cursor,0);
+    if(*cursor!=';' && *cursor!=0){
+      outMsg(0,'E',"Expecting ';' at [%s].",cursor);
+      return(1);
+      }
+    term=nbTermNew((NB_Term *)context,ident,nb_Unknown);
+    ruleCond=useCondition(0,condTypeNerve,object,(struct STRING *)term->word);
+    term->def=(NB_Object *)ruleCond;
+    }
+  else if(strcmp(type,"cell")==0) {
+    object=nbParseCell((NB_Term *)context,&cursor,0);
+    if(*cursor!=';' && *cursor!=0){
+      outMsg(0,'E',"Expecting ';' at [%s].",cursor);
+      return(1);
+      }
+    if(object==NULL) object=nb_Unknown; /* perhaps nbParseCell should return it, but...*/
+    nbTermNew((NB_Term *)context,ident,object);
+    }
+  else if(strcmp(type,"translator")==0){
+    NB_Translator *translator;
+    while(*cursor==' ') cursor++;
+    delim=cursor;
+    while(*delim!=0 && *delim!=';') delim++;
+    *delim=0;
+    translator=(NB_Translator *)nbTranslatorCompile(context,cursor);
+    outFlush();
+    if(translator!=NULL) nbTermNew((NB_Term *)context,ident,translator);
+    }
+  else if(strcmp(type,"node")==0){
+    nbNodeParse((NB_Term *)context,ident,cursor);
+    }
+  else if(strcmp(type,"macro")==0){
+    NB_Macro *macro;
+    if(NULL!=(macro=nbMacroParse(context,&cursor)))
+      nbTermNew((NB_Term *)context,ident,macro);
+    }
+  else outMsg(0,'E',"Type \"%s\" not recognized.",type);
+  return(0);
   }
   
-void nbCmdUndefine(nbCELL context,char *verb,char *cursor){
+int nbCmdUndefine(nbCELL context,void *handle,char *verb,char *cursor){
   char symid,ident[256];
   NB_Term *term;
 
@@ -1587,21 +1614,25 @@ void nbCmdUndefine(nbCELL context,char *verb,char *cursor){
     /* why would anyone want to do that */
     if(*cursor!=0){
       outMsg(0,'E',"Syntax error at \"%s\".",cursor);
-      return;
+      return(1);
       }
     termUndefAll();
     }
   else {
     term=nbTermFindHere((NB_Term *)context,(NB_String *)grabObject(useString(ident)));
-    if(term==NULL) outMsg(0,'E',"Term \"%s\" not defined in active context.",ident);
+    if(term==NULL){
+      outMsg(0,'E',"Term \"%s\" not defined in active context.",ident);
+      return(1);
+      }
     else termUndef(term);
     }
+  return(0);
   }
 
 /*
 * Write command to user profile
 */
-void nbCmdProfile(nbCELL context,char *verb,char *cursor){
+int nbCmdProfile(nbCELL context,void *handle,char *verb,char *cursor){
   //unsigned char symid,ident[256];
   int saveBail=nb_opt_bail;
   FILE *file;
@@ -1611,33 +1642,37 @@ void nbCmdProfile(nbCELL context,char *verb,char *cursor){
   char filename[256];
 
   while(*cursor==' ') cursor++;
-  if(*cursor==0 || *cursor==';' || *cursor=='\n') return;
+  if(*cursor==0 || *cursor==';' || *cursor=='\n'){
+    outMsg(0,'E',"Expecting command to place in user profile - not found.");
+    return(1);
+    }
   nb_opt_bail=1;  // turn on bail option so we don't save bad commands
   nbCmd(context,cursor,NB_CMDOPT_HUSH);
   nb_opt_bail=saveBail;
 #if defined(WIN32)
   sprintf(filename,"%s\\user.nb",outUserDir(NULL));
   if((file=fopen(filename,"a"))==NULL){
-    outMsg(0,'E',"Unable to open %s to append identity.",filename);
-    return;
+    outMsg(0,'E',"Unable to open %s to append command.",filename);
+    return(1);
     }
 #else
   home=((struct passwd *)getpwuid(getuid()))->pw_dir;
   strcpy(filename,home);
   strcat(filename,"/.nb/profile.nb");
   if((file=fopen(filename,"a"))==NULL){
-    outMsg(0,'E',"Unable to open %s to append identity.",filename);
-    return;
+    outMsg(0,'E',"Unable to open %s to append command.",filename);
+    return(1);
     }
 #endif
   fprintf(file,"%s\n",cursor);
   fclose(file);
+  return(0);
   }
 
 /*
 *  Forecast schedules
 */
-void nbCmdForecast(nbCELL context,char *verb,char *cursor){
+int nbCmdForecast(nbCELL context,void *handle,char *verb,char *cursor){
   char *delim,msg[256];
   char symid,ident[256],*cursave;
   time_t floor,start,end;
@@ -1647,13 +1682,13 @@ void nbCmdForecast(nbCELL context,char *verb,char *cursor){
 
   if(!(clientIdentity->authority&AUTH_CONNECT)){
     outMsg(0,'E',"Identity \"%s\" does not have authority to forecast.",clientIdentity->name->value);
-    return;
+    return(1);
     }
   symid=nbParseSymbol(ident,&cursor);
   if(symid=='t'){
     if((term=nbTermFind((NB_Term *)context,ident))==NULL){
       outMsg(0,'E',"Term \"%s\" not defined.",ident);
-      return;
+      return(1);
       }
     sched=(struct SCHED *)term->def;
     //fprintf(stderr,"sched=%p type=%p condTypeTime=%p schedTypeTime=%p schedTypePulse=%p schedTypeDelay=%p\n",sched,sched->cell.object.type,schedTypeTime,schedTypePulse,schedTypeDelay);
@@ -1662,7 +1697,7 @@ void nbCmdForecast(nbCELL context,char *verb,char *cursor){
       }
     else if(sched->cell.object.type!=schedTypeTime && sched->cell.object.type!=schedTypePulse && sched->cell.object.type!=schedTypeDelay){
       outMsg(0,'E',"Term \"%s\" does not reference a schedule cell.",ident);
-      return;
+      return(1);
       }
     }  
   else if(symid=='~'){
@@ -1670,18 +1705,18 @@ void nbCmdForecast(nbCELL context,char *verb,char *cursor){
     if(sched==NULL){
       outPut("%s\n",msg);
       outMsg(0,'E',"Schedule \"%s\" not understood.",ident);
-      return;
+      return(1);
       }   
     }
   else{
     outMsg(0,'E',"Parameter must be schedule term or expression.");
-    return;
+    return(1);
     }
   cursave=cursor;
   symid=nbParseSymbol(ident,&cursor);
   if(symid!=';'){
     outMsg(0,'E',"Expecting end of command at \"%s\".",cursave);
-    return;
+    return(1);
     }
   schedPrintDump(sched);
   time(&floor);
@@ -1689,27 +1724,29 @@ void nbCmdForecast(nbCELL context,char *verb,char *cursor){
     start=schedNext(floor,sched); /* start */
     if(start<=0 || start==eternity.end){
       outMsg(0,'I',"Forecast stopped in January of 2038.");
-      return;
+      return(0);
       }
     end=schedNext(0,sched);       /* end */
     tcPrintSeg(start,end,"");
     floor=end;
     }  
+  return(0);
   }
   
-void nbCmdStop(nbCELL context,char *verb,char *cursor){
+int nbCmdStop(nbCELL context,void *handle,char *verb,char *cursor){
   nb_flag_stop=1;
   nb_opt_prompt=0;
   nbMedullaStop();
+  return(0);
   } 
 
-void nbCmdExit(nbCELL context,char *verb,char *cursor){
+int nbCmdExit(nbCELL context,void *handle,char *verb,char *cursor){
   NB_Stem *stem=context->object.type->stem;
   NB_Cell *cell=NULL;
 
   if(!(clientIdentity->authority&AUTH_CONTROL)){
     outMsg(0,'E',"Identity \"%s\" does not have authority to issue stop.",clientIdentity->name->value);
-    return;
+    return(1);
     }
   while(*cursor==' ') cursor++;
   if(*cursor==0 || *cursor==';' || *cursor=='\n') stem->exitcode=0;
@@ -1738,6 +1775,7 @@ void nbCmdExit(nbCELL context,char *verb,char *cursor){
   nb_flag_stop=1;
   nb_opt_prompt=0;
   nbMedullaStop();
+  return(0);
   }
 
 /*
@@ -2120,8 +2158,9 @@ void nbParseSource(nbCELL context,char *cursor){
   symContext=symContextSave;  // restore symbolic context 
   }
 
-void nbCmdSource(nbCELL context,char *verb,char *cursor){
+int nbCmdSource(nbCELL context,void *handle,char *verb,char *cursor){
   nbParseSource(context,cursor);
+  return(0);
   }
 
 /*
@@ -2160,35 +2199,40 @@ void nbCmdTranslate(nbCELL context,char *verb,char *cursor){
 //
 // Load Shared Library for use by modules
 //
-void nbCmdLoad(nbCELL context,char *verb,char *cursor){
+int nbCmdLoad(nbCELL context,void *handle,char *verb,char *cursor){
   char *name,msg[1024];   // we might reconsider the way messages are handled
   while(*cursor==' ') cursor++;
   if(*cursor==0){
     outMsg(0,'E',"Quoted library name required by LOAD command.");
-    return;
+    return(1);
     }
   if(*cursor!='"'){
     outMsg(0,'E',"Expecting quoted string at: %s",cursor);
-    return;
+    return(1);
     }
   cursor++;
   name=cursor;
   while(*cursor && *cursor!='"') cursor++;
   if(*cursor==0){
     outMsg(0,'E',"Missing ending quote.");
-    return;
+    return(1);
     }
   *cursor=0;
   if(*name==0){
     outMsg(0,'E',"Null library name not expected - ignored.");
-    return;
+    return(1);
     }
-  if(nbModuleLoad(name,1,msg)==NULL) outMsg(0,'E',"Unable to load %s - %s",name,msg);
+  if(nbModuleLoad(name,1,msg)==NULL){
+    outMsg(0,'E',"Unable to load %s - %s",name,msg);
+    return(1);
+    }
   *cursor='"';  // restore quote because it may be reused
+  return(0);
   }
 
-void nbCmdQuit(nbCELL context,char *verb,char *cursor){
+int nbCmdQuit(nbCELL context,void *handle,char *verb,char *cursor){
   nb_opt_prompt=0;
+  return(0);
   }
 
 char *iWord(cursor,word)
@@ -2231,7 +2275,7 @@ void nbCmd(nbCELL context,char *cursor,int cmdopt){
   //NB_Term *term;
   NB_Term *saveContext;
   //int cmdlen;
-  struct NB_VERB *verbEntry;
+  struct NB_VERB *verbObject;
 
   //outMsg(0,'T',"nbCmd() called");
   // 2008-06-20 eat - this is a good place to check for schedule events
@@ -2339,12 +2383,14 @@ void nbCmd(nbCELL context,char *cursor,int cmdopt){
       if(strcmp(verb,"%assert")==0) iLet(cursor,symContext,0);    /* AUTH_ASSERT  */
       else if(strcmp(verb,"%default")==0) iLet(cursor,symContext,1);   /* AUTH_ASSERT  */
       else if(strcmp(verb,"%include")==0) nbParseSource(context,cursor);       /* AUTH_DEFINE  */
-      else if((verbEntry=nbVerbFind(stem->verbTree,verb))!=NULL){
-        if(!(clientIdentity->authority&verbEntry->authmask)){
+      else if((verbObject=nbVerbFind(context,verb))!=NULL){
+        if(!(clientIdentity->authority&verbObject->authmask)){
           outMsg(0,'E',"Identity \"%s\" does not have authority to issue %s command.",clientIdentity->name->value,verb);
           return;
           }
-        (*verbEntry->parse)(context,verb,cursor);
+        // 2010-06-20 eat 0.8.2 - included handle - but we should also get the return code
+        // we need to modify nbCmd to provide a return code
+        (*verbObject->parse)(context,verbObject->handle,verb,cursor);
         }
       else if(strcmp(verb,"address")==0){
         outMsg(0,'E',"The ADDRESS command is obsolete. Use single quote (') to establish command prefix.");
@@ -2378,7 +2424,7 @@ void nbCmd(nbCELL context,char *cursor,int cmdopt){
       }
       break;
     case '?':  // comput a cell expression 
-      if(*cursor==0) nbCmdShow(context,"show",cursor);
+      if(*cursor==0) nbCmdShow(context,stem,"show",cursor);
       else{
         NB_Object *object,*cell;
         if(NULL==(cell=nbParseCell((NB_Term *)context,&cursor,0))) return;
@@ -2420,47 +2466,32 @@ void nbCmdSid(nbCELL context,char *cursor,char cmdopt,struct IDENTITY *identity)
 *
 */
 void nbCmdInit(NB_Stem *stem){
-  stem->verbTree=NULL;
-  stem->verbCount=0;
-  // These should be built into the print function instead of being in the tree
-  nbVerbDefine(stem," <context>.",AUTH_CONNECT,0,NULL,"<command>");
-  nbVerbDefine(stem," <context>:",AUTH_CONNECT,0,NULL,"<node_command>");
-  nbVerbDefine(stem," <context>(",AUTH_CONNECT,0,NULL,"<list>):<node_command>");
-
-  nbVerbDefine(stem,"#",AUTH_CONNECT,0,NULL,"<comment>");
-  nbVerbDefine(stem,":",AUTH_CONNECT,0,NULL,"<command> | <stdout_message>");
-  nbVerbDefine(stem,"-",AUTH_SYSTEM,0,NULL,"[|][:]<shell_command>");
-  nbVerbDefine(stem,"=",AUTH_SYSTEM,0,NULL,"[|][:]<shell_command>");
-  nbVerbDefine(stem,"{",AUTH_CONNECT,0,NULL,"<rule>}");
-  nbVerbDefine(stem,"?",AUTH_CONNECT,0,NULL,"<cell>");
-  nbVerbDefine(stem,"(",AUTH_CONNECT,0,NULL,"<option>[,...]) <command>");
-  nbVerbDefine(stem,"`",AUTH_ASSERT,0,NULL,"<assertion>");
-  nbVerbDefine(stem,"alert",AUTH_ASSERT,0,&nbCmdAssert,"<assertion>");    // nbCmdAssert checks verb
-  nbVerbDefine(stem,"archive",AUTH_CONTROL,0,&nbCmdArchive,"");
-  nbVerbDefine(stem,"assert",AUTH_ASSERT,0,&nbCmdAssert,"( [!|?]<term>[<list] | <term>[<list>][=[=]<cell>] | [!|?]<list> | <list>[=<cell>] ) [,...]");
-  nbVerbDefine(stem,"declare",AUTH_DECLARE,0,&nbCmdDeclare,"<term> <type> ...");
-  nbVerbDefine(stem,"define",AUTH_DEFINE,0,&nbCmdDefine,"<term> <type> ...");
-  nbVerbDefine(stem,"deny",AUTH_CONTROL,0,&nbCmdDeny,"*** future ***");
-  nbVerbDefine(stem,"disable",AUTH_DEFINE,0,&nbCmdEnable,"<term>");  // nbCmdEnable checks verb
-  nbVerbDefine(stem,"enable",AUTH_DEFINE,0,&nbCmdEnable,"<term>");
-  nbVerbDefine(stem,"exit",AUTH_CONTROL,0,&nbCmdExit,"<cell>");
-  nbVerbDefine(stem,"forecast",AUTH_CONNECT,0,&nbCmdForecast,"~(<timeCondition>)");
-  nbVerbDefine(stem,"grant",AUTH_CONTROL,0,&nbCmdGrant,"*** future ***");
-  nbVerbDefine(stem,"load",AUTH_CONTROL,0,&nbCmdLoad,"<library>");
-  nbVerbDefine(stem,"profile",AUTH_CONTROL,0,&nbCmdProfile,"<command>");
-  nbVerbDefine(stem,"query",AUTH_CONTROL,0,&nbCmdQuery,"<context>");
-  nbVerbDefine(stem,"quit",AUTH_CONTROL,NB_VERB_LOCAL,&nbCmdQuit,"");
-  nbVerbDefine(stem,"rank",AUTH_CONTROL,0,&nbCmdRank,"<identity> (owner|peer|guest)");
-  nbVerbDefine(stem,"set",AUTH_CONTROL,0,&nbCmdSet,"<option>[,...]");
-  nbVerbDefine(stem,"show",AUTH_CONNECT,0,&nbCmdShow,"<term> | (<cell>) | ?");
-  nbVerbDefine(stem,"solve",AUTH_CONTROL,0,&nbCmdQuery,"<context>");
-  nbVerbDefine(stem,"source",AUTH_ASSERT,0,&nbCmdSource,"<file>,<term>=<cell>[,...]");
-  nbVerbDefine(stem,"stop",AUTH_CONTROL,0,&nbCmdStop,"");
-  //nbVerbDefine(stem,"translate",AUTH_ASSERT,0,&nbCmdTranslate,"");
-  nbVerbDefine(stem,"undefine",AUTH_DEFINE,0,&nbCmdUndefine,"<term>");
-  nbVerbDefine(stem,"use",AUTH_CONTROL,0,&nbCmdUse,"");
+  nbCELL context=(nbCELL)stem->verbs;
+  nbVerbDeclare(context,"alert",AUTH_ASSERT,0,stem,&nbCmdAssert,"<assertion>");    // nbCmdAssert checks verb
+  nbVerbDeclare(context,"archive",AUTH_CONTROL,0,stem,&nbCmdArchive,"");
+  nbVerbDeclare(context,"assert",AUTH_ASSERT,0,stem,&nbCmdAssert,"( [!|?]<term>[<list>] | <term>[<list>][=[=]<cell>] | [!|?]<list> | <list>[=<cell>] ) [,...]");
+  nbVerbDeclare(context,"declare",AUTH_DECLARE,0,stem,&nbCmdDeclare,"<term> <type> ...");
+  nbVerbDeclare(context,"define",AUTH_DEFINE,0,stem,&nbCmdDefine,"<term> <type> ...");
+  nbVerbDeclare(context,"deny",AUTH_CONTROL,0,stem,&nbCmdDeny,"*** future ***");
+  nbVerbDeclare(context,"disable",AUTH_DEFINE,0,stem,&nbCmdEnable,"<term>");  // nbCmdEnable checks verb
+  nbVerbDeclare(context,"enable",AUTH_DEFINE,0,stem,&nbCmdEnable,"<term>");
+  nbVerbDeclare(context,"exit",AUTH_CONTROL,0,stem,&nbCmdExit,"<cell>");
+  nbVerbDeclare(context,"forecast",AUTH_CONNECT,0,stem,&nbCmdForecast,"~(<timeCondition>)");
+  nbVerbDeclare(context,"grant",AUTH_CONTROL,0,stem,&nbCmdGrant,"*** future ***");
+  nbVerbDeclare(context,"load",AUTH_CONTROL,0,stem,&nbCmdLoad,"<library>");
+  nbVerbDeclare(context,"profile",AUTH_CONTROL,0,stem,&nbCmdProfile,"<command>");
+  nbVerbDeclare(context,"query",AUTH_CONTROL,0,stem,&nbCmdQuery,"<context>");
+  nbVerbDeclare(context,"quit",AUTH_CONTROL,NB_VERB_LOCAL,stem,&nbCmdQuit,"");
+  nbVerbDeclare(context,"rank",AUTH_CONTROL,0,stem,&nbCmdRank,"<identity> (owner|peer|guest)");
+  nbVerbDeclare(context,"set",AUTH_CONTROL,0,stem,&nbCmdSet,"<option>[,...]");
+  nbVerbDeclare(context,"show",AUTH_CONNECT,0,stem,&nbCmdShow,"<term> | (<cell>) | ?");
+  nbVerbDeclare(context,"solve",AUTH_CONTROL,0,stem,&nbCmdQuery,"<context>");
+  nbVerbDeclare(context,"source",AUTH_ASSERT,0,stem,&nbCmdSource,"<file>,<term>=<cell>[,...]");
+  nbVerbDeclare(context,"stop",AUTH_CONTROL,0,stem,&nbCmdStop,"");
+  //nbVerbDeclare(stem,"translate",AUTH_ASSERT,0,&nbCmdTranslate,"");
+  nbVerbDeclare(context,"undefine",AUTH_DEFINE,0,stem,&nbCmdUndefine,"<term>");
+  nbVerbDeclare(context,"use",AUTH_CONTROL,0,stem,&nbCmdUse,"");
 #if defined(WIN32)
-  nbVerbDefine(stem,"windows",AUTH_CONTROL,0,&nbwCommand,"service(Start|Stop) <service>");
+  nbVerbDeclare(context,"windows",AUTH_CONTROL,0,stem,&nbwCommand,"service(Start|Stop) <service>");
 #endif
-  stem->verbTree=nbVerbBalance(stem->verbTree,stem->verbCount);
   }

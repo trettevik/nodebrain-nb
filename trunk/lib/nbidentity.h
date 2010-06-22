@@ -108,6 +108,13 @@ typedef void *nbIDENTITY;
 
 #endif // !NB_INTERNAL 
 
+#define NB_AUTH_CONNECT 1    /* connection permission */
+#define NB_AUTH_ASSERT  2    /* assert,alert,cache permission */
+#define NB_AUTH_DEFINE  4    /* define,undefine permission */
+#define NB_AUTH_DECLARE 32   /* declare permission (owner) */
+#define NB_AUTH_SYSTEM  64   /* shell command permission */
+#define NB_AUTH_CONTROL 128  /* grant,set,stop (owner) */
+
 #if defined(WIN32)
 _declspec (dllexport)
 #endif

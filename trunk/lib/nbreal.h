@@ -41,12 +41,10 @@
 
 #include <nbstem.h>
 
-struct REAL{
+typedef struct REAL{
   struct NB_OBJECT object;   /* object header */
   double value;              /* real number value */
-  };
-
-typedef struct REAL NB_Real;
+  } NB_Real;
 
 extern struct HASH *realH;
 extern struct TYPE *realType;

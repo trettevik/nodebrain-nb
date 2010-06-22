@@ -53,78 +53,98 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2005/11/22 Ed Trettevik (original prototype version introduced in 0.6.4)
+* 2005-11-22 Ed Trettevik (original prototype version introduced in 0.6.4)
+* 2010-06-19 eat 0.8.2  Making verbs objects so modules can contribute extensions
+*            By making verbs objects we can manage them via the API in a way 
+*            consistent with other types of objects.
 *=============================================================================
 */
 #include "nbi.h"
 
-void nbVerbPrint(struct NB_VERB *verbEntry){
-  char verb[sizeof(verbEntry->verb)];
-  strcpy(verb,verbEntry->verb);
-  if(strlen(verb)<sizeof(verb)-1){
-    strncat(verb,"                         ",sizeof(verb)-1-strlen(verb));
-    *(verb+sizeof(verb)-1)=0;
-    }
-  outPut("%s %s\n",verb,verbEntry->syntax);
-  }
+struct TYPE *nb_verbType;
 
-void nbVerbPrintSub(struct NB_VERB *verbEntry){
-  if(verbEntry->lower!=NULL) nbVerbPrintSub(verbEntry->lower);
-  nbVerbPrint(verbEntry);
-  if(verbEntry->higher!=NULL) nbVerbPrintSub(verbEntry->higher);
-  }
-
-void nbVerbPrintAll(struct NB_VERB *verbEntry){
-  outPut("Verb Table:\n");
-  nbVerbPrintSub(verbEntry);
-  }
-
-int nbVerbDefine(NB_Stem *stem,char *verb,int authmask,int flags,void (*parse)(struct NB_CELL *context,char *verb,char *cursor),char *syntax){
-  struct NB_VERB *newVerb;
+//int nbVerbDeclare(nbCELL context,char *ident,int authmask,int flags,void (*parse)(struct NB_CELL *context,char *verb,char *cursor),char *syntax){
+int nbVerbDeclare(nbCELL context,char *ident,int authmask,int flags,void *handle,int (*parse)(struct NB_CELL *context,void *handle,char *verb,char *cursor),char *syntax){
+  struct NB_VERB *verb;
   
-  newVerb=malloc(sizeof(struct NB_VERB));
-  strcpy(newVerb->verb,verb);   // depend on caller not to pass verb over 15 characters
-  newVerb->authmask=authmask;
-  newVerb->flags=flags;
-  newVerb->parse=parse;
-  newVerb->syntax=syntax;
-  newVerb->lower=stem->verbTree;
-  newVerb->higher=NULL;
-  stem->verbTree=newVerb;
-  stem->verbCount++;
-  //outMsg(0,'T',"verb created - %s\n",verb);
+  verb=(struct NB_VERB *)newObject(nb_verbType,NULL,sizeof(struct NB_VERB));
+  //strcpy(verb->verb,ident);   // depend on caller not to pass verb over 15 characters
+  verb->authmask=authmask;
+  verb->flags=flags;
+  verb->handle=handle;
+  verb->parse=parse;
+  verb->syntax=syntax;
+  verb->term=nbTermNew(context->object.type->stem->verbs,ident,verb);
+  if(trace) outMsg(0,'T',"verb created - %s\n",ident);
   return(0);
   }
 
-struct NB_VERB *nbVerbFind(struct NB_VERB *verbEntry,char *verb){
-  int cmp;
-  //outMsg(0,'T',"nbVerbFind called - %s",verb);
-  while(verbEntry!=NULL){
-    //outMsg(0,'T',"  checking %s",verbEntry->verb);
-    if((cmp=strcmp(verb,verbEntry->verb))<0) verbEntry=verbEntry->lower;
-    else if(cmp>0) verbEntry=verbEntry->higher;
-    else return(verbEntry); 
-    }
-  //outMsg(0,'t',"nbVerbFind returning - %s",verbEntry->verb);
-  return(NULL);
+void nbVerbLoad(nbCELL context,char *ident){
+  char *cursor,modName[256],msg[1024];
+
+  cursor=ident;
+  while(*cursor!='.' && *cursor!=0) cursor++;
+  if(*cursor!='.') return;
+  strncpy(modName,ident,cursor-ident);
+  *(modName+(cursor-ident))=0;
+  nbModuleBind(context,modName,msg);
   }
 
-/*
-*  Balance the tree - it is initially just a list
-*/
-struct NB_VERB *nbVerbBalance(struct NB_VERB *verbHigh,int n){
-  // insert code to balance the tree
-  struct NB_VERB *verb=verbHigh;
-  int l,h,i;
-  if(n<1) return(NULL);
-  l=n/2;
-  h=n-l-1;
-  i=h;
-  while(i>0){
-    verb=verb->lower;
-    i--;
-    }     
-  verb->lower=nbVerbBalance(verb->lower,l);
-  verb->higher=nbVerbBalance(verbHigh,h);
-  return(verb);
+struct NB_VERB *nbVerbFind(nbCELL context,char *ident){
+  struct NB_STEM *stem=context->object.type->stem;
+  struct NB_TERM *term;
+
+  term=nbTermFindDown(stem->verbs,ident);
+  if(!term){
+    nbVerbLoad(context,ident);
+    term=nbTermFindDown(stem->verbs,ident);
+    if(!term) return(NULL);
+    }
+  return((struct NB_VERB *)term->def);
+  }
+
+/**********************************************************************
+* Object Management Methods
+**********************************************************************/
+void nbVerbPrint(struct NB_VERB *verb){
+  outPut("verb ::= %s",verb->syntax);
+  }
+
+//void nbVerbPrintAll(struct NB_VERB *verb){
+void nbVerbPrintAll(nbCELL context){
+  struct NB_STEM *stem;
+  outPut("Command Syntax:\n");
+  outPut(
+    " <command> ::= [<context>. ]<command> |\n"
+    "               <context>:<node_command> |\n"
+    "               <context>(<list>):<node_command> |\n"
+    "               #<comment>\n"
+    "               ^<stdout_message>\n"
+    "               -[|][:]<shell_command>\n"
+    "               =[|][:]<shell_command>\n"
+    "               {<rule>}\n"
+    "               ?<cell>\n"
+    "               (<option>[,...])<command>\n"
+    "               `<assertion>\n"
+    " <context> ::= <term>      # defined as a node\n"
+    " <term>    ::= <ident>[.<term>]\n"
+    " <ident>   ::= <alpha>[<alphanumerics>]\n"
+    "-------------------------------------------------\n");
+  outPut("Verb Table:\n");
+  stem=context->object.type->stem;
+  nbTermPrintGloss((nbCELL)stem->verbs,(nbCELL)stem->verbs);
+  }
+
+void nbVerbDestroy(struct NB_VERB *verb){
+  nbFree(verb,sizeof(struct NB_VERB));
+  }
+
+/**********************************************************************
+* Public Methods
+**********************************************************************/
+void nbVerbInit(NB_Stem *stem){
+  //verbH=newHash(7919);
+  nb_verbType=newType(stem,"verb",NULL,0,nbVerbPrint,nbVerbDestroy);
+  nb_verbType->apicelltype=NB_TYPE_VERB;
+  stem->verbs=nbTermNew(NULL,"verb",useString("verb"));
   }
