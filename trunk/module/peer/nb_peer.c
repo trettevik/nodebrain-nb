@@ -765,7 +765,7 @@ int serviceCmdCopy(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL argl
   return(0);
   }
 
-int serviceCmdIdentify(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL arglist,char *text){
+int peerCmdIdentify(nbCELL context,void *handle,char *verb,char *text){
   char *cursor=text;
   unsigned int bits;   /* number of bits */
   unsigned char symid,bitsStr[10],identityName[256];
@@ -829,6 +829,11 @@ int serviceCmdIdentify(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL 
 #if !defined(WIN32)
   chmod(filename,S_IRUSR|S_IWUSR);  // always correct the file permissions
 #endif
+  return(0);
+  }
+
+int serviceCmdIdentify(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL arglist,char *text){
+  peerCmdIdentify(context,NULL,"peer.identify",text);
   return(0);
   }
 
@@ -1066,5 +1071,26 @@ extern void *queueBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arg
   nbSkillSetMethod(context,skill,NB_NODE_ENABLE,queueEnable);
   nbSkillSetMethod(context,skill,NB_NODE_COMMAND,queueCommand);
   nbSkillSetMethod(context,skill,NB_NODE_DESTROY,queueDestroy);
+  return(NULL);
+  }
+
+//=====================================================================
+// Commands
+
+void peerCmdShow(struct NB_CELL *context,void *handle,char *verb,char *cursor){
+  nbTermPrintGloss(NULL,(nbCELL)brainC);
+  //return(0);
+  }
+
+//=====================================================================
+/* Module Initialization Function */
+
+#if defined(_WINDOWS)
+_declspec (dllexport)
+#endif
+extern void *nbBind(nbCELL context,char *ident,nbCELL arglist,char *text){
+  // nbLogMsg(context,0,'T',"nbBind() called for \"%s\".",ident);
+  nbVerbDeclare(context,"peer.identify",NB_AUTH_CONTROL,0,NULL,&peerCmdIdentify,"<identity> [bits]");
+  nbVerbDeclare(context,"peer.show",NB_AUTH_CONNECT,0,NULL,&peerCmdShow,"");
   return(NULL);
   }

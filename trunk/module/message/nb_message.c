@@ -1020,3 +1020,88 @@ extern void *peerBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL argl
   return(NULL);
   }
 
+//=====================================================================
+// Commands
+
+int messageCmdExport(nbCELL context,void *handle,char *verb,char *cursor){
+  char cabalName[64],nodeName[64],instanceStr[4],filename[64];
+  int instance;
+  char *delim;
+  int len;
+  nbMsgLog *msglog;
+  int state;
+
+  // consider using nbParseToken instead
+  while(*cursor==' ') cursor++;
+  delim=cursor;
+  while(*delim && *delim!=' ') delim++;
+  len=delim-cursor;
+  if(!len || len>sizeof(cabalName)-1){
+    nbLogMsg(context,0,'E',"Expecting 1 to %d character cabal name at:%s",sizeof(cabalName)-1,cursor);
+    return(1);
+    } 
+  strncpy(cabalName,cursor,len);
+  *(cabalName+len)=0;
+  cursor+=len;
+  while(*cursor==' ') cursor++;
+  delim=cursor;
+  while(*delim && *delim!=' ') delim++;
+  len=delim-cursor;
+  if(!len || len>sizeof(nodeName)-1){
+    nbLogMsg(context,0,'E',"Expecting 1 to %d character node name at:%s",sizeof(nodeName)-1,cursor);
+    return(1);
+    }
+  strncpy(nodeName,cursor,len);
+  *(nodeName+len)=0;
+  cursor+=len;
+  while(*cursor==' ') cursor++;
+  delim=cursor;
+  while(*delim && *delim!=' ') delim++;
+  len=delim-cursor;
+  if(!len || len>sizeof(instanceStr)-1){
+    nbLogMsg(context,0,'E',"Expecting 1 to %d character instance number at:%s",sizeof(instanceStr)-1,cursor);
+    return(1);
+    }
+  strncpy(instanceStr,cursor,len);
+  *(instanceStr+len)=0;
+  cursor+=len;
+  while(*cursor==' ') cursor++;
+  delim=cursor;
+  while(*delim && *delim!=' ') delim++;
+  len=delim-cursor;
+  if(!len || len>sizeof(filename)-1){
+    nbLogMsg(context,0,'E',"Expecting 1 to %d character file name at:%s",sizeof(filename)-1,cursor);
+    return(1);
+    }
+  strncpy(filename,cursor,len);
+  *(filename+len)=0;
+  cursor+=len;
+ 
+  instance=atoi(instanceStr); 
+  msglog=nbMsgLogOpen(context,cabalName,nodeName,instance,filename,NB_MSG_MODE_SINGLE,NULL); 
+  if(!msglog){
+    nbLogMsg(context,0,'E',"Unable to open message log for cabal \"%s\" instance %d",cabalName,instance);
+    return(1);
+    }
+  while(!((state=nbMsgLogRead(context,msglog))&NB_MSG_STATE_LOGEND)){
+    nbMsgPrint(stdout,msglog->msgrec);
+    }
+  if(state<0){
+    nbLogMsg(context,0,'E',"Unable to read to end of file for cabal \"%s\" node %d",cabalName,instance);
+    return(1);
+    }
+  nbLogMsg(context,0,'E',"Cabal '%s' node '%s' instance %u exported",cabalName,nodeName,instance);
+  return(0);
+  }
+
+//=====================================================================
+/* Module Initialization Function */
+
+#if defined(_WINDOWS)
+_declspec (dllexport)
+#endif
+extern void *nbBind(nbCELL context,char *ident,nbCELL arglist,char *text){
+  nbVerbDeclare(context,"message.export",NB_AUTH_CONTROL,0,NULL,&messageCmdExport,"<cabal> <node> <instance> <file>");
+  return(NULL);
+  }
+
