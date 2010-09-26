@@ -61,7 +61,6 @@ void nbParseStdin(int prompt);
 
 int nbParseSourceTil(struct NB_CELL *context,FILE *file);
 int nbParseSourceIgnoreTil(struct NB_CELL *context,FILE *file,char *buf,int til);
-void nbParseSource(struct NB_CELL *context,char *cursor);
  
 /* symbolic substitution routines */
 extern char *nb_symBuf1;
@@ -90,6 +89,11 @@ void printAbout(void);
 #define NB_CMDOPT_TRACE     4 // Display debugging info
 #define NB_CMDOPT_RULE      8 // Display rule action with ":" in column one
 #define NB_CMDOPT_ALERT   128 // Indicates an action assertion is an alert
+
+#if defined(WIN32)
+__declspec(dllexport)
+#endif
+extern void nbParseSource(nbCELL context,char *cursor);
 
 #if defined(WIN32)
 __declspec(dllexport)

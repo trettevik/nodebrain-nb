@@ -55,7 +55,7 @@
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([nb_module],[0.8.2],[bugs@nodebrain.org])
+AC_INIT([nb_module],[0.8.3],[bugs@nodebrain.org])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
@@ -130,5 +130,5 @@ AC_CONFIG_SUBDIRS([webster])
 #=====================================
 # Create the Makefile
 
-AC_CONFIG_FILES([Makefile audit/Makefile cache/Makefile console/Makefile mail/Makefile message/Makefile netflow/Makefile peer/Makefile pipe/Makefile servant/Makefile snmptrap/Makefile string/Makefile syslog/Makefile toy/Makefile translator/Makefile tree/Makefile udp/Makefile])
+AC_CONFIG_FILES([Makefile audit/Makefile baseline/Makefile cache/Makefile console/Makefile mail/Makefile message/Makefile netflow/Makefile peer/Makefile pipe/Makefile servant/Makefile snmptrap/Makefile string/Makefile syslog/Makefile toy/Makefile translator/Makefile tree/Makefile udp/Makefile])
 AC_OUTPUT

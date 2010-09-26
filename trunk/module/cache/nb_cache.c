@@ -497,7 +497,12 @@ struct CACHE_ATTR *newCacheAttr(nbCELL context,char **source,int level,struct CA
   if((level>0 && *cursor==',') || prefix==0 || (level==0 && *cursor==':')){
     if(prefix) cursor++;
     attr->next=newCacheAttr(context,&cursor,level+1,backattr,threshflag);
-    attr->next->prev=attr;
+    if(attr->next) attr->next->prev=attr;
+    else{
+      attr->next=cacheAttrFree;
+      cacheAttrFree=attr;
+      return(NULL);
+      }
     }
   else attr->next=NULL;
   *source=cursor;

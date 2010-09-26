@@ -1,10 +1,13 @@
-NodeBrain 0.8.x Change Summary
+NodeBrain 0.8.3 Change Summary
 
-* Released TDB
+* Released September 6, 2010
 
-     Versions 0.7.5 through 0.7.9 have not been released
+     Versions 0.7.5 through 0.7.9 were not released.
+     Versions 0.8.0 through 0.8.2 were not released.
+     Actually 0.8.0 was released to SourceForge, but this
+     release was not documented at www.nodebrain.org.
      
-* Theme: Message Cabals
+* Theme: Message Cabals and Statistical Anomaly Detection
 
      A NodeBrain message cabal is a set of nodes that
      broadcast messages to every node in the cabal.  The
@@ -14,16 +17,36 @@ NodeBrain 0.8.x Change Summary
      NodeBrain agents to share a set of knowledge more
      efficiently and reliably than is possible using the
      peer module.
+
+     Statistical anomaly detection capability
     
 * Documentation:
 
-  o  *** need to document message module ***
+  o  *** need to document Message and Baseline modules ***
 
 * Incompatibilities:
 
   o  None intended since 0.7.4
  
 * New Features:
+ 
+  o  Node modules may now implement commands independent
+     of nodes using the following syntax.
+
+         <module>.<verb> <body>
+
+     This is an alternative to a node module providing a
+     utility skill and requiring the user to first create
+     a utility node.
+
+         define <node> node <module>.utility;
+         <node>:<verb> <body> 
+
+     Either of these approaches is appropriate in cases
+     where module specific commands are needed to configure
+     a node module in some way (e.g. define keys for a
+     communications module) or operate on files managed
+     by a node module.
 
   o  Included the NodeBrain Message Cabal feature.  This
      provides a set of C API functions for reading and
@@ -36,6 +59,13 @@ NodeBrain 0.8.x Change Summary
      NodeBrain commands.  Other modules may use the API
      to implement the message cabal feature for different
      types of messages.
+
+  o  Statistical anomaly detection is supported by a new
+     module, Baseline.  This module maintains two statistics,
+     average value and average deviation, for any number of
+     measures.  It alerts when values are outside of user
+     defined limits expressed as a tolerance factor in units
+     of sigma (standard deviation).
 
 * Deprecated Syntax:
 

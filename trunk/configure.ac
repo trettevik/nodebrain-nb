@@ -75,10 +75,11 @@
 # 2010/05/06 eat 0.8.0  New release - multiple master message log support
 # 2010/05/11 eat 0.8.1  Fix to defects in message cabal feature
 # 2010/05/21 eat 0.8.2  Fix more defects in message cabal feature
+# 2010/09/06 eat 0.8.3  Baseline module
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([nodebrain],[0.8.2],[bugs@nodebrain.org])
+AC_INIT([nodebrain],[0.8.3],[bugs@nodebrain.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SUBDIRS([lib module])
 AM_INIT_AUTOMAKE

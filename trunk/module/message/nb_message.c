@@ -376,7 +376,7 @@ int consumerMessageHandler(nbCELL context,void *handle,nbMsgRec *msgrec){
 /*
 *  construct() method
 *
-*    define <term> node message.consumer("<cabal>",<node>);
+*    define <term> node message.consumer("<cabal>","<nodeName>",<nodeNumber>,"<consumerName>");
 */
 void *consumerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   nbModConsumer *consumer;

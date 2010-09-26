@@ -123,6 +123,7 @@
 *                       define a cell x+y;
 *                       assert x,y;
 *                       define z cell c and $(a);
+* 2010-09-17 eat 0.8.3  fixed crash on unbalanced parens or braces in nbParseTimeSymbol
 *==============================================================================
 */
 #include "nbi.h"
@@ -283,7 +284,8 @@ void nbParseTimeSymbol(char *symid,char **identP,char **sourceP){
       *symbol=*cursor; symbol++; cursor++;
       }
     if(paren>0){
-      outMsg(0,'E',"Unbalanced braces {} in time condition \"%s\".",**sourceP);
+      // 2010-09-17 eat - changed **sourceP to *sourceP to fix crash on unbalanced parens
+      outMsg(0,'E',"Unbalanced braces {} in time condition \"%s\".",*sourceP);
       *symid='.';
       }
     }
@@ -296,7 +298,8 @@ void nbParseTimeSymbol(char *symid,char **identP,char **sourceP){
       *symbol=*cursor; symbol++; cursor++;
       }
     if(paren>0){
-      outMsg(0,'E',"Unbalanced parentheses in time condition \"%s\".",**sourceP);
+      // 2010-09-17 eat - changed **sourceP to *sourceP to fix crash on unbalanced parens
+      outMsg(0,'E',"Unbalanced parentheses in time condition \"%s\".",*sourceP);
       *symid='.';
       }
     else symbol--;  /* drop trailing parenthesis */

@@ -572,9 +572,9 @@ static int treeStoreValue(nbCELL context,nbCELL cell,char *cursor,int len){
   char *string,number[256];
 
   if(cell==NB_CELL_UNKNOWN){
-    n=2;
+    n=1;
     if(n>len) return(-1);
-    strcpy(cursor,"??");
+    strcpy(cursor,"?");
     }
   else{
     cellType=nbCellGetType(context,cell);

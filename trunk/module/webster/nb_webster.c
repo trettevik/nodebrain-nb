@@ -308,14 +308,18 @@ static int websterRead(nbCELL context,nbSession *session){
 // Returns: 0 - success, -1 error
 //   
 static int websterDecodeRequest(nbCELL context,nbSession *session,char *request,int reqlen){
-  char *hexalpha="0123456789ABCDEF";
-  char *h,*l;
-  unsigned char n;
+  char *hexalpha="0123456789abcdefABCDEF";
+  char *nibble;
+  unsigned char n,l;
   char *reqcur=session->request;
   char *delim;
   int len;
   char *cursor=request;
 
+  // initialize side effect values in case we bail out on error
+  *reqcur=0;
+  *session->reqauth=0;
+  strcpy(session->reqhost,"?");
   // decode the URL
   if(strncmp(cursor,"GET /",5)==0){
     len=5;
@@ -334,13 +338,16 @@ static int websterDecodeRequest(nbCELL context,nbSession *session,char *request,
     if(*cursor=='+') *reqcur=' ';
     else if(*cursor=='%'){
       cursor++;
-      h=strchr(hexalpha,*cursor);
-      if(!h) return(-1);
-      n=(h-hexalpha)<<4;
+      nibble=strchr(hexalpha,*cursor);
+      if(!nibble) return(-1);
+      n=nibble-hexalpha;
+      if(n>15) n-=6;
       cursor++;
-      l=strchr(hexalpha,*cursor);
-      if(!l) return(-1);
-      n+=l-hexalpha;
+      nibble=strchr(hexalpha,*cursor);
+      if(!nibble) return(-1);
+      l=nibble-hexalpha;
+      if(l>15) l-=6;
+      n=(n<<4)&l; 
       *reqcur=n;
       }
     else *reqcur=*cursor;
@@ -355,8 +362,6 @@ static int websterDecodeRequest(nbCELL context,nbSession *session,char *request,
   nbLogMsg(context,0,'T',"Header fields:\n%s\n",session->headerfields);
 
   // process header entries
-  *session->reqauth=0;
-  strcpy(session->reqhost,"?");
 
   cursor=strchr(session->headerfields,'\n');
   if(cursor==NULL) return(1);

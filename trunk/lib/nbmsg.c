@@ -224,9 +224,11 @@ int nbMsgStateSetFromMsgId(nbCELL context,nbMsgState *state,nbMsgId *msgid){
   uint32_t time=ntohl(*(uint32_t *)&msgid->time);
   uint32_t count=ntohl(*(uint32_t *)&msgid->count);
   uint32_t countAhead=state->msgnum[node].count+1;
-  if(!countAhead) countAhead++;  // skip over zero - is special count value
-  nbLogMsg(context,0,'T',"nbMsgStateSetFromMsgId: node=%d countAhead=%u count=%u",node,countAhead,count);
-  if(countAhead!=count) return(-1);
+  if(countAhead!=1){
+    if(!countAhead) countAhead++;  // skip over zero - is special count value
+    nbLogMsg(context,0,'T',"nbMsgStateSetFromMsgId: node=%d countAhead=%u count=%u",node,countAhead,count);
+    if(countAhead!=count) return(-1);
+    }
   state->msgnum[node].time=time;
   state->msgnum[node].count=count;
   return(0);
