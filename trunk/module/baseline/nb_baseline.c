@@ -21,17 +21,17 @@
 *
 * File:     nb_baseline.c
 *
-* Title:    Statistical Baseline Anomaly Skill Module
+* Title:    Statistical Anomaly Detection Skill Module
 *
 * Purpose:
 *
 *   This file is a NodeBrain skill module for detecting statistical anomalies
 *   in measures based on an exponentially weighted moving average (ewma) and
-*   an average deviation.
+*   an exponentially weighted moving deviation.
 * 
 * Reference:
 *
-*   See NodeBrain Baseline Module Manual for more information.
+*   See Baseline NodeBrain Module Manual for more information.
 *
 * Syntax:
 *
@@ -47,7 +47,7 @@
 *     <cycle>      - number of minutes in cycle (time before wrapping around on baseline files) 
 *     <interval>   - number of minutes covered by each baseline file (must divide evenly into cycle) 
 *     <options>    - comma separated options
-*                    "sum"    - add asserted values over each period
+*                    "sum"    - add asserted values over each period and only check upper limits until end of period
 *                    "static" - profile is not modified (use in cases where training is complete)
 *
 *   Command:
@@ -68,33 +68,50 @@
 *     assert <node>(args)=<number>,...;
 *     define r1 on(condition) <node>(args)=<number>,...;
 *
-*     ! sum option - set measure and checks limits
-*     sum option   - increment value and check upper limit
-*                    (lower limit is checked and end of period)
 *
 * Description:
 *   
-*   The "baseline" node module monitors a set of measures and alerts
-*   when a measure is outside a normal range.  The normal range for
-*   a given measure is defined by two exponentially weighted moving
-*   averages: 1) the average measure, and 2) the average deviation
-*   from the average measure.  Our threshold limits are defined by
-*   a factor called the "tolerance".  We multiply average deviation
-*   by the tolerance to establish an offset (+/-) from the average 
-*   measure.  Values outside these limits are considered anomalies.
+*   The Baseline node module monitors a set of measures and alerts when
+*   a measure is outside a normal range.  The normal range for a given
+*   measure is defined by two exponentially weighted moving averages:
+*
+*     1) the average measure, and 
+*     2) the average deviation from the average measure.
+*
+*   Deviation thresholds are defined at powers of 2 times the average
+*   deviation times a "tolerance" factor.  The tolerance is expressed
+*   by the user in units of sigma (standard deviation), which we
+*   approximate as 1.25 times the average deviation.  The tolerance is 
+*   converted to units of average deviation for internal use.  The first
+*   threshold (level 0) is tolerance times average deviation.  The second
+*   (level 1) is twice the first.  The third is twice the second, etc.
+*
+*     threshold = 2**level * tolerance * average_deviation
+*
+*   We define deviation as the absolute value of the difference between
+*   a measure's current value and average value.  By checking this against
+*   the current threshold, we are actually checking an upper and lower
+*   limit.
+*
+*     upper_limit = average_value + threshold
+*     lower_limit = average_value - threshold
+*
+*     (deviation > threshold)<==>(value < lower_limit or value > upper_limit)
+*
+*   The level indicates the "magnitude" of an anomaly.  We use an exponential
+*   scale (powers of 2) to avoid generating a large number of alerts.  Each
+*   time an alert is generated the threshold is doubled (the level increments
+*   by one).  At the end of a period, the level is decremented as much as
+*   possible without dropping below the current value.  At the start of a
+*   period, when the average_value and average_deviation are reset, the
+*   threshold is recomputed using the current level.  This prevents generation
+*   of alerts at the start of each period during an anomalous episode of a
+*   given magnitude.
 *   
-*   A level counter is maintained indicating how "extreme" an anomaly
-*   we are monitoring for.  This value is adjusted each time a measure
-*   is updated, after checking for an anomaly based on the current level.
-*   So the range of values that are "normal" under current conditions 
-*   is defined as follows.
-*
-*     range = average_value +/- (2**level * tolerance * average_deviation)  
-*
 *   At the end of a complete period, the average and deviation for each measure
 *   is computed and stored in a baseline file for the period.  The file
-*   name is nnnnnn.nb where nnnnnn is a multiple of the period and a result
-*   of time%7*24*60*60, or time%week.
+*   name is nnnnnnnn.nb where nnnnnnnn is a multiple of the period and less than
+*   the cycle time.
 *
 *   The format of a baseline file is a set of node commands.
 *
@@ -111,11 +128,7 @@
 * 2010-08-02 Ed Trettevik - first prototype
 * 2010-09-24 eat - Changed "limit" variable to "level" 
 * 2010-09-24 eat - Changed level to mean powers of 2
-*            To improve efficiency we should replace the node level with
-*            a node threshold, which we need to double and half as we go
-*            up and down.  This will save on threshold computation and level
-*            recalculation.  The level should then be computed only as needed
-*            for and alert or log message.
+* 2010-09-26 eat - included threshold in node to avoid recomputing on every assertion
 *=============================================================================
 */
 #include "config.h"
@@ -140,13 +153,13 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL,DWORD fdwReason,LPVOID lpvReserved){
 
 typedef struct BTREE_NODE{
   NB_TreeNode bnode;           // binary tree node
-  //nbCELL value;              // assigned value
-  // Temporary variables
-  int    level;                // power of 2 for current limits to alert on (adjusted after updates)
-  double value;                // current value of the measure
   // Baseline variables
-  double average;                 // exponentially weighted moving average
-  double deviation;                 // exponentially weighted moving deviation
+  double average;              // exponentially weighted moving average
+  double deviation;            // exponentially weighted moving deviation
+  // Temporary variables
+  double value;                // current value of the measure
+  double threshold;            // current threshold
+  int    level;                // power of 2 for current limits to alert on
   //
   struct BTREE_NODE *root;     // root node for next column
   } BTreeNode;
@@ -462,36 +475,40 @@ static int treeStoreValue(nbCELL context,nbCELL cell,char *cursor,int len){
   return(n);
   }
 
-static void baselineAlert(nbCELL context,BTreeSkill *skillHandle,BTree *tree,BTreeNode *node,nbCELL element[],int qualifiers,double threshold){
+static void baselineAlert(nbCELL context,BTreeSkill *skillHandle,BTree *tree,BTreeNode *node,nbCELL element[],int qualifiers,double deviation){
   char cmd[1024];
   char *cmdcur;
   int i;
+  double limit,threshold;
 
-  nbLogMsg(context,0,'T',"baselineAlert called with qualifiers=%d threshold=%g",qualifiers,threshold);
+  //nbLogMsg(context,0,'T',"baselineAlert called with qualifiers=%d threshold=%g",qualifiers,deviation);
   strcpy(cmd,"alert _measure=\"");
   cmdcur=strchr(cmd,0);
   for(i=0;i<qualifiers;i++){
     switch(nbCellGetType(context,element[i])){
       case NB_TYPE_STRING:
-        sprintf(cmdcur,"'%s'.",nbCellGetString(context,element[i]));
+        sprintf(cmdcur,"%s.",nbCellGetString(context,element[i]));
         break;
       case NB_TYPE_REAL:
-        sprintf(cmdcur,"'%f'.",nbCellGetReal(context,element[i]));
+        sprintf(cmdcur,"%f.",nbCellGetReal(context,element[i]));
         break;
       default:
-        strcpy(cmdcur,"'?'.");
+        strcpy(cmdcur,"?.");
       }
     cmdcur=strchr(cmdcur,0);
     }
   if(*(cmdcur-1)=='.') cmdcur--;
-  if(node->value<node->average) threshold=-threshold;
-  sprintf(cmdcur,"\",_value=%g,_average=%g,_sigma=%g,_deviation=%g,_threshold=%g,_limit=%g,_level=%d;",node->value,node->average,node->deviation*1.25,node->value-node->average,threshold,node->average+threshold,node->level);
+  if(node->value<node->average) limit=node->average-node->threshold;
+  else limit=node->average+node->threshold;
+  while((threshold=node->threshold*2) && deviation>threshold) node->level++,node->threshold=threshold;
+  sprintf(cmdcur,"\",_value=%.10g,_average=%.10g,_sigma=%.10g,_deviation=%.10g,_threshold=%.10g,_limit=%.10g,_level=%d;",node->value,node->average,node->deviation*1.25,deviation,node->threshold,limit,node->level);
   nbActionCmd(context,cmd,0);
+  node->threshold=threshold;
   }
 
 static int treeStoreNode(nbCELL context,BTreeSkill *skillHandle,BTree *tree,int learning,BTreeNode *node,nbCELL element[],int qualifiers,FILE *file,char *buffer,char *cursor,char *bufend){
   char *curCol=cursor;
-  int n,times;
+  int n;
   double threshold,deviation;
 
   element[qualifiers]=(nbCELL)node->bnode.key;
@@ -507,17 +524,16 @@ static int treeStoreNode(nbCELL context,BTreeSkill *skillHandle,BTree *tree,int 
     if(node->average==0 && node->deviation==0){
       node->average=node->value;
       node->deviation=node->value/4;  // start with 25% deviation
+      node->threshold=node->deviation*tree->tolerance;
+      node->level=0;
       }
     else{
-      // check limit 
-      threshold=((double)((int)1<<node->level))*node->deviation*tree->tolerance;
+      // check deviation against threshold 
       deviation=fabs(node->value-node->average);
-      if(deviation>threshold) baselineAlert(context,skillHandle,tree,node,element,qualifiers,threshold);
+      if(deviation>node->threshold) baselineAlert(context,skillHandle,tree,node,element,qualifiers,deviation);
+      else while(node->level && (threshold=node->threshold/2) && deviation<threshold) node->level--,node->threshold=threshold;
       node->deviation+=tree->weight*(deviation-node->deviation);
       node->average+=tree->weight*(node->value-node->average);
-      // recompute level
-      node->level=0,times=deviation/(node->deviation*tree->tolerance);
-      while(times) node->level++,times=times>>1;
       } 
     if(file) fprintf(file,"%s):set %.10g,%.10g;\n",buffer,node->average,node->deviation);
     if(tree->options&BTREE_OPTION_SUM) node->value=0;  // reset value when summing
@@ -697,8 +713,7 @@ static int baselineAssert(nbCELL context,void *skillHandle,BTree *tree,nbCELL ar
   double real;
   int qualifiers=0;
   nbCELL element[32];
-  double threshold,deviation;
-  int times;
+  double deviation;
 
   if(arglist==NULL) return(0); // perhaps we should set the value of the tree itself
   argSet=nbListOpen(context,arglist);
@@ -733,35 +748,26 @@ static int baselineAssert(nbCELL context,void *skillHandle,BTree *tree,nbCELL ar
         *nodeP=node;
         nodeP=&(node->root);
         }
-      node->level=0;
       node->value=real;
+      // note we don't set deviation, threshold and level until the end of the period.
       return(0);
       }
     nodeP=&(node->root);
     nbCellDrop(context,argCell);
     argCell=nbListGetCellValue(context,&argSet);
     }
-  threshold=((double)((int)1<<node->level))*node->deviation*tree->tolerance;
   if(tree->options&BTREE_OPTION_SUM){
     // need to check for zero average and deviation here!
     node->value+=real;
+    if(node->average==0 && node->deviation==0) return(0);
     deviation=fabs(node->value-node->average);
-    if(node->value>node->average && deviation>threshold){
-      baselineAlert(context,skillHandle,tree,node,element,qualifiers,threshold);
-      // recompute level
-      node->level=0,times=deviation/(node->deviation*tree->tolerance);
-      while(times) node->level++,times=times>>1;
-      }
+    if(node->value>node->average && deviation>node->threshold) baselineAlert(context,skillHandle,tree,node,element,qualifiers,deviation);
     }
   else{
     node->value=real;  // update value and check limits
+    if(node->average==0 && node->deviation==0) return(0);
     deviation=fabs(node->value-node->average);
-    if(deviation>threshold) baselineAlert(context,skillHandle,tree,node,element,qualifiers,threshold);
-    node->deviation+=tree->weight*(deviation-node->deviation);
-    node->average+=tree->weight*(node->value-node->average);
-    // recompute level
-    node->level=0,times=deviation/(node->deviation*tree->tolerance);
-    while(times) node->level++,times=times>>1;
+    if(deviation>node->threshold) baselineAlert(context,skillHandle,tree,node,element,qualifiers,deviation);
     }
   return(0);
   }
@@ -939,9 +945,10 @@ static void treeSet(nbCELL context,BTreeSkill *skillHandle,BTree *tree,nbCELL ar
         *nodeP=node;
         nodeP=&(node->root);
         }
-      node->level=0;
       node->average=average;
       node->deviation=deviation;
+      node->threshold=deviation*tree->tolerance;
+      node->level=0;
       return;
       }
     nodeP=&(node->root);
@@ -951,6 +958,7 @@ static void treeSet(nbCELL context,BTreeSkill *skillHandle,BTree *tree,nbCELL ar
   /* matched - change value */
   node->average=average;
   node->deviation=deviation;
+  node->threshold=(double)((int)1<<node->level)*deviation*tree->tolerance;
   return;
   }
 

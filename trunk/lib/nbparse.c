@@ -404,6 +404,7 @@ char nbParseSymbol(char *symbol,char **source){
         symbol++;
         cursor++;
         }
+      symid='i';
       if(*cursor=='.'){
         *symbol=*cursor;
         symbol++;
@@ -413,19 +414,19 @@ char nbParseSymbol(char *symbol,char **source){
           symbol++;
           cursor++;
           }
-        if(*cursor=='e' && (*(cursor+1)=='+' || *(cursor+1)=='-') && NB_ISNUMERIC((int)*(cursor+2))){
-          *symbol=*cursor; symbol++; cursor++;
-          *symbol=*cursor; symbol++; cursor++;
-          *symbol=*cursor; symbol++; cursor++;
-          while(NB_ISNUMERIC((int)*cursor)){
-            *symbol=*cursor;
-            symbol++;
-            cursor++;
-            }
+        symid='r';
+        }
+      if(*cursor=='e' && (*(cursor+1)=='+' || *(cursor+1)=='-') && NB_ISNUMERIC((int)*(cursor+2))){
+        *symbol=*cursor; symbol++; cursor++;
+        *symbol=*cursor; symbol++; cursor++;
+        *symbol=*cursor; symbol++; cursor++;
+        while(NB_ISNUMERIC((int)*cursor)){
+          *symbol=*cursor;
+          symbol++;
+          cursor++;
           }
         symid='r';
         }
-      else symid='i';
       break;
     case NB_CHAR_ALPHA:      // handle words and identifiers including single quoted strings
     case NB_CHAR_TERMQUOTE:
