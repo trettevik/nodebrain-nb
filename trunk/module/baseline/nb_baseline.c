@@ -500,6 +500,7 @@ static void baselineAlert(nbCELL context,BTreeSkill *skillHandle,BTree *tree,BTr
   if(*(cmdcur-1)=='.') cmdcur--;
   if(node->value<node->average) limit=node->average-node->threshold;
   else limit=node->average+node->threshold;
+  node->level++;
   while((threshold=node->threshold*2) && deviation>threshold) node->level++,node->threshold=threshold;
   sprintf(cmdcur,"\",_value=%.10g,_average=%.10g,_sigma=%.10g,_deviation=%.10g,_threshold=%.10g,_limit=%.10g,_level=%d;",node->value,node->average,node->deviation*1.25,deviation,node->threshold,limit,node->level);
   nbActionCmd(context,cmd,0);
