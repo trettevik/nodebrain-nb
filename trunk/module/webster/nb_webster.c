@@ -347,7 +347,7 @@ static int websterDecodeRequest(nbCELL context,nbSession *session,char *request,
       if(!nibble) return(-1);
       l=nibble-hexalpha;
       if(l>15) l-=6;
-      n=(n<<4)&l; 
+      n=(n<<4)|l; 
       *reqcur=n;
       }
     else *reqcur=*cursor;
