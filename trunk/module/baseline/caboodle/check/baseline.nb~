@@ -1,0 +1,13 @@
+declare baseline module {"../.libs"};
+~ > declare baseline module {"../.libs"};
+define anomaly node baseline("cache/baseline/test",0.2,6,60,5);
+~ > define anomaly node baseline("cache/baseline/test",0.2,6,60,5);
+anomaly("happy"):set 10.5,3.25;
+~ > anomaly("happy"):set 10.5,3.25;
+anomaly("sad"):set 10.5,3.25;
+~ > anomaly("sad"):set 10.5,3.25;
+anomaly. assert ("happy")=30;
+~ > anomaly. assert ("happy")=30;
+anomaly. assert ("sad")=10;
+~ > anomaly. assert ("sad")=10;
+

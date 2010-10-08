@@ -19,7 +19,7 @@ module/model files    (model directory for new module directories)
 
 configure.ac         - Model autoconf configure.ac file 
 Makefile.am          - Common Makefile.am used for each module
-Makefile.nm          - Model module specify make file
+Makefile.nm          - Model module specific make file
 
 caboodle/bin/nb      - symbolic link to appropriate nb
 caboodle/bin/nbcheck - script to check 
