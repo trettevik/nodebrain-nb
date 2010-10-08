@@ -62,7 +62,7 @@ browser interface for administrators.
 %defattr(-,root,root,-)
 %doc AUTHORS COPYING ChangeLog NEWS README THANKS
 %dir %{_libdir}/nb
-%dir %{_libdir}/nb/0.7
+%dir %{_libdir}/nb/0.8
 %{_bindir}/nb
 %{_bindir}/nb-%{version}
 %{_libdir}/libnb-%{version}.so
