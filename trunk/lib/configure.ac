@@ -85,7 +85,7 @@ AM_INIT_AUTOMAKE
 # define module directory variables
 
 AC_DEFINE_UNQUOTED(NB_API_VERSION,"0",[NodeBrain API version])
-NB_MODULE_PATH=".nb:/usr/local/lib/nb/0.8:/usr/local/lib/nb"
+NB_MODULE_PATH=".nb:/usr/local/lib/nb/0.8:/usr/lib/nb/0.8:/usr/local/lib/nb:/usr/lib/nb"
 NB_MODULE_PATH_SEPARATOR=":"
 AC_DEFINE_UNQUOTED(NB_MODULE_PATH,"${NB_MODULE_PATH}",[Module path])
 AC_DEFINE_UNQUOTED(NB_MODULE_PATH_SEPARATOR,'${NB_MODULE_PATH_SEPARATOR}',[Module path separator])
