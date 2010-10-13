@@ -11,7 +11,7 @@
 
 @copying
 Baseline NodeBrain Module@*
-September, 2010@*
+October, 2010@*
 The Boeing Company,  P.O. Box 3707, Seattle, WA 98124, USA
 
 @sp 2
