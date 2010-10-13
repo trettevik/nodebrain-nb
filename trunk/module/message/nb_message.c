@@ -864,7 +864,7 @@ void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
     }
   str=nbCellGetString(context,cell);
   if(strlen(str)>sizeof(nodeName)-1){
-    nbLogMsg(context,0,'E',"First argument has node name \"%s\" too long for buffer - limit is %d characters",str,sizeof(nodeName)-1);
+    nbLogMsg(context,0,'E',"Second argument has node name \"%s\" too long for buffer - limit is %d characters",str,sizeof(nodeName)-1);
     return(NULL);
     }
   strcpy(nodeName,str);  // size checked
