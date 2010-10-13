@@ -1,0 +1,544 @@
+\input texinfo   @c -*-texinfo-*-
+@c %**start of header
+@setfilename message.info
+@include version.texi
+@settitle Message NodeBrain Module
+@c %**end of header
+
+@finalout
+@paragraphindent none
+@setchapternewpage odd
+
+@copying
+Message NodeBrain Module@*
+October, 2010@*
+The Boeing Company,  P.O. Box 3707, Seattle, WA 98124, USA
+
+@sp 2
+@b{Version @value{VERSION}} 
+
+Author: Ed Trettevik <ed.a.trettevik@@boeing.com>
+
+Copyright @copyright{} 2010 The Boeing Company.
+
+@sp 1
+Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} preceding the index at the end of this document.
+
+@sp 1
+NodeBrain(TM) is a trademark of The Boeing Company.   All other trademarks and registered trademarks referenced in this document are the trademarks of their respective owners.
+
+@sp 2
+@b{Software License}
+
+@multitable {------------------------------} {----------------------------------------------------}
+@item Copyright @copyright{} 2010 @tab The Boeing Company
+@item @tab Ed Trettevik <eat@@nodebrain.org>
+@end multitable
+
+The Message NodeBrain Module is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by theFree Software Foundation; either version 2 of the License, or (at your option)any later version.
+
+This program is distributed in the hope that it will be useful,but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General PublicLicense along with this program; if not, write to Free Software Foundation,Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+@end copying
+
+@iftex
+@titlepage
+@c @image{./image001,32pt,32pt,,gif}
+
+@titlefont{Message NodeBrain Module}
+@sp 1
+@tex
+\vskip4pt \hrule height 3pt width \hsize
+@end tex
+@sp 3
+@b{Version @value{VERSION}}
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+
+@c History Preface and Document Conventions 
+@page
+@b{History}
+
+@multitable {-------------} {--------------------------------------------------------------------------------------------------------}
+@item 2010-09-13 @tab
+Title: @i{Message NodeBrain Module}@*  
+Author: Ed  Trettevik <ed.a.trettevik@@boeing.com>@*
+Publisher: The Boeing Company
+
+@item @tab
+Version 0.1
+@itemize @bullet
+@item Initial prototype.
+This document describes the Message module as released with NodeBrain 0.8.3.
+We anticipate changes to this document as the module evolves to a version 1.0.
+@end itemize
+
+@c @item 2010-02-06 @tab   
+@c Version 0.2
+@c @itemize @bullet
+@c @item This update follows installation of Bingo 0.2 in a test environment.  It is not an entirely
+@c accurate description of Bingo 0.2 software.  We are continuing to use this document as a specification
+@c document, with version 1.0 being the target. Bingo 0.2 has some deficiencies relative to this document,
+@c and may also include functionality not yet documented here.
+@c @end itemize
+
+@end multitable
+
+@page
+@b{Preface}
+
+@sp 1
+This manual is intended for users of the Message NodeBrain Module, a plug-in for broadcasting messages
+to a set of NodeBrain agents.
+The Message module was first introduced in NodeBrain 0.8.0 in early 2010.  
+This module should be treated as a prototype.  It has not yet been exercised enough to fully validate the design.
+We expect it to evolve as we gain experience.
+
+This module was developed in support of a specific application requiring multi-master replication of data objects
+managed by a proprietary module.  
+However, it provides a generic message server and a Nodebrain command specific message client,
+making it useful to various NodeBrain applications.
+Custom modules can use the NodeBrain Message API to impliment application specific message clients.  It is the
+responsibility of a message client to handle conflict resolution.
+
+In November 2010, this module was first used in a production application supporting a form
+of user authentication requiring high availability.
+
+
+@end titlepage
+@end iftex
+
+@c ----------------------------------------------------------
+@c Not printed document
+
+@ifnottex
+@node Top
+@top Message NodeBrain Module @value{VERSION}
+
+This manual is for the Message NodeBrain Module (version @value{VERSION}, @value{UPDATED}), a plug-in module for broadcasting
+messages to multiple NodeBrain agents.
+
+Copyright @copyright{} 2010 The Boeing Company.
+
+@ifnotplaintext
+@b{Short Table of Contents}
+@end ifnotplaintext
+@menu
+* Concepts:: Purpose and Approach
+* Tutorial:: By example
+* Commands:: Syntax and Semantics
+@end menu
+
+@ifnotplaintext
+@b{References}
+@end ifnotplaintext
+@menu
+* GNU Free Documentation License::
+* Index::
+@end menu
+@end ifnottex
+
+@c Set page footings
+@oddfooting @thistitle @| @| @thispage
+@evenfooting @thispage @| @| @thistitle
+
+@c Table of Contents
+@oddheading @| @| 
+@evenheading @| @|
+@contents
+
+@c Set page headings for document
+@oddheading @thischapter @| @| @value{UPDATED-MONTH}
+@evenheading @value{UPDATED-MONTH} @| @| @thischapter
+
+@node Concepts
+@chapter Concepts
+@cindex concepts
+
+The Message module is a NodeBrain plug-in for broadcasting messages to multiple peers. 
+It uses the NodeBrain Message API, which is also available to other modules.
+Here we introduce some basic concepts of the API.
+
+@section Message Log
+@cindex message log
+
+A message log is a directory containing message log files, with a symbolic link, @file{m.nbm}, pointing to the active file.
+Message log files are named @i{nnnnnnnn}@code{.nbm}, where @i{nnnnnnnn} starts at 00000001 and increments
+each time a new file is created.
+A new file is created when the active file reaches a specified size.
+
+Each log file has a header record, and all but the active file has a footer record.  
+Every record in a message log file contains a header portion and a data portion.
+The header portion of each record, and the header and footer records, are used to manage
+message delivery.  The data portion of a message record contains the application message to be delivered.
+An application message may be text or binary data.
+
+@section Producer and Consumer
+@cindex producer
+@cindex consumer
+
+A message producer is a component that writes to a message log.
+A message consumer is a component that reads from a message log.
+Consumers keep track of their position within the message log by updating a cursor file.
+A consumer is responsible for polling the message log for more messages, and should only be used where
+rapid delivery is not important.
+
+In addition, a message producer optionally sends every message to a message server (see next section) as a UDP packet
+via a local domain socket. 
+A message server doesn't have to read the message log, unless a missed packet is detected.
+The UDP packets are numbered to enable the detection of a missed packet, and include the offset
+within the message log where the next message will be stored.  This enables the message server
+to start reading directly at the message contained in a missed packet.
+
+The goal of this design is to ensure rapid delivery when both the producer and server
+are running efficiently, but also decouple the producer and server so either one can operate without the other,
+or at different speeds, at any given time. 
+
+@section Server and Client
+@cindex server
+@cindex client
+
+A message server (at most one per producer) delivers messages from a message log
+to message clients.  A message client is a component that connects to a message server
+and requests messages starting at a given number.  While a client maintains a connection to
+a message server, messages will continue to stream in near real-time as generated by the message producer.
+The connection between a client and server can actually be requested by either the client or the server,
+meaning the client and server are peers.
+
+It is often the case that a component is both a message client and a message producer, where the component logs messages it
+receives from servers as well as messages it originates.
+The corresponding message server is then able to serve messages originating at multiple producers.
+The communication between a producer and a server is described in the previous section.
+
+@section Source and Sink
+@cindex source
+@cindex sink
+
+We call a message server a "source" when the corresponding producer is not also a client.  
+The message log produced by such a node contains only messages it generates itself.
+We call a message client a "sink" when it is not also a producer, which means it has no associated server or consumers.
+The use of source and sink nodes is appropriate in cases where you simply want to collect messages from one or more
+nodes and process the messages at one or more other nodes.
+
+@section Cabals, Node Numbers, and State
+@cindex cabals
+@cindex node numbers
+@cindex state
+
+A message cabal is a set of nodes sharing messages for some purpose.
+The message log of every producer is assigned a number from 1 to 255, which means there can be at most 255 producers in a cabal.
+All sink nodes (clients that are not also producers) may share a common node number of 0.
+Each client is required to maintain a state, which is defined as a set of the last message identifier received from each producer.
+A client's state is passed to a message server when a connection is established, enabling the server to only
+deliver messages the client is not known to have already received.
+
+
+@section Adaptive Ring, Hub and Spoke Topology
+@cindex adaptive topology
+@cindex ring
+@cindex hub
+@cindex spoke
+
+Each node within a cabal has a strategy for maintaining connections with other nodes.
+This strategy depends on the type of node.
+@sp 1
+@multitable {---} {--------------------} {--------------------------------------------------------------------------------------}
+@item @w{  } @tab @b{Type} @w{         } @tab @b{Strategy}
+@item @tab source server @tab accept connections from sink clients
+@item @tab sink client   @tab request connections to all source servers
+@item @tab hub server  @tab accept connections from hub and spoke clients, request connection to preferred hub client
+@item @tab hub client  @tab accept connections from hub servers, request connection to preferred hub server
+@item @tab spoke client  @tab request connection to preferred hub server
+@end multitable
+@sp 1
+Sink and source nodes use a one directional many-to-many topology.  Hub nodes form a ring topology, enabling efficient and scalable
+message broadcasting to all nodes.  Spoke nodes are able to tap into any hub node, enabling access to all broadcast messages without
+having to be a conduit for the ring.
+
+For hub and spoke nodes, an ordered list of all cabal nodes specifies the preferred connections: "@i{node1},@i{node2},...,@i{nodeN}".
+This list is circular, so @i{node1} follows @i{nodeN}.  
+A hub server prefers connecting to the first hub client following it in the circular list.
+If the connection fails, it continues through the list until a connection to a hub client is made, or there are no more hub clients (reached self in list).  A hub client prefers connecting to the first hub server prior to it in the circular list.  Like a server, it continues through the list (only backwards) until a connection succeeds or there are no more hub servers (wrapped around to self).  Spoke clients use the same strategy as hub clients to search the list backwards for the first hub for which a connection succeeds.  Sink clients search the list and attempt to connect to every source server.
+
+The most interesting connections are those between hub clients and hub servers.  These can be requested and accepted by both clients and servers. So our use of the terms "client" and "server" is a bit awkward.  If we think of hub nodes as peers, they each want a connection to the first hub node ahead and behind themself in the circular list, forming a ring.  
+If a given node is down or unreachable it is bypassed and a smaller ring is formed. 
+
+When a node does not have a preferred set of connections, it periodically attempts to establish a preferred set of connections.
+Once a preferred connection is established, an alternate connection requested by the node is dropped.  
+Extra connections requested by peers are maintained until the peers decides to drop them.  In other words, the node that requests a connection is responsible for deciding when it is no longer needed.
+
+This strategy enables replication or broadcast rings to adapt to network or system problems.  For example if a set of 5 nodes in a ring of 10 nodes becomes isolated from the other 5 because of a network problem, both sets of 5 will form into separate rings.  When the network problem is resolved,the larger 10 node ring will form again.
+
+@section Delivery Sequence
+@cindex delivery
+@cindex sequence
+
+Messages originating at any given node are delivered in sequence, once and only once, to every subscribing node.  By "delivery" we mean complete delivery.  In a scenario where a ring adapts to a problem and is in the process of repairing itself, it is possible to have redundant transport, or partial delivery, of a message within the messaging layer. 
+However, only messages not yet received will make it through final delivery to the application layer.
+
+Messages originationg on two different nodes can arrive at a third node in any order.  Let's say node A and node B are originating messages and node C subscribes to both.  Messages from A will arrive in order at C, once and only once.  Messages from B will arrive in order at C, once and only once.  However, a message A1 originating at node A before a message B2 originates at B, may arrive at C before or after B2.  It is like shuffling a deck of cards with a stack from A in the left hand and a stack from B in the right hand.  The cards from a given hand stay in order, but there are many ways the two stacks might merge.
+
+@section Conflict Resolution
+@cindex conflict resolution
+
+When using the NodeBrain Message API to implement multi-master object replication, it is the application's responsibility to perform conflict resolution.  There is no one approach that will work for all applications.  However, there is a general approach that will work for many applications.
+
+@itemize @bullet
+@item Assign a unique identifier to each object.
+@item Assign a unique instance number to each object store where updates originate.
+@item Include an instance attribute for every object.  This identifies the instance that originated the last update.
+@item Include a version number attribute for every object. 
+@item Include an update time stamp attribute for every object.  This not required, but nice to have.
+@item When an object is added or updated, assign the local instance number, increment the version number, stamp the current time, and issue an "assert" transaction message including a complete copy (specification) of the object and the instance prior to update.
+@item When an object is deleted, issue a "delete" transaction message including object identifier, instance, and version.
+@item When processing an "assert" transaction message for an object that doesn't already exist, add the object.
+@item When processing an "assert" for an existing object and the instance and version are the ones the transaction claims were updated on the original node, then apply the update.  Otherwise, apply the update only if the new instance number is lower than the existing instance number.
+@item When processing a "delete" transaction message for an existing object, only delete it when the instance and version in the message match the olocal copy.
+@end itemize
+
+This approach ensures that all instances of the object store remain synchronized over time, although they can be a bit off at any given moment.
+This is not the same as saying all object stores will be "correct".  
+We are only claiming they will be the same.  A simultaneous delete and update on two different object stores will preserve the update and drop the delete at every store.  This seems like a best result for many applications, but for others it might be the wrong result.  Simultaneous updates at two different stores will preserve the update from the lower numbered instance.  This ensures all object stores end up the same, but which update should actually win is not clear.  For a given application there may be additional factors for making this determination, perhaps a ranking of users initiating the update, or perhaps the updates can be merged to accept both updates.
+So the conflict resolution logic must be designed for the application.  The approach outlined above can be used for many applications, and can be used as a starting point for designing others.  
+
+
+
+
+@node Tutorial
+@chapter Tutorial
+@cindex tutorial
+
+This section illustrates the use of the Message module with simple examples.  
+
+bingo. define alert node message.producer("alert","E1",1);
+
+@node Commands
+@chapter Commands
+@cindex commands
+
+This section describes the syntax and semantics of commands used with the Message module.
+
+@section Define 
+@cindex define
+
+This section describes the syntax and semantics of core NodeBrain commands used with Message nodes.
+
+@subsection Define Producer
+@cindex producer
+
+The @code{define} command is used to create a @code{message.producer} node.  
+
+@example
+define @i{node} node message.producer("@i{cabal}","@i{nodename}",@i{nodenumber})[:@i{option}[,...]];
+@end example
+
+@multitable {--------------------} {--------------------------------------------------------------------------------------}
+@item @b{Parameter} @w{          } @tab @b{Description}
+@sp 1
+@item @i{cabal}
+@tab Identifies a cabal subdirectory in the message subdirectory of a caboodle (root directory of NodeBrain application)
+This is a directory containing message logs for every node in the cabal that run within the application on the local host.
+@sp 1
+@item @i{nodename} @tab
+Identifies a node within the cabal, and a message log (directory) wihin the cabal subdirectory.
+@sp 1
+@item @i{nodenumber} @tab
+The unique node number from 1 to 255 assigned to this message log within a cabal.
+@sp 2
+@item @b{Option} @w{         } @tab @b{Description}
+@sp 1
+@item trace @tab
+The @code{trace} option is used to generate log messages for troubleshooting.
+@end multitable
+
+@subsection Define Consumer
+@cindex consumer
+@cindex define
+
+@example
+define @i{node} node message.consumer("@i{cabal}","@i{nodename}",@i{nodenumber},"@i{name}")[:@i{option}[,...]];
+@end example
+
+@multitable {--------------------} {--------------------------------------------------------------------------------------}
+@item @b{Parameter} @w{          } @tab @b{Description}
+@sp 1
+@item @i{cabal}
+@tab Identifies a cabal subdirectory in the message subdirectory of a caboodle (root directory of NodeBrain application)
+This is a directory containing message logs for every node in the cabal that run within the application on the local host.
+@sp 1
+@item @i{nodename} @tab
+Identifies a node within the cabal, and a message log (directory) wihin the cabal subdirectory.
+@sp 1
+@item @i{nodenumber} @tab
+The unique node number from 1 to 255 assigned to this message log within a cabal.
+@sp 1
+@item @i{name} @tab
+This parameter uniquely identifies a consumer.
+@sp 2
+@item @b{Option} @tab @b{Description}
+@sp 1
+@item trace @tab
+The @code{trace} option is used to generate log messages for troubleshooting.
+@end multitable
+
+@subsection Define Server
+@cindex server
+@cindex define
+
+A @code{message.server} node accepts connections from other nodes (clients) in a cabal and delivers messages that are
+new releative to a client's state.  A state is defined by the last message identifier received by the client from each
+producer within the cabal.
+@example
+define @i{node} node message.server("@i{cabal}","@i{nodename}")[:@i{option}[,...]];
+@end example
+
+@multitable {--------------------} {--------------------------------------------------------------------------------------}
+@item @b{Parameter}@w{     }@tab @b{Description}
+@item @i{cabal}
+@tab Identifies a cabal subdirectory in the message subdirectory of a caboodle (root directory of NodeBrain application)
+This is a directory containing message logs for every node in the cabal that run within the application on the local host.
+The parameter also identifies a subordinate rule node for cabal configuration.  See "Cabal Configuration" below.
+@item @i{nodename} @tab
+Identifies a node within the cabal, a message log (directory) within the cabal subdirectory, and subordinate cabal
+node configuration rule node.  See "Cabal Configuration" below.
+@item @b{Option} @tab @b{Description}
+@item trace @tab
+The @code{trace} option is used to generate log messages for troubleshooting.
+@end multitable
+
+@b{Cabal Configuration}
+
+Server and client (see next section) nodes reference a cabal configuration rule set.
+These rules identify all nodes in the cabal and information needed to communicate.
+
+@example
+define @i{node} node message.server("@i{cabal}","@i{nodeI}")[:@i{option}[,...]];
+@i{node}. define @i{cabal} node;
+@i{node}.@i{cabal}. source cabal.nb;
+@end example
+
+@example
+define ring cell "@i{node1},...,@i{nodeI},...,@i{nodeN}";
+define @i{node1} node;
+...
+#
+define @i{nodeI} node;
+define bill node;
+bill. define id     cell 2;
+bill. define type   cell "hub";
+bill. define client cell "tls://@i{ipaddress}:@i{port}";
+bill. define server cell "tls://@i{ipaddress}:@i{port}";
+#
+define @i{nodeN} node;
+...
+@end example
+
+@subsection Define Client
+@cindex client
+@cindex define
+
+A @code{message.client} node connects to one or more Message servers and requests a feed of all messages
+that are new relative to the client's state.  A state is defined by the last message identifier received for
+each producer within the cabal.
+
+@example
+define @i{node} node message.client("@i{cabal}","@i{nodename}")[:@i{option}[,...]];
+@end example
+
+@multitable {--------------------} {--------------------------------------------------------------------------------------}
+@item @b{Parameter} @w{          } @tab @b{Description}
+@sp 1
+@item @i{cabal}
+@tab Identifies a cabal subdirectory in the message subdirectory of a caboodle (root directory of NodeBrain application)
+This is a directory containing messaoge logs for every node in the cabal that run within the application on the local host.
+The parameter also identifies a subordinate rule node for cabal configuration.
+See "Define Server" for a description of cabal configuration.
+
+@sp 1
+@item @i{nodename} @tab
+Identifies a node within the cabal, a message log (directory) within the cabal subdirectory, and a subordinate rule node
+configuring the node within the cabal.  See "Define Server" for a description of cabal configuration.
+@sp 2
+@item @b{Option} @tab @b{Description}
+@sp 1
+@item trace @tab
+The @code{trace} option is used to generate log messages for troubleshooting.
+@end multitable
+
+@section Assertions
+@cindex assertions
+@cindex assert
+@cindex alert
+@cindex evaluation
+
+The Message module does not implement the @code{assert} and @code{alert} commands, nor does it implement cell evaluation.
+
+@section Node Commands
+@cindex node commands
+
+This section describes commands implemented by the Message module for use with defined nodes.
+
+@subsection Trace
+@cindex trace
+
+The @code{trace} command is used to toggle the trace option for troubleshooting.
+@example
+@i{node}:trace [on|off]
+@end example
+
+@section Module Commands
+@cindex module commands
+
+The Message module provides commands for managing message logs.  These commands are registered with the
+command interpreter so they may be invoked without first defining a node.  These commands start with @code{message}
+followed by a period and then a verb.
+
+@example
+message.@i{verb} @i{body}
+@end example
+
+@subsection Export
+@cindex export command
+
+The export command is used to convert a message log file into text.
+This may be useful for troubleshooting.
+In the future, we anticipate providing a corresponding @code{import} command,
+which would enable repairs to corrupted log files using a text editor.
+
+@example
+message.export @i{cabal} @i{nodename} @i{nodenumber} @i{filename}
+@end example
+
+This command must be issued with the working directory set to the @i{caboodle} root directory.
+The @i{cabal} and @i{nodename} parameters simply identify the path to a message log.
+
+@example
+@i{caboodle}/message/@i{cabal}/@i{nodename}/
+@end example
+
+The @i{nodenumber} parameters is currently required by the NodeBrain Message API for validation.
+If the specified @i{filename} is not for the specified @i{nodenumber}, an error is displayed and the file is not exported.
+While this validation is appropriate for other uses of the Message API, a future enhancement to the
+API will enable the @code{export} command to work without requiring the @i{nodenumber}.
+
+
+@section Generated Commands
+@cindex generated commands
+
+There are currently no special commands generated by message nodes.
+A future enhancement may provide an option for @code{message.server} nodes to generate connection status alerts,
+enabling rules to respond to connection status changes.
+In this release, only a @code{message.client} node generates commands, and they can be any command
+provided by a message servers.
+
+@node GNU Free Documentation License
+@unnumbered GNU Free Documentation License
+@include fdl.texi
+
+@node Index
+@unnumbered Index
+@printindex cp
+
+@bye
