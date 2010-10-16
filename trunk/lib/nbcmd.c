@@ -229,6 +229,9 @@
 *            but some "failure" conditions may still flow out the end of a
 *            function where a "return(0)" has been included.
 * 2010-10-14 eat 0.8.4  Included servepid---pid file name.
+* 2010-10-16 eat 0.8.4  Replacing "log" setting with "logfile", but accepting "log" as alias.
+* 2010-10-16 eat 0.8.4  Replacing "out" setting with "outdir", but accepting "out" as alias.
+* 2010-10-16 eat 0.8.4  Replacing "jail" setting with "jaildir", but accepting "jail" as alias.
 *==============================================================================
 */
 #include "nbi.h"
@@ -408,12 +411,13 @@ void showSet(){
   //outPut("ipaddr:\t%s\n",serveipaddr);
   //outPut("oar:\t%s\n",serveoar);
   //outPut("nbp:\t%u\n",nbp);
-  outPut("log:    \t%s\n",outLogName(NULL));
-  outPut("out:    \t%s\n",outDirName(NULL));
+  outPut("logfile:\t%s\n",outLogName(NULL));
+  outPut("outdir: \t%s\n",outDirName(NULL));
   outPut("pidfile:\t%s\n",servepid);
-  outPut("jail:   \t%s\n",servejail);
-  outPut("dir:    \t%s\n",servedir);
+  outPut("jaildir:\t%s\n",servejail);
+  outPut("chdir:  \t%s\n",servedir);
   outPut("user:   \t%s\n",serveuser);
+  outPut("group:  \t%s\n",servegroup);
   }
 
 // Show process list
@@ -910,11 +914,11 @@ int nbCmdSet(nbCELL context,void *handle,char *verb,char *cursor){
             } 
           outMsg(0,'I',"Using log file \"%s\"",lname);
           }
-        else if(strcmp(ident,"log")==0){
+        else if(strcmp(ident,"logfile")==0 || strcmp(ident,"log")==0){
           outLogName(token);
           outMsg(0,'I',"NodeBrain %s will log to %s",myname,token);
           }
-        else if(strcmp(ident,"out")==0){
+        else if(strcmp(ident,"outdir")==0 || strcmp(ident,"out")==0){
           if(*(token+strlen(token)-1)!='/') strcat(token,"/");
           outDirName(token);
           }
@@ -930,10 +934,11 @@ int nbCmdSet(nbCELL context,void *handle,char *verb,char *cursor){
           }
         //else if(strcmp(ident,"ipaddr")==0) nbSetOptStr(ident,serveipaddr,token,sizeof(serveipaddr));
         //else if(strcmp(ident,"oar")==0)  nbSetOptStr(ident,serveoar,token,sizeof(serveoar));
-        else if(strcmp(ident,"jail")==0) nbSetOptStr(ident,servejail,token,sizeof(servejail)); // 2006-05-12 eat 0.6.6
-        else if(strcmp(ident,"dir")==0)  nbSetOptStr(ident,servedir,token,sizeof(servedir));   // 2006-05-12 eat 0.6.6
+        else if(strcmp(ident,"jaildir")==0 || strcmp(ident,"jail")==0) nbSetOptStr(ident,servejail,token,sizeof(servejail)); // 2006-05-12 eat 0.6.6
+        else if(strcmp(ident,"chdir")==0 || strcmp(ident,"dir")==0)  nbSetOptStr(ident,servedir,token,sizeof(servedir));   // 2006-05-12 eat 0.6.6
         else if(strcmp(ident,"pidfile")==0)  nbSetOptStr(ident,servepid,token,sizeof(servedir));   // 2010-10-14 eat 0.8.4
         else if(strcmp(ident,"user")==0) nbSetOptStr(ident,serveuser,token,sizeof(serveuser)); // 2006-05-12 eat 0.6.6
+        else if(strcmp(ident,"group")==0) nbSetOptStr(ident,servegroup,token,sizeof(servegroup)); // 2010-10-16 eat 0.8.4
         else{
           outMsg(0,'E',"Unrecognized string option \"%s\".",ident);
           return(1);

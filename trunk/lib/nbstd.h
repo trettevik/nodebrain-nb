@@ -78,6 +78,7 @@
 #else  // not windows
 
 #include <pwd.h>
+#include <grp.h>
 #include <sys/wait.h>    // 0.6.4
 #include <unistd.h>      // 0.6.4
 #if defined(HAVE_SYS_TYPES_H)

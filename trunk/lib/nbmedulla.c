@@ -96,6 +96,8 @@
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010/02/26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2010/02/28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2010-10-16 eat 0.8.4  Included group option in shell commands
+*                       =[<user>:<group>]<command>
 *=============================================================================
 */
 #define NB_INTERNAL
@@ -1464,12 +1466,13 @@ nbPROCESS nbMedullaProcessOpen(
 //  int pid,cldpid,waitpid;
   nbFILE cldin,cldout,clderr;
   char *pgm=NULL;           // Program to execute
-  char *cursor,*delim,mode,user[32],pgmname[sizeof(process->pgm)];
+  char *cursor,*delim,mode,user[32],group[32],pgmname[sizeof(process->pgm)];
   char outfilename[512],*outfile=outfilename,errfilename[512],*errfile=errfilename;
   //int append=0,shell=1,outspec,errspec;
   int outspec,errspec;
   int uid=0,gid=0;
   struct passwd *pwd=NULL;
+  struct group *grp=NULL;
 
   //fprintf(stderr,"nbMedullaProcessOpen %s\n",cmd);
   // limit the number of children we can start.
@@ -1497,8 +1500,9 @@ nbPROCESS nbMedullaProcessOpen(
   // user
   if(*cursor=='['){  // have user
     cursor++; 
-    delim=strchr(cursor,']');
-    if(delim==NULL){
+    delim=cursor;
+    while(*delim && *delim!=']' && *delim!='.') delim++;
+    if(!*delim){
       sprintf(msgbuf,"Expecting ']' as user delimiter\n");
       return(NULL);
       }
@@ -1509,19 +1513,35 @@ nbPROCESS nbMedullaProcessOpen(
     strncpy(user,cursor,delim-cursor);
     *(user+(delim-cursor))=0;
     cursor=delim+1;
-    while(*cursor==' ') cursor++;
-#if defined(WIN32)
-    // insert Windows code here
-#else
     if((pwd=getpwnam(user))==NULL){
       sprintf(msgbuf,"User %s not defined\n",user);
       return(NULL);
       }
     uid=pwd->pw_uid;
-    gid=pwd->pw_gid;
-#endif
+    gid=pwd->pw_gid;  // default to user's default group
+    if(*delim=='.'){ // we have a group
+      delim=cursor;
+      while(*delim && *delim!=']') delim++;
+      if(!*delim){
+        sprintf(msgbuf,"Expecting ']' as group delimiter\n");
+        return(NULL);
+        }
+      if(delim-cursor>=sizeof(group)){
+        sprintf(msgbuf,"Group is too long for buffer\n");
+        return(NULL);
+        }
+      strncpy(group,cursor,delim-cursor);
+      *(group+(delim-cursor))=0;
+      cursor=delim+1;
+      if((grp=getgrnam(group))==NULL){
+        sprintf(msgbuf,"Group %s is not defined\n",group);
+        return(NULL);
+        }
+      gid=grp->gr_gid;
+      }
+    while(*cursor==' ') cursor++;
     }
-  else *user=0;
+  else *user=0,*group;
 
   // output
   if((outspec=nbMedullaParseFileSpec(outfilename,&cursor,msgbuf))<0) return(NULL);

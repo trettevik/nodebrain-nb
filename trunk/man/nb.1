@@ -1,7 +1,7 @@
 .\" Process this file with "groff -man -Tascii foo.1" or "nbman2ht foo.1"
 .\" See NodeBrain Developer Guide for project standards
 .\"
-.TH nb 1 "February 2009" "NodeBrain 0.7.4" "NodeBrain Administrator Guide"
+.TH nb 1 "October 2010" "NodeBrain 0.8.4" "NodeBrain Administrator Guide"
 .SH NAME
 \fBnb\fP - NodeBrain Interpreter, Agent, Client, and Utility.
 .SH SYNOPSIS
@@ -55,6 +55,10 @@
 |
 .B --noTrace
 | 
+.B --pidfile=\fIfile\fP
+|
+.B --log=\fIlogfile\fP
+|
 .IB "variable" "=" "value"
 |
 \fB\`\fP\fIassertion\fP
@@ -90,6 +94,11 @@ the \fBOPTIONS\fP section for a description of available options.
 .BI "-" "o"
 .IP
 .BI "--" "option"
+.P
+Variable settings start with a double minus ("--") followed be a setting assignment.
+See the \fBSETTINGS\fP section for a description of available settings.
+.IP
+.BI "--" "variable" = "value"
 .P
 Source variables may be assigned for symbolic
 substitution or conditional command interpretation within scripts.  These are application
@@ -225,6 +234,25 @@ The --trace option is used by developers for debugging NodeBrain internal logic.
 messages are written while this option is on.
 .IP -T
 The --noTrace option turns off the --trace option.
+.P
+.SH SETTINGS
+Settings passed as arguments may be used as an alternative to specifying settings using a \fBset\fP command within a script.
+They can also be used to override settings within a script if specified later in the sequence of parameters.
+.IP --logfile=\fIfilename\fP
+The logfile setting specifies a file where the log is written when nb daemonizes.  An alias of "--log" is
+recognized for compatibility with earlier version.
+.IP --outdir=\fIdirectory\fP
+The outdir setting specifies a directory where output of a spawned process is stored if not directed elsewhere.
+An alias of "--out" is recognized for compatibility with earlier versions.
+.IP --pidfile=\fIfilename\fP
+The pidfile setting specifies a file where the process identifier (PID) is to be stored when daemonizing.
+This can be used by init scripts (/etc/init.d).
+.IP --user=\fIuser\fP
+When running as root, the user setting causes the process user to be set after deamonizing.
+This setting is ignored for non-root users.
+.IP --group=\fIgroup\fP
+When running as root, the group setting causes the process group to be set after deamonizing.
+This setting is ignored for non-root users.
 .P
 .SH COMMANDS
 There are three important types of commands, used to  

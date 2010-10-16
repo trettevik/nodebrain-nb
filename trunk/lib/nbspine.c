@@ -47,6 +47,7 @@
 * 2005/10/10 Ed Trettevik (split out from nbspawn.c in 0.6.3)
 * 2005/12/12 eat 0.6.4  included options parameter to nbChild
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
+* 2010-10-16 eat 0.8.4  Changed order of setuid and setgid in nbChildOpen to do group first
 *=============================================================================
 */
 //#include "nbstd.h"
@@ -315,10 +316,9 @@ nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cld
         }
       else for(fd=getdtablesize();fd>2;fd--) close(fd);
       }
-
-    if(uid!=0 && getuid()==0){   // set user id if we are root
-      setuid(uid);
-      setgid(gid);
+    if(getuid()==0){  // if we are running as root, optionally set gid and uid
+      if(gid!=0) setgid(gid); // set group id if requested
+      if(uid!=0) setuid(uid); // set user id if requested
       }
 
     // switch major signals to SIG_IGN or SIG_DFT

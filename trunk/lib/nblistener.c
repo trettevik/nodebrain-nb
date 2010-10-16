@@ -279,7 +279,8 @@ _declspec (dllexport)
 extern int nbListenerStart(nbCELL context){
   NB_Listener *sel,*selnext=NULL;
 #if !defined(WIN32)
-  struct passwd *pwd;
+  struct passwd *pwd=NULL;
+  struct group  *grp=NULL;
 #endif
  
   if(trace) outMsg(0,'T',"selectListener() called");
@@ -304,10 +305,22 @@ extern int nbListenerStart(nbCELL context){
       }
     outMsg(0,'I',"Working directory changed to %s",servedir);
     }
-  // Find the password entry for the new user before putting them in a jail
+  // If running as root, check for and process special settings
   if(getuid()==0){
-    if(*serveuser!=0 && (pwd=getpwnam(serveuser))==NULL){
-      outMsg(0,'E',"User %s not defined",serveuser);
+    // get user id if user parameter specified
+    if(*serveuser!=0){
+      if((pwd=getpwnam(serveuser))==NULL){
+        outMsg(0,'E',"User %s not defined",serveuser);
+        exit(NB_EXITCODE_FAIL);
+        }
+      if((grp=getgrgid(pwd->pw_gid))==NULL){
+        outMsg(0,'E',"User %s has undefined group id %d",serveuser,pwd->pw_gid);
+        exit(NB_EXITCODE_FAIL);
+        }
+      }
+    // get group id if group parameter specified
+    if(*servegroup && (grp=getgrnam(servegroup))==NULL){
+      outMsg(0,'E',"User %s has undefined group id %d",serveuser,pwd->pw_gid);
       exit(NB_EXITCODE_FAIL);
       }
     // change root directory (jail) if requested
@@ -318,11 +331,21 @@ extern int nbListenerStart(nbCELL context){
         }
       outMsg(0,'I',"Root directory changed to %s",servejail);
       }
+    // switch group if requested
+    if(grp){
+      if(setgid(grp->gr_gid)<0){
+        outMsg(0,'E',"Unable to set group to %s - %s",grp->gr_name,strerror(errno));
+        exit(NB_EXITCODE_FAIL);
+        }
+      outMsg(0,'I',"Set group to %s",grp->gr_name);
+      }
     // switch user if requested
-    if(*serveuser!=0){
-      setuid(pwd->pw_uid);
-      setgid(pwd->pw_gid);
-      outMsg(0,'I',"Switched user to %s",serveuser);
+    if(pwd){ 
+      if(setuid(pwd->pw_uid)<0){
+        outMsg(0,'E',"Unable to set user to %s - %s",serveuser,strerror(errno));
+        exit(NB_EXITCODE_FAIL);
+        }
+      outMsg(0,'I',"Set user to %s",serveuser);
       }
     }
 #endif

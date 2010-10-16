@@ -591,7 +591,6 @@ void daemonize(){
   dup(1);
   //umask(077);
   umask(S_IWGRP|S_IRWXO);  // 2008-06-11 eat - avoid group write and all other user access
-  //sleep(1);    // 2005-10-11 eat - what is this for?
   agent=1;
   pid=getpid();
   ppid=getppid();

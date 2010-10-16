@@ -47,6 +47,7 @@
 * 2006-05-12 eat 0.6.6  Included servejail, servedir, and serveuser.
 * 2009-12-28 eat 0.7.7  Included msgTrace.
 * 2010-10-14 eat 0.8.4  Included servepid.
+* 2010-10-16 eat 0.8.4  Included servegroup.
 *============================================================================
 */
 #include <stdio.h> 
@@ -102,6 +103,7 @@ char servejail[256];     // chroot jail directory
 char servedir[256];      // chdir working directory
 char servepid[256];      // pid file
 char serveuser[32];      // su user
+char servegroup[32];     // sg group
 
 struct HASH    *localH;   /* local brain term hash */
 struct NB_TERM *locGloss; /* local glossary "@" brain */

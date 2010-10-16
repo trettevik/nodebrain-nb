@@ -14,7 +14,7 @@
 <table width="100%"><tr>
 <td align="left" width="20%">nb(1)</td>
 <td align="center" width="60%"><span style="font-size: 14pt">NodeBrain Administrator Guide</span>
-<br>Version 0.7.4 - February 2009</td>
+<br>Version 0.8.4 - October 2010</td>
 <td align="right" width="20%">nb(1)</td>
 </tr></table>
 <p style="font-size: 7pt">
@@ -23,6 +23,7 @@
 | <a href="#DESCRIPTION">DESCRIPTION</a>
 | <a href="#ARGUMENTS">ARGUMENTS</a>
 | <a href="#OPTIONS">OPTIONS</a>
+| <a href="#SETTINGS">SETTINGS</a>
 | <a href="#COMMANDS">COMMANDS</a>
 | <a href="#SCRIPTS">SCRIPTS</a>
 | <a href="#Nodes">Nodes</a>
@@ -101,6 +102,10 @@
 |
 <b>--noTrace</b>
 | 
+<b>--pidfile=<i>file</i></b>
+|
+<b>--log=<i>logfile</i></b>
+|
 <i>variable</i> <b>=</b> <i>value</i> 
 |
 <b>\`</b><i>assertion</i>
@@ -147,6 +152,12 @@ the <b>OPTIONS</b> section for a description of available options.
 </td></tr>
 <tr><td width="5%" align="left" valign="top">&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
 <b>--</b> <i>option</i> 
+</td></tr></table>
+Variable settings start with a double minus (&quot;--&quot;) followed be a setting assignment.
+See the <b>SETTINGS</b> section for a description of available settings.
+<p><table width="100%" border="0" cellspacing="0" cellpadding="5">
+<tr><td width="5%" align="left" valign="top">&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
+<b>--</b> <i>variable</i> <b>=</b> <i>value</i> 
 </td></tr></table>
 Source variables may be assigned for symbolic
 substitution or conditional command interpretation within scripts.  These are application
@@ -292,6 +303,27 @@ messages are written while this option is on.
 </td></tr>
 <tr><td width="5%" align="left" valign="top">-T&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
 The --noTrace option turns off the --trace option.
+</td></tr></table>
+</td></tr></table>
+<a name="SETTINGS"></a>
+<h3>SETTINGS</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+Settings arguments may be used as an alternative to placing a <b>set</b> command within a script.
+They can also be used to override settings within a script if specified later in the sequence of parameters.
+<p><table width="100%" border="0" cellspacing="0" cellpadding="5">
+<tr><td width="5%" align="left" valign="top">--logfile=<i>filename</i>&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
+The logfile setting specifies a file where the log is written when nb daemonizes.  An alias of &quot;--log&quot; is
+recognized for compatibility with earlier version.
+</td></tr>
+<tr><td width="5%" align="left" valign="top">--outdir=<i>directory</i>&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
+The outdir setting specifies a directory where output of a spawned process is stored if not directed elsewhere.
+An alias of &quot;--out&quot; is recognized for compatibility with earlier versions.
+</td></tr>
+<tr><td width="5%" align="left" valign="top">--pidfile=<i>filename</i>&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
+The pidfile setting specifies a file where the process identifier (PID) is to be stored when nb daemonizes.
+This can be used by init scripts (/etc/init.d).
 </td></tr></table>
 </td></tr></table>
 <a name="COMMANDS"></a>
@@ -542,4 +574,4 @@ Ed Trettevik &lt;eat@nodebrain.org&gt;
 <p><p>[6] <a href="http://www.nodebrain.org "><i>NodeBrain API Reference</i></a><br>
 </td></table>
 <hr>
-<table width="100%"><tr><td align="left" width="33%">NodeBrain 0.7.4</td><td align="center" width="34%">February 2009</td><td align="right" width="33%">nb(1)</td></tr></table>
+<table width="100%"><tr><td align="left" width="33%">NodeBrain 0.8.4</td><td align="center" width="34%">October 2010</td><td align="right" width="33%">nb(1)</td></tr></table>
