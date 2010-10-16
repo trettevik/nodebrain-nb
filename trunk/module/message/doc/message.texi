@@ -126,9 +126,10 @@ Copyright @copyright{} 2010 The Boeing Company.
 @b{Short Table of Contents}
 @end ifnotplaintext
 @menu
-* Concepts:: Purpose and Approach
-* Tutorial:: By example
+* Concepts:: Foundation
+* Tutorial:: Introduction by Example
 * Commands:: Syntax and Semantics
+* Triggers:: Conditions and Response
 @end menu
 
 @ifnotplaintext
@@ -243,16 +244,15 @@ deliver messages the client is not known to have already received.
 
 Each node within a cabal has a strategy for maintaining connections with other nodes.
 This strategy depends on the type of node.
-@sp 1
-@multitable {---} {--------------------} {--------------------------------------------------------------------------------------}
-@item @w{  } @tab @b{Type} @w{         } @tab @b{Strategy}
-@item @tab source server @tab accept connections from sink clients
-@item @tab sink client   @tab request connections to all source servers
-@item @tab hub server  @tab accept connections from hub and spoke clients, request connection to preferred hub client
-@item @tab hub client  @tab accept connections from hub servers, request connection to preferred hub server
-@item @tab spoke client  @tab request connection to preferred hub server
+@multitable {--------------------} {--------------------------------------------------------------------------------------}
+@item @b{Type} @w{            } @tab @b{Strategy}
+@item source server @tab accept connections from sink clients
+@item sink client   @tab request connections to all source servers
+@item hub server  @tab accept connections from hub and spoke clients, request connection to preferred hub client
+@item hub client  @tab accept connections from hub servers, request connection to preferred hub server
+@item spoke client  @tab request connection to preferred hub server
 @end multitable
-@sp 1
+
 Sink and source nodes use a one directional many-to-many topology.  Hub nodes form a ring topology, enabling efficient and scalable
 message broadcasting to all nodes.  Spoke nodes are able to tap into any hub node, enabling access to all broadcast messages without
 having to be a conduit for the ring.
@@ -303,9 +303,6 @@ This is not the same as saying all object stores will be "correct".
 We are only claiming they will be the same.  A simultaneous delete and update on two different object stores will preserve the update and drop the delete at every store.  This seems like a best result for many applications, but for others it might be the wrong result.  Simultaneous updates at two different stores will preserve the update from the lower numbered instance.  This ensures all object stores end up the same, but which update should actually win is not clear.  For a given application there may be additional factors for making this determination, perhaps a ranking of users initiating the update, or perhaps the updates can be merged to accept both updates.
 So the conflict resolution logic must be designed for the application.  The approach outlined above can be used for many applications, and can be used as a starting point for designing others.  
 
-
-
-
 @node Tutorial
 @chapter Tutorial
 @cindex tutorial
@@ -323,32 +320,32 @@ This section describes the syntax and semantics of commands used with the Messag
 @section Define 
 @cindex define
 
-This section describes the syntax and semantics of core NodeBrain commands used with Message nodes.
+This section describes the syntax for defining Message nodes.
 
 @subsection Define Producer
 @cindex producer
 
-The @code{define} command is used to create a @code{message.producer} node.  
+The @code{message.producer} node is used to write NodeBrain commands to a message log for processing by other members of a message cabal.
 
 @example
 define @i{node} node message.producer("@i{cabal}","@i{nodename}",@i{nodenumber})[:@i{option}[,...]];
 @end example
 
 @multitable {--------------------} {--------------------------------------------------------------------------------------}
-@item @b{Parameter} @w{          } @tab @b{Description}
-@sp 1
+@item @b{Parameter}@w{         }@tab @b{Description}
+
 @item @i{cabal}
 @tab Identifies a cabal subdirectory in the message subdirectory of a caboodle (root directory of NodeBrain application)
 This is a directory containing message logs for every node in the cabal that run within the application on the local host.
-@sp 1
+
 @item @i{nodename} @tab
 Identifies a node within the cabal, and a message log (directory) wihin the cabal subdirectory.
-@sp 1
+
 @item @i{nodenumber} @tab
 The unique node number from 1 to 255 assigned to this message log within a cabal.
-@sp 2
-@item @b{Option} @w{         } @tab @b{Description}
-@sp 1
+
+@item @b{Option}@tab @b{Description}
+
 @item trace @tab
 The @code{trace} option is used to generate log messages for troubleshooting.
 @end multitable
@@ -357,28 +354,30 @@ The @code{trace} option is used to generate log messages for troubleshooting.
 @cindex consumer
 @cindex define
 
+A @code{message.consumer} node is used to read NodeBrain commands from a message log and pass them to the interpreter.
+
 @example
 define @i{node} node message.consumer("@i{cabal}","@i{nodename}",@i{nodenumber},"@i{name}")[:@i{option}[,...]];
 @end example
 
 @multitable {--------------------} {--------------------------------------------------------------------------------------}
-@item @b{Parameter} @w{          } @tab @b{Description}
-@sp 1
+@item @b{Parameter}@w{         }@tab @b{Description}
+
 @item @i{cabal}
 @tab Identifies a cabal subdirectory in the message subdirectory of a caboodle (root directory of NodeBrain application)
 This is a directory containing message logs for every node in the cabal that run within the application on the local host.
-@sp 1
+
 @item @i{nodename} @tab
 Identifies a node within the cabal, and a message log (directory) wihin the cabal subdirectory.
-@sp 1
+
 @item @i{nodenumber} @tab
 The unique node number from 1 to 255 assigned to this message log within a cabal.
-@sp 1
+
 @item @i{name} @tab
 This parameter uniquely identifies a consumer.
-@sp 2
-@item @b{Option} @tab @b{Description}
-@sp 1
+
+@item @b{Option}@tab @b{Description}
+
 @item trace @tab
 The @code{trace} option is used to generate log messages for troubleshooting.
 @end multitable
@@ -390,20 +389,25 @@ The @code{trace} option is used to generate log messages for troubleshooting.
 A @code{message.server} node accepts connections from other nodes (clients) in a cabal and delivers messages that are
 new releative to a client's state.  A state is defined by the last message identifier received by the client from each
 producer within the cabal.
+
 @example
 define @i{node} node message.server("@i{cabal}","@i{nodename}")[:@i{option}[,...]];
 @end example
 
 @multitable {--------------------} {--------------------------------------------------------------------------------------}
-@item @b{Parameter}@w{     }@tab @b{Description}
+@item @b{Parameter}@w{         }@tab @b{Description}
+
 @item @i{cabal}
 @tab Identifies a cabal subdirectory in the message subdirectory of a caboodle (root directory of NodeBrain application)
 This is a directory containing message logs for every node in the cabal that run within the application on the local host.
 The parameter also identifies a subordinate rule node for cabal configuration.  See "Cabal Configuration" below.
+
 @item @i{nodename} @tab
 Identifies a node within the cabal, a message log (directory) within the cabal subdirectory, and subordinate cabal
 node configuration rule node.  See "Cabal Configuration" below.
-@item @b{Option} @tab @b{Description}
+
+@item @b{Option}@tab @b{Description}
+
 @item trace @tab
 The @code{trace} option is used to generate log messages for troubleshooting.
 @end multitable
@@ -448,21 +452,20 @@ define @i{node} node message.client("@i{cabal}","@i{nodename}")[:@i{option}[,...
 @end example
 
 @multitable {--------------------} {--------------------------------------------------------------------------------------}
-@item @b{Parameter} @w{          } @tab @b{Description}
-@sp 1
+@item @b{Parameter}@w{         }@tab @b{Description}
+
 @item @i{cabal}
 @tab Identifies a cabal subdirectory in the message subdirectory of a caboodle (root directory of NodeBrain application)
 This is a directory containing messaoge logs for every node in the cabal that run within the application on the local host.
 The parameter also identifies a subordinate rule node for cabal configuration.
 See "Define Server" for a description of cabal configuration.
 
-@sp 1
 @item @i{nodename} @tab
 Identifies a node within the cabal, a message log (directory) within the cabal subdirectory, and a subordinate rule node
 configuring the node within the cabal.  See "Define Server" for a description of cabal configuration.
-@sp 2
-@item @b{Option} @tab @b{Description}
-@sp 1
+
+@item @b{Option}@tab @b{Description}
+
 @item trace @tab
 The @code{trace} option is used to generate log messages for troubleshooting.
 @end multitable
@@ -471,9 +474,14 @@ The @code{trace} option is used to generate log messages for troubleshooting.
 @cindex assertions
 @cindex assert
 @cindex alert
+
+The Message module does not implement the @code{assert} and @code{alert} commands.
+
+@section Cell Expressions
+@cindex cells
 @cindex evaluation
 
-The Message module does not implement the @code{assert} and @code{alert} commands, nor does it implement cell evaluation.
+The Message module does not implement cell evaluation.
 
 @section Node Commands
 @cindex node commands
@@ -524,14 +532,14 @@ While this validation is appropriate for other uses of the Message API, a future
 API will enable the @code{export} command to work without requiring the @i{nodenumber}.
 
 
-@section Generated Commands
-@cindex generated commands
+@node Triggers
+@chapter Triggers
+@cindex triggers
 
-There are currently no special commands generated by message nodes.
-A future enhancement may provide an option for @code{message.server} nodes to generate connection status alerts,
-enabling rules to respond to connection status changes.
-In this release, only a @code{message.client} node generates commands, and they can be any command
-provided by a message servers.
+A @code{message.client} node passes all commands received from a @code{message.server} to the interpreter.
+There are no other trigger conditions implemented by the Message module.
+A future enhancement may provide an option for @code{message.server} nodes to generate connection status change alerts,
+enabling rules to respond.
 
 @node GNU Free Documentation License
 @unnumbered GNU Free Documentation License

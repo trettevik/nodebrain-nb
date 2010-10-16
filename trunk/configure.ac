@@ -76,10 +76,11 @@
 # 2010/05/11 eat 0.8.1  Fix to defects in message cabal feature
 # 2010/05/21 eat 0.8.2  Fix more defects in message cabal feature
 # 2010/09/06 eat 0.8.3  Baseline module
+# 2010/10/14 eat 0.8.4  Patches and pid file
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([nodebrain],[0.8.3],[bugs@nodebrain.org])
+AC_INIT([nodebrain],[0.8.4],[bugs@nodebrain.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SUBDIRS([lib module])
 AM_INIT_AUTOMAKE

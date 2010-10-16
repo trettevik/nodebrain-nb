@@ -48,6 +48,7 @@
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2010-06-19 eat 0.8.2  Included support for commands provided by modules
+* 2010-10-14 eat 0.8.4  Included initialization of servepid.
 *============================================================================*/
 #include "nbi.h"
 #include "nbmedulla.h"
@@ -322,6 +323,7 @@ nbCELL nbStart(int argc,char *argv[]){
 
   *servejail=0;  // chroot directory
   *servedir=0;   // chdir directory
+  *servepid=0;   // pid file 
   *serveuser=0;  // su user
   nb_symBuf1=malloc(NB_BUFSIZE);
   nb_symBuf2=malloc(NB_BUFSIZE);

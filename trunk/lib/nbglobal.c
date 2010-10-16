@@ -41,11 +41,12 @@
 *
 *    Date    Name/Change
 * ---------- ---------------------------------------------------------------
-* 2003/03/15 eat 0.5.2  Created to simplify code restructuring.
-* 2003/05/22 eat 0.5.3  Dropped global server_socket variable (see listeners)
-* 2003/10/07 eat 0.5.5  Removed definition of nbin - see nbGets().
-* 2006/05/12 eat 0.6.6  Included servejail, servedir, and serveuser.
-* 2009/12/28 eat 0.7.7  Included msgTrace.
+* 2003-03-15 eat 0.5.2  Created to simplify code restructuring.
+* 2003-05-22 eat 0.5.3  Dropped global server_socket variable (see listeners)
+* 2003-10-07 eat 0.5.5  Removed definition of nbin - see nbGets().
+* 2006-05-12 eat 0.6.6  Included servejail, servedir, and serveuser.
+* 2009-12-28 eat 0.7.7  Included msgTrace.
+* 2010-10-14 eat 0.8.4  Included servepid.
 *============================================================================
 */
 #include <stdio.h> 
@@ -99,6 +100,7 @@ char jname[100];         /* journal file name */
 
 char servejail[256];     // chroot jail directory
 char servedir[256];      // chdir working directory
+char servepid[256];      // pid file
 char serveuser[32];      // su user
 
 struct HASH    *localH;   /* local brain term hash */

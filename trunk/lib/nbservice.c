@@ -545,6 +545,8 @@ void daemonize(){
   pid_t pid,ppid;
   void (*sighandler)(int);
   int fd;
+  int pidfd;
+  char pidbuffer[12];
 
   pid=getpid();
   ppid=getppid();
@@ -552,13 +554,13 @@ void daemonize(){
   // make sure we can open the log file before reassigning stderr
   // tests may show the code below to be sufficient - comment this out to test
   if(*log!=0){
-	if((fd=open(log,O_CREAT|O_RDWR|O_APPEND,S_IRUSR|S_IWUSR|S_IRGRP))<0){
+    if((fd=open(log,O_CREAT|O_RDWR|O_APPEND,S_IRUSR|S_IWUSR|S_IRGRP))<0){
       outMsg(0,'E',"Unable to open log file '%s' - errno=%d %s",log,errno,strerror(errno));
-	  outMsg(0,'E',"NodeBrain %s[%d] terminating with severe error - exit code=%d",myname,pid,NB_EXITCODE_FAIL);
+      outMsg(0,'E',"NodeBrain %s[%d] terminating with severe error - exit code=%d",myname,pid,NB_EXITCODE_FAIL);
       outFlush();
-	  exit(NB_EXITCODE_FAIL);
-	  }
-	else close(fd);
+      exit(NB_EXITCODE_FAIL);
+      }
+    else close(fd);
     }
   outFlush();
   fflush(NULL);
@@ -605,6 +607,18 @@ void daemonize(){
         fprintf(stderr,"file %d is open\n",fd);
         }
       }
+    }
+  // 2010-10-14 eat - write to pid file if we have a pid file name
+  if(*servepid){
+    if((pidfd=open(servepid,O_CREAT|O_TRUNC|O_WRONLY,S_IRUSR|S_IWUSR|S_IRGRP))<0){
+      outMsg(0,'E',"Unable to open pid file '%s' - errno=%d %s",servepid,errno,strerror(errno));
+      outMsg(0,'E',"NodeBrain %s[%d] terminating with severe error - exit code=%d",myname,pid,NB_EXITCODE_FAIL);
+      outFlush();
+      exit(NB_EXITCODE_FAIL);
+      }
+    sprintf(pidbuffer,"%d\n",pid);
+    write(pidfd,pidbuffer,strlen(pidbuffer));
+    close(pidfd);
     }
   return;
   }

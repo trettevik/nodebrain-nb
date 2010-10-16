@@ -228,6 +228,7 @@
 *            be 100% correct.  The modifications focused on "return" statements,
 *            but some "failure" conditions may still flow out the end of a
 *            function where a "return(0)" has been included.
+* 2010-10-14 eat 0.8.4  Included servepid---pid file name.
 *==============================================================================
 */
 #include "nbi.h"
@@ -407,12 +408,12 @@ void showSet(){
   //outPut("ipaddr:\t%s\n",serveipaddr);
   //outPut("oar:\t%s\n",serveoar);
   //outPut("nbp:\t%u\n",nbp);
-  outPut("log:\t%s\n",outLogName(NULL));
-  outPut("out:\t%s\n",outDirName(NULL));
-  //outPut("que:\t%s\n",quedir);
-  outPut("jail:\t%s\n",servejail);
-  outPut("dir:\t%s\n",servedir);
-  outPut("user:\t%s\n",serveuser);
+  outPut("log:    \t%s\n",outLogName(NULL));
+  outPut("out:    \t%s\n",outDirName(NULL));
+  outPut("pidfile:\t%s\n",servepid);
+  outPut("jail:   \t%s\n",servejail);
+  outPut("dir:    \t%s\n",servedir);
+  outPut("user:   \t%s\n",serveuser);
   }
 
 // Show process list
@@ -931,6 +932,7 @@ int nbCmdSet(nbCELL context,void *handle,char *verb,char *cursor){
         //else if(strcmp(ident,"oar")==0)  nbSetOptStr(ident,serveoar,token,sizeof(serveoar));
         else if(strcmp(ident,"jail")==0) nbSetOptStr(ident,servejail,token,sizeof(servejail)); // 2006-05-12 eat 0.6.6
         else if(strcmp(ident,"dir")==0)  nbSetOptStr(ident,servedir,token,sizeof(servedir));   // 2006-05-12 eat 0.6.6
+        else if(strcmp(ident,"pidfile")==0)  nbSetOptStr(ident,servepid,token,sizeof(servedir));   // 2010-10-14 eat 0.8.4
         else if(strcmp(ident,"user")==0) nbSetOptStr(ident,serveuser,token,sizeof(serveuser)); // 2006-05-12 eat 0.6.6
         else{
           outMsg(0,'E',"Unrecognized string option \"%s\".",ident);

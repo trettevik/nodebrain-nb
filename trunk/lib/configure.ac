@@ -73,10 +73,11 @@
 # 2010/05/11 eat 0.8.1  Fix to defects in message cabal feature 
 # 2010/05/21 eat 0.8.2  Fix more defects in message cabal feature 
 # 2010/09/06 eat 0.8.3  Baseline module 
+# 2010/10/14 eat 0.8.4  Patches and pid file 
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([libnb],[0.8.3],[bugs@nodebrain.org])
+AC_INIT([libnb],[0.8.4],[bugs@nodebrain.org])
 AC_CONFIG_SRCDIR([nb.h])
 AC_CONFIG_HEADER([nbcfg.h])
 AC_CONFIG_AUX_DIR(config)
@@ -103,7 +104,7 @@ LT_SYS_MODULE_EXT
 LT_FUNC_DLSYM_USCORE
 
 # define a release date variable
-AC_DEFINE(NB_RELEASE_DATE,"2010/09/06",[Define release date])
+AC_DEFINE(NB_RELEASE_DATE,"2010/10/14",[Define release date])
 
 # Checks for programs.
 AC_PROG_CC

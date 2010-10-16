@@ -38,6 +38,7 @@
 * 2006-05-12 eat 0.6.6  Included servejail, servedir, and serveuser.
 * 2008-03-08 eat 0.7.0  removed serveipaddr
 * 2009-12-28 eat 0.7.7  included msgTrace
+* 2010-10-14 eat 0.8.4  Included servepid.
 *============================================================================
 */
 #ifndef _NB_GLOBAL_H_
@@ -95,6 +96,7 @@ extern FILE *jfile;           /* journal file */
 extern char jname[100];       /* journal file name */
 extern char servejail[256];     // chroot jail directory
 extern char servedir[256];      // chdir working directory
+extern char servepid[256];      // pid file
 extern char serveuser[32];      // su user
 
 extern struct HASH   *localH;   /* local brain term hash */

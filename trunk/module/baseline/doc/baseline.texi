@@ -124,9 +124,10 @@ Copyright @copyright{} 2010 The Boeing Company.
 @b{Short Table of Contents}
 @end ifnotplaintext
 @menu
-* Concepts:: Purpose and Approach
+* Concepts:: Foundation
+* Tutorial:: Introduction by Example
 * Commands:: Syntax and Semantics
-* Tutorial:: By example
+* Triggers:: Conditions and Response
 @end menu
 
 @ifnotplaintext
@@ -311,211 +312,6 @@ T = t % c               time within the cycle
 F = int ( T / p ) * p   file time
 @end example
 
-@node Commands
-@chapter Commands
-@cindex commands
-
-This section describes the syntax and semantics of commands used with the Baseline module.
-
-@section define
-@cindex define
-
-This section describes define commands supported by the Baseline module.
-
-@subsection Define Baseline
-@cindex define
-
-The @code{define} command is used to create a Baseline node.  
-
-@example
-define @i{node} node baseline("@i{directory}",@i{weight},@i{tolerance},@i{cycle},@i{period})[:@i{options}];
-@end example
-
-
-@multitable {--------------------} {--------------------------------------------------------------------------------------}
-@item @i{directory}
-@tab Path of directory for storing baseline files called period profiles.  This should normally be a relative path within a caboodle and the "cache" directory (e.g. "cache/baseline/@i{baseline}") is recommended.  You should avoid having more than one node, in one or more agents, referencing the same Baseline profile directory.
-@sp 1
-@item @i{weight} @tab
-A real number from 0 to 1 which determines how much weight should be given to a new value relative to past values.
-@sp 1
-@item @i{tolerance} @tab
-The number of standard deviations from the average for which a given deviation is considered to be within a normal range.
-@sp 1
-@item @i{cycle} @tab
-Number of minutes in each cycle for which a pattern of periodic variation is expected.  Examples are daily (24*60) and weekly (7*24*60).
-@sp 1
-@item @i{period} @tab
-Number of minutes in each period within a cycle for which an average value and average deviation is maintained for each measure.
-@end multitable
-
-@subsection Options
-@cindex options
-
-Comma separated options are used to modify the default behavior of a baseline node.
-@multitable {--------------------} {--------------------------------------------------------------------------------------}
-@item found @tab
-The @code{found} option is assigned a cell expression to be used as a default value when an element is found
-by an evaluation but has no value.  This happens when an evaluation has fewer arguments than the assertion
-that created the element.  For example, if we assert @code{foobar("abc","def")=5} and evaluate @code{foobar("abc")}, the "abc" element is found, but has no value, assuming it was not explicitly asserted also.  By default, ? (unknown) is returned. 
-@example
-found=@i{cellExpression}
-@end example
-@sp 1
-@item notfound @tab
-The @code{notfound} option provides a default value when an element is not found during an evaluation.
-The default value for @code{notfound} is ? (unknown).  A value of 0 can be used to implement the "closed world assumption", where anything not known to be true is assumed to be false.
-@example
-notfound=@i{cellExpression}
-@end example
-@sp 1
-@item order @tab
-The @code{order} option specifies the use of argument values for comparison when searching and maintaining binary trees within a Baseline node.
-By default, comparisons are performed on the address of argument value objects for added efficiency.
-This is possible because NodeBrain maintains only one object for any given value.
-@sp 1
-@item partition @tab
-The @code{partition} option implies the @code{order} option, and changes the evaluation operation to match an argument to the element with the maximum value less than or equal to the argument value.  This enables a domain of values to be partitioned into ranges of values.  
-For example, a partitioned Baseline node might be used to monitor the number of traffic accidents by driver age ranges
-in 10 year increments.
-@sp 1
-@item static @tab
-Use @code{static} to avoid updating the profile at the end of each period.
-This is appropriate when the profile defines the acceptable range of values for each measure, and "learning" is not
-desired.  
-Although the weight can be set to 0 to avoid adjusting average value and average deviation statistics in a profile for known elements, this does not prevent the Baseline node from updating the profile with new elements.
-Use of the @code{static} option prevents the addition of new elements, and (if weight is not zero) enables learning for elements not included in the profile.  
-However, learning for an element that is not in the profile develops statistics over all periods, instead of per period.
-@sp 1
-@item sum @tab
-When @code{sum} is used, asserted values are summed up over each period.  The period value is then the sum of all values asserted during the period.  
-When the sum reaches an upper limit and the assertion and average are both positive, or a lower limit and the assertion and average are both negative, an alert can be triggered right away. 
-However, a lower limit for positive average and upper limit for negative average must be checked at the end of a period when the full sum is known.
-@sp 1
-@item trace @tab
-The @code{trace} option is used to generate log messages for troubleshooting.
-@end multitable
-
-@section Assertions
-@cindex assertions
-
-This section describes support for assertions and response to assertions implemented by the Baseline module.
-
-@subsection Assert and Alert
-@cindex assert
-@cindex alert
-
-The Baseline module supports assertions within @code{assert} or @code{alert} commands.  
-@example
-assert @i{node}(@i{arg1}[,@i{arg2},...])[=@i{value}];  # value must be number or ? (Unknown)
-@end example
-The semantics are similar to the Tree module, except the value assigned to an element within a Baseline node must be a number.
-Strings are not allowed.  
-When the @code{sum} option is used by a Baseline node, an assertion to a Baseline node will add to the current value, otherwise it replaces the current value.  If no value is specified, 1 is assumed.  If an unknown value ("?") is assigned, the element is removed.
-
-@subsection Cell Expression Evaluation
-@cindex cell
-@cindex cell expression
-@cindex evaluation
-
-When a Baseline node is referenced in a cell expression it presents the value of the specified element.
-Here we show a reference within a cell expression of a simple @code{define} statement.
-
-@example
-define @i{term} cell @i{node}(@i{arg1}[,@i{arg2},...]);  # term has value of specified element
-@end example
-
-@section Node Commands
-@cindex node commands
-
-This section describes commands implemented by the Baseline module for use with defined nodes.
-
-@example
-@i{node}[(@i{arg1}[,@i{arg2},...])]:@i{verb} [@i{arguments}]
-@end example
-
-@subsection Balance
-@cindex balance
-
-The @code{balance} command is used to rebalance the trees within a Baseline node after @code{flatten} or @code{prune} commands have made the trees unbalanced.
-
-@example
-@i{node}:balance
-@end example
-
-@subsection Flatten
-@cindex flatten
-
-The @code{balance} command is used to completely unbalance the trees within a Baseline node so they effectively become lists.
-
-@example
-@i{node}:flatten
-@end example
-
-@subsection Prune
-@cindex prune
-
-The @code{prune} command is used to remove elements from a Baseline node.
-
-@example
-@i{node}[(@i{arg1}[,@i{arg2},...])]:prune
-@end example
-
-Unlike an assertion that an element is unknown, which removes the identified element and the subordinate tree, the @code{prune} command only removes the subordinate tree.  
-Using a table model, it deletes the subordinate table, emptying the cells to the right of the identified cell and deleting all rows represented by the subordinate table.
-
-@subsection Set
-@cindex set
-
-The @code{set} command is used to assign the average value and average deviation for an element in a Baseline node.
-
-@example
-@i{node}(@i{arg1}[,@i{arg2},...]):set @i{averageValue},@i{averageDeviation};
-@end example
-
-Although @code{set} commands can be issued at any time, they are primarily used in period profiles.  A period profile is just a file containing @code{set} commands.  These files are processed ("sourced") at the start of a period, and optionally updated at the end of a period.  
-
-@subsection Store
-@cindex store
-
-The @code{store} command is used to write the current measures within a Baseline node to a file in the form of assertions.
-
-@example
-assert (@i{arg1}[,@i{arg2},...])=@i{value};
-...
-@end example
-
-The node name is not included in the assertions.  This enables the assertions to be easily applied to a different node---perhaps not even a Baseline node.
-
-@subsection Trace
-@cindex trace
-
-The @code{trace} command is used to toggle the trace option for troubleshooting.
-@example
-@i{node}:trace [on|off]
-@end example
-
-@section Module Commands
-@cindex module commands
-
-The Baseline module currently implements no module level commands.
-
-
-@section Generated Commands
-@cindex generated commands
-
-This section describes the commands generated by a Baseline node.
-
-@subsection Alert
-@cindex alert
-
-When measures reach thresholds a Baseline node issues an alert to @code{if} rules defined for the node.
-These alerts have the following form.
-@example
-alert _measure="@i{name}",_value=@i{n},_average=@i{n},_sigma=@i{n},_deviation=@i{n},_threshold=@i{n},_level=@i{n};
-@end example
-
-*** include description of the attributes ***
 @node Tutorial
 @chapter Tutorial
 @cindex tutorial
@@ -699,6 +495,202 @@ packets. assert ("icmp")=465,("http")=1024,("smtp")=34; # increment measures
 @end example
 
 At the end of each period the measures are all reset to zero when the @code{sum} option is used.
+
+@node Commands
+@chapter Commands
+@cindex commands
+
+This section describes the syntax and semantics of commands used with the Baseline module.
+
+@section Define
+@cindex define
+
+This section describes define commands supported by the Baseline module.
+
+@subsection Define Baseline
+@cindex define
+
+The @code{define} command is used to create a Baseline node.  
+
+@example
+define @i{node} node baseline("@i{directory}",@i{weight},@i{tolerance},@i{cycle},@i{period})[:@i{options}];
+@end example
+
+
+@multitable {--------------------} {--------------------------------------------------------------------------------------}
+@item @b{Parameters}@w{        }@tab @b{Description}
+@item @i{directory}
+@tab Path of directory for storing baseline files called period profiles.  This should normally be a relative path within a caboodle and the "cache" directory (e.g. "cache/baseline/@i{baseline}") is recommended.  You should avoid having more than one node, in one or more agents, referencing the same Baseline profile directory.
+@item @i{weight} @tab
+A real number from 0 to 1 which determines how much weight should be given to a new value relative to past values.
+@item @i{tolerance} @tab
+The number of standard deviations from the average for which a given deviation is considered to be within a normal range.
+@item @i{cycle} @tab
+Number of minutes in each cycle for which a pattern of periodic variation is expected.  Examples are daily (24*60) and weekly (7*24*60).
+@item @i{period} @tab
+Number of minutes in each period within a cycle for which an average value and average deviation is maintained for each measure.
+@sp 1
+@item @b{Option}@tab @b{Description}
+@item found @tab
+The @code{found} option is assigned a cell expression to be used as a default value when an element is found
+by an evaluation but has no value.  This happens when an evaluation has fewer arguments than the assertion
+that created the element.  For example, if we assert @code{foobar("abc","def")=5} and evaluate @code{foobar("abc")}, the "abc" element is found, but has no value, assuming it was not explicitly asserted also.  By default, ? (unknown) is returned. 
+@example
+found=@i{cellExpression}
+@end example
+@item notfound @tab
+The @code{notfound} option provides a default value when an element is not found during an evaluation.
+The default value for @code{notfound} is ? (unknown).  A value of 0 can be used to implement the "closed world assumption", where anything not known to be true is assumed to be false.
+@example
+notfound=@i{cellExpression}
+@end example
+@item order @tab
+The @code{order} option specifies the use of argument values for comparison when searching and maintaining binary trees within a Baseline node.
+By default, comparisons are performed on the address of argument value objects for added efficiency.
+This is possible because NodeBrain maintains only one object for any given value.
+@item partition @tab
+The @code{partition} option implies the @code{order} option, and changes the evaluation operation to match an argument to the element with the maximum value less than or equal to the argument value.  This enables a domain of values to be partitioned into ranges of values.  
+For example, a partitioned Baseline node might be used to monitor the number of traffic accidents by driver age ranges
+in 10 year increments.
+@item static @tab
+Use @code{static} to avoid updating the profile at the end of each period.
+This is appropriate when the profile defines the acceptable range of values for each measure, and "learning" is not
+desired.  
+Although the weight can be set to 0 to avoid adjusting average value and average deviation statistics in a profile for known elements, this does not prevent the Baseline node from updating the profile with new elements.
+Use of the @code{static} option prevents the addition of new elements, and (if weight is not zero) enables learning for elements not included in the profile.  
+However, learning for an element that is not in the profile develops statistics over all periods, instead of per period.
+@item sum @tab
+When @code{sum} is used, asserted values are summed up over each period.  The period value is then the sum of all values asserted during the period.  
+When the sum reaches an upper limit and the assertion and average are both positive, or a lower limit and the assertion and average are both negative, an alert can be triggered right away. 
+However, a lower limit for positive average and upper limit for negative average must be checked at the end of a period when the full sum is known.
+@item trace @tab
+The @code{trace} option is used to generate log messages for troubleshooting.
+@end multitable
+
+@section Assertions
+@cindex assertions
+@cindex assert
+@cindex alert
+
+The Baseline module supports assertions within @code{assert} or @code{alert} commands.  
+@example
+assert @i{node}(@i{arg1}[,@i{arg2},...])[=@i{value}];  # value must be number or ? (Unknown)
+@end example
+The semantics are similar to the Tree module, except the value assigned to an element within a Baseline node must be a number.
+Strings are not allowed.  
+When the @code{sum} option is used by a Baseline node, an assertion to a Baseline node will add to the current value, otherwise it replaces the current value.  If no value is specified, 1 is assumed.  If an unknown value ("?") is assigned, the element is removed.
+
+@section Cell Expressions
+@cindex cell
+@cindex cell expression
+@cindex evaluation
+
+When a Baseline node is referenced in a cell expression it presents the value of the specified element.
+Here we show a reference within a cell expression of a simple @code{define} statement.
+
+@example
+define @i{term} cell @i{node}(@i{arg1}[,@i{arg2},...]);  # term has value of specified element
+@end example
+
+@section Node Commands
+@cindex node commands
+
+This section describes commands implemented by the Baseline module for use with defined nodes.
+
+@example
+@i{node}[(@i{arg1}[,@i{arg2},...])]:@i{verb} [@i{arguments}]
+@end example
+
+@subsection Balance
+@cindex balance
+
+The @code{balance} command is used to rebalance the trees within a Baseline node after @code{flatten} or @code{prune} commands have made the trees unbalanced.
+
+@example
+@i{node}:balance
+@end example
+
+@subsection Flatten
+@cindex flatten
+
+The @code{balance} command is used to completely unbalance the trees within a Baseline node so they effectively become lists.
+
+@example
+@i{node}:flatten
+@end example
+
+@subsection Prune
+@cindex prune
+
+The @code{prune} command is used to remove elements from a Baseline node.
+
+@example
+@i{node}[(@i{arg1}[,@i{arg2},...])]:prune
+@end example
+
+Unlike an assertion that an element is unknown, which removes the identified element and the subordinate tree, the @code{prune} command only removes the subordinate tree.  
+Using a table model, it deletes the subordinate table, emptying the cells to the right of the identified cell and deleting all rows represented by the subordinate table.
+
+@subsection Set
+@cindex set
+
+The @code{set} command is used to assign the average value and average deviation for an element in a Baseline node.
+
+@example
+@i{node}(@i{arg1}[,@i{arg2},...]):set @i{averageValue},@i{averageDeviation};
+@end example
+
+Although @code{set} commands can be issued at any time, they are primarily used in period profiles.  A period profile is just a file containing @code{set} commands.  These files are processed ("sourced") at the start of a period, and optionally updated at the end of a period.  
+
+@subsection Store
+@cindex store
+
+The @code{store} command is used to write the current measures within a Baseline node to a file in the form of assertions.
+
+@example
+assert (@i{arg1}[,@i{arg2},...])=@i{value};
+...
+@end example
+
+The node name is not included in the assertions.  This enables the assertions to be easily applied to a different node---perhaps not even a Baseline node.
+
+@subsection Trace
+@cindex trace
+
+The @code{trace} command is used to toggle the trace option for troubleshooting.
+@example
+@i{node}:trace [on|off]
+@end example
+
+@section Module Commands
+@cindex module commands
+
+The Baseline module currently implements no module level commands.
+
+
+@node Triggers
+@chapter Triggers
+@cindex triggers
+@cindex alert
+
+When measures reach thresholds a Baseline node issues an alert to @code{if} rules defined for the node.
+These alerts have the following form.
+@example
+alert _measure="@i{name}",_value=@i{n},_average=@i{n},_deviation=@i{n},_threshold=@i{n},_limit=@i{n}, \
+      _sigma=@i{n},_level=@i{n};
+@end example
+
+@multitable {--------------------} {--------------------------------------------------------------------------------------}
+@item @b{Attribute}@w{        }@tab @b{Description}
+@item _measure @tab Name of the measure for which the value is outside the specified limit.
+@item _value @tab Value of the measure outside the limit.
+@item _average @tab Learned average value for the period.
+@item _deviation @tab Absolute value of the different between actual (_value) and expected (_average).
+@item _threshold @tab Deviation threshold surpassed.
+@item _limit @tab Control limit surpassed.  This is the average plus or minus the threshold.
+@item _sigma @tab Approximate standard deviation for the period.
+@item _level @tab Magnitude of anomaly.  threshold=(2**level)*tolerance*sigma
+@end multitable
 
 @node GNU Free Documentation License
 @unnumbered GNU Free Documentation License
