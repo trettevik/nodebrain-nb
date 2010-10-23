@@ -31,6 +31,7 @@ NodeBrain(TM) is a trademark of The Boeing Company.   All other trademarks and r
 @b{Software License}
 
 @multitable {------------------------------} {----------------------------------------------------}
+
 @item Copyright @copyright{} 2010 @tab The Boeing Company
 @item @tab Ed Trettevik <eat@@nodebrain.org>
 @end multitable
@@ -162,19 +163,42 @@ The Message module is a NodeBrain plug-in for broadcasting messages to multiple 
 It uses the NodeBrain Message API, which is also available to other modules.
 Here we introduce some basic concepts of the API.
 
+
 @section Message Log
 @cindex message log
 
-A message log is a directory containing message log files, with a symbolic link, @file{m.nbm}, pointing to the active file.
-Message log files are named @i{nnnnnnnn}@code{.nbm}, where @i{nnnnnnnn} starts at 00000001 and increments
-each time a new file is created.
-A new file is created when the active file reaches a specified size.
+A message log is a directory containing files used to manage the delivery of messages from one node to another within a set of nodes that share messages.  We call this set of nodes a "cabal".
 
-Each log file has a header record, and all but the active file has a footer record.  
+@multitable {-----------------------} {-----------------------------------------------------------------------------------------}
+@item @code{@i{name}.msg}@w{         }
+@tab A named message file identifies the last message received from every node within a cabal.
+We call this information the "state" of the node, and sometimes refer to a named message file as the state file.
+This file may be a symbolic link to the active numbered message file.
+
+@item @code{@i{nnnnnnnn}.msg}
+@tab A numbered message file contains a header providing the log's state at the time the file was stared.
+This is followed by a set of message records.
+The number @i{nnnnnnnn} starts at 00000001 and increments each time a new file is created.
+A new file is created when the active file reasches a specified size.
+All message files other than the active one end with a footer record.
 Every record in a message log file contains a header portion and a data portion.
 The header portion of each record, and the header and footer records, are used to manage
 message delivery.  The data portion of a message record contains the application message to be delivered.
 An application message may be text or binary data.
+
+@item @code{@i{name}.cursor}
+@tab A cursor file points to an offset within a numbered message file.
+Cursor files may be used by processes that read a message log and need to keep track of their position within the log.
+A cursor file is not required by processes that maintain state in some other way.
+
+@item @code{producer}
+@tab Each message log has a single "producer"---a process that writes to the log. 
+A producer file is a local domain socket that can be used by "consumers" (processes that read from the log) to request a stream of new measages via UDP packets. 
+
+@item @code{@i{name}.consumer}
+@tab A consumer file is a local domain socket used for sending UDP message packets from the producer to a consumer.
+@end multitable
+
 
 @section Producer and Consumer
 @cindex producer
@@ -183,12 +207,9 @@ An application message may be text or binary data.
 A message producer is a component that writes to a message log.
 A message consumer is a component that reads from a message log.
 Consumers keep track of their position within the message log by updating a cursor file.
-A consumer is responsible for polling the message log for more messages, and should only be used where
-rapid delivery is not important.
+A consumer may receive messages by polling the message log for new messages, or by requesting that the producer provide a stream of new messages via UDP.
 
-In addition, a message producer optionally sends every message to a message server (see next section) as a UDP packet
-via a local domain socket. 
-A message server doesn't have to read the message log, unless a missed packet is detected.
+A consumer that requests a UDP stream of messages doesn't have to read the message log, unless a missed packet is detected.
 The UDP packets are numbered to enable the detection of a missed packet, and include the offset
 within the message log where the next message will be stored.  This enables the message server
 to start reading directly at the message contained in a missed packet.
@@ -197,13 +218,14 @@ The goal of this design is to ensure rapid delivery when both the producer and s
 are running efficiently, but also decouple the producer and server so either one can operate without the other,
 or at different speeds, at any given time. 
 
+
 @section Server and Client
 @cindex server
 @cindex client
 
-A message server (at most one per producer) delivers messages from a message log
+A message server delivers messages from a message log
 to message clients.  A message client is a component that connects to a message server
-and requests messages starting at a given number.  While a client maintains a connection to
+and requests messages starting at a given state.  While a client maintains a connection to
 a message server, messages will continue to stream in near real-time as generated by the message producer.
 The connection between a client and server can actually be requested by either the client or the server,
 meaning the client and server are peers.
@@ -213,15 +235,17 @@ receives from servers as well as messages it originates.
 The corresponding message server is then able to serve messages originating at multiple producers.
 The communication between a producer and a server is described in the previous section.
 
+
 @section Source and Sink
 @cindex source
 @cindex sink
 
 We call a message server a "source" when the corresponding producer is not also a client.  
-The message log produced by such a node contains only messages it generates itself.
-We call a message client a "sink" when it is not also a producer, which means it has no associated server or consumers.
+The message log produced by such a node contains only messages it generates.
+We call a message client a "sink" when it is not also a producer, which means it has no associated server.
 The use of source and sink nodes is appropriate in cases where you simply want to collect messages from one or more
 nodes and process the messages at one or more other nodes.
+
 
 @section Cabals, Node Numbers, and State
 @cindex cabals
@@ -317,6 +341,14 @@ bingo. define alert node message.producer("alert","E1",1);
 
 This section describes the syntax and semantics of commands used with the Message module.
 
+@menu
+* Define:: 
+* Assertions::
+* Cell Expressions:: 
+* Node Commands:: 
+* Module Commands:: 
+@end menu
+@node Define
 @section Define 
 @cindex define
 
@@ -470,6 +502,7 @@ configuring the node within the cabal.  See "Define Server" for a description of
 The @code{trace} option is used to generate log messages for troubleshooting.
 @end multitable
 
+@node Assertions
 @section Assertions
 @cindex assertions
 @cindex assert
@@ -477,12 +510,14 @@ The @code{trace} option is used to generate log messages for troubleshooting.
 
 The Message module does not implement the @code{assert} and @code{alert} commands.
 
+@node Cell Expressions
 @section Cell Expressions
 @cindex cells
 @cindex evaluation
 
 The Message module does not implement cell evaluation.
 
+@node Node Commands
 @section Node Commands
 @cindex node commands
 
@@ -496,6 +531,7 @@ The @code{trace} command is used to toggle the trace option for troubleshooting.
 @i{node}:trace [on|off]
 @end example
 
+@node Module Commands
 @section Module Commands
 @cindex module commands
 
@@ -507,6 +543,64 @@ followed by a period and then a verb.
 message.@i{verb} @i{body}
 @end example
 
+@subsection Create
+@cindex create command
+
+The @code{message.create} command is used to initialize a message log before using for the first time with a message node.
+
+@example
+message.create [@i{path}] @i{cabal} @i{nodename} @i{nodenumber} [@i{type}]
+@end example
+
+@multitable {--------------------} {--------------------------------------------------------------------------------------}
+@item @b{Element}@w{         }@tab @b{Description}
+
+@item @i{path}
+@tab Specifies a path to a directory containing message logs.  
+When specified, a path must start with "/" or "./". 
+A path starting with "./" is relative to the working directory. 
+The default value is "./message", which assumes the command is executed with a NodeBrain caboodle as the working directory and message logs are stored in this directory.
+
+@item @i{cabal}
+@tab The name of the cabal in which the new message log will participate.
+
+@item @i{nodename}
+@tab The name of the cabal node for which to create a new message log.
+
+@item @i{nodenumber}
+@tab Number from 0 to 255 assigned to the specified node within the specified cabal.  This number may be zero for a spoke or sink node, but must otherwise be a unique number within the cabal greater than zero.  The @code{create} command is not aware of the numbers that may have been assigned to other nodes, perhaps on other machines, so you must manually reference a common cabal configuration file to make this assignment properly.
+
+@item @i{type}
+@tab When the @i{nodenumber} is zero (a message log with no server), specify @code{content} if you want messages logged, or @code{state} to simply maintain a node's message state.  
+When @code{state} is specified, the state is stored as a message log file header record and updated as each message arrives.
+This option may be  used by "sink" and "spoke" client nodes to keep track of their state without using up file space to store messages.  
+There are times where it is desireable to store message content at "sink" and "spoke" client nodes for visibility or for sharing with local consumer nodes.
+When the @i{nodenumber} is non-zero, the @i{type} may be omitted, or a value of @code{content} may be specified.
+A value of @code{state} is not allowed with a non-zero @i{nodenumber}.
+
+@itemize @bullet
+@item @code{content} - Write messages to the log.
+@item @code{state} - Only maintain a state (header) record.
+@end itemize
+@end multitable
+
+When the @code{content} option is specified, or used by default, a numbered message file is created with a named symbolic link.
+The numbered message file is initialized with a header record.
+
+@example
+@i{path}/@i{cabal}/@i{nodename}/@i{nodename}.msg -> 00000001.msg    
+@i{path}/@i{cabal}/@i{nodename}/00000001.msg
+@end example
+
+When the @code{state} option is specified, the named message file is created as a regular file with a header record.
+The content of the named file is the same as the numbered file created under the @code{content} option.
+
+@example
+@i{path}/@i{cabal}/@i{nodename}/@i{nodename}.msg
+@end example
+
+In either case, the named message file can be read to determine the state of the message log.
+
 @subsection Export
 @cindex export command
 
@@ -516,20 +610,39 @@ In the future, we anticipate providing a corresponding @code{import} command,
 which would enable repairs to corrupted log files using a text editor.
 
 @example
-message.export @i{cabal} @i{nodename} @i{nodenumber} @i{filename}
+message.export [@i{path}] @i{cabal} @i{nodename} @i{nodenumber} @i{filename}
 @end example
 
-This command must be issued with the working directory set to the @i{caboodle} root directory.
-The @i{cabal} and @i{nodename} parameters simply identify the path to a message log.
+@multitable {--------------------} {--------------------------------------------------------------------------------------}
+@item @b{Element}@w{         }@tab @b{Description}
 
-@example
-@i{caboodle}/message/@i{cabal}/@i{nodename}/
-@end example
+@item @i{path}
+@tab Specifies a path to a directory containing message logs.
+When specified, a path must start with "/" or "./".  The default path is "./message".
 
+@item @i{cabal}
+@tab Specify the name of the cabal in which the message log participates.
+
+@item @i{nodename}
+@tab Specify the name of the cabal node.
+
+@item @i{nodenumber}
+@tab Number from 0 to 255 assigned to the specified node within the specified cabal.
 The @i{nodenumber} parameters is currently required by the NodeBrain Message API for validation.
 If the specified @i{filename} is not for the specified @i{nodenumber}, an error is displayed and the file is not exported.
 While this validation is appropriate for other uses of the Message API, a future enhancement to the
-API will enable the @code{export} command to work without requiring the @i{nodenumber}.
+API may enable the @code{export} command to work without requiring the @i{nodenumber}.
+
+@item @i{filename}
+@tab Specify the name of the message file to export. The file name is of the form @code{@i{nodename}.msg} or @code{@i{nnnnnnnn}.msg}. 
+@end multitable
+
+The full path to the message log exported is shown below.
+
+@example
+@i{path}/@i{cabal}/@i{nodename}/@i{filename}
+@end example
+
 
 
 @node Triggers

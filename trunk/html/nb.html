@@ -310,7 +310,7 @@ The --noTrace option turns off the --trace option.
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
 <tr><td width="5%">&nbsp;</td>
 <td width="94%" valign="top" align="left">
-Settings arguments may be used as an alternative to placing a <b>set</b> command within a script.
+Settings passed as arguments may be used as an alternative to specifying settings using a <b>set</b> command within a script.
 They can also be used to override settings within a script if specified later in the sequence of parameters.
 <p><table width="100%" border="0" cellspacing="0" cellpadding="5">
 <tr><td width="5%" align="left" valign="top">--logfile=<i>filename</i>&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
@@ -322,8 +322,16 @@ The outdir setting specifies a directory where output of a spawned process is st
 An alias of &quot;--out&quot; is recognized for compatibility with earlier versions.
 </td></tr>
 <tr><td width="5%" align="left" valign="top">--pidfile=<i>filename</i>&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
-The pidfile setting specifies a file where the process identifier (PID) is to be stored when nb daemonizes.
+The pidfile setting specifies a file where the process identifier (PID) is to be stored when daemonizing.
 This can be used by init scripts (/etc/init.d).
+</td></tr>
+<tr><td width="5%" align="left" valign="top">--user=<i>user</i>&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
+When running as root, the user setting causes the process user to be set after deamonizing.
+This setting is ignored for non-root users.
+</td></tr>
+<tr><td width="5%" align="left" valign="top">--group=<i>group</i>&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
+When running as root, the group setting causes the process group to be set after deamonizing.
+This setting is ignored for non-root users.
 </td></tr></table>
 </td></tr></table>
 <a name="COMMANDS"></a>

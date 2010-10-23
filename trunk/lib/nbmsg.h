@@ -36,6 +36,7 @@
 * 2009-12-12 eat 0.7.7  (original prototype) 
 * 2010-05-11 eat 0.8.1  Included msglog fileJumper method (for message cache)
 * 2010-06-07 eat 0.8.2  Included cursorFile fileOffset for cursor mode reading
+* 2010-10-16 eat 0.8.4  Included state file option
 *=============================================================================
 */
 #ifndef _NBMSG_H_
@@ -104,17 +105,25 @@ typedef struct NB_MSG_CURSOR{          // Message log cursorUnix domain UDP pack
   uint32_t recordCount;                // last record count
   } nbMsgCursor;
 
+typedef struct NB_MSG_CONSUMER{        // Message log real-time consumer
+  struct NB_MSG_CONSUMER *next;        // next entry in list
+  char name[32];                       // unique name
+  int  socket;                         // udp socket for sending message to the consumer
+  struct sockaddr_un un_addr;          // unix domain socket address
+  } nbMsgConsumer;
+
 typedef struct NB_MSG_LOG{
   char cabal[32];                      // name of message cabal - group of nodes
   char nodeName[32];                   // name of node within cabal
   int  node;                           // node number 0-255
   char filename[32];                   // base file name
+  int  option;                         // option flags
   int  mode;                           // requested mode
   int  state;                          // state used to control operation sequence
   int  file;
   int  socket;                         // socket for UDP communication between producer and consumer
+  nbMsgConsumer *consumer;             // list of consumers
   int  cursorFile;
-  struct sockaddr_un un_addr;          // unix domain socket address
   uint32_t fileOffset;                 // offset of next message maintained in cursor mode
   uint32_t filesize;                   // file position (size when writing)
   uint32_t maxfilesize;                // maximum filesize - new message log file started at this size
@@ -133,6 +142,9 @@ typedef struct NB_MSG_LOG{
   int (*handler)(nbCELL context,void *handle,nbMsgRec *msgrec);
   void (*fileJumper)(nbCELL context,void *handle,uint32_t fileOffset);
   } nbMsgLog;
+
+#define NB_MSG_OPTION_STATE   1        // Message log contains state record only - no message content files
+#define NB_MSG_OPTION_CONTENT 2        // Message log contains state record only - no message content files
 
 #define NB_MSG_MODE_CONSUMER  0        // state aware consumer - calls nbMsgLogConsume after open
 #define NB_MSG_MODE_SINGLE    1        // single file reader
@@ -153,12 +165,20 @@ typedef struct NB_MSG_LOG{
                                        // nbMsgProduce may be called in this state
 #define NB_MSG_STATE_ERROR   -1        // all bits on
 
+// Options for nbMsgLogInitialize
+
+#define NB_MSG_INIT_OPTION_STATE    0 // on - write messages to log, off - write state file only
+#define NB_MSG_INIT_OPTION_CONTENT  1 // on - write messages to log, off - write state file only
+#define NB_MSG_INIT_OPTION_CONVERT  2 // on - convert with emptying
+#define NB_MSG_INIT_OPTION_EMPTY    4 // on - empty
+
 int nbMsgLogSetState(nbCELL context,nbMsgLog *msglog,nbMsgRec *msgrec);
 int nbMsgLogWrite(nbCELL context,nbMsgLog *msglog,int msglen);
 int nbMsgLogFileCreate(nbCELL context,nbMsgLog *msglog);
 
 // Message Log API
 
+extern int nbMsgLogInitialize(nbCELL context,char *cabal,char *nodeName,int node,int option);
 extern int nbMsgLogStateToRecord(nbCELL context,nbMsgLog *msglog,unsigned char *buffer,int buflen);
 extern nbMsgState *nbMsgLogStateFromRecord(nbCELL context,nbMsgRec *msgrec);
 

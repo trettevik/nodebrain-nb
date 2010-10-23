@@ -1534,10 +1534,19 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
         if(assertions==NULL) return(1);
         }
       }
-    if(*cursor!=':' && *cursor!=';' && *cursor!=0){
+    if(*cursor==':'){
+      cursor++; /* step over ':' delimiter */
+      while(*cursor==' ') cursor++;
+      if(!*cursor || *cursor==';'){
+        outMsg(0,'E',"Expecting command after ':' at end of line");
+        return(1);
+        }
+      }
+    else if(*cursor!=';' && *cursor!=0){
       outMsg(0,'E',"Expecting ':', ';' or end of line at [%s].",cursor);
       return(1);
       }
+    else cursor=NULL;  // rule has no action
     action=malloc(sizeof(struct ACTION));
     action->nextAct=NULL;
     action->priority=rulePrty;
@@ -1545,7 +1554,8 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     else if(strcmp(type,"when")==0) rule_type=condTypeWhenRule; 
     else rule_type=condTypeIfRule;
     action->assert=assertions;
-    action->command=NULL;
+    if(!cursor) action->command=NULL;
+    else action->command=grabObject(useString(strtok(cursor,"\n"))); /* action is rest of line */
     action->cmdopt=NB_CMDOPT_RULE;     /* do not suppress symbolic substitution */
     action->status='R';   /* ready */
     ruleCond=useCondition(0,rule_type,object,action);
@@ -1564,11 +1574,6 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
       action->cell.object.next=(NB_Object *)((NB_Node *)((NB_Term *)context)->def)->ifrule;
       ((NB_Node *)((NB_Term *)context)->def)->ifrule=action;
       }
-    if(*cursor!=':') return(1);
-    cursor++; /* step over ':' delimiter */
-    while(*cursor==' ') cursor++;
-    if(*cursor==';') return(1);
-    action->command=grabObject(useString(strtok(cursor,"\n"))); /* action is rest of line */ 
     }
   else if(strcmp(type,"nerve")==0){
     object=nbParseCell((NB_Term *)context,&cursor,0);

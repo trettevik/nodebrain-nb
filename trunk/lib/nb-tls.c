@@ -58,7 +58,7 @@
 *     int nbTlsFreeContext(nbTLSX *tlsx);
 *
 *
-*   The nbTlsConnect function are used by clients to establish
+*   The nbTlsConnect function is used by clients to establish
 *   a connection to a server.
 *
 *     nbTLS *nbTlsConnect(nbTLSX *tlsx,char *host,int port); 
@@ -108,6 +108,15 @@
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2010-06-16 eat 0.8.2  Included timeout in connect function
 * 2010-06-16 eat 0.8.2  Put debug messages under tlsTrace option
+* 2010-10-21 eat 0.8.5  Included nbTlsReconnectIfBetter function
+*            This function does nothing if the uriIndex is zero, meaning we
+*            are already connected to the first URI.  If we are connected to
+*            URI N, where N>0, then this function will attempt to connect to
+*            a URI less than N.  If not successful the function returns zero
+*            and the current connection is retained.  If a connection to a
+*            URI less than N is obtained, the the current socket is closed and
+*            the new connection is used.  A program may call this function
+*            periodically to re-establish a preferred connection. 
 *==================================================================================
 */
 #include <stdio.h>
@@ -466,7 +475,7 @@ int nbTlsConnectNonBlocking(nbTLS *tls){
 *    It supports unix domain sockets as well as
 *    internet domain sockets.
 */
-int nbTlsConnect(nbTLS *tls){
+int nbTlsConnectWithinUriCount(nbTLS *tls,int uriCount){
   int sd,rc;
   struct sockaddr_in sa;
   struct timeval tv;
@@ -518,14 +527,26 @@ int nbTlsConnect(nbTLS *tls){
     if(rc<0) close(sd);
     else{
       tls->uriIndex=uriIndex;
+      // 2010-10-21 eat 0.8.5 - close current socket if open
+      if(tls->socket) close(tls->socket),tls->socket=0;
       tls->socket=sd;
       tls->ssl=ssl;
       tls->handle=tls->tlsx->handle;
       return(nbTlsConnected(tls));
       }
     }
+  if(uriCount<tls->uriCount && tls->socket) return(0);  // keeping the connection we have
   fprintf(stderr,"nbTlsConnect: connect failed: %s\n",strerror(errno));
   return(-1);
+  }
+
+int nbTlsConnect(nbTLS *tls){
+  return(nbTlsConnectWithinUriCount(tls,tls->uriCount));
+  }
+
+int nbTlsReconnectIfBetter(nbTLS *tls){
+  if(tls->uriIndex) return(nbTlsConnectWithinUriCount(tls,tls->uriIndex));
+  return(0);
   }
 
 /*

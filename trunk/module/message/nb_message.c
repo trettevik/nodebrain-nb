@@ -1023,6 +1023,76 @@ extern void *peerBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL argl
 //=====================================================================
 // Commands
 
+int messageCmdParseLogIdentifiers(nbCELL context,char **cursorP,char *cabalName,char *nodeName,int *instance){
+  char *cursor=*cursorP;
+  char instanceStr[4];
+  char *delim;
+  int len;
+
+  // consider using nbParseToken instead
+  while(*cursor==' ') cursor++;
+  delim=cursor;
+  while(*delim && *delim!=' ') delim++;
+  len=delim-cursor;
+  if(!len || len>sizeof(cabalName)-1){
+    nbLogMsg(context,0,'E',"Expecting 1 to %d character cabal name at:%s",sizeof(cabalName)-1,cursor);
+    return(1);
+    }
+  strncpy(cabalName,cursor,len);
+  *(cabalName+len)=0;
+  cursor+=len;
+  while(*cursor==' ') cursor++;
+  delim=cursor;
+  while(*delim && *delim!=' ') delim++;
+  len=delim-cursor;
+  if(!len || len>sizeof(nodeName)-1){
+    nbLogMsg(context,0,'E',"Expecting 1 to %d character node name at:%s",sizeof(nodeName)-1,cursor);
+    return(1);
+    }
+  strncpy(nodeName,cursor,len);
+  *(nodeName+len)=0;
+  cursor+=len;
+  while(*cursor==' ') cursor++;
+  delim=cursor;
+  while(*delim && *delim!=' ') delim++;
+  len=delim-cursor;
+  if(!len || len>sizeof(instanceStr)-1){
+    nbLogMsg(context,0,'E',"Expecting 1 to %d character instance number at:%s",sizeof(instanceStr)-1,cursor);
+    return(1);
+    }
+  strncpy(instanceStr,cursor,len);
+  *(instanceStr+len)=0;
+  cursor+=len;
+  *cursorP=cursor;
+  *instance=atoi(instanceStr); 
+  return(0);
+  }
+
+int messageCmdCreate(nbCELL context,void *handle,char *verb,char *cursor){
+  char cabalName[64],nodeName[64];
+  int instance;
+  char *delim;
+  int len;
+  int option;
+
+  if(messageCmdParseLogIdentifiers(context,&cursor,cabalName,nodeName,&instance)) return(1);
+  while(*cursor==' ') cursor++;
+  delim=cursor;
+  while(*delim && *delim!=' ') delim++;
+  len=delim-cursor;
+  if(len==5 && strncmp(cursor,"state",5)==0) option=NB_MSG_INIT_OPTION_STATE;
+  else if(len==7 && strncmp(cursor,"content",7)==0) option=NB_MSG_INIT_OPTION_CONTENT;
+  else{
+    nbLogMsg(context,0,'E',"Expecting type of 'content' or 'state' at:%s",cursor);
+    return(1);
+    }
+  if(nbMsgLogInitialize(context,cabalName,nodeName,instance,option)) return(1);
+  return(0);
+  }
+
+/*
+*  Export a message file converting to text.
+*/
 int messageCmdExport(nbCELL context,void *handle,char *verb,char *cursor){
   char cabalName[64],nodeName[64],instanceStr[4],filename[64];
   int instance;
@@ -1031,6 +1101,7 @@ int messageCmdExport(nbCELL context,void *handle,char *verb,char *cursor){
   nbMsgLog *msglog;
   int state;
 
+  // After testing the messageCmdCreate command call nbMsgCmdParseLogIdentifiers here also
   // consider using nbParseToken instead
   while(*cursor==' ') cursor++;
   delim=cursor;
@@ -1101,6 +1172,7 @@ int messageCmdExport(nbCELL context,void *handle,char *verb,char *cursor){
 _declspec (dllexport)
 #endif
 extern void *nbBind(nbCELL context,char *ident,nbCELL arglist,char *text){
+  nbVerbDeclare(context,"message.create",NB_AUTH_CONTROL,0,NULL,&messageCmdCreate,"<cabal> <node> <instance> [content|state]");
   nbVerbDeclare(context,"message.export",NB_AUTH_CONTROL,0,NULL,&messageCmdExport,"<cabal> <node> <instance> <file>");
   return(NULL);
   }

@@ -501,7 +501,7 @@ void outMsg(int msgid,char msgclass,char *format,...){
   outStamp();
   if((nb_OutCursor+len)>=(nb_OutBuffer+NB_BUFSIZE-256)) outFlush();
   if(msgid<0) sprintf(nb_OutCursor,"NX%3.3d%c %s",-msgid,msgclass,nb_OutLine);
-  else sprintf(nb_OutCursor,"NB%3.3d%c %s",msgid,msgclass,nb_OutLine); 
+  else sprintf(nb_OutCursor,"NB%3.3d%c %s",msgid,msgclass,nb_OutLine);
   len=strlen(nb_OutCursor);
   nb_OutCursor+=len;
   *nb_OutCursor='\n';
