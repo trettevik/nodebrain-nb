@@ -765,7 +765,7 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
       nbLogMsg(context,0,'E',"nbMsgLogRead: Unable to open file %s - %s",filename,strerror(errno));
       return(-1);
       }
-    fprintf(stderr,"nbMsgLogRead: 0 msglog->fileOffset=%d msglog->filesize=%d\n",msglog->fileOffset,msglog->filesize);
+    outMsg(0,'T',"nbMsgLogRead: 0 msglog->fileOffset=%d msglog->filesize=%d",msglog->fileOffset,msglog->filesize);
     if((pos=lseek(msglog->file,msglog->filesize,SEEK_SET))<0){
       nbLogMsg(context,0,'E',"nbMsgLogRead: Unable to seek file %s to offset %u - %s",filename,msglog->filesize,strerror(errno));
       return(-1);
@@ -809,7 +809,7 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
     // do something here to validate header relative to log state - have a validate function
     cursor=(unsigned char *)msglog->msgbuf;
     msglog->fileOffset=(*cursor<<8)|*(cursor+1); // set file offset just past header
-    fprintf(stderr,"nbMsgLogRead: 1 msglog->fileOffset=%d\n",msglog->fileOffset);
+    outMsg(0,'T',"nbMsgLogRead: 1 msglog->fileOffset=%d",msglog->fileOffset);
     cursor+=(*cursor<<8)|*(cursor+1);  // step to next record - over header
     msglog->msgrec=(nbMsgRec *)cursor;
     }
@@ -817,7 +817,7 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
     cursor=(unsigned char *)msglog->msgrec;
     if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogRead: Step to next record at %p *cursor=%2.2x%2.2x",cursor,*cursor,*(cursor+1));
     msglog->fileOffset+=(*cursor<<8)|*(cursor+1);  // update file offset
-    fprintf(stderr,"nbMsgLogRead: 2 msglog->fileCount=%d msglog->fileOffset=%d\n",msglog->fileCount,msglog->fileOffset);
+    outMsg(0,'T',"nbMsgLogRead: 2 msglog->fileCount=%d msglog->fileOffset=%d",msglog->fileCount,msglog->fileOffset);
     cursor+=(*cursor<<8)|*(cursor+1);  // step to next record
     msglog->msgrec=(nbMsgRec *)cursor;
     }
@@ -956,15 +956,15 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
     exit(1);
     }
   if(node>NB_MSG_NODE_MAX){
-    fprintf(stderr,"nbMsgLogOpen: Node number %d exceeds limit of %d\n",node,NB_MSG_NODE_MAX);
+    outMsg(0,'E',"nbMsgLogOpen: Node number %d exceeds limit of %d",node,NB_MSG_NODE_MAX);
     return(NULL);
     }
   if(strlen(cabal)>sizeof(msglog->cabal)-1){
-    fprintf(stderr,"nbMsgLogOpen: Message cabal name length exceeds %d bytes\n",(int)sizeof(msglog->cabal)-1);
+    outMsg(0,'E',"nbMsgLogOpen: Message cabal name length exceeds %d bytes",(int)sizeof(msglog->cabal)-1);
     return(NULL);
     }
   if(strlen(nodeName)>sizeof(msglog->nodeName)-1){
-    fprintf(stderr,"nbMsgLogOpen: Message node name length exceeds %d bytes\n",(int)sizeof(msglog->nodeName)-1);
+    outMsg(0,'E',"nbMsgLogOpen: Message node name length exceeds %d bytes",(int)sizeof(msglog->nodeName)-1);
     return(NULL);
     }
   // Get the file name to start with

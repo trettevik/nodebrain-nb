@@ -483,7 +483,9 @@ int nbTlsConnectWithinUriCount(nbTLS *tls,int uriCount){
   int uriIndex;
   struct sockaddr_un un_addr;
 
-  for(uriIndex=0;uriIndex<tls->uriCount;uriIndex++){
+  // 2010-10-25 eat 0.8.4 - was looping too far
+  //for(uriIndex=0;uriIndex<tls->uriCount;uriIndex++){
+  for(uriIndex=0;uriIndex<uriCount;uriIndex++){
     if(tls->uriMap[uriIndex].scheme==NB_TLS_SCHEME_UNIX){
       if(strlen(tls->uriMap[uriIndex].name)>sizeof(un_addr.sun_path)){
         fprintf(stderr,"nbTlsListen: Local domain socket path too long - %s\n",tls->uriMap[uriIndex].name);
