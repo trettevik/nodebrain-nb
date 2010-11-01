@@ -551,6 +551,10 @@ int nbTlsReconnectIfBetter(nbTLS *tls){
   return(0);
   }
 
+int nbTlsGetUriIndex(nbTLS *tls){
+  return(tls->uriIndex);
+  }
+
 /*
 *  SSL handshake with nonblocking errors allowed
 */

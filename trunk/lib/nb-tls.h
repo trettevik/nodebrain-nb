@@ -84,6 +84,8 @@ extern int nbTlsConnect(nbTLS *tls);
 
 extern int nbTlsReconnectIfBetter(nbTLS *tls);
 
+extern int nbTlsGetUriIndex(nbTLS *tls);
+
 extern int nbTlsConnectNonBlocking(nbTLS *tls);
 
 extern int nbTlsConnected(nbTLS *tls);

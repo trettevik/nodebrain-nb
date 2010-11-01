@@ -511,7 +511,7 @@ int nbPeerConnect(nbCELL context,nbPeer *peer,void *handle,
   peer->shutdown=shutdown;
   rc=nbTlsConnectNonBlockingAndSchedule(context,peer->tls,peer,nbPeerHandshakeWriter);
   if(rc<0){
-    nbLogMsg(context,0,'E',"nbPeerConnect: Unable to connect - %s",strerror(errno));
+    nbLogMsg(context,0,'W',"nbPeerConnect: Unable to connect - %s",strerror(errno));
     nbPeerShutdown(context,peer,-1);
     }
   else if(rc==1) nbLogMsg(context,0,'T',"nbPeerConnect: returning - connected");
