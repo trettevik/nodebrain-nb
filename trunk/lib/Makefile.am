@@ -75,6 +75,7 @@ libnb_a_HEADERS = \
   nbqueue.h \
   nbrule.h \
   nbservice.h \
+  nbsource.h \
   nbspine.h \
   nbstd.h \
   nbstream.h \
@@ -127,6 +128,7 @@ libnb_la_SOURCES = \
   nbrule.c \
   nbsched.c \
   nbservice.c \
+  nbsource.c \
   nbspawn.c \
   nbspine.c \
   nbstem.c \
@@ -173,6 +175,7 @@ libnb_la_SOURCES = \
   nbrule.h \
   nbsched.h \
   nbservice.h \
+  nbsource.h \
   nbspawn.h \
   nbspine.h \
   nbstem.h \

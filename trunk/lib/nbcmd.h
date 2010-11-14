@@ -73,6 +73,7 @@ char *nbSymCmd(NB_Cell *context,char *source,char *style);
 char *nbSymSource(NB_Cell *context,char *source);
 void nbCmdInit(struct NB_STEM *stem);
 void printAbout(void);
+void iLet(char *cursor,NB_Term *context,int mode);
 
 #endif // !NB_INTERNAL (external API)
 

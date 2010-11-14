@@ -80,6 +80,7 @@
 #include <nbrule.h>        /* rules */
 #include <nbtranslator.h>  /* text translator */
 #include <nblistener.h>    /* listener object */
+#include <nbsource.h>      /* rule file sourcing */
 #include <nbcmd.h>         /* command processor */
 // 2009-02-14 eat 0.7.5 - exposing external API
 #include <nbmodule.h>      // module routines
