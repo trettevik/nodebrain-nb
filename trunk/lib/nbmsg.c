@@ -148,6 +148,17 @@
 #endif
 
 /*
+*  Define macros for ntohl and htohs to avoid alignment problems on some platforms
+*/
+#if defined(SOLARIS)
+#define CNTOHL(_byte) ntohl((uint32_t)((((((*_byte)<<8)|(*(_byte+1)))<<8)|(*(_byte+2)))<<8)|*(_byte+3))
+#define CNTOHS(_byte) ntohs((uint16_t)(*_byte<<8|*(_byte+1)))
+#else
+#define CNTOHL(_byte) ntohl(*(uint32_t *)_byte)
+#define CNTOHS(_byte) ntohs(*(uint16_t *)_byte)
+#endif
+
+/*
 *  Add a message consumer - UDP socket
 */
 int nbMsgConsumerAdd(nbMsgLog *msglog,char *name){
@@ -277,8 +288,8 @@ int nbMsgStateSet(nbMsgState *state,int node,uint32_t time,uint32_t count){
 */
 int nbMsgStateSetFromMsgId(nbCELL context,nbMsgState *state,nbMsgId *msgid){
   int node=msgid->node;
-  uint32_t time=ntohl(*(uint32_t *)&msgid->time);
-  uint32_t count=ntohl(*(uint32_t *)&msgid->count);
+  uint32_t time=CNTOHL(msgid->time);
+  uint32_t count=CNTOHL(msgid->count);
   uint32_t countAhead=state->msgnum[node].count+1;
   if(countAhead!=1){
     if(!countAhead) countAhead++;  // skip over zero - is special count value
@@ -313,8 +324,8 @@ int nbMsgCountCompare(uint32_t a,uint32_t b){
 */
 int nbMsgStateCheck(nbMsgState *state,nbMsgId *msgid){
   int node=msgid->node;
-  uint32_t time=ntohl(*(uint32_t *)&msgid->time);
-  uint32_t count=ntohl(*(uint32_t *)&msgid->count);
+  uint32_t time=CNTOHL(msgid->time);
+  uint32_t count=CNTOHL(msgid->count);
   if(time<state->msgnum[node].time) return(-1);
   if(time>state->msgnum[node].time) return(1);
   return(nbMsgCountCompare(count,state->msgnum[node].count));
@@ -394,8 +405,8 @@ int nbMsgPrint(FILE *file,nbMsgRec *msgrec){
   msgid=&msgrec->si;  // start with state msgid and display all msgid values
   for(msgids=msgrec->msgids+2;msgids;msgids--){
     mNode=msgid->node;
-    mTime=ntohl(*(uint32_t *)msgid->time);
-    mCount=ntohl(*(uint32_t *)msgid->count);
+    mTime=CNTOHL(msgid->time);
+    mCount=CNTOHL(msgid->count);
     fprintf(file,",%u-%u-%u",mNode,mTime,mCount);
     msgid++;
     }
@@ -413,8 +424,8 @@ int nbMsgPrint(FILE *file,nbMsgRec *msgrec){
       }
     else if(msgrec->datatype==NB_MSG_REC_DATA_ID){
       mNode=msgid->node;
-      mTime=ntohl(*(uint32_t *)msgid->time);
-      mCount=ntohl(*(uint32_t *)msgid->count);
+      mTime=CNTOHL(msgid->time);
+      mCount=CNTOHL(msgid->count);
       fprintf(file,"%u-%u-%u",mNode,mTime,mCount);
       }
     else{
@@ -465,8 +476,8 @@ int nbMsgLogSetState(nbCELL context,nbMsgLog *msglog,nbMsgRec *msgrec){
   msglog->state&=0xffffffff-(NB_MSG_STATE_LOG|NB_MSG_STATE_PROCESS|NB_MSG_STATE_SEQLOW|NB_MSG_STATE_SEQHIGH);
   if(msgrec->pi.node==msglog->node){ // called while reading own log
     msgid=&msgrec->pi;
-    recordTime=ntohl(*(uint32_t *)msgid->time);
-    recordCount=ntohl(*(uint32_t *)msgid->count);
+    recordTime=CNTOHL(msgid->time);
+    recordCount=CNTOHL(msgid->count);
     if(recordCount!=msglog->recordCount+1){  // make sure record count increments by 1
       if((rc=nbMsgCountCompare(recordCount,msglog->recordCount))<=0){
         // if(recordTime>msglog->recordTime)...error
@@ -490,8 +501,8 @@ int nbMsgLogSetState(nbCELL context,nbMsgLog *msglog,nbMsgRec *msgrec){
     return(NB_MSG_STATE_FILEND);
     }
   node=msgid->node;
-  tranTime=ntohl(*(uint32_t *)msgid->time);
-  tranCount=ntohl(*(uint32_t *)msgid->count);
+  tranTime=CNTOHL(msgid->time);
+  tranCount=CNTOHL(msgid->count);
   if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogSetState: tranTime=%u,tranCount=%u,LOG,node=%u,stateTime=%u,stateCount=%u",tranTime,tranCount,node,logState->msgnum[node].time,logState->msgnum[node].count);
   if(tranTime>logState->msgnum[node].time){
     logState->msgnum[node].time=tranTime;
@@ -545,15 +556,15 @@ int nbMsgIncludesState(nbMsgLog *msglog){
   nbMsgState *pgmState=msglog->pgmState;
 
   node=msgid->node;
-  mTime=ntohl(*(uint32_t *)msgid->time);
-  mCount=ntohl(*(uint32_t *)msgid->count);
+  mTime=CNTOHL(msgid->time);
+  mCount=CNTOHL(msgid->count);
   if(mTime>pgmState->msgnum[node].time) return(0);
   else if(mTime==logState->msgnum[node].time && nbMsgCountCompare(mCount,logState->msgnum[node].count)>0) return(0);
   msgid+=2;
   for(msgids=msgrec->msgids;msgids;msgids--){
     node=msgid->node;
-    mTime=ntohl(*(uint32_t *)msgid->time);
-    mCount=ntohl(*(uint32_t *)msgid->count);
+    mTime=CNTOHL(msgid->time);
+    mCount=CNTOHL(msgid->count);
     if(mTime>pgmState->msgnum[node].time) return(0);
     else if(mTime==pgmState->msgnum[node].time && nbMsgCountCompare(mCount,pgmState->msgnum[node].count)>0) return(0);
     msgid++;
@@ -653,13 +664,13 @@ nbMsgState *nbMsgLogStateFromRecord(nbCELL context,nbMsgRec *msgrec){
   msgstate=nbMsgStateCreate(context);
   msgid=&msgrec->si;
   nodeIndex=msgid->node;
-  msgstate->msgnum[nodeIndex].time=ntohl(*(uint32_t *)&msgid->time);
-  msgstate->msgnum[nodeIndex].count=ntohl(*(uint32_t *)&msgid->count);
+  msgstate->msgnum[nodeIndex].time=CNTOHL(msgid->time);
+  msgstate->msgnum[nodeIndex].count=CNTOHL(msgid->count);
   msgid+=2;
   for(msgids=msgrec->msgids;msgids;msgids--){
     nodeIndex=msgid->node;
-    msgstate->msgnum[nodeIndex].time=ntohl(*(uint32_t *)&msgid->time);
-    msgstate->msgnum[nodeIndex].count=ntohl(*(uint32_t *)&msgid->count);
+    msgstate->msgnum[nodeIndex].time=CNTOHL(msgid->time);
+    msgstate->msgnum[nodeIndex].count=CNTOHL(msgid->count);
     msgid++;
     }
   nbMsgStatePrint(stderr,msgstate,"Client state:");
@@ -687,16 +698,16 @@ char *nbMsgHeaderExtract(nbMsgRec *msgrec,int node,uint32_t *tranTimeP,uint32_t 
   if(msgrec->type!=NB_MSG_REC_TYPE_HEADER) return("msg type not header");
   if(msgrec->datatype!=NB_MSG_REC_DATA_ID) return("msg data type not ID");
   if(msgid->node!=node) return("state message id node does not match expected node");
-  *tranTimeP=ntohl(*(uint32_t *)msgid->time);
-  *tranCountP=ntohl(*(uint32_t *)msgid->count);
+  *tranTimeP=CNTOHL(msgid->time);
+  *tranCountP=CNTOHL(msgid->count);
   msgid++;
   if(msgid->node!=node) return("log message id node does not match expected node");
-  *recordTimeP=ntohl(*(uint32_t *)msgid->time);
-  *recordCountP=ntohl(*(uint32_t *)msgid->count);
+  *recordTimeP=CNTOHL(msgid->time);
+  *recordCountP=CNTOHL(msgid->count);
   msgid+=1+msgrec->msgids;
   if(msgid->node!=node) return("log message id node does not match expected node");
-  *fileTimeP=ntohl(*(uint32_t *)msgid->time);
-  *fileCountP=ntohl(*(uint32_t *)msgid->count);
+  *fileTimeP=CNTOHL(msgid->time);
+  *fileCountP=CNTOHL(msgid->count);
   return(NULL);
   }
 
@@ -1093,7 +1104,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
   //msglog->filesize+=msgbuflen;
   msglog->filesize=msgbuflen;
   msglog->msgbuflen=msgbuflen;
-  msglen=ntohs(*(uint16_t *)msglog->msgbuf);
+  msglen=CNTOHS(msglog->msgbuf);
   msglog->fileOffset=msglen;
   fprintf(stderr,"nbMsgLogOpen: 1 msglog->fileOffset=%d\n",msglog->fileOffset);
   msglog->msgrec=(nbMsgRec *)msglog->msgbuf;
@@ -1129,7 +1140,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
     msglog->filesize+=msgbuflen;
     msglog->msgbuflen=msgbuflen;
     //fprintf(stderr,"msglog->msgbuflen=%d\n",msglog->msgbuflen);
-    msglen=ntohs(*(uint16_t *)msglog->msgbuf);
+    msglen=CNTOHS(msglog->msgbuf);
     msglog->fileOffset=msglen;
     fprintf(stderr,"nbMsgLogOpen: 2 msglog->fileOffset=%d\n",msglog->fileOffset);
     msglog->msgrec=(nbMsgRec *)msglog->msgbuf;
@@ -1299,7 +1310,7 @@ void nbMsgUdpRead(nbCELL context,int serverSocket,void *handle){
       nbLogDump(context,buffer,len);
       nbLogMsg(context,0,'T',"nbMsgUdpRead: fileCount=%u fileOffset=%u",msgudp->fileCount,msgudp->fileOffset); 
       }
-    msglen=ntohs(*(unsigned short *)msgrec);
+    msglen=CNTOHS(((unsigned char *)msgrec));
     if(msglen+sizeof(nbMsgCursor)!=len){
       nbLogMsg(context,0,'E',"packet len=%d not the same as msglen=%u+%u - terminating",len,msglen,sizeof(nbMsgCursor));
       exit(1);
@@ -1990,7 +2001,7 @@ int nbMsgLogWriteReplica(nbCELL context,nbMsgLog *msglog,nbMsgRec *msgin){
     return(-1);
     }
   if(state&NB_MSG_STATE_LOG && msglog->option&NB_MSG_OPTION_CONTENT){
-    msglen=ntohs(*(uint16_t *)msgin->len);
+    msglen=CNTOHS(((unsigned char *)&msgin->len));
     if(msglen<sizeof(nbMsgRec)){
       nbLogMsg(context,0,'E',"nbMsgLogWriteReplica: Message length %u less than min %u",msglen,sizeof(nbMsgRec));
       return(-1);
@@ -2273,7 +2284,7 @@ int nbMsgCacheInsert(nbCELL context,void *handle,nbMsgRec *msgrec){
   if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCacheInsert: buffer start=%2.2x%2.2x%2.2x",*msgcache->bufferStart,*(msgcache->bufferStart+1),*(msgcache->bufferStart+2));
   msglen=(msgrec->len[0]<<8)|msgrec->len[1];
   msgid=&msgrec->pi;
-  recordCount=ntohl(*(uint32_t *)&msgid->count);
+  recordCount=CNTOHL(msgid->count);
   if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCacheInsert: msglen=%d recordCount=%u msgcache->endCount=%u",msglen,recordCount,msgcache->endCount);
   if(recordCount!=msgcache->endCount+1){
     nbLogMsg(context,0,'T',"nbMsgCacheInsert: out of sequence code - recordCount=%u endCount=%u - terminating",recordCount,msgcache->endCount);
@@ -2282,7 +2293,7 @@ int nbMsgCacheInsert(nbCELL context,void *handle,nbMsgRec *msgrec){
   msgcache->endCount=recordCount;
   if(msgTrace){ // (msgTrace) info
     msgid=&msgrec->si;
-    recordCount=ntohl(*(uint32_t *)&msgid->count);
+    recordCount=CNTOHL(msgid->count);
     nbLogMsg(context,0,'T',"nbMsgCacheInsert: tranCount=%u",recordCount);
     }
   // check to see if we already have this message - UDP may be behind file

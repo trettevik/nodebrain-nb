@@ -1034,8 +1034,8 @@ int messageCmdParseLogIdentifiers(nbCELL context,char **cursorP,char *cabalName,
   delim=cursor;
   while(*delim && *delim!=' ') delim++;
   len=delim-cursor;
-  if(!len || len>sizeof(cabalName)-1){
-    nbLogMsg(context,0,'E',"Expecting 1 to %d character cabal name at:%s",sizeof(cabalName)-1,cursor);
+  if(!len || len>63){
+    nbLogMsg(context,0,'E',"Expecting 1 to %d character cabal name at:%s",63,cursor);
     return(1);
     }
   strncpy(cabalName,cursor,len);
@@ -1045,8 +1045,8 @@ int messageCmdParseLogIdentifiers(nbCELL context,char **cursorP,char *cabalName,
   delim=cursor;
   while(*delim && *delim!=' ') delim++;
   len=delim-cursor;
-  if(!len || len>sizeof(nodeName)-1){
-    nbLogMsg(context,0,'E',"Expecting 1 to %d character node name at:%s",sizeof(nodeName)-1,cursor);
+  if(!len || len>63){
+    nbLogMsg(context,0,'E',"Expecting 1 to %d character node name at:%s",63,cursor);
     return(1);
     }
   strncpy(nodeName,cursor,len);
@@ -1161,7 +1161,7 @@ int messageCmdExport(nbCELL context,void *handle,char *verb,char *cursor){
     nbLogMsg(context,0,'E',"Unable to read to end of file for cabal \"%s\" node %d",cabalName,instance);
     return(1);
     }
-  nbLogMsg(context,0,'E',"Cabal '%s' node '%s' instance %u exported",cabalName,nodeName,instance);
+  nbLogMsg(context,0,'I',"Cabal '%s' node '%s' instance %u exported",cabalName,nodeName,instance);
   return(0);
   }
 

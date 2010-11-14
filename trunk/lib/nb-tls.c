@@ -119,6 +119,7 @@
 *            periodically to re-establish a preferred connection. 
 *==================================================================================
 */
+#include <nbcfg.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <memory.h>
@@ -418,7 +419,9 @@ int nbTlsConnected(nbTLS *tls){
 int nbTlsConnectNonBlocking(nbTLS *tls){
   int sd,rc;
   struct sockaddr_in sa;
+#if !defined(HPUX) && !defined(SOLARIS)
   struct timeval tv;
+#endif
   char *addr=tls->uriMap[tls->uriIndex].addr;
   int port=tls->uriMap[tls->uriIndex].port;
 
@@ -433,6 +436,7 @@ int nbTlsConnectNonBlocking(nbTLS *tls){
   sa.sin_addr.s_addr=inet_addr(addr);   // host IP
   sa.sin_port=htons(port);              // port number
 
+#if !defined(HPUX) && !defined(SOLARIS)
   if(tls->tlsx) tv.tv_sec=tls->tlsx->timeout;
   else tv.tv_sec=5;
   tv.tv_usec=0;
@@ -446,6 +450,7 @@ int nbTlsConnectNonBlocking(nbTLS *tls){
     fprintf(stderr,"nbTlsConnectNonBlocking: setsockopt SO_SNDTIMEO failed: %s\n",strerror(errno));
     return(-1);
     }
+#endif
   // 2010-06-06 eat - seeing if blocking IO will work
   //fcntl(sd,F_SETFL,fcntl(sd,F_GETFL)|O_NONBLOCK);
   rc=connect(sd,(struct sockaddr*)&sa,sizeof(sa));
@@ -478,7 +483,9 @@ int nbTlsConnectNonBlocking(nbTLS *tls){
 int nbTlsConnectWithinUriCount(nbTLS *tls,int uriCount){
   int sd,rc;
   struct sockaddr_in sa;
+#if !defined(HPUX) && !defined(SOLARIS)
   struct timeval tv;
+#endif
   SSL *ssl=NULL;
   int uriIndex;
   struct sockaddr_un un_addr;
@@ -511,6 +518,7 @@ int nbTlsConnectWithinUriCount(nbTLS *tls,int uriCount){
       sa.sin_addr.s_addr=inet_addr(tls->uriMap[uriIndex].addr);   // host IP 
       sa.sin_port=htons(tls->uriMap[uriIndex].port);              // port number
     
+#if !defined(HPUX) && !defined(SOLARIS)
       if(tls->tlsx) tv.tv_sec=tls->tlsx->timeout;
       else tv.tv_sec=5;
       tv.tv_usec=0;
@@ -524,6 +532,7 @@ int nbTlsConnectWithinUriCount(nbTLS *tls,int uriCount){
         fprintf(stderr,"nbTlsConnect: setsockopt SO_SNDTIMEO failed: %s\n",strerror(errno));
         return(-1);
         } 
+#endif
       rc=connect(sd,(struct sockaddr*)&sa,sizeof(sa));
       }
     if(rc<0) close(sd);
@@ -713,7 +722,9 @@ int nbTlsListen(nbTLS *tls){
 */
 nbTLS *nbTlsAccept(nbTLS *tlsListener){
   nbTLS *tls;
+#if !defined(HPUX) && !defined(SOLARIS)
   struct timeval tv;
+#endif
   int sd,rc;
   char *protocol;
   struct sockaddr_in client;
@@ -737,6 +748,7 @@ nbTLS *nbTlsAccept(nbTLS *tlsListener){
 #if !defined(WIN32)
   fcntl(sd,F_SETFD,FD_CLOEXEC);
 #endif
+#if !defined(HPUX) && !defined(SOLARIS)
   if(tlsListener->tlsx) tv.tv_sec=tlsListener->tlsx->timeout;
   else tv.tv_sec=5;
   tv.tv_usec=0;
@@ -750,6 +762,7 @@ nbTLS *nbTlsAccept(nbTLS *tlsListener){
     fprintf(stderr,"nbTlsAccept: setsockopt SO_SNDTIMEO failed: %s\n",strerror(errno));
     return(NULL);
     }
+#endif
   // Create the nbTLS structure
   tls=malloc(sizeof(nbTLS));
   memset(tls,0,sizeof(nbTLS));
