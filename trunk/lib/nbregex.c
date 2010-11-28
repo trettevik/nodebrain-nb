@@ -98,7 +98,7 @@ struct REGEXP *newRegexp(char *expression,int flags){
   struct STRING *string;
   struct REGEXP *re,**reP;   
   pcre *preg;
-  const char *msg;
+  const char *msg=NULL;
   int offset;
   //int parens;
 
@@ -115,7 +115,8 @@ struct REGEXP *newRegexp(char *expression,int flags){
   //  }
   preg=pcre_compile(expression,flags,&msg,&offset,NULL);
   if(preg==NULL){
-    outMsg(0,'E',"Regular expression syntax error in \"%s\".",expression);
+    outMsg(0,'E',"Regular expression syntax error at: %s",expression);
+    if(msg) outMsg(0,'E',"Regular expression syntax error: %s",msg);
     return(NULL);
     }
   re=newObject(regexpType,(void **)&freeRegexp,sizeof(struct REGEXP));

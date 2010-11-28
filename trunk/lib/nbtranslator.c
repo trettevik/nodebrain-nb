@@ -1390,8 +1390,9 @@ int nbTranslatorParseStmt(nbCELL context,char *cursor,char *source,FILE *file,st
       curthen--;
       *curthen=0; /* terminate regular expression */
 
-      regexCell=grabObject(newRegexp(cursor,0));
+      regexCell=newRegexp(cursor,0);
       if(!regexCell) return(0);
+      grabObject(regexCell);
       if(regexCell->nsub>PROJECTION_PARENS){
         outMsg(0,'E',"Only %d sub-expressions may be referenced.",PROJECTION_PARENS);
         dropObject(regexCell);
