@@ -452,7 +452,7 @@ When we direct NodeBrain to execute another command to perform a task, we refer 
 @i{CONSULT,v.i. To seek another's disapproval of a course already decided on.}  --- Ambrose Bierce (1842 - 1914), The Devil's Dictionary
 @end quotation
 
-NodeBrain is willing to accept the advice of others---even servants.  To illustrate this, let’s first write a simple Perl script named processCount.pl that checks to see how many processes are running on a Unix system.
+NodeBrain is willing to accept the advice of others---even servants.  To illustrate this, let's first write a simple Perl script named processCount.pl that checks to see how many processes are running on a Unix system.
 
 @example
 #!/usr/bin/perl
