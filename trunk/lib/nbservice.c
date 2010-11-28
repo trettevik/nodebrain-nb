@@ -576,11 +576,12 @@ void daemonize(){
     setsid();
     signal(SIGHUP,sighandler);  // restore SIGHUP signal handler
     }
-  /* redirect stdin/stdout/stderr to /dev/null or daemon log */
+  /* redirect stdin and stdout to /dev/null and stderr to /dev/null or daemon log */
   close(0);
   close(1);
   open("/dev/null",O_RDWR);
-  if(*log!=0 && open(log,O_CREAT|O_RDWR|O_APPEND,S_IRUSR|S_IWUSR|S_IRGRP)!=1){
+  // Try to open log file as stdout first so we can still report a problem on stderr
+  if(*log && open(log,O_CREAT|O_RDWR|O_APPEND,S_IRUSR|S_IWUSR|S_IRGRP)!=1){
     outMsg(0,'E',"Unable to open log file '%s' - errno=%d %s",log,errno,strerror(errno));
     outMsg(0,'E',"NodeBrain %s[%d] terminating with severe error - exit code=%d",myname,pid,NB_EXITCODE_FAIL);
     outFlush();
@@ -589,7 +590,11 @@ void daemonize(){
   else dup(0);
   close(2);
   dup(1);
-  //umask(077);
+  // 2010-11-28 eat - now switch stdout to /dev/null if not already
+  if(*log){
+    close(1);
+    dup(0);
+    }
   umask(S_IWGRP|S_IRWXO);  // 2008-06-11 eat - avoid group write and all other user access
   agent=1;
   pid=getpid();
