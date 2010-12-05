@@ -214,8 +214,8 @@ extern int nbMsgLogWriteReplica(nbCELL context,nbMsgLog *msglog,nbMsgRec *msgrec
 typedef struct NB_MSG_CACHE_FILE_MARKER{  // file marker in cache enables maintenance of msglog fileCount
                                           // and filesize across file boundaries.  Message record lengths
                                           // are used to update filePos between markers.
-  unsigned char code;        // always x80
-  unsigned char filePos[4];  // host byte order file position (unaligned uint32_t)
+  unsigned char code;             // always x80
+  unsigned char filePos[4];       // network byte order file position (unaligned uint32_t)
   } nbMsgCacheFileMarker;
 
 typedef struct NB_MSG_CACHE_SUBSCRIBER{

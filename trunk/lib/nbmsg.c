@@ -2195,7 +2195,8 @@ unsigned char *nbMsgCacheStomp(nbCELL context,nbMsgCache *msgcache,int msglen){
       if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCacheInsert: stop>=start");
       if(*msgcache->start==0x80){   // handle file marker - update file count and offset to jump to next file
         msgcache->fileCount++;
-        msgcache->fileOffset=*(uint32_t *)(msgcache->start+1);
+        //msgcache->fileOffset=*(uint32_t *)(msgcache->start+1);
+        msgcache->fileOffset=CNTOHL(msgcache->start+1);
         msgcache->start+=sizeof(nbMsgCacheFileMarker);
         nbLogMsg(context,0,'T',"nbMsgCacheStomp: filecount=%d fileOffset=%d",msgcache->fileCount,msgcache->fileOffset);
         }
