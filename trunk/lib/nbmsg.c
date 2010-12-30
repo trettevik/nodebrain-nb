@@ -150,13 +150,15 @@
 /*
 *  Define macros for ntohl and htohs to avoid alignment problems on some platforms
 */
-#if defined(SOLARIS)
-#define CNTOHL(_byte) ntohl((uint32_t)((((((*_byte)<<8)|(*(_byte+1)))<<8)|(*(_byte+2)))<<8)|*(_byte+3))
-#define CNTOHS(_byte) ntohs((uint16_t)(*_byte<<8|*(_byte+1)))
-#else
-#define CNTOHL(_byte) ntohl(*(uint32_t *)_byte)
-#define CNTOHS(_byte) ntohs(*(uint16_t *)_byte)
-#endif
+//#if defined(SOLARIS)
+//#define CNTOHL(_byte) ntohl((uint32_t)((((((*_byte)<<8)|(*(_byte+1)))<<8)|(*(_byte+2)))<<8)|*(_byte+3))
+//#define CNTOHS(_byte) ntohs((uint16_t)(*_byte<<8|*(_byte+1)))
+//#else
+//#define CNTOHL(_byte) ntohl(*(uint32_t *)_byte)
+//#define CNTOHS(_byte) ntohs(*(uint16_t *)_byte)
+//#endif
+#define CNTOHL(_byte) ((uint32_t)((((((*_byte)<<8)|(*(_byte+1)))<<8)|(*(_byte+2)))<<8)|*(_byte+3))
+#define CNTOHS(_byte) ((uint16_t)(*_byte<<8|*(_byte+1)))
 
 /*
 *  Add a message consumer - UDP socket
@@ -338,10 +340,23 @@ int nbMsgStateCheck(nbMsgState *state,nbMsgId *msgid){
 
 int nbMsgPrintHex(FILE *file,unsigned short len,unsigned char *buffer){
   unsigned char *cursor=buffer;
+  char hexbuf[4096],*hexcur=hexbuf,*hexend=hexbuf+sizeof(hexbuf)-2;
+  char *hexchar="0123456789ABCDEF";
 
+  if(len<1) return(-1);
   for(cursor=buffer;cursor<buffer+len;cursor++){
-    fprintf(file,"%2.2x",*cursor);
+    //fprintf(file,"%2.2x",*cursor);
+    if(hexcur>=hexend){
+      *hexcur=0;
+      fprintf(file,"%s",hexbuf);
+      hexcur=hexbuf;
+      }
+    sprintf(hexcur,"%c%c",*(hexchar+(*cursor>>4)),*(hexchar+(*cursor&0x0f)));
+    hexcur+=2;
     }
+  if(hexcur==hexbuf) return(0);
+  *hexcur=0;
+  fprintf(file,"%s",hexbuf);
   return(0);
   }
 
@@ -776,7 +791,7 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
       nbLogMsg(context,0,'E',"nbMsgLogRead: Unable to open file %s - %s",filename,strerror(errno));
       return(-1);
       }
-    outMsg(0,'T',"nbMsgLogRead: 0 msglog->fileOffset=%d msglog->filesize=%d",msglog->fileOffset,msglog->filesize);
+    outMsg(0,'T',"nbMsgLogRead: 0 msglog->fileOffset=%u msglog->filesize=%u",msglog->fileOffset,msglog->filesize);
     if((pos=lseek(msglog->file,msglog->filesize,SEEK_SET))<0){
       nbLogMsg(context,0,'E',"nbMsgLogRead: Unable to seek file %s to offset %u - %s",filename,msglog->filesize,strerror(errno));
       return(-1);
@@ -820,7 +835,7 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
     // do something here to validate header relative to log state - have a validate function
     cursor=(unsigned char *)msglog->msgbuf;
     msglog->fileOffset=(*cursor<<8)|*(cursor+1); // set file offset just past header
-    outMsg(0,'T',"nbMsgLogRead: 1 msglog->fileOffset=%d",msglog->fileOffset);
+    outMsg(0,'T',"nbMsgLogRead: 1 msglog->fileOffset=%u",msglog->fileOffset);
     cursor+=(*cursor<<8)|*(cursor+1);  // step to next record - over header
     msglog->msgrec=(nbMsgRec *)cursor;
     }
@@ -828,7 +843,7 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
     cursor=(unsigned char *)msglog->msgrec;
     if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogRead: Step to next record at %p *cursor=%2.2x%2.2x",cursor,*cursor,*(cursor+1));
     msglog->fileOffset+=(*cursor<<8)|*(cursor+1);  // update file offset
-    outMsg(0,'T',"nbMsgLogRead: 2 msglog->fileCount=%d msglog->fileOffset=%d",msglog->fileCount,msglog->fileOffset);
+    outMsg(0,'T',"nbMsgLogRead: 2 msglog->fileCount=%u msglog->fileOffset=%u",msglog->fileCount,msglog->fileOffset);
     cursor+=(*cursor<<8)|*(cursor+1);  // step to next record
     msglog->msgrec=(nbMsgRec *)cursor;
     }
@@ -1077,7 +1092,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
       msglog->fileOffset=msgcursor.fileOffset;
       msglog->recordTime=msgcursor.recordTime;
       msglog->recordCount=msgcursor.recordCount;
-      fprintf(stderr,"nbMsgLogOpen: from cursor fileCount=%d fileOffset=%d\n",msglog->fileCount,msglog->fileOffset);
+      fprintf(stderr,"nbMsgLogOpen: from cursor fileCount=%u fileOffset=%u\n",msglog->fileCount,msglog->fileOffset);
       msglog->filesize=msgcursor.fileOffset;
       msglog->state|=NB_MSG_STATE_LOGEND;
       return(msglog);
@@ -1106,7 +1121,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
   msglog->msgbuflen=msgbuflen;
   msglen=CNTOHS(msglog->msgbuf);
   msglog->fileOffset=msglen;
-  fprintf(stderr,"nbMsgLogOpen: 1 msglog->fileOffset=%d\n",msglog->fileOffset);
+  fprintf(stderr,"nbMsgLogOpen: 1 msglog->fileOffset=%u\n",msglog->fileOffset);
   msglog->msgrec=(nbMsgRec *)msglog->msgbuf;
   errStr=nbMsgHeaderExtract(msglog->msgrec,node,&tranTime,&tranCount,&recordTime,&recordCount,&fileTime,&fileCount); 
   if(errStr){
@@ -1142,7 +1157,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
     //fprintf(stderr,"msglog->msgbuflen=%d\n",msglog->msgbuflen);
     msglen=CNTOHS(msglog->msgbuf);
     msglog->fileOffset=msglen;
-    fprintf(stderr,"nbMsgLogOpen: 2 msglog->fileOffset=%d\n",msglog->fileOffset);
+    fprintf(stderr,"nbMsgLogOpen: 2 msglog->fileOffset=%u\n",msglog->fileOffset);
     msglog->msgrec=(nbMsgRec *)msglog->msgbuf;
     errStr=nbMsgHeaderExtract(msglog->msgrec,node,&tranTime,&tranCount,&recordTime,&recordCount,&fileTime,&fileCount);
     if(errStr){
@@ -1161,7 +1176,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
     msgcursor.fileOffset=msglog->fileOffset;    // point over header
     msgcursor.recordTime=msglog->recordTime;   
     msgcursor.recordCount=msglog->recordCount;   
-    fprintf(stderr,"nbMsgLogOpen: 3 msglog->fileOffset=%d\n",msglog->fileOffset);
+    fprintf(stderr,"nbMsgLogOpen: 3 msglog->fileOffset=%u\n",msglog->fileOffset);
     if((msglog->cursorFile=open(cursorFilename,O_RDWR|O_CREAT,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP))<0){ // have a cursor file
       nbLogMsg(context,0,'E',"nbMsgLogOpen: Unable to create file '%s'",cursorFilename);
       free(msglog->msgbuf);
@@ -1211,7 +1226,7 @@ int nbMsgLogCursorWrite(nbCELL context,nbMsgLog *msglog){
   msgcursor.fileOffset=msglog->fileOffset;
   msgcursor.recordTime=msglog->recordTime;
   msgcursor.recordCount=msglog->recordCount;
-  fprintf(stderr,"nbMsgLogCursorWrite: msgcursor.fileOffset=%u msglog->fileOffset=%d\n",msgcursor.fileOffset,msglog->fileOffset);
+  fprintf(stderr,"nbMsgLogCursorWrite: msgcursor.fileOffset=%u msglog->fileOffset=%u\n",msgcursor.fileOffset,msglog->fileOffset);
   if(lseek(msglog->cursorFile,0,SEEK_SET)<0){
     nbLogMsg(context,0,'E',"nbMsgLogCursorWrite: Unable to seek cursor file %d to offset %u - %s",msglog->cursorFile,0,strerror(errno));
     return(-1);
@@ -1316,7 +1331,7 @@ void nbMsgUdpRead(nbCELL context,int serverSocket,void *handle){
       exit(1);
       }
     //if(msgTrace) nbMsgPrint(stderr,msgrec);
-    nbLogMsg(context,0,'T',"nbMsgUdpRead: recvfrom len=%d",len);
+    if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: recvfrom len=%d",len);
     nbMsgPrint(stderr,msgrec);
     state=nbMsgLogSetState(context,msglog,msgrec);
     if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: state=%d",state);
@@ -1362,7 +1377,7 @@ void nbMsgUdpRead(nbCELL context,int serverSocket,void *handle){
         }
       msglog->filesize=msgudp->fileOffset;  // now adjust offset to next message location
       msglog->fileOffset=msgudp->fileOffset;  // now adjust offset to next message location
-      fprintf(stderr,"nbMsgUdpRead: msglog->fileOffset=%d\n",msglog->fileOffset);
+      fprintf(stderr,"nbMsgUdpRead: msglog->fileOffset=%u\n",msglog->fileOffset);
       if(msglog->mode==NB_MSG_MODE_CURSOR && nbMsgLogCursorWrite(context,msglog)<0){
         nbLogMsg(context,0,'T',"Unable to update cursor for cabal '%s' node '%s' - terminating",msglog->cabal,msglog->nodeName);
         exit(1);
@@ -1792,7 +1807,7 @@ int nbMsgLogProduce(nbCELL context,nbMsgLog *msglog,unsigned int maxfilesize){
   char filename[256];
   int  node;
 
-  //fprintf(stderr,"nbMsgLogProduce: called with maxfilesize=%d\n",maxfilesize);
+  //fprintf(stderr,"nbMsgLogProduce: called with maxfilesize=%u\n",maxfilesize);
   node=msglog->node;
   if(!(msglog->state&NB_MSG_STATE_LOGEND)){
     outMsg(0,'E',"nbMsgLogProduce: Message log not in end-of-log state - cabal \"%s\" node %d",msglog->cabal,msglog->node);
@@ -2051,8 +2066,8 @@ int nbMsgCachePublish(nbCELL context,nbMsgCacheSubscriber *msgsub){
     while(!(state&NB_MSG_STATE_LOGEND)){
       state=nbMsgLogRead(context,msgsub->msglog);
       nbLogMsg(context,0,'T',"nbMsgCachePublish: nbMsgLogRead returned state=%d",state);
-      nbMsgPrint(stderr,msgsub->msglog->msgrec);
       if(state&NB_MSG_STATE_PROCESS){
+        nbMsgPrint(stderr,msgsub->msglog->msgrec);
         if((*msgsub->handler)(context,msgsub->handle,msgsub->msglog->msgrec)){
           nbLogMsg(context,0,'T',"nbMsgCachePublish: turning FLAG_INBUF and FLAG_PAUSE on");
           msgsub->flags|=NB_MSG_CACHE_FLAG_INBUF|NB_MSG_CACHE_FLAG_PAUSE;
@@ -2104,6 +2119,11 @@ int nbMsgCachePublish(nbCELL context,nbMsgCacheSubscriber *msgsub){
           return(messages);
           }
         else messages++;
+        }
+      else if(state&NB_MSG_STATE_SEQHIGH){
+        nbLogMsg(context,0,'L',"nbMsgCachePublish: Record count sequence error - terminating");
+        nbLogFlush(context);
+        exit(1);
         }
       cachePtr++; // step over flag byte
       cachePtr+=(*cachePtr<<8)|*(cachePtr+1); 
@@ -2198,7 +2218,7 @@ unsigned char *nbMsgCacheStomp(nbCELL context,nbMsgCache *msgcache,int msglen){
         //msgcache->fileOffset=*(uint32_t *)(msgcache->start+1);
         msgcache->fileOffset=CNTOHL(msgcache->start+1);
         msgcache->start+=sizeof(nbMsgCacheFileMarker);
-        nbLogMsg(context,0,'T',"nbMsgCacheStomp: filecount=%d fileOffset=%d",msgcache->fileCount,msgcache->fileOffset);
+        nbLogMsg(context,0,'T',"nbMsgCacheStomp: filecount=%d fileOffset=%u",msgcache->fileCount,msgcache->fileOffset);
         }
       else if(*msgcache->start!=0xff){
         if(msgTrace){
@@ -3068,19 +3088,24 @@ int nbMsgPeerCacheMsgHandler(nbCELL context,void *handle,nbMsgRec *msgrec){
   int msgids;
   int size;
 
-  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgPeerCacheMsgHandler: called");
+  nbLogMsg(context,0,'T',"nbMsgPeerCacheMsgHandler: called");
   size=(msgrec->len[0]<<8)|msgrec->len[1];
   if(!size){
     nbLogMsg(context,0,'L',"nbMsgPeerCacheMsgHandler: we should not receive a zero length record - terminating");
     exit(1);
     }
   // ignore messages that have been at the peer node
-  msgid=&msgrec->si;
-  if(msgid->node==msgnode->number) return(0);
-  msgid+=2;
-  for(msgids=msgrec->msgids;msgids;msgids--){
+  if(msgnode->number){
+    nbLogMsg(context,0,'T',"nbMsgPeerCacheMsgHandler: checking msgid for visit at node %d",msgnode->number);
+    msgid=&msgrec->si;
     if(msgid->node==msgnode->number) return(0);
+    msgid+=2;
+    for(msgids=msgrec->msgids;msgids;msgids--){
+      if(msgid->node==msgnode->number) return(0);
+      }
+    nbLogMsg(context,0,'T',"nbMsgPeerCacheMsgHandler: msgid not seen at %d",msgnode->number);
     }
+  else nbLogMsg(context,0,'T',"nbMsgPeerCacheMsgHandler: not checking msgid because target node is zero");
   return(nbPeerSend(context,msgnode->peer,(unsigned char *)msgrec,size));
   }
 

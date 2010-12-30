@@ -162,11 +162,13 @@ static void nbPeerWriter(nbCELL context,int sd,void *handle){
       nbPeerShutdown(context,peer,code);
       }
     if(peer->wloc==peer->wbuf){  // if we don't have more data to write, stop waiting to write
+      nbLogMsg(context,0,'T',"nbPeerWriter: removing WRITE_WAIT on SD=%d because we have no more data at the moment",sd);
       nbListenerRemoveWrite(context,sd);
       peer->flags&=0xff-NB_PEER_FLAG_WRITE_WAIT;
       }
     }
   else{
+    nbLogMsg(context,0,'T',"nbPeerWriter: removing WRITE_WAIT on SD=%d because we have no producer",sd);
     nbListenerRemoveWrite(context,sd);
     peer->flags&=0xff-NB_PEER_FLAG_WRITE_WAIT;
     }
@@ -533,10 +535,20 @@ int nbPeerConnect(nbCELL context,nbPeer *peer,void *handle,
 */
 int nbPeerSend(nbCELL context,nbPeer *peer,void *data,int size){
   int mysize=size+2;
-  //nbLogMsg(context,0,'T',"nbPeerSend: called with peer=%p size=%d flags=%x",peer,size,peer->flags);
-  if(peer->flags&NB_PEER_FLAG_WRITE_ERROR) return(-1);
-  if(size>NB_PEER_BUFLEN-2) return(-1);
-  if(peer->wloc+size+2>peer->wbuf+NB_PEER_BUFLEN) return(1);
+  nbLogMsg(context,0,'T',"nbPeerSend: called with peer=%p SD=%d size=%d flags=%x",peer,peer->tls->socket,size,peer->flags);
+  if(peer->flags&NB_PEER_FLAG_WRITE_ERROR){
+    nbLogMsg(context,0,'T',"nbPeerSend: error flag is set");
+    return(-1);
+    }
+  if(size>NB_PEER_BUFLEN-2){
+    nbLogMsg(context,0,'T',"nbPeerSend: size is too big for buffer");
+    return(-1);
+    }
+  if(peer->wloc+size+2>peer->wbuf+NB_PEER_BUFLEN){
+    nbLogMsg(context,0,'T',"nbPeerSend: buffer is full");
+    return(1);
+    }
+  nbLogMsg(context,0,'T',"nbPeerSend: made it past bail out conditions");
   // put message in buffer
   memcpy(peer->wloc+2,data,size);
   *peer->wloc=mysize>>8;
@@ -545,6 +557,7 @@ int nbPeerSend(nbCELL context,nbPeer *peer,void *data,int size){
   peer->wloc++;
   peer->wloc+=size;
   if(!(peer->flags&NB_PEER_FLAG_WRITE_WAIT)){
+    nbLogMsg(context,0,'T',"nbPeerSend: nbListenerAddWrite SD=%d flags=%x",peer->tls->socket,peer->flags);
     nbListenerAddWrite(context,peer->tls->socket,peer,nbPeerWriter);
     peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
     }
