@@ -646,7 +646,7 @@ int nbMedullaPulse(int serve){
   nbMedullaWaitEnable(nb_medulla_event,NULL,nbMedullaEventProcess);
   nb_medulla->serving=1;
   while(nb_medulla->serving){
-    nbMedullaThreadServe();
+    if(nb_medulla->threadcount) nbMedullaThreadServe();
     if(serve){
       waitSeconds=(nb_medulla->scheduler)(nb_medulla->session);
       // 2007-07-22 eat 0.6.8 - included test of serving switch to respond to stop command
@@ -698,15 +698,14 @@ int nbMedullaPulse(int serve){
 #else
 int nbMedullaPulse(int serve){
   struct NB_MEDULLA_WAIT *handler,**handlerP;
-  struct timeval tv;
+  struct timeval tv,tvNow;
   int readyfd;
   fd_set *setP;
 
   //fprintf(stderr,"nbMedullaPulse(%d) called\n",schedule);
-  tv.tv_usec=0;
   nb_medulla->serving=1;
   while(nb_medulla->serving){
-    nbMedullaThreadServe();
+    if(nb_medulla->thread_count) nbMedullaThreadServe();
     if(serve){
       tv.tv_sec=(nb_medulla->scheduler)(nb_medulla->session);
       // 2007-07-22 eat 0.6.8 - included test of serving switch to respond to stop command
@@ -714,9 +713,14 @@ int nbMedullaPulse(int serve){
         nb_medulla->serving=0;
         return(0);
         }
-      if(nb_medulla->thread_count) tv.tv_sec=0;
+      if(nb_medulla->thread_count) tv.tv_sec=0,tv.tv_usec=0;
+      else{
+        gettimeofday(&tvNow,NULL);  // align to start of second
+        tv.tv_sec--;
+        tv.tv_usec=1000000-tvNow.tv_usec;
+        }
       }
-    else tv.tv_sec=0;
+    else tv.tv_sec=0,tv.tv_usec=0;
     //readyfd=select(nb_medulla->highfd,&nb_medulla->readfds,&nb_medulla->writefds,&nb_medulla->exceptfds,&tv);
     //fprintf(stderr,"select highfd=%d sec=%d\n",nb_medulla->highfd,tv.tv_sec);
     readyfd=select(nb_medulla->highfd,&nb_medulla->readfds,&nb_medulla->writefds,NULL,&tv);
