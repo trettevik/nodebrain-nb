@@ -249,6 +249,7 @@
 */
 #include "config.h"
 #include <nb.h>
+#include <ctype.h>
 
 /*
 *  The following structure is created by the skill module's "construct"
@@ -266,6 +267,8 @@ typedef struct NB_MOD_SNMPTRAP{            /* SNMPTRAP node descriptor */
   unsigned char  echo;             /* echo option */
   unsigned int   sourceAddr;       /* source address */
   nbCELL handlerContext;
+  nbCELL syntaxContext;
+  nbCELL attributeContext;
   } NB_MOD_Snmptrap;
 
 /*================================================================================*/
@@ -400,16 +403,17 @@ static char *translateOid(unsigned char **cursorP,unsigned char *bufend,char **c
 *  SNMP Value Types           NodeBrain Value
 *
 *    i 02 - INTEGER           number n
-*    s 04 - STRING            string "abcdef"
+*    s 04 - OCTET STRING      string "abcdef"
 **   x 04 - HEX STRING        "
 **   d 04 - DECIMAL STRING    "
 **   b 04 - BITS              "
-*    n 05 - NULLOBJ           unknown value ?? 
+**     04 - DateAndTime       number n - UTC time
+*    n 05 - NULLOBJ           unknown value ? 
 *    o 06 - OBJID             string "n.n.n.n..."
-*    a 40 - IPADDRESS         string "xxx.xxx.xxx.xxx" 
-**   c 41 - COUNTER32         number n 
-**   u 42 - UNSIGNED          " 
-**   t 43 - TIMETICKS         " 
+*    a 40 - IpAddress         string "xxx.xxx.xxx.xxx" 
+**   c 41 - Counter32         number n 
+**   u 42 - Unsigned          " 
+**   t 43 - TimeTicks         " 
 *
 *  Note 1: Addresses are formated in a non-standard way to simplify comparison.  Leading
 *          zeros are included so every number has three digits.  For example, 192.168.1.23
@@ -420,6 +424,14 @@ static char *translateOid(unsigned char **cursorP,unsigned char *bufend,char **c
 *
 *  Note 2: Double quotes are replaced with single quotes in strings to avoid terminating
 *          NodeBrain strings.
+*
+*  Note 3: For some reason SNMP elected to double up on value types like 0x04.  We have a
+*          default way of representing values, but accept a syntax parameter to direct 
+*          the representation when the default is not appropriate.
+*
+*          04 Default     - as is if all bytes are printable, else convert bytes to hex string
+*          04 DateAndTime - number n - UTC Time
+*          
 */
 static void translateUnquoteString(char *cursor,int len){
   char *delim;
@@ -432,10 +444,15 @@ static void translateUnquoteString(char *cursor,int len){
     }
   }
 
-static char *translateValue(unsigned char **cursorP,unsigned char *bufend,char **cmdP,char *cmdend){
-  unsigned char *cursor=*cursorP;
+char mymsg[256];
+static char *translateValue(unsigned char **cursorP,unsigned char *bufend,char **cmdP,char *cmdend,char *syntax){
+  unsigned char *cursor=*cursorP,*lookahead;
   char *cmdcur=*cmdP,*msg;
   int objlen,n=0,type;
+  char *hexchar="0123456789ABCDEF";
+  double d=0;
+  time_t utime;
+  struct tm tm;
 
   type=*cursor;  /* get date type */
   cursor++;
@@ -456,20 +473,71 @@ static char *translateValue(unsigned char **cursorP,unsigned char *bufend,char *
     case 0x04: /* string */
       if(objlen<0) return("variable binding string value length error");
       if(objlen>cmdend-cmdcur-1) return("value is too large for buffer");
+      if(strcmp(syntax,"DateAndTime")==0){
+        if(objlen!=8 && objlen!=11) return("variable binding DateAndTime value length error");
+        tm.tm_year=*cursor<<8;
+        cursor++;
+        tm.tm_year|=*cursor;
+        tm.tm_year-=1900;
+        cursor++;
+        tm.tm_mon=*cursor-1;
+        cursor++;
+        tm.tm_mday=*cursor;
+        cursor++;
+        tm.tm_hour=*cursor;
+        cursor++;
+        tm.tm_min=*cursor;
+        cursor++;
+        tm.tm_sec=*cursor;
+        cursor++;
+        cursor++; // ignore deci-seconds
+        objlen-=8;
+        if(objlen){ 
+          if(*cursor=='+'){
+            cursor++;
+            tm.tm_hour-=*cursor;
+            cursor++;
+            tm.tm_min-=*cursor;
+            }
+          else if(*cursor=='-'){
+            cursor++;
+            tm.tm_hour+=*cursor;
+            cursor++;
+            tm.tm_min+=*cursor;
+            }
+          else return("variable binding DateAndtime value has unrecognized direction from UTC");
+          cursor++;
+          }
+        tm.tm_isdst=0;
+        utime=nbClockTimeGm(&tm);
+        sprintf(cmdcur,"%d",(int)utime);
+        cmdcur=strchr(cmdcur,0);
+        }
       else{
         *cmdcur='"';
         cmdcur++;
-        strncpy(cmdcur,(char *)cursor,objlen);
-        translateUnquoteString(cmdcur,objlen);
-        cmdcur+=objlen;
+        for(lookahead=cursor+objlen-1;lookahead>=cursor && isprint(*lookahead);lookahead--);
+        if(lookahead<cursor){
+          strncpy(cmdcur,(char *)cursor,objlen);
+          translateUnquoteString(cmdcur,objlen);
+          cmdcur+=objlen;
+          }
+        else{
+          for(lookahead=cursor;lookahead<cursor+objlen;lookahead++){
+            *cmdcur=*(hexchar+(*lookahead>>4));
+            cmdcur++;
+            *cmdcur=*(hexchar+(*lookahead&0x0f));
+            cmdcur++;
+            }
+          }
         *cmdcur='"';
         cmdcur++;
+        cursor+=objlen;
         }
-      cursor+=objlen;
       break;
     case 0x05: /* NULLOBJ */
       if(objlen!=0) return("variable binding NULLOBJ length error - expecting zero");
-      strcpy(cmdcur,"??");  /* we'll use NodeBrain's Unknown value for NULLOBJ */
+      strcpy(cmdcur,"?");  /* we'll use NodeBrain's Unknown value for NULLOBJ */
       cmdcur+=2;
       break;
     case 0x06: /* OID */
@@ -517,8 +585,18 @@ static char *translateValue(unsigned char **cursorP,unsigned char *bufend,char *
       sprintf(cmdcur,"%d",n);
       cmdcur=strchr(cmdcur,0);
       break;
+    case 0x46: // 64 bit number
+      if(objlen<1 || objlen>8) return("variable binding Counter64 value length error");
+      for(;objlen>0;objlen--){
+        d=d*256+*cursor;
+        cursor++;
+        } 
+      sprintf(cmdcur,"%.10g",d);
+      cmdcur=strchr(cmdcur,0);
+      break;
     default:
-      return("unrecognized value type");
+      sprintf(mymsg,"unrecognized value type %x len=%d",type,objlen);
+      return(mymsg);
     }
   *cursorP=cursor;
   *cmdP=cmdcur;
@@ -534,7 +612,7 @@ static char *translateValue(unsigned char **cursorP,unsigned char *bufend,char *
 *  
 *    *** include example here ***
 */
-static char *translate(NB_MOD_Snmptrap *snmptrap,unsigned char *buf,int len,char *cmd,int cmdlen){
+static char *translate(NB_MOD_Snmptrap *snmptrap,unsigned char *buf,int len,char *cmd,int cmdlen,char **handlerNameP){
   char *cmdcur=cmd;
   char *cmdend=cmdcur+cmdlen;
   unsigned char *cursor=buf;
@@ -543,8 +621,9 @@ static char *translate(NB_MOD_Snmptrap *snmptrap,unsigned char *buf,int len,char
   int objlen,generic;
   char *msg,version,senderAddr[40];
   char trapOID[64],*trapOIDCur;  // value of '1.3.6.1.6.3.1.1.4.1.0' (SNMP_TRAP_OID)
-  char *handler;
+  //char *handler;
   nbCELL cell;
+  char *oid,*value,*syntax,*attribute;
 
   fprintf(stderr,"translate: called\n");
   fflush(stderr);
@@ -561,7 +640,7 @@ static char *translate(NB_MOD_Snmptrap *snmptrap,unsigned char *buf,int len,char
   sprintf(cmdcur,"alert '1.3.6.1.6.3.18.1.4'=");  // snmpTrapCommunity OID
   cmdcur=strchr(cmdcur,0);
   if(*cursor!=0x04) return("expecting type 04 (string) for community string");
-  if(NULL!=(msg=translateValue(&cursor,bufend,&cmdcur,cmdend))) return(msg);
+  if(NULL!=(msg=translateValue(&cursor,bufend,&cmdcur,cmdend,""))) return(msg);
 
   fprintf(stderr,"translate: checking version specific stuff\n");
   fflush(stderr);
@@ -577,12 +656,12 @@ static char *translate(NB_MOD_Snmptrap *snmptrap,unsigned char *buf,int len,char
       strcpy(cmdcur,",'1.3.6.1.6.3.1.1.4.3'=");
       cmdcur=strchr(cmdcur,0);
       enterpriseOid=cursor;
-      if(NULL!=(msg=translateValue(&cursor,bufend,&cmdcur,cmdend))) return(msg);
+      if(NULL!=(msg=translateValue(&cursor,bufend,&cmdcur,cmdend,""))) return(msg);
 
       if(*cursor!=0x40) return("expecting 0x40 for address");
       strcpy(cmdcur,",'1.3.6.1.6.3.18.1.3'=");
       cmdcur=strchr(cmdcur,0);
-      if(NULL!=(msg=translateValue(&cursor,bufend,&cmdcur,cmdend))) return(msg);
+      if(NULL!=(msg=translateValue(&cursor,bufend,&cmdcur,cmdend,""))) return(msg);
 
       if(*cursor!=0x02) return("expecting integer for trap generic type");
       cursor++;
@@ -602,11 +681,11 @@ static char *translate(NB_MOD_Snmptrap *snmptrap,unsigned char *buf,int len,char
         }
       else{
         trapOIDCur=cmdcur+1;  //save location of trapOId
-        if(NULL!=(msg=translateValue(&enterpriseOid,bufend,&cmdcur,cmdend))) return(msg);
+        if(NULL!=(msg=translateValue(&enterpriseOid,bufend,&cmdcur,cmdend,""))) return(msg);
         cmdcur--;  // back up over ending quote to extend this enterprise oid
         strcpy(cmdcur,".0.");
         cmdcur+=3;
-        if(NULL!=(msg=translateValue(&cursor,bufend,&cmdcur,cmdend))) return(msg);
+        if(NULL!=(msg=translateValue(&cursor,bufend,&cmdcur,cmdend,""))) return(msg);
         *trapOID='\'';
         objlen=cmdcur-trapOIDCur;
         strncpy(trapOID+1,trapOIDCur,objlen);
@@ -618,7 +697,7 @@ static char *translate(NB_MOD_Snmptrap *snmptrap,unsigned char *buf,int len,char
       if(*cursor!=0x43) return("expecting 0x43 for uptime");
       strcpy(cmdcur,",'1.3.6.1.2.1.1.3.0'=");
       cmdcur=strchr(cmdcur,0);
-      if(NULL!=(msg=translateValue(&cursor,bufend,&cmdcur,cmdend))) return(msg);
+      if(NULL!=(msg=translateValue(&cursor,bufend,&cmdcur,cmdend,""))) return(msg);
       break;
 
     case 1: /* snmpV2 trap */
@@ -647,20 +726,6 @@ static char *translate(NB_MOD_Snmptrap *snmptrap,unsigned char *buf,int len,char
   fprintf(stderr,"translate: checking for handler\n");
   fflush(stderr);
 
-  // Check for handler
-  if(snmptrap->handlerContext
-      && (cell=nbTermLocateHere(snmptrap->handlerContext,trapOID))!=NULL
-      && (cell=nbTermGetDefinition(snmptrap->handlerContext,cell))!=NULL
-      && nbCellGetType(snmptrap->handlerContext,cell)==NB_TYPE_STRING){
-    handler=nbCellGetString(snmptrap->handlerContext,cell);
-    strcpy(cmd,handler);
-    cmdcur=strchr(cmd,0);
-    *cmdcur=':';
-    cmdcur++; 
-    strcpy(cmdcur,trapOID);
-    cmdcur=strchr(cmdcur,0);
-    }
-
   fprintf(stderr,"translate: processing variable bindings\n");
   fflush(stderr);
 
@@ -676,16 +741,63 @@ static char *translate(NB_MOD_Snmptrap *snmptrap,unsigned char *buf,int len,char
     if(objlen<0) return("variable binding length error");
     if(*cursor!=0x06) return("expecting OID on left side of variable binding");
     cursor++;
-    strcpy(cmdcur,",'");
-    cmdcur+=2;
+    *cmdcur=',';
+    cmdcur++;
+    oid=cmdcur;  // save location of OID
+    *cmdcur='\'';
+    cmdcur++;
     if((msg=translateOid(&cursor,bufend,&cmdcur,cmdend))!=NULL) return(msg);
     *cmdcur='\'';
     cmdcur++;
+    *cmdcur=0;
+    // look up syntax for value representation
+    if(snmptrap->syntaxContext
+        && (cell=nbTermLocateHere(snmptrap->syntaxContext,oid))!=NULL
+        && (cell=nbTermGetDefinition(snmptrap->syntaxContext,cell))!=NULL
+        && nbCellGetType(snmptrap->syntaxContext,cell)==NB_TYPE_STRING){
+      syntax=nbCellGetString(snmptrap->syntaxContext,cell);
+      }
+    else syntax="";
+    // look up attribute name and replace if found
+    if(snmptrap->attributeContext
+        && (cell=nbTermLocateHere(snmptrap->attributeContext,oid))!=NULL
+        && (cell=nbTermGetDefinition(snmptrap->attributeContext,cell))!=NULL
+        && nbCellGetType(snmptrap->attributeContext,cell)==NB_TYPE_STRING){
+      attribute=nbCellGetString(snmptrap->attributeContext,cell);
+      strcpy(oid,attribute);
+      cmdcur=strchr(oid,0);
+      }
     *cmdcur='=';
     cmdcur++;
-    if((msg=translateValue(&cursor,bufend,&cmdcur,cmdend))!=NULL) return(msg);
+    value=cmdcur;
+    if((msg=translateValue(&cursor,bufend,&cmdcur,cmdend,syntax))!=NULL) return(msg);
+    if(strncmp(oid,"'1.3.6.1.6.3.1.1.4.1.0'",23)==0 && *value=='"'){
+      oid=trapOID;
+      *oid='\'';
+      oid++;
+      value++;
+      while(value<cmdcur && *value!='"') *oid=*value,oid++,value++;
+      *oid='\'';
+      oid++;
+      *oid=0;
+      }
     }
   *cmdcur=0;
+
+  // Check for handler
+  if(snmptrap->handlerContext
+      && (cell=nbTermLocateHere(snmptrap->handlerContext,trapOID))!=NULL
+      && (cell=nbTermGetDefinition(snmptrap->handlerContext,cell))!=NULL
+      && nbCellGetType(snmptrap->handlerContext,cell)==NB_TYPE_STRING){
+    *handlerNameP=nbCellGetString(snmptrap->handlerContext,cell);
+    //handler=nbCellGetString(snmptrap->handlerContext,cell);
+    //strcpy(cmd,handler);
+    //cmdcur=strchr(cmd,0);
+    //*cmdcur=':';
+    //cmdcur++; 
+    //strcpy(cmdcur,trapOID);
+    //cmdcur=strchr(cmdcur,0);
+    }
 
   fprintf(stderr,"translate: returning\n");
   fflush(stderr);
@@ -720,17 +832,23 @@ static void serverRead(nbCELL context,int serverSocket,void *handle){
   char cmd[NB_BUFSIZE];
   size_t cmdlen=NB_BUFSIZE;
   char *msg;
+  char *handlerName=NULL;
 
   nbIpGetSocketAddrString(serverSocket,daddr);
   len=nbIpGetDatagram(context,serverSocket,&snmptrap->sourceAddr,&rport,buffer,buflen);
   if(snmptrap->trace) nbLogMsg(context,0,'I',"Datagram %s:%5.5u -> %s len=%d\n",nbIpGetAddrString(raddr,snmptrap->sourceAddr),rport,daddr,len);
-  msg=translate(snmptrap,buffer,len,cmd,cmdlen);
+  if(snmptrap->dump) nbLogDump(context,buffer,len);
+  msg=translate(snmptrap,buffer,len,cmd,cmdlen,&handlerName);
   if(msg!=NULL){
     nbLogMsg(context,0,'E',msg);
     return;
     }
   if(snmptrap->trace && !snmptrap->echo) nbLogMsg(context,0,'I',cmd);
-  nbCmd(context,cmd,snmptrap->echo);
+  if(handlerName){
+    *(cmd+5)=':'; // convert to node command, stepping over "alert" verb
+    nbNodeCmd(context,handlerName,cmd+5);
+    }
+  else nbCmd(context,cmd,snmptrap->echo);
   }
 
 /*
@@ -837,6 +955,8 @@ static void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
   snmptrap->dump=dump;
   snmptrap->echo=echo;
   snmptrap->handlerContext=NULL;
+  snmptrap->syntaxContext=NULL;
+  snmptrap->attributeContext=NULL;
   nbListenerEnableOnDaemon(context);  // sign up to enable when we daemonize
   return(snmptrap);
   }
@@ -848,6 +968,8 @@ static void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
 */
 static int serverEnable(nbCELL context,void *skillHandle,NB_MOD_Snmptrap *snmptrap){
   snmptrap->handlerContext=nbTermLocateHere(context,"handler");
+  snmptrap->syntaxContext=nbTermLocateHere(context,"syntax");
+  snmptrap->attributeContext=nbTermLocateHere(context,"attribute");
   if((snmptrap->socket=nbIpGetUdpServerSocket(context,snmptrap->interfaceAddr,snmptrap->port))<0){
     nbLogMsg(context,0,'E',"Unable to listen on port %d\n",snmptrap->port);
     return(1);
