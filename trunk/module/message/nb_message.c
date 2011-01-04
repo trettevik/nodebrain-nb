@@ -267,8 +267,8 @@ int producerEnable(nbCELL context,void *skillHandle,nbModProducer *producer){
     nbLogMsg(context,0,'E',"Unable to read to end of file for cabal \"%s\" node %d",msglog->cabal,msglog->node);
     return(1);
     }
-  state=nbMsgLogProduce(context,msglog,1024*1024);
-  //state=nbMsgLogProduce(context,msglog,10*1024*1024);
+  //state=nbMsgLogProduce(context,msglog,1024*1024); // smaller files to force more file boundaries for testing messaging
+  state=nbMsgLogProduce(context,msglog,10*1024*1024);
   nbLogMsg(context,0,'T',"Return from nbMsgLogProduce() is %d",state);
   nbLogMsg(context,0,'I',"Message.producer enabled for cabal \"%s\" node %d",msglog->cabal,msglog->node);
   return(0);
@@ -1154,9 +1154,11 @@ int messageCmdExport(nbCELL context,void *handle,char *verb,char *cursor){
     nbLogMsg(context,0,'E',"Unable to open message log for cabal \"%s\" instance %d",cabalName,instance);
     return(1);
     }
-  while(!((state=nbMsgLogRead(context,msglog))&NB_MSG_STATE_LOGEND)){
+  nbMsgPrint(stdout,msglog->msgrec);
+  while(!((state=nbMsgLogRead(context,msglog))&(NB_MSG_STATE_LOGEND|NB_MSG_STATE_FILEND))){
     nbMsgPrint(stdout,msglog->msgrec);
     }
+  if(state&NB_MSG_STATE_FILEND) nbMsgPrint(stdout,msglog->msgrec);
   if(state<0){
     nbLogMsg(context,0,'E',"Unable to read to end of file for cabal \"%s\" node %d",cabalName,instance);
     return(1);
