@@ -157,8 +157,8 @@
 //#define CNTOHL(_byte) ntohl(*(uint32_t *)_byte)
 //#define CNTOHS(_byte) ntohs(*(uint16_t *)_byte)
 //#endif
-#define CNTOHL(_byte) ((uint32_t)((((((*_byte)<<8)|(*(_byte+1)))<<8)|(*(_byte+2)))<<8)|*(_byte+3))
-#define CNTOHS(_byte) ((uint16_t)(*_byte<<8|*(_byte+1)))
+#define CNTOHL(_byte) ((uint32_t)((((((*(_byte))<<8)|(*(_byte+1)))<<8)|(*(_byte+2)))<<8)|*(_byte+3))
+#define CNTOHS(_byte) ((uint16_t)(*(_byte)<<8|*(_byte+1)))
 
 /*
 *  Add a message consumer - UDP socket
@@ -570,6 +570,7 @@ int nbMsgIncludesState(nbMsgLog *msglog){
   nbMsgState *logState=msglog->logState;
   nbMsgState *pgmState=msglog->pgmState;
 
+  if(msgTrace) outMsg(0,'T',"nbMsgIncludesState: called - false if no message saying it is true");
   node=msgid->node;
   mTime=CNTOHL(msgid->time);
   mCount=CNTOHL(msgid->count);
@@ -584,6 +585,7 @@ int nbMsgIncludesState(nbMsgLog *msglog){
     else if(mTime==pgmState->msgnum[node].time && nbMsgCountCompare(mCount,pgmState->msgnum[node].count)>0) return(0);
     msgid++;
     }
+  if(msgTrace) outMsg(0,'T',"nbMsgIncludesState: true");
   return(1);  
   }
 
@@ -778,20 +780,34 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
   int msgbuflen;
   off_t pos;
   time_t utime;
+  struct stat filestat;
 
-  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogRead: called with state=%x",msglog->state);
+  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogRead: Called for msglog=%p state=0x%x fileCount=%u fileOffset=%u filesize=%u",msglog,msglog->state,msglog->fileCount,msglog->fileOffset,msglog->filesize);
   if(msglog->state&NB_MSG_STATE_LOGEND){
+    sprintf(msglog->filename,"%10.10d.msg",msglog->fileCount);  
+    sprintf(filename,"message/%s/%s/%s",msglog->cabal,msglog->nodeName,msglog->filename);
     if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogRead: Check for growth in cabal \"%s\" node %u file %s",msglog->cabal,msglog->node,msglog->filename);
     if(msglog->file){
       nbLogMsg(context,0,'E',"nbMsgLogRead: Logic error - cabal \"%s\" node %u file %s - still open while log is in end-of-log state",msglog->cabal,msglog->node,msglog->filename);
       return(-1);
       }
-    sprintf(filename,"message/%s/%s/%10.10u.msg",msglog->cabal,msglog->nodeName,msglog->fileCount);
+    if(msglog->fileOffset!=msglog->filesize){
+      nbLogMsg(context,0,'L',"nbMsgLogRead: Logic error - cabal \"%s\" node %u file %s offset %d is not equal filesize=%u after LOGEND",msglog->cabal,msglog->node,filename,msglog->fileOffset,msglog->filesize);
+      exit(1);
+      }
+    if(lstat(filename,&filestat)){
+      nbLogMsg(context,0,'E',"nbMsgLogRead: Unable to stat file %s - %s",filename,strerror(errno));
+      return(-1);
+      }
+    if(filestat.st_size<msglog->filesize){
+      nbLogMsg(context,0,'L',"nbMsgLogRead: Logic error - cabal \"%s\" node %u file %s size %d is less than msglog->filesize=%u",msglog->cabal,msglog->node,filename,filestat.st_size,msglog->filesize);
+      exit(1);
+      }
     if((msglog->file=open(filename,O_RDONLY))<0){
       nbLogMsg(context,0,'E',"nbMsgLogRead: Unable to open file %s - %s",filename,strerror(errno));
       return(-1);
       }
-    outMsg(0,'T',"nbMsgLogRead: 0 msglog->fileOffset=%u msglog->filesize=%u",msglog->fileOffset,msglog->filesize);
+    nbLogMsg(context,0,'T',"nbMsgLogRead: msglog->fileOffset=%u msglog->filesize=%u",msglog->fileOffset,msglog->filesize);
     if((pos=lseek(msglog->file,msglog->filesize,SEEK_SET))<0){
       nbLogMsg(context,0,'E',"nbMsgLogRead: Unable to seek file %s to offset %u - %s",filename,msglog->filesize,strerror(errno));
       return(-1);
@@ -835,17 +851,21 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
     // do something here to validate header relative to log state - have a validate function
     cursor=(unsigned char *)msglog->msgbuf;
     msglog->fileOffset=(*cursor<<8)|*(cursor+1); // set file offset just past header
-    outMsg(0,'T',"nbMsgLogRead: 1 msglog->fileOffset=%u",msglog->fileOffset);
+    if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogRead: Starting %s msglog->fileOffset=%u",msglog->filename,msglog->fileOffset);
     cursor+=(*cursor<<8)|*(cursor+1);  // step to next record - over header
     msglog->msgrec=(nbMsgRec *)cursor;
     }
   else{
     cursor=(unsigned char *)msglog->msgrec;
-    if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogRead: Step to next record at %p *cursor=%2.2x%2.2x",cursor,*cursor,*(cursor+1));
+    if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogRead: Step msglog=%p to next record at %p *cursor=%2.2x%2.2x",cursor,*cursor,*(cursor+1));
     msglog->fileOffset+=(*cursor<<8)|*(cursor+1);  // update file offset
-    outMsg(0,'T',"nbMsgLogRead: 2 msglog->fileCount=%u msglog->fileOffset=%u",msglog->fileCount,msglog->fileOffset);
     cursor+=(*cursor<<8)|*(cursor+1);  // step to next record
     msglog->msgrec=(nbMsgRec *)cursor;
+    nbLogMsg(context,0,'T',"nbMsgLogRead: After step msglog->fileCount=%u msglog->fileOffset=%u msglog->filesize=%u",msglog->fileCount,msglog->fileOffset,msglog->filesize);
+    if(msglog->fileOffset>msglog->filesize){
+      nbLogMsg(context,0,'T',"nbMsgLogRead: Logic error - fileOffset>filesize - terminating");
+      exit(1);
+      }
     }
   bufend=msglog->msgbuf+msglog->msgbuflen;
   cursor=(unsigned char *)msglog->msgrec;
@@ -904,6 +924,10 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
     msglog->file=0;
     msglog->state|=NB_MSG_STATE_FILEND;
     return(NB_MSG_STATE_FILEND);
+    }
+  else if(msglog->msgrec->type>2){
+    nbLogMsg(context,0,'L',"nbMsgLogRead: Invalid record type %d - terminating",msglog->msgrec->type);
+    exit(1);
     }
   if(msglog->mode==NB_MSG_MODE_CURSOR && nbMsgLogCursorWrite(context,msglog)<0){
     nbLogMsg(context,0,'T',"nbMsgLogRead: Unable to update cursor for cabal '%s' node '%s' - terminating",msglog->cabal,msglog->nodeName);
@@ -1121,7 +1145,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
   msglog->msgbuflen=msgbuflen;
   msglen=CNTOHS(msglog->msgbuf);
   msglog->fileOffset=msglen;
-  fprintf(stderr,"nbMsgLogOpen: 1 msglog->fileOffset=%u\n",msglog->fileOffset);
+  if(msgTrace) outMsg(0,'T',"nbMsgLogOpen: initial msglog->fileOffset=%u\n",msglog->fileOffset);
   msglog->msgrec=(nbMsgRec *)msglog->msgbuf;
   errStr=nbMsgHeaderExtract(msglog->msgrec,node,&tranTime,&tranCount,&recordTime,&recordCount,&fileTime,&fileCount); 
   if(errStr){
@@ -1134,9 +1158,10 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
   msglog->fileCount=fileCount;
   msglog->recordTime=recordTime;
   msglog->recordCount=recordCount;
-  //fprintf(stderr,"nbMsgLogOpen: Extracted header time=%u count=%u fileTime=%u fileCount=%u\n",mTime,mCount,fileTime,fileCount);
-  if(mode!=NB_MSG_MODE_SINGLE && msglog->logState!=msglog->pgmState && !flags&NB_MSG_MODE_LASTFILE) while(!nbMsgIncludesState(msglog)){
-    fprintf(stderr,"nbMsgLogOpen: File %s does not include requested state\n",filename);
+  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogOpen: Extracted header time=%u count=%u fileTime=%u fileCount=%u",recordTime,recordCount,fileTime,fileCount);
+  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogOpen: msglog=%p msglog->logState=%p msglog->pgmState=%p flags=%x",msglog,msglog->logState,msglog->pgmState,flags);
+  if(mode!=NB_MSG_MODE_SINGLE && msglog->logState!=msglog->pgmState && !(flags&NB_MSG_MODE_LASTFILE)) while(!nbMsgIncludesState(msglog)){
+    if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogOpen: File %s does not include requested state",filename);
     close(msglog->file);
     msglog->filesize=0;
     sprintf(filename,"message/%s/%s/%10.10u.msg",cabal,nodeName,fileCount-1);
@@ -1256,18 +1281,21 @@ int nbMsgLogProcess(nbCELL context,nbMsgLog *msglog){
   int rc;
 
   while(!((state=nbMsgLogRead(context,msglog))&NB_MSG_STATE_LOGEND)){
-    if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogProcess: return from nbMsgLogRead state=%d",state);
+    if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogProcess: msglog=%p return from nbMsgLogRead state=0x%x",msglog,state);
     nbMsgPrint(stderr,msglog->msgrec);
     if(state&NB_MSG_STATE_PROCESS){  // handle new message records
-      if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogProcess: calling message handler\n");
+      if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogProcess: msglog=%p calling message handler",msglog);
       if((rc=(*msglog->handler)(context,msglog->handle,msglog->msgrec))!=0){
         nbLogMsg(context,0,'I',"UDP message handler return code=%d",rc);
         exit(1);
         }
       processed++;
       }
-    //else if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogProcess: not processing record - state=%d",state);
-    else if(!(state&NB_MSG_STATE_FILEND)){  // no tolerance for error here
+    else if(state&NB_MSG_STATE_FILEND){  // if we cross over a file boundary, call the fileJump handler
+      if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogProcess: msglog=%p file end calling fileJumper exit if defined",msglog);
+      if(msglog->fileJumper) (*msglog->fileJumper)(context,msglog->handle,(msglog->msgrec->len[0]<<8)+msglog->msgrec->len[1]);
+      }
+    else{  // no tolerance for error here
       nbLogMsg(context,0,'T',"nbMsgLogProcess: not processing record - state=%d - terminating",state);
       exit(1);
       }
@@ -1312,6 +1340,7 @@ void nbMsgUdpRead(nbCELL context,int serverSocket,void *handle){
   int limit=500; // limit the number of messages handled at one time
   int processed;
 
+  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: Called at fileCount=%u fileOffset=%u fileSize=%u",msglog->fileCount,msglog->fileOffset,msglog->filesize);
   nbSynapseSetTimer(context,msglog->synapse,0);  // cancel the timer
   len=recvfrom(msglog->socket,buffer,buflen,0,NULL,0);
   while(len==-1 && errno==EINTR) len=recvfrom(msglog->socket,buffer,buflen,0,NULL,0);
@@ -1323,7 +1352,7 @@ void nbMsgUdpRead(nbCELL context,int serverSocket,void *handle){
     if(msgTrace){
       nbLogMsg(context,0,'T',"Datagram len=%d",len);
       nbLogDump(context,buffer,len);
-      nbLogMsg(context,0,'T',"nbMsgUdpRead: fileCount=%u fileOffset=%u",msgudp->fileCount,msgudp->fileOffset); 
+      nbLogMsg(context,0,'T',"nbMsgUdpRead: udp packet fileCount=%u fileOffset=%u",msgudp->fileCount,msgudp->fileOffset); 
       }
     msglen=CNTOHS(((unsigned char *)msgrec));
     if(msglen+sizeof(nbMsgCursor)!=len){
@@ -1354,30 +1383,34 @@ void nbMsgUdpRead(nbCELL context,int serverSocket,void *handle){
         }
       limit-=processed;
       // drain the udp queue
-      nbLogMsg(context,0,'T',"nbMsgUdpRead: flushing UDP stream - sd=%d",msglog->socket);
+      if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: flushing UDP stream - sd=%d",msglog->socket);
       state|=NB_MSG_STATE_SEQLOW;
       while(len>0 && state&NB_MSG_STATE_SEQLOW){
         len=recvfrom(msglog->socket,buffer,buflen,0,NULL,0);
         while(len==-1 && errno==EINTR) len=recvfrom(msglog->socket,buffer,buflen,0,NULL,0);
         if(len>0) state=nbMsgLogSetState(context,msglog,msgrec);
         }
-      nbLogMsg(context,0,'T',"nbMsgUdpRead: UDP stream flushed");
+      if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: UDP stream flushed");
       }
     if(len>0){
       if(msgudp->fileCount>msglog->fileCount){
+        if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: before new file msglog->fileCount=%u msglog->fileOffset=%u msglog->filesize=%u",msglog->fileCount,msglog->fileOffset,msglog->filesize);
         msglog->fileCount=msgudp->fileCount;
         msglog->filesize=msgudp->fileOffset;
-        msglog->filesize-=(msgrec->len[0]<<8)+msgrec->len[1];  // adjust offset to start of first message in new file
-        if(msglog->fileJumper) (*msglog->fileJumper)(context,msglog->handle,msglog->filesize);
+        msglog->fileOffset=msgudp->fileOffset;
+        // call fileJumper with offset adjusted to start of first message in new file
+        if(msglog->fileJumper) (*msglog->fileJumper)(context,msglog->handle,msglog->fileOffset-((msgrec->len[0]<<8)+msgrec->len[1]));
+        if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: after new file msglog->fileCount=%u msglog->fileOffset=%u msglog->filesize=%u",msglog->fileCount,msglog->fileOffset,msglog->filesize);
         }
       if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: calling nbMsgCacheInsert");
       if((rc=(*msglog->handler)(context,msglog->handle,msgrec))!=0){
         nbLogMsg(context,0,'I',"UDP message handler return code=%d - terminating",rc);
         exit(1);
         }
-      msglog->filesize=msgudp->fileOffset;  // now adjust offset to next message location
-      msglog->fileOffset=msgudp->fileOffset;  // now adjust offset to next message location
-      fprintf(stderr,"nbMsgUdpRead: msglog->fileOffset=%u\n",msglog->fileOffset);
+      if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: before update msglog->fileCount=%u msglog->fileOffset=%u msglog->filesize=%u",msglog->fileCount,msglog->fileOffset,msglog->filesize);
+      msglog->filesize=msgudp->fileOffset;    // adjust file size to next message location
+      msglog->fileOffset=msgudp->fileOffset;  // adjust file offset to next message location
+      if(msgTrace) nbLogMsg(context,0,'T',"nbMsgUdpRead: after update msglog->fileCount=%u msglog->fileOffset=%u msglog->filesize=%u",msglog->fileCount,msglog->fileOffset,msglog->filesize);
       if(msglog->mode==NB_MSG_MODE_CURSOR && nbMsgLogCursorWrite(context,msglog)<0){
         nbLogMsg(context,0,'T',"Unable to update cursor for cabal '%s' node '%s' - terminating",msglog->cabal,msglog->nodeName);
         exit(1);
@@ -1393,7 +1426,7 @@ void nbMsgUdpRead(nbCELL context,int serverSocket,void *handle){
     while(len==-1 && errno==EINTR) len=recvfrom(msglog->socket,buffer,buflen,0,NULL,0);
     }
   if(len==-1 && errno!=EAGAIN){
-    nbLogMsg(context,0,'E',"nbMsgLogUdpRead: recvfrom error - %s",strerror(errno));
+    nbLogMsg(context,0,'E',"nbMsgUdpRead: recvfrom error - %s",strerror(errno));
     }
   nbSynapseSetTimer(context,msglog->synapse,5);
   }
@@ -2065,7 +2098,7 @@ int nbMsgCachePublish(nbCELL context,nbMsgCacheSubscriber *msgsub){
     nbLogMsg(context,0,'T',"nbMsgCachePublish: msgsub=%p msgsub->msglog=%p",msgsub,msgsub->msglog);
     while(!(state&NB_MSG_STATE_LOGEND)){
       state=nbMsgLogRead(context,msgsub->msglog);
-      nbLogMsg(context,0,'T',"nbMsgCachePublish: nbMsgLogRead returned state=%d",state);
+      nbLogMsg(context,0,'T',"nbMsgCachePublish: nbMsgLogRead returned state=0x%u",state);
       if(state&NB_MSG_STATE_PROCESS){
         nbMsgPrint(stderr,msgsub->msglog->msgrec);
         if((*msgsub->handler)(context,msgsub->handle,msgsub->msglog->msgrec)){
@@ -2212,13 +2245,15 @@ unsigned char *nbMsgCacheStomp(nbCELL context,nbMsgCache *msgcache,int msglen){
       msgqstop=msgqrec+1+msglen;
       }
     else if(msgqstop>=msgcache->start){  // we are in front of start and going to overlay it
-      if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCacheInsert: stop>=start");
+      if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCacheStomp: stop>=start");
       if(*msgcache->start==0x80){   // handle file marker - update file count and offset to jump to next file
+        if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCacheStomp: Found file marker cache.start=%p cache.fileCount=%u cache.fileOffset=%u",msgcache->start,msgcache->fileCount,msgcache->fileOffset);
+    
         msgcache->fileCount++;
         //msgcache->fileOffset=*(uint32_t *)(msgcache->start+1);
         msgcache->fileOffset=CNTOHL(msgcache->start+1);
         msgcache->start+=sizeof(nbMsgCacheFileMarker);
-        nbLogMsg(context,0,'T',"nbMsgCacheStomp: filecount=%d fileOffset=%u",msgcache->fileCount,msgcache->fileOffset);
+        if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCacheStomp: After file marker cache.start=%p cache.fileCount=%u cache.fileOffset=%u",msgcache->start,msgcache->fileCount,msgcache->fileOffset);
         }
       else if(*msgcache->start!=0xff){
         if(msgTrace){
@@ -2230,10 +2265,13 @@ unsigned char *nbMsgCacheStomp(nbCELL context,nbMsgCache *msgcache,int msglen){
         // if we save stomp=msgcache->start this can be handled in the spin below
         for(msgsub=msgcache->msgsub;msgsub;msgsub=msgsub->next){
           if(msgsub->cachePtr==msgcache->start && !(msgsub->flags&NB_MSG_CACHE_FLAG_MSGLOG)){
+            if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCacheStomp: Switching msgsub=%p msglog=%p to file mode",msgsub,msgsub->msglog);
             msgsub->flags|=NB_MSG_CACHE_FLAG_MSGLOG;
             msgsub->cachePtr=NULL;
             msgsub->msglog->fileCount=msgcache->fileCount;    // position message log for reading
+            msgsub->msglog->fileOffset=msgcache->fileOffset;  // 2011-01-03 eat
             msgsub->msglog->filesize=msgcache->fileOffset;
+            if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCacheStomp: Switched msgsub=%p msglog=%p fileCount=%u fileOffset=%u filesize=%u",msgsub,msgsub->msglog,msgsub->msglog->fileCount,msgsub->msglog->fileOffset,msgsub->msglog->filesize);
             }
           }
         // set state of cache start

@@ -496,7 +496,7 @@ struct NB_SKILL *nbSkillParse(NB_Term *context,char *cursor){
     }
   else{
     if(*cursor!=0 && *cursor!=';'){
-      outMsg(0,'E',"Expecting colon ':' or end of command at \"%s\"",cursor);
+      outMsg(0,'E',"Expecting colon ':' or end of command at:%s",cursor);
       if(args!=NULL) dropObject(args);
       return(NULL);
       }
@@ -552,7 +552,7 @@ NB_Term *nbNodeParse(NB_Term *context,char *ident,char *cursor){
   if(*cursor=='(') args=grabObject(nbSkillArgs(context,&cursor));
   if(*cursor==':') cursor++;
   else if(*cursor!=0 && *cursor!=';'){
-    outMsg(0,'E',"Expecting colon ':' or end of command at \"%s\"",cursor);
+    outMsg(0,'E',"Expecting colon ':' or end of command at:%s",cursor);
     dropObject(args);
     termUndef(term);
     return(NULL);
@@ -606,7 +606,7 @@ int nbNodeCmd(nbCELL context,char *name,char *cursor){
   if(*cursor==':') cursor++;
   else if(*cursor==';') cursor="";
   else if(*cursor!=0){
-    outMsg(0,'E',"Expecting colon ':' or end of command at \"%s\"",cursor);
+    outMsg(0,'E',"Expecting colon ':' or end of command at:%s",cursor);
     dropObject(args);
     return(-1);
     }

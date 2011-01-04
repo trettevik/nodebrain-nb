@@ -172,7 +172,6 @@ struct NB_SKILLCOND *nbSkillAssertionUse(NB_Term *context,char **cursor,char *ms
 int nbSkillCmd(NB_Term *context,char **cursor,char *msg);
 
 NB_Term *nbNodeParse(NB_Term *context,char *ident,char *cursor);
-int nbNodeCmd(NB_Cell *context,char *name,char *cursor);
 
 struct NB_SKILL *nbSkillNew(char *ident,NB_List *arglist,char *text);
 struct NB_FACET *nbFacetNew(NB_Skill *skill,char *ident);
@@ -225,6 +224,11 @@ extern int nbNodeSetLevel(nbCELL context,nbCELL cell);
 __declspec(dllexport)
 #endif
 extern void nbNodeSetValue(nbCELL context,nbCELL cell);
+
+#if defined(WIN32)
+_declspec (dllexport)
+#endif
+extern int nbNodeCmd(nbCELL context,char *name,char *cursor);
 
 #if defined(WIN32)
 _declspec (dllexport)

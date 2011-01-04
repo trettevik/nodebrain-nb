@@ -127,6 +127,7 @@
 #include "nbi.h" 
 
 time_t nb_ClockTime;     /* current clock time */
+time_t nb_ClockLocalOffset;  // local offset in seconds
 time_t nb_clockOffset=0; /* offset applied before breakdown to tm structure */  
 int    nb_clockClock=NB_CLOCK_LOCAL;  /* break down function: 0 - gmtime(), 1 - localtime() */
 int    nb_clockFormat=1; /* format for displaying times */ 
@@ -140,6 +141,7 @@ NB_Timer *nb_timerFree;  /* free timers */
 */ 
 void nbClockInit(NB_Stem *stem){
   time(&nb_ClockTime);
+  nb_ClockLocalOffset=mktime(localtime(&nb_ClockTime))-mktime(gmtime(&nb_ClockTime));
   nb_timerQueue=NULL;
   nb_timerFree=NULL;
   }
@@ -264,6 +266,14 @@ struct tm *nbClockGetTm(int clock,time_t utc){
   if(clock==NB_CLOCK_GMT) clockTm=gmtime(&utc);
   else clockTm=localtime(&utc);
   return(clockTm);  
+  }
+
+/*
+*  Convert a broken down GMT time into UTC
+*    This is intended as a portable alternative to the GNU timegm function.
+*/
+time_t nbClockTimeGm(struct tm *tm){
+  return(mktime(tm)-nb_ClockLocalOffset);
   }
 
 /*

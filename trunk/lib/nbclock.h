@@ -62,6 +62,7 @@
 #define NB_CLOCK_LOCAL    1  /* time breakdown function - localtime()       */
 
 extern time_t     nb_ClockTime;   /* current time */
+extern time_t     nb_ClockLocalOffset;  // local time offset in seconds
 extern time_t     nb_clockOffset; /* offset applied before breakdown */
 extern int        nb_clockClock;  /* time breakdown function: see NB_CLOCK_GMT above */
 extern int        nb_clockFormat; /* time display format */
@@ -102,5 +103,11 @@ extern int nbClockAlert(void);
 _declspec (dllexport)
 #endif
 extern char *nbClockToBuffer(char *buffer);
+
+#if defined(WIN32)
+_declspec (dllexport)
+#endif
+extern time_t nbClockTimeGm(struct tm *tm);
+
 
 #endif
