@@ -11,15 +11,15 @@
 
 @copying
 NodeBrain Tutorial@*
-March, 2009@*
+December 2010@*
 The Boeing Company,  P.O. Box 3707, Seattle, WA 98124, USA
 
 @sp 2
-@b{Release 0.7.5}
+@b{Release 0.8}
 
 Author: Ed Trettevik <eat@@nodebrain.org>
 
-Copyright @copyright{} 2006, 2007, 2008, 2009 The Boeing Company
+Copyright @copyright{} 2006, 2007, 2008, 2009, 2010, 2011 The Boeing Company
 
 @sp 1
 Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} preceding the index at the end of this document.
@@ -31,15 +31,15 @@ NodeBrain(TM) is a trademark of The Boeing Company.   All other trademarks and r
 @b{Software License}
 
 @multitable {------------------------------} {----------------------------------------------------}
-@item Copyright @copyright{} 1998-2009 @tab The Boeing Company
+@item Copyright @copyright{} 1998--2010 @tab The Boeing Company
 @item @tab Ed Trettevik <eat@@nodebrain.org>
 @end multitable
 
 NodeBrain is free software; you can redistribute it and/ormodify it under the terms of the GNU General Public License as published by theFree Software Foundation; either version 2 of the License, or (at your option)any later version.
 
-This program is distributed in the hope that it will be useful,but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License formore details.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License formore details.
 
-You should have received a copy of the GNU General PublicLicense along with this program; if not, write to Free Software Foundation,Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+You should have received a copy of the GNU General PublicLicense along with this program; if not, write to Free Software Foundation,Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 @end copying
 
 @iftex
@@ -108,8 +108,14 @@ Release 0.7.4
 @item 2009-03-04 @tab
 Release 0.7.5
 @itemize @bullet
-@item Refined for PDF format
+@item Refined for PDF
 @item Several minor corrections
+@end itemize
+
+@item 2010-12-31 @tab
+Release 0.8.3
+@itemize @bullet
+@item Updates - still needed
 @end itemize
 
 @end multitable
@@ -118,7 +124,7 @@ Release 0.7.5
 @b{Preface}
 
 @sp 1
-This tutorial is intended for readers seeking an introduction to NodeBrain through a series of simple examples.  Other documents are available for readers looking for a more complete reference to the rule language, modules or API.
+This tutorial is intended for readers seeking an introduction to NodeBrain through a series of simple examples.  Other documents are available for readers looking for a more complete reference to the rule language, modules, or API.
 
 The intent of the examples in this tutorial is to illustrate individual concepts, not to provide complete working applications or show all related options.
 We avoid formal syntax descriptions, thinking you are here because you want to figure it out from examples.  
@@ -145,13 +151,13 @@ See www.nodebrain.org for more information and the latest update to this documen
 @sp 2
 @b{Document Conventions}
 @sp 1
-Sample code and input/output examples are displayed in a fixed font, indented in HTML and Info, and enclosed
+Sample code and input/output examples are displayed in a monospace font, indented in HTML and Info, and enclosed
 in a box in PDF or printed copies.
 Bold text is used to bring the reader's attention to specific portions of an example.
 In the following example the first and last line are associated with the host shell and the lines in between are input or output unique to NodeBrain.
 The @code{define} command is highlighted, indicating it is the focus of the example.
 Lines starting with "@dots{}" are a continuation of the previous line ending with "@dots{}".
-This is not part of the language, just our way of breaking up single lines to fit on a printed page.
+This is not part of the language, just one way of breaking up single lines to fit on a printed page.
 If you copy an example, you must remove the dots and combine the lines into a single line.
 
 @example
@@ -183,7 +189,7 @@ $
 This tutorial is for NodeBrain (version @value{VERSION}, @value{UPDATED}), an open source agent
 for state and event monitoring.
 
-Copyright @copyright{} 2006, 2007, 2008, 2009 The Boeing Company
+Copyright @copyright{} 2006, 2007, 2008, 2009, 2010, 2011 The Boeing Company
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} preceding the index at the end of this document.
@@ -229,7 +235,7 @@ Permission is granted to copy, distribute and/or modify this document under the 
 @oddfooting @thistitle @| @| @thispage
 @evenfooting @thispage @| @| @thistitle
 
-@c Table of Contents
+@c Contents
 @oddheading @| @| 
 @evenheading @| @|
 @contents
@@ -244,7 +250,7 @@ Permission is granted to copy, distribute and/or modify this document under the 
 @cindex invoking NodeBrain
 
 @sp 1
-This tutorial illustrates how to invoke NodeBrain and introduces the reader to modes of operation that enable NodeBrain to adapt in minor ways to the requirements of different components within a monitoring application.  Some basic concepts about the language syntax and semantics are introduced along the way.  
+This tutorial illustrates how to invoke NodeBrain and introduces you to modes of operation that enable NodeBrain to adapt in minor ways to the requirements of different components within a monitoring application.  Some basic concepts about the language syntax and semantics are introduced along the way.  
 
 @menu
 * Interactive Mode::
@@ -256,7 +262,7 @@ This tutorial illustrates how to invoke NodeBrain and introduces the reader to m
 @node Interactive Mode
 @section Interactive Mode
 
-The easiest way to get started with NodeBrain is to invoke it interactively, type some commands and watch it respond.  This tutorial will walk you through some simple interactive sessions.
+The easiest way to get started with NodeBrain is to invoke it interactively, type some commands, and watch it respond.  This tutorial walks you through some simple interactive sessions.
 
 @menu
 * Starting and Ending an Interactive Session::
@@ -273,7 +279,7 @@ The easiest way to get started with NodeBrain is to invoke it interactively, typ
 @node Starting and Ending an Interactive Session
 @subsection Starting and Ending an Interactive Session
 
-If you execute NodeBrain with no arguments, it starts in interactive mode and presents a prompt.  At a Unix or Linux shell command prompt you start NodeBrain by typing @code{nb}.  It looks like this.
+If you execute NodeBrain with no arguments, it starts in interactive mode and presents a prompt.  At a Unix or Linux shell command prompt, you start NodeBrain by typing @code{nb}.  It looks like this.
 
 @example
 $ @b{nb}
@@ -298,21 +304,21 @@ Date       Time     Message
 >
 @end example
 
-Since the information NodeBrain displays when starting up is not important to the topics covered in this tutorial, we will not include it in our examples.  The example above is reduced to this.
+Since the information NodeBrain displays when starting up is not important to the topics covered in this tutorial, I don't include it in the examples.  The example above is shown as this.
 
 @example
 $ @b{nb}
 > 
 @end example
 
-At a Windows command prompt it looks like this.
+At a Windows command prompt,, it looks like this.
 
 @example
 C:> @b{nb}
 > 
 @end example
 
-For the examples in this tutorial we will use the Unix style shell command prompt.
+For the examples in this tutorial, we will use the Unix-style shell command prompt.
 
 To end an interactive session, just tell NodeBrain you want to quit.
 
@@ -328,7 +334,7 @@ You may also use Cntl-D or Cntl-C to end an interactive session.
 @subsection Assertions
 
 @quotation
-@i{The partisan, when he is engaged in a dispute, cares nothing about the rights of the question, but is anxious only to convince his hearers of his own assertions.} -- Plato (427 BC - 347BC), Dialogues, Phaedo
+@i{The partisan, when he is engaged in a dispute, cares nothing about the rights of the question, but is anxious only to convince his hearers of his own assertions.} ---Plato (427 BC--347 BC), @i{Dialogues, Phaedo}
 @end quotation
 
 It is quite easy to convince NodeBrain of your own assertions.  It looks like this.
@@ -338,7 +344,7 @@ $ nb
 > @b{assert a=1,b=2,mood="happy";}
 @end example
 
-To verify that NodeBrain is willing to accept your assertions, ask it to show you what it now believes about a, b and mood;
+To verify that NodeBrain is willing to accept your assertions, ask it to show you what it now believes about a, b, and mood:
 
 @example
 > @b{show a}
@@ -354,11 +360,11 @@ mood = "happy"
 @subsection Rules
 
 @quotation
-@i{Hell, there are no rules here--we're trying to accomplish something.}
---- Thomas A. Edison (1847 - 1931)
+@i{Hell, there are no rules here---we're trying to accomplish something.}
+---Thomas A. Edison (1847--1931)
 @end quotation
 
-If you are trying to accomplish something with NodeBrain and there are no rules, you are using the wrong tool.  NodeBrain is a rule engine, not a general purpose shell or scripting language.  There are many good shells and scripting languages to choose from, and much to be accomplished without rules --- at least not the kind of rules we are talking about here.  In a more general sense, no computing exists without rules, but the kind of rules you find in NodeBrain and similar tools are not appropriate for most computing problems.  However, they can be quite handy when applied to the right problems.
+If you are trying to accomplish something with NodeBrain and there are no rules, you are using the wrong tool.  NodeBrain is a rule engine, not a general purpose shell or scripting language.  There are many good shells and scripting languages to choose from, and much to be accomplished without rules---at least not the kind of rules we are talking about here.  In a more general sense, no computing exists without rules, but the kind of rules you find in NodeBrain and similar tools are not appropriate for most computing problems.  However, they can be quite handy when applied to the right problems.
 
 Let's start with a rule that doesn't accomplish anything.
 
@@ -377,7 +383,7 @@ $ nb
 $
 @end example
 
-What just happened there?  Well, we defined a rule named @file{myFirstRule} and specified a condition @code{(a=1 and b=2)} under which we want it to fire.  Each time this condition transitioned to a "true" state, the rule fired.
+What just happened there?  Well, you defined a rule named @file{myFirstRule} and specified a condition @code{(a=1 and b=2)} under which you want it to fire.  Each time this condition transitioned to a "true" state, the rule fired.
 
 Let's modify this example to make it accomplish something---perhaps an assertion.  
 
@@ -395,16 +401,16 @@ mood = "happy"
 $
 @end example
 
-The assertion that a=1, b=2 and c=3 changed our mood from "sad" to "happy".  Who said you can't accomplish something by following rules?
+The assertion that a=1, b=2, and c=3 changed the mood from "sad" to "happy."  Who said you can't accomplish something by following rules?
 
 @node Shell Commands
 @subsection Shell Commands
 
 @quotation
-@i{She did not talk to people as if they were strange hard shells she had to crack open to get inside. She talked as if she were already in the shell. In their very shell.}   --- Marita Bonner
+@i{She did not talk to people as if they were strange hard shells she had to crack open to get inside. She talked as if she were already in the shell. In their very shell.}   ---Marita Bonner
 @end quotation
 
-From NodeBrain you can get into the host systems command shell by using a command prefix of @code{-}.
+From NodeBrain you can get into the host systems command shell by using a command prefix of dash (@code{-}).
 
 @example
 $ nb
@@ -443,16 +449,16 @@ C:> nb
 $
 @end example
 
-When we direct NodeBrain to execute another command to perform a task, we refer to the child process as @i{servant}.
+When you direct NodeBrain to execute another command to perform a task, it's referred to the child process as @i{servant}.
 
 @node Consulting Servant Scripts
 @subsection Consulting Servant Scripts
 
 @quotation
-@i{CONSULT,v.i. To seek another's disapproval of a course already decided on.}  --- Ambrose Bierce (1842 - 1914), The Devil's Dictionary
+@i{CONSULT,v.i. To seek another's disapproval of a course already decided on.}  --- Ambrose Bierce (1842--1914), @i{The Devil's Dictionary}
 @end quotation
 
-NodeBrain is willing to accept the advice of others---even servants.  To illustrate this, let's first write a simple Perl script named processCount.pl that checks to see how many processes are running on a Unix system.
+NodeBrain is willing to accept the advice of others---even servants.  To illustrate, let's first write a simple Perl script named @code{processCount.pl} that checks to see how many processes are running on a Unix system.
 
 @example
 #!/usr/bin/perl
@@ -460,14 +466,14 @@ chomp($processes=`ps -e|wc -l`);
 print("assert processes=$processes;\n");
 @end example
 
-Now let's execute it in our Unix command shell.
+Now let's execute it in the Unix command shell.
 
 @example
 $ ./processCount.pl
 assert processes=40;
 @end example
 
-Now we can consult this script from NodeBrain by using a prefix of "@code{-:}" instead of just "@code{-}".  This tells NodeBrain to accept the output of the shell command as input to the NodeBrain interpreter.
+Now you can consult this script from NodeBrain by using a prefix of "@code{-:}" instead of just "@code{-}".  This tells NodeBrain to accept the output of the shell command as input to the NodeBrain interpreter.
 
 @example
 $ nb
@@ -485,11 +491,11 @@ $
 @subsection Rule Actions
 
 @quotation
-@i{You ask me why I do not write something... I think one's feelings waste themselves in words, they ought all to be distilled into actions and into actions which bring results.}
-- Florence Nightingale (1820 -1910), in Cecil Woodham-Smith, Florence Nightingale, 1951
+@i{You ask me why I do not write something...I think one's feelings waste themselves in words, they ought all to be distilled into actions and into actions which bring results.}
+---Florence Nightingale (1820--1910), in Cecil Woodham-Smith, @i{Florence Nightingale,} 1951
 @end quotation
 
-Any NodeBrain command can be used as a rule action by following the rule condition with a colon @code{:} and the action command.
+Any NodeBrain command can be used as a rule action by following the rule condition with a colon (@code{:}) and the action command.
 
 @example 
 $ nb
@@ -506,7 +512,7 @@ $
 @node Action Servant Scripts
 @subsection Action Servant Scripts
 
-When the action you want to take in response to a condition is not a trivial command, you can often turn it into one by writing a script in your favorite scripting language.  We'll illustrate this in an odd way by writing a trivial Perl script and ask you to imagine that it isn't trivial. We'll call this script alarmMe.pl.
+When the action you want to take in response to a condition is not a trivial command, you can often turn it into one by writing a script in your favorite scripting language.  I illustrate this in an odd way by writing a trivial Perl script and ask you to imagine that it isn't trivial. Call this script @code{alarmMe.pl}.
 
 @example
 alarmMe.pl
@@ -517,7 +523,7 @@ $me=getpwuid($<);
 system("mailx -s \"$id: $msg\" $me < note$id.txt");
 @end example
 
-Here's a session that uses a rule that invokes our alarmMe.pl script as a servant.
+Here's a session that uses a rule that invokes the @code{alarmMe.pl} script as a servant.
 
 @example
 $ nb
@@ -534,7 +540,7 @@ $
 @node Rule Files
 @subsection Rule Files (Scripts) 
 
-A rule file is just a file that contains NodeBrain rules. By convention we use a @code{.nb} suffix on these files.  We can combine what we've learned in this section into a rule file named @file{roger.nb}.
+A rule file is just a file that contains NodeBrain rules. By convention, use a @code{.nb} suffix on these files.  You can combine what you've learned in this section into a rule file named @code{roger.nb}.
 
 @example
 # roger.nb
@@ -543,7 +549,7 @@ define myProcessRule2 on(processes<100):-./alarmMe.pl 2 "ok - under 100 processe
 define myProcessRule3 on(a=1 and b=2):-:./processCount.pl
 @end example
 
-When we specify a file as an argument to NodeBrain, it reads the file and processes the commands.
+When you specify a file as an argument to NodeBrain, it reads the file and processes the commands.
 
 @example
 $ nb roger.nb
@@ -557,11 +563,11 @@ $ nb roger.nb
 $
 @end example
 
-But wait, this is a tutorial on interactive sessions.  What happened to our prompt?
-Remember we said that NodeBrain assumes we want an interactive session when we don't specify any arguments?
-Well, when we specify a file NodeBrain assumes we want a batch session and just processes the file and quits.
+But wait, this is a tutorial on interactive sessions.  What happened to the prompt?
+Remember that NodeBrain assumes you want an interactive session when you don't specify any arguments?
+Well, when you specify a file, NodeBrain assumes you want a batch session and just processes the file and quits.
 
-To tell NodeBrain we want an interactive session after the file is processed, we need to give it an additional @code{-} argument.
+To tell NodeBrain you want an interactive session after the file is processed, you need to give it an additional @code{-} argument.
 
 @example
 $ nb roger.nb -
@@ -591,11 +597,11 @@ $ nb roger.nb -
 @node Batch Mode
 @section Batch Mode    
 
-Except for the user prompt, everything you learned in the previous section on interactive sessions applies to batch sessions.  The rules are the same; we just no longer assume a user is typing commands.
+Except for the user prompt, everything you learned in the previous section on interactive sessions applies to batch sessions.  The rules are the same; you just no longer assume a user is typing commands.
 
 @subsection Starting and Stopping a Batch Session
 
-In the previous section we actually ran a batch session by accident.
+In the previous section you actually ran a batch session by accident.
 
 @example
 $ nb roger.nb
@@ -609,9 +615,9 @@ $ nb roger.nb
 $
 @end example
 
-We start a batch session by giving nb at least one source file without specifying the "-" option.  A batch session ends when all source files have been processed.
+You start a batch session by giving @code{nb} at least one source file without specifying the @code{-} option.  A batch session ends when all source files have been processed.
 
-Let's create a second source file with some assertions; call it abby.nb.
+Create a second source file with some assertions. Call it @code{abby.nb}.
 
 @example
 # abby.nb
@@ -622,7 +628,7 @@ assert a=1;
 @b{@ }
 @end example
 
-Let's combine the rule file and assertions in a single batch session.
+Combine the rule file and assertions in a single batch session.
 
 @example
 @b{@ }
@@ -658,23 +664,23 @@ $ nb roger.nb abby.nb
 $
 @end example
 
-This time our batch session generated an alarm saying "ok - under 100 processes".  Do you know why rule myProcessRule3 fired twice, but rule myProcessRule2 only fired once?  It is because the rule condition for myProcessRule3 transitioned to a true state twice, while the condition for myProcessRule2 only transitioned to a true state once.  An @code{on} rule whose condition is true will not fire when a new assertion causes it to remain true. 
+This time the batch session generated an alarm saying "ok - under 100 processes".  Do you know why rule @code{myProcessRule3} fired twice, but rule @code{myProcessRule2} only fired once?  The rule condition for @code{myProcessRule3} transitioned to a true state twice, while the condition for @code{myProcessRule2} only transitioned to a true state once.  An @code{on} rule whose condition is true will not fire when a new assertion causes it to remain true. 
 
 @subsection Piping Commands to a Batch Session
 
-If you give NodeBrain an equal symbol @code{=} as an argument, it processes stdin like any other file.  Let's do the same thing we did in the previous example using a pipe to stdin.
+If you give NodeBrain an equals sign (@code{=}) as an argument, it processes @code{stdin} like any other file.  Do the same thing you did in the previous example using a pipe to @code{stdin}.
 
 @example
 $ cat roger.nb abby.nb | nb =
 @end example
 
-We can combine the @code{=} argument with other source file arguments.
+You can combine the @code{=} argument with other source file arguments.
 
 @example
 $ cat abby.nb | nb roger.nb =
 @end example
 
-Files are processed in the order of arguments.  If we change the argument order the assertions are made before we define the rules, so we don't get the same results.
+Files are processed in the order of arguments.  If you change the argument order, the assertions are made before you define the rules, so you don't get the same results.
 
 @example
 $ cat abby.nb | nb = roger.nb
@@ -686,7 +692,7 @@ This is like specifying the following command.
 $ nb abby.nb roger.nb
 @end example
 
-Ok, so we now know how to pipe commands into NodeBrain. Maybe it would be handy to use a script as the source of assertions.  Here's a script called randy.pl that will generate some pseudo random values for a and b.
+Okay, so you now know how to pipe commands into NodeBrain. Maybe it would be handy to use a script as the source of assertions.  Here's a script called @code{randy.pl} that will generate some pseudo random values for a and b.
 
 @example
 randy.pl
@@ -698,7 +704,7 @@ for($i=1;$i<10;$i++)@{
   @}
 @end example
 
-We can use this script as the source of our assertions by piping the output of the script to NodeBrain.
+You can use this script as the source of your assertions by piping the output of the script to NodeBrain.
 
 @example
 $ ./randy.pl | nb roger.nb =
@@ -738,7 +744,7 @@ $ ./randy.pl | nb roger.nb =
 $
 @end example
 
-We can also pipe from within a script.  In randal.pl we open a pipe to NodeBrain and write to the pipe.
+You can also pipe from within a script.  In @code{randal.pl}, you open a pipe to NodeBrain and write to the pipe.
 
 @example
 randal.pl
@@ -787,22 +793,22 @@ $ ./randal.pl
 $
 @end example
 
-So, any way you can establish a pipe to NodeBrain is fine, just remember to tell NodeBrain to read stdin by specifying @code{=} as a file argument.
+So, any way you can establish a pipe to NodeBrain is fine, just remember to tell NodeBrain to read @code{stdin} by specifying @code{=} as a file argument.
 
 @node Servant Mode
 @section Servant Mode
 
 @quotation
 @i{If thou are a master, be sometimes blind; if a servant, sometimes deaf.}
-        -- Thomas Fuller (1608 -1661)
+---Thomas Fuller (1608--1661)
 @end quotation
 
-When NodeBrain reads commands from stdin in batch mode, it uses blocking I/O.
-This means it does nothing while waiting for the next command from the master.  If the master is mute, NodeBrain is an idle slave.  In servant mode, NodeBrain reads stdin using non-blocking I/O and is free to perform other duties while waiting for the next command from the master.
+When NodeBrain reads commands from @code{stdin} in batch mode, it uses blocking I/O.
+This means it does nothing while waiting for the next command from the master.  If the master is mute, NodeBrain is an idle slave.  In servant mode, NodeBrain reads @code{stdin} using non-blocking I/O and is free to perform other duties while waiting for the next command from the master.
 
 @subsection Scheduling Rules
 
-Let's first learn a simple way to give NodeBrain something else to do while waiting for commands.  Here's a rule file like roger.nb that includes a scheduling rule.  We'll call it jeeves.nb.
+Let's first learn a simple way to give NodeBrain something else to do while waiting for commands.  Here's a rule file like @code{roger.nb} that includes a scheduling rule.  Call it @code{jeeves.nb}.
 
 @example
 # jeeves.nb
@@ -812,18 +818,17 @@ define myProcessRule3 on(a=1 and b=2):-:./processCount.pl
 @b{define mySchedulingRule on(~(3s)) a=0;}
 @end example
 
-The rule condition ~(3s) specifies that the rule should fire every 3 seconds.  When the mySchedulingRule fires, it asserts that a=0.  If NodeBrain is waiting on input from stdin, it can not trigger this rule as specified.  So we're going to have to change the way we run NodeBrain.
+The rule condition @code{~(3s)} specifies that the rule should fire every 3 seconds.  When the @code{mySchedulingRule} fires, it asserts that a=0.  If NodeBrain is waiting on input from @code{stdin}, it cannot trigger this rule as specified.  So you have to change the way NodeBrain runs.
 
 @subsection Servant Option
 
-Here's a script called bertie.pl that uses the @code{-s} option to put NodeBrain in servant mode once all the input files specified as arguments have been processed.
+Here's a script called @code{bertie.pl} that uses the @code{-s} option to put NodeBrain in servant mode once all the input files specified as arguments have been processed.
 
 @example
-bertie.pl
-#!/usr/bin/perl
+bertie.pl#!/usr/bin/perl
 use FileHandle;
 open(NB,"|nb jeeves.nb @b{-s}")||die;  # use servant option
-NB->autoflush(1);       # force output to nb as soon as we send a command
+NB->autoflush(1); # force output to nb as soon as we send a command
 for($i=1;$i<10;$i++)@{
   $r=int(rand()*4);
   if($r%2)@{print(NB "assert a=$r;\n");@}
@@ -889,9 +894,9 @@ $
 @node Agent Mode
 @section Agent Mode
 
-Monitoring applications normally require a program that runs constantly and mostly without user control, but acts on the user's behalf. These qualities of persistence, relative autonomy, and user directed goals are characteristic of a software agent.  We know these programs as daemons on UNIX or Linux, and services on Windows.
+Monitoring applications normally require a program that runs constantly and mostly without user control but acts on the user's behalf. These qualities of persistence, relative autonomy, and user-directed goals are characteristic of a software agent.  These programs are known as as daemons on UNIX or Linux, and services on Windows.
 
-Let's modify our rules from the previous example so we execute our process counting script every minute.   
+Let's modify the rules from the previous example so the program can execute the process counting script every minute.   
 
 @example
 # maxwell.nb
@@ -900,7 +905,7 @@ define myProcessRule2 on(processes<100):-./alarmMe.pl 2 "ok - under 100 processe
 define myProcessRule3 on(~(m)):-:./processCount.pl
 @end example
 
-Now we'll execute it.
+Now you'll execute it.
 
 @example 
 $ nb maxwell.nb
@@ -915,10 +920,10 @@ $ nb maxwell.nb
 $
 @end example
 
-But wait, that’s not right.  The program just ended after loading the rules.  We need a way to tell it to run as a daemon.  We’ll try the daemon option, “-d”.
+But wait, that.s not right.  The program just ended after loading the rules.  You need a way to tell it to run as a daemon.  Try the daemon option @code{-d}.
  
 @example
-$ nb –d maxwell.nb
+$ nb .d maxwell.nb
 2008/06/05 21:47:28 NB000I Argument [1] -d
 2008/06/05 21:47:28 NB000I Argument [2] maxwell.nb
 > # maxwell.nb
@@ -931,20 +936,20 @@ $ nb –d maxwell.nb
 $
 @end example
 
-Ok, that's better, it daemonized.  That just means it disconnected from the terminal and is running in the background with no stdin or stdout.  It actually forks a new process to run as the daemon and then ends.
+Okay, that's better, it daemonized.  It disconnected from the terminal and is running in the background with no @code{stdin} or @code{stdout}.  It actually forks a new process to run as the daemon and then ends.
 
 @example
 $ ps -ef | grep nb
 myuser   @b{7622}     1  0 21:47 ?       00:00:00 nb -d maxwell.nb
 @end example
 
-Well, we have an agent running now, but we don't have anyway to see what it is doing.  To give us better visibility we need to instruct NodeBrain to write to a log file.  While we're at it, let's make this an executable script by adding a she-bang line.  Guess we should stop the running agent also.
+Well, you have an agent running now, but you don't have anyway to see what it is doing.  For better visibility, you need to instruct NodeBrain to write to a log file.  While you're at it, make it an executable script by adding a she-bang line.  Guess you should stop the running agent also.
 
 @example
 $ kill 7622
 @end example
 
-Here's our enhanced agent we'll call james.nb.
+Here's the enhanced agent called @code{james.nb}.
  
 @example
 #!/usr/local/bin/nb -d
@@ -956,7 +961,7 @@ define myProcessRule2 on(processes<100):-./alarmMe.pl 2 "ok - under 100 processe
 define myProcessRule3 on(~(m)):-:./processCount.pl
 @end example
 
-If we want to execute it we need to set the file permissions.
+If you want to execute it, set the file permissions.
 
 @example
 $chmod 755 james.nb
@@ -981,7 +986,7 @@ $ ./james.nb
 $
 @end example
 
-Now we can see what our agent is doing by tailing the log file.  Wait a minute, it isn't doing much.  Yes, wait another minute.  
+Now you can see what the agent is doing by tailing the log file.  Wait a minute, it isn't doing much.  Yes, wait another minute.  
 
 @example
 $ tail james.log
@@ -1006,9 +1011,9 @@ $ tail james.log
 [5659] Exit(0)
 @end example
 
-The log tells us the scheduled process is running and there are 78 active processes on this system.  If the count goes over 200 we will be notified by rule myProcessRule1 via the alarmMe.pl script.
+The log tells you the scheduled process is running and there are 78 active processes on this system.  If the count goes over 200, you will be notified by @code{rule myProcessRule1} via the @code{alarmMe.pl} script.
 
-That's it --- we have a working agent.  But clearly this example was not designed to convince you that NodeBrain should be used when the application is this simple.  This entire problem could be solved with one simple script written in your favorite scripting language.  NodeBrain is appropriate for situations where there is a benefit to separating declarative rules from procedural logic in a modular fashion.  It may take experimentation with more complex and evolving agent requirements to appreciate when it is appropriate.
+That's it---you have a working agent.  But clearly this example was not designed to convince you that NodeBrain should be used when the application is this simple.  This entire problem could be solved with one simple script written in your favorite scripting language.  NodeBrain is appropriate for situations where there is a benefit to separating declarative rules from procedural logic in a modular fashion.  It may take experimentation with more complex and evolving agent requirements to appreciate when it is appropriate.
 
 @node Cell Expressions
 @chapter Cell Expressions
@@ -1016,15 +1021,15 @@ That's it --- we have a working agent.  But clearly this example was not designe
 
 @quotation
 @i{I like nonsense; it wakes up the brain cells.}
-   -- Dr. Seuss (1904 -1991)
+---Dr. Seuss (1904--1991)
 @end quotation
 
-What could be more nonsensical than a program called NodeBrain?  And of course, if we claim this program is a brain, there must have brain cells and a way to wake them up.  So here goes.
+What could be more nonsensical than a program called NodeBrain?  And of course, if I claim this program is a brain, there must be brain cells and a way to wake them up.  So here goes.
 
-You can think of a cell as a structure capable of storing a value and optionally a formula for computing a value.  You may be familiar with this notion if you use a spreadsheet program.  A NodeBrain cell is vary similar to a spreadsheet cell, but without the tabular model.  There is no physical relationship between NodeBrain cells; no notions like "two to the left" or "one cell up".  NodeBrain cells are referenced only by their formula, which we call a cell expression.
+You can think of a cell as a structure capable of storing a value and optionally a formula for computing a value.  You may be familiar with this notion if you use a spreadsheet program.  A NodeBrain cell is vary similar to a spreadsheet cell, but without the tabular model.  There is no physical relationship between NodeBrain cells; no notions like "two to the left" or "one cell up."  NodeBrain cells are referenced only by their formula, which is called a cell expression.
 
 Cell expressions are allowed in various places within the command syntax.
-We can't tell you where exactly because we promised not to get BNF on you here, but we can say cell definitions, assertions, and rule conditions are the primary places where cell expressions are used.
+I can't tell you where exactly because I promised not to get BNF (Backus-Naur Form) on you here, but I can say cell definitions, assertions, and rule conditions are the primary places where cell expressions are used.
 
 @menu
 * Numbers and Strings::
@@ -1038,7 +1043,7 @@ We can't tell you where exactly because we promised not to get BNF on you here, 
 @node Numbers and Strings
 @section Numbers and Strings
 
-The simplest cell expressions identify a literal number or string.  Here we define a cell @code{a} with the expression @code{5}, and a cell @code{b} with the expression @code{"abc"}.
+The simplest cell expressions identify a literal number or string.  Here you define a cell @code{a} with the expression @code{5}, and a cell @code{b} with the expression @code{"abc"}.
 
 @example
 $ nb
@@ -1054,7 +1059,7 @@ b = "abc"
 @node Arithmetic
 @section Arithmetic
 
-We can do simple arithmetic in a cell expression.
+NodeBrain can do simple arithmetic in a cell expression.
 
 @example
 $ nb
@@ -1067,8 +1072,8 @@ b = ! == (a+3)
 > @ 
 @end example
 
-Wait, this must not be what Dr. Seuss meant by nonsense because these brain cells don't seem to be awake!  NodeBrain accepted our expression @code{5+4} but didn't compute @code{9}.  This is because NodeBrain is lazy. Nobody cares what the value of @code{a} or @code{b} is, so NodeBrain doesn't bother to compute them.
-We need more nonsense to wake these brain cells up.
+Wait, this must not be what Dr. Seuss meant by nonsense because these brain cells don't seem to be awake!  NodeBrain accepted the expression @code{5+4} but didn't compute @code{9}.  This is because NodeBrain is lazy. Nobody cares what the value of @code{a} or @code{b} is, so NodeBrain doesn't bother to compute them.
+You need more nonsense to wake up these brain cells.
 Let's try adding a rule that depends on the value of @code{b}.
 
 @example
@@ -1079,11 +1084,11 @@ a = 9 == (5+4)
 b = 12 == (a+3)
 @end example
 
-When we added the rule referencing @code{b}, NodeBrain was motivated to compute the value of @code{a+3}.  To get the value of @code{a}, it computes the value of @code{5+4}.
+When you added the rule referencing @code{b}, NodeBrain was motivated to compute the value of @code{a+3}.  To get the value of @code{a}, it computes the value of @code{5+4}.
 
-The symbol @code{==} can be read as "is defined as".  The response to @code{show b} above can be read as "@code{b} is @code{12} and is defined as @code{a+3}."
+The double equals signs symbol (@code{==}) can be read as "is defined as."  The response to @code{show b} above can be read as "@code{b} is @code{12} and is defined as @code{a+3}."
 
-Just for fun, let's see what happens when we assert new cell expressions for @code{a}.
+Just for fun, let's see what happens when you assert new cell expressions for @code{a}.
 
 @example
 > assert a=19;
@@ -1091,7 +1096,7 @@ Just for fun, let's see what happens when we assert new cell expressions for @co
 a = 19
 > show b
 b = 22 == (a+3)
-@b{> assert a=1;}
+@b{>assert a=1;}
 @b{2008/06/05 22:04:51 NB000I Rule rule1 fired}
 > show b
 b = 4 == (a+3)
@@ -1101,18 +1106,18 @@ a = 12.71428571
 > @ 
 @end example
 
-Although we are on the topic of arithmetic, it is perhaps less interesting that NodeBrain does arithmetic than when it does it.
-When we asserted that @code{a=1}, NodeBrain recomputed @code{b} and got @code{4}.  It then recomputed @code{b<20} which transitioned from false to true and rule1 fired.
+Although you are on the topic of arithmetic, it is perhaps less interesting that NodeBrain does arithmetic than when it does it.
+When you asserted that @code{a=1}, NodeBrain recomputed @code{b} and got @code{4}.  It then recomputed @code{b<20}, which transitioned from false to true and @code{rule1} fired.
 
 @node Logic
 @section Logic
 
 @quotation
-@i{Logic is like the sword -- those who appeal to it shall perish by it.}
---  Samuel Butler (1835 - 1902)
+@i{Logic is like the sword---those who appeal to it shall perish by it.}
+--- Samuel Butler (1835--1902)
 @end quotation
 
-One can appeal to logic in cell expressions, much as we do in other programming languages.  Some familiar operators are illustrated here.
+One can appeal to logic in cell expressions, much as in other programming languages.  Some familiar operators are illustrated here.
 
 @example
 > assert a=1,b=2,c=3,d=3;
@@ -1123,21 +1128,21 @@ One can appeal to logic in cell expressions, much as we do in other programming 
 > define rule5 on(a=b and c=d);
 @end example
 
-Relational operators (@code{> , < , <> , =, >=, <=}) have precedence over Boolean operators (@code{and}, @code{or}, @code{not}).  Use parentheses to force the order of precedence when you don't want the default or don't know the default.  
+Relational operators (@code{>  <  <>  = >= <=}) have precedence over Boolean operators (@code{and}, @code{or}, @code{not}).  Use parentheses to force the order of precedence when you don't want or don't know the default.  
 
-As we demonstrated with arithmetic expressions, NodeBrain evaluates logical expressions when there are assertions that change the value of operands.
-For example, consider the following expression used by rule5.
+As demonstrated with arithmetic expressions, NodeBrain evaluates logical expressions when there are assertions that change the value of operands.
+For example, consider the following expression used by @code{rule5}.
 
 @example
 a=b and c=d
 @end example
 
-If we assert that @code{a=3}, the interpreter has to recomputed @code{a=b}, but doesn't recompute the larger expression @code{a=b and c=d}.  Since @code{c} and @code{d} didn't change, the value of @code{c=d} has not changed, and since @code{a=b} remains false, the value of the larger expression is known to be unchanged without further computation.  
+If you assert that @code{a=3}, the interpreter has to recomputed @code{a=b}, but doesn't recompute the larger expression @code{a=b and c=d}.  Since @code{c} and @code{d} didn't change, the value of @code{c=d} has not changed, and since @code{a=b} remains false, the value of the larger expression is known to be unchanged without further computation.  
 
 There is only one cell for computing any given expression.
-No matter how may rule conditions reference @code{a=b}, there is only one @code{a=b} cell, as there is only one @code{a} cell and one @code{b} cell.
+No matter how many rule conditions reference @code{a=b}, there is only one @code{a=b} cell, as there is only one @code{a} cell and one @code{b} cell.
 Every cell knows which cells reference it.
-In this example both @code{a} and @code{b} know that @code{a=b} depends on them.
+In this example, both @code{a} and @code{b} know that @code{a=b} depends on them.
 If @code{a} changes, it reports a change to @code{a=b}.
 If @code{b} changes, it does the same.
 If @code{a} changes, @code{b} changes, or both @code{a} and @code{b} change in the same assertion, @code{a=b} is recomputed once.
@@ -1157,17 +1162,17 @@ Since the value is still true, no further computation is required.
 
 @quotation
 @i{I must govern the clock, not be governed by it.}
-    --  Golda Meir (1898 - 1978)
+---Golda Meir (1898--1978)
 @end quotation
 
 NodeBrain is happy to be governed by the clock.
-It has an extensive algebra for expressing schedules we call time conditions.
+It has an extensive algebra for expressing schedules called time conditions.
 A time condition is a function of time that is true or false at any given second.  
 
-In the spirit of this tutorial, we will be deliberately incomplete here and just try to give you a sense of it.
-The author is somewhat proud of this feature, so conscious restraint is required, but entirely appropriate.  (If you need a cure for insomnia, read about time conditions in the @i{NodeBrain Language Reference}.)
+In the spirit of this tutorial, I have been deliberately incomplete here and give you a sense of it.
+I'm somewhat proud of this feature, so I've exercised conscious restraint.  (If you need a cure for insomnia, read about time conditions in the @i{NodeBrain Language Reference}.)
 
-We'll just jump into it with a few examples.  We have a script called @file{schedule.nb} with rules whose names describe their time condition. Let's start it in interactive mode.
+I'll just jump into it with a few examples.  The following script, @code{schedule.nb}, has rules with names describing their time condition. Let's start it in interactive mode.
 
 @example
 $ nb schedule.nb -
@@ -1188,8 +1193,8 @@ $ nb schedule.nb -
 >
 @end example
 
-To see the next event for each schedule we use the show command with a @code{/c} (clock) option.
-We issued this command at 6:41 on Friday June 6, 2008.  The @code{h(4)} condition will transition to true at 04:00, and then back to false at 05:00.  The @code{(mo,we,fr)} condition will transition to true at 00:00 Monday the 9th.  See if you can make sense out of the rest of the conditions in this list, given the hint that weeks start at 00:00 Sunday. Match the conditions to the name of the corresponding rule above if you need help.    
+To see the next event for each schedule, use the @code{show} command with a @code{/c} (clock) option.
+I issued this command at 6:41 on Friday, June 6, 2008.  The @code{h(4)} condition will transition to true at 04:00, and then back to false at 05:00.  The @code{(mo,we,fr)} condition will transition to true at 00:00 Monday the 9th.  See if you can make sense out of the rest of the conditions in this list, given the hint that weeks start at 00:00 Sunday. Match the conditions to the name of the corresponding rule above if you need help.    
 
 @example
 > show /c
@@ -1212,7 +1217,7 @@ We issued this command at 6:41 on Friday June 6, 2008.  The @code{h(4)} conditio
                       on(~(fr[-1]jan));
 @end example
 
-A forecast command is used to see when a time condition will transition to true (left column) and false (right column).
+A @code{forecast} command is used to see when a time condition will transition to true (left column) and false (right column).
 
 @example
 > @b{forecast ~(mo,we,fr)}
@@ -1237,24 +1242,24 @@ The fundamental concepts to grasp here are that time conditions have
 
 @enumerate
 @item
-identifiers like @code{mo} for Monday, @code{h} for hour, @code{jan} for January, and @code{w} for week that define a set of time intervals, and
+Identifiers like @code{mo} for Monday, @code{h} for hour, @code{jan} for January, and @code{w} for week that define a set of time intervals
 @item
-operators @code{,} , @code{.} , @code{(n)}, and @code{[n]} that operate on time interval sets to produce new sets.
+Operators (@code{,} @code{.} @code{(n)} @code{[n]}) that operate on time interval sets to produce new sets
 @end enumerate
 
-The operators are based on formal concepts like intersection, union, selection, rejection, inverse, etc.        
+The operators are based on formal concepts like intersection, union, selection, rejection, inverse, and so on.        
 
 @node Node Conditions
 @section Node Conditions 
 
 @quotation
-@i{An expert knows all the answers -- if you ask the right questions.}
-  --  Unknown
+@i{An expert knows all the answers--- if you ask the right questions.}
+---Unknown
 @end quotation
 
-A NodeBrain node is an expert, with a set of knowledge and associated skill.  The skill is provided by a node module (plug-in) that extends NodeBrain functionality.  Since NodeBrain is not a general purpose scripting language, there are many things that are simply inappropriate to attempt without help from a node module.  It is the combination of skill and knowledge that makes a node an expert.  Of course we need to know how to ask the right questions.
+A NodeBrain node is an expert, with a set of knowledge and associated skill.  The skill is provided by a node module (plug-in) that extends NodeBrain functionality.  Since NodeBrain is not a general purpose scripting language, many things are simply inappropriate to attempt without help from a node module.  It is the combination of skill and knowledge that makes a node an expert.  Of course, you need to know how to ask the right questions.
 
-Node modules can be developed to perform any function imaginable, but within the context of a cell expression they only provide us with the value of node conditions.  These are expressions that look like a function call.  In rule @code{r1} below, @code{sally(x)} is a node condition and @code{sally} is a node with the skills provided by the tree module.
+Node modules can be developed to perform any function imaginable, but within the context of a cell expression they only provide us with the value of node conditions.  These expressions look like a function call.  In rule @code{r1} below, @code{sally(x)} is a node condition and @code{sally} is a node with the skills provided by the tree module.
 
 @example
 $ nb sally.nb
@@ -1272,15 +1277,15 @@ sally = ! == node tree
 2008/06/06 07:05:49 NB000I Rule r1 fired
 @end example
 
-Do you see why rule @code{r1} fired when we asserted that @code{x="abc"}? It is because @code{sally("abc")} was asserted to be true, so @code{sally(x)} is true when @code{x="abc"}.  What a node module does with assertions and how it computes the value of node conditions is entirely up to it.  In this case, the @code{tree} node module keeps track of assertions and returns a value for conditions by doing a lookup.  When the value of @code{x} changes, the interpreter reports a change to the node module and it computes a new value for the cell.
-When the cell value changes, it reports a change to the referencing cells, in this case rule r1, which fired.
+Do you see why rule @code{r1} fired when you asserted that @code{x="abc"}? It is because @code{sally("abc")} was asserted to be true, so @code{sally(x)} is true when @code{x="abc"}.  What a node module does with assertions and how it computes the value of node conditions is entirely up to it.  In this case, the @code{tree} node module keeps track of assertions and returns a value for conditions by doing a lookup.  When the value of @code{x} changes, the interpreter reports a change to the node module and it computes a new value for the cell.
+When the cell value changes, it reports a change to the referencing cells, in this case rule @code{r1}, which fired.
 
 @node Complex Expressions
 @section Complex Expressions
 
 @quotation
 @i{A complex system that works is invariably found to have evolved from a simple system that works.}
-    -- John Gaule
+---John Gaule
 @end quotation
 
 Every type of cell expression introduced in this tutorial can be combined into complex expressions as illustrated by rule @code{complex} below.
@@ -1301,7 +1306,7 @@ $ nb complex.nb
 If the complex rule doesn't fire when you run @code{complex.nb}, perhaps you are not running it on a Friday.
 If you try it on a Friday, it will fire because @code{y<7} is true and @code{sally(x,y)=a+b} is true.  
 The fact that the last expression is true may not be so obvious, so let's break it down.  The command @code{assert a,b;}
-sets @code{a} and @code{b} to 1 (true).  That means the expression @code{a+b} is 2.  Since @code{x} is "def" and @code{y} is 5, the expression @code{sally(x,y)=a+b} is @code{sally("def",5)=2}, which we assert to be true.
+sets @code{a} and @code{b} to 1 (true).  That means the expression @code{a+b} is 2.  Since @code{x} is @code{"def"} and @code{y} is 5, the expression @code{sally(x,y)=a+b} is @code{sally("def",5)=2}, which you assert to be true.
 
 @node Ignorance
 @chapter Ignorance
@@ -1314,10 +1319,10 @@ sets @code{a} and @code{b} to 1 (true).  That means the expression @code{a+b} is
 
 @quotation
 @i{Ignorance more frequently begets confidence than does knowledge.}
-     --  Charles Darwin
+---Charles Darwin
 @end quotation
 
-This tutorial is about ignorance; when NodeBrain is aware of it and how it is handled.  It is perhaps obvious, but important to remember, that NodeBrain assumes that whatever is asserted is the truth.  It makes no attempt to independently verify assertions, or check to see if assertions should have been made that were not.  So what NodeBrain thinks it knows may not be the truth.  In this respect, NodeBrain is unaware of its ignorance and blissfully acts with great confidence.  No different than most of us.
+This tutorial is about ignorance: when NodeBrain is aware of it and how it is handled.  It is perhaps obvious, but important to remember, that NodeBrain assumes that whatever is asserted is the truth.  It makes no attempt to independently verify assertions, or check whether assertions should have been made that were not.  So what NodeBrain thinks it knows may not be the truth.  In this respect, NodeBrain is unaware of its ignorance and blissfully acts with great confidence.  No different than most of us.
 
 However, within NodeBrain's own version of reality, it can be aware of a form of ignorance.  The notion here is that something can be known to be unknown, a possibility often dismissed by people rushing to judgment.
 How NodeBrain deals with that condition is the topic of this tutorial.
@@ -1334,7 +1339,7 @@ How NodeBrain deals with that condition is the topic of this tutorial.
 
 @quotation
 @i{Something unknown is doing we don't know what.}
-    -- Sir Arthur Eddington (1882 - 1944)
+---Sir Arthur Eddington (1882--1944)
 @end quotation
 
 The NodeBrain interpreter recognizes three logical states: true, false, and unknown.  These states are represented as follows.
@@ -1344,11 +1349,11 @@ The NodeBrain interpreter recognizes three logical states: true, false, and unkn
 @item @b{Value} @tab @b{Representation}
 @item Unknown @tab ?
 @item False   @tab 0
-@item True    @tab 1 or anything else (e.g. 5.2,-7, "abc", "")
+@item True    @tab 1 or anything else (e.g., 5.2, --7, "abc", "")
 @end multitable
 @end quotation
 
-We can test for these states by using the @code{=} relational operator or a prefix operator. The @code{!} prefix operator means "not" and the @code{?} prefix operator means "is unknown".
+You can test for these states by using the @code{=} relational operator or a prefix operator. The @code{!} prefix operator means "not" and the @code{?} prefix operator means "is unknown".
  
 @example
 > define r1 on(a=1 and b=0 and c=? and x and !y and ?z);
@@ -1370,7 +1375,7 @@ a =1
 > @ 
 @end example
 
-Although anything other than @code{?} or @code{0} is interpreted as true, logical operators often return a value of @code{1} to represent a true state. Below we see that the value of @code{a<b} is @code{1}.
+Although anything other than @code{?} or @code{0} is interpreted as true, logical operators often return a value of @code{1} to represent a true state. Below you see that the value of @code{a<b} is @code{1}.
 
 @example
 > assert a=5,b=7;
@@ -1379,11 +1384,11 @@ Although anything other than @code{?} or @code{0} is interpreted as true, logica
 ()= @b{1} == (@b{a<b})
 @end example
 
-Here's the important thing to understand.  Logical operators accept the unknown value as an operand and return the unknown value under specific conditions.  Logic tables for @code{A and B} and @code{A or B} are shown below. Notice that in some cases we know the result without knowing both operands.
+Here's the important thing to understand.  Logical operators accept the unknown value as an operand and return the unknown value under specific conditions.  Logic tables for @code{A and B} and @code{A or B} are shown below. Notice that in some cases NodeBrain knows the result without knowing both operands.
 
 @quotation
 @multitable {---} {---} {------} {------}
-@item   A @tab B @tab A&B @tab A|B 
+@item   @b{A} @tab @b{B} @tab @b{A&B} @tab @b{A|B}
 @item   0 @tab 0 @tab  0  @tab  0
 @item   0 @tab 1 @tab  0  @tab  1
 @item   0 @tab ? @tab  0  @tab  ?
@@ -1396,7 +1401,7 @@ Here's the important thing to understand.  Logical operators accept the unknown 
 @end multitable
 @end quotation
 
-The ? prefix operator enables us to test for an unknown condition and act upon it.
+The @code{?} prefix operator enables you to test for an unknown condition and act on it.
 
 @example
 $ nb
@@ -1414,16 +1419,16 @@ a =7
 > 
 @end example
 
-Let's pause to make sure we all know what just happened here. The condition ?x is true when x is unknown.  This was true when we first defined r1 because x is @i{a}+@i{b} and both @i{a} and @i{b} are unknown at that time.  Hey, the arithmetic operators understand the unknown value also.  When we asserted that a=7 and b=12, x was known to be 19 and ?x was false.  Then we assert ?b, making a+b unknown, making x unknown, making ?x true and r1 fired.
+Let's pause to make sure you know what just happened here. The condition @code{?x} is true when @code{x} is unknown.  This was true when @code{r1} was defined because @code{x} is @code{@i{a}+@i{b}}and both @code{@i{a}} and @code{@i{b}} are unknown at that time.  Hey, the arithmetic operators understand the unknown value also.  When you assert that @code{a=7} and @code{b=12}, @code{x} was known to be 19 and @code{?x} was false.  Then you assert @code{?b}, making @code{a+b} unknown, making @code{x} unknown, making @code{?x} true and @code{r1} fired.
  
 @node Closed World Assumption
 @section Closed World Assumption
 
-Some systems use a closed world assumption, where anything not known to be true is assumed to be false.  As we illustrated in the previous section, NodeBrain does not generally make this assumption.  Instead it allows the unknown state to propagate through the evaluation of cell expression.
+Some systems use a closed world assumption, where anything not known to be true is assumed to be false.  As  illustrated in the previous section, NodeBrain does not generally make this assumption.  Instead it allows the unknown state to propagate through the evaluation of cell expression.
 
 However, node modules are allowed to handle the unknown state using either the closed world assumption or three-state logic.  This means you must be aware of how each node module handles the unknown state when coding rules.
 
-We'll illustrate using two nodes, one with the @code{tree} skill and one with the @code{cache} skill.  The tree module uses three-state logic and the cache module uses the closed world assumption.
+I'll illustrate using two nodes, one with the @code{tree} skill and one with the @code{cache} skill.  The @code{tree} module uses three-state logic and the @code{cache} module uses the closed world assumption.
 
 @example
 $ nb closedWorld.nb
@@ -1452,18 +1457,18 @@ $
 @end example
 
 This may just be a blur, so let's take the assertions one at a time.  Initially @code{soup} is unknown, @code{myTree(soup)} is unknown, and @code{myCache(soup)} is false.
-The reason @code{myCache(soup)} is false is because the cache skill uses the closed world assumption; what is not known to be true is false. 
-When we assert @code{"Chicken"} to both the tree and the cache there is no change to the value of @code{myTree(soup)} and @code{myCache(soup)}.
-When we assert that @code{soup="Tomato"} there is still no change.  A value of @code{"Tomato"} is not known to the tree or cache, in the same way an unknown soup is not known. 
+The reason @code{myCache(soup)} is false is because the @code{cache} skill uses the closed world assumption; what is not known to be true is false. 
+When you assert @code{"Chicken"} to both the @code{tree} and the @code{cache}, there is no change to the value of @code{myTree(soup)} and @code{myCache(soup)}.
+When you assert that @code{soup="Tomato"}, there is still no change.  A value of @code{"Tomato"} is not known to @code{tree} or @code{cache}, in the same way an unknown soup is not known. 
 
-Next we assert that @code{soup="Chicken"}.  Both @code{myTree(soup)} and @code{myCache(soup)} transition to true and the corresponding rules @code{rMyCacheHasSoup} and @code{rMyTreeHasSoup} fire.
+Next, you assert that @code{soup="Chicken"}.  Both @code{myTree(soup)} and @code{myCache(soup)} transition to true and the corresponding rules @code{rMyCacheHasSoup} and @code{rMyTreeHasSoup} fire.
 
-This is followed by an assertion that @code{myTree("Chicken")} and @code{myCache("Chicken")} are unknown.  Because the cache skill uses the closed world assumption, this is the same as asserting that @code{myCache("Chicken")} is false.  Consequently, @code{rMyCacheHasNotSoup} fires while @code{myTreeKnowsNotSoup} fires.
+This is followed by an assertion that @code{myTree("Chicken")} and @code{myCache("Chicken")} are unknown.  Because the @code{cach} skill uses the closed world assumption, this is the same as asserting that @code{myCache("Chicken")} is false.  Consequently, @code{rMyCacheHasNotSoup} fires while @code{myTreeKnowsNotSoup} fires.
 
-Finally we assert @code{myTree("Chicken")} and @code{myCache("Chicken")} to be false.  This causes the rule @code{rMyTreeHasNotSoup} to fire.
-There is no change to @code{myCache("Chicken")}, so no cache related rule fires.
+Finally, you assert @code{myTree("Chicken")} and @code{myCache("Chicken")} to be false.  This causes the rule @code{rMyTreeHasNotSoup} to fire.
+There is no change to @code{myCache("Chicken")}, so no cache-related rule fires.
 
-The difference between the tree and cache skills is that we must assert @code{myTree(soup)} to be false before @code{myTree(soup)} evaluates to false, while @code{myCache(soup)} is false simply because we haven't asserted it to be true.
+The difference between the @code{tree} and @code{cache} skills is that you must assert @code{myTree(soup)} to be false before @code{myTree(soup)} evaluates to false, while @code{myCache(soup)} is false simply because you haven't asserted it to be true.
 Asserting either @code{!myCache("Chicken")} or @code{?myCache("Chicken")} removes knowledge of "Chicken" from the cache.
 Only an assertion of @code{?myTree("Chicken")} removes knowledge of "Chicken" from the tree.
 Asserting @code{!myTree("Chicken")} asserts a value of false to the "Chicken" entry in the tree.
@@ -1471,7 +1476,7 @@ Asserting @code{!myTree("Chicken")} asserts a value of false to the "Chicken" en
 @node Reactive Mode
 @section Reactive Mode
 
-In all the previous examples in this tutorial the interpreter has been operating in reactive mode when processing rules.  In this mode, the interpreter waits for assertions and responds appropriately.  It makes no effort to convert unknown values into known values.  Consider the following example.
+In all the previous examples in this tutorial, the interpreter has been operating in reactive mode when processing rules.  In this mode, the interpreter waits for assertions and responds appropriately.  It makes no effort to convert unknown values into known values.  Consider the following example.
 
 @example
 $ nb
@@ -1479,20 +1484,20 @@ $ nb
 >
 @end example
 
-The interpreter knows the value of processes is unknown and it does nothing to find out.  This is reasonable because we haven't asked it to and we haven't told it how.  These are possibilities we cover in the next section.
+The interpreter knows the value of processes is unknown and it does nothing to find out.  This is reasonable because you haven't asked it to and you haven't told it how.  These are possibilities covered in the next section.
 
 @node Query Mode
 @section Query Mode
 
-There is an interpreter mode we call @i{query} mode, in which NodeBrain attempts to solve for unknown values as required to obtain a known value for rule conditions.  This mode approximates what your doctor does when you go in with a medical problem, or your car mechanic does when you take your car in with a mechanical problem.
-They ask questions of you, and they ask questions of themselves which they try to answer by running tests.  They attempt to diagnose your problem by applying rules and seeking values for parameters that are initially unknown.  They only ask the questions and run the tests that are necessary to arrive at a conclusion.
+There is an interpreter mode called @i{query} mode, in which NodeBrain attempts to solve for unknown values as required to obtain a known value for rule conditions.  This mode approximates what your doctor does when you go in with a medical problem, or your car mechanic does when you take your car in with a mechanical problem.
+They ask you questions, and they ask themselves questions thatthey try to answer by running tests.  They attempt to diagnose your problem by applying rules and seeking values for parameters that are initially unknown.  They only ask the questions and run the tests that are necessary to arrive at a conclusion.
 This helps to avoid running unnecessary expensive tests.
 
-If we tell NodeBrain how to query for unknown values and ask it to solve for rule conditions that have an unknown value, it can diagnose or investigate with similar efficiency.
+If you tell NodeBrain how to query for unknown values and ask it to solve for rule conditions that have an unknown value, it can diagnose or investigate with similar efficiency.
 
 @subsection Query Rule Files
 
-A query rule file is simply a rule file designed to be processed in query mode.  Here's a file named @file{illness.nb} that is a trivial (and not useful) query rule file.
+A query rule file is simply a rule file designed to be processed in query mode.  Here's a file named @code{illness.nb} that is a trivial (and not useful) query rule file.
 
 @example
 # File: tutorial/Ignorance/illness.nb
@@ -1500,7 +1505,7 @@ define CommonCold on(cough and soreThroat);
 define Flu on(fever and achy and upsetStomach);
 @end example
 
-As you can see, these query rules have the same syntax as reactive rules.   The difference is not in the rules, but in how we use them.  
+As you can see, these query rules have the same syntax as reactive rules.   The difference is not in the rules, but in how you use them.  
 
 @subsection Interactive Query Mode
 
@@ -1532,14 +1537,14 @@ Enter cell soreThroat==@b{1}
 > @ 
 @end example
 
-Since we are running in interactive mode and have not provided any alternate methods for NodeBrain to solve for unknown values, the interpreter prompts the user to resolve unknown values.  If you study the rule file you will find 5 unknown terms in the two rule conditions: cough, soreThroat, fever, achy, and upsetStomach.  However, the interpreter only prompted the user for values of three of these terms.  This is because requesting values for the other two terms would not have changed the result.  Since fever=0, the @code{flu} condition is false for any value of the other two terms in the condition.
+Since you are running in interactive mode and have not provided any alternate methods for NodeBrain to solve for unknown values, the interpreter prompts the user to resolve unknown values.  If you study the rule file you will find five unknown terms in the two rule conditions: cough, soreThroat, fever, achy, and upsetStomach.  However, the interpreter only prompted the user for values of three of these terms.  This is because requesting values for the other two terms would not have changed the result.  Since @code{fever=0}, the @code{flu} condition is false for any value of the other two terms in the condition.
 
-Our response to each query may be any valid cell expression.  This means we must enclose strings in quotes, and have the option of introducing new terms for which the interpreter does not have a value.  When new terms are introduced, the interpreter attempts to resolve them as necessary.  If we respond with @code{5 or soreEye}, the interpreter will not attempt to solve for soreEye because it knows the expression is true without knowledge of soreEye.
+The response to each query may be any valid cell expression.  This means you must enclose strings in quotes and have the option of introducing new terms for which the interpreter does not have a value.  When new terms are introduced, the interpreter attempts to resolve them as necessary.  If you respond with @code{5 or soreEye}, the interpreter will not attempt to solve for soreEye because it knows the expression is true without knowledge of soreEye.
 
 @subsection Batch Query Mode
 
-In most applications of NodeBrain we are attempting to automate decisions, so we want to query software to resolve unknowns where possible.
-Here's a script called @file{illnessConsult.pl} that simulates the running of potentially complex tests to arrive at the same answers we provided interactively above.  There would be no point in doing something this simple for real, and no point in doing something more complicated in a tutorial.  You can imagine a much more complicated problem.  
+In most applications of NodeBrain, you are attempting to automate decisions, so you want to query software to resolve unknowns where possible.
+Here's a script called @code{illnessConsult.pl} that simulates the running of potentially complex tests to arrive at the same answers you provided interactively above.  There would be no point in doing something this simple for real, and no point in doing something more complicated in a tutorial.  You can imagine a much more complicated problem.  
 
 @example
 #!/usr/bin/perl
@@ -1555,14 +1560,14 @@ if(exists($state@{$symptom@}))@{print("$state@{$symptom@}\n");@}
 else@{print("?\n");@}
 @end example
   
-Let's run this script that we are pretending to be complicated software to determine the value of the cough symptom.
+Let's run this script that you are pretending is complicated software to determine the value of the cough symptom.
 
 @example
 $./illnessConsult.pl cough
 1
 @end example
  
-Now we'll create a new rule file called @code{illnessConsult.nb} to consult our Perl script.
+Create a new rule file called @code{illnessConsult.nb} to consult the Perl script.
 
 @example
 # File: tutorial/Ignorance/illnessConsult.nb
@@ -1572,7 +1577,7 @@ defineFlu on(fever and achy and upsetStomach);
 @b{query;}
 @end example
 
-Now we can diagnose an illness in batch mode.
+Diagnose an illness in batch mode.
 
 @example
 $ nb illnessConsult.nb
@@ -1594,7 +1599,7 @@ Value=(1)
 $
 @end example
 
-In this example the consulted script @code{illnessConsult.pl} returned simple 0 and 1 values.  The interpreter will accept any valid cell expression and will attempt to resolve any term whose value is both unknown and needed.
+In this example, the consulted script @code{illnessConsult.pl} returned simple 0 and 1 values.  The interpreter will accept any valid cell expression and will attempt to resolve any term whose value is both unknown and needed.
 
 @node Rules
 @chapter Rules
@@ -1602,14 +1607,14 @@ In this example the consulted script @code{illnessConsult.pl} returned simple 0 
 
 @quotation
 @i{If you obey all the rules, you miss all the fun.}
- --- Katherine Hepburn
+---Katherine Hepburn
 @end quotation
 
-In this tutorial we'll see how much fun we can have making up rules and watching NodeBrain obey them.
+In this tutorial you'll see how much fun it is to make up rules and watch NodeBrain obey them.
 
 @section When and if a rule fires on what
 
-NodeBrain @code{on}, @code{when} and @code{if} rules have almost identical syntax. Their conditional cell expressions are resolved by the same cell evaluation algorithm.  Yet they respond differently to new information.  You can study these differences using rules that have no action.  Start by creating the following script called rules.nb.
+NodeBrain @code{on}, @code{when}, and @code{if} rules have almost identical syntax. Their conditional cell expressions are resolved by the same cell evaluation algorithm.  Yet they respond differently to new information.  You can study these differences using rules that have no action.  Start by creating the following script called @code{rules.nb}.
 
 @example
 # File: tutorial/RuleTypes/rules.nb
@@ -1625,7 +1630,7 @@ alert a=1;
 alert a=1;
 @end example
 
-When you execute this script you will notice that rules "fire" in response to assert and alert commands.
+When you execute this script you will notice that rules fire in response to assert and alert commands.
 
 @example
 $ nb rules.nb
@@ -1652,33 +1657,33 @@ $ nb rules.nb
 $
 @end example
 
-Although rules r0, r1 and r3 are based on the same condition @code{(a=1 and b=2)}, they react differently to the @code{assert} and @code{alert} commands.
+Although rules @code{r0}, @code{r1}, and @code{r3} are based on the same condition @code{(a=1 and b=2)}, they react differently to the @code{assert} and @code{alert} commands.
 
 Q: Why didn't r3 fire on the first "@code{assert a=1,b=2;}" command?
 
 A: Because @code{if} rules only respond to @code{alert} commands.
 
-Q: Why didn't r1 fire on the second "@code{assert a=1,b=2;}" command?
+Q: Why didn't @code{r1} fire on the second @code{assert a=1,b=2;} command?
 
 A: Because @code{on} rules only fire when their condition transitions to true.  The second assertion made no change in the state of the condition.
 
-Q: Why didn't r0 fire when r1 fired the second time?
+Q: Why didn't @code{r0} fire when @code{r1} fired the second time?
 
 A: Because @code{when} rules only fire once.  They are removed from the rule set once they fire.
 
 
-Q: Why did r3 fire on the second "@code{alert a=1;}" command?
+Q: Why did @code{r3} fire on the second @code{alert a=1;} command?
 
 A: Because @code{if} rules fire on every @code{alert} command that leaves their condition in a true state.  Unlike @code{on} and @code{when} rules, they are not required to transition to a true state from a false or unknown state.
 
 @section State Monitoring vs. Event Monitoring
 
-In the previous example you may have noticed that NodeBrain supports both state and event monitoring.  The difference between the two is subtle.
+In the previous example, you may have noticed that NodeBrain supports both state and event monitoring.  The difference between the two is subtle.
 The @code{assert} command and @code{on} rule are designed for state monitoring.
 The @code{alert} command and @code{if} rule are designed for event monitoring.  But it isn't that simple.
 The @code{on} rule responds to both @code{assert} and @code{alert} commands.  To an @code{on} rule, @code{alert} is just an alias for @code{assert}.  In fact, everything about the way an @code{alert} command is processed is identical to the way an @code{assert} command is processed, except @code{alert} brings @code{if} rules into play.  In other words, @code{alert} makes an assertion, and then says, "Oh, and by the way, this is an event to be considered by the @code{if} rules."
 
-What makes our notion of state and event monitoring hard to untangle is the fact that we describe an event in the same way we describe a state, interpret an event as a new state, recognize state changes as events, and translate state changes into events.
+What makes the notion of state and event monitoring hard to untangle is that an event is describted in the same way as a state, an event is interpreted as a new state, state recognizes changes as events, and state translates changes into events.
 Let's look at these confusing statements individually.
 
 @example
@@ -1706,12 +1711,12 @@ assert a=1,b=2;       # r1 translated state change into event(alert)
 @chapter Syntax Surprises
 @cindex syntax, surprises
 
-This section provides answers to some anticipated questions.
+This section provides answers to some syntax questions.
 
 @section When do I use a semi-colon to end a command?
 
 @quotation
-@i{From now on, ending a sentence with a preposition is something up with which I will not put.}  --- Sir Winston Churchill (1874 - 1965)
+@i{From now on, ending a sentence with a preposition is something up with which I will not put.}---Sir Winston Churchill (1874--1965)
 @end quotation
 
 NodeBrain does not require a semi-colon to terminate a command at the end of a line.  The following examples are both acceptable.
@@ -1734,7 +1739,7 @@ You can not put two commands on one line.
 > assert a=1,b=2; define x cell 10; # This is not valid
 @end example
 
-There are cases where a NodeBrain command ends with a command directed to another interpreter.  In those cases, you must follow the syntax rules of the other interpreter.  This is illustrated by the following rule that uses a host shell command as the action.
+In some cases, a NodeBrain command ends with a command directed to another interpreter.  In those cases, you must follow the syntax rules of the other interpreter.  The following rule that uses a host shell command as the action is illustrated in this concept.
 
 @example
 > define psNb on(~(m)):-@b{ps -ef | grep nb}
@@ -1742,17 +1747,17 @@ There are cases where a NodeBrain command ends with a command directed to anothe
 
 @section How do I continue a command onto the next line?
 
-There is no support for multiple line commands.  A new-line character ("\n") is always interpreted as the end of a command.
+There is no support for multiple line commands.  A new-line character (\n) is always interpreted as the end of a command.
 
 @section How can I specify multiple commands for a rule action?
 
-If you are specifying multiple shell commands, the shell supports semi-colon @code{;} separated commands on a single line.
+If you are specifying multiple shell commands, the shell supports semi-colon (@code{;}) separated commands on a single line.
 
 @example
 > define r1 on(a=1 and b=2):= @b{myscript1.pl; rm*.foo; myscript2.pl}
 @end example
 
-You may also include multiple comma separated NodeBrain assertions.
+You may also include multiple comma-separated NodeBrain assertions.
 
 @example
 > define r1 on(a=1 and b=2) x=5,y="abc",z=20 := @b{myscript1.pl;rm *.foo; myscript2.pl}
@@ -1770,7 +1775,7 @@ You may also use a @code{-:} or @code{=:} (servant) command and have a servant s
 @example
 > define r1 on(a=1 and b=2):-:r1Action.pl
 @end example
-If the order of the commands is not important, and the number is relatively small, you can use multiple rules with the same condition. To avoid typing the condition multiple times, specify the name of the first rule as the second rule's condition.
+If the order of the commands is not important and the number is relatively small, you can use multiple rules with the same condition. To avoid typing the condition multiple times, specify the name of the first rule as the second rule's condition.
 
 @example
 > define r1 on(a=1 and b=2):-myscript1.pl
@@ -1782,12 +1787,12 @@ Under the current implementation, you should not expect these rules to fire in a
 
 @section How do I include quotes within a string?
 
-This is not allowed.  Because NodeBrain is not a general purpose or report writing language, we have not yet found a reason to support quotes within a string.  When generating cell expressions manually or with a program, simply avoid generating values containing quotes.
+Including quotes within a string is not allowed.  Because NodeBrain is not a general purpose or report writing language, I have not yet found a reason to support quotes within a string.  When generating cell expressions manually or with a program, simply avoid generating values containing quotes.
 
 @section Is there an escape sequence for including special characters in strings?
 
-No, and we like it that way.  We have not found it necessary to use special characters in NodeBrain strings.  In commands sent to the host shell, and messages sent to servants or node modules, NodeBrain does not interfere with the use of any escape sequences supported by the target interpreter.
-But NodeBrain is oblivious to it, and this is actually why there is no interference.
+No, and I like it that way.  Special characters aren't necessary in NodeBrain strings.  In commands sent to the host shell and messages sent to servants or node modules, NodeBrain does not interfere with the use of any escape sequences supported by theBut  target interpreter.
+NodeBrain is oblivious to it, and this is actually why there is no interference.
 If a string value assigned to a NodeBrain term is ultimately destined to another interpreter (shell or node module), then you are free to include an escape sequence (except an escaped double quote). Again, NodeBrain is oblivious to it.
 
 @node Tree
@@ -1797,7 +1802,7 @@ If a string value assigned to a NodeBrain term is ultimately destined to another
 
 @quotation
 @i{A memory is what is left when something happens and does not completely unhappen.}
---- Edward de Bono
+---Edward de Bono
 @end quotation
 
 A tree node provides NodeBrain with a place to remember things that happen until they unhappen.
@@ -1805,13 +1810,13 @@ Actually that is true of simple cells as well.
 The difference is that simple cells store one value while trees store multiple associated values.
 So a tree can remember a more complex happening.
 You can think of a tree node as a table of values.  Like a relational table, the values in a given row form a relation.
-But we represent the table using a tree-of-trees structure and associate a value with each relation, including each left-to-right partial relation.
-This enable us to test for the existence of a relation, or use a relation as a key for looking up a stored value.
+But the table is represented using a tree-of-trees structure and a value is associated with each relation, including each left-to-right partial relation.
+This enable you to test for the existence of a relation or use a relation as a key for looking up a stored value.
 
 @section Conditions
 
-An expression of the form @i{tree(cell1,cell2,...)} can be used like a term in cell expressions.
-We can assert values for these expressions and use then as conditions.
+An expression of the form @code{@i{tree(cell1,cell2,...)}} can be used like a term in cell expressions.
+You can assert values for these expressions and use then as conditions.
 The @code{stuff.nb} file below illustrates these concepts.
 
 @example
@@ -1832,7 +1837,7 @@ show a
 @end example
 
 Study the execution below.
-Do you know why rule r1 fires when it does?
+Do you know why rule @code{r1} fires when it does?
 Try rewriting the rule by replacing x, y, and z with their values at the time the rule fires.
 Then replace the @code{stuff(...)} expressions in the rule with their values at the time the rule fires.
 
@@ -1877,8 +1882,8 @@ $
 
 @section Watch Tables
 
-Sometimes we use a tree node to specify a set of values to watch.
-Here we use a simple tree to represent a list, or a table with a single column.
+Sometimes NodeBrain uses a tree node to specify a set of values to watch.
+You can use a simple tree to represent a list or a table with a single column.
 A multi-column table may be used if you want to watch for specific combinations
 of event attributes.
 
@@ -1920,7 +1925,7 @@ $
 
 @section Event Sequence
 
-We said earlier that a tree can be used to remember an event between the time it happens and unhappens.
+I said earlier that a tree can be used to remember an event between the time it happens and unhappens.
 Let's look at an example that provides a better illustration of this.
 
 @example
@@ -1944,7 +1949,7 @@ alert event="land",name="joe";
 alert event="jump",name="sally";
 @end example
 
-In the execution below we were able to detect a couple things that happened and then happened again without first unhappening.
+In the execution below, NodeBrain was able to detect a couple things that happened and then happened again without first unhappening.
 
 @example
 2009/01/31 13:22:07 NB000I Argument [1] ./sequence.nb
@@ -1980,8 +1985,8 @@ $
 @end example
 
 A tree node can support large trees if you have enough memory on your system. 
-From a performance perspective tree nodes scale well because they are organized as binary trees that are kept reasonably balanced.
-A lookup on a tuple (x,y,z) is performed as a binary search for x, followed by a binary search for y in a tree owned by (x), followed by a binary search for z in a tree owned by (x,y).
+From a performance perspective, tree nodes scale well because they are organized as binary trees that are kept reasonably balanced.
+A lookup on a tuple (@code{x,y,z}) is performed as a binary search for @code{x}, followed by a binary search for @code{y} in a tree owned by (@code{x}), followed by a binary search for @code{z} in a tree owned by (@code{x,y}).
 
 
 @node Cache
@@ -1991,12 +1996,12 @@ A lookup on a tuple (x,y,z) is performed as a binary search for x, followed by a
 
 @quotation
 @i{There is a measure in everything. There are fixed limits beyond which and short of which right cannot find a resting place.}
---- Horace (65 BC - 8 BC)
+---Horace (65 BC--8 BC)
 @end quotation
 
 A cache node, like a tree node, provides a place to remember events as associations, or relations.
 But a cache adds to this the ability to measure repetition and variation within intervals of time and respond when predefined limits are reached.
-It enables us to detect patterns of events that can be described as follows. 
+It enables you to detect patterns of events that can be described as follows: 
 
 @itemize @bullet
 @item X happened N times within time period P or interval I.
@@ -2011,7 +2016,7 @@ If you think of a cache as a table-of-tables, a better way to visualize it, then
 
 @section Thresholds
 
-Here's a 24-hour cache node with 4 thresholds and 4 rules to respond when they are reached.
+Here's a 24-hour cache node with four thresholds and four rules to respond when they are reached.
 @example
 #!/usr/local/bin/nb
 # File: tutorial/cache/cache.nb
@@ -2025,7 +2030,7 @@ horace. define r4 if(quantity._hitState): @dots{}
 @dots{} $ # ($@{type@},$@{city@},$@{customer@},$@{item@},$@{quantity@}) happened $@{quantity._hits@} times
 @end example
 
-Here's a set of events represented as assertions to our 24-hour cache node named "horace".
+Here's a set of events represented as assertions to our 24-hour cache node named "horace."
 @example
 # File: tutorial/cache/events.nb
 horace. assert ("purchase","Paris","Bruno","iPod",5);
@@ -2111,29 +2116,29 @@ $ ./cache.nb events.nb
 $
 @end example
 
-Ok, now why did rules r1, r2, r3, and r4 fire when they did?
-Each time we assert a tuple to the cache, it updates a tree-of-trees structure as needed to retain the full set of asserted tuples.
+Okay, now why did rules @code{r1}, @code{r2}, @code{r3}, and @code{r4} fire when they did?
+Each time a tuple is asserted to the cache, it updates a tree-of-trees structure as needed to retain the full set of asserted tuples.
 It also updates three counters at each node within the tree-of-trees: hits, rows, and kids.
-We define @i{hits} as the number of times an assertion arrives at a given node within the tree, @i{rows} as the number of subordinate table rows represented by the subordinate tree-of-trees, and @i{kids} as the number of directly subordinate nodes---or the number of unique values in the first column of the subordinate table.
-In our definition of the "horace" cache node, we specified thresholds for hits using (), rows using @{@}, and kids using [].
+The cache module defines @i{hits} as the number of times an assertion arrives at a given node within the tree, @i{rows} as the number of subordinate table rows represented by the subordinate tree-of-trees, and @i{kids} as the number of directly subordinate nodes---or the number of unique values in the first column of the subordinate table.
+In the definition of the "horace" cache node, you specify thresholds for hits using (), rows using @{@}, and kids using [].
 When a threshold is reached, the cache node alerts itself.
-The rules we defined for the node handle the alerts.
-In the example above, when r4 fired, it was responding to an invisible alert that would look something like the following if it were not invisible.
+The rules defined for the node handle the alerts.
+In the example above, when @code{r4} fired, it was responding to an invisible alert that would look something like the following if it were not invisible.
 
 @example
 horace. alert quantity._hitState,quantity._hits=3,type="purchase",city="Paris", @dots{}
 @dots{} customer="Bruno",item="iPod",quantity=5;
 @end example
 
-This alert was triggered because the hit counter for the (purchase,Paris,Bruno,iPod,5) node in our cache reached the specified limit of 3 within a 24-hour interval.
-See if you can figure out why rules r1, r2, and r3 fired when they did.
+This alert was triggered because the hit counter for the (purchase,Paris,Bruno,iPod,5) node in the cache reached the specified limit of 3 within a 24-hour interval.
+See if you can figure out why rules @code{r1}, @code{r2}, and @code{r3} fired when they did.
 
-In this example our rules just issue comment commands.
-In a real application the rules would have taken action of some kind: an alert, assertion, alarm, shell command, etc.
+In this example, the rules just issue comments.
+In a real application, the rules would have taken action of some kind: an alert, assertion, alarm, shell command, etc.
 
 @section Tuple Expiration 
 
-A tuple in a cache can be retained for a defined time interval (e.g. 24-hours in our example above), until the end of a time period (e.g. end of current minute, hour, day), until some state is detected, or indefinitely.
+A tuple in a cache can be retained for a defined time interval (e.g., 24 hours in the example above), until the end of a period (e.g., end of current minute, hour, day), until some state is detected, or indefinitely.
 
 @example
 # interval
@@ -2146,13 +2151,13 @@ define horace node cache@b{(a=1)}:(type(20),city@{10@}[5],customer,item,quantity
 define horace node cache:(type(20),city@{10@}[5],customer,item,quantity(3));
 @end example
 
-We can also remove a tuple or set of tuples from a cache at any time.  The following command removes all tuples starting with ("purchase","London").
+You can also remove a tuple or set of tuples from a cache at any time.  The following command removes all tuples starting with ("purchase","London").
 
 @example
 horace. assert @b{?}("purchase","London");
 @end example
 
-In addition to alerting when a threshold is reached, we can direct a cache to alert when a tuple expires.  This enables us to assert a tuple to the cache and take action if we haven't asserted it again within the expiration period.  In other word, we can use a cache to know when something hasn't happened for some interval of time.
+In addition to alerting when a threshold is reached, you can direct a cache to alert when a tuple expires.  This enables us to assert a tuple to the cache and take action if you haven't asserted it again within the expiration period.  In other words, you can use a cache to know when something hasn't happened for some interval.
 
 @example
 #!/usr/local/bin/nb
@@ -2162,7 +2167,7 @@ tardy. define r1 if(_action="expire"): $ # $@{Source@} has been quiet for $@{_in
 tardy. assert ("Fred");
 @end example
 
-When executed below, we are notified that "Fred" has not been asserted to our cache for 6 seconds.
+When executed below, you are notified when "Fred" has not been asserted to the cache for 6 seconds.
 @example
 ./tardy.nb -
 2009/01/31 10:38:06 NB000I Argument [1] ./tardy.nb
@@ -2213,7 +2218,7 @@ alert on,switch="porch light";
 alert !on,switch="porch light";
 @end example
 
-In the execution below, you will notice that the @code{TurnedOff} rule did not respond when the porch light stayed on for 6 seconds.
+In the execution below, notice that the @code{TurnedOff} rule did not respond when the porch light stayed on for 6 seconds.
 
 @example
 $ ./sequence.nb
@@ -2250,9 +2255,9 @@ A cache node is useful for event correlation where the goal is to detect repetit
 Rules can be used to recognize input events and assert multiple attribute combinations (tuples) to different cache
 nodes to detect different patterns.
 A single cache can detect multiple patterns, but it often necessary to specify attributes in a different order in different cache nodes to detect all the required patterns.
-For example, a cache specified as (child,action[5],toy) could detect a given child taking a given action on 5 different toys, while a cache specified as (toy[10],child[3],action(7)) could detect when 10 different children performed a given action on a given toy, a given child performed 3 different actions on a given toy, and a given child performed a given action on a given toy 7 times.  The last condition could be detected by the first cache if we included another threshold, (child,action[5],toy(7)).
+For example, a cache specified as (child,action[5],toy) could detect a given child taking a given action on five different toys, while a cache specified as (toy[10],child[3],action(7)) could detect when 10 different children performed a given action on a given toy, a given child performed three different actions on a given toy, and a given child performed a given action on a given toy seven times.  The last condition could be detected by the first cache if you included another threshold, (child,action[5],toy(7)).
 But the first two conditions detected by the second cache could not be detected by the first cache.
-It is necessary to use two different cache nodes with the attributes in a different order to detect all 4 conditions.
+It is necessary to use two different cache nodes with the attributes in a different order to detect all four conditions.
 
 
 @node Servant
@@ -2262,14 +2267,14 @@ It is necessary to use two different cache nodes with the attributes in a differ
 
 @quotation
 @i{In order to become the master, the politician poses as the servant.}
---- Charles De Gaulle (1890 - 1970)
+---Charles de Gaulle (1890--1970)
 @end quotation
 
-NodeBrain is not intended to be the master of all things.  As in politics, it is often more convenient to let a servant be the master.  In this tutorial you will learn how to create a servant in your favorite programming language to obtain information needed to make decisions.  You will see that when a servant sends commands to NodeBrain, it becomes the master---like a politician once elected.
+NodeBrain is not intended to be the master of all things.  As in politics, it is often more convenient to let a servant be the master.  In this tutorial, you will learn how to create a servant in your favorite programming language to obtain information needed to make decisions.  You will see that when a servant sends commands to NodeBrain, it becomes the master---like a politician once elected.
 
 @section Creating a Servant Program
 
-To keep it simple and only hint at something useful, let's create a servant script using Perl that pretends to tell us the cost of gas and bread, something every politician should be prepared to include in a campaign speech.
+To keep it simple and only hint at something useful, let's create a servant script using Perl that pretends to tell you the cost of gas and bread, something every politician should be prepared to include in a campaign speech.
 
 @example
 #!/usr/bin/perl
@@ -2287,7 +2292,7 @@ while(<>)@{
 
 @section Specifying a Servant Node
 
-Now we need some rules to use our servant program.  Create a script that looks like this.
+Now you need some rules to use the servant program.  Create a script that looks like this.
 
 @example
 #!/usr/local/bin/nb -s
@@ -2298,8 +2303,8 @@ define getgasprice on(~(3s)):price:gas
 define getbreadprice on(~(3s)):price:bread
 @end example
 
-The Servant node module specification includes an @code{=} command to specify the program and what to do with stdout and stderr.
-It also supports a leading @code{|} to enable the sending of text to the program on stdin.
+The Servant node module specification includes an @code{=} command to specify the program and what to do with @code{stdout} and @code{stderr}.
+It also supports a leading pipe (@code{|}) to enable the sending of text to the program on @code{stdin}.
 
 @section Execution
 
@@ -2351,14 +2356,14 @@ $ ./charles.nb
 
 @quotation
 @i{I don't mind what language an opera is sung in so long as it is a language I don't understand.}
---- Sir Edward Appleton (1892 - 1965)
+---Sir Edward Appleton (1892--1965)
 @end quotation
 
-NodeBrain supports rules used to translate an opera into NodeBrain commands.  Well, okay, not exactly an opera, but lines of text conforming to some foreign syntax for which the significant elements can be recognized and extracted with regular expressions.  The desired translation is specified in a NodeBrain translation rule file called a "translator".  This capability is made available to node modules via the API.  The Translator node module is a simple example of one that uses NodeBrain's translator feature. 
+NodeBrain supports rules used to translate an opera into NodeBrain commands.  Well, okay, not exactly an opera, but lines of text conforming to some foreign syntax for which the significant elements can be recognized and extracted with regular expressions.  The desired translation is specified in a NodeBrain translation rule file called a "translator."  This capability is made available to node modules via the API.  The Translator node module is a simple example of one that uses NodeBrain's translator feature. 
 
 @section Foreign Text
 
-We'll start this tutorial with a file named @file{opera.txt} containing the text of a Mother Goose rhyme.
+Let's start this tutorial with a file named @code{opera.txt} containing the text of a Mother Goose rhyme.
 
 @example
 # File: tutorial/Translator/opera.txt
@@ -2379,7 +2384,7 @@ He ran fourteen miles in fifteen days,
 
 @section Translator File
 
-A translator recognizes elements of foreign text and converts it into NodeBrain commands.  Let's create one called @file{opera.nbx} that can be used to translate files that look like our @file{opera.txt} file.  
+A translator recognizes elements of foreign text and converts it into NodeBrain commands.  Let's create one called @code{opera.nbx} that can be used to translate files that look like the @code{opera.txt} file.  
 
 @example
 # File: tutorial/Translator/opera.nbx
@@ -2415,7 +2420,7 @@ A translator recognizes elements of foreign text and converts it into NodeBrain 
   @}
 @end example
  
-The lines starting with "(" specify a regular expression up to the balanced ")" to be matched against lines of foreign text.
+The lines starting with an open parenthesis @code{(} specify a regular expression up to the balanced close parenthesis @code{)} to be matched against lines of foreign text.
 The first matching expression determines the translation; that is, the translator stops on a match and subsequent expressions are not evaluated.
 However, if you start the line with "@@(" instead, the translator will continue even after a match.  
 
@@ -2424,26 +2429,26 @@ This means all lines starting with "#" will translate into nothing.  You could s
 
 An expression can also be followed by a single action, like the @code{@@(had (\w*))} and @code{(he had (\w*))} expressions which are followed by "@code{:alert ...}".
 
-When an expression is followed by "@{", a nested translator is specified up until the following "@}".
+When an expression is followed by "@{", a nested translator is specified until the following "@}".
 A nested translator matches against the text following the previous match.
 Let's consider the input line "And then they thought they had him."
-When this line matches @code{(^s*And )} in our translator,
+When this line matches @code{(^s*And )} in the translator,
 the nested translation block will work on "then they thought they had him."
 After a match on @code{(^then they )}, nested translation continues trying to match "thought they had him."
 
 NodeBrain commands are passed to the interpreter with an expression starting with colon ":" to distinguish them from other operations supported by the translator.
-A $[@i{n}] in the command is replaced with the string matching the @i{n}'th parenthetical sub-expression, starting at 0 for the outer parentheses.
+A $[@i{n}] in the command is replaced with the string matching the @i{n}th parenthetical subexpression, starting at 0 for the outer parenthesis.
 A $[=] is replaced with the text being matched, and $[>] is replaced with the text following the last match.
 
 The text buffer can be replaced with an expression of the form @code{[@i{text}]}.
-In our example above, the @code{[$[1]]} following @code{(^(\w*) )} replaces the text buffer with the matched word.
+In the example above, the @code{[$[1]]} following @code{(^(\w*) )} replaces the text buffer with the matched word.
 
-Strings enclosed in double quotes (e.g. @code{"robbers"}) specify an exact match.  When strings are used, they must be placed at the start of a block.  NodeBrain likes to look for exact matches before regular expressions.
+Strings enclosed in double quotes (e.g., @code{"robbers"}) specify an exact match.  When strings are used, they must be placed at the start of a block.  NodeBrain likes to look for exact matches before regular expressions.
 
-@section Rule File using Translator Node
+@section Rule File Using Translator Node
 
 A translator works in concert with NodeBrain rules---hopefully not as difficult to understand as an operatic concert.
-Here's a rule file called @code{opera.nb} designed to work with our translator above.
+Here's a rule file called @code{opera.nb} designed to work with the translator above.
 
 @example
 #!/usr/local/bin/nb
@@ -2459,15 +2464,15 @@ opera:And never worry.
 
 @end example
   
-The first highlighted line defines a translator node that uses our @code{opera.nbx} translator.  Then we define two rules, r1 and r2, that do nothing except enable us to demonstrate that a rule can fire in response to foreign text.
+The first highlighted line defines a translator node that uses the @code{opera.nbx} translator.  The two rules, @code{r1} and @code{r2}, do nothing except demonstrate a rule can fire in response to foreign text.
   
-The second highlighted line, which starts with "opera:", sends foreign text to the translator node for translation.
-The last highlighted line, starting with "opera(", directs the translator nodes to translate our foreign text file @file{opera.txt}. 
+The second highlighted line, which starts with @code{opera:}, sends foreign text to the translator node for translation.
+The last highlighted line, starting with @code{opera(}, directs the translator nodes to translate the foreign text file @code{opera.txt}. 
 
 @page
 @section Lost in Translation
 
-When your execute @file{opera.nb}, you should see something like this.  
+When you execute @code{opera.nb}, you should see something like this.  
 
 @example
 $ ./opera.nb
@@ -2542,17 +2547,14 @@ $
 @end example
 
 As an exercise, you should perform the translation yourself to make sure you understand what is going on here.
-At least focus on the lines around the first firing of rule opera.r1, starting with "opera:And never mind."
-Walk "And never mind." through the translator to see why it emits @code{assert info="they didn't mind."} triggering r1.
-Do you understand why "opera:And never worry." emits a similar assertion without trigging r1?
+At least focus on the lines around the first firing of rule @code{opera.r1}, starting with @code{opera:And never mind.}
+Walk @code{And never mind.} through the translator to see why it emits @code{assert info="they didn't mind."} triggering @code{r1}.
+Do you understand why @code{opera:And never worry.} emits a similar assertion without trigging @code{r1}?
 It is a characteristic of NodeBrain's @code{on} rule and the fact that the condition didn't change. 
 An @code{if} rule would have fired both times.
 
-We said that our translator @file{opera.nbx} is designed to operate on lines like those found in @file{opera.txt}, and we said that our rule file @file{opera.nb} is designed to work with our translator. 
-You may have noticed that our translator was not designed specifically to work with our rules, because
-it emits commands that give us information our rules don't need.
-In many cases, a translator and a set of rules are designed together and the
-translator only emits information that is used by the rules.
+The translator @code{opera.nbx} is designed to operate on lines like those found in @code{opera.txt}, and the rule file @code{opera.nb} is designed to work with the translator. 
+You may have noticed that the translator was not designed specifically to work with these rules, because it emits commands that provide information the rules don't need.  In many cases, a translator and a set of rules are designed together and the translator only emits information that the rules use.
 
 @node Audit
 @chapter Audit Node
@@ -2561,23 +2563,23 @@ translator only emits information that is used by the rules.
 
 @quotation
 @i{If Edison had a needle to find in a haystack, he would proceed at once with the diligence of the bee to examine straw after straw until he found the object of his search... I was a sorry witness of such doings, knowing that a little theory and calculation would have saved him ninety per cent of his labor.}
---- Nikola Tesla (1857- 1943), New York Times, October 19, 1931
+---Nikola Tesla (1857--1943), @i{New York Times}, October 19, 1931
 @end quotation
 
 Effective review of system and application logs can be like trying to find a needle in a haystack.  It requires at least one Edison and one Tesla working as a team.
 The Audit node module works like Edison when reviewing logs so you can work like Tesla.
 
 An Audit node is similar to the Translator node covered in an earlier tutorial, but differs in the way lines of text are input for translation.
-An Audit node starts at the end of a log file and periodically checks for new lines to translate.  When a log file rolls, the audit node starts at the beginning of the new log file.
+An Audit node starts at the end of a log file and periodically checks for new lines to translate.  When a log file rolls, the Audit node starts at the beginning of the new log file.
 
 The content of system and application log files can vary significantly depending on the mix of applications on a system and how they are configured.  A good strategy is to treat log entries as worthy of investigation by default.  Duplicate suppression and other flood protection techniques are helpful when using this strategy.  As new log entries are reported and investigated, you can decide if they should be suppressed or handled in a special way.
 
 @section Agent Rules
 
-The @file{syslog.nb} file below provides an agent with an audit node to monitor a log file called @file{syslog}.  
-It specifies a translator named @file{syslog.nbx} and a polling interval of 10 seconds.
-(A longer interval is recommended for real application.)
-We have also included a deduplication cache.
+The @code{syslog.nb} file below provides an agent with an audit node to monitor a log file called @code{syslog}.  
+It specifies a translator named @code{syslog.nbx} and a polling interval of 10 seconds.
+(A longer interval is recommended for real applications.)
+It also includes a deduplication cache.
 @example
 #!/usr/local/bin/nb -d
 # File: tutorial/Audit/syslog.nb
@@ -2591,8 +2593,8 @@ syslog. define alarm if(text._hitState):$ -|mail.form @dots{}
 
 @section Sample Log
 
-Here's a small sample of a log file in the format we'll use for this tutorial.
-A copy of this file is stored as @file{tutorial/Audit/syslog.sample}.
+Here's a small sample of a log file in the format to use for this tutorial.
+A copy of this file is stored as @code{tutorial/Audit/syslog.sample}.
 
 @example
 Feb  1 19:00:04 smk001 sshd[3972]: Accepted publickey for myuser @dots{}
@@ -2610,7 +2612,7 @@ Feb  1 19:01:19 smk001 su: (to root) myuser on /dev/pts/1
 
 @section Translation Rules
 
-Here's a small translator called @file{syslog.nbx} designed for the log format above.
+Here's a small translator called @code{syslog.nbx} designed for the log format above.
 
 @example
 # File: tutorial/Audit/syslog.nbx
@@ -2647,7 +2649,7 @@ Here's a small translator called @file{syslog.nbx} designed for the log format a
 @page
 @section Start the Agent
 
-Before starting the agent you must touch a file named @file{syslog} to make sure it exists.
+Before starting the agent, you must touch  @code{syslog} to make sure it exists.
 
 @example
 $ ./syslog.nb
@@ -2702,7 +2704,7 @@ $
 
 @section Grow the Log
 
-We'll just use a shell script to append our sample log file @file{syslog.sample} to the monitored @file{syslog} file three times.
+Use a shell script to append the sample log file @code{syslog.sample} to the monitored @code{syslog} file three times.
 
 @example
 # File: tutorial/Audit/syslog.sh
@@ -2713,7 +2715,7 @@ cat syslog.sample >> syslog
 
 @section Review the Agent Log
 
-After executing the @file{syslog.sh} script above, your @file{syslog.log} file should look like this.
+After executing the @code{syslog.sh} script above, your @code{syslog.log} file should look like this.
 
 @example
 2009/02/01 19:59:35 NB000I Agent log is syslog.log
@@ -2735,14 +2737,13 @@ After executing the @file{syslog.sh} script above, your @file{syslog.log} file s
 @dots{} "SYS0000 su: (to root) myuser on /dev/pts/1");
 @end example
 
-Notice that the translator only asserted the su log entries to the syslog cache.
-This is because our translator was coded to ignore the other entries in our sample log file.
+Notice that the translator only asserted the @code{su} log entries to the @code{syslog} cache.
+This is because the translator was coded to ignore the other entries in the sample log file.
 Notice also that the agent only generated an alarm once.
-This is because the syslog cache node was coded to ignore duplicates until 8:00 AM unless they are separated by 1 hour.
+This is because the @code{syslog} cache node was coded to ignore duplicates until 8:00 AM unless they are separated by 1 hour.
 
-Although we used a system log for this tutorial, you can code up a translator for application logs as well.
-In fact, the more unique your application log, the more likely you will need to construct your own custom log monitor
-with one of the many tools like this.
+Although you used a system log for this tutorial, you can code a translator for application logs as well.
+In fact, the more unique your application log, the more likely you will need to construct your own custom log monitor.
 
 If you started the agent for this tutorial, you should kill it now.
 
@@ -2753,11 +2754,11 @@ If you started the agent for this tutorial, you should kill it now.
 @cindex node, syslog
 
 @quotation
-I decided that it was not wisdom that enabled [poets] to write their poetry, but a kind of instinct or inspiration, such as you find in seers and prophets who deliver all their sublime messages without knowing in the least what they mean.
---- Socrates (469 BC - 399 BC), In "Apology," sct. 21, by Plato.
+@i{I decided that it was not wisdom that enabled [poets] to write their poetry, but a kind of instinct or inspiration, such as you find in seers and prophets who deliver all their sublime messages without knowing in the least what they mean.}
+--- Socrates (469 BC--399 BC), in "Apology," sct. 21, by Plato.
 @end quotation
 
-If your sublime messages are delivered via the syslog protocol, you may prefer to use a syslog node instead of an audit node.
+If your sublime messages are delivered via the syslog protocol, you may prefer to use a syslog node instead of an Audit node.
 This enables NodeBrain to respond immediately to arriving syslog UDP packets without waiting to poll a log file.
 
 You have a couple options.
@@ -2788,7 +2789,7 @@ filter f_nodebrain @{ host("(humpty|dumpty).mydomain.com|franklin.otherdomain.co
 log @{ source(src);  filter(f_nodebrain); destination(nodebrain); @};
 @end example
 
-Refer to the @i{Audit Node} tutorial above for a sample @file{syslog.nbx} file.
+Refer to the @i{Audit Node} tutorial above for a sample @code{syslog.nbx} file.
 Refer to the @i{Translator Node} tutorial for more information on coding a translator.
 
 @node Snmptrap
@@ -2797,19 +2798,19 @@ Refer to the @i{Translator Node} tutorial for more information on coding a trans
 @cindex node, snmptrap
 
 @quotation
-Man is the only kind of varmint who sets his own trap, baits it, then steps on it.
---- John Steinbeck (1902 - 1968)
+@i{Man is the only kind of varmint who sets his own trap, baits it, then steps on it.}
+---John Steinbeck (1902--1968)
 @end quotation
-The snmptrap node is used to monitor SNMP traps.
+The Snmptrap node is used to monitor SNMP traps.
 This is one method of configuring NodeBrain to accept alerts from monitoring tools that are capable of sending SNMP traps.
-NodeBrain's snmptrap node is a bit unusual in that it does not use MIB's.  Instead, each trap is converted into a NodeBrain alert using single quoted OID terms.
+NodeBrain's Snmptrap node is a bit unusual in that it does not use MIBs.  Instead, each trap is converted into a NodeBrain alert using single quoted OID terms.
 
 @example
 alert '@i{oid}'="@i{value}",'@i{oid}'="@i{value}",...;
 @end example
 
-You must then code your rules referencing the '@i{oid}' terms.
-However, we recommend that you define aliases for the OID's of interest to make your rules more readable.
+You must then code your rules referencing the @i{oid} terms.
+However, I recommend you define aliases for the OIDs of interest to make your rules more readable.
 
 @example
 #!/usr/local/bin/nb -d
@@ -2829,15 +2830,15 @@ snmptrap. define r1 if(myProduct and type="hiccup");
 The example above is only provided to illustrate the syntax for working with single quoted OID terms.
 You will need to adapt this example to the traps you want to monitor to construct useful rules.
 However, you can use this example to start collecting traps right away.
-The traps will show up in your @file{snmptrap.log} file.
-Then you can figure out what you want to monitor.
+The traps will show up in your @code{snmptrap.log} file.
+Then, you can figure out what you want to monitor.
 
-Remove the ":trace,dump" from your snmptrap node specification to reduce the amount of information in your log.
+Remove the @code{:trace,dump} from your Snmptrap node specification to reduce the amount of information in your log.
 @example
 @b{define snmptrap node snmptrap;}
 @end example
 
-You may use a "silent" option to stop logging the alerts generated by the snmptrap node.
+You may use a @code{silent} option to stop logging the alerts generated by the snmptrap node.
 @example
 @b{define snmptrap node snmptrap:silent;}
 @end example
@@ -2849,17 +2850,16 @@ You may use a "silent" option to stop logging the alerts generated by the snmptr
 
 @quotation
 @i{To listen closely and reply well is the highest perfection we are able to attain in the art of conversation.}
---- Francois de La Rochefoucauld (1613 - 1680)
+---Francois de La Rochefoucauld (1613--1680)
 @end quotation
 
-To construct a successful NodeBrain application we must configure NodeBrain to listen closely and respond well.  The "Operating Mode Tutorial" illustrates how NodeBrain can listen for input commands from stdin and both input commands and error messages from servant scripts.   NodeBrain's ability to listen is controlled by a component called the "medulla".   Node modules interface with the medulla to extend NodeBrain's ability to listen to include other sources of input.  
+To construct a successful NodeBrain application you must configure NodeBrain to listen closely and respond well.  The @i{Operating Mode} tutorial" illustrates how NodeBrain can listen for input commands from @code{stdin} and both input commands and error messages from servant scripts.   NodeBrain's ability to listen is controlled by a component called the @i{medulla.}  Node modules interface with the medulla to extend NodeBrain's ability to listen to include other sources of input.  
 
-A pipe node is perhaps the simplest of listening nodes.  It listens to a FIFO (named pipe) file, and you can write to the
-pipe using any program you like, including an @code{echo} command.
+A pipe node is perhaps the simplest of listening nodes.  It listens to a FIFO (named pipe) file, and you can write to the pipe using any program you like, including an @code{echo} command.
 
 @section Defining Pipe Server Nodes
 
-We begin this tutorial by creating an agent script called smokey.nb with two pipe server nodes as shown here.
+To begin this tutorial, createan agent script called @code{smokey.nb} with two pipe server nodes as shown here.
 
 @example
 #!/usr/local/bin/nb -d
@@ -2874,18 +2874,18 @@ corncob.define r1 on(a=1 and b=2);
 peace.define r1 on(a=1 and b=2);
 @end example
 
-The argument to a pipe.server is of the form "@i{identity}@@@i{pipe}".
-Identities are associated with listening nodes to limit the types of commands the interpreter will accept from the node.  In this example we associate the identity "jed" with the corncob pipe, and the identity "chief" with the peace pipe.
-We have declared jed to be a guest and chief to be an owner.  A guest can only connect and issue @code{show} commands---like read only access.
-An owner can issue any command, including shell commands, which means they have all permissions of the user that started the agent.  For this reason, pipes are created with owner only read/write permissions.
-However, if you declare the associated identity to be a "peer", you can give other user's write permission on the pipe.
+The argument to a @code{pipe.server} is of the form "@i{identity}@@@i{pipe}".
+Identities are associated with listening nodes to limit the types of commands the interpreter will accept from the node.  In this example, you associate the identity @code{jed} with the corncob pipe, and the identity @code{chief} with the peace pipe.
+You have declared @code{jed} to be a guest and @code{chief} to be an owner.  A guest can only connect and issue @code{show} commands---like read only access.
+An owner can issue any command, including shell commands, which means they have all permissions of the user that started the agent.  For this reason, pipes are created with owner-only read/write permissions.
+However, if you declare the associated identity to be a "peer," you can give other user's write permission on the pipe.
 They will be able to issue assertions and alerts, but not modify your rules or issue shell commands.
 You must still think through how the agent will respond to their assertions.
-For example, if you create a rule that reboots the system when a=1, then letting someone assert a=1 is the same as letting them reboot the system.
+For example, if you create a rule that reboots the system when @code{a=1}, then letting someone assert @code{a=1} is the same as letting them reboot the system.
 
 @section Starting Pipe Server Agent
 
-Now let's start our agent.  We've made this script executable and specified the @code{-d} (daemon) option on the she-bang line.  So we can just execute it like any executable and it will load the rules and go into the background (daemonize).
+Now let's start the agent.  This script is executable because the @code{-d} (daemon) option is specificied on the she-bang line.  So you can just execute it like any executable and it will load the rules and go into the background (daemonize).
 
 @example
 $ ./smokey.nb
@@ -2911,14 +2911,14 @@ $
 
 @section Sending Commands to Pipe Server Nodes
 
-We'll use the echo command to send NodeBrain commands to our pipe servers.
+Use the @code{echo} command to send NodeBrain commands to the pipe servers.
 
 @example
 $ echo stop > corncob
 $ echo stop > peace
 @end example
 
-The log file shows us what happened.
+The log file shows you what happened.
 
 @example
 $ @b{cat smokey.log}
@@ -2949,9 +2949,9 @@ Date       Time     Message
 $
 @end example
 
-Notice that when we sent a @code{stop} command to the corncob pipe we didn't have the needed authority, but when we sent the same @code{stop} command to the peace pipe it worked.  
+Notice that when you sent a @code{stop} command to the corncob pipe you didn't have the needed authority, but when you sent the same @code{stop} command to the peace pipe it worked.  
   
-Run smokey.nb again with the following commands to see what happens.
+Run @code{smokey.nb} again with the following commands to see what happens.
 
 @example
 $ ./smokey.nb
@@ -2970,16 +2970,16 @@ $ cat smokey.log
 
 @quotation
 @i{The more elaborate our means of communication, the less we communicate.}
---- Edwin Schlossberg
+---Joseph Priestly (1733--1804)
 @end quotation
   
-The peer module is more elaborate than some of the other modules used for communication.  The goal is to communicate less, or at least to be more selective in with whom we communicate.  This selectivity is accomplished with encryption and key based authentication.
+The peer module is more elaborate than some of the other modules used for communication.  The goal is to communicate less, or at least to be more selective in with whom you communicate.  This selectivity is accomplished with encryption and key-based authentication.
 
-The files for this tutorial are in the tutorial/Peer directory.  The NodeBrain scripts are executable and we have left the @code{.nb} suffix off for fun.
+The files for this tutorial are in the @code{tutorial/Peer} directory.  The NodeBrain scripts are executable and I have left the @code{.nb} suffix off for fun.
 
 @section Peer Module Identity Keys
 
-Before we communicate using the peer module, we must create keys to be used by clients and servers.  To reduce complexity for this example, we'll create a single key and use it for both the client and the server as a "shared secret" key.  Here's a script called @file{genkey} that creates a key for an identity called @code{buddy}.
+Before you communicate using the peer module, you must create keys to be used by clients and servers.  To reduce complexity for this example, you'll create a single key and use it for both the client and the server as a "shared secret" key.  Here's a script called @code{genkey} that creates a key for an identity called @code{buddy}.
 
 @example
 #!/usr/local/bin/nb
@@ -2989,12 +2989,12 @@ Before we communicate using the peer module, we must create keys to be used by c
 @end example
 
 The peer module provides a skill called @code{service} that supports some helpful commands associated with peer communication.
-We are using the @code{identify} command here.
+Use the @code{identify} command here.
 This command generates a key and places it in a key store for later reference.
 
 @multitable {----------------------} {----------------------------------------------------------------------------------}
-@item Unix and Linux: @tab ~/.nb/nb_peer.keys
-@item Windows: @tab USER_PROFILE/ApplicationData/NodeBrain/nb_peer.keys
+@item Unix and Linux: @tab @code{~/.nb/nb_peer.keys}
+@item Windows: @tab @code{USER_PROFILE/ApplicationData/NodeBrain/nb_peer.keys}
 @end multitable
 
 The key store is readable only by the owning user and looks like this.
@@ -3010,12 +3010,12 @@ bar 7.b49ad9bfb68a97b8.fab67908064b5cb3.0;
 
 @quotation
 @i{Be alert to give service.  What counts a great deal in life is what we do for others.}
---- Anonymous
+---Anonymous
 @end quotation
 
 A peer server node is alert to give service, in fact, it can even give service to alerts.
-It provides a method for a peer client to send any command to a NodeBrain agent: alerts, assertions, new rule definitions, etc.
-It accepts TCP/IP socket connections from clients and issues received commands in the context of the server node.  The @code{server} file in the tutorial/Peer directory looks like this.
+It provides a method for a peer client to send any command to a NodeBrain agent: alerts, assertions, new rule definitions, and so on.
+It accepts TCP/IP socket connections from clients and issues received commands in the context of the server node.  The @code{server} file in the @code{tutorial/Peer} directory looks like this.
 
 @example
 #!/usr/local/bin/nb -d
@@ -3029,9 +3029,9 @@ set out=".",log="server.log";
 myServer. define r1 on(a=1 and b=2);
 @end example
 
-We declare an identity @code{buddy} that we rank as @code{owner}. This is all the interpreter knows about @code{buddy}.  We use this same name, @code{buddy}, in the specification of the peer server node.  The peer node module requires that a key exist in the key store for this identity, which is why we created it in the previous section.
+Declare an identity @code{buddy} that you rank as @code{owner}. This is all the interpreter knows about @code{buddy}.  Use this same name, @code{buddy}, in the specification of the peer server node.  The peer node module requires that a key exist in the key store for this identity, which is why you created it in the previous section.
 
-Let's start up our peer server.  
+Let's start up the peer server.  
 
 @example
 $ ./server
@@ -3055,20 +3055,20 @@ $ ./server
 $
 @end example
 
-We are using a Unix domain socket in this tutorial because we don't need to communicate with remote clients.
-To experiment with serving remote clients, you can comment out the active myServernode and uncomment the remote myServer node.
-But first you should experiment with the client in the next section
+You are using a Unix domain socket in this tutorial because you don't need to communicate with remote clients.
+To experiment with serving remote clients, you can comment out the active @code{myServernode} and uncomment the remote myServer node.
+But first you should experiment with the client in the next section.
 
 @section Peer Module Client Node
 
 @quotation
 @i{He who is always his own counselor will often have a fool for his client.}
---- Hunter
+---Hunter S. Thompson (1937--2005)
 @end quotation
 
-The peer module enables NodeBrain to play the part of both server and client.  This is not foolish because we are talking about different instances of NodeBrain, different processes ("skulls"), playing the roles of client and server.
+The peer module enables NodeBrain to play the part of both server and client.  This is not foolish because I am talking about different instances of NodeBrain, different processes ("skulls"), playing the roles of client and server.
 
-The @file{client} file in the tutorial/Peer directory looks like this.
+The @code{client} file in the @code{tutorial/Peer} directory looks like this.
 
 @example
 #!/usr/local/bin/nb
@@ -3081,13 +3081,13 @@ The @file{client} file in the tutorial/Peer directory looks like this.
 @b{myClient:stop;}
 @end example
 
-Notice we declare the identity @code{buddy} and specify the client just like we specified the server in the previous section.  Here there is no requirement to give @code{buddy} local permissions.  
+Notice you declare the identity @code{buddy} and specify the client just like you specified the server in the previous section.  Here there is no requirement to give @code{buddy} local permissions.  
 
-Because we are going to run this client on the same machine as our server, and under the same user account, the client and server will use the same key store.
-To run the client from a different account or machine, we would have to copy the @code{buddy} key from the server's key store to the client's key store.
-We could also configure different private keys for servers and clients and copy their public keys to the key stores of their peers.  That approach provides better security, but we're more interested in quick success in this tutorial, so we'll stick with shared secret keys.
+Because you are going to run this client on the same machine as the server and under the same user account, the client and server will use the same key store.
+To run the client from a different account or machine, you would have to copy the @code{buddy} key from the server's key store to the client's key store.
+You could also configure different private keys for servers and clients and copy their public keys to the key stores of their peers.  That approach provides better security, but  quick success in this tutorial is more important, so stick with shared secret keys.
 
-Now we can run our client and see what happens.
+Now you can run the client and see what happens.
 
 @example
 $ ./client
@@ -3110,7 +3110,7 @@ $
 @end example
 
 The command @code{myClient:assert a=1,b=2} sends the command @code{assert a=1,b=2} to the server specified as @code{buddy@@./socket}.  Notice the message @code{Rule myServer.r1 fired}.
-There is no @code{myServer.r1} defined in the client.  This is what happened at the server.  When a peer client issues a command to a peer server, the server lets the client listen in as it reacts to the command.  We can look at it from the server's point of view by displaying the agent log, in this case called @file{server.log}.
+There is no @code{myServer.r1} defined in the client.  This is what happened at the server.  When a peer client issues a command to a peer server, the server lets the client listen in as it reacts to the command.  You can look at it from the server's point of view by displaying the agent log, in this case called @code{server.log}.
 
 @example
 $ @b{cat server.log}
@@ -3140,20 +3140,20 @@ Date       Time     Message
 $
 @end example
 
-At 10:27:58 our server started listening for connections. At 10:28 we received a connection and issued the command @code{assert a=1,b=2} in the @code{myServer} context.  This triggered rule @file{myServer.r1} which has no action.  In previous tutorials you've learned enough to modify the rules in server to provide an action and try it again.
+At 10:27:58 the server started listening for connections. At 10:28 it received a connection and issued the command @code{assert a=1,b=2} in the @code{myServer} context.  This triggered rule @code{myServer.r1}, which has no action.  In previous tutorials, you've learned enough to modify the rules in server to provide an action and try it again.
 
-Notice our client sends a stop command to the server, which stops it because we've given the client full owner permissions.  This means we have to restart the server each time we run the client.  Only in a tutorial would we do something this silly.
+Notice the client sends a @code{stop} command to the server, which stops it because you've given the client full owner permissions.  This means you have to restart the server each time you run the client.  Only in a tutorial would you do something this silly.
 
 @section Interactive Peer Module Client
 
-If you want to experiment further with the peer module, start the server again and try the @file{iclient} file instead of @code{client}.
+If you want to experiment further with the peer module, restart the server and try the @code{iclient} file instead of @code{client}.
 
 @example
 $ ./server
 $ ./iclient
 @end example
 
-The iclient script looks like this.
+The @code{iclient} script looks like this.
 
 @example
 #!/usr/local/bin/nb -`myClient:
