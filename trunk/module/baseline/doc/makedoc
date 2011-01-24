@@ -1,0 +1,11 @@
+makeinfo --html --no-split --number-sections baseline.texi
+makeinfo --plaintext --no-split --number-sections --output=baseline.txt baseline.texi
+makeinfo --docbook --no-split --number-sections --output=baselineDocBook.xml baseline.texi
+makeinfo --xml --no-split --number-sections baseline.texi
+makeinfo --no-split --number-sections baseline.texi
+
+cp baseline.html /home/project/nodebrain/release/web@boeing/edit.d/htdocs/package/nb/version/0.8/release/0.8.3/module/baseline/nb_baseline.html
+./texi4pdf baseline.texi > baseline.texi4pdf
+texi2pdf -D -V -o baseline.pdf baseline.texi4pdf
+
+cp baseline.pdf /home/project/nodebrain/release/web@boeing/edit.d/htdocs/package/nb/version/0.8/release/0.8.3/module/baseline/nb_baseline.pdf
