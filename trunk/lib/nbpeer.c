@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2011 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -139,7 +139,7 @@ static void nbPeerWriter(nbCELL context,int sd,void *handle){
 
   if(peerTrace) nbLogMsg(context,0,'T',"nbPeerWriter: called for sd=%d",sd);
   size=peer->wloc-peer->wbuf;
-  nbLogMsg(context,0,'T',"nbPeerWriter: called for sd=%d size=%d",sd,size);
+  if(peerTrace) nbLogMsg(context,0,'T',"nbPeerWriter: called for sd=%d size=%d",sd,size);
   if(size){
     //nbListenerRemoveWrite(context,sd);
     //peer->flags&=0xff-NB_PEER_FLAG_WRITE_WAIT;
@@ -162,13 +162,13 @@ static void nbPeerWriter(nbCELL context,int sd,void *handle){
       nbPeerShutdown(context,peer,code);
       }
     if(peer->wloc==peer->wbuf){  // if we don't have more data to write, stop waiting to write
-      nbLogMsg(context,0,'T',"nbPeerWriter: removing WRITE_WAIT on SD=%d because we have no more data at the moment",sd);
+      if(peerTrace) nbLogMsg(context,0,'T',"nbPeerWriter: removing WRITE_WAIT on SD=%d because we have no more data at the moment",sd);
       nbListenerRemoveWrite(context,sd);
       peer->flags&=0xff-NB_PEER_FLAG_WRITE_WAIT;
       }
     }
   else{
-    nbLogMsg(context,0,'T',"nbPeerWriter: removing WRITE_WAIT on SD=%d because we have no producer",sd);
+    if(peerTrace) nbLogMsg(context,0,'T',"nbPeerWriter: removing WRITE_WAIT on SD=%d because we have no producer",sd);
     nbListenerRemoveWrite(context,sd);
     peer->flags&=0xff-NB_PEER_FLAG_WRITE_WAIT;
     }
@@ -207,7 +207,7 @@ static void nbPeerReader(nbCELL context,int sd,void *handle){
 
   while(bufcur<dataend && peer->consumer){
     if(dataend-peer->rbuf<2){
-      nbLogMsg(context,0,'T',"nbPeerReader: message length is split - have to read again");
+      if(peerTrace) nbLogMsg(context,0,'T',"nbPeerReader: message length is split - have to read again");
       peer->rloc+=len;
       if(bufcur!=peer->rbuf){
         memcpy(peer->rbuf,bufcur,peer->rloc-bufcur);
@@ -221,7 +221,7 @@ static void nbPeerReader(nbCELL context,int sd,void *handle){
       }
     len=(*bufcur<<8)|*(bufcur+1);
     if(bufcur+len>dataend){
-      nbLogMsg(context,0,'T',"nbPeerReader: didn't get full message - have to read again");
+      if(peerTrace) nbLogMsg(context,0,'T',"nbPeerReader: didn't get full message - have to read again");
       peer->rloc=dataend;
       if(bufcur!=peer->rbuf){
         memcpy(peer->rbuf,bufcur,dataend-bufcur);
@@ -234,7 +234,7 @@ static void nbPeerReader(nbCELL context,int sd,void *handle){
       return;
       }
     // call the consumer
-    nbLogMsg(context,0,'T',"nbPeerReader: calling the consumer exit - peer->handle=%p",peer->handle);
+    if(peerTrace) nbLogMsg(context,0,'T',"nbPeerReader: calling the consumer exit - peer->handle=%p",peer->handle);
     if((code=(*peer->consumer)(context,peer,peer->handle,bufcur+2,len-2))){
       nbLogMsg(context,0,'T',"nbPeerReader: Peer %d %s shutting down by consumer request",sd,tls->uriMap[tls->uriIndex].uri);
       nbListenerRemove(context,sd); // shutdown should do this for us
@@ -256,7 +256,7 @@ static void nbPeerReader(nbCELL context,int sd,void *handle){
     nbLogMsg(context,0,'L',"nbPeerReader: Peer %d %s fatal defect - consumer bailed in middle of sending buffer - terminating",sd,tls->uriMap[tls->uriIndex].uri);
     exit(1);
     }
-  nbLogMsg(context,0,'T',"nbPeerReader: returning");
+  if(peerTrace) nbLogMsg(context,0,'T',"nbPeerReader: returning");
   }
 
 
@@ -475,7 +475,8 @@ int nbPeerListen(nbCELL context,nbPeer *peer){
     return(-1);
     }
   // 2010-06-06 eat - seeing if blocking IO will work
-  //fcntl(peer->tls->socket,F_SETFL,fcntl(peer->tls->socket,F_GETFL)|O_NONBLOCK);
+  // 2011-01-23 eat - trying non-blocking IO again
+  fcntl(peer->tls->socket,F_SETFL,fcntl(peer->tls->socket,F_GETFL)|O_NONBLOCK);
   nbListenerAdd(context,peer->tls->socket,peer,nbPeerAccepter);
   peer->flags|=NB_PEER_FLAG_READ_WAIT;
   nbLogMsg(context,0,'T',"nbPeerListen: things look good");
@@ -502,6 +503,10 @@ int nbPeerConnect(nbCELL context,nbPeer *peer,void *handle,
 
   int rc;
 
+  if(!peer || !peer->tls){
+    nbLogMsg(context,0,'E',"nbPeerConnect: called with bad pointer");
+    return(-1);
+    }
   if(peerTrace) nbLogMsg(context,0,'T',"nbPeerConnect: called uri=%s",peer->tls->uriMap[0].uri);
   if(!peer->wbuf) peer->wbuf=(unsigned char *)malloc(NB_PEER_BUFLEN);
   peer->wloc=peer->wbuf;
@@ -535,7 +540,8 @@ int nbPeerConnect(nbCELL context,nbPeer *peer,void *handle,
 */
 int nbPeerSend(nbCELL context,nbPeer *peer,void *data,int size){
   int mysize=size+2;
-  nbLogMsg(context,0,'T',"nbPeerSend: called with peer=%p SD=%d size=%d flags=%x",peer,peer->tls->socket,size,peer->flags);
+
+  if(peerTrace) nbLogMsg(context,0,'T',"nbPeerSend: called with peer=%p SD=%d size=%d flags=%x",peer,peer->tls->socket,size,peer->flags);
   if(peer->flags&NB_PEER_FLAG_WRITE_ERROR){
     nbLogMsg(context,0,'T',"nbPeerSend: error flag is set");
     return(-1);
@@ -548,7 +554,7 @@ int nbPeerSend(nbCELL context,nbPeer *peer,void *data,int size){
     nbLogMsg(context,0,'T',"nbPeerSend: buffer is full");
     return(1);
     }
-  nbLogMsg(context,0,'T',"nbPeerSend: made it past bail out conditions");
+  if(peerTrace) nbLogMsg(context,0,'T',"nbPeerSend: made it past bail out conditions");
   // put message in buffer
   memcpy(peer->wloc+2,data,size);
   *peer->wloc=mysize>>8;
@@ -557,7 +563,7 @@ int nbPeerSend(nbCELL context,nbPeer *peer,void *data,int size){
   peer->wloc++;
   peer->wloc+=size;
   if(!(peer->flags&NB_PEER_FLAG_WRITE_WAIT)){
-    nbLogMsg(context,0,'T',"nbPeerSend: nbListenerAddWrite SD=%d flags=%x",peer->tls->socket,peer->flags);
+    if(peerTrace) nbLogMsg(context,0,'T',"nbPeerSend: nbListenerAddWrite SD=%d flags=%x",peer->tls->socket,peer->flags);
     nbListenerAddWrite(context,peer->tls->socket,peer,nbPeerWriter);
     peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
     }

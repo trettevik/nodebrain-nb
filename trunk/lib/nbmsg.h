@@ -122,7 +122,8 @@ typedef struct NB_MSG_LOG{
   int  state;                          // state used to control operation sequence
   int  file;
   int  socket;                         // socket for UDP communication between producer and consumer
-  nbMsgConsumer *consumer;             // list of consumers
+  char consumerName[32];               // name for consumer - 2011-01-20 eat experiment
+  nbMsgConsumer *consumer;             // list of consumers for producer
   int  cursorFile;
   uint32_t fileOffset;                 // offset of next message maintained in cursor mode
   uint32_t filesize;                   // file position (size when writing)

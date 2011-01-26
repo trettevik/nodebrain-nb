@@ -108,11 +108,14 @@ nbTLSX *nbTlsLoadContext(nbCELL context,nbCELL tlsContext,void *handle,int clien
     return(NULL);
     }
   timeout=nbTermOptionInteger(tlsContext,"timeout",5);
-  keyFile=nbTermOptionString(tlsContext,"keyfile","security/ServerKey.pem");
-  certFile=nbTermOptionString(tlsContext,"certfile","security/ServerCertificate.pem");
-  trustedCertsFile=nbTermOptionString(tlsContext,"trustfile","security/TrustedCertificates.pem");
-  tlsx=nbTlsCreateContext(option,handle,timeout,keyFile,certFile,trustedCertsFile);
-  return(tlsx); 
+  if(option&(NB_TLS_SERVER_CERTS|NB_TLS_SERVER_CERT|NB_TLS_SERVER_KEYS|NB_TLS_SERVER_TLS)){
+    keyFile=nbTermOptionString(tlsContext,"keyfile","security/ServerKey.pem");
+    certFile=nbTermOptionString(tlsContext,"certfile","security/ServerCertificate.pem");
+    trustedCertsFile=nbTermOptionString(tlsContext,"trustfile","security/TrustedCertificates.pem");
+    tlsx=nbTlsCreateContext(option,handle,timeout,keyFile,certFile,trustedCertsFile);
+    return(tlsx); 
+    }
+  return(NULL);
   }
 
 //int nbTlsLoadListener(nbCELL context,int defaultPort){

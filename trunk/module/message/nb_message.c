@@ -31,24 +31,24 @@
 *     producer  - node that writes NodeBrain commands to a message log
 *     consumer  - node that reads and executes NodeBrain commands from a message log
 *     client    - node that reads and executes NodeBrain commands from a message server
-*     server    - node that serves message from a message log to message clients
+*     server    - node that serves messages from a message log to message clients
 *
 *   The server skill is general purpose---not specific to the processing
-*   of NodeBrain commands.  The other skills are devotes to NodeBrain
+*   of NodeBrain commands.  The other skills are devoted to NodeBrain
 *   command processing.  However, they also serve as examples for the development
 *   of other applications that need to replicate transactions for processing
 *   at multiple nodes.
 *
 * Description:
 *
-*   The module is a companion to a NodeBrain messaging API (nbmsg.c).
+*   This module is a companion to a NodeBrain messaging API (nbmsg.c).
 *   The API enables any NodeBrain module to function as a message
 *   producer.  The "producer" skill provided by this module is a
 *   special case that executes and logs nodebrain commands.  Other
 *   modules (e.g. bingo) may use messages to represent transactions
 *   that are foreign to NodeBrain.
 *
-*   A producer (in term of this module) is defined as follows.
+*   A producer (in terms of this module) is defined as follows.
 *
 *     define <term> node message.producer("<cabal>","<nodeName>"[,<nodeNumber>]);
 *     # <cabal>      - name given to a set of cooperating nodes
@@ -231,7 +231,7 @@ void *producerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *te
   producer->trace=trace;
   producer->dump=dump;
   producer->echo=echo;
-  nbLogMsg(context,0,'I',"calling nbListenerEnableOnDaemon");
+  if(producer->trace) nbLogMsg(context,0,'I',"calling nbListenerEnableOnDaemon");
   nbListenerEnableOnDaemon(context);  // sign up to enable when we daemonize
   return(producer);
   }
@@ -262,15 +262,15 @@ int producerEnable(nbCELL context,void *skillHandle,nbModProducer *producer){
     }
   producer->msglog=msglog;
   while(!((state=nbMsgLogRead(context,msglog))&NB_MSG_STATE_LOGEND));
-  nbLogMsg(context,0,'T',"State after read loop is %d",state);
+  //nbLogMsg(context,0,'T',"State after read loop is %d",state);
   if(state<0){
     nbLogMsg(context,0,'E',"Unable to read to end of file for cabal \"%s\" node %d",msglog->cabal,msglog->node);
     return(1);
     }
   //state=nbMsgLogProduce(context,msglog,1024*1024); // smaller files to force more file boundaries for testing messaging
   state=nbMsgLogProduce(context,msglog,10*1024*1024);
-  nbLogMsg(context,0,'T',"Return from nbMsgLogProduce() is %d",state);
-  nbLogMsg(context,0,'I',"Message.producer enabled for cabal \"%s\" node %d",msglog->cabal,msglog->node);
+  //nbLogMsg(context,0,'T',"Return from nbMsgLogProduce() is %d",state);
+  nbLogMsg(context,0,'I',"Enabled for cabal %s node %s",msglog->cabal,msglog->nodeName);
   return(0);
   }
 
@@ -499,7 +499,7 @@ void *consumerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *te
   consumer->trace=trace;
   consumer->dump=dump;
   consumer->echo=echo;
-  nbLogMsg(context,0,'I',"calling nbListenerEnableOnDaemon");
+  if(consumer->trace) nbLogMsg(context,0,'I',"calling nbListenerEnableOnDaemon");
   nbListenerEnableOnDaemon(context);  // sign up to enable when we daemonize
   return(consumer);
   }
@@ -521,7 +521,7 @@ int consumerEnable(nbCELL context,void *skillHandle,nbModConsumer *consumer){
     nbLogMsg(context,0,'E',"Unable to register message handler for cabal \"%s\" node %d",consumer->cabalName,consumer->cabalNode);
     return(1);
     }
-  nbLogMsg(context,0,'I',"Enabled for cabal \"%s\" node \"%s\"",consumer->cabalName,consumer->nodeName);
+  nbLogMsg(context,0,'I',"Enabled for cabal %s node %s",consumer->cabalName,consumer->nodeName);
   return(0);
   }
 
@@ -705,7 +705,7 @@ void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
   client->trace=trace;
   client->dump=dump;
   client->echo=echo;
-  nbLogMsg(context,0,'I',"calling nbListenerEnableOnDaemon");
+  if(client->trace) nbLogMsg(context,0,'I',"calling nbListenerEnableOnDaemon");
   nbListenerEnableOnDaemon(context);  // sign up to enable when we daemonize
   return(client);
   }
@@ -749,8 +749,13 @@ int clientDisable(nbCELL context,void *skillHandle,nbModClient *client){
 *    <node>[(<args>)][:<text>]
 */
 int *clientCommand(nbCELL context,void *skillHandle,nbModClient *client,nbCELL arglist,char *text){
+  if(!client || !client->msgclient || !client->msgclient->msglog){
+    nbLogMsg(context,0,'T',"nb_message: clientCommand() text: %s",text);
+    nbLogMsg(context,0,'T',"nb_message: client is not properly enabled - check prior messages");
+    return(1);
+    }
   if(client->trace){
-    nbLogMsg(context,0,'T',"nb_message:clientCommand() text=[%s]\n",text);
+    nbLogMsg(context,0,'T',"nb_message: clientCommand() text: %s",text);
     }
   nbCmd(context,text,1);
   if(client->msgclient->msglog) nbMsgLogWriteString(context,client->msgclient->msglog,(unsigned char *)text);
@@ -900,7 +905,7 @@ void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
   server->trace=trace;
   server->dump=dump;
   server->echo=echo;
-  nbLogMsg(context,0,'I',"calling nbListenerEnableOnDaemon");
+  if(server->trace) nbLogMsg(context,0,'I',"calling nbListenerEnableOnDaemon");
   nbListenerEnableOnDaemon(context);  // sign up to enable when we daemonize
   return(server);
   }
@@ -1080,8 +1085,8 @@ int messageCmdCreate(nbCELL context,void *handle,char *verb,char *cursor){
   delim=cursor;
   while(*delim && *delim!=' ') delim++;
   len=delim-cursor;
-  if(len==5 && strncmp(cursor,"state",5)==0) option=NB_MSG_INIT_OPTION_STATE;
-  else if(len==7 && strncmp(cursor,"content",7)==0) option=NB_MSG_INIT_OPTION_CONTENT;
+  if(len==0 || (len==7 && strncmp(cursor,"content",7)==0)) option=NB_MSG_INIT_OPTION_CONTENT;
+  else if(len==5 && strncmp(cursor,"state",5)==0) option=NB_MSG_INIT_OPTION_STATE;
   else{
     nbLogMsg(context,0,'E',"Expecting type of 'content' or 'state' at:%s",cursor);
     return(1);

@@ -418,23 +418,39 @@ int nbTlsConnected(nbTLS *tls){
 */  
 int nbTlsConnectNonBlocking(nbTLS *tls){
   int sd,rc;
-  struct sockaddr_in sa;
+  struct sockaddr_in in_addr;
+  int domain=AF_INET;
 #if !defined(HPUX) && !defined(SOLARIS)
   struct timeval tv;
 #endif
+  struct sockaddr_un un_addr;
   char *addr=tls->uriMap[tls->uriIndex].addr;
-  int port=tls->uriMap[tls->uriIndex].port;
+  char *name=tls->uriMap[tls->uriIndex].name;
+  unsigned short port=tls->uriMap[tls->uriIndex].port;
 
-  fprintf(stderr,"nbTlsConnectNonBlocking: called addr=%s port=%d\n",addr,port);
-  sd=socket(AF_INET,SOCK_STREAM,0);
+  if(tls->uriMap[tls->uriIndex].scheme==NB_TLS_SCHEME_UNIX){
+    domain=AF_UNIX;
+    if(strlen(name)>sizeof(un_addr.sun_path)){
+      fprintf(stderr,"nbTlsnbTlsConnectNonBlocking: Local domain socket path too long - %s\n",name);
+      return(-1);
+      }
+    }
+
+  sd=socket(domain,SOCK_STREAM,0);
   if(sd<0){
     fprintf(stderr,"nbTlsConnectNonBlocking: Unable to obtain socket\n");
     return(-1);
     }
-  memset(&sa,0,sizeof(sa));
-  sa.sin_family=AF_INET;
-  sa.sin_addr.s_addr=inet_addr(addr);   // host IP
-  sa.sin_port=htons(port);              // port number
+  if(domain==AF_INET){
+    memset(&in_addr,0,sizeof(in_addr));
+    in_addr.sin_family=AF_INET;
+    in_addr.sin_addr.s_addr=inet_addr(addr);   // host IP
+    in_addr.sin_port=htons(port);              // port number
+    }
+  else{
+    un_addr.sun_family=AF_UNIX;
+    strcpy(un_addr.sun_path,name);
+    }
 
 #if !defined(HPUX) && !defined(SOLARIS)
   if(tls->tlsx) tv.tv_sec=tls->tlsx->timeout;
@@ -452,15 +468,17 @@ int nbTlsConnectNonBlocking(nbTLS *tls){
     }
 #endif
   // 2010-06-06 eat - seeing if blocking IO will work
-  //fcntl(sd,F_SETFL,fcntl(sd,F_GETFL)|O_NONBLOCK);
-  rc=connect(sd,(struct sockaddr*)&sa,sizeof(sa));
+  // 2011-01-23 eat - trying non-blocking again
+  fcntl(sd,F_SETFL,fcntl(sd,F_GETFL)|O_NONBLOCK);
+  if(domain==AF_INET) rc=connect(sd,(struct sockaddr*)&in_addr,sizeof(in_addr));
+  else rc=connect(sd,(struct sockaddr*)&un_addr,sizeof(un_addr));
   if(rc<0){
     if(errno==EINPROGRESS){
       tls->socket=sd;
-      fprintf(stderr,"nbTlsConnectNonBlocking: connecting\n");
+      //fprintf(stderr,"nbTlsConnectNonBlocking: connecting\n");
       return(0);
       }
-    fprintf(stderr,"nbTlsConnectNonBlocking: connect failed: %s\n",strerror(errno));
+    //fprintf(stderr,"nbTlsConnectNonBlocking: connect failed: %s\n",strerror(errno));
     close(sd);
     return(-1);
     }
@@ -652,18 +670,18 @@ int nbTlsListen(nbTLS *tls){
     }
   fcntl(sd,F_SETFD,FD_CLOEXEC);
 #endif
-  /* make sure we can reuse sockets when we restart */
-  /* we say the option value is char for windows */
-  if(setsockopt(sd,SOL_SOCKET,SO_REUSEADDR,(char *)&sockopt_enable,sizeof(sockopt_enable))<0){
-    fprintf(stderr,"nbTlsListen: Unable to set socket option - %s\n",strerror(errno));
-#if defined(WIN32)
-    closesocket(sd);
-#else
-    close(sd);
-#endif
-    return(-1);
-    }
   if(domain==AF_INET){
+    /* make sure we can reuse sockets when we restart */
+    /* we say the option value is char for windows */
+    if(setsockopt(sd,SOL_SOCKET,SO_REUSEADDR,(char *)&sockopt_enable,sizeof(sockopt_enable))<0){
+      fprintf(stderr,"nbTlsListen: Unable to set socket option - %s\n",strerror(errno));
+#if defined(WIN32)
+      closesocket(sd);
+#else
+      close(sd);
+#endif
+      return(-1);
+      }
     in_addr.sin_family = AF_INET;
     in_addr.sin_port = htons(port);
     if(*addr==0) in_addr.sin_addr.s_addr=INADDR_ANY;
