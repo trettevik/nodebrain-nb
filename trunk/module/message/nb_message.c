@@ -208,19 +208,16 @@ void *producerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *te
     delim=strchr(cursor,' ');
     if(delim==NULL) delim=strchr(cursor,',');
     if(delim==NULL) delim=strchr(cursor,';');
-    if(delim!=NULL){
-      saveDelim=*delim;
-      *delim=0;
-      }
+    if(delim==NULL) delim=strchr(cursor,0);
+    saveDelim=*delim;
+    *delim=0;
     if(strcmp(cursor,"trace")==0){trace=1;}
     else if(strcmp(cursor,"dump")==0){trace=1;dump=1;}
     else if(strcmp(cursor,"silent")==0) echo=0; 
-    if(delim!=NULL){
-      *delim=saveDelim;
-      cursor=delim;
-      while(*cursor==' ' || *cursor==',') cursor++;
-      }
-    else cursor=strchr(cursor,0);
+    *delim=saveDelim;
+    cursor=delim;
+    if(*cursor==',') cursor++;
+    while(*cursor==' ') cursor++;
     }
   producer=nbAlloc(sizeof(nbModProducer));
   memset(producer,0,sizeof(nbModProducer));
@@ -475,19 +472,16 @@ void *consumerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *te
     delim=strchr(cursor,' ');
     if(delim==NULL) delim=strchr(cursor,',');
     if(delim==NULL) delim=strchr(cursor,';');
-    if(delim!=NULL){
-      saveDelim=*delim;
-      *delim=0;
-      }
+    if(delim==NULL) delim=strchr(cursor,0);
+    saveDelim=*delim;
+    *delim=0;
     if(strcmp(cursor,"trace")==0){trace=1;}
     else if(strcmp(cursor,"dump")==0){trace=1;dump=1;}
     else if(strcmp(cursor,"silent")==0) echo=0; 
-    if(delim!=NULL){
-      *delim=saveDelim;
-      cursor=delim;
-      while(*cursor==' ' || *cursor==',') cursor++;
-      }
-    else cursor=strchr(cursor,0);
+    *delim=saveDelim;
+    cursor=delim;
+    if(*cursor==',') cursor++;
+    while(*cursor==' ') cursor++;
     }
   consumer=malloc(sizeof(nbModConsumer));
   memset(consumer,0,sizeof(nbModConsumer));
@@ -683,19 +677,16 @@ void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
     delim=strchr(cursor,' ');
     if(delim==NULL) delim=strchr(cursor,',');
     if(delim==NULL) delim=strchr(cursor,';');
-    if(delim!=NULL){
-      saveDelim=*delim;
-      *delim=0;
-      }
+    if(delim==NULL) delim=strchr(cursor,0);
+    saveDelim=*delim;
+    *delim=0;
     if(strcmp(cursor,"trace")==0){trace=1;}
     else if(strcmp(cursor,"dump")==0){trace=1;dump=1;}
     else if(strcmp(cursor,"silent")==0) echo=0; 
-    if(delim!=NULL){
-      *delim=saveDelim;
-      cursor=delim;
-      while(*cursor==' ' || *cursor==',') cursor++;
-      }
-    else cursor=strchr(cursor,0);
+    *delim=saveDelim;
+    cursor=delim;
+    if(*cursor==',') cursor++;
+    while(*cursor==' ') cursor++;
     }
   client=malloc(sizeof(nbModClient));
   memset(client,0,sizeof(nbModClient));
@@ -748,7 +739,7 @@ int clientDisable(nbCELL context,void *skillHandle,nbModClient *client){
 *
 *    <node>[(<args>)][:<text>]
 */
-int *clientCommand(nbCELL context,void *skillHandle,nbModClient *client,nbCELL arglist,char *text){
+int clientCommand(nbCELL context,void *skillHandle,nbModClient *client,nbCELL arglist,char *text){
   if(!client || !client->msgclient || !client->msgclient->msglog){
     nbLogMsg(context,0,'T',"nb_message: clientCommand() text: %s",text);
     nbLogMsg(context,0,'T',"nb_message: client is not properly enabled - check prior messages");
@@ -884,19 +875,16 @@ void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
     delim=strchr(cursor,' ');
     if(delim==NULL) delim=strchr(cursor,',');
     if(delim==NULL) delim=strchr(cursor,';');
-    if(delim!=NULL){
-      saveDelim=*delim;
-      *delim=0;
-      }
+    if(delim==NULL) delim=strchr(cursor,0);
+    saveDelim=*delim;
+    *delim=0;
     if(strcmp(cursor,"trace")==0){trace=1;}
     else if(strcmp(cursor,"dump")==0){trace=1;dump=1;}
     else if(strcmp(cursor,"silent")==0) echo=0; 
-    if(delim!=NULL){
-      *delim=saveDelim;
-      cursor=delim;
-      while(*cursor==' ' || *cursor==',') cursor++;
-      }
-    else cursor=strchr(cursor,0);
+    *delim=saveDelim;
+    cursor=delim;
+    if(*cursor==',') cursor++;
+    while(*cursor==' ') cursor++;
     }
   server=malloc(sizeof(nbModServer));
   memset(server,0,sizeof(nbModServer));

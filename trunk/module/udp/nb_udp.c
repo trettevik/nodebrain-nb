@@ -239,19 +239,16 @@ static void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
     delim=strchr(cursor,' ');
     if(delim==NULL) delim=strchr(cursor,',');
     if(delim==NULL) delim=strchr(cursor,';');
-    if(delim!=NULL){
-      saveDelim=*delim;
-      *delim=0;
-      }
+    if(delim==NULL) delim=strchr(cursor,0);
+    saveDelim=*delim;
+    *delim=0;
     if(strcmp(cursor,"trace")==0){trace=1;}
     else if(strcmp(cursor,"dump")==0){trace=1;dump=1;}
     else if(strcmp(cursor,"silent")==0) echo=0; 
-    if(delim!=NULL){
-      *delim=saveDelim;
-      cursor=delim;
-      while(*cursor==' ' || *cursor==',') cursor++;
-      }
-    else cursor=strchr(cursor,0);
+    *delim=saveDelim;
+    cursor=delim;
+    if(*cursor==',') cursor++;
+    while(*cursor==' ' || *cursor==',') cursor++;
     }
   server=malloc(sizeof(NB_MOD_Server));
   server->prefix=prefix;
@@ -415,19 +412,16 @@ static void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
     delim=strchr(cursor,' ');
     if(delim==NULL) delim=strchr(cursor,',');
     if(delim==NULL) delim=strchr(cursor,';');
-    if(delim!=NULL){
-      saveDelim=*delim;
-      *delim=0;
-      }
+    if(delim==NULL) delim=strchr(cursor,0);
+    saveDelim=*delim;
+    *delim=0;
     if(strcmp(cursor,"trace")==0){trace=1;}
     else if(strcmp(cursor,"dump")==0){trace=1;dump=1;}
     else if(strcmp(cursor,"silent")==0) echo=0;
-    if(delim!=NULL){
-      *delim=saveDelim;
-      cursor=delim;
-      while(*cursor==' ' || *cursor==',') cursor++;
-      }
-    else cursor=strchr(cursor,0);
+    *delim=saveDelim;
+    cursor=delim;
+    if(*cursor==',') cursor++;
+    while(*cursor==' ' || *cursor==',') cursor++;
     }
   client=malloc(sizeof(NB_MOD_Server));
   client->prefix=prefix;

@@ -332,7 +332,7 @@ static void *baselineConstruct(nbCELL context,BTreeSkill *skillHandle,nbCELL arg
   nbSET  argSet;
   char *directory;
   double weight=0.5,tolerance=3,cycle=7*24*60,periods=24;
-  double interval;
+  double interval=60;
 
   argSet=nbListOpen(context,arglist);
   cell=nbListGetCellValue(context,&argSet);

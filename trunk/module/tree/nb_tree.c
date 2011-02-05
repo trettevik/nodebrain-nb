@@ -637,7 +637,7 @@ static void treeStore(nbCELL context,BTreeSkill *skillHandle,BTree *tree,nbCELL 
   char buffer[NB_BUFSIZE],*bufend=buffer+sizeof(buffer),*cursor=text,filename[512];
   FILE *file;
   int len;
-  BTreeNode *node;
+  BTreeNode *node=NULL;
   nbSET argSet;
   nbCELL argCell;
   void *ptr;

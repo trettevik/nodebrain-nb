@@ -584,7 +584,7 @@ void analyzeFlows(nbCELL context,NB_MOD_Netflow *netflow,unsigned int address){
   unsigned int  savf=0,davf=0,spvf=0,dpvf=0,ssvf=0,dsvf=0;
   unsigned char maskbit[8]={1,2,4,8,16,32,64,128};
   unsigned char savfbyte[8192],davfbyte[8192],spvfbyte[8192],dpvfbyte[8192],ssvfbyte[256],dsvfbyte[256];
-  unsigned int  bit,byte,proto,port;
+  unsigned int  bit,byte,proto=0,port=0;
   char cmd[1024],caddr[16],rcaddr[16],ctype[256];
 
   atime=time(NULL);
@@ -1016,66 +1016,57 @@ void *netflowConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *tex
   char *cursor=text,*delim,saveDelim;
   double r,d;
   unsigned int port;
-  int type,trace=0,dump=0,format=0,null=0;
+  int trace=0,dump=0,format=0,null=0;
   int hfile;
   char *hfilename;
 
   argSet=nbListOpen(context,arglist);
   cell=nbListGetCellValue(context,&argSet);
+  if(!cell || nbCellGetType(context,cell)!=NB_TYPE_REAL){
+    nbLogMsg(context,0,'E',"Expecting numeric UDP port number as first argument");
+    return(NULL);
+    }
+  r=nbCellGetReal(context,cell);
+  nbCellDrop(context,cell);
+  port=(unsigned int)r;
+  d=port;
+  if(d!=r || d==0){
+    nbLogMsg(context,0,'E',"Expecting non-zero integer UDP port number as first argument");
+    return(NULL);
+    }
+  cell=nbListGetCellValue(context,&argSet);
+  if(!cell || nbCellGetType(context,cell)!=NB_TYPE_STRING){
+    nbLogMsg(context,0,'E',"Expecting string argument for history file name");
+    return(NULL);
+    }
+  hfilename=nbCellGetString(context,cell);
+  hfilename=strdup(hfilename);
+  nbCellDrop(context,cell);
+  hfile=openHistory(hfilename,7*24,sizeof(struct NB_MOD_NETFLOW_PERIOD));
+  if(hfile<0){
+    nbLogMsg(context,0,'E',"Unable to open history file");
+    return(NULL);
+    }
+  cell=nbListGetCellValue(context,&argSet);
   if(cell!=NULL){
-    type=nbCellGetType(context,cell);
-    if(type!=NB_TYPE_REAL){
-      nbLogMsg(context,0,'E',"Expecting numeric UDP port number as first argument");
-      return(NULL);
-      }
-    r=nbCellGetReal(context,cell);
-    nbCellDrop(context,cell);
-    port=(unsigned int)r;
-    d=port;
-    if(d!=r || d==0){
-      nbLogMsg(context,0,'E',"Expecting non-zero integer UDP port number as first argument");
-      return(NULL);
-      }
-    cell=nbListGetCellValue(context,&argSet);
-    if(cell!=NULL){
-      type=nbCellGetType(context,cell);
-      if(type!=NB_TYPE_STRING){
-        nbLogMsg(context,0,'E',"Expecting string argument for history file name");
-        return(NULL);
-        }
-      hfilename=nbCellGetString(context,cell);
-      hfilename=strdup(hfilename);
-      nbCellDrop(context,cell);
-      hfile=openHistory(hfilename,7*24,sizeof(struct NB_MOD_NETFLOW_PERIOD));
-      if(hfile<0){
-        nbLogMsg(context,0,'E',"Unable to open history file");
-        return(NULL);
-        }
-      cell=nbListGetCellValue(context,&argSet);
-      if(cell!=NULL){
-        nbLogMsg(context,0,'W',"Unexpected argument - third argument and beyond ignored");
-        }
-      }
+    nbLogMsg(context,0,'W',"Unexpected argument - third argument and beyond ignored");
     }
   while(*cursor==' ') cursor++;
   while(*cursor!=';' && *cursor!=0){
     delim=strchr(cursor,' ');
     if(delim==NULL) delim=strchr(cursor,',');
     if(delim==NULL) delim=strchr(cursor,';');
-    if(delim!=NULL){
-      saveDelim=*delim;
-      *delim=0;
-      }
+    if(delim==NULL) delim=strchr(cursor,0);
+    saveDelim=*delim;
+    *delim=0;
     if(strcmp(cursor,"dump")==0){trace=1;dump=1;}
     else if(strcmp(cursor,"format")==0){trace=1;format=1;}
     else if(strcmp(cursor,"trace")==0) trace=1; 
     else if(strcmp(cursor,"null")==0) null=1; 
-    if(delim!=NULL){
-      *delim=saveDelim;
-      cursor=delim;
-      while(*cursor==' ' || *cursor==',') cursor++;
-      }
-    else cursor=strchr(cursor,0);
+    *delim=saveDelim;
+    cursor=delim;
+    if(*cursor==',') cursor++;
+    while(*cursor==' ') cursor++;
     }
   netflow=malloc(sizeof(NB_MOD_Netflow));
   netflow->socket=0;

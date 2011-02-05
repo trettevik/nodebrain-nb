@@ -100,8 +100,9 @@ AC_CHECK_FILE([../lib/libnb.la],[AC_SUBST([NB_LIBRARY_PATH],[../../../lib/.libs]
 
 AC_SUBST([NB_MOD_PATH],[../.libs])
 
-CFLAGS="-Wall -I/usr/local/include -I/usr/local/ssl/include"
-LDFLAGS="-L/usr/local/ssl/lib"
+CFLAGS="-Wall $CFLAGS"
+#CFLAGS="-Wall -I/usr/local/include -I/usr/local/ssl/include"
+#LDFLAGS="-L/usr/local/ssl/lib"
 
 #=====================================
 # Checks for header files.

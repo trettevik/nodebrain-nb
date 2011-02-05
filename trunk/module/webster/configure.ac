@@ -87,8 +87,9 @@ AC_SUBST([NB],[../../../../lib/.libs/lt-nb])
 #  AC_PATH_PROGS([NB],[nb-0.7.5 nb-0.7.4 nb-0.7.3 nb-0.7.2 nb-0.7.1 nb])
 #fi
 
-CFLAGS="-I/usr/local/include -I/usr/local/ssl/include"
-LDFLAGS="-L/usr/local/ssl/lib"
+CFLAGS="-Wall $CFLAGS"
+#CFLAGS="-I/usr/local/include -I/usr/local/ssl/include"
+#LDFLAGS="-L/usr/local/ssl/lib"
 
 #=====================================
 # Checks for libraries.

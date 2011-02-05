@@ -190,7 +190,7 @@ static nbWebster *websterNew(nbCELL context,char *cursor,char *msg){
     free(webster);
     return(NULL);
     }
-  *cursor++;
+  cursor++;
   inCursor=cursor;
   while(*cursor>='0' && *cursor<='9') cursor++;
   if(*cursor!=0){
@@ -272,6 +272,7 @@ static void websterPut(nbCELL context,nbSession *session,char *text){
     }
   }
 
+/*
 // Put chunked text - each chunk is prefixed with a length and a final chuck of 0 indicated the end.
 static void websterPutChunk(nbCELL context,nbSession *session,char *text){
   int len=strlen(text);
@@ -286,6 +287,7 @@ static void websterPutChunk(nbCELL context,nbSession *session,char *text){
   websterPut(context,session,chunksize);
   websterPut(context,session,text);
   }
+*/
 
 static int websterRead(nbCELL context,nbSession *session){
   int len;
@@ -496,7 +498,7 @@ static void websterError(nbCELL context,nbSession *session,char *problem,char *v
   char html[1024];
 
   sprintf(html,
-    "<p><table width='100%' border='1' bgcolor='pink'>"
+    "<p><table width='100%%' border='1' bgcolor='pink'>"
     "<tr><td><b>%s</b></td></tr>"
     "<tr><td><pre>%s</pre></td></tr></table>\n",
     problem,value);
@@ -621,7 +623,6 @@ static void websterBookmark(nbCELL context,nbSession *session,char *cursor){
 static void websterLinkDir(nbCELL context,nbSession *session,char *path);
 
 static void websterLink(nbCELL context,nbSession *session,char *path){
-  nbWebster *webster=session->webster;
   char *head=
     "<p><h1>Bookmarks <a href=':help?bookmarks'><img src='webster/help.gif' border=0></a></h1>\n"
     "<p><table>\n";
@@ -648,7 +649,6 @@ static void websterLink(nbCELL context,nbSession *session,char *path){
 // Display a regular file
 
 static void websterFile(nbCELL context,nbSession *session,char *name){
-  nbWebster *webster=session->webster;
   char text[NB_BUFSIZE+1],*end,*filename;
   char buffer[NB_BUFSIZE],*bufcur,*bufend;
   int fildes,len,maxsub=6;
@@ -667,7 +667,7 @@ static void websterFile(nbCELL context,nbSession *session,char *name){
   while((len=read(fildes,text,sizeof(text)-1))>0){
     end=text+len;
     *end=0;
-    cursor=text;
+    cursor=(unsigned char *)text;
     bufcur=buffer;
     bufend=buffer+sizeof(buffer)-maxsub;   // stay back enough to make largest substitution
     while(*cursor){
@@ -701,7 +701,6 @@ static void websterFile(nbCELL context,nbSession *session,char *name){
 // Display a note file
 
 static void websterNote(nbCELL context,nbSession *session,char *name){
-  nbWebster *webster=session->webster;
   char text[4097],*end;
   int fildes,len;
 
@@ -741,7 +740,7 @@ static char *websterGetFileType(mode_t mode){
 
 #endif
 
-static char *websterLinkDirRow(nbCELL context,nbSession *session,char *class,int row,char *path){
+void websterLinkDirRow(nbCELL context,nbSession *session,char *class,int row,char *path){
   char text[1024];
   char *name=path+strlen(path)-1;
   while(name>=path && *name!='/') name--;
@@ -765,10 +764,9 @@ static void websterLinkDir(nbCELL context,nbSession *session,char *path){
   DIR *dir;
   struct dirent *ent;
   struct stat filestat;      // file statistics
-  int i,n,len;
+  int i,len;
   char text[NB_BUFSIZE];
   char *class,*cursor,*delim;
-  char *filename,*extension;
   struct FILE_ENTRY{
     struct FILE_ENTRY *next;
     char   name[512];
@@ -877,7 +875,6 @@ static void websterLinkDir(nbCELL context,nbSession *session,char *path){
 //   NOTE: we use opendir,readdir,closedir instead of scandir for better portability
 
 static void websterDir(nbCELL context,nbSession *session,char *name){
-  nbWebster *webster=session->webster;
 #if defined(WIN32)
   HANDLE dir;
   WIN32_FIND_DATA info;
@@ -891,7 +888,7 @@ static void websterDir(nbCELL context,nbSession *session,char *name){
   char filetime[128];
   char *filetype;
   struct tm *tm;
-  int i,n,len;
+  int i,len;
   char text[1024];
   char *class;
   char *filename,*extension;
@@ -904,7 +901,7 @@ static void websterDir(nbCELL context,nbSession *session,char *name){
   struct FILE_ENTRY *rootent;
   struct FILE_ENTRY *curent;
   struct FILE_ENTRY *nextent;
-  struct FILE_ENTRY *rootdocent,*curdocent,*nextdocent;
+  struct FILE_ENTRY *rootdocent,*curdocent;
 
   rootent=malloc(sizeof(struct FILE_ENTRY));
   *rootent->name=0;
@@ -976,7 +973,7 @@ static void websterDir(nbCELL context,nbSession *session,char *name){
       filetype=websterGetFileType(filestat.st_mode);
       tm=localtime(&filestat.st_mtime);
       sprintf(filetime,"<table cellpadding=0><tr><td>%4.4d-%2.2d-%2.2d</td><td>&nbsp;%2.2d:%2.2d</td></tr></table>\n",tm->tm_year+1900,tm->tm_mon+1,tm->tm_mday,tm->tm_hour,tm->tm_min);
-      sprintf(filesize,"%d",filestat.st_size);
+      sprintf(filesize,"%d",(int)filestat.st_size);
       for(curdocent=rootdocent->next;curdocent!=NULL && strcmp(curent->name,curdocent->name)!=0;curdocent=curdocent->next);
       if(curdocent!=NULL) havenote=1;
       } 
@@ -1036,7 +1033,6 @@ static char *websterGetLinkedPath(char *html,char *path){
 
 static void websterPath(nbCELL context,nbSession *session,char *name){
   struct stat filestat;
-  char heading[512+32];
   char text[NB_BUFSIZE],whtml[NB_BUFSIZE];
   char filesize[16];
   char filetime[17];
@@ -1063,7 +1059,7 @@ static void websterPath(nbCELL context,nbSession *session,char *name){
   if(!*filetype) filetype="regular";
   tm=localtime(&filestat.st_mtime);
   sprintf(filetime,"%4.4d-%2.2d-%2.2d %2.2d:%2.2d\n",tm->tm_year+1900,tm->tm_mon+1,tm->tm_mday,tm->tm_hour,tm->tm_min);
-  sprintf(filesize,"%d",filestat.st_size);
+  sprintf(filesize,"%d",(int)filestat.st_size);
   sprintf(text,
     "<p><table>"
     "<tr><th>Modified</th><th>Size</th><th>Type</th><th>Path</th></tr>\n"
@@ -1093,7 +1089,6 @@ static void websterPath(nbCELL context,nbSession *session,char *name){
 */
 
 static void websterHelp(nbCELL context,nbSession *session,char *topic){
-  nbWebster *webster=session->webster;
   char *html;
   static char *htmlHelp=
     "<p><h1>Help <a href=':help?help'><img src='webster/help.gif' border=0></a></h1>\n"
@@ -1198,7 +1193,6 @@ static void websterHelp(nbCELL context,nbSession *session,char *topic){
   }
 
 static void websterContentHeading(nbCELL context,nbSession *session,char *code,char *type,char *subtype,int length){
-  nbWebster *webster=session->webster;
   char buffer[1024];
   char ctimeCurrent[32],ctimeExpires[32];
   time_t currentTime;
@@ -1231,7 +1225,7 @@ static void websterContentHeading(nbCELL context,nbSession *session,char *code,c
 
 static void websterHeading(nbCELL context,nbSession *session){
   nbWebster *webster=session->webster;
-  char ctimeCurrent[32],ctimeExpires[32];
+  char ctimeCurrent[32];
   time_t currentTime;
   static char *staticHeading=
     "<link rel='shortcut icon' href='nb.ico'>\n"
@@ -1310,6 +1304,7 @@ static void websterFooting(nbCELL context,nbSession *session){
   websterPut(context,session,html); 
   }
 
+/*
 static void websterDisplayHomePageForm(nbCELL context,nbSession *session){
   static char *html=
     "<p><h1>Webster Home Page Form</h1>\n"
@@ -1323,10 +1318,11 @@ static void websterDisplayHomePageForm(nbCELL context,nbSession *session){
     "<p><b>Description</b>\n"
     "<p>Enter a one or two paragraph description of the agent or application.\n"
     "<p><textarea rows=10 cols=100 name='title' title='Enter one paragraph description.'></textarea>"
-    "<p><input type=submit value='Submit'>";
+    "<p><input type=submit value='Submit'>"
     "</form>";
   websterPut(context,session,html); 
   }
+*/
 
 /*
 *  Display a page from the Webster content directory.
@@ -1437,9 +1433,7 @@ static int cgiWriter(nbPROCESS process,int pid,void *processSession){
 
 static int websterCgi(nbCELL context,nbSession *session,char *file,char *queryString){
   nbWebster *webster=session->webster;
-  FILE *pipe;
   char buf[NB_BUFSIZE],dir[2048],*cursor,*delim,value[512];
-  int  rc;
   
   // set environment variables for the cgi program
   setenv("SERVER_SOFTWARE","NodeBrain Webster/0.7.0",1);
@@ -1467,8 +1461,9 @@ static int websterCgi(nbCELL context,nbSession *session,char *file,char *querySt
       }
     }
   else if(session->method==NB_WEBSTER_METHOD_POST){
-    char *buffer=(char *)session->channel->buffer;
-    int len,expect;
+    //char *buffer=(char *)session->channel->buffer;
+    //int expect;
+    int len;
     setenv("REQUEST_METHOD","POST",1);
     nbLogMsg(context,0,'T',"CGI Post request: %s",session->command);
 /*
@@ -1545,7 +1540,6 @@ static int websterCgi(nbCELL context,nbSession *session,char *file,char *querySt
 * an industrial web server is not convenient. 
 */
 static void websterLittleWebServer(nbCELL context,nbSession *session){
-  nbWebster *webster=session->webster;
   char *filename;
   struct stat filestat;      // file statistics
   int fildes,len;
@@ -1724,7 +1718,7 @@ static void websterRequirePassword(nbCELL context,nbSession *session){
     "Connection: close\r\n"
     "Content-Length: %d\r\n"
     "Content-Type: text/html; charset=iso-8859-1\r\n\r\n",
-    strlen(html));
+    (int)strlen(html));
   websterPut(context,session,header);
   websterPut(context,session,html);
   websterPut(context,session,NULL);
@@ -1796,7 +1790,6 @@ static void websterRequest(nbCELL context,int socket,void *handle){
   static int count=0;
   int len;
   char *cursor;
-  char strbuf[512];
 
   // initialize some stuff for this request
   session->role=NB_WEBSTER_ROLE_REJECT;   // we may not need to redo this for every request
@@ -1917,13 +1910,11 @@ static void websterShutdown(nbCELL context,nbSession *session,char *error){
 static void websterAccept(nbCELL context,int websterSocket,void *handle){
   nbWebster *webster=handle;
   NB_IpChannel *channel;
-  static time_t now,until=0;
-  static long count=0,max=10;  /* accept 10 connections per second */
   SSL *ssl;
-  X509 *clientCertificate;
-  int len,rc;
+  //X509 *clientCertificate;
+  int rc;
   char *buffer;
-  char *x509str;
+  //char *x509str;
   nbSession *session;
 
   channel=nbIpAlloc();  // get a channel so we can use chaccept for now
@@ -1999,11 +1990,9 @@ static void *websterConstruct(nbCELL context,void *skillHandle,nbCELL arglist,ch
   nbWebster *webster;
   nbCELL cell=NULL;
   nbSET argSet;
-  char *cursor=text;
-  int type,trace=0,dump=0,format=0,null=0;
+  int type;
   char *websterSpec;
   char msg[1024];
-  //char cmd[1024];
 
   //nbLogMsg(context,0,'T',"websterConstruct: called");
   argSet=nbListOpen(context,arglist);
@@ -2035,12 +2024,12 @@ static void *websterConstruct(nbCELL context,void *skillHandle,nbCELL arglist,ch
 
 static int websterVerify(int preverify_ok,X509_STORE_CTX *ctx){
   SSL *ssl;
-  X509 *clientCertificate;
+  //X509 *clientCertificate;
   nbWebster *webster;
   nbSession *session;
-  char *x509str;
+  //char *x509str;
   nbCELL context;
-  char buffer[2048];
+  //char buffer[2048];
 
   ssl=X509_STORE_CTX_get_ex_data(ctx,SSL_get_ex_data_X509_STORE_CTX_idx());
   session=SSL_get_ex_data(ssl,0);  // note: we believe we know the index number here---be careful
@@ -2144,7 +2133,7 @@ static int websterLoadAccessList(nbCELL context,nbWebster *webster,char *filenam
 static int websterEnable(nbCELL context,void *skillHandle,nbWebster *webster){
   SSL_METHOD *method;
   SSL_CTX    *ctx=NULL;
-  char ctxContext[1024];
+  unsigned char ctxContext[1024];
   int dataIndex;
   char *transport;
   char *protocol="HTTPS";
@@ -2185,9 +2174,9 @@ static int websterEnable(nbCELL context,void *skillHandle,nbWebster *webster){
 
   // consider including hostname in the context
   //sprintf(ctxContext,"Webster:%s",webster->dir);
-  sprintf(ctxContext,"Webster:%s","testing");
+  sprintf((char *)ctxContext,"Webster:%s","testing");
   //nbLogMsg(context,0,'T',"ctxContext=%s",ctxContext);
-  if(!SSL_CTX_set_session_id_context(ctx,ctxContext,strlen(ctxContext))){
+  if(!SSL_CTX_set_session_id_context(ctx,ctxContext,strlen((char *)ctxContext))){
     nbLogMsg(context,0,'E',"Unable to set the session id context");
     return(1);
     }

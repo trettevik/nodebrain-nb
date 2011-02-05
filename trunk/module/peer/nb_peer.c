@@ -1077,9 +1077,9 @@ extern void *queueBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arg
 //=====================================================================
 // Commands
 
-void peerCmdShow(struct NB_CELL *context,void *handle,char *verb,char *cursor){
+int peerCmdShow(struct NB_CELL *context,void *handle,char *verb,char *cursor){
   nbTermPrintGloss(NULL,(nbCELL)brainC);
-  //return(0);
+  return(0);
   }
 
 //=====================================================================

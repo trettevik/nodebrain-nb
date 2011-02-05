@@ -191,60 +191,51 @@ void *consoleConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *tex
   NB_MOD_Console *console;
   nbCELL cell=NULL;
   nbSET argSet;
-  char *cursor=text,*delim,saveDelim;
+  char *cursor=text,*delim,saveDelim=0;
   unsigned int d,port;
   double r;
-  int type,trace=0;
+  int trace=0;
   char *dirnameP,dirname[256];
 
   argSet=nbListOpen(context,arglist);
   cell=nbListGetCellValue(context,&argSet);
+  if(!cell || nbCellGetType(context,cell)!=NB_TYPE_REAL){
+    nbLogMsg(context,0,'E',"Expecting numeric TCP port number as first argument");
+    return(NULL);
+    }
+  r=nbCellGetReal(context,cell);
+  nbCellDrop(context,cell);
+  port=(unsigned int)r;
+  d=port;
+  if(d!=r || d==0){
+    nbLogMsg(context,0,'E',"Expecting non-zero integer TCP port number as first argument");
+    return(NULL);
+    }
+  cell=nbListGetCellValue(context,&argSet);
+  if(!cell || nbCellGetType(context,cell)!=NB_TYPE_STRING){
+    nbLogMsg(context,0,'E',"Expecting string argument for directory name");
+    return(NULL);
+    }
+  dirnameP=nbCellGetString(context,cell);
+  strncpy(dirname,dirnameP,255);
+  nbCellDrop(context,cell);
+  cell=nbListGetCellValue(context,&argSet);
   if(cell!=NULL){
-    type=nbCellGetType(context,cell);
-    if(type!=NB_TYPE_REAL){
-      nbLogMsg(context,0,'E',"Expecting numeric TCP port number as first argument");
-      return(NULL);
-      }
-    r=nbCellGetReal(context,cell);
-    nbCellDrop(context,cell);
-    port=(unsigned int)r;
-    d=port;
-    if(d!=r || d==0){
-      nbLogMsg(context,0,'E',"Expecting non-zero integer TCP port number as first argument");
-      return(NULL);
-      }
-    cell=nbListGetCellValue(context,&argSet);
-    if(cell!=NULL){
-      type=nbCellGetType(context,cell);
-      if(type!=NB_TYPE_STRING){
-        nbLogMsg(context,0,'E',"Expecting string argument for directory name");
-        return(NULL);
-        }
-      dirnameP=nbCellGetString(context,cell);
-      strncpy(dirname,dirnameP,255);
-      nbCellDrop(context,cell);
-      cell=nbListGetCellValue(context,&argSet);
-      if(cell!=NULL){
-        nbLogMsg(context,0,'W',"Unexpected argument - third argument and above ignored");
-        }
-      }
+    nbLogMsg(context,0,'W',"Unexpected argument - third argument and above ignored");
     }
   while(*cursor==' ') cursor++;
   while(*cursor!=';' && *cursor!=0){
     delim=strchr(cursor,' ');
     if(delim==NULL) delim=strchr(cursor,',');
     if(delim==NULL) delim=strchr(cursor,';');
-    if(delim!=NULL){
-      saveDelim=*delim;
-      *delim=0;
-      }
+    if(delim==NULL) delim=strchr(cursor,0);
+    saveDelim=*delim;
+    *delim=0;
     if(strcmp(cursor,"trace")==0) trace=1; 
-    if(delim!=NULL){
-      *delim=saveDelim;
-      cursor=delim;
-      while(*cursor==' ' || *cursor==',') cursor++;
-      }
-    else cursor=strchr(cursor,0);
+    *delim=saveDelim;
+    cursor=delim;
+    if(*cursor==',') cursor++;
+    while(*cursor==' ') cursor++;
     }
   console=malloc(sizeof(NB_MOD_Console));
   console->sessions=NULL;
