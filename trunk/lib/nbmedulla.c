@@ -585,6 +585,9 @@ int nbMedullaWaitEnable(int type,nbFILE fildes,void *session,NB_MEDULLA_WAIT_HAN
     case 0: setP=&nb_medulla->readfds;   break;
     case 1: setP=&nb_medulla->writefds;  break;
     case 2: setP=&nb_medulla->exceptfds; break;
+    default: 
+      printf("nbMedullaWaitEnable: Logic error - invalid medulla file handler type=%d\n",medfile->type);
+      exit(NB_EXITCODE_FAIL);
     }
   FD_SET(medfile->fildes,setP);
   // 2010-01-02 eat - see if we can make write waits return when the peer closes the connection
@@ -606,6 +609,9 @@ int nbMedullaWaitDisable(int type,nbFILE fildes){
       case 0: setP=&nb_medulla->readfds;   break;
       case 1: setP=&nb_medulla->writefds;  break;
       case 2: setP=&nb_medulla->exceptfds; break;
+      default:
+        printf("nbMedullaWaitDisable: Logic error - invalid medulla file handler type=%d\n",handler->type);
+        exit(NB_EXITCODE_FAIL);
       }
     FD_CLR((unsigned int)handler->fildes,setP);
     // 2010-01-02 eat - see if we can make write waits return when the peer closes the connection
@@ -735,6 +741,9 @@ int nbMedullaPulse(int serve){
             case 0: setP=&nb_medulla->readfds;   break;
             case 1: setP=&nb_medulla->writefds;  break;
             case 2: setP=&nb_medulla->exceptfds; break;
+            default:
+              printf("nbMedullaPulse: Logic error - invalid medulla file handler type=%d\n",handler->type);
+              exit(NB_EXITCODE_FAIL);
             }
           flags=fcntl(handler->fildes,F_GETFL);
           if(flags==-1 && errno==EBADF){
@@ -756,6 +765,9 @@ int nbMedullaPulse(int serve){
           case 0: setP=&nb_medulla->readfds;   break;
           case 1: setP=&nb_medulla->writefds;  break;
           case 2: setP=&nb_medulla->exceptfds; break;
+          default:
+            printf("nbMedullaPulse: Logic error - invalid medulla file handler type=%d\n",handler->type);
+            exit(NB_EXITCODE_FAIL);
           }
         // call handler for any fildes set for response, and flag for removal on non-zero return code
         if(FD_ISSET(handler->fildes,setP) && (handler->handler)(handler->session)) handler->close=1;
@@ -772,6 +784,9 @@ int nbMedullaPulse(int serve){
         case 0: setP=&nb_medulla->readfds;   break;
         case 1: setP=&nb_medulla->writefds;  break;
         case 2: setP=&nb_medulla->exceptfds; break;
+        default:
+          printf("nbMedullaPulse: Logic error - invalid medulla file handler type=%d\n",handler->type);
+          exit(NB_EXITCODE_FAIL);
         }
       if(handler->close){                // remove handlers flagged for removal
         FD_CLR((unsigned int)handler->fildes,setP);
@@ -1545,7 +1560,7 @@ nbPROCESS nbMedullaProcessOpen(
       }
     while(*cursor==' ') cursor++;
     }
-  else *user=0,*group;
+  else *user=0,*group=0;
 
   // output
   if((outspec=nbMedullaParseFileSpec(outfilename,&cursor,msgbuf))<0) return(NULL);

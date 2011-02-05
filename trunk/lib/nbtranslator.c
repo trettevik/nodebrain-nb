@@ -518,7 +518,7 @@ char *nbProjectionEncodeLiteral(char *bufcur,char *cursor,int len){
 int nbProjectionEncode(char *buffer,int buflen,struct REGEXP_STACK *reStackP,int nsub[],int level,char *source){
   char *subcur,*bufcur=buffer,*cursor=source,*cursave;
   char exp,find,replace;
-  int len,i,reIndex=reStackP->count-1;
+  int len,i,reIndex=reStackP->count-1,initialReIndex=reIndex;
   char symid,ident[512];
 
   //outMsg(0,'T',"Encoding projection: %s",source);
@@ -566,7 +566,7 @@ int nbProjectionEncode(char *buffer,int buflen,struct REGEXP_STACK *reStackP,int
             i=pcre_get_stringnumber(reStackP->regexp[reIndex]->re,ident);
             }
           if(i<0){
-            outMsg(0,'E',"Pattern name '%s' not defined in regex: %s",ident,reStackP->regexp[reIndex]->string->value);
+            outMsg(0,'E',"Pattern name '%s' not defined in scope of regex: %s",ident,reStackP->regexp[initialReIndex]->string->value);
             return(-1);
             }
           }

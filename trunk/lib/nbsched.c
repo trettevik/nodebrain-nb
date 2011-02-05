@@ -191,7 +191,7 @@ struct SCHED *newSched(nbCELL context,char symid,char *source,char **delim,char 
   int r=1;  /* temp relation <0, 0, >0 */
   time_t interval;
   time_t duration;
-  struct SCHED *sched,**schedP;
+  struct SCHED *sched,**schedP=NULL;
   struct TYPE *schedType;
   struct tcDef *tcdef;          /* Time condition definition */
   struct tcQueue *queue=NULL;   /* Time queue */
@@ -216,7 +216,7 @@ struct SCHED *newSched(nbCELL context,char symid,char *source,char **delim,char 
     for(sched=*schedP;sched!=NULL && sched->cell.object.type==schedType && (r=strcmp(sched->symbol->value,source))>0;sched=(struct SCHED *)sched->cell.object.next){
       schedP=(struct SCHED **)&(sched->cell.object.next);
       }
-	  if(sched!=NULL && r==0) return(sched);
+    if(sched && r==0) return(sched);
     }
   
   interval=0;

@@ -595,7 +595,7 @@ void nbTermAssign(NB_Term *term,NB_Object *new){
 *  Define a new term.
 */
 NB_Term *nbTermNew(NB_Term *context,char *ident,void *def){
-  NB_Term *term;
+  NB_Term *term=NULL;
   //NB_Term **termP;
   NB_String *word=NULL;
   NB_TreePath treePath;

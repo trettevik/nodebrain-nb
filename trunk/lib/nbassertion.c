@@ -140,8 +140,8 @@ void assert(NB_Link *member,int mode){
   while(member!=NULL){
     assertion=(struct ASSERTION *)member->object;
     object=assertion->object;
+    term=(NB_Term *)assertion->target;
     if(assertion->target->type==termType){
-      term=(NB_Term *)assertion->target;
       if(assertion->cell.object.type==assertTypeDef)
         nbTermAssign(term,object);
       else if(assertion->cell.object.type==assertTypeRef){

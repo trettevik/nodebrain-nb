@@ -439,7 +439,7 @@ void showProcessList(){
 */
 int nbCmdShow(nbCELL context,void *handle,char *verb,char * cursor){
   char symid,optid,ident[1024],*cursave;
-  NB_Term *term;
+  NB_Term *term=NULL;
   NB_Cell *ref,*def,*val;
   int len;
 

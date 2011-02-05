@@ -62,6 +62,7 @@ struct NB_VERB{
 
 #define NB_VERB_LOCAL 1   // verb is interpreted locally - not sent to peers
 
+void nbVerbInit(NB_Stem *stem);
 void nbVerbPrint(struct NB_VERB *verb);
 void nbVerbPrintAll(nbCELL context);
 

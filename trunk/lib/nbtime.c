@@ -1313,7 +1313,7 @@ tc tcParseFunction(char **source,char *msg){
   char *cursor,*name=*source,mark;
   bfi (*operation)()=tcSimple;
   void *right=NULL;
-  struct tcFunction *function;
+  struct tcFunction *function=NULL;
   NB_Term *term;
 
   /* get the name - restricted identifier */

@@ -195,7 +195,7 @@
 * Index Routines
 **************************************************************************/       
 struct bfiindex *bfiIndexParse(char *s){
-  int type,min=32000,max=-32000;
+  int type=0,min=32000,max=-32000;
   struct bfiindex *top=NULL,*entry;  
   char *cursor=s,*comma,element[60],sfrom[20],sto[20];
     

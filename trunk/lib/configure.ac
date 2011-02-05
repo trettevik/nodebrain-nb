@@ -154,53 +154,54 @@ AC_CHECK_FUNCS([alarm gethostbyaddr gethostbyname inet_ntoa memchr memset regcom
 # define a release date variable
 AC_DEFINE_UNQUOTED(NB_COMPILE_PLATFORM,"$host",[Define compile platform])
 
-CFLAGS="-Wall -I/usr/local/include -I/usr/local/ssl/include"
-LDFLAGS="-L/usr/local/ssl/lib"
+CFLAGS="-Wall $CFLAGS"
+#CFLAGS="-Wall -I/usr/local/include -I/usr/local/ssl/include"
+#LDFLAGS="-L/usr/local/ssl/lib"
 case "$host" in
   *-netbsd*)
     AC_DEFINE(NETBSD,,[Define if NetBSD])
     AC_DEFINE(ANYBSD,,[Define if any BSD])
-    CFLAGS="${CFLAGS} -rdynamic"
+    #CFLAGS="${CFLAGS} -rdynamic"
     ;;
   *-openbsd*)
     AC_DEFINE(OPENBSD,,[Define if OpenBSD])
     AC_DEFINE(ANYBSD,,[Define if any BSD])
-    CFLAGS="${CFLAGS} -rdynamic"
-    LDFLAGS="${LDFLAGS} -Wl,-E"
+    #CFLAGS="${CFLAGS} -rdynamic"
+    #LDFLAGS="${LDFLAGS} -Wl,-E"
     ;;
   *-sgi-irix*)
     AC_DEFINE(IRIX,,[Define if IRIX])
     ;;
   *-solaris*)
     AC_DEFINE(SOLARIS,,[Define if SOLARIS])
-    LDFLAGS="${LDFLAGS} -ldl -lnsl -lsocket"
+    #LDFLAGS="${LDFLAGS} -ldl -lnsl -lsocket"
     ;;
   *-sunos*)
     AC_DEFINE(SUNOS,,[Define if SUNOS])
     ;;
   *-linux*)
     AC_DEFINE(LINUX,,[Define if LINUX])
-    CFLAGS="${CFLAGS} -rdynamic"
+    #CFLAGS="${CFLAGS} -rdynamic"
     LDFLAGS="${LDFLAGS} -ldl"
     ;;
   *-hpux*)
     AC_DEFINE(HPUX,,[Define if HPUX])
-    LDFLAGS="${LDFLAGS} -ldld -Wl,-E"
+    #LDFLAGS="${LDFLAGS} -ldld -Wl,-E"
     ;;
   *-freebsd*)
     AC_DEFINE(FREEBSD,,[Define if FREEBSD])
     AC_DEFINE(ANYBSD,,[Define if any BSD])
-    CFLAGS="${CFLAGS} -rdynamic"
+    #CFLAGS="${CFLAGS} -rdynamic"
     ;;
   *-bsdi*)
     AC_DEFINE(BSDI,,[Define if BSDI])
     AC_DEFINE(ANYBSD,,[Define if any BSD])
-    CFLAGS="${CFLAGS} -rdynamic"
+    #CFLAGS="${CFLAGS} -rdynamic"
     ;;
   *-aix*)
     AC_DEFINE(AIX,,[Define if AIX])
-    CFLAGS="${CFLAGS} -qmaxmem=8192"
-    LDFLAGS="${LDFLAGS} -ldl"
+    #CFLAGS="${CFLAGS} -qmaxmem=8192"
+    #LDFLAGS="${LDFLAGS} -ldl"
     ;;
 # <platform>-apple-darwin* or <platform>-apple-rhapsody*    
   *-apple*)

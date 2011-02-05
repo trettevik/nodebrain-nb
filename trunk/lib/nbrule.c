@@ -701,7 +701,7 @@ struct ACTION *newAction(NB_Cell *context,NB_Term *term,struct COND *cond,char p
   action->assert=assertion;
   // 2010-06-12 eat 0.8.2 - we don't grab the context in nbcmd.c when defining a rule, so we shouldn't grap it here
   //action->context=grabObjectNull(context);
-  action->context=context;
+  action->context=(struct NB_TERM *)context;
   action->command=grabObjectNull(cmd);      // action command is rest of line
   action->cmdopt=option|NB_CMDOPT_RULE;     // command option
   action->status='R';                       // ready 
