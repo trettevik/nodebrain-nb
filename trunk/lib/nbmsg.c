@@ -1361,7 +1361,7 @@ int nbMsgLogSubscribe(nbCELL context,nbMsgLog *msglog,char *name){
     }
   un_addr.sun_family=AF_UNIX;
   sprintf(un_addr.sun_path,"message/%s/%s/~.socket",msglog->cabal,msglog->nodeName);
-  if(msgTrace) outMsg(0,'T',"Cabal %s node %s sending datagram message '%s' to producer",msglog->cabal,msglog->nodeName,name);
+  if(msgTrace) outMsg(0,'T',"Cabal %s node %s sending subscription '%s' to producer",msglog->cabal,msglog->nodeName,name);
   if(sendto(sd,name,strlen(name)+1,MSG_DONTWAIT,(struct sockaddr *)&un_addr,sizeof(struct sockaddr_un))<0){
     nbLogMsg(context,0,'W',"Cabal %s node %s consumer %s subscription: %s",msglog->cabal,msglog->nodeName,name,strerror(errno));
     return(-1);
@@ -2755,9 +2755,9 @@ static int nbMsgPeerHelloConsumer(nbCELL context,nbPeer *peer,void *handle,void 
   nbLogMsg(context,0,'T',"nbMsgPeerHelloConsumer: called for node %s uri %s",msgnode->name,peer->tls->uriMap[peer->tls->uriIndex].uri);
   // include code here to check the node record
   // if bad return -1
-  nbLogMsg(context,0,'T',"verify msgcabal=%p",msgcabal);
-  nbLogMsg(context,0,'T',"verify msgcabal->mode=%p",msgcabal->mode);
-  nbLogMsg(context,0,'T',"verify msgcabal->mode=%2.2x",msgcabal->mode);
+  //nbLogMsg(context,0,'T',"verify msgcabal=%p",msgcabal);
+  //nbLogMsg(context,0,'T',"verify msgcabal->mode=%p",msgcabal->mode);
+  //nbLogMsg(context,0,'T',"verify msgcabal->mode=%2.2x",msgcabal->mode);
   if(msgcabal->mode&NB_MSG_CABAL_MODE_CLIENT){ // client
     nbLogMsg(context,0,'T',"nbMsgPeerHelloConsumer: Handing client off to nbMsgPeerStateProducer");
     nbPeerModify(context,peer,msgnode,nbMsgPeerStateProducer,nbMsgPeerConsumer,nbMsgPeerShutdown);
@@ -2803,7 +2803,7 @@ static int nbMsgCabalAcceptHelloConsumer(nbCELL context,nbPeer *peer,void *handl
   char *nodeName;
 
   if(len<0){
-    nbLogMsg(context,0,'E',"nbMsgCabalAcceptHelloConsumer: Connection %s shutting down - cabal %s node %s peer %s",peer->tls->uriMap[peer->tls->uriIndex].uri,msgcabal->cabalName,msgcabal->node->name,msgnode->name);
+    nbLogMsg(context,0,'E',"nbMsgCabalAcceptHelloConsumer: Connection %s shutting down - cabal %s node %s",peer->tls->uriMap[peer->tls->uriIndex].uri,msgcabal->cabalName,msgcabal->node->name);
     return(0);
     }
   nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloConsumer: called for cabal %s",msgcabal->cabalName);

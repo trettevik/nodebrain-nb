@@ -31,6 +31,7 @@ typedef struct NB_TLS_CONTEXT{  // TLS Context
 typedef struct NB_TLS_HANDLE{   // TLS Handle
   int option;                   // see NB_TLS_OPTION_*
   int socket;                   // socket
+  int error;                    // last error code
   unsigned char uriIndex;       // uri we are using
   unsigned char uriCount;       // number of uri values
   nbTlsUriMap uriMap[4];        // uri mapping - this will replace the next 4 attributes
@@ -65,6 +66,12 @@ typedef struct NB_TLS_HANDLE{   // TLS Handle
 #define NB_TLS_CLIENT_CERT   21  // Server certificate
 #define NB_TLS_CLIENT_CERTS  29  // Server and client certificates
 
+// Error codes
+
+#define NB_TLS_ERROR_UNKNOWN    0  // Unknown error - check errno or SSL_get_error
+#define NB_TLS_ERROR_WANT_WRITE 1  // Non-blocking - reschedule write
+#define NB_TLS_ERROR_WANT_READ  2  // Non-blocking - reschedule read
+
 // API Functions
 
 extern int tlsTrace;          // debugging trace flag for TLS routines
@@ -80,6 +87,8 @@ extern int nbTlsListen(nbTLS *tls);
 
 extern nbTLS *nbTlsAccept(nbTLS *tls);
 
+extern int nbTlsAcceptHandshake(nbTLS *tls);
+
 extern int nbTlsConnect(nbTLS *tls);
 
 extern int nbTlsReconnectIfBetter(nbTLS *tls);
@@ -90,7 +99,7 @@ extern int nbTlsConnectNonBlocking(nbTLS *tls);
 
 extern int nbTlsConnected(nbTLS *tls);
 
-extern int nbTlsHandshakeNonBlocking(nbTLS *tls);
+extern int nbTlsConnectHandshake(nbTLS *tls);
 
 extern int nbTlsRead(nbTLS *tls,char *buffer,size_t size);
 

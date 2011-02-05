@@ -32,7 +32,7 @@
 *   as variable length records.  Higher level API's can apply
 *   structure to the records.
 *
-* Synopse:
+* Synopsis:
 *
 *   nbPeer *nbPeerConstruct(nbCELL context,char *uri,nbCELL tlsContext,void *handle,
 *     int (*producer)(nbCELL context,nbPeer *peer,void *handle),
@@ -141,12 +141,9 @@ static void nbPeerWriter(nbCELL context,int sd,void *handle){
   size=peer->wloc-peer->wbuf;
   if(peerTrace) nbLogMsg(context,0,'T',"nbPeerWriter: called for sd=%d size=%d",sd,size);
   if(size){
-    //nbListenerRemoveWrite(context,sd);
-    //peer->flags&=0xff-NB_PEER_FLAG_WRITE_WAIT;
-    //return;
-    //}
     len=nbTlsWrite(peer->tls,(char *)peer->wbuf,size);
     if(len<0){
+      if(peer->tls->error==NB_TLS_ERROR_WANT_WRITE) return; // will try again later
       nbLogMsg(context,0,'E',"nbPeerWriter: nbTlsWrite failed - %s",strerror(errno));
       peer->flags|=NB_PEER_FLAG_WRITE_ERROR;
       }
@@ -190,10 +187,13 @@ static void nbPeerReader(nbCELL context,int sd,void *handle){
     nbLogMsg(context,0,'T',"nbPeerReader: data available but no consumer - removing wait");
     nbListenerRemove(context,sd);
     peer->flags&=0xff-NB_PEER_FLAG_READ_WAIT;
+    nbPeerShutdown(context,peer,-1);
+    return;
     }
   size=NB_PEER_BUFLEN-(peer->rloc-peer->rbuf);
   len=nbTlsRead(tls,(char *)peer->rloc,size);
   if(len<=0){
+    if(len<0 && tls->error==NB_TLS_ERROR_WANT_READ) return; // will try again later
     if(len==0) nbLogMsg(context,0,'I',"nbPeerReader: Peer %d %s has shutdown connection",sd,tls->uriMap[tls->uriIndex].uri);
     else nbLogMsg(context,0,'E',"nbPeerReader: Peer %d %s unable to read - %s",sd,tls->uriMap[tls->uriIndex].uri,strerror(errno));
     peer->flags|=NB_PEER_FLAG_WRITE_ERROR;
@@ -292,83 +292,81 @@ static void nbPeerConnecter(nbCELL context,int sd,void *handle){
   nbLogMsg(context,0,'T',"nbPeerConnecter: Peer %d flags=%x",sd,peer->flags);
   }
 
-static void nbPeerHandshakeReader(nbCELL context,int sd,void *handle);
 /*
-*  Handle TLS handshake when OpenSSL wants to write 
-*
-*    We should not get here without a tls pointer.
+*  Handle TLS handshake when OpenSSL wants read or write during connect 
 */
-static void nbPeerHandshakeWriter(nbCELL context,int sd,void *handle){
+static void nbPeerConnectHandshaker(nbCELL context,int sd,void *handle){
   nbPeer *peer=(nbPeer *)handle;
   int rc;
 
-  if(peerTrace) nbLogMsg(context,0,'T',"nbPeerHandshakeWriter: Peer %d flags=%x",sd,peer->flags);
+  if(peerTrace) nbLogMsg(context,0,'T',"nbPeerConnectHandshaker: called");
   if(peer->flags&NB_PEER_FLAG_WRITE_WAIT){
-    nbLogMsg(context,0,'T',"nbPeerHandshakeWriter: ready after CONNECTING_WRITE_WAIT");
     nbListenerRemoveWrite(context,sd);
     peer->flags&=0xff-NB_PEER_FLAG_WRITE_WAIT;
     }
-  if(!peer->tls->tlsx){
-    nbLogMsg(context,0,'T',"nbPeerHandshakeWriter: handing off to nbPeerConnecter 1");
-    nbListenerAddWrite(context,sd,peer,nbPeerConnecter);
-    peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
-    return;
+  if(peer->flags&NB_PEER_FLAG_READ_WAIT){
+    nbListenerRemove(context,sd);
+    peer->flags&=0xff-NB_PEER_FLAG_READ_WAIT;
     }
-  // 2010-05-31 eat - uncommented this get TLS option working
-  // had been commented out because of problems elsewhere
-  //if(peer->tls->option && !peer->tls->ssl){
-  //  nbLogMsg(context,0,'T',"nbPeerHandshakeWriter: calling nbTlsConnected");
-  //  if(nbTlsConnected(peer->tls)!=0){
-  //    nbLogMsg(context,0,'T',"nbPeerHandshakeWriter: Unable to set ssl  - terminating");
-  //    exit(1);
-  //    }
-  //  }
-  if(!peer->tls->option || (rc=nbTlsHandshakeNonBlocking(peer->tls))==0){
-    nbLogMsg(context,0,'T',"nbPeerHandshakeWriter: handing off to nbPeerConnecter 2");
+  if((rc=nbTlsConnectHandshake(peer->tls))==0){
+    nbLogMsg(context,0,'T',"nbPeerConnectHandshaker: handing off to nbPeerConnecter");
     nbListenerAddWrite(context,sd,peer,nbPeerConnecter);
     peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
-    return;
     }
   else if(rc==SSL_ERROR_WANT_WRITE){
-    nbLogMsg(context,0,'T',"nbPeerHandshakeWriter: SSL_ERROR_WANT_WRITE");
-    nbListenerAddWrite(context,sd,peer,nbPeerHandshakeWriter);
+    nbLogMsg(context,0,'T',"nbPeerConnectHandshaker: SSL_ERROR_WANT_WRITE");
+    nbListenerAddWrite(context,sd,peer,nbPeerConnectHandshaker);
     peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
     }
   else if(rc==SSL_ERROR_WANT_READ){
-    nbLogMsg(context,0,'T',"nbPeerHandshakeWriter: SSL_ERROR_WANT_READ");
-    nbListenerAdd(context,sd,peer,nbPeerHandshakeReader);
+    nbLogMsg(context,0,'T',"nbPeerConnectHandshaker: SSL_ERROR_WANT_READ");
+    nbListenerAdd(context,sd,peer,nbPeerConnectHandshaker);
     peer->flags|=NB_PEER_FLAG_READ_WAIT;
     }
-  else nbPeerShutdown(context,peer,-1);
+  else{
+    nbLogMsg(context,0,'T',"nbPeerConnectHandshaker: handshake failed rc=%d - shutting down",rc);
+    nbPeerShutdown(context,peer,-1);
+    }
   }
 
 /*
-*  Handle TLS handshake when OpenSSL wants to read 
+*  Handle TLS handshake when OpenSSL wants read or write during accept
 */
-static void nbPeerHandshakeReader(nbCELL context,int sd,void *handle){
+static void nbPeerAcceptHandshaker(nbCELL context,int sd,void *handle){
   nbPeer *peer=(nbPeer *)handle;
   int rc;
 
-  if(peerTrace) nbLogMsg(context,0,'T',"nbPeerHandshakeReader: called");
-  nbListenerRemove(context,sd);
-  peer->flags&=0xff-NB_PEER_FLAG_READ_WAIT;
-  if((rc=nbTlsHandshakeNonBlocking(peer->tls))==0){
-    nbLogMsg(context,0,'T',"nbPeerHandshakeReader: handing off to nbPeerConnecter 3");
-    nbListenerAddWrite(context,sd,peer,nbPeerConnecter);
+  if(peerTrace) nbLogMsg(context,0,'T',"nbPeerAcceptHandshaker: called");
+  if(peer->flags&NB_PEER_FLAG_WRITE_WAIT){
+    nbListenerRemoveWrite(context,sd);
+    peer->flags&=0xff-NB_PEER_FLAG_WRITE_WAIT;
+    }
+  if(peer->flags&NB_PEER_FLAG_READ_WAIT){
+    nbListenerRemove(context,sd);
+    peer->flags&=0xff-NB_PEER_FLAG_READ_WAIT;
+    }
+  rc=nbTlsAcceptHandshake(peer->tls);
+  if(rc==1){
+    nbLogMsg(context,0,'T',"nbPeerAcceptHandshaker: handing off to nbPeerConnecter");
     nbListenerAddWrite(context,sd,peer,nbPeerConnecter);
     peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
     }
-  else if(rc==SSL_ERROR_WANT_WRITE){
-    nbLogMsg(context,0,'T',"nbPeerHandshakeReader: SSL_ERROR_WANT_WRITE");
-    nbListenerAddWrite(context,sd,peer,nbPeerHandshakeWriter);
-    peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
+  else if(rc==-1){
+    if(rc==-1 && peer->tls->error==NB_TLS_ERROR_WANT_WRITE){
+      nbLogMsg(context,0,'T',"nbPeerAcceptHandshaker: SSL_ERROR_WANT_WRITE");
+      nbListenerAddWrite(context,sd,peer,nbPeerAcceptHandshaker);
+      peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
+      }
+    if(rc==-1 && peer->tls->error==NB_TLS_ERROR_WANT_READ){
+      nbLogMsg(context,0,'T',"nbPeerAcceptHandshaker: SSL_ERROR_WANT_READ");
+      nbListenerAdd(context,sd,peer,nbPeerAcceptHandshaker);
+      peer->flags|=NB_PEER_FLAG_READ_WAIT;
+      }
     }
-  else if(rc==SSL_ERROR_WANT_READ){
-    nbLogMsg(context,0,'T',"nbPeerHandshakeReader: SSL_ERROR_WANT_READ");
-    nbListenerAdd(context,sd,peer,nbPeerHandshakeReader);
-    peer->flags|=NB_PEER_FLAG_READ_WAIT;
+  else{
+    nbLogMsg(context,0,'T',"nbPeerAcceptHandshaker: handshake failed rc=%d - shutting down",rc);
+    nbPeerShutdown(context,peer,-1);
     }
-  else nbPeerShutdown(context,peer,-1);
   }
 
 /*
@@ -387,9 +385,6 @@ static void nbPeerAccepter(nbCELL context,int sd,void *handle){
   tls=nbTlsAccept(lpeer->tls);
   if(!tls){
     nbLogMsg(context,0,'T',"nbPeerAccepter: nbTlsAccept failed");
-    // 2010-05-31 eat - we don't want to stop listening just because one accept failed
-    //nbListenerRemove(context,sd);
-    //lpeer->flags&=0xff-NB_PEER_FLAG_READ_WAIT;
     return;
     }
   nbLogMsg(context,0,'T',"nbPeerAccepter: nbTlsAccept succeeded");
@@ -400,26 +395,29 @@ static void nbPeerAccepter(nbCELL context,int sd,void *handle){
   peer->wloc=peer->wbuf;
   if(!peer->rbuf) peer->rbuf=(unsigned char *)malloc(NB_PEER_BUFLEN);
   peer->rloc=peer->rbuf;
-  // Should not call producer until we get to nbPeerWriter
-  //nbLogMsg(context,0,'T',"nbPeerAccepter: calling handler=%p",peer->producer);
-  //if((*peer->producer)(context,peer,peer->handle)<0){
-  //  nbLogMsg(context,0,'T',"nbPeerAccepter: handler want's to bail");
-  //  nbPeerDestroy(context,peer);
-  //  }
-  // 2010-05-31 eat - we're good to go at this point
-  //   have a problem above with nbTlsAccept though
-  //   it can fail if non blocking - but I don't think it is
-  //   returning a non-block socket anyway
-  //if(tls->option==NB_TLS_OPTION_TCP){
-    nbListenerAdd(context,tls->socket,peer,nbPeerReader);
-    nbListenerAddWrite(context,tls->socket,peer,nbPeerWriter);
-  //  }
-  //else{
-  //  nbListenerAdd(context,tls->socket,peer,nbPeerHandshakeReader);
-  //  nbListenerAddWrite(context,tls->socket,peer,nbPeerHandshakeWriter);
-  //  }
-  // 2010-05-31 eat end mod
-  peer->flags|=NB_PEER_FLAG_WRITE_WAIT|NB_PEER_FLAG_READ_WAIT;
+  // 2011-02-05 eat - this has been reworked for non-blocking IO
+  if(tls->option==NB_TLS_OPTION_TCP || tls->error==NB_TLS_ERROR_UNKNOWN){
+    if(peer->producer){
+      nbListenerAddWrite(context,tls->socket,peer,nbPeerWriter);
+      peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
+      }
+    if(peer->consumer){
+      nbListenerAdd(context,tls->socket,peer,nbPeerReader);
+      peer->flags|=NB_PEER_FLAG_READ_WAIT;
+      }
+    if(peer->producer){
+      nbListenerAddWrite(context,tls->socket,peer,nbPeerWriter);
+      peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
+      }
+    }
+  else if(tls->error==NB_TLS_ERROR_WANT_WRITE){
+    nbListenerAddWrite(context,tls->socket,peer,nbPeerAcceptHandshaker);
+    peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
+    }
+  else if(tls->error==NB_TLS_ERROR_WANT_READ){
+    nbListenerAdd(context,tls->socket,peer,nbPeerAcceptHandshaker);
+    peer->flags|=NB_PEER_FLAG_READ_WAIT;
+    }
   nbLogMsg(context,0,'T',"nbPeerAccepter: returning");
   }
 
@@ -516,16 +514,28 @@ int nbPeerConnect(nbCELL context,nbPeer *peer,void *handle,
   peer->producer=producer;
   peer->consumer=consumer;
   peer->shutdown=shutdown;
-  rc=nbTlsConnectNonBlockingAndSchedule(context,peer->tls,peer,nbPeerHandshakeWriter);
+  rc=nbTlsConnectNonBlocking(peer->tls);
   if(rc<0){
     nbLogMsg(context,0,'W',"nbPeerConnect: Unable to connect - %s",strerror(errno));
     nbPeerShutdown(context,peer,-1);
+    return(-1);
     }
-  else if(rc==1) nbLogMsg(context,0,'T',"nbPeerConnect: returning - connected");
-  else{
-    peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
-    nbLogMsg(context,0,'T',"nbPeerConnect: returning - good luck waiting for a connection");
+  switch(rc){
+    case 0:
+      nbLogMsg(context,0,'T',"nbPeerConnect: returning - connected");
+      return(1);
+    case 1:
+      nbListenerAddWrite(context,peer->tls->socket,peer,nbPeerConnectHandshaker);
+      peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
+      nbLogMsg(context,0,'T',"nbPeerConnect: returning - good luck waiting for a connection");
+      return(0); 
+    case 2:
+      nbListenerAdd(context,peer->tls->socket,peer,nbPeerConnectHandshaker);
+      peer->flags|=NB_PEER_FLAG_READ_WAIT;
+      nbLogMsg(context,0,'T',"nbPeerConnect: returning - good luck waiting for a connection");
+      return(0); 
     }
+  nbLogMsg(context,0,'L',"nbPeerConnect: unexpected return code %d from nbTlsConnectNonBlocking");
   return(rc);
   }
 

@@ -370,13 +370,20 @@ nbTLS *nbTlsCreate(nbTLSX *tlsx,char *uri){
 
 /*
 *  Do some TLS stuff after a blocking or non-blocking connection
+*
+*  Return Code:
+*
+*    -1 - error socket closed
+*     0 - connected or connecting without SSL
+*     1 - SSL_ERROR_WANT_WRITE
+*     2 - SSL_ERROR_WANT_READ
 */
 int nbTlsConnected(nbTLS *tls){
   SSL *ssl=NULL;
   nbTLSX *tlsx=tls->tlsx;
   int rc,error;
 
-  //fprintf(stderr,"nbTlsConnected: tlsx=%p tlsx->option=%d\n",tlsx,tlsx->option);
+  if(tlsTrace) fprintf(stderr,"nbTlsConnected: tlsx=%p tlsx->option=%d\n",tlsx,tlsx->option);
   if(tlsx && (tls->uriMap[tls->uriIndex].scheme==NB_TLS_SCHEME_TLS || tls->uriMap[tls->uriIndex].scheme==NB_TLS_SCHEME_HTTPS)){
     ssl=SSL_new(tlsx->ctx);
     if(!ssl){
@@ -386,18 +393,18 @@ int nbTlsConnected(nbTLS *tls){
       }
     SSL_set_fd(ssl,tls->socket);
     tls->ssl=ssl;
-
     rc=SSL_connect(tls->ssl);
     if(rc!=1){
       error=SSL_get_error(tls->ssl,rc); // get error code
-      if(error==SSL_ERROR_WANT_WRITE || error==SSL_ERROR_WANT_READ) return(error);
+      if(error==SSL_ERROR_WANT_WRITE) return(1);
+      if(error==SSL_ERROR_WANT_READ) return(2);
       fprintf(stderr,"nbTlsConnected: Handshake failed - rc=%d code=%d\n",rc,error);
       ERR_print_errors_fp(stderr);
       SSL_shutdown(tls->ssl);
       close(tls->socket);
       SSL_free(tls->ssl);
       tls->ssl=NULL;
-      return(error);
+      return(-1);
       }
     }
   if(tlsx){
@@ -413,8 +420,10 @@ int nbTlsConnected(nbTLS *tls){
 *
 *  Returns:  return code from connect()
 *     -1 - error (see errno set by connect())
-*      0 - connecting (errno==EINPROGRESS)
-*      1 - connected
+*      0 - connected
+*      1 - connecting (errno==EINPROGRESS)  SSL_write wait
+*      2 - connecting (errno==EINPROGRESS)  SSL_read wait
+*      3 - connecting (errno==EINPROGRESS)  no SSL  
 */  
 int nbTlsConnectNonBlocking(nbTLS *tls){
   int sd,rc;
@@ -468,22 +477,24 @@ int nbTlsConnectNonBlocking(nbTLS *tls){
     }
 #endif
   // 2010-06-06 eat - seeing if blocking IO will work
-  // 2011-01-23 eat - trying non-blocking again
+  // 2011-01-30 eat - trying non-blocking again to troubleshoot
   fcntl(sd,F_SETFL,fcntl(sd,F_GETFL)|O_NONBLOCK);
   if(domain==AF_INET) rc=connect(sd,(struct sockaddr*)&in_addr,sizeof(in_addr));
   else rc=connect(sd,(struct sockaddr*)&un_addr,sizeof(un_addr));
   if(rc<0){
-    if(errno==EINPROGRESS){
-      tls->socket=sd;
-      //fprintf(stderr,"nbTlsConnectNonBlocking: connecting\n");
-      return(0);
+    if(errno!=EINPROGRESS){
+      fprintf(stderr,"nbTlsConnectNonBlocking: connect failed: %s\n",strerror(errno));
+      close(sd);
+      return(-1);
       }
-    //fprintf(stderr,"nbTlsConnectNonBlocking: connect failed: %s\n",strerror(errno));
-    close(sd);
-    return(-1);
+    if(tlsTrace) fprintf(stderr,"nbTlsConnectNonBlocking: connecting\n");
+    tls->socket=sd;
+    rc=nbTlsConnected(tls);
+    if(rc==0) return(4);
+    return(rc);
     }
   tls->socket=sd;
-  return(1);
+  return(nbTlsConnected(tls));
   }
 
 /*
@@ -584,32 +595,46 @@ int nbTlsGetUriIndex(nbTLS *tls){
 
 /*
 *  SSL handshake with nonblocking errors allowed
+*    nbTlsConnectHandshake was nbTlsHandshakeNonBlocking
 */
-int nbTlsHandshakeNonBlocking(nbTLS *tls){
+int nbTlsConnectHandshake(nbTLS *tls){
   int rc,error;
   nbTLSX *tlsx=tls->tlsx;
   SSL *ssl=NULL;
 
-  if(tlsTrace) fprintf(stderr,"nbTlsHandshakeNonBlocking: tls->option=%d tls->tlsx=%p tls->ssl=%p\n",tls->option,tls->tlsx,tls->ssl);
+  if(tlsTrace) fprintf(stderr,"nbTlsConnectHandshake: tls->option=%d tls->tlsx=%p tls->ssl=%p\n",tls->option,tls->tlsx,tls->ssl);
   if(!tls->option) return(0);
   if(!tlsx){
-    fprintf(stderr,"nbTlsHandshakeNonBlocking: Logic error - should not be called will null tlsx - terminating\n");
+    fprintf(stderr,"nbTlsConnectHandshake: Logic error - should not be called with null tlsx - terminating\n");
     exit(1);
     }
-  if(tlsTrace) fprintf(stderr,"nbTlsHandshakeNonBlocking: tls->tlsx->ctx=%p\n",tlsx->ctx);
-  ssl=SSL_new(tlsx->ctx);
-  if(!ssl){
-    fprintf(stderr,"nbTlsHandshakeNonBLocking: SSL_new failed\n");
-    return(-1);
+  // Seems like the tls->ssl should be set before calling this function
+  // we are handling it here if not until the callers are fixed
+  if(!tls->ssl){ 
+    if(tlsTrace) fprintf(stderr,"nbTlsConnectHandshake: tls->tlsx->ctx=%p\n",tlsx->ctx);
+    ssl=SSL_new(tlsx->ctx);
+    if(!ssl){
+      fprintf(stderr,"nbTlsHandshakeNonBLocking: SSL_new failed\n");
+      return(-1);
+      }
+    SSL_set_fd(ssl,tls->socket);
+    tls->ssl=ssl;
     }
-  SSL_set_fd(ssl,tls->socket);
-  tls->ssl=ssl;
-  if(tlsTrace) fprintf(stderr,"nbTlsHandshakeNonBlocking: tls->socket=%u ssl=%p\n",tls->socket,ssl);
+  if(tlsTrace) fprintf(stderr,"nbTlsConnectHandshake: tls->socket=%u ssl=%p\n",tls->socket,tls->ssl);
   rc=SSL_connect(tls->ssl);
   if(rc!=1){
     error=SSL_get_error(tls->ssl,rc); // get error code
     if(error==SSL_ERROR_WANT_WRITE || error==SSL_ERROR_WANT_READ) return(error);
-    fprintf(stderr,"nbTlsHandshakeNonBlocking: Handshake failed - rc=%d code=%d\n",rc,error);
+    fprintf(stderr,"nbTlsConnectHandshake: SSL_connect failed - rc=%d code=%d\n",rc,error);
+    fprintf(stderr,"nbTlsConnectHandshake: Handshake failed - rc=%d code=%d\n",rc,error);
+    fprintf(stderr,"SSL_ERROR_NONE = %d\n",SSL_ERROR_NONE);
+    fprintf(stderr,"SSL_ERROR_ZERO_RETURN = %d\n",SSL_ERROR_ZERO_RETURN);
+    fprintf(stderr,"SSL_ERROR_WANT_WRITE = %d\n",SSL_ERROR_WANT_WRITE);
+    fprintf(stderr,"SSL_ERROR_WANT_READ = %d\n",SSL_ERROR_WANT_READ);
+    fprintf(stderr,"SSL_ERROR_WANT_CONNECT = %d\n",SSL_ERROR_WANT_CONNECT);
+    fprintf(stderr,"SSL_ERROR_WANT_ACCEPT = %d\n",SSL_ERROR_WANT_ACCEPT);
+    fprintf(stderr,"SSL_ERROR_WANT_X509_LOOKUP = %d\n",SSL_ERROR_WANT_X509_LOOKUP);
+    fprintf(stderr,"SSL_ERROR_SYSCALL = %d\n",SSL_ERROR_SYSCALL);
     ERR_print_errors_fp(stderr);
     SSL_shutdown(tls->ssl);
     close(tls->socket);
@@ -726,6 +751,39 @@ int nbTlsListen(nbTLS *tls){
   }
 
 /*
+*  Issue SSL_accept for SSL handshake
+*
+*  Return: (like SSL_accept)
+*
+*    1 - success
+*    0 - connection was shutdown
+*   -1 - error 
+*        tls->error
+*          NB_TLS_ERROR_UNKNOWN
+*          NB_TLS_ERROR_WANT_WRITE
+*          NB_TLS_ERROR_WANT_READ
+*
+*/
+int nbTlsAcceptHandshake(nbTLS *tls){
+  int rc,error;
+  char errbuf[121];
+
+  if(tlsTrace) fprintf(stderr,"nbTlsAcceptHandshake: Issuing SSL_accept on socket %d\n",tls->socket);
+  tls->error=NB_TLS_ERROR_UNKNOWN;
+  rc=SSL_accept(tls->ssl);
+  if(rc>=0) return(rc);
+  error=SSL_get_error(tls->ssl,rc);
+  if(error==SSL_ERROR_WANT_READ) tls->error=NB_TLS_ERROR_WANT_READ;
+  else if(error==SSL_ERROR_WANT_WRITE) tls->error=NB_TLS_ERROR_WANT_WRITE;
+  else{
+    fprintf(stderr,"nbTlsAccept: SSL_accept rc=%d code=%d\n",rc,error);
+    fprintf(stderr,"nbTlsAccept: %s\n",ERR_error_string(error,errbuf));
+    ERR_print_errors_fp(stderr);
+    }
+  return(rc);
+  }
+
+/*
 *  Accept a connection from a client
 *
 *    The tlsx parameter may be NULL, in which case the connection will
@@ -734,9 +792,14 @@ int nbTlsListen(nbTLS *tls){
 *
 *    The timeout parameter is used to set the timeout period for read
 *    and write operations.  It does not specify a timeout on inactivity.
-*    That must be implemented at a high level.
+*    That must be implemented at a higher level.
 *
-*    
+*  Returns nbTLS pointer or NULL
+*
+*    When using non-blocking IO, the tls->error code must be checked
+*    for NB_TLS_ERROR_WANT_WRITE or NB_TLS_ERROR_WANT_READ.  On these
+*    error codes schedule calls to nbTlsAcceptHandshake when the
+*    write or read can be satisified.
 */
 nbTLS *nbTlsAccept(nbTLS *tlsListener){
   nbTLS *tls;
@@ -765,6 +828,8 @@ nbTLS *nbTlsAccept(nbTLS *tlsListener){
     }
 #if !defined(WIN32)
   fcntl(sd,F_SETFD,FD_CLOEXEC);
+  // 2011-02-05 eat - if listener is non-blocking, make new socket non-blocking
+  if(fcntl(socket,F_GETFL)&O_NONBLOCK) fcntl(sd,F_SETFL,fcntl(sd,F_GETFL)|O_NONBLOCK);
 #endif
 #if !defined(HPUX) && !defined(SOLARIS)
   if(tlsListener->tlsx) tv.tv_sec=tlsListener->tlsx->timeout;
@@ -808,12 +873,8 @@ nbTLS *nbTlsAccept(nbTLS *tlsListener){
     //SSL_set_ex_data(ssl,0,session);  // make session structure available to verify callback function
 
     if(tlsTrace) fprintf(stderr,"nbTlsAccept: Issuing SSL_accept on socket %d\n",sd);
-    if((rc=SSL_accept(tls->ssl))!=1){
-      char errbuf[121];
-      SSL_load_error_strings();
-      fprintf(stderr,"nbTlsAccept: SSL_accept rc=%d code=%d\n",rc,SSL_get_error(tls->ssl,rc));
-      fprintf(stderr,"nbTlsAccept: %s\n",ERR_error_string(SSL_get_error(tls->ssl,rc),errbuf));
-      ERR_print_errors_fp(stderr);
+    rc=nbTlsAcceptHandshake(tls);
+    if(rc==0 || (rc==-1 && tls->error!=NB_TLS_ERROR_WANT_READ && tls->error!=NB_TLS_ERROR_WANT_WRITE)){
       nbTlsFree(tls);
       return(NULL);
       }
@@ -831,22 +892,34 @@ nbTLS *nbTlsAccept(nbTLS *tlsListener){
 
 /*
 *  Read from peer
+*
+*  When -1 is returned, the caller should handle the error code set
+*  in the nbTLS structure (tls->error).
+*
+*    NB_TLS_ERROR_WANT_READ
+*    NB_TLS_ERROR_WANT_WRITE  - possible if SSL is handshaking again
+*    NB_TLS_ERROR_UNKNOWN 
 */
 int nbTlsRead(nbTLS *tls,char *buffer,size_t size){
-  int len;
+  int len,error;
   if(tlsTrace) fprintf(stderr,"nbTlsRead: size=%d\n",(int)size);
+  tls->error=NB_TLS_ERROR_UNKNOWN;
   if(!tls->ssl){
     if(tlsTrace) fprintf(stderr,"nbTlsRead: calling clear recv\n");
     len=recv(tls->socket,buffer,size,0);
     while(len==-1 && errno==EINTR) len=recv(tls->socket,buffer,size,0);
     if(tlsTrace) fprintf(stderr,"nbTlsRead: read len=%d\n",len);
+    if(len==-1 && errno==EAGAIN) tls->error=NB_TLS_ERROR_WANT_READ;
     return(len);
     }
   if(tlsTrace) fprintf(stderr,"nbTlsRead: calling SSL_read\n");
   len=SSL_read(tls->ssl,buffer,size);
   if(len<0){
-    fprintf(stderr,"nbTlsRead: SSL_read rc=%d code=%d\n",len,SSL_get_error(tls->ssl,len));
+    error=SSL_get_error(tls->ssl,len);
+    fprintf(stderr,"nbTlsRead: SSL_read rc=%d code=%d\n",len,error);
     ERR_print_errors_fp(stderr);
+    if(error==SSL_ERROR_WANT_READ) tls->error=NB_TLS_ERROR_WANT_READ;
+    else if(error==SSL_ERROR_WANT_WRITE) tls->error=NB_TLS_ERROR_WANT_WRITE;
     }
   if(tlsTrace) fprintf(stderr,"nbTlsRead: SSL_read len=%d\n",len);
   return(len);
@@ -854,22 +927,34 @@ int nbTlsRead(nbTLS *tls,char *buffer,size_t size){
 
 /*
 *  Write to peer
+*
+*  When -1 is returned, the caller should handle the error code set
+*  in the nbTLS structure (tls->error).
+*
+*    NB_TLS_ERROR_WANT_READ   - possible if SSL is handshaking again
+*    NB_TLS_ERROR_WANT_WRITE
+*    NB_TLS_ERROR_UNKNOWN 
 */
 int nbTlsWrite(nbTLS *tls,char *buffer,size_t size){
-  int len;
+  int len,error;
   if(tlsTrace) fprintf(stderr,"nbTlsWrite: size=%d\n",(int)size);
+  tls->error=NB_TLS_ERROR_UNKNOWN;
   if(!tls->ssl){
     if(tlsTrace) fprintf(stderr,"nbTlsWrite: calling clear send - socket=%d\n",tls->socket);
     len=send(tls->socket,buffer,size,0);
     while(len==-1 && errno==EINTR) len=send(tls->socket,buffer,size,0);
     if(tlsTrace) fprintf(stderr,"nbTlsWrite: wrote len=%d\n",len);
+    if(len==-1 && errno==EAGAIN) tls->error=NB_TLS_ERROR_WANT_WRITE;
     return(len);
     }
   if(tlsTrace) fprintf(stderr,"nbTlsWrite: calling SSL_write - ssl=%p\n",tls->ssl);
   len=SSL_write(tls->ssl,buffer,size);
   if(len<0){
-    fprintf(stderr,"nbTlsWrite: SSL_write rc=%d code=%d\n",len,SSL_get_error(tls->ssl,len));
+    error=SSL_get_error(tls->ssl,len);
+    fprintf(stderr,"nbTlsWrite: SSL_write rc=%d code=%d\n",len,error);
     ERR_print_errors_fp(stderr);
+    if(error==SSL_ERROR_WANT_READ) tls->error=NB_TLS_ERROR_WANT_READ;
+    else if(error==SSL_ERROR_WANT_WRITE) tls->error=NB_TLS_ERROR_WANT_WRITE;
     }
   if(tlsTrace) fprintf(stderr,"nbTlsWrite: SSL_write len=%d\n",len);
   return(len);
@@ -879,7 +964,7 @@ int nbTlsWrite(nbTLS *tls,char *buffer,size_t size){
 *  Close a TLS connection and free the structure
 */
 int nbTlsClose(nbTLS *tls){
-  int rc;
+  int rc=0;
 
   if(!tls) return(0);
   if(tls->ssl){
