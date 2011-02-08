@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2011 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -295,6 +295,7 @@ typedef struct NB_MSG_NODE{
 
 #define NB_MSG_NODE_TYPE_CLIENT  1 // Consumes messages
 #define NB_MSG_NODE_TYPE_SERVER  2 // Serves messages
+#define NB_MSG_NODE_TYPE_PEER    3 // Serves and consumes messages
 #define NB_MSG_NODE_TYPE_HUB     4 // Responsible for forming a ring with other hubs (may be server or client or both)
 #define NB_MSG_NODE_TYPE_SPOKE   8 // Consumes but doesn't produce or share - connects to one hub node
 #define NB_MSG_NODE_TYPE_SINK   16 // Consumes but doesn't produce or share - connects to all source nodes
@@ -321,6 +322,7 @@ typedef struct NB_MSG_CABAL{
 
 // The mode is used both as an index and a bit mask
 // If more bits are needed, we have to stop using it as an index
+// It is necessary for this scheme to align with the first two bits of the node type scheme
 #define NB_MSG_CABAL_MODE_CLIENT  1  // Requests messages from servers
 #define NB_MSG_CABAL_MODE_SERVER  2  // Serves messages up for clients
 #define NB_MSG_CABAL_MODE_PEER    3  // Both a client and server

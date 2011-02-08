@@ -119,6 +119,7 @@
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010/02/26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2010/06/06 eat 0.8.2  Added client parameter to nbTlsLoadContext parameter
+* 2011-02-08 eat 0.8.5  Refined non-blocking SSL handshake
 *==============================================================================
 */
 #include <nb.h>
@@ -309,17 +310,17 @@ static void nbPeerConnectHandshaker(nbCELL context,int sd,void *handle){
     peer->flags&=0xff-NB_PEER_FLAG_READ_WAIT;
     }
   if((rc=nbTlsConnectHandshake(peer->tls))==0){
-    nbLogMsg(context,0,'T',"nbPeerConnectHandshaker: handing off to nbPeerConnecter");
+    nbLogMsg(context,0,'I',"Peer connection established with %s",nbTlsGetUri(peer->tls));
     nbListenerAddWrite(context,sd,peer,nbPeerConnecter);
     peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
     }
   else if(rc==SSL_ERROR_WANT_WRITE){
-    nbLogMsg(context,0,'T',"nbPeerConnectHandshaker: SSL_ERROR_WANT_WRITE");
+    if(peerTrace) nbLogMsg(context,0,'T',"nbPeerConnectHandshaker: SSL_ERROR_WANT_WRITE");
     nbListenerAddWrite(context,sd,peer,nbPeerConnectHandshaker);
     peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
     }
   else if(rc==SSL_ERROR_WANT_READ){
-    nbLogMsg(context,0,'T',"nbPeerConnectHandshaker: SSL_ERROR_WANT_READ");
+    if(peerTrace) nbLogMsg(context,0,'T',"nbPeerConnectHandshaker: SSL_ERROR_WANT_READ");
     nbListenerAdd(context,sd,peer,nbPeerConnectHandshaker);
     peer->flags|=NB_PEER_FLAG_READ_WAIT;
     }
@@ -347,18 +348,18 @@ static void nbPeerAcceptHandshaker(nbCELL context,int sd,void *handle){
     }
   rc=nbTlsAcceptHandshake(peer->tls);
   if(rc==1){
-    nbLogMsg(context,0,'T',"nbPeerAcceptHandshaker: handing off to nbPeerConnecter");
+    nbLogMsg(context,0,'T',"Peer connection with %s established",nbTlsGetUri(peer->tls));
     nbListenerAddWrite(context,sd,peer,nbPeerConnecter);
     peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
     }
   else if(rc==-1){
     if(rc==-1 && peer->tls->error==NB_TLS_ERROR_WANT_WRITE){
-      nbLogMsg(context,0,'T',"nbPeerAcceptHandshaker: SSL_ERROR_WANT_WRITE");
+      if(peerTrace) nbLogMsg(context,0,'T',"nbPeerAcceptHandshaker: SSL_ERROR_WANT_WRITE");
       nbListenerAddWrite(context,sd,peer,nbPeerAcceptHandshaker);
       peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
       }
     if(rc==-1 && peer->tls->error==NB_TLS_ERROR_WANT_READ){
-      nbLogMsg(context,0,'T',"nbPeerAcceptHandshaker: SSL_ERROR_WANT_READ");
+      if(peerTrace) nbLogMsg(context,0,'T',"nbPeerAcceptHandshaker: SSL_ERROR_WANT_READ");
       nbListenerAdd(context,sd,peer,nbPeerAcceptHandshaker);
       peer->flags|=NB_PEER_FLAG_READ_WAIT;
       }
@@ -397,18 +398,9 @@ static void nbPeerAccepter(nbCELL context,int sd,void *handle){
   peer->rloc=peer->rbuf;
   // 2011-02-05 eat - this has been reworked for non-blocking IO
   if(tls->option==NB_TLS_OPTION_TCP || tls->error==NB_TLS_ERROR_UNKNOWN){
-    if(peer->producer){
-      nbListenerAddWrite(context,tls->socket,peer,nbPeerWriter);
-      peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
-      }
-    if(peer->consumer){
-      nbListenerAdd(context,tls->socket,peer,nbPeerReader);
-      peer->flags|=NB_PEER_FLAG_READ_WAIT;
-      }
-    if(peer->producer){
-      nbListenerAddWrite(context,tls->socket,peer,nbPeerWriter);
-      peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
-      }
+    nbLogMsg(context,0,'T',"nbPeerAccepter: setting up nbPeerConnecter");
+    nbListenerAddWrite(context,tls->socket,peer,nbPeerConnecter);
+    peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
     }
   else if(tls->error==NB_TLS_ERROR_WANT_WRITE){
     nbListenerAddWrite(context,tls->socket,peer,nbPeerAcceptHandshaker);
@@ -477,7 +469,7 @@ int nbPeerListen(nbCELL context,nbPeer *peer){
   fcntl(peer->tls->socket,F_SETFL,fcntl(peer->tls->socket,F_GETFL)|O_NONBLOCK);
   nbListenerAdd(context,peer->tls->socket,peer,nbPeerAccepter);
   peer->flags|=NB_PEER_FLAG_READ_WAIT;
-  nbLogMsg(context,0,'T',"nbPeerListen: things look good");
+  if(peerTrace) nbLogMsg(context,0,'T',"nbPeerListen: returning - handing off to nbPeerAccepter");
   return(0);
   }
 
@@ -505,7 +497,8 @@ int nbPeerConnect(nbCELL context,nbPeer *peer,void *handle,
     nbLogMsg(context,0,'E',"nbPeerConnect: called with bad pointer");
     return(-1);
     }
-  if(peerTrace) nbLogMsg(context,0,'T',"nbPeerConnect: called uri=%s",peer->tls->uriMap[0].uri);
+  //nbLogMsg(context,0,'I',"Attempting peer connection with %s",peer->tls->uriMap[0].uri);
+  nbLogMsg(context,0,'I',"Attempting peer connection with %s",nbTlsGetUri(peer->tls));
   if(!peer->wbuf) peer->wbuf=(unsigned char *)malloc(NB_PEER_BUFLEN);
   peer->wloc=peer->wbuf;
   if(!peer->rbuf) peer->rbuf=(unsigned char *)malloc(NB_PEER_BUFLEN);
@@ -522,17 +515,19 @@ int nbPeerConnect(nbCELL context,nbPeer *peer,void *handle,
     }
   switch(rc){
     case 0:
-      nbLogMsg(context,0,'T',"nbPeerConnect: returning - connected");
+      nbLogMsg(context,0,'I',"Peer connection established with %s",nbTlsGetUri(peer->tls));
+      nbListenerAddWrite(context,peer->tls->socket,peer,nbPeerConnecter);
+      peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
       return(1);
     case 1:
       nbListenerAddWrite(context,peer->tls->socket,peer,nbPeerConnectHandshaker);
       peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
-      nbLogMsg(context,0,'T',"nbPeerConnect: returning - good luck waiting for a connection");
+      if(peerTrace) nbLogMsg(context,0,'I',"nbPeerConnect: returning - good luck waiting for a connection");
       return(0); 
     case 2:
       nbListenerAdd(context,peer->tls->socket,peer,nbPeerConnectHandshaker);
       peer->flags|=NB_PEER_FLAG_READ_WAIT;
-      nbLogMsg(context,0,'T',"nbPeerConnect: returning - good luck waiting for a connection");
+      if(peerTrace) nbLogMsg(context,0,'T',"nbPeerConnect: returning - good luck waiting for a connection");
       return(0); 
     }
   nbLogMsg(context,0,'L',"nbPeerConnect: unexpected return code %d from nbTlsConnectNonBlocking");
@@ -551,6 +546,7 @@ int nbPeerConnect(nbCELL context,nbPeer *peer,void *handle,
 int nbPeerSend(nbCELL context,nbPeer *peer,void *data,int size){
   int mysize=size+2;
 
+  if(peerTrace) nbLogMsg(context,0,'I',"Sending %d bytes to %s",size,nbTlsGetUri(peer->tls));
   if(peerTrace) nbLogMsg(context,0,'T',"nbPeerSend: called with peer=%p SD=%d size=%d flags=%x",peer,peer->tls->socket,size,peer->flags);
   if(peer->flags&NB_PEER_FLAG_WRITE_ERROR){
     nbLogMsg(context,0,'T',"nbPeerSend: error flag is set");

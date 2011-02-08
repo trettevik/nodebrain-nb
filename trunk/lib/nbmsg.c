@@ -140,6 +140,7 @@
 * 2010-05-23 eat 0.8.2  Included logic in nbMsgCabalEnable needed to shutdown extra connections
 * 2010-06-07 eat 0.8.2  Included support for cursor mode message log reading
 * 2011-01-20 eat 0.8.5  Finishing up support for multiple consumers
+* 2011-02-08 eat 0.8.5  Cleaned up non-blocking SSL handshake
 *==============================================================================
 */
 #include <ctype.h>
@@ -1385,11 +1386,12 @@ void nbMsgLogPoll(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL cell)
 
   if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogPoll: called");
   processed=nbMsgLogProcess(context,msglog);
-  if(processed) nbSynapseSetTimer(context,msglog->synapse,5);
-  else{
+  //nbSynapseSetTimer(context,msglog->synapse,0);  // 2011-02-07 eat - troubleshooting a duplicate timer
+  if(processed){
     nbMsgLogSubscribe(context,msglog,msglog->consumerName); // renew subscription
-    nbSynapseSetTimer(context,msglog->synapse,60);  // this should not be required - an experiment
+    nbSynapseSetTimer(context,msglog->synapse,5);
     }
+  else nbSynapseSetTimer(context,msglog->synapse,60);  // this should not be required - an experiment
   }
 
 /*
@@ -2554,6 +2556,7 @@ nbMsgCache *nbMsgCacheAlloc(nbCELL context,char *cabal,char *nodeName,int node,i
   msgcache->fileOffset=msglog->filesize;
   if(nbMsgLogConsume(context,msglog,msgcache,nbMsgCacheInsert)!=0){
     nbMsgCacheFree(context,msgcache);
+    return(NULL);
     }
   return(msgcache);
   }
@@ -2576,7 +2579,7 @@ static void nbMsgPeerShutdown(nbCELL context,nbPeer *peer,void *handle,int code)
   msgnode->state=NB_MSG_NODE_STATE_DISCONNECTED;
   time(&utime);             // get utc time
   msgnode->downTime=utime;  // time stamp the disconnect
-  nbMsgCabalEnable(context,msgnode->msgcabal);
+  //nbMsgCabalEnable(context,msgnode->msgcabal);
   }
 
 /*
@@ -2591,7 +2594,7 @@ static void nbMsgPeerShutdown(nbCELL context,nbPeer *peer,void *handle,int code)
 *    NOTE: We need to work out a similar relationship on the consumer side.
 */
 static int nbMsgPeerNullProducer(nbCELL context,nbPeer *peer,void *handle){
-  nbLogMsg(context,0,'T',"nbMsgPeerNullProducer: called - returning nothing");
+  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgPeerNullProducer: called - returning nothing");
   return(0);
   }
 
@@ -2671,11 +2674,11 @@ static int nbMsgPeerStateProducer(nbCELL context,nbPeer *peer,void *handle){
   nbMsgCabal *msgcabal=msgnode->msgcabal;
   int msglen;
 
-  nbLogMsg(context,0,'T',"nbMsgPeerStateProducer: called msgcabal=%p",msgcabal);
-  nbLogMsg(context,0,'T',"nbMsgPeerStateProducer: calledd msgcabal->msglog=%p",msgcabal->msglog);
-  nbLogMsg(context,0,'T',"nbMsgPeerStateProducer: calling nbMsgLogStateToRecord msgnode=%p",msgnode);
+  //nbLogMsg(context,0,'T',"nbMsgPeerStateProducer: called msgcabal=%p",msgcabal);
+  //nbLogMsg(context,0,'T',"nbMsgPeerStateProducer: calledd msgcabal->msglog=%p",msgcabal->msglog);
+  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgPeerStateProducer: calling nbMsgLogStateToRecord msgnode=%p",msgnode);
   msglen=nbMsgLogStateToRecord(context,msgcabal->msglog,msgcabal->cntlMsgBuf,NB_MSG_NODE_BUFLEN); // gen state record
-  nbLogMsg(context,0,'T',"nbMsgPeerStateProducer: sending state record  msglen=%d\n",msglen);
+  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgPeerStateProducer: sending state record  msglen=%d",msglen);
   if(nbPeerSend(context,peer,msgcabal->cntlMsgBuf,msglen)){ // send state record
     nbLogMsg(context,0,'E',"nbMsgPeerStateProducer: unable to send state record - shutting down connection");
     return(-1);
@@ -2705,13 +2708,13 @@ static int nbMsgPeerStateConsumer(nbCELL context,nbPeer *peer,void *handle,void 
     return(-1);
     }
   // handle the state record here - data is full message record
-  nbLogMsg(context,0,'T',"nbMsgPeerStateConsumer: calling nbMsgLogStateFromRecord");
+  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgPeerStateConsumer: calling nbMsgLogStateFromRecord");
   msgstate=nbMsgLogStateFromRecord(context,(nbMsgRec *)data);
   if(!msgstate){
     nbLogMsg(context,0,'T',"nbMsgPeerStateConsumer: Unable to get state from state record");
     return(-1);
     }
-  nbLogMsg(context,0,'T',"nbMsgPeerStateConsumer: calling nbMsgCacheSubscribe");
+  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgPeerStateConsumer: calling nbMsgCacheSubscribe");
   msgnode->msgsub=nbMsgCacheSubscribe(context,msgcabal->msgcache,msgstate,msgnode,nbMsgPeerCacheMsgHandler);
   if(!msgnode->msgsub){
     nbLogMsg(context,0,'E',"Unable to subscribe to message cache");
@@ -2730,13 +2733,12 @@ static int nbMsgPeerHelloProducer(nbCELL context,nbPeer *peer,void *handle){
   nbMsgNode *msgnode=(nbMsgNode *)handle;
   nbMsgCabal *msgcabal=msgnode->msgcabal;
   
-  nbLogMsg(context,0,'T',"nbMsgPeerHelloProducer: called for node %s uri %s",msgnode->name,peer->tls->uriMap[peer->tls->uriIndex].uri);
-  nbLogMsg(context,0,'T',"nbMsgPeerHelloProducer: verify");
+  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgPeerHelloProducer: called for node %s uri %s",msgnode->name,peer->tls->uriMap[peer->tls->uriIndex].uri);
   if(nbPeerSend(context,peer,(char *)&msgcabal->node->msgnoderec,sizeof(nbMsgNodeRec))!=0){
     nbLogMsg(context,0,'E',"nbMsgPeerHelloProducer: Unable to send node record");
     return(-1);
     }
-  nbLogMsg(context,0,'T',"nbMsgPeerHelloProducer: Handing off to nbMsgPeerHelloConsumer");
+  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgPeerHelloProducer: Handing off to nbMsgPeerHelloConsumer");
   nbPeerModify(context,peer,msgnode,nbMsgPeerNullProducer,nbMsgPeerHelloConsumer,nbMsgPeerShutdown);
   return(0);
   }
@@ -2752,7 +2754,7 @@ static int nbMsgPeerHelloConsumer(nbCELL context,nbPeer *peer,void *handle,void 
     nbLogMsg(context,0,'E',"nbMsgPeerHelloConsumer: Connection %s shutting down - cabal %s node %s peer %s",msgcabal->cabalName,msgcabal->node->name,msgnode->name);
     return(0);
     }
-  nbLogMsg(context,0,'T',"nbMsgPeerHelloConsumer: called for node %s uri %s",msgnode->name,peer->tls->uriMap[peer->tls->uriIndex].uri);
+  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgPeerHelloConsumer: called for node %s uri %s",msgnode->name,peer->tls->uriMap[peer->tls->uriIndex].uri);
   // include code here to check the node record
   // if bad return -1
   //nbLogMsg(context,0,'T',"verify msgcabal=%p",msgcabal);
@@ -2767,7 +2769,7 @@ static int nbMsgPeerHelloConsumer(nbCELL context,nbPeer *peer,void *handle,void 
     nbLogMsg(context,0,'T',"nbMsgPeerHelloConsumer: Handing server off to nbMsgPeerStateConsumer");
     nbPeerModify(context,peer,msgnode,nbMsgPeerNullProducer,nbMsgPeerStateConsumer,nbMsgPeerShutdown);
     }
-  nbLogMsg(context,0,'T',"nbMsgPeerHelloConsumer: returning for node %s uri %s",msgnode->name,peer->tls->uriMap[peer->tls->uriIndex].uri);
+  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgPeerHelloConsumer: returning for node %s uri %s",msgnode->name,peer->tls->uriMap[peer->tls->uriIndex].uri);
   return(0);
   }
 
@@ -2778,19 +2780,16 @@ static int nbMsgCabalAcceptHelloConsumer(nbCELL context,nbPeer *peer,void *handl
 static int nbMsgCabalAcceptHelloProducer(nbCELL context,nbPeer *peer,void *handle){
   nbMsgCabal *msgcabal=(nbMsgCabal *)handle;
 
-  fprintf(stderr,"hello from nbMsgCabalAcceptHelloProducer\n");
-  fflush(stderr);
-  nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloProducer: called for cabal=%p peer=%p ",msgcabal,peer);
-  nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloProducer: called for peer->tls=%p",peer->tls);
-  //nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloProducer: called for cabal %s uri %s",msgcabal->cabalName,peer->tls->uriMap[peer->tls->uriIndex].uri);
-  nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloProducer: calling nbPeerSend for cabal %s uri %s",msgcabal->cabalName,peer->tls->uriMap[peer->tls->uriIndex].uri);
+  //nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloProducer: called for cabal=%p peer=%p ",msgcabal,peer);
+  //nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloProducer: called for peer->tls=%p",peer->tls);
+  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloProducer: called for cabal %s uri %s",msgcabal->cabalName,nbTlsGetUri(peer->tls));
   if(nbPeerSend(context,peer,(char *)&msgcabal->node->msgnoderec,sizeof(nbMsgNodeRec))!=0){ // send nodeID record;
     nbLogMsg(context,0,'E',"nbMsgCabalAcceptHelloProducer: unable to write node record - %s",strerror(errno));
     return(-1);
     }
-  nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloProducer: Server handing off to nbMsgCabalAcceptHelloConsumer");
+  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloProducer: Server handing off to nbMsgCabalAcceptHelloConsumer");
   nbPeerModify(context,peer,msgcabal,nbMsgPeerNullProducer,nbMsgCabalAcceptHelloConsumer,nbMsgPeerAcceptShutdown);
-  nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloProducer: returning");
+  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloProducer: returning");
   return(0);
   }
 
@@ -2806,9 +2805,9 @@ static int nbMsgCabalAcceptHelloConsumer(nbCELL context,nbPeer *peer,void *handl
     nbLogMsg(context,0,'E',"nbMsgCabalAcceptHelloConsumer: Connection %s shutting down - cabal %s node %s",peer->tls->uriMap[peer->tls->uriIndex].uri,msgcabal->cabalName,msgcabal->node->name);
     return(0);
     }
-  nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloConsumer: called for cabal %s",msgcabal->cabalName);
-  nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloConsumer: buffer received - len=%d",len);
-  nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloConsumer: size expecting - size=%d",sizeof(nbMsgNodeRec));
+  //nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloConsumer: called for cabal %s",msgcabal->cabalName);
+  //nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloConsumer: buffer received - len=%d",len);
+  //nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloConsumer: size expecting - size=%d",sizeof(nbMsgNodeRec));
   if(len!=sizeof(nbMsgNodeRec)){
     nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloConsumer: unexpected size of node record - %d - expecting %d",len,sizeof(nbMsgNodeRec));
     return(-1);
@@ -2828,7 +2827,7 @@ static int nbMsgCabalAcceptHelloConsumer(nbCELL context,nbPeer *peer,void *handl
     nbLogMsg(context,0,'E',"nbMsgCabalAcceptHelloConsumer: Node %s is not in a disconnected state - %d - shutting down new connection",msgnode->name,msgnode->state);
     return(-1);
     }
-  nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloConsumer: Node %s connecting",msgnode->name);
+  nbLogMsg(context,0,'T',"Cabal node %s connecting",msgnode->name);
   // should check to make sure we aren't stomping on an old peer here
   msgnode->peer=peer;
   msgnode->state=NB_MSG_NODE_STATE_CONNECTING;
@@ -2843,24 +2842,32 @@ static int nbMsgCabalAcceptHelloConsumer(nbCELL context,nbPeer *peer,void *handl
     // nbPeerModify(context,peer,msgnode,NULL,nbMsgPeerStateConsumer,nbMsgPeerShutdown);
     nbPeerModify(context,peer,msgnode,nbMsgPeerNullProducer,nbMsgPeerStateConsumer,nbMsgPeerShutdown);
     }
-  nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloConsumer: Setting connecting state");
+  //nbLogMsg(context,0,'T',"nbMsgCabalAcceptHelloConsumer: Setting connecting state");
   return(0);
   }
 
 /*
 *  Create a message cabal node
 *
-*  serviceName  - "peer", "server", or "client"
+*  myNodeType   - hub, spoke, source, or sink
 *
-*  type - "hub", "spoke", "source", "sink"
+*    TYPE     LOOKS FOR
+*    ------   -------------
+*    hub      hub and spoke
+*    spoke    hub
+*    source   sink
+*    sink     source
+*    0        anything
 *
+*  serviceType  - client, server, or peer
 */
-nbMsgNode *nbMsgNodeCreate(nbCELL context,char *cabalName,char *nodeName,nbCELL nodeContext,char *serviceName){
+nbMsgNode *nbMsgNodeCreate(nbCELL context,char *cabalName,char *nodeName,nbCELL nodeContext,int myNodeType,int serviceType){
   nbMsgNode *msgnode;
   int        nodeNumber;
   char      *uri;
   char      *nodeType;
   int        type=0;
+  char      *serviceName;
 
   nbLogMsg(context,0,'T',"nbMsgNodeCreate: called with cabal \"%s\" node \"%s\"",cabalName,nodeName);
   if(strlen(nodeName)>=NB_MSG_NAMESIZE){
@@ -2885,18 +2892,35 @@ nbMsgNode *nbMsgNodeCreate(nbCELL context,char *cabalName,char *nodeName,nbCELL 
     nbLogMsg(context,0,'E',"Cabal \"%s\" node \"%s\" type \"%s\" not recognized",cabalName,nodeName,nodeType);
     return(NULL);
     }
-  if(strcmp(serviceName,"peer")==0) type|=NB_MSG_NODE_TYPE_SERVER|NB_MSG_NODE_TYPE_CLIENT;
-  else if(strcmp(serviceName,"server")==0) type|=NB_MSG_NODE_TYPE_SERVER;
-  else if(strcmp(serviceName,"client")==0) type|=NB_MSG_NODE_TYPE_CLIENT;
-  else{
-    nbLogMsg(context,0,'L',"Cabal \"%s\" node \"%s\" service \"%s\" not recognized",cabalName,nodeName,serviceName);
-    return(NULL);
+  // filter out the nodes we don't need
+  if(myNodeType){
+    if(myNodeType&NB_MSG_NODE_TYPE_HUB){
+      if(!(type&NB_MSG_NODE_TYPE_HUB || type&NB_MSG_NODE_TYPE_SPOKE)) return(NULL);
+      if(serviceType&NB_MSG_NODE_TYPE_SERVER && type&NB_MSG_NODE_TYPE_SPOKE) return(NULL);
+      }
+    else if(myNodeType&NB_MSG_NODE_TYPE_SPOKE){
+      if(!(type&NB_MSG_NODE_TYPE_HUB)) return(NULL);
+      }
+    else if(myNodeType&NB_MSG_NODE_TYPE_SINK){
+      if(!(type&NB_MSG_NODE_TYPE_SOURCE)) return(NULL);
+      }
+    else if(myNodeType&NB_MSG_NODE_TYPE_SOURCE){
+      if(!(type&NB_MSG_NODE_TYPE_SINK)) return(NULL);
+      }
     }
-  nbLogMsg(context,0,'T',"calling nbTermOptionString");
+  if(msgTrace) nbLogMsg(context,0,'T',"calling nbTermOptionString to get service URI");
+  serviceName="peer";
   uri=nbTermOptionString(nodeContext,serviceName,"");
-  if(!*uri && type&(NB_MSG_NODE_TYPE_HUB|NB_MSG_NODE_TYPE_SOURCE)){  // hub or source need to provide uri
-    nbLogMsg(context,0,'W',"Cabal \"%s\" node \"%s\" %s not defined",cabalName,nodeName,serviceName);
-    return(NULL);
+  if(*uri) type|=NB_MSG_NODE_TYPE_SERVER|NB_MSG_NODE_TYPE_CLIENT;
+  else if(serviceType&NB_MSG_NODE_TYPE_SERVER){
+    serviceName="server";
+    uri=nbTermOptionString(nodeContext,serviceName,"");
+    type|=NB_MSG_NODE_TYPE_SERVER;
+    }
+  else if(serviceType&NB_MSG_NODE_TYPE_CLIENT){
+    serviceName="client";
+    uri=nbTermOptionString(nodeContext,serviceName,"");
+    type|=NB_MSG_NODE_TYPE_CLIENT;
     }
   msgnode=(nbMsgNode *)nbAlloc(sizeof(nbMsgNode));
   memset(msgnode,0,sizeof(nbMsgNode)); 
@@ -2943,19 +2967,14 @@ void nbMsgCabalRetry(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL ce
 */
 nbMsgCabal *nbMsgCabalAlloc(nbCELL context,char *cabalName,char *nodeName,int mode){
   nbMsgCabal *msgcabal;
-  //nbMsgNode *msgnode;
   nbCELL     cabalContext,nodeContext,tlsContext;
-  //int        socket;
-  //nbTLSX    *tlsx;
   char *ring;
-  //char *interface;
-  //int port;
   char *cursor,*delim;
   char peerName[NB_MSG_NAMESIZE];
   nbMsgNode *peerNode;
   nbMsgNode *anchor=NULL; // first in list at time self is encountered in ring
-  char *serviceName[3]={"client","server","peer"};
-  int serviceIndex;
+  int myNodeType;
+  int serviceType;
 
   if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCabalAlloc: called cabal=%s node=%s mode=%d",cabalName,nodeName,mode);
   cabalContext=nbTermLocate(context,cabalName);
@@ -2982,11 +3001,12 @@ nbMsgCabal *nbMsgCabalAlloc(nbCELL context,char *cabalName,char *nodeName,int mo
   msgcabal->mode=mode;
   msgcabal->cntlMsgBuf=(unsigned char *)malloc(NB_MSG_CABAL_BUFLEN);
   strcpy(msgcabal->cabalName,cabalName);
-  msgcabal->node=nbMsgNodeCreate(context,cabalName,nodeName,nodeContext,serviceName[mode-1]);
+  msgcabal->node=nbMsgNodeCreate(context,cabalName,nodeName,nodeContext,0,mode);
   if(!msgcabal->node){
     nbLogMsg(context,0,'E',"nbMsgCabalAlloc: Cabal \"%s\" has no node named \"%s\"",cabalName,nodeName);
     return(NULL);
     }
+  myNodeType=msgcabal->node->type;
   msgcabal->node->msgcabal=msgcabal;
   msgcabal->nodeCount=0;  
   cursor=ring;
@@ -3012,26 +3032,27 @@ nbMsgCabal *nbMsgCabalAlloc(nbCELL context,char *cabalName,char *nodeName,int mo
       // free stuff here
       return(NULL);
       }
-    for(serviceIndex=0;serviceIndex<3;serviceIndex++){
-      // note: we are working up to allowing a cabal service to work as both a client
-      // and a server.  This means the cabal descriptions needs to tell us what
-      // a given node is willing to be.  Here we are assuming we are one thing and
-      // want to treat others as the opposite.
-      peerNode=nbMsgNodeCreate(context,cabalName,peerName,nodeContext,serviceName[serviceIndex]); 
-      if(peerNode){
-        peerNode->msgcabal=msgcabal;
-        peerNode->order=msgcabal->nodeCount;
-        if(anchor){
-          peerNode->next=anchor;
-          peerNode->prior=anchor->prior;
-          anchor->prior->next=peerNode;
-          anchor->prior=peerNode;
-          }
-        else{
-          peerNode->next=msgcabal->node;
-          peerNode->prior=msgcabal->node->prior;
-          msgcabal->node->prior->next=peerNode;
-          msgcabal->node->prior=peerNode;
+    for(serviceType=1;serviceType<3;serviceType++){
+      // Servers look for clients, clients look for servers, and peers look for both and satisfy both
+      if((mode&NB_MSG_CABAL_MODE_SERVER && serviceType==1) || (mode&NB_MSG_CABAL_MODE_CLIENT && serviceType==2)){
+        peerNode=nbMsgNodeCreate(context,cabalName,peerName,nodeContext,myNodeType,serviceType); 
+        if(peerNode){
+          peerNode->msgcabal=msgcabal;
+          peerNode->order=msgcabal->nodeCount;
+          if(anchor){
+            peerNode->next=anchor;
+            peerNode->prior=anchor->prior;
+            anchor->prior->next=peerNode;
+            anchor->prior=peerNode;
+            }
+          else{
+            peerNode->next=msgcabal->node;
+            peerNode->prior=msgcabal->node->prior;
+            msgcabal->node->prior->next=peerNode;
+            msgcabal->node->prior=peerNode;
+            }
+          // if we look for a client and find a peer, we don't need to look for a server
+          if(peerNode->type&NB_MSG_NODE_TYPE_SERVER) continue;
           }
         }
       }
@@ -3085,8 +3106,9 @@ int nbMsgCabalFree(nbCELL context,nbMsgCabal *msgcabal){
 nbMsgCabal *nbMsgCabalServer(nbCELL context,char *cabalName,char *nodeName){
   nbMsgCabal *msgcabal;
 
-  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCabalServer: calling nbMsgCabalAlloc cabal=%s node=%s",cabalName,nodeName);
+  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCabalServer: called for cabal=%s node=%s",cabalName,nodeName);
   msgcabal=nbMsgCabalAlloc(context,cabalName,nodeName,NB_MSG_CABAL_MODE_SERVER); // server mode
+  if(!msgcabal) return(NULL);
   if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCabalServer: msgcabal->node->number=%d",msgcabal->node->number);
   if(msgcabal->node->number<0){
     nbLogMsg(context,0,'E',"nbMsgCabalServer: Node \"%s\" required number not defined in context",nodeName);
@@ -3110,12 +3132,12 @@ nbMsgCabal *nbMsgCabalServer(nbCELL context,char *cabalName,char *nodeName){
 nbMsgCabal *nbMsgCabalClient(nbCELL context,char *cabalName,char *nodeName,void *handle,int (*handler)(nbCELL context,void *handle,nbMsgRec *msgrec)){
   nbMsgCabal *msgcabal;
 
-  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCabalClient: called");
-  msgcabal=nbMsgCabalAlloc(context,cabalName,nodeName,NB_MSG_CABAL_MODE_CLIENT); // 1 for client
+  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCabalClient: called for cabal=%s node=%s",cabalName,nodeName);
+  msgcabal=nbMsgCabalAlloc(context,cabalName,nodeName,NB_MSG_CABAL_MODE_CLIENT); // client mode
   if(!msgcabal) return(NULL);
+  if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCabalCient: msgcabal->node->number=%d",msgcabal->node->number);
   msgcabal->handle=handle;
   msgcabal->handler=handler;
-  if(msgTrace) nbLogMsg(context,0,'T',"msgcabal->node->number=%d",msgcabal->node->number);
   return(msgcabal);
   }
 
@@ -3163,7 +3185,7 @@ int nbMsgCabalClientSync(nbCELL context,nbMsgCabal *msgcabal,nbMsgState *msgstat
 *
 *  Mode:
 *    NB_MSG_CABAL_MODE_CLIENT   - Connect to and accept connections from appropriate server(s)
-*    NB_MSG_CABAL_MODE_SERVER   - Connect to and accetp connections from appropriate client(s)
+*    NB_MSG_CABAL_MODE_SERVER   - Connect to and accept connections from appropriate client(s)
 *    NB_MSG_CABAL_MODE_PEER     - Client and server (not yet implemented)
 *
 *  The connection goal of a node depends on the type defined in the cabal configuration
@@ -3189,7 +3211,7 @@ nbMsgCabal *nbMsgCabalOpen(nbCELL context,int mode,char *cabalName,char *nodeNam
 
   msgcabal=nbMsgCabalAlloc(context,cabalName,nodeName,mode); // 
   if(!msgcabal){
-    nbLogMsg(context,0,'E',"Unable to alloca cabal structure");
+    nbLogMsg(context,0,'E',"Unable to allocate cabal structure");
     return(NULL);
     }
   msgcabal->handle=handle;
@@ -3296,8 +3318,7 @@ int nbMsgCabalEnable(nbCELL context,nbMsgCabal *msgcabal){
     nbMsgCabalPrint(msgcabal);
     }
 
-  //nbClockSetTimer(0,msgcabal->synapse); // cancel previous timer if set
-  nbSynapseSetTimer(context,msgcabal->synapse,0);
+  nbSynapseSetTimer(context,msgcabal->synapse,0); // cancel previous timer
   time(&utime);
   expirationTime=utime;
   expirationTime-=30;  // wait 30 seconds before connecting after a disconnect
@@ -3305,14 +3326,45 @@ int nbMsgCabalEnable(nbCELL context,nbMsgCabal *msgcabal){
   // Handle fan topology sink (client) and source (server)
   if(msgcabal->node->type&NB_MSG_NODE_TYPE_FAN){
     if(msgcabal->node->type&NB_MSG_NODE_TYPE_SOURCE){
-      nbLogMsg(context,0,'T',"nbMsgCabalEnable: source node waits for connection from sink nodes");
-      return(0);
+      //nbLogMsg(context,0,'T',"nbMsgCabalEnable: source node waits for connection from sink nodes");
+      //return(0);
+      // 2011-02-06 eat - experimenting with source nodes connecting to sink nodes
+      nbLogMsg(context,0,'T',"nbMsgCabalEnable: source server for cabal %s node %s",msgcabal->cabalName,msgcabal->node->name);
+      for(count=0,msgnode=msgcabal->node->next;msgnode!=msgcabal->node && count<limit;msgnode=msgnode->next){
+        // We can unify this and the next outer block as follows
+        // if((msgcabal->node->type&NB_MSG_NODE_TYPE_SOURCE && 
+        //       msgnode->type&NB_MSG_NODE_TYPE_SINK && msgnode->type&NB_MSG_NODE_TYPE_CLIENT) ||
+        //    (msgcabal->node->type&NB_MSG_NODE_TYPE_SINK &&
+        //       msgnode->type&NB_MSG_NODE_TYPE_SOURCE && msgnode->type&NB_MSG_NODE_TYPE_SERVER))
+        if(msgnode->peer->tls && msgnode->type&NB_MSG_NODE_TYPE_SINK && msgnode->type&NB_MSG_NODE_TYPE_CLIENT){
+          if(msgnode->state!=NB_MSG_NODE_STATE_CONNECTED) preferred=0;
+          if(msgnode->state==NB_MSG_NODE_STATE_DISCONNECTED && msgnode->downTime<expirationTime){
+            // we only want to connect from a disconnected state
+            nbLogMsg(context,0,'T',"nbMsgCabalEnable: calling nbPeerConnect for cabal %s sink node %s to source node %s",msgcabal->cabalName,msgcabal->node->name,msgnode->name);
+            if(msgnode->peer!=msgnode->peer4Connect){
+              nbPeerDestroy(context,msgnode->peer);
+              msgnode->peer=msgnode->peer4Connect;
+              }
+            msgnode->state=NB_MSG_NODE_STATE_CONNECTING;
+            connected=nbPeerConnect(context,msgnode->peer,msgnode,nbMsgPeerHelloProducer,NULL,nbMsgPeerShutdown);
+            if(connected<0){
+              nbLogMsg(context,0,'T',"nbMsgCabalEnable: nbPeerConnect failed for cabal %s sink node %s to source node %s",msgcabal->cabalName,msgcabal->node->name,msgnode->name);
+              msgnode->state=NB_MSG_NODE_STATE_DISCONNECTED;
+              msgnode->downTime=utime;
+              preferred=0;
+              }
+            else if(connected==1) msgnode->state=NB_MSG_NODE_STATE_CONNECTED;
+            else preferred=0;
+            count++;
+            }
+          }
+        }
       }
     // A sink node tries to connect to all source nodes (we don't connect to hubs---thats what spoke nodes do)
     if(msgcabal->node->type&NB_MSG_NODE_TYPE_SINK){
       nbLogMsg(context,0,'T',"nbMsgCabalEnable: sink client for cabal %s node %s",msgcabal->cabalName,msgcabal->node->name);
       for(count=0,msgnode=msgcabal->node->next;msgnode!=msgcabal->node && count<limit;msgnode=msgnode->next){
-        if(msgnode->type&NB_MSG_NODE_TYPE_SOURCE && msgnode->type&NB_MSG_NODE_TYPE_SERVER){
+        if(msgnode->peer->tls && msgnode->type&NB_MSG_NODE_TYPE_SOURCE && msgnode->type&NB_MSG_NODE_TYPE_SERVER){
           if(msgnode->state!=NB_MSG_NODE_STATE_CONNECTED) preferred=0;
           if(msgnode->state==NB_MSG_NODE_STATE_DISCONNECTED && msgnode->downTime<expirationTime){
             // we only want to connect from a disconnected state 
@@ -3343,7 +3395,7 @@ int nbMsgCabalEnable(nbCELL context,nbMsgCabal *msgcabal){
     if(msgcabal->mode&NB_MSG_CABAL_MODE_SERVER){  // server tries to connect to clients
       nbLogMsg(context,0,'T',"nbMsgCabalEnable: hub server for cabal %s node %s",msgcabal->cabalName,msgcabal->node->name);
       for(count=0,connected=-1,msgnode=msgcabal->node->next;connected==-1 && msgnode!=msgcabal->node && count<limit;msgnode=msgnode->next){
-        if(msgnode->type&NB_MSG_NODE_TYPE_HUB && msgnode->type&NB_MSG_NODE_TYPE_CLIENT){
+        if(msgnode->peer->tls && msgnode->type&NB_MSG_NODE_TYPE_HUB && msgnode->type&NB_MSG_NODE_TYPE_CLIENT){
           if(msgnode->state==NB_MSG_NODE_STATE_CONNECTED) connected=1;
           else if(msgnode->state==NB_MSG_NODE_STATE_CONNECTING) connected=0;
           else if(msgnode->state==NB_MSG_NODE_STATE_DISCONNECTED && msgnode->downTime<expirationTime){
@@ -3383,7 +3435,7 @@ int nbMsgCabalEnable(nbCELL context,nbMsgCabal *msgcabal){
     if(msgcabal->mode&NB_MSG_CABAL_MODE_CLIENT){ // client tries to connect to server in reverse order
       nbLogMsg(context,0,'T',"nbMsgCabalEnable: client for cabal %s node %s",msgcabal->cabalName,msgcabal->node->name);
       for(count=0,connected=-1,msgnode=msgcabal->node->prior;connected==-1 && msgnode!=msgcabal->node && count<limit;msgnode=msgnode->prior){
-        if(msgnode->type&NB_MSG_NODE_TYPE_HUB && msgnode->type&NB_MSG_NODE_TYPE_SERVER){
+        if(msgnode->peer->tls && msgnode->type&NB_MSG_NODE_TYPE_HUB && msgnode->type&NB_MSG_NODE_TYPE_SERVER){
           if(msgnode->state==NB_MSG_NODE_STATE_CONNECTED) connected=1;
           else if(msgnode->state==NB_MSG_NODE_STATE_CONNECTING) connected=0;
           else if(msgnode->state==NB_MSG_NODE_STATE_DISCONNECTED && msgnode->downTime<expirationTime){
