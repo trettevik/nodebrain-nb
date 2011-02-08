@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2011 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -127,6 +127,7 @@ NB_Cell *nbSynapseOpen(NB_Cell *context,void *skillHandle,void *nodeHandle,NB_Ce
 */
 void nbSynapseSetTimer(nbCELL context,nbCELL synapse,int seconds){
   time_t at;
+  //outMsg(0,'T',"nbSynapseSetTimer: seconds=%d synapse=%p",seconds,synapse);
   if(seconds){
     time(&at);
     seconds+=at;
