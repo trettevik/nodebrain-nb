@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2011 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -122,6 +122,9 @@
 * 2008-11-11 eat 0.7.3  Change failure exit code to NB_EXITCODE_FAIL
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2011-02-08 eat 0.8.0  Modified nbClockSetTimer to reset object timers
+*            Previosly it considered an attempt to reset a timer a logic error
+*            and required a timer to be cleared by setting a new one.
 *=============================================================================
 */
 #include "nbi.h" 
@@ -152,7 +155,7 @@ void nbClockInit(NB_Stem *stem){
 void nbClockSetTimer(time_t etime,NB_Cell *object){
   NB_Timer **timerP,*newTimer;
 
-  //outMsg(0,'T',"nbClockSetTimer: called");
+  //outMsg(0,'T',"nbClockSetTimer: called time=%d object=%p",(int)etime,object);
   //printObject(object);
   //outPut("\n");
   /* This can be improved by using a more complex structure.  A simple list seems
@@ -160,17 +163,12 @@ void nbClockSetTimer(time_t etime,NB_Cell *object){
   */
   for(timerP=&nb_timerQueue;*timerP!=NULL && object!=(NB_Cell *)(*timerP)->object;timerP=&((*timerP)->next));
   if(*timerP!=NULL){
-    if(etime==0){ /* cancel timer */
-      newTimer=*timerP;
-      *timerP=(*timerP)->next;
-      newTimer->next=nb_timerFree;
-      nb_timerFree=newTimer;
-      return;
-      }  
-    else{
-      outMsg(0,'L',"nbClockSetTimer() - may not set more than one timer per object.");
-      return;
-      }
+    newTimer=*timerP;             // cancel existing timer
+    *timerP=(*timerP)->next;
+    newTimer->next=nb_timerFree;
+    nb_timerFree=newTimer;
+    if(etime==0) return;
+    outMsg(0,'W',"Object timer was reset.");
     }
   else if(etime==0) return;
   if(nb_timerFree==NULL) newTimer=malloc(sizeof(NB_Timer));
