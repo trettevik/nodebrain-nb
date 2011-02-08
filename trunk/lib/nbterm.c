@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2011 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -102,6 +102,7 @@
 *            to have the Unknown value.
 * 2008-11-11 eat 0.7.3  Changed failure exit code to NB_EXITCODE_FAIL
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2011-02-08 eat 0.8.5  Stopped echo of nbTermOptionString values
 *=============================================================================
 */
 #include "nbi.h"
@@ -899,7 +900,7 @@ char *nbTermOptionString(nbCELL context,char *name,char *defaultValue){
 //    && (cell=nbTermGetDefinition(context,cell))!=NULL
     && (cell=nbCellCompute(context,cell))!=NULL
     && nbCellGetType(context,cell)==NB_TYPE_STRING) value=nbCellGetString(context,cell);
-  if(value) nbLogMsg(context,0,'T',"%s=%s",name,value);
+  if(trace && value) nbLogMsg(context,0,'T',"%s=%s",name,value);
   return(value);
   }
 
