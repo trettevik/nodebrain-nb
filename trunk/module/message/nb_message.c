@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2009-2010 The Boeing Company
+* Copyright (C) 2009-2011 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -88,6 +88,7 @@
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2010-04-26 eat 0.7.9  Included optional node number argument to message.producer
+* 2011-02-08 eat 0.8.5  Started to unify message.(client|server|peer)
 *===================================================================================
 */
 #include "config.h"
@@ -571,6 +572,12 @@ extern void *consumerBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL 
 /*==================================================================================
 *  Peer
 *
+*  There are currently three skills that share a common peer structure.
+*
+*    client - processes messages from a server
+*    server - shares messages with a client
+*    peer   - both client and server
+*
 *=================================================================================*/
 
 /*
@@ -580,20 +587,36 @@ extern void *consumerBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL 
 *  structure which it stores in a node's "handle".  The handle is passed to
 *  various functions defined in this module.
 */
-typedef struct NB_MOD_CLIENT{      // message.client node descriptor
+
+typedef struct NB_MOD_PEER{        // message.client node descriptor
   char           cabalName[32];    // cabal name
   char           nodeName[32];     // node name within cabal
-  nbMsgCabal     *msgclient;        // client mode peer
-  unsigned char  trace;            // trace option 
+  int            cabalNode;        // number of node within cabal
+  nbMsgCabal     *msgpeer;         // client mode peer
+  unsigned char  trace;            // trace option
   unsigned char  dump;             // option to dump packets in trace
   unsigned char  echo;             // echo option
-  } nbModClient;
+  } nbModPeer;
+
+/*
+*  Peer message handler
+*/
+int peerMessageHandler(nbCELL context,void *handle,nbMsgRec *msgrec){
+  nbModPeer *peer=handle;
+  char *cmd;
+  int cmdlen;
+
+  if(peer->trace) nbLogMsg(context,0,'T',"clientMessageHandler: called");
+  cmd=nbMsgData(context,msgrec,&cmdlen);
+  nbCmd(context,cmd,1);
+  return(0);
+  }
 
 /*
 *  Client message handler
 */
 int clientMessageHandler(nbCELL context,void *handle,nbMsgRec *msgrec){
-  nbModClient *client=handle;
+  nbModPeer *client=handle;
   char *cmd;
   int cmdlen;
 
@@ -622,8 +645,8 @@ int clientMessageHandler(nbCELL context,void *handle,nbMsgRec *msgrec){
 *    define <term> node message.peer("<cabal>","<nodeName>");
 *    <term>. define filelines cell <filelines>; # number of lines per file
 */
-void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
-  nbModClient *client;
+void *peerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+  nbModPeer *peer;
   nbCELL cell=NULL;
   nbSET argSet;
   char *cursor=text,*delim,saveDelim;
@@ -669,7 +692,7 @@ void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
   nbCellDrop(context,cell);
   cell=nbListGetCellValue(context,&argSet);
   if(cell!=NULL){
-    nbLogMsg(context,0,'E',"The message.client skill only accepts two arguments.");
+    nbLogMsg(context,0,'E',"The message.(peer|client|server) skill only accepts two arguments.");
     return(NULL);
     }
   while(*cursor==' ') cursor++;
@@ -688,17 +711,17 @@ void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
     if(*cursor==',') cursor++;
     while(*cursor==' ') cursor++;
     }
-  client=malloc(sizeof(nbModClient));
-  memset(client,0,sizeof(nbModClient));
-  strcpy(client->cabalName,cabalName);
-  strcpy(client->nodeName,nodeName);
-  client->msgclient=NULL;
-  client->trace=trace;
-  client->dump=dump;
-  client->echo=echo;
-  if(client->trace) nbLogMsg(context,0,'I',"calling nbListenerEnableOnDaemon");
+  peer=malloc(sizeof(nbModPeer));
+  memset(peer,0,sizeof(nbModPeer));
+  strcpy(peer->cabalName,cabalName);
+  strcpy(peer->nodeName,nodeName);
+  peer->msgpeer=NULL;
+  peer->trace=trace;
+  peer->dump=dump;
+  peer->echo=echo;
+  if(peer->trace) nbLogMsg(context,0,'I',"calling nbListenerEnableOnDaemon");
   nbListenerEnableOnDaemon(context);  // sign up to enable when we daemonize
-  return(client);
+  return(peer);
   }
 
 /*
@@ -706,210 +729,13 @@ void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
 *
 *    enable <node>
 */
-int clientEnable(nbCELL context,void *skillHandle,nbModClient *client){
-  // We call nbMsgCabalClient with a NULL message state to let the message log
-  // define our state.  For other applications we may want to set the message state
-  // from another source, and reprocess message from the log to resynchronize.
-  if(!client->msgclient) client->msgclient=nbMsgCabalClient(context,client->cabalName,client->nodeName,client,clientMessageHandler);
-  if(!client->msgclient){
-    nbLogMsg(context,0,'E',"Unable to instantiate message client for cabal \"%s\" node \"%s\"",client->cabalName,client->nodeName);
+int peerEnable(nbCELL context,void *skillHandle,nbModPeer *server){
+  if(!server->msgpeer) server->msgpeer=nbMsgCabalOpen(context,NB_MSG_CABAL_MODE_PEER,server->cabalName,server->nodeName,NULL,NULL,peerMessageHandler);
+  if(!server->msgpeer){
+    nbLogMsg(context,0,'E',"Unable to instantiate message peer for cabal \"%s\" node \"%s\"",server->cabalName,server->nodeName);
     return(1);
     }
-  if(nbMsgCabalClientSync(context,client->msgclient,NULL)){
-    nbLogMsg(context,0,'E',"Unable to synchronize message client for cabal \"%s\" node \"%s\"",client->cabalName,client->nodeName);
-    return(1);
-    }
-  nbMsgCabalEnable(context,client->msgclient);
-  nbLogMsg(context,0,'I',"Enabled for cabal \"%s\" node \"%s\"",client->cabalName,client->nodeName);
-  return(0);
-  }
-
-/*
-*  disable method
-* 
-*    disable <node>
-*/
-int clientDisable(nbCELL context,void *skillHandle,nbModClient *client){
-  nbMsgCabalDisable(context,client->msgclient);
-  return(0);
-  }
-
-/*
-*  command() method
-*
-*    <node>[(<args>)][:<text>]
-*/
-int clientCommand(nbCELL context,void *skillHandle,nbModClient *client,nbCELL arglist,char *text){
-  if(!client || !client->msgclient || !client->msgclient->msglog){
-    nbLogMsg(context,0,'T',"nb_message: clientCommand() text: %s",text);
-    nbLogMsg(context,0,'T',"nb_message: client is not properly enabled - check prior messages");
-    return(1);
-    }
-  if(client->trace){
-    nbLogMsg(context,0,'T',"nb_message: clientCommand() text: %s",text);
-    }
-  nbCmd(context,text,1);
-  if(client->msgclient->msglog) nbMsgLogWriteString(context,client->msgclient->msglog,(unsigned char *)text);
-  else nbLogMsg(context,0,'E',"nb_message:clientCommand():message log file not open");
-  return(0);
-  }
-
-
-/*
-*  destroy() method
-*
-*    undefine <node>
-*/
-int clientDestroy(nbCELL context,void *skillHandle,nbModClient *client){
-  nbLogMsg(context,0,'T',"clientDestroy called");
-  if(client->msgclient) clientDisable(context,skillHandle,client);
-  nbFree(client,sizeof(nbModClient));
-  return(0);
-  }
-
-#if defined(_WINDOWS)
-_declspec (dllexport)
-#endif
-extern void *clientBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
-  nbSkillSetMethod(context,skill,NB_NODE_CONSTRUCT,clientConstruct);
-  nbSkillSetMethod(context,skill,NB_NODE_DISABLE,clientDisable);
-  nbSkillSetMethod(context,skill,NB_NODE_ENABLE,clientEnable);
-  nbSkillSetMethod(context,skill,NB_NODE_COMMAND,clientCommand);
-  nbSkillSetMethod(context,skill,NB_NODE_DESTROY,clientDestroy);
-  return(NULL);
-  }
-
-
-/*==================================================================================
-*  Server
-*
-*=================================================================================*/
-
-/*
-*  The following structure is created by the skill module's "construct"
-*  function defined in this file.  This is a module specific
-*  structure.  NodeBrain is only aware of the address of instances of this
-*  structure which it stores in a node's "handle".  The handle is passed to
-*  various functions defined in this module.
-*/
-typedef struct NB_MOD_SERVER{      // message.server node descriptor
-  char           cabalName[32];    // name of cabal
-  char           nodeName[32];     // name of node within cabal
-  int            cabalNode;        // number of node within cabal
-  nbMsgCabal     *msgserver;        // message server peer structure
-  unsigned char  trace;            // trace option 
-  unsigned char  dump;             // option to dump packets in trace
-  unsigned char  echo;             // echo option
-  } nbModServer;
-
-/*==================================================================================
-*
-*  M E T H O D S
-*
-*  The code above this point is very specific to the goals of this skill module. The
-*  code below this point is also specific in some of the details, but the general
-*  structure applies to any skill module.  The functions below are "methods" called
-*  by NodeBrain.  Their parameters must conform to the NodeBrain Skill Module
-*  API.  A module is not required to provide all possible methods, so modules may
-*  vary in the set of methods they implement.
-*
-*=================================================================================*/
-
-/*
-*  construct() method
-*
-*    define <term> node message.server("<cabal>","<node>");
-*/
-void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
-  nbModServer *server;
-  nbCELL cell=NULL;
-  nbSET argSet;
-  char *cursor=text,*delim,saveDelim;
-  char cabalName[32];
-  char nodeName[32];
-  int type,trace=0,dump=0,echo=1;
-  char *str;
-
-  argSet=nbListOpen(context,arglist);
-  cell=nbListGetCellValue(context,&argSet);
-  if(cell==NULL){
-    nbLogMsg(context,0,'E',"Cabal name required as first argument");
-    return(NULL);
-    }
-  type=nbCellGetType(context,cell);
-  if(type!=NB_TYPE_STRING){
-    nbLogMsg(context,0,'E',"First argument must be string identifying cabal");
-    return(NULL);
-    }
-  str=nbCellGetString(context,cell);
-  if(strlen(str)>sizeof(cabalName)-1){
-    nbLogMsg(context,0,'E',"First argument has cabal name \"%s\" too long for buffer - limit is %d characters",str,sizeof(cabalName)-1);
-    return(NULL);
-    }
-  strcpy(cabalName,str);  // size checked
-  nbCellDrop(context,cell);
-  cell=nbListGetCellValue(context,&argSet);
-  if(cell==NULL){
-    nbLogMsg(context,0,'E',"Node name required as second argument");
-    return(NULL);
-    }
-  type=nbCellGetType(context,cell);
-  if(type!=NB_TYPE_STRING){
-    nbLogMsg(context,0,'E',"Second argument must be string identifying node within cabal");
-    return(NULL);
-    }
-  str=nbCellGetString(context,cell);
-  if(strlen(str)>sizeof(nodeName)-1){
-    nbLogMsg(context,0,'E',"Second argument has node name \"%s\" too long for buffer - limit is %d characters",str,sizeof(nodeName)-1);
-    return(NULL);
-    }
-  strcpy(nodeName,str);  // size checked
-  nbCellDrop(context,cell);
-  cell=nbListGetCellValue(context,&argSet);
-  if(cell!=NULL){
-    nbLogMsg(context,0,'E',"The message.server skill only accepts two arguments.");
-    return(NULL);
-    }
-  while(*cursor==' ') cursor++;
-  while(*cursor!=';' && *cursor!=0){
-    delim=strchr(cursor,' ');
-    if(delim==NULL) delim=strchr(cursor,',');
-    if(delim==NULL) delim=strchr(cursor,';');
-    if(delim==NULL) delim=strchr(cursor,0);
-    saveDelim=*delim;
-    *delim=0;
-    if(strcmp(cursor,"trace")==0){trace=1;}
-    else if(strcmp(cursor,"dump")==0){trace=1;dump=1;}
-    else if(strcmp(cursor,"silent")==0) echo=0; 
-    *delim=saveDelim;
-    cursor=delim;
-    if(*cursor==',') cursor++;
-    while(*cursor==' ') cursor++;
-    }
-  server=malloc(sizeof(nbModServer));
-  memset(server,0,sizeof(nbModServer));
-  strcpy(server->cabalName,cabalName);
-  strcpy(server->nodeName,nodeName);
-  server->trace=trace;
-  server->dump=dump;
-  server->echo=echo;
-  if(server->trace) nbLogMsg(context,0,'I',"calling nbListenerEnableOnDaemon");
-  nbListenerEnableOnDaemon(context);  // sign up to enable when we daemonize
-  return(server);
-  }
-
-/*
-*  enable() method
-*
-*    enable <node>
-*/
-int serverEnable(nbCELL context,void *skillHandle,nbModServer *server){
-  if(!server->msgserver) server->msgserver=nbMsgCabalServer(context,server->cabalName,server->nodeName);
-  if(!server->msgserver){
-    nbLogMsg(context,0,'E',"Unable to instantiate message peer server for cabal \"%s\" node \"%s\"",server->cabalName,server->nodeName);
-    return(1);
-    }
-  nbMsgCabalEnable(context,server->msgserver);
+  nbMsgCabalEnable(context,server->msgpeer);
   nbLogMsg(context,0,'I',"Enabled for cabal \"%s\" node \"%s\"",server->cabalName,server->nodeName);
   return(0);
   }
@@ -919,8 +745,8 @@ int serverEnable(nbCELL context,void *skillHandle,nbModServer *server){
 * 
 *    disable <node>
 */
-int serverDisable(nbCELL context,void *skillHandle,nbModServer *server){
-  nbMsgCabalDisable(context,server->msgserver);
+int peerDisable(nbCELL context,void *skillHandle,nbModPeer *peer){
+  nbMsgCabalDisable(context,peer->msgpeer);
   return(0);
   }
 
@@ -929,9 +755,9 @@ int serverDisable(nbCELL context,void *skillHandle,nbModServer *server){
 *
 *    <node>[(<args>)][:<text>]
 */
-int *serverCommand(nbCELL context,void *skillHandle,nbModServer *server,nbCELL arglist,char *text){
-  if(server->trace){
-    nbLogMsg(context,0,'T',"nb_message:serverCommand() text=[%s]\n",text);
+int *peerCommand(nbCELL context,void *skillHandle,nbModPeer *peer,nbCELL arglist,char *text){
+  if(peer->trace){
+    nbLogMsg(context,0,'T',"nb_message:peerCommand() text=[%s]\n",text);
     }
   //nbCmd(context,text,1);
   return(0);
@@ -942,10 +768,114 @@ int *serverCommand(nbCELL context,void *skillHandle,nbModServer *server,nbCELL a
 *
 *    undefine <node>
 */
-int serverDestroy(nbCELL context,void *skillHandle,nbModServer *server){
-  nbLogMsg(context,0,'T',"serverDestroy called");
-  nbMsgCabalFree(context,server->msgserver);
-  nbFree(server,sizeof(nbModServer));
+int peerDestroy(nbCELL context,void *skillHandle,nbModPeer *peer){
+  nbLogMsg(context,0,'T',"peerDestroy called");
+  if(peer->msgpeer) peerDisable(context,skillHandle,peer);
+  nbFree(peer,sizeof(nbModPeer));
+  return(0);
+  }
+
+#if defined(_WINDOWS)
+_declspec (dllexport)
+#endif
+extern void *peerBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
+  nbSkillSetMethod(context,skill,NB_NODE_CONSTRUCT,peerConstruct);
+  nbSkillSetMethod(context,skill,NB_NODE_ENABLE,peerEnable);
+  nbSkillSetMethod(context,skill,NB_NODE_DISABLE,peerDisable);
+  nbSkillSetMethod(context,skill,NB_NODE_COMMAND,peerCommand);
+  nbSkillSetMethod(context,skill,NB_NODE_DESTROY,peerDestroy);
+  return(NULL);
+  }
+
+/*==================================================================================
+*  Client
+*=================================================================================*/
+
+/*
+*  enable() method
+*
+*    enable <node>
+*/
+int clientEnable(nbCELL context,void *skillHandle,nbModPeer *client){
+  // We call nbMsgCabalClient with a NULL message state to let the message log
+  // define our state.  For other applications we may want to set the message state
+  // from another source, and reprocess message from the log to resynchronize.
+  if(!client->msgpeer) client->msgpeer=nbMsgCabalClient(context,client->cabalName,client->nodeName,client,clientMessageHandler);
+  if(!client->msgpeer){
+    nbLogMsg(context,0,'E',"Unable to instantiate message client for cabal \"%s\" node \"%s\"",client->cabalName,client->nodeName);
+    return(1);
+    }
+  if(nbMsgCabalClientSync(context,client->msgpeer,NULL)){
+    nbLogMsg(context,0,'E',"Unable to synchronize message client for cabal \"%s\" node \"%s\"",client->cabalName,client->nodeName);
+    return(1);
+    }
+  nbMsgCabalEnable(context,client->msgpeer);
+  nbLogMsg(context,0,'I',"Enabled for cabal \"%s\" node \"%s\"",client->cabalName,client->nodeName);
+  return(0);
+  }
+
+/*
+*  command() method
+*
+*    <node>[(<args>)][:<text>]
+*/
+int clientCommand(nbCELL context,void *skillHandle,nbModPeer *client,nbCELL arglist,char *text){
+  if(!client || !client->msgpeer || !client->msgpeer->msglog){
+    nbLogMsg(context,0,'T',"nb_message: clientCommand() text: %s",text);
+    nbLogMsg(context,0,'T',"nb_message: client is not properly enabled - check prior messages");
+    return(1);
+    }
+  if(client->trace){
+    nbLogMsg(context,0,'T',"nb_message: clientCommand() text: %s",text);
+    }
+  nbCmd(context,text,1);
+  if(client->msgpeer->msglog) nbMsgLogWriteString(context,client->msgpeer->msglog,(unsigned char *)text);
+  else nbLogMsg(context,0,'E',"nb_message:clientCommand():message log file not open");
+  return(0);
+  }
+
+#if defined(_WINDOWS)
+_declspec (dllexport)
+#endif
+extern void *clientBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
+  nbSkillSetMethod(context,skill,NB_NODE_CONSTRUCT,peerConstruct);
+  nbSkillSetMethod(context,skill,NB_NODE_DISABLE,peerDisable);
+  nbSkillSetMethod(context,skill,NB_NODE_ENABLE,clientEnable);
+  nbSkillSetMethod(context,skill,NB_NODE_COMMAND,clientCommand);
+  nbSkillSetMethod(context,skill,NB_NODE_DESTROY,peerDestroy);
+  return(NULL);
+  }
+
+/*==================================================================================
+*  Server
+*=================================================================================*/
+
+/*
+*  enable() method
+*
+*    enable <node>
+*/
+int serverEnable(nbCELL context,void *skillHandle,nbModPeer *server){
+  if(!server->msgpeer) server->msgpeer=nbMsgCabalServer(context,server->cabalName,server->nodeName);
+  if(!server->msgpeer){
+    nbLogMsg(context,0,'E',"Unable to instantiate message peer server for cabal \"%s\" node \"%s\"",server->cabalName,server->nodeName);
+    return(1);
+    }
+  nbMsgCabalEnable(context,server->msgpeer);
+  nbLogMsg(context,0,'I',"Enabled for cabal \"%s\" node \"%s\"",server->cabalName,server->nodeName);
+  return(0);
+  }
+
+/*
+*  command() method
+*
+*    <node>[(<args>)][:<text>]
+*/
+int *serverCommand(nbCELL context,void *skillHandle,nbModPeer *server,nbCELL arglist,char *text){
+  if(server->trace){
+    nbLogMsg(context,0,'T',"nb_message:serverCommand() text=[%s]\n",text);
+    }
+  //nbCmd(context,text,1);
   return(0);
   }
 
@@ -953,63 +883,11 @@ int serverDestroy(nbCELL context,void *skillHandle,nbModServer *server){
 _declspec (dllexport)
 #endif
 extern void *serverBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
-  nbSkillSetMethod(context,skill,NB_NODE_CONSTRUCT,serverConstruct);
-  nbSkillSetMethod(context,skill,NB_NODE_DISABLE,serverDisable);
+  nbSkillSetMethod(context,skill,NB_NODE_CONSTRUCT,peerConstruct);
+  nbSkillSetMethod(context,skill,NB_NODE_DISABLE,peerDisable);
   nbSkillSetMethod(context,skill,NB_NODE_ENABLE,serverEnable);
   nbSkillSetMethod(context,skill,NB_NODE_COMMAND,serverCommand);
-  nbSkillSetMethod(context,skill,NB_NODE_DESTROY,serverDestroy);
-  return(NULL);
-  }
-
-//===============================================
-// Peer
-//===============================================
-// This skill binds to the server skill mostly
-// with the message handler being almost identical
-// the client skill.  By giving the client and server
-// skills the same data structure, all three skills
-// can be combined further.
-
-/*
-*  Client message handler
-*/
-int peerMessageHandler(nbCELL context,void *handle,nbMsgRec *msgrec){
-  nbModServer *server=handle;
-  char *cmd;
-  int cmdlen;
-
-  if(server->trace) nbLogMsg(context,0,'T',"clientMessageHandler: called");
-  cmd=nbMsgData(context,msgrec,&cmdlen);
-  nbCmd(context,cmd,1);
-  return(0);
-  }
-
-/*
-*  enable() method
-*
-*    enable <node>
-*/
-int peerEnable(nbCELL context,void *skillHandle,nbModServer *server){
-  if(!server->msgserver) server->msgserver=nbMsgCabalOpen(context,NB_MSG_CABAL_MODE_PEER,server->cabalName,server->nodeName,NULL,NULL,peerMessageHandler);
-  if(!server->msgserver){
-    nbLogMsg(context,0,'E',"Unable to instantiate message peer for cabal \"%s\" node \"%s\"",server->cabalName,server->nodeName);
-    return(1);
-    }
-  nbMsgCabalEnable(context,server->msgserver);
-  nbLogMsg(context,0,'I',"Enabled for cabal \"%s\" node \"%s\"",server->cabalName,server->nodeName);
-  return(0);
-  }
-
-
-#if defined(_WINDOWS)
-_declspec (dllexport)
-#endif
-extern void *peerBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
-  nbSkillSetMethod(context,skill,NB_NODE_CONSTRUCT,serverConstruct);
-  nbSkillSetMethod(context,skill,NB_NODE_DISABLE,serverDisable);
-  nbSkillSetMethod(context,skill,NB_NODE_ENABLE,serverEnable);
-  nbSkillSetMethod(context,skill,NB_NODE_COMMAND,serverCommand);
-  nbSkillSetMethod(context,skill,NB_NODE_DESTROY,serverDestroy);
+  nbSkillSetMethod(context,skill,NB_NODE_DESTROY,peerDestroy);
   return(NULL);
   }
 
