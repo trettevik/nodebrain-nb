@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2011 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -233,6 +233,7 @@
 * 2010-10-16 eat 0.8.4  Replacing "out" setting with "outdir", but accepting "out" as alias.
 * 2010-10-16 eat 0.8.4  Replacing "jail" setting with "jaildir", but accepting "jail" as alias.
 * 2010-11-07 eat 0.8.5  Split out nbSource commands to nbsource.c
+* 2011-02-08 eat 0.8.5  Updated copyright
 *==============================================================================
 */
 #include "nbi.h"
@@ -314,7 +315,7 @@ int nbGetCmdInteractive(char *cmd){
 void printVersion(void){
   printf("nb %s\n\n",PACKAGE_VERSION);
   printf("N o d e B r a i n\n");
-  printf("Copyright (C) 1998-2010 The Boeing Company\n");
+  printf("Copyright (C) 1998-2011 The Boeing Company\n");
   printf("GNU General Public License\n\n");
   }
 
@@ -376,7 +377,7 @@ void showVersion(void){
 
 void showCopyright(void){
   showVersion();
-  outPut("Copyright (C) 1998-2010 The Boeing Company\n");
+  outPut("Copyright (C) 1998-2011 The Boeing Company\n");
   outPut("GNU General Public License\n");
   outPut("----------------------------------------------------------------\n\n");
   }
