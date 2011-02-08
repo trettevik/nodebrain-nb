@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2011 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -117,6 +117,7 @@
 *            URI less than N is obtained, the the current socket is closed and
 *            the new connection is used.  A program may call this function
 *            periodically to re-establish a preferred connection. 
+* 2011-02-08 eat 0.8.5  Minor cleanup for local domain sockets
 *==================================================================================
 */
 #include <nbcfg.h>
@@ -159,6 +160,13 @@ static char *nbTlsGetAddrByName(char *hostname){
 #else
   return(inet_ntoa(*inaddr));
 #endif
+  }
+
+/*
+*  Return the URI of an open nbTLS structure
+*/
+char *nbTlsGetUri(nbTLS *tls){
+  return(tls->uriMap[tls->uriIndex].uri);
   }
 
 /*
@@ -776,8 +784,8 @@ int nbTlsAcceptHandshake(nbTLS *tls){
   if(error==SSL_ERROR_WANT_READ) tls->error=NB_TLS_ERROR_WANT_READ;
   else if(error==SSL_ERROR_WANT_WRITE) tls->error=NB_TLS_ERROR_WANT_WRITE;
   else{
-    fprintf(stderr,"nbTlsAccept: SSL_accept rc=%d code=%d\n",rc,error);
-    fprintf(stderr,"nbTlsAccept: %s\n",ERR_error_string(error,errbuf));
+    fprintf(stderr,"nbTlsAcceptHandshake: SSL_accept rc=%d code=%d\n",rc,error);
+    fprintf(stderr,"nbTlsAcceptHandshake: %s\n",ERR_error_string(error,errbuf));
     ERR_print_errors_fp(stderr);
     }
   return(rc);
@@ -849,17 +857,23 @@ nbTLS *nbTlsAccept(nbTLS *tlsListener){
   // Create the nbTLS structure
   tls=malloc(sizeof(nbTLS));
   memset(tls,0,sizeof(nbTLS));
-  if(tlsListener->tlsx) tls->option=tlsListener->tlsx->option;
-  else tls->option=NB_TLS_OPTION_TCP;
+  if(tlsListener->tlsx) tls->option=tlsListener->tlsx->option,tls->uriMap[0].scheme=NB_TLS_SCHEME_TLS;
+  else tls->option=NB_TLS_OPTION_TCP,tls->uriMap[0].scheme=NB_TLS_SCHEME_TCP;
   tls->socket=sd;
   tls->uriCount=1;
   tls->tlsx=tlsListener->tlsx;
+  if(client.sin_family==AF_UNIX){
+    tls->uriMap[0].scheme=NB_TLS_SCHEME_UNIX;
+    strcpy(tls->uriMap[0].name,tlsListener->uriMap[0].name);
+    }
+  else{
 #if defined(mpe)
-  strcpy(tls->uriMap[0].addr,(char *)inet_ntoa(client.sin_addr));
+    strcpy(tls->uriMap[0].addr,(char *)inet_ntoa(client.sin_addr));
 #else
-  strcpy(tls->uriMap[0].addr,inet_ntoa(client.sin_addr));
+    strcpy(tls->uriMap[0].addr,inet_ntoa(client.sin_addr));
 #endif
-  tls->uriMap[0].port=ntohs(client.sin_port);
+    tls->uriMap[0].port=ntohs(client.sin_port);
+    }
   if(tlsTrace) fprintf(stderr,"nbTlsAccept: tls->option=%d\n",tls->option);
   if(tls->tlsx && tls->option&NB_TLS_OPTION_TLS){
     protocol="tls";
@@ -885,7 +899,9 @@ nbTLS *nbTlsAccept(nbTLS *tlsListener){
     protocol="tcp";
     tls->ssl=NULL;
     }
-  sprintf(tls->uriMap[0].uri,"%s://%s:%d",protocol,tls->uriMap[0].addr,tls->uriMap[0].port);
+  if(tls->uriMap[0].scheme==NB_TLS_SCHEME_UNIX)
+    sprintf(tls->uriMap[0].uri,"unix://%s",tls->uriMap[0].name);
+  else sprintf(tls->uriMap[0].uri,"%s://%s:%d",protocol,tls->uriMap[0].addr,tls->uriMap[0].port);
   if(tls->tlsx) tls->handle=tls->tlsx->handle;
   return(tls);
   }

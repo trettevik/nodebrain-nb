@@ -1,3 +1,43 @@
+/*
+* Copyright (C) 1998-2011 The Boeing Company
+*                         Ed Trettevik <eat@nodebrain.org>
+*
+* NodeBrain is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place Suite 330, Boston, MA 02111-1307, USA.
+*
+*=============================================================================
+* Program:  NodeBrain
+*
+* File:     nb-tls.h
+*
+* Title:    Transport Layer Security Header
+*
+* Purpose:
+*
+*   This file provides function headers for Transport Layer Security
+*   using the OpenSSL library.
+*
+* See nb-tls.c for more information.
+*=============================================================================
+* Change History:
+*
+*    Date    Name/Change
+* ---------- -----------------------------------------------------------------
+* 2009-12-12 eat 0.7.7  (original prototype)
+* 2011-02-08 eat 0.8.5  Included nbTlsGetUri
+*=============================================================================
+*/
 #ifndef _NB__TLS_H_
 #define _NB__TLS_H_
 
@@ -34,7 +74,7 @@ typedef struct NB_TLS_HANDLE{   // TLS Handle
   int error;                    // last error code
   unsigned char uriIndex;       // uri we are using
   unsigned char uriCount;       // number of uri values
-  nbTlsUriMap uriMap[4];        // uri mapping - this will replace the next 4 attributes
+  nbTlsUriMap uriMap[4];        // uri mapping 
   nbTLSX *tlsx;
   SSL *ssl;
   void *handle;                 // user data handle
@@ -81,6 +121,8 @@ extern int nbTlsFreeContext(nbTLSX *tlsx);
 
 extern int nbTlsUriParse(nbTlsUriMap *uriMap,int n,char *uri);
 
+extern char *nbTlsGetUri(nbTLS *tls);
+
 extern nbTLS *nbTlsCreate(nbTLSX *tlsx,char *uri);
 
 extern int nbTlsListen(nbTLS *tls);
@@ -108,6 +150,5 @@ extern int nbTlsWrite(nbTLS *tls,char *buffer,size_t size);
 extern int nbTlsClose(nbTLS *tls);
 
 extern int nbTlsFree(nbTLS *tls);
-
 
 #endif
