@@ -141,6 +141,12 @@
 * 2010-06-07 eat 0.8.2  Included support for cursor mode message log reading
 * 2011-01-20 eat 0.8.5  Finishing up support for multiple consumers
 * 2011-02-08 eat 0.8.5  Cleaned up non-blocking SSL handshake
+* 2011-02-08 eat 0.8.5  Enable source and sink connections to made in either direction
+*            Previously sink nodes connected to all source nodes.  Now listeners
+*            can be configured on the sink nodes and source nodes will connect
+*            to all sink nodes.  This enables a source node to transmit to sink
+*            nodes when a firewall prevents the sink from connecting to the
+*            source but enables the source to connect to the sink.
 *==============================================================================
 */
 #include <ctype.h>
@@ -3060,7 +3066,7 @@ nbMsgCabal *nbMsgCabalAlloc(nbCELL context,char *cabalName,char *nodeName,int mo
     }
   if(msgTrace) nbMsgCabalPrint(msgcabal);
   // some types of nodes need to listen for a connection - source (server) and hub (client and server)
-  if(msgcabal->node->type&(NB_MSG_NODE_TYPE_HUB|NB_MSG_NODE_TYPE_SOURCE)){ 
+  if(msgcabal->node->type&(NB_MSG_NODE_TYPE_HUB|NB_MSG_NODE_TYPE_SOURCE|NB_MSG_NODE_TYPE_SINK)){ 
     // It is my beleive that if we modify nbMsgNodeCreate to support the
     // a uriName parameter, we can use the root node's peer and not need
     // to create one here.
