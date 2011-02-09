@@ -212,16 +212,16 @@ void *consoleConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *tex
     return(NULL);
     }
   cell=nbListGetCellValue(context,&argSet);
-  if(!cell || nbCellGetType(context,cell)!=NB_TYPE_STRING){
-    nbLogMsg(context,0,'E',"Expecting string argument for directory name");
-    return(NULL);
-    }
-  dirnameP=nbCellGetString(context,cell);
-  strncpy(dirname,dirnameP,255);
-  nbCellDrop(context,cell);
-  cell=nbListGetCellValue(context,&argSet);
-  if(cell!=NULL){
-    nbLogMsg(context,0,'W',"Unexpected argument - third argument and above ignored");
+  if(cell){
+    if(nbCellGetType(context,cell)!=NB_TYPE_STRING){
+      nbLogMsg(context,0,'E',"Expecting string argument for directory name");
+      return(NULL);
+      }
+    dirnameP=nbCellGetString(context,cell);
+    strncpy(dirname,dirnameP,255);
+    nbCellDrop(context,cell);
+    cell=nbListGetCellValue(context,&argSet);
+    if(cell!=NULL) nbLogMsg(context,0,'W',"Unexpected argument - third argument and above ignored");
     }
   while(*cursor==' ') cursor++;
   while(*cursor!=';' && *cursor!=0){

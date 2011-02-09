@@ -88,8 +88,6 @@ AC_SUBST([NB],[../../../../lib/.libs/lt-nb])
 #fi
 
 CFLAGS="-Wall $CFLAGS"
-#CFLAGS="-I/usr/local/include -I/usr/local/ssl/include"
-#LDFLAGS="-L/usr/local/ssl/lib"
 
 #=====================================
 # Checks for libraries.

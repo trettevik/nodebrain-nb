@@ -323,6 +323,7 @@ int openHistory(char *filename,int periods,size_t len){
 int readHistory(int file,void *buffer,int period,size_t len){
   long pos=period*len;
 
+  if(!file) return(0);
   if(lseek(file,pos,SEEK_SET)!=pos) return(0);
   if(read(file,buffer,len)!=(int)len) return(0);
   return(1);
@@ -1017,8 +1018,8 @@ void *netflowConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *tex
   double r,d;
   unsigned int port;
   int trace=0,dump=0,format=0,null=0;
-  int hfile;
-  char *hfilename;
+  int hfile=0;
+  char *hfilename="";
 
   argSet=nbListOpen(context,arglist);
   cell=nbListGetCellValue(context,&argSet);
@@ -1035,21 +1036,23 @@ void *netflowConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *tex
     return(NULL);
     }
   cell=nbListGetCellValue(context,&argSet);
-  if(!cell || nbCellGetType(context,cell)!=NB_TYPE_STRING){
-    nbLogMsg(context,0,'E',"Expecting string argument for history file name");
-    return(NULL);
-    }
-  hfilename=nbCellGetString(context,cell);
-  hfilename=strdup(hfilename);
-  nbCellDrop(context,cell);
-  hfile=openHistory(hfilename,7*24,sizeof(struct NB_MOD_NETFLOW_PERIOD));
-  if(hfile<0){
-    nbLogMsg(context,0,'E',"Unable to open history file");
-    return(NULL);
-    }
-  cell=nbListGetCellValue(context,&argSet);
-  if(cell!=NULL){
-    nbLogMsg(context,0,'W',"Unexpected argument - third argument and beyond ignored");
+  if(cell){
+    if(nbCellGetType(context,cell)!=NB_TYPE_STRING){
+      nbLogMsg(context,0,'E',"Expecting string argument for history file name");
+      return(NULL);
+      }
+    hfilename=nbCellGetString(context,cell);
+    hfilename=strdup(hfilename);
+    nbCellDrop(context,cell);
+    hfile=openHistory(hfilename,7*24,sizeof(struct NB_MOD_NETFLOW_PERIOD));
+    if(hfile<0){
+      nbLogMsg(context,0,'E',"Unable to open history file");
+      return(NULL);
+      }
+    cell=nbListGetCellValue(context,&argSet);
+    if(cell!=NULL){
+      nbLogMsg(context,0,'W',"Unexpected argument - third argument and beyond ignored");
+      }
     }
   while(*cursor==' ') cursor++;
   while(*cursor!=';' && *cursor!=0){
