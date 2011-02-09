@@ -105,7 +105,7 @@ LT_SYS_MODULE_EXT
 LT_FUNC_DLSYM_USCORE
 
 # define a release date variable
-AC_DEFINE(NB_RELEASE_DATE,"2010/11/07",[Define release date])
+AC_DEFINE(NB_RELEASE_DATE,"2011/02/09",[Define release date])
 
 # Checks for programs.
 AC_PROG_CC
@@ -155,8 +155,6 @@ AC_CHECK_FUNCS([alarm gethostbyaddr gethostbyname inet_ntoa memchr memset regcom
 AC_DEFINE_UNQUOTED(NB_COMPILE_PLATFORM,"$host",[Define compile platform])
 
 CFLAGS="-Wall $CFLAGS"
-#CFLAGS="-Wall -I/usr/local/include -I/usr/local/ssl/include"
-#LDFLAGS="-L/usr/local/ssl/lib"
 case "$host" in
   *-netbsd*)
     AC_DEFINE(NETBSD,,[Define if NetBSD])
