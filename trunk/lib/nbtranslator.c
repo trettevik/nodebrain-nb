@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2011 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -295,6 +295,7 @@
 * 2010-02-25 eat 0.7.9  cleaned up to remove -Wall warning messages
 * 2010-02-26 eat 0.7.9  cleaned up to remove -Wall warning messages (gcc 4.1.2)
 * 2010-02-28 eat 0.7.9  cleaned up to remove -Wall warning messages (gcc 4.5.0)
+* 2011-02-10 eat 0.8.5  turned echo off on call to nbCmd
 *=============================================================================
 */
 #include "nbi.h"
@@ -952,7 +953,6 @@ void nbTranslatorExecute(NB_Cell *context,NB_Cell *translator,char *source){
           *textcur=0;
           }
         if(xi->oper==NB_XI_OPER_COMMAND){
-          //if(textbuf!=NULL) nbCmd(context,textbuf,1);
           if(*textbuf) nbCmd(context,textbuf,1);
           xi=xi->next;
           }
