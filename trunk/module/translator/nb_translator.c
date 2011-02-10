@@ -44,19 +44,17 @@
 *
 *       <argList>  - String arguments are translated
 *
-*   <node>[("<file>"[,...])][:<text>]
+*   <node>("translate"):<filename>
 *
 *       <file>     - File is translated
 *
-*       <text>     - Text line is translated
-*    
 *
 * Example:
 *
 *   define mytran node translator("mytran.nbx");  
 *   assert mytran("this is line 1","this is line 2");
 *   mytran:this is line 3
-*   mytran("myfile","yourfile");
+*   mytran("translate"):myfile
 *
 * Description:
 *
@@ -302,7 +300,6 @@ int translatorCommand(nbCELL context,NB_MOD_TranslatorSkill *skillHandle,NB_MOD_
     }
   return(0);
   }
-
 
 /*
 *  destroy() method
