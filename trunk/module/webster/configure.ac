@@ -53,6 +53,7 @@
 # 2008-11-02 Ed Trettevik (version 0.7.3)
 # 2009-02-20 eat 0.7.5 port to other platforms (windows plus others)
 # 2010-02-26 John Ellson - fix libtoolize warning
+# 2011-02-19 eat 0.8.5 - set optimization level
 #=============================================================================
 
 AC_PREREQ(2.62)
@@ -61,6 +62,8 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
+
+CFLAGS="-Wall -O1 $CFLAGS"
 
 #=====================================
 # LIBTOOL stuff
@@ -87,15 +90,12 @@ AC_SUBST([NB],[../../../../lib/.libs/lt-nb])
 #  AC_PATH_PROGS([NB],[nb-0.7.5 nb-0.7.4 nb-0.7.3 nb-0.7.2 nb-0.7.1 nb])
 #fi
 
-CFLAGS="-Wall $CFLAGS"
-
 #=====================================
 # Checks for libraries.
 
 # Find -lssl library
 
-AC_SEARCH_LIBS([SSL_CTX_new],[ssl],,[AC_MSG_ERROR(Required library -lssl not found. You may want to download it from http://www.openssl.org or locate it and include the directory in LD_LIBRARY_PATH for this build.)],[-lcrypto])
-#AC_SEARCH_LIBS([SSL_CTX_new],[ssl],,[AC_MSG_ERROR(Required library -lssl not found. You may want to download it from http://www.openssl.org or locate it and include the directory in LD_LIBRARY_PATH for this build.)])
+AC_SEARCH_LIBS(SSL_CTX_new,ssl,,[AC_MSG_ERROR(Required library -lssl not found. Specify path in LDFLAGS.)],[-lcrypto])
 
 # Figure out which NB_LIBRARY_PATH to use with "make check".
 #   If we are in a NodeBrain distribution, we'll use
