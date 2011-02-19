@@ -36,6 +36,8 @@
 * 2010/11/07 Ed Trettevik (version 0.8.5 - split out from nbcmd.c)
 * 2010/11/07 eat 0.8.5  nbParseSourceX names changed to nbSourceX
 * 2010/11/07 eat 0.8.5  Supporting "\" at end of line for continuation
+* 2011-02-19 eat 0.8.5  Fixed bug in IF with source substitution in skipped block
+*            Was not acception "% " in a IF or ELSE block being skipped over
 *=============================================================================
 */
 #include <nbi.h>
@@ -93,7 +95,7 @@ int nbSourceIgnoreTil(nbCELL context,FILE *file,char *buf,int til){
 
   //while(fgets(buf,NB_BUFSIZE,file)!=NULL){
   while(nbSourceGet(buf,NB_BUFSIZE,file)!=NULL){
-    if(*buf=='%'){
+    if(*buf=='%' && *(buf+1)!=' '){
       cursor=buf+1;
       symid=nbParseSymbol(ident,&cursor);
       if(strcmp(ident,"if")==0){
