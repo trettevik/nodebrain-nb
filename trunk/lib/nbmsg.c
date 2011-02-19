@@ -2586,6 +2586,8 @@ static void nbMsgPeerShutdown(nbCELL context,nbPeer *peer,void *handle,int code)
   time(&utime);             // get utc time
   msgnode->downTime=utime;  // time stamp the disconnect
   //nbMsgCabalEnable(context,msgnode->msgcabal);
+  // 2011-02-19 eat 0.8.5 - set or reset the timer on the cabal
+  nbSynapseSetTimer(context,msgnode->msgcabal->synapse,30);
   }
 
 /*
@@ -3483,6 +3485,6 @@ int nbMsgCabalEnable(nbCELL context,nbMsgCabal *msgcabal){
     exit(1);
     }
   // If not in a preferred state let's set a medulla timer using synapse to check again later
-  if(!preferred) nbSynapseSetTimer(context,msgcabal->synapse,15);
+  if(!preferred) nbSynapseSetTimer(context,msgcabal->synapse,30);
   return(0);
   }
