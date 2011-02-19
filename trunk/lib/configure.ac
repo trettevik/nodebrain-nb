@@ -84,6 +84,7 @@ AC_CONFIG_HEADER([nbcfg.h])
 AC_CONFIG_AUX_DIR(config)
 AM_INIT_AUTOMAKE
 
+CFLAGS="-Wall -O1 $CFLAGS"
 # define module directory variables
 
 AC_DEFINE_UNQUOTED(NB_API_VERSION,"0",[NodeBrain API version])
@@ -112,15 +113,15 @@ AC_PROG_CC
 
 # Checks for libraries.
 LIBS="-lncurses"
-AC_CHECK_LIB([pcre],[pcre_compile],,[AC_MSG_ERROR(Required library -lpcre not found. You may want to download it from http://www.pcre.org or locate it and include directory in LD_LIBRARY_PATH to support this build.)])
-AC_CHECK_LIB([readline],[readline],,[AC_MSG_ERROR(Required library -lreadline not found. You may want to download it from http://cnswww.cns.cwru.edu/php/chet/readline/rltop.html or locate it and include directory in LD_LIBRARY_PATH to support this build.)])
-AC_CHECK_LIB(history,add_history,,[AC_MSG_ERROR(Required library -lhistory not found. You may want to download it from http://cnswww.cns.cwru.edu/php/chet/readline/rltop.html or locate it and include directory in LD_LIBRARY_PATH to support this build.)])
-AC_CHECK_LIB(ssl,SSL_library_init,,[AC_MSG_ERROR(Required library -lssl not found. You may want to download it from http://cnswww.cns.cwru.edu/php/chet/readline/rltop.html or locate it and include directory in LD_LIBRARY_PATH to support this build.)])
+AC_CHECK_LIB(pcre,pcre_compile,,[AC_MSG_ERROR(Required library -lpcre not found.  Specify path in LDFLAGS.)])
+AC_CHECK_LIB(readline,readline,,[AC_MSG_ERROR(Required library -lreadline not found. Specify path in LDFLAGS.)])
+AC_CHECK_LIB(history,add_history,,[AC_MSG_ERROR(Required library -lhistory not found. Specify path in LDFLAGS.)])
+AC_CHECK_LIB(ssl,SSL_library_init,,[AC_MSG_ERROR(Required library -lssl not found. Specify path in LDFLAGS.)])
 
 AC_SEARCH_LIBS(socket,socket)
 AC_SEARCH_LIBS(inet_ntoa,nsl)
 
-AC_SEARCH_LIBS(fmod,m,,[AC_MSG_ERROR(Required math library -lm not found. Locate it and include in LD_LIBRARY_PATH to support this build.)])
+AC_SEARCH_LIBS(fmod,m,,[AC_MSG_ERROR(Required math library -lm not found. Specify path in LDFLAGS.)])
 #AC_CHECK_LIB(dl, main)
 
 # Checks for header files.
@@ -154,52 +155,41 @@ AC_CHECK_FUNCS([alarm gethostbyaddr gethostbyname inet_ntoa memchr memset regcom
 # define a release date variable
 AC_DEFINE_UNQUOTED(NB_COMPILE_PLATFORM,"$host",[Define compile platform])
 
-CFLAGS="-Wall $CFLAGS"
 case "$host" in
   *-netbsd*)
     AC_DEFINE(NETBSD,,[Define if NetBSD])
     AC_DEFINE(ANYBSD,,[Define if any BSD])
-    #CFLAGS="${CFLAGS} -rdynamic"
     ;;
   *-openbsd*)
     AC_DEFINE(OPENBSD,,[Define if OpenBSD])
     AC_DEFINE(ANYBSD,,[Define if any BSD])
-    #CFLAGS="${CFLAGS} -rdynamic"
-    #LDFLAGS="${LDFLAGS} -Wl,-E"
     ;;
   *-sgi-irix*)
     AC_DEFINE(IRIX,,[Define if IRIX])
     ;;
   *-solaris*)
     AC_DEFINE(SOLARIS,,[Define if SOLARIS])
-    #LDFLAGS="${LDFLAGS} -ldl -lnsl -lsocket"
     ;;
   *-sunos*)
     AC_DEFINE(SUNOS,,[Define if SUNOS])
     ;;
   *-linux*)
     AC_DEFINE(LINUX,,[Define if LINUX])
-    #CFLAGS="${CFLAGS} -rdynamic"
-    LDFLAGS="${LDFLAGS} -ldl"
+    #LDFLAGS="${LDFLAGS} -ldl"
     ;;
   *-hpux*)
     AC_DEFINE(HPUX,,[Define if HPUX])
-    #LDFLAGS="${LDFLAGS} -ldld -Wl,-E"
     ;;
   *-freebsd*)
     AC_DEFINE(FREEBSD,,[Define if FREEBSD])
     AC_DEFINE(ANYBSD,,[Define if any BSD])
-    #CFLAGS="${CFLAGS} -rdynamic"
     ;;
   *-bsdi*)
     AC_DEFINE(BSDI,,[Define if BSDI])
     AC_DEFINE(ANYBSD,,[Define if any BSD])
-    #CFLAGS="${CFLAGS} -rdynamic"
     ;;
   *-aix*)
     AC_DEFINE(AIX,,[Define if AIX])
-    #CFLAGS="${CFLAGS} -qmaxmem=8192"
-    #LDFLAGS="${LDFLAGS} -ldl"
     ;;
 # <platform>-apple-darwin* or <platform>-apple-rhapsody*    
   *-apple*)
