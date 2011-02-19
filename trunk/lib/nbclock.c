@@ -122,9 +122,9 @@
 * 2008-11-11 eat 0.7.3  Change failure exit code to NB_EXITCODE_FAIL
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
-* 2011-02-08 eat 0.8.0  Modified nbClockSetTimer to reset object timers
+* 2011-02-08 eat 0.8.5  Modified nbClockSetTimer to reset object timers
 *            Previously it considered an attempt to reset a timer a logic error
-*            and required a timer to be cleared by setting a new one.
+*            and required a timer to be cleared before setting a new one.
 *=============================================================================
 */
 #include "nbi.h" 
