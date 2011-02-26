@@ -234,6 +234,7 @@
 * 2010-10-16 eat 0.8.4  Replacing "jail" setting with "jaildir", but accepting "jail" as alias.
 * 2010-11-07 eat 0.8.5  Split out nbSource commands to nbsource.c
 * 2011-02-08 eat 0.8.5  Updated copyright
+* 2011-02-26 eat 0.8.5  Renamed iLet to nbLet and added to check for invalid cell expression;
 *==============================================================================
 */
 #include "nbi.h"
@@ -1111,9 +1112,13 @@ int nbCmdAssert(nbCELL context,void *handle,char *verb,char *cursor){
 *  Set symbolic variables
 *     <parm1>=<value1>,<parm2>="<value2>",...
 *
-*     mode: 0 - update or create [let] ; 1 - create only [default]
+*     mode: 0 - update or create [assert] ; 1 - create only [default]
+*
+*  Return Code:
+*   -1 - error
+*    0 - success
 */   
-void iLet(char *cursor,NB_Term *context,int mode){
+int nbLet(char *cursor,NB_Term *context,int mode){
   char ident[256],operator[256],token[4096],*cursave;
   NB_Term *term;
   NB_Object *object;
@@ -1122,18 +1127,18 @@ void iLet(char *cursor,NB_Term *context,int mode){
   
   if(!(clientIdentity->authority&AUTH_ASSERT)){
     outMsg(0,'E',"Identity \"%s\" does not have authority to assign symbolic values.",clientIdentity->name->value);
-    return;
+    return(-1);
     }
   while(symid==','){
     symid=nbParseSymbol(ident,&cursor);
     if(symid!='t'){
       outMsg(0,'E',"Expecting term \"%s\".",ident);
-      return;
+      return(-1);
       }
     symid=nbParseSymbol(operator,&cursor);
     if(symid!='='){
       outMsg(0,'E',"Expecting '=' \"%s\".",operator);
-      return;
+      return(-1);
       }
     cursave=cursor;
     symid=nbParseSymbol(token,&cursor);
@@ -1145,6 +1150,10 @@ void iLet(char *cursor,NB_Term *context,int mode){
     else found=1;  
     cursor=cursave;
     object=nbParseCell((NB_Term *)context,&cursor,0);
+    if(!object){
+      outMsg(0,'E',"Cell expression not recognized at-->%s",cursave);
+      return(-1);
+      }
     if(found==0 || mode==0){
       if(strcmp(operator,"==")==0) nbTermAssign(term,object);
       else{
@@ -1158,8 +1167,9 @@ void iLet(char *cursor,NB_Term *context,int mode){
     }
   if(symid!=';'){
     outMsg(0,'E',"Expected delimiter ';' not found. [%s]",cursor);
-    return;
+    return(-1);
     }
+  return(0);
   }
 
 /*
@@ -1920,7 +1930,7 @@ void nbCmdTranslate(nbCELL context,char *verb,char *cursor){
     *delim=0;
     delim++;
     while(*delim==' ') delim++;
-    if(*delim!=0 && *delim!=';') iLet(delim,symContext,0);  
+    if(*delim!=0 && *delim!=';') nbLet(delim,symContext,0);  
     }
   else *delim=0;
   strcpy(filename,cursor);
@@ -2112,8 +2122,8 @@ void nbCmd(nbCELL context,char *cursor,int cmdopt){
     case 't':
       // need to move these to the verb table - but think about the symContext
       // should these really be available here - what is the scope of symContext - investigate
-      if(strcmp(verb,"%assert")==0) iLet(cursor,symContext,0);    /* AUTH_ASSERT  */
-      else if(strcmp(verb,"%default")==0) iLet(cursor,symContext,1);   /* AUTH_ASSERT  */
+      if(strcmp(verb,"%assert")==0) nbLet(cursor,symContext,0);    /* AUTH_ASSERT  */
+      else if(strcmp(verb,"%default")==0) nbLet(cursor,symContext,1);   /* AUTH_ASSERT  */
       else if(strcmp(verb,"%include")==0) nbSource(context,cursor);       /* AUTH_DEFINE  */
       else if((verbObject=nbVerbFind(context,verb))!=NULL){
         if(!(clientIdentity->authority&verbObject->authmask)){

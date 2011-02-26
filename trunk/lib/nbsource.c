@@ -257,8 +257,8 @@ int nbSourceTil(nbCELL context,FILE *file){
           else if(strcmp(ident,"else")==0) return(2);
           else if(strcmp(ident,"elseif")==0) return(3);
           else if(strcmp(ident,"if")==0) nbSourceIf(context,file,buf,cursor);
-          else if(strcmp(ident,"assert")==0) iLet(cursor,symContext,0);
-          else if(strcmp(ident,"default")==0) iLet(cursor,symContext,1);
+          else if(strcmp(ident,"assert")==0 && nbLet(cursor,symContext,0)!=0) return(-1);
+          else if(strcmp(ident,"default")==0 && nbLet(cursor,symContext,1)!=0) return(-1);
           else if(strcmp(ident,"include")==0) nbSource(context,cursor);
           else{
             outMsg(0,'E',"Directive \"%s\" not recognized.",ident);
@@ -334,7 +334,9 @@ void nbSource(nbCELL context,char *cursor){
   while(*cursor==' ') cursor++;
   if(*cursor==',') cursor++;
   else while(*cursor==' ') cursor++;
-  if(*cursor!=0 && *cursor!=';') iLet(cursor,symContext,0);
+  if(*cursor!=0 && *cursor!=';'){
+    if(nbLet(cursor,symContext,0)!=0) return;
+    }
   if(strcmp(filename,"-")==0) nbParseStdin(1);
   else if(strcmp(filename,"=")==0) nbParseStdin(0);
   else{
