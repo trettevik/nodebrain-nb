@@ -1,0 +1,9 @@
+#!/usr/local/bin/nb -d
+# File: tutorial/Peer/server
+-rm server.log
+set out=".",log="server.log";
+declare buddy identity owner;
+define myServer node peer.server("buddy@./socket");         # Unix domain
+#define myServer node peer.server("buddy@127.0.0.1:12345"); # local
+#define myServer node peer.server("buddy@0.0.0.0:12345");   # remote
+myServer. define r1 on(a=1 and b=2);

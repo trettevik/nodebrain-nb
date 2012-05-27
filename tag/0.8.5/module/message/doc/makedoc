@@ -1,0 +1,9 @@
+makeinfo --html --no-split --number-sections message.texi
+makeinfo --plaintext --no-split --number-sections --output=message.txt message.texi
+makeinfo --docbook --no-split --number-sections --output=messageDocBook.xml message.texi
+makeinfo --xml --no-split --number-sections message.texi
+makeinfo --no-split --number-sections message.texi
+
+./texi4pdf message.texi > message.texi4pdf
+texi2pdf -D -V -o message.pdf message.texi4pdf
+

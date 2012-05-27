@@ -1,0 +1,36 @@
+Dir:    bin
+
+Title:  NodeBrain Development Script Directory
+
+Purpose:
+
+  Provides scripts that support distribution and testing.
+
+=============================================================
+History:
+
+Date       Change
+---------  --------------------------------------------------
+2004/10/09 Ed Trettevik - introduced in 0.6.1
+2005/05/07 eat 0.6.2  nbman2ht added
+=============================================================
+
+File        Function
+----------  -------------------------------------------------
+README      This file
+
+nbcheck     A Perl script for running every check script in a
+            directory. It reports the results for each check
+            script, cleans up temporary files for successful
+            check scripts and exits with the highest exit
+            code returned.
+
+nbfarm      Execute nbpen on a set of compile farm machines
+            to verify the new source distribution configures,
+	    compiles, and executes properly on each platform.
+
+nbman2ht    Builds html man pages from roff format man pages
+
+nbpen       Test ./configure, Makefile, and nb binary on a
+            single server ("pen") in a compile farm.
+----------  -------------------------------------------------

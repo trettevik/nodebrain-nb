@@ -1,0 +1,31 @@
+# File: tutorial/Translator/opera.nbx
+#
+
+# Ignore lines starting with "#"
+(^#)
+
+# Pick up lines with "had" followed by a word,
+# but continue on looking for other matches
+# even when a match is found.
+@(had (\w*)):alert type="Had",what="$[1]";
+
+# Look for "he had" lines - will be subset of "had" lines
+(he had (\w*)):alert type="HeHad",what="$[1]";
+
+# Look for lines starting with "And".
+(^\s*And ){
+  (^then they ){
+    (thought)
+    :assert info="$[=]";
+    }
+  (^(\w*) )[$[1]]{
+    "robbers":assert info="bad guys $[>]";
+    "never":assert info="they didn't $[>]";
+    }
+  } 
+
+# Look for "He <verb>" lines.
+(^He (crept|ran) ){
+  @"fourteen miles in fifteen days,":assert info="slow runner this man who had naught";
+  :assert heVerb="$[1]";
+  }

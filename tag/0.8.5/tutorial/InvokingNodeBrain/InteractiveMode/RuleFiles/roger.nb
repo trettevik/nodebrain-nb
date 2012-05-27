@@ -1,0 +1,4 @@
+# roger.nb
+define myProcessRule1 on(processes>200):-./alarmMe.pl 1 "dang - more than 200 processes."
+define myProcessRule2 on(processes<100):-./alarmMe.pl 2 "ok - under 100 processes."
+define myProcessRule3 on(a=1 and b=2):-:./processCount.pl

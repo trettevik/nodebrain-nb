@@ -1,0 +1,30 @@
+## This file, Makefile.nm, provides module specific make rules.  It
+## is included by Makefile.am, which you should reference for more
+## information.
+
+nblib_LTLIBRARIES = nb_peer.la
+nb_peer_la_SOURCES = nb_peer.c \
+  nbbrain.c \
+  nbbrain.h \
+  nbchannel.c \
+  nbchannel.h \
+  nbpke.c \
+  nbpke.h \
+  nbprotocol.h \
+  nbprotocol.c \
+  nbprotokey.c \
+  nbprotokey.h \
+  nbske.c \
+  nbske.h \
+  nbvli.c \
+  nbvli.h \
+  nb_peer.h
+
+nb_peer_la_CFLAGS  = $(NB_INCLUDE) -I/usr/local/include
+nb_peer_la_LDFLAGS = -module -version-info 0:1
+
+EXTRA_DIST = \
+  caboodle/agent/server.nb \
+  caboodle/check/peer.nb- \
+  caboodle/log/README \
+  caboodle/socket/README 

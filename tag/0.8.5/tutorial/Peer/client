@@ -1,0 +1,8 @@
+#!/usr/local/bin/nb
+# File: tutorial/Peer/client
+declare buddy identity;
+define myClient node peer.client("buddy@./socket");         # Unix domain
+#define myClient node peer.client("buddy@localhost:12345"); # local
+#define myClient node peer.client("buddy@myhost.mydomain:12345"); # remote
+myClient:assert a=1,b=2;
+myClient:stop;
