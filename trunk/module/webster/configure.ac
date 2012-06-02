@@ -54,10 +54,11 @@
 # 2009-02-20 eat 0.7.5 port to other platforms (windows plus others)
 # 2010-02-26 John Ellson - fix libtoolize warning
 # 2011-02-19 eat 0.8.5 - set optimization level
+# 2012-06-02 eat 0.8.10 - new version
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([nb_webster],[0.9.0],[bugs@nodebrain.org])
+AC_INIT([nb_webster],[0.8.10],[bugs@nodebrain.org])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
@@ -85,10 +86,6 @@ AC_PROG_CXX
 #   we look for a compatible installed program.
 
 AC_SUBST([NB],[../../../../lib/.libs/lt-nb])
-#AC_CHECK_PROG([NB],[nb.h],[../../../../lib/.libs/lt-nb],,[../../lib])
-#if test "x${NB}" = "x"; then
-#  AC_PATH_PROGS([NB],[nb-0.7.5 nb-0.7.4 nb-0.7.3 nb-0.7.2 nb-0.7.1 nb])
-#fi
 
 #=====================================
 # Checks for libraries.

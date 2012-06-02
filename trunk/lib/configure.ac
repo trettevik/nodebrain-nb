@@ -81,10 +81,11 @@
 # 2012/04/22 eat 0.8.8  Switched from nbcfg.h to standard config.h
 # 2012/05/11 eat 0.8.9  New version
 # 2012/05/12 eat 0.8.9  Set optimization to 0 because nbproxy.c has a problem with optimization
+# 2012/06/02 eat 0.8.10 New version for release
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([libnb],[0.9.0],[bugs@nodebrain.org])
+AC_INIT([libnb],[0.8.10],[bugs@nodebrain.org])
 AC_CONFIG_SRCDIR([nb.h])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(config)
@@ -94,7 +95,7 @@ CFLAGS="-Wall -O0 $CFLAGS"
 # define module directory variables
 
 AC_DEFINE_UNQUOTED(NB_API_VERSION,"0",[NodeBrain API version])
-NB_MODULE_PATH=".nb:/usr/local/lib/nb/0.9:/usr/lib/nb/0.9:/usr/lib64/nb/0.9:/usr/local/lib/nb:/usr/lib/nb:/usr/lib64/nb"
+NB_MODULE_PATH=".nb:/usr/local/lib/nb/0.8:/usr/lib/nb/0.8:/usr/lib64/nb/0.8:/usr/local/lib/nb:/usr/lib/nb:/usr/lib64/nb"
 NB_MODULE_PATH_SEPARATOR=":"
 AC_DEFINE_UNQUOTED(NB_MODULE_PATH,"${NB_MODULE_PATH}",[Module path])
 AC_DEFINE_UNQUOTED(NB_MODULE_PATH_SEPARATOR,'${NB_MODULE_PATH_SEPARATOR}',[Module path separator])
