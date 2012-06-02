@@ -875,7 +875,7 @@ static void treeBalance(nbCELL context,BTreeSkill *skillHandle,BTree *tree){
 // Prune a tree at the selected node without removing the selected node
 //
 static void treePrune(nbCELL context,BTreeSkill *skillHandle,BTree *tree,nbCELL arglist,char *text){
-  BTreeNode *node;
+  BTreeNode *node=NULL;
   nbSET argSet;
   nbCELL argCell;
   void *ptr;
@@ -908,7 +908,7 @@ static void treePrune(nbCELL context,BTreeSkill *skillHandle,BTree *tree,nbCELL 
 
 static void treeSet(nbCELL context,BTreeSkill *skillHandle,BTree *tree,nbCELL arglist,char *text){
   NB_TreePath path;
-  BTreeNode *node,**nodeP=&tree->root;
+  BTreeNode *node=NULL,**nodeP=&tree->root;
   nbSET argSet;
   nbCELL argCell;
   double average,deviation;
@@ -957,10 +957,12 @@ static void treeSet(nbCELL context,BTreeSkill *skillHandle,BTree *tree,nbCELL ar
     nbCellDrop(context,argCell);
     argCell=nbListGetCellValue(context,&argSet);
     }
-  /* matched - change value */
-  node->average=average;
-  node->deviation=deviation;
-  node->threshold=(double)((int)1<<node->level)*deviation*tree->tolerance;
+  if(node){
+    /* matched - change value */
+    node->average=average;
+    node->deviation=deviation;
+    node->threshold=(double)((int)1<<node->level)*deviation*tree->tolerance;
+    }
   return;
   }
 

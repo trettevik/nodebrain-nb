@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 #=============================================================================
 #
-# Copyright (C) 1998-2010 The Boeing Company
+# Copyright (C) 1998-2012 The Boeing Company
 #                         Ed Trettevik <eat@nodebrain.org>
 #
 # NodeBrain is free software; you can redistribute it and/or modify
@@ -75,20 +75,26 @@
 # 2010/09/06 eat 0.8.3  Baseline module 
 # 2010/10/14 eat 0.8.4  Patches and pid file 
 # 2010/11/07 eat 0.8.5  Source line continuation - "\" at end of line
+# 2011/05/31 eat 0.8.6  Webster API and Proxy API
+# 2012/02/09 eat 0.8.7  Checker changes
+# 2012/04/22 eat 0.8.8  TLS and Message API changes
+# 2012/04/22 eat 0.8.8  Switched from nbcfg.h to standard config.h
+# 2012/05/11 eat 0.8.9  New version
+# 2012/05/12 eat 0.8.9  Set optimization to 0 because nbproxy.c has a problem with optimization
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([libnb],[0.8.5],[bugs@nodebrain.org])
+AC_INIT([libnb],[0.9.0],[bugs@nodebrain.org])
 AC_CONFIG_SRCDIR([nb.h])
-AC_CONFIG_HEADER([nbcfg.h])
+AC_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(config)
 AM_INIT_AUTOMAKE
 
-CFLAGS="-Wall -O1 $CFLAGS"
+CFLAGS="-Wall -O0 $CFLAGS"
 # define module directory variables
 
 AC_DEFINE_UNQUOTED(NB_API_VERSION,"0",[NodeBrain API version])
-NB_MODULE_PATH=".nb:/usr/local/lib/nb/0.8:/usr/lib/nb/0.8:/usr/local/lib/nb:/usr/lib/nb"
+NB_MODULE_PATH=".nb:/usr/local/lib/nb/0.9:/usr/lib/nb/0.9:/usr/lib64/nb/0.9:/usr/local/lib/nb:/usr/lib/nb:/usr/lib64/nb"
 NB_MODULE_PATH_SEPARATOR=":"
 AC_DEFINE_UNQUOTED(NB_MODULE_PATH,"${NB_MODULE_PATH}",[Module path])
 AC_DEFINE_UNQUOTED(NB_MODULE_PATH_SEPARATOR,'${NB_MODULE_PATH_SEPARATOR}',[Module path separator])
@@ -106,7 +112,7 @@ LT_SYS_MODULE_EXT
 LT_FUNC_DLSYM_USCORE
 
 # define a release date variable
-AC_DEFINE(NB_RELEASE_DATE,"2011/02/09",[Define release date])
+AC_DEFINE(NB_RELEASE_DATE,"2012/06/02",[Define release date])
 
 # Checks for programs.
 AC_PROG_CC

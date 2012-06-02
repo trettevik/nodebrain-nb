@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -93,45 +93,46 @@
 */
 nbTLSX *nbTlsLoadContext(nbCELL context,nbCELL tlsContext,void *handle,int client){
   nbTLSX *tlsx;
-  char *optionStr,*keyFile,*certFile,*trustedCertsFile;
+  char *optionStr,*keyFile="",*certFile="",*trustedCertsFile="";
   int option=0,timeout;
 
-  if(client) option=NB_TLS_OPTION_CLIENT;
-  optionStr=nbTermOptionString(tlsContext,"option","certs");
-  if(strcmp(optionStr,"certs")==0) option|=NB_TLS_SERVER_CERTS;
-  else if(strcmp(optionStr,"cert")==0) option|=NB_TLS_SERVER_CERT;
-  else if(strcmp(optionStr,"keys")==0) option|=NB_TLS_SERVER_KEYS;
-  else if(strcmp(optionStr,"tls")==0) option|=NB_TLS_SERVER_TLS;
-  else if(strcmp(optionStr,"tcp")==0) option|=NB_TLS_SERVER_TCP;
+  nbLogMsg(context,0,'T',"nbTlsLoadContext: checking for tls options");
+  optionStr=nbTermOptionString(tlsContext,"option","CERTS");
+  if(strcmp(optionStr,"certs")==0) option=NB_TLS_OPTIONS_CERTS|NB_TLS_OPTION_SSL2;
+  else if(strcmp(optionStr,"cert")==0) option=NB_TLS_OPTIONS_CERT|NB_TLS_OPTION_SSL2;
+  else if(strcmp(optionStr,"keys")==0) option=NB_TLS_OPTIONS_KEYS|NB_TLS_OPTION_SSL2;
+  else if(strcmp(optionStr,"tls")==0) option=NB_TLS_OPTIONS_CERT|NB_TLS_OPTION_SSL2; 
+  else if(strcmp(optionStr,"tcp")==0) option=NB_TLS_OPTIONS_TCP;
+  // new options
+  else if(strcmp(optionStr,"CERTS")==0) option=NB_TLS_OPTIONS_CERTS;
+  else if(strcmp(optionStr,"CERTO")==0) option=NB_TLS_OPTIONS_CERTO;
+  else if(strcmp(optionStr,"CERT")==0) option=NB_TLS_OPTIONS_CERT;
+  else if(strcmp(optionStr,"KEYS")==0) option=NB_TLS_OPTIONS_KEYS;
+  else if(strcmp(optionStr,"ADH")==0) option=NB_TLS_OPTIONS_TLS;
+  else if(strcmp(optionStr,"TCP")==0) option=NB_TLS_OPTIONS_TCP;
   else{
     nbLogMsg(context,0,'E',"nbTlsLoadContext: Option '%s' not recognized.",optionStr);
     return(NULL);
     }
+  if(client) option|=NB_TLS_OPTION_CLIENT;
+  else option|=NB_TLS_OPTION_SERVER;
   timeout=nbTermOptionInteger(tlsContext,"timeout",5);
-  nbLogMsg(context,0,'T',"nbTlsLoadContext: checking for tls options");
-  if(option&(NB_TLS_SERVER_CERTS|NB_TLS_SERVER_CERT|NB_TLS_SERVER_KEYS|NB_TLS_SERVER_TLS)){
-    keyFile=nbTermOptionString(tlsContext,"keyfile","security/ServerKey.pem");
-    certFile=nbTermOptionString(tlsContext,"certfile","security/ServerCertificate.pem");
-    trustedCertsFile=nbTermOptionString(tlsContext,"trustfile","security/TrustedCertificates.pem");
+  if(option&NB_TLS_OPTION_TLS){
+    //if(option&(NB_TLS_SERVER_CERTS|NB_TLS_SERVER_CERT|NB_TLS_SERVER_KEYS|NB_TLS_SERVER_TLS)){
+    if(option&NB_TLS_OPTION_CERTS || (option&NB_TLS_OPTION_SERVER && option&NB_TLS_OPTION_CERT)){
+      keyFile=nbTermOptionString(tlsContext,"keyfile","security/ServerKey.pem");
+      certFile=nbTermOptionString(tlsContext,"certfile","security/ServerCertificate.pem");
+      }
+    if(option&NB_TLS_OPTION_CERT)
+      trustedCertsFile=nbTermOptionString(tlsContext,"trustfile","security/TrustedCertificates.pem");
+    else if(option&NB_TLS_OPTION_SERVER)
+      keyFile=nbTermOptionString(tlsContext,"dhfile","security/ServerAnonymousKey.pem");
     tlsx=nbTlsCreateContext(option,handle,timeout,keyFile,certFile,trustedCertsFile);
-    nbLogMsg(context,0,'T',"nbTlsLoadContext: returning tlsx=%p",*tlsx);
+    nbLogMsg(context,0,'T',"nbTlsLoadContext: returning tlsx=%p",tlsx);
     return(tlsx); 
     }
   return(NULL);
   }
-
-//int nbTlsLoadListener(nbCELL context,int defaultPort){
-//  nbTLSX *tlsx;
-//  char *interface;
-//  int port;
-//  int sd;
-//
-//  interface=nbTermOptionString(context,"interface","0.0.0.0");
-//  port=nbTermOptionInteger(context,"port",defaultPort); 
-//  sd=nbTlsListen(interface,port);
-//  nbLogMsg(context,0,'T',"interface=%s,port=%d,socket=%d",interface,port,sd);
-//  return(sd);
-//  } 
 
 nbTLS *nbTlsLoadListener(nbCELL context,nbCELL tlsContext,char *defaultUri,void *handle){
   nbTLS *tls;

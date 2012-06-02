@@ -93,6 +93,10 @@ static void *hashRegexp(struct HASH *hash,struct STRING *value,int flags){
 *
 *   REG_EXTENDED|REG_NOSUB   - used for matching only (cell expressions)
 *   REG_EXTENDED             - used for matching with substring table (translators)
+*
+*   PCRE_EXTENDED    - see PCRE_ flag definitions
+*   PCRE_MULTILINE   - ^ and $ match on new line characters
+*   PCRE_NEWLINE_ANY - $ matches CR LF CRLF
 */
 struct REGEXP *newRegexp(char *expression,int flags){
   struct STRING *string;

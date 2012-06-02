@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2011 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -43,6 +43,7 @@
 * 2008-10-06 eat 0.7.2  Modified to use NodeBrain's API for regular expressions
 * 2008-10-14 eat 0.7.2  Modified to make projection a NodeBrain object
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2010-10-15 eat 0.8.6  Included return value setting operation
 *=============================================================================
 */
 #ifndef _NB_TRANSLATOR_H_
@@ -58,6 +59,7 @@ typedef struct NB_PROJECTION{
 
 typedef struct NB_TRANSLATOR{
   struct NB_OBJECT object;
+  int              reFlags;       // regular expression flags
   struct STRING    *filename;   // file containing source code
   struct NB_XI      *xi;        // first translation instruction
   int              depth;       // maximum nesting of expressions
@@ -90,6 +92,7 @@ struct NB_XI{
 #define NB_XI_OPER_COMMAND     4  // command projection
 #define NB_XI_OPER_TRANSFORM   5  // text projection
 #define NB_XI_OPER_SEARCH      6  // binary tree search
+#define NB_XI_OPER_VALUE       7  // value on return
 #define NB_XI_OPER_STATIC    0x07 // Mask to get opcode without dynamic bits
 // Flag bits and masks
 #define NB_XI_OPER_DISABLED  0x80 // Set when command is disabled
@@ -122,7 +125,7 @@ void nbProjectionShowAll(void);
 #if defined(WIN32)
 _declspec (dllexport)
 #endif
-extern nbCELL nbTranslatorCompile(nbCELL context,char *file);
+extern nbCELL nbTranslatorCompile(nbCELL context,int reFlags,char *file);
 
 #if defined(WIN32)
 _declspec (dllexport)
@@ -137,7 +140,7 @@ extern int nbTranslatorRefresh(nbCELL context,nbCELL translator);
 #if defined(WIN32)
 _declspec (dllexport)
 #endif
-extern void nbTranslatorExecute(nbCELL context,nbCELL translator,char *source);
+extern nbCELL nbTranslatorExecute(nbCELL context,nbCELL translator,char *source);
 
 #if defined(WIN32)
 _declspec (dllexport)

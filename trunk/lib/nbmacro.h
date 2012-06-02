@@ -57,5 +57,9 @@ NB_Macro *nbMacroParse(NB_Cell *context,char **source);
 NB_Link *nbMacroParseTermList(NB_Cell *context,char **source);
 char *nbMacroSub(NB_Cell *context,char **cursorP);
 NB_String *nbMacroString(NB_Cell *context,char **source);
+int sstrcpy(char *buff,char *bufend,char *value);
+int sstrcat(char *buff,char *bufend,char *value);
+int openCreate(char *filename, int flags, mode_t mode);
+int openRead(char *filename, int flags);
 
 #endif

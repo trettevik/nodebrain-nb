@@ -837,6 +837,7 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
       if(parseTrace) outMsg(0,'T',"Calling newSched A [%s].",ident);
       if(NULL==(object=(NB_Object *)newSched((nbCELL)context,symid,ident,&delim,msg,1))){
         outPut("%s\n",msg);
+        *cursor=savecursor;
         return(NULL);
         }
       if(parseTrace) outMsg(0,'T',"Schedule structure generated.");
@@ -944,7 +945,7 @@ NB_Object *nbParseRel(NB_Term *context,char **cursor){
   savecursor=*cursor;
   symid=nbParseSymbolInfix(operator,cursor);
   if(parseTrace) outMsg(0,'T',"nbParseRel(): nbParseSymbol returned ['%c',\"%s\"].",symid,operator);
-  if(strchr(")}:;",symid)!=NULL) return(lobject);
+  if(strchr(")}]:;",symid)!=NULL) return(lobject);
 
   if(symid=='m'){
     type=condTypeMatch;
@@ -992,6 +993,9 @@ NB_Object *nbParseRel(NB_Term *context,char **cursor){
 
 /*
 * Parse cell expression
+*
+* Return: Object structure or NULL if syntax error.
+*
 */
 NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
   char operator[256];
@@ -1010,7 +1014,7 @@ NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
     cursave=*cursor;
     symid=nbParseSymbolInfix(operator,cursor);
     if(parseTrace) outMsg(0,'T',"nbParseCell(%d): back from nbParseSymbolInfix [%s].",level,*cursor);
-    if(strchr(")}:;",symid)!=NULL) return(lobject);
+    if(strchr(")}]:;",symid)!=NULL) return(lobject);
     if(symid=='.'){
       if(level!=0) return(lobject);
       outMsg(0,'E',"Operator not recognized at-->%s",cursave);

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -94,6 +94,7 @@
 *
 * 2005/10/03 eat 0.6.3  "??" substitures for Unknown values
 * 2006/10/28 eat 0.6.6  Removed [] experiment from nbSymCmd().
+* 2012/01/26 dtl Checker updates
 *=============================================================================
 */
 #include "nbi.h"
@@ -111,6 +112,7 @@
 char *nbSymCell(nbCELL context,char **target,char *targetend,char *source,char close){
   struct NB_OBJECT *object,*cell;
   char tmpstr[256],*cursor;
+  int n;
   if(trace) outMsg(0,'T',"nbSymCell called [%s].",source);
   if((cell=nbParseCell((NB_Term *)context,&source,0))==NULL) return(NULL);
   grabObject(cell);
@@ -123,7 +125,7 @@ char *nbSymCell(nbCELL context,char **target,char *targetend,char *source,char c
   object=nbCellCompute_((NB_Cell *)cell);
   dropObject(cell);
   if(object->type==realType){
-    sprintf(tmpstr,"%.10g",((struct REAL *)object)->value);
+    snprintf(tmpstr,sizeof(tmpstr),"%.10g",((struct REAL *)object)->value); //2012-01-16 dtl used snprintf
     cursor=tmpstr;
     }
   else if(object->type==strType)
@@ -136,12 +138,12 @@ char *nbSymCell(nbCELL context,char **target,char *targetend,char *source,char c
     return(NULL);
     }
   if(trace) outMsg(0,'T',"substitution value=[%s].",cursor);
-  if(targetend<*target+strlen(cursor)){
+  if(targetend < (*target+(n=strlen(cursor)))){
     outMsg(0,'L',"buffer size insufficient for substitution value");
     dropObject(object);
     return(NULL);
     }
-  strcpy(*target,cursor);
+  else strncpy(*target,cursor,n+1); //2012-01-16 dtl:moved into if block,used strncpy,cp include 0 byte
   *target=strchr(*target,0);
   dropObject(object);
   return(source);

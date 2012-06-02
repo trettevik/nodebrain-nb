@@ -11,7 +11,7 @@
 
 @copying
 Baseline NodeBrain Module@*
-October, 2010@*
+October 2010@*
 The Boeing Company,  P.O. Box 3707, Seattle, WA 98124, USA
 
 @sp 2
@@ -22,7 +22,7 @@ Author: Ed Trettevik <ed.a.trettevik@@boeing.com>
 Copyright @copyright{} 2010 The Boeing Company.
 
 @sp 1
-Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} preceding the index at the end of this document.
+Permission is granted to copy, distribute, and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} preceding the index at the end of this document.
 
 @sp 1
 NodeBrain(TM) is a trademark of The Boeing Company.   All other trademarks and registered trademarks referenced in this document are the trademarks of their respective owners.
@@ -35,11 +35,11 @@ NodeBrain(TM) is a trademark of The Boeing Company.   All other trademarks and r
 @item @tab Ed Trettevik <eat@@nodebrain.org>
 @end multitable
 
-The Baseline NodeBrain Module is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by theFree Software Foundation; either version 2 of the License, or (at your option)any later version.
+The Baseline NodeBrain Module is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by theFree Software Foundation; either version 2 of the License, or (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General PublicLicense along with this program; if not, write to Free Software Foundation,Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+You should have received a copy of the GNU General Public License along with this program; if not, write to Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 @end copying
 
 @iftex
@@ -72,7 +72,7 @@ Version 0.1
 @itemize @bullet
 @item Initial prototype.
 This document describes the Baseline module as first introduced with NodeBrain 0.8.3, with
-very little experimentation on real world problems having been performed to valid the design.
+very little experimentation on real world problems having been performed to validate the design.
 We anticipate changes to this document as the module evolves, hopefully quickly, to a version 1.0.
 @end itemize
 
@@ -92,18 +92,16 @@ We anticipate changes to this document as the module evolves, hopefully quickly,
 
 @sp 1
 This manual is intended for users of the Baseline NodeBrain Module, a plug-in for statistical anomaly detection.
-The Baseline module was first introduced in NodeBrain 0.8.3 in September of 2010.  
+The Baseline module was first introduced in NodeBrain 0.8.3 in September 2010.  
 This module should be treated as a prototype.  It has not yet been exercised enough to fully validate the design.
 We expect it to evolve as we gain experience.
 
-A statistical anomaly detection capability was on the NodeBrain to-do list since 2003. 
+A statistical anomaly detection capability has been on the NodeBrain to-do list since 2003. 
 Although theoretically interesting, and potentially useful, we did not consider it a high priority.
-Around 2008, it moved into the "management requested" category, but continued at a lower priority than other projects
-consuming our development resources.
+Around 2008, it moved into the "management requested" category, but continued at a lower priority than other projects consuming development resources.
 In August 2010, disruption on another project requiring a temporary halt for redesign and rescheduling provided a
 nice opportunity to work on this task until the dust settled on the higher priority project.
-A several year old draft design was reviewed and then mostly discarded and replaced by a very simple approach based on the
-existing Tree module.  This made it possible to create the initial prototype in a couple days.
+A several year old draft design was reviewed and then mostly discarded and replaced by a very simple approach based on the existing Tree module.  This made it possible to create the initial prototype in a couple days.
 
 
 @end titlepage
@@ -116,9 +114,13 @@ existing Tree module.  This made it possible to create the initial prototype in 
 @node Top
 @top Baseline NodeBrain Module @value{VERSION}
 
-This manual is for the Baseline NodeBrain Module (version @value{VERSION}, @value{UPDATED}), a statistical anomaly detection plug-in modules to NodeBrain.
+This manual is for the Baseline NodeBrain Module (version @value{VERSION}, @value{UPDATED}), a statistical anomaly detection plug-in module to NodeBrain.
 
 Copyright @copyright{} 2010 The Boeing Company.
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts. A copy of the license is included in the section titled @i{GNU Free Documentation License} preceding the index at the end of this document.
+@end quotation
 
 @ifnotplaintext
 @b{Short Table of Contents}
@@ -180,7 +182,7 @@ The difference between a new value and the current average is called the deviati
 d[i] = v[i] - a[i-1]
 @end example
 
-We can restate the formula for the exponentially weighted moving average as an adjustment using the product of weight and deviation.
+You can restate the formula for the exponentially weighted moving average as an adjustment using the product of weight and deviation.
 
 @example
 a[i] = a[i-1] + w d[i]
@@ -189,9 +191,8 @@ a[i] = a[i-1] + w d[i]
 @section Average Deviation
 @cindex average deviation
 
-The average deviation of actual values from the expected values is also computed as an exponentially weighted moving average (EWMA).  
-This is an approach for measuring the amount of variation in a measure.
-It is calculated like the average except the value is replaced by the absolute difference between the new value and prior average value.
+The average deviation of actual values from the expected values is also computed as an EWMA.  
+This is an approach for measuring the amount of variation in a measure.  It is calculated like the average except the value is replaced by the absolute difference between the new value and prior average value.
 
 @example
 D[i] = w abs(d[i]) + (1-w) D[i-1]     where D is the average deviation
@@ -206,7 +207,7 @@ D[i] = D[i-1] + w abs(d[i]-D[i-1])
 @section Standard Deviation
 @cindex standard deviation
 
-The average deviation is expected to be 0.8 of the standard deviation for a normal distribution.  We use this to approximate a standard deviation by multiplying the average deviation by 1.25.  We specify the threshold as a factor times the approximate standard deviation.  It is common to consider a value more than 3 standard deviations (3-sigma) an anomaly.  For a normal distribution, 3-sigma will include 97% of the values in the normal range.  
+The average deviation is expected to be 0.8 of the standard deviation for a normal distribution.  Use this to approximate a standard deviation by multiplying the average deviation by 1.25.  Specify the threshold as a factor times the approximate standard deviation.  It is common to consider a value more than three standard deviations (3-sigma) an anomaly.  For a normal distribution, 3-sigma will include 97 percent of the values in the normal range.  
 
 @example
 s = 1.25 D     where D is the average deviation and s is an approximate standard deviation
@@ -215,13 +216,9 @@ s = 1.25 D     where D is the average deviation and s is an approximate standard
 @section Weight
 @cindex Weight
 
-A Baseline node is assigned a weight factor from 0 to 1 used in the calculation of the average value and average deviation.  
-One can think of this as a level of skepticism about the latest value or deviation being the new "normal".  
-The lower the value, the slower the Baseline node will adapt the expectation for any given measure based on new information.  
-A value of 0 can be used to avoid "learning" from new information.
-This is appropriate in cases where a "normal" range of values is known and there is no reason to allow actual values to alter the definition of "normal".  
-On the other extreme, a value of 1 will cause the Baseline node to use the last value as the definition of "normal" when assessing a new value.  
-Values from 0.2 to 0.3 are often used when "learning" is desired but there is a reasonable level of skepticism about the latest value representing a new "normal".
+A Baseline node is assigned a weight factor from 0 to 1 used in the calculation of the average value and average deviation.  Think of this as a level of skepticism about the latest value or deviation being the new "normal."  The lower the value, the slower the Baseline node will adapt the expectation for any given measure based on new information.  A value of 0 can be used to avoid "learning" from new information.  This is appropriate in cases where a "normal" range of values is known and there is no reason to allow actual values to alter the definition of "normal."  
+
+On the other extreme, a value of 1 will cause the Baseline node to use the last value as the definition of "normal" when assessing a new value.  Values from 0.2 to 0.3 are often used when "learning" is desired, but there is a reasonable level of skepticism about the latest value representing a new "normal."
 
 @section Tolerance
 @cindex tolerance
@@ -231,7 +228,7 @@ A Baseline node is assigned a tolerance factor that specifies how "abnormal" a v
 @section Thresholds
 @cindex thresholds
 
-A threshold is an amount of deviation from the average, beyond which a new value is considered an anomaly.  We define a threshold unit for any given measure as the tolerance times the standard deviation.
+A threshold is an amount of deviation from the average, beyond which a new value is considered an anomaly.  You can define a threshold unit for any given measure as the tolerance times the standard deviation.
 
 @example
 u[i] = t s[i-1]       where u is the threshold unit, t is the tolerance, and s is the approximate standard deviation
@@ -239,8 +236,7 @@ u[i] = 1.25 t D[i-1]  substituting 1.25 D for s
 u[i] = T D[i-1]       where T is an internal tolerance factor 1.25 t
 @end example
 
-A threshold is established at every positive integer multiple of the threshold unit.
-The first threshold is at 1u, the second at 2u, etc.
+A threshold is established at every positive integer multiple of the threshold unit.  The first threshold is at 1u, the second at 2u, and so on.
 
 @section Anomaly Level
 @cindex anomaly level
@@ -256,10 +252,9 @@ Alerts are triggered when the anomaly level of a measure increases.
 @section Limits
 @cindex limits
 
-In a control process there are upper and lower limits that define the range of normal values.  Values outside these limits are considered anomalies.  We define the upper and lower limits in threshold units above and below the average.
-These limits identify the values where alerts are triggered, although this is simply a restatement of deviation thresholds.
+A control process has upper and lower limits that define the range of normal values.  Values outside these limits are considered anomalies.  Define the upper and lower limits in threshold units above and below the average.  These limits identify the values where alerts are triggered, although this is simply a restatement of deviation thresholds.
 
-To avoid triggering alerts for each new data point during an anomalous episode (period of abnormal values), the upper and lower limits open when the anomaly level increases (this is when an alert triggers), and close down when the anomaly level decreases.  In the formulas below, @code{a} is the average value, @code{n} = 1 + @code{L}, where @code{L} is the anomaly level, and @code{u} is the threshold unit.
+To avoid triggering alerts for each new data point during an anomalous episode (period of abnormal values), the upper and lower limits open when the anomaly level increases (this is when an alert triggers) and close down when the anomaly level decreases.  In the formulas below, @code{a} is the average value, @code{n} = 1 + @code{L}, where @code{L} is the anomaly level, and @code{u} is the threshold unit.
 
 @example
 UL = a + n u     upper limit
@@ -275,14 +270,12 @@ To take this normal variation into account, a Baseline node is told the cycle ti
 @section Period Duration
 @cindex period
 
-The cycle time is divided into shorter periods of equal duration.  The statistical profile maintained by a Baseline node includes an average value and average deviation for each measure for each period.  If a one hour period is specified (60 minutes) with a daily cycle, there will be 24 periods for which separate statistics are maintained.  If the cycle is weekly, then a 60 minute period duration will generate 168 periods with separate statistics.
+The cycle time is divided into shorter periods of equal duration.  The statistical profile maintained by a Baseline node includes an average value and average deviation for each measure for each period.  If a one-hour period is specified (60 minutes) with a daily cycle, there will be 24 periods for which separate statistics are maintained.  If the cycle is weekly, then a 60-minute period duration will generate 168 periods with separate statistics.
 
 @section Statistical Profiles
 @cindex profiles
 
-A Baseline statistical profile is maintained as a set of files in a directory.  
-Each file contains a profile for a single period, providing the average value and average deviation for each measure.  
-A period profile is just a set of Baseline node commands.
+A Baseline statistical profile is maintained as a set of files in a directory.  Each file contains a profile for a single period, providing the average value and average deviation for each measure.  A period profile is just a set of Baseline node commands.
 
 @example
 .(@i{arg1},@i{arg2},...):set @i{averageValue},@i{averageDeviation};
@@ -296,13 +289,13 @@ Here's an example with two measures.
 .("disk utilization"):set 50.48,20.984;
 @end example
 
-The file name of a period profile is based on the number of seconds from the start of a cycle.
+The filename of a period profile is based on the number of seconds from the start of a cycle.
 
 @example
 nnnnnnnn.nb
 @end example
 
-If a one hour period is used, the file names will increment by 60*60 or 3600.  At any given UTC time, we can compute which profile to use as follows.
+If a one-hour period is used, the filenames will increment by 60*60 or 3600.  At any given UTC time, you can compute which profile to use as follows.
 
 @example
 t =: UTC time
@@ -321,8 +314,7 @@ This section illustrates the use of the Baseline module with simple examples.
 @section Creating Profile Directory
 @cindex profile
 
-First create a directory for storing period profiles. 
-Since we are going to create a statistical profile for weather measurements, we'll name our directory @code{weather}, and create it in the @code{cache/baseline} subdirectory of our caboodle (NodeBrain application directory).
+Create a directory for storing period profiles.  Since you are going to create a statistical profile for weather measurements, name the directory @code{weather}, and create it in the @code{cache/baseline} subdirectory of the caboodle (NodeBrain application directory).
 
 @example
 $ cd CABOODLE
@@ -332,9 +324,7 @@ $ mkdir -p cache/baseline/weather
 @section Constant Expectation
 @cindex constant expectation
 
-Let's say we are monitoring the temperature and humidity inside a house where it is expected to be relatively constant over time.
-There is no need to manage multiple period profiles, nor is there a reason to learn a statistical definition of normal.
-Instead we can use a single period with a static profile that we define manually.
+Let's say you are monitoring the temperature and humidity inside a house where it is expected to be relatively constant over time.  There is no need to manage multiple period profiles, nor is there a reason to learn a statistical definition of normal.  Instead, you can use a single period with a static profile that you define manually.
 
 @example
 # cache/baseline/weather/00000000.nb
@@ -342,30 +332,29 @@ Instead we can use a single period with a static profile that we define manually
 .("humidity"):set 45,5;
 @end example
 
-In this case, we define our Baseline node as follows.
+In this case, define the Baseline node as follows.
 
 @example
 # arguments: directory, weight, tolerance, cycle, period
 define indoor node baseline("cache/baseline/weather",0,0.8,60,60):static;
 @end example
 
-Here's a quick explanation of our choices.
+Here's a quick explanation of your choices.
 
 @itemize @bullet
 @item The @code{static} option is used to avoid updating the profile at the end of a period. 
 @item A weight of 0 is used to avoid adjusting the average based on new actual values.
 This is not technically required under the @code{static} option, but any other value would be misleading.
-@item A tolerance of 0.8 is specified so we can express the range of normal values in the same units as the measure.
-This may seem a bit odd, but because of our approximation of standard deviation, 0.8 standard deviations is 1 average deviation.
-Since the profile contains average deviation, we can set it to one half the normal range and set the average to the center of the normal range.
-@item A one hour (60 minute) cycle and period are used so only one period profile is needed.  Since the period duration divides into the cycle duration one time, we keep repeating a single period.
+@item A tolerance of 0.8 is specified so you can express the range of normal values in the same units as the measure.
+This may seem a bit odd, but because of the approximation of standard deviation, 0.8 standard deviation is 1 average deviation.  Since the profile contains average deviation, you can set it to half the normal range and set the average to the center of the normal range.
+@item A one-hour (60 minute) cycle and period are used so only one period profile is needed.  Since the period duration divides into the cycle duration one time, keep repeating a single period.
 @end itemize
 
 @section Asserting Values
 @cindex assert
 
-There is nothing special about the way we make assertions to a Baseline node.
-We assert values in the same way we would assert to a Tree node.
+There is nothing special about the way to make assertions to a Baseline node.
+You assert values in the same way you would assert to a Tree node.
 Here are some examples.
 
 @example
@@ -377,14 +366,14 @@ indoor. assert x=2,("temperature")=73;
 @section Anomaly Response Rules
 @cindex response rules
 
-Given the last assertion above, where temperature is asserted to be 73, we could expect the following alert to be generated by the "indoor" node shown previously.
+Given the last assertion above, where temperature is asserted to be 73, you may expect the following alert to be generated by the "indoor" node shown previously.
 @example
 alert _measure="'temperature'",_value=73,_average=68,_sigma=2.5,_deviation=5, \
       _threshold=5,_level=1;
 @end example
 
-By itself this alert does nothing.  We need to provide rules to specify a response.
-Here's an example where we simply echo an entry out to an application log, and when it is a temperature anomaly also log to the system log.
+By itself this alert does nothing.  You need to provide rules to specify a response.
+Here's an example that simply echoes an entry out to an application log, and when it is a temperature anomaly also logs to the system log.
 
 @example
 # arguments: directory, weight, tolerance, cycle, period
@@ -396,13 +385,8 @@ indoor. define logger if(_measure="'temperature'"):$ =logger -p local0.notice -t
                                       "$@{_measure@}=$@{_value@} threshold=$@{threshold@}"
 @end example
 
-Here's another example where our response is more complicated.
-The @code{alarmit} rule invokes the @code{alarm} macro, which we define on the third line.
-The macro makes an assertion to the alarmMessage cache.
-The cache logs a message to the system log, but only when the measure has had no anomaly
-alerts for at least 1 hour prior.
-The @code{cacheit} rule asserts the measure name to the @code{anomaly} cache, which can
-be used to check if a measure has had an anomaly alert in the past 2 hours.
+Here's another example where the response is more complicated.  The @code{alarmit} rule invokes the @code{alarm} macro, which is defined on the third line.  The macro makes an assertion to the @code{alarmMessage} cache.  The cache logs a message to the system log, but only when the measure has had no anomaly
+alerts for at least 1 hour prior.  The @code{cacheit} rule asserts the measure name to the @code{anomaly} cache, which can be used to check whether a measure has had an anomaly alert in the past 2 hours.
 
 @example
 define alarmMessage node cache(~(h):measure,message(1));
@@ -425,11 +409,8 @@ indoor. define cacheit if(1) anomaly(_measure);
 @section Periodicity
 @cindex periodicity
 
-Now let's suppose we live in a barn, where the temperature and humidity are not so constant,
-but where the temperature values are expected to vary by time of day.
-Now we may want a profile for every four hour period of time during the day.
-There would be six of these periods per day. 
-The period profiles are stored in files with names incrementing by 4*60*60, or 14400 seconds.
+Now let's suppose you live in a barn, where the temperature and humidity are not so constant,
+but where the temperature values are expected to vary by time of day. You may want a profile for every 4-hour period during the day. There would be six periods per day.  The period profiles are stored in files with names incrementing by 4*60*60, or 14400 seconds.
 
 @multitable {-------------------} {------------------------}
 @item @b{Period} @tab @b{Profile}
@@ -441,7 +422,7 @@ The period profiles are stored in files with names incrementing by 4*60*60, or 1
 @item 20:00 to 00:00 @tab 00072000.nb
 @end multitable
 
-Our Baseline node now has a 24 hour cycle time and a 4 hour period.
+The Baseline node now has a 24-hour cycle time and a 4-hour period.
 
 @example
 # arguments: directory, weight, tolerance, cycle, period
@@ -451,25 +432,21 @@ define indoor node baseline("cache/baseline/weather",0,0.8,@b{24*}60,@b{4*}60):s
 @section Learning
 @cindex learning
 
-Suppose we don't have a preconceived notion of what a normal range of values is for our measures.
-In this case, we want to let the Baseline module create the profiles for us and adjust the average
-value and average deviation based on actual values experience while learning is enabled.
-To do this, we simply remove the @code{static} option from our Baseline node definition and
-provide a non-zero weight to control how fast to adapt averages to new actuals.
-Because we no longer know the range of normal values, we express the tolerance in standard deviations (e.g. 3 below)
+Suppose you don't have a preconceived notion of what a normal range of values is for your measures.
+In this case, you want to let the Baseline module create the profiles for you and adjust the average
+value and average deviation based on actual values experience while learning is enabled.  To do this, simply remove the @code{static} option from the Baseline node definition and provide a non-zero weight to control how fast to adapt averages to new actuals.  Because you no longer know the range of normal values, you express the tolerance in standard deviations (e.g., 3 below).
 
 @example
 # arguments: directory, weight, tolerance, cycle, period
 define indoor node baseline("cache/baseline/weather",@b{0.2},@b{3},@b{24*}60,@b{4*}60);
 @end example
 
-At the end of each period the profile is updated with weight adjusted averages for each measure's value and deviation.
+At the end of each period, the profile is updated with weight-adjusted averages for each measure's value and deviation.
 
 @section Computer Network Periods
 @cindex periods
 
-Measurements within a computer network (e.g. number of packets by protocol) typically vary based on user and software schedules that vary by time of day and day of week.
-If we are monitoring measures with this type of periodicity, it is appropriate to use a weekly cycle and hourly period.
+Measurements within a computer network (e.g., number of packets by protocol) typically vary based on user and software schedules that vary by time of day and day of week.  If you are monitoring measures with this type of periodicity, it is appropriate to use a weekly cycle and hourly period.
 
 @example
 # arguments: directory, weight, tolerance, cycle, period
@@ -479,22 +456,20 @@ define packets node baseline("cache/baseline/@b{packetsbyprotocol}",0.2,3,@b{7*2
 @section Summation
 @cindex summation
 
-When our measure are counts (e.g. number of packets by protocol) our information source may provide counts over units of time much smaller than our period duration.  
-In this case, we want to sum up the counts from our information source over our period duration.
-We do this by specifying the @code{sum} option.
+When your measures are counts (e.g., number of packets by protocol), your information source may provide counts over units of time much smaller than the period duration.  In this case, you want to sum up the counts from the information source over the period duration.  You do this by specifying the @code{sum} option.
 
 @example
 # arguments: directory, weight, tolerance, cycle, period
 define packets node baseline("cache/baseline/packetsbyprotocol",0.2,3,7*24*60,60):@b{sum};
 @end example
 
-Now when we assert values to measures within our Baseline node, the measures are incremented instead of being set to the new value.
+Now when you assert values to measures within the Baseline node, the measures are incremented instead of being set to the new value.
 
 @example
 packets. assert ("icmp")=465,("http")=1024,("smtp")=34; # increment measures
 @end example
 
-At the end of each period the measures are all reset to zero when the @code{sum} option is used.
+At the end of each period, the measures are all reset to zero when the @code{sum} option is used.
 
 @node Commands
 @chapter Commands
@@ -505,7 +480,7 @@ This section describes the syntax and semantics of commands used with the Baseli
 @section Define
 @cindex define
 
-This section describes define commands supported by the Baseline module.
+This section describes define commands the Baseline module supports.
 
 @subsection Define Baseline
 @cindex define
@@ -520,51 +495,31 @@ define @i{node} node baseline("@i{directory}",@i{weight},@i{tolerance},@i{cycle}
 @multitable {--------------------} {--------------------------------------------------------------------------------------}
 @item @b{Parameters}@w{        }@tab @b{Description}
 @item @i{directory}
-@tab Path of directory for storing baseline files called period profiles.  This should normally be a relative path within a caboodle and the "cache" directory (e.g. "cache/baseline/@i{baseline}") is recommended.  You should avoid having more than one node, in one or more agents, referencing the same Baseline profile directory.
-@item @i{weight} @tab
-A real number from 0 to 1 which determines how much weight should be given to a new value relative to past values.
-@item @i{tolerance} @tab
-The number of standard deviations from the average for which a given deviation is considered to be within a normal range.
-@item @i{cycle} @tab
-Number of minutes in each cycle for which a pattern of periodic variation is expected.  Examples are daily (24*60) and weekly (7*24*60).
-@item @i{period} @tab
-Number of minutes in each period within a cycle for which an average value and average deviation is maintained for each measure.
+@tab Path of directory for storing baseline files called period profiles.  This should normally be a relative path within a caboodle, and the "cache" directory (e.g., "cache/baseline/@i{baseline}") is recommended.  You should avoid having more than one node, in one or more agents, referencing the same Baseline profile directory.
+@item @i{weight} @tab A real number from 0 to 1 that determines how much weight should be given to a new value relative to past values.
+@item @i{tolerance} @tab The number of standard deviations from the average for which a given deviation is considered to be within a normal range.
+@item @i{cycle} @tab Number of minutes in each cycle for which a pattern of periodic variation is expected.  Examples are daily (24*60) and weekly (7*24*60).
+@item @i{period} @tab Number of minutes in each period within a cycle for which an average value and average deviation is maintained for each measure.
 @sp 1
 @item @b{Option}@tab @b{Description}
-@item found @tab
-The @code{found} option is assigned a cell expression to be used as a default value when an element is found
-by an evaluation but has no value.  This happens when an evaluation has fewer arguments than the assertion
-that created the element.  For example, if we assert @code{foobar("abc","def")=5} and evaluate @code{foobar("abc")}, the "abc" element is found, but has no value, assuming it was not explicitly asserted also.  By default, ? (unknown) is returned. 
+@item found @tab The @code{found} option is assigned a cell expression to be used as a default value when an element is found by an evaluation but has no value.  This happens when an evaluation has fewer arguments than the assertion
+that created the element.  For example, if you assert @code{foobar("abc","def")=5} and evaluate @code{foobar("abc")}, the "abc" element is found, but has no value, assuming it was not explicitly asserted also.  By default, ? (unknown) is returned. 
 @example
 found=@i{cellExpression}
 @end example
-@item notfound @tab
-The @code{notfound} option provides a default value when an element is not found during an evaluation.
-The default value for @code{notfound} is ? (unknown).  A value of 0 can be used to implement the "closed world assumption", where anything not known to be true is assumed to be false.
+@item notfound @tab The @code{notfound} option provides a default value when an element is not found during an evaluation.  The default value for @code{notfound} is ? (unknown).  A value of 0 can be used to implement the "closed world assumption," where anything not known to be true is assumed to be false.
 @example
 notfound=@i{cellExpression}
 @end example
-@item order @tab
-The @code{order} option specifies the use of argument values for comparison when searching and maintaining binary trees within a Baseline node.
-By default, comparisons are performed on the address of argument value objects for added efficiency.
-This is possible because NodeBrain maintains only one object for any given value.
+@item order @tab The @code{order} option specifies the use of argument values for comparison when searching and maintaining binary trees within a Baseline node.  By default, comparisons are performed on the address of argument value objects for added efficiency.   This is possible because NodeBrain maintains only one object for any given value.
 @item partition @tab
-The @code{partition} option implies the @code{order} option, and changes the evaluation operation to match an argument to the element with the maximum value less than or equal to the argument value.  This enables a domain of values to be partitioned into ranges of values.  
-For example, a partitioned Baseline node might be used to monitor the number of traffic accidents by driver age ranges
-in 10 year increments.
-@item static @tab
-Use @code{static} to avoid updating the profile at the end of each period.
-This is appropriate when the profile defines the acceptable range of values for each measure, and "learning" is not
-desired.  
-Although the weight can be set to 0 to avoid adjusting average value and average deviation statistics in a profile for known elements, this does not prevent the Baseline node from updating the profile with new elements.
-Use of the @code{static} option prevents the addition of new elements, and (if weight is not zero) enables learning for elements not included in the profile.  
-However, learning for an element that is not in the profile develops statistics over all periods, instead of per period.
-@item sum @tab
-When @code{sum} is used, asserted values are summed up over each period.  The period value is then the sum of all values asserted during the period.  
-When the sum reaches an upper limit and the assertion and average are both positive, or a lower limit and the assertion and average are both negative, an alert can be triggered right away. 
-However, a lower limit for positive average and upper limit for negative average must be checked at the end of a period when the full sum is known.
-@item trace @tab
-The @code{trace} option is used to generate log messages for troubleshooting.
+The @code{partition} option implies the @code{order} option and changes the evaluation operation to match an argument to the element with the maximum value less than or equal to the argument value.  This enables a domain of values to be partitioned into ranges of values.  For example, a partitioned Baseline node might be used to monitor the number of traffic accidents by driver age ranges in 10-year increments.
+@item static @tab Use @code{static} to avoid updating the profile at the end of each period.
+This is appropriate when the profile defines the acceptable range of values for each measure, and "learning" is not desired.  Although the weight can be set to 0 to avoid adjusting average value and average deviation statistics in a profile for known elements, this does not prevent the Baseline node from updating the profile with new elements.
+Use of the @code{static} option prevents the addition of new elements, and (if weight is not zero) enables learning for elements not included in the profile.  However, learning for an element that is not in the profile develops statistics over all periods, instead of per period.
+@item sum @tab When @code{sum} is used, asserted values are summed up over each period.  The period value is then the sum of all values asserted during the period.  
+When the sum reaches an upper limit and the assertion and average are both positive, or a lower limit and the assertion and average are both negative, an alert can be triggered right away.  However, a lower limit for positive average and upper limit for negative average must be checked at the end of a period when the full sum is known.
+@item trace @tab  The @code{trace} option is used to generate log messages for troubleshooting.
 @end multitable
 
 @section Assertions
@@ -576,17 +531,15 @@ The Baseline module supports assertions within @code{assert} or @code{alert} com
 @example
 assert @i{node}(@i{arg1}[,@i{arg2},...])[=@i{value}];  # value must be number or ? (Unknown)
 @end example
-The semantics are similar to the Tree module, except the value assigned to an element within a Baseline node must be a number.
-Strings are not allowed.  
-When the @code{sum} option is used by a Baseline node, an assertion to a Baseline node will add to the current value, otherwise it replaces the current value.  If no value is specified, 1 is assumed.  If an unknown value ("?") is assigned, the element is removed.
+The semantics are similar to the Tree module, except the value assigned to an element within a Baseline node must be a number.  Strings are not allowed.  When the @code{sum} option is used by a Baseline node, an assertion to a Baseline node will add to the current value, otherwise it replaces the current value.  If no value is specified, 1 is assumed.  If an unknown value ("?") is assigned, the element is removed.
 
 @section Cell Expressions
 @cindex cell
 @cindex cell expression
 @cindex evaluation
 
-When a Baseline node is referenced in a cell expression it presents the value of the specified element.
-Here we show a reference within a cell expression of a simple @code{define} statement.
+When a Baseline node is referenced in a cell expression, it presents the value of the specified element.
+The example shows a reference within a cell expression of a simple @code{define} statement.
 
 @example
 define @i{term} cell @i{node}(@i{arg1}[,@i{arg2},...]);  # term has value of specified element
@@ -628,8 +581,7 @@ The @code{prune} command is used to remove elements from a Baseline node.
 @i{node}[(@i{arg1}[,@i{arg2},...])]:prune
 @end example
 
-Unlike an assertion that an element is unknown, which removes the identified element and the subordinate tree, the @code{prune} command only removes the subordinate tree.  
-Using a table model, it deletes the subordinate table, emptying the cells to the right of the identified cell and deleting all rows represented by the subordinate table.
+Unlike an assertion that an element is unknown, which removes the identified element and the subordinate tree, the @code{prune} command only removes the subordinate tree.  Using a table model, it deletes the subordinate table, emptying the cells to the right of the identified cell and deleting all rows represented by the subordinate table.
 
 @subsection Set
 @cindex set
@@ -640,7 +592,7 @@ The @code{set} command is used to assign the average value and average deviation
 @i{node}(@i{arg1}[,@i{arg2},...]):set @i{averageValue},@i{averageDeviation};
 @end example
 
-Although @code{set} commands can be issued at any time, they are primarily used in period profiles.  A period profile is just a file containing @code{set} commands.  These files are processed ("sourced") at the start of a period, and optionally updated at the end of a period.  
+Although @code{set} commands can be issued at any time, they are primarily used in period profiles.  A period profile is just a file containing @code{set} commands.  These files are processed ("sourced") at the start of a period and optionally updated at the end of a period.  
 
 @subsection Store
 @cindex store
@@ -657,7 +609,7 @@ The node name is not included in the assertions.  This enables the assertions to
 @subsection Trace
 @cindex trace
 
-The @code{trace} command is used to toggle the trace option for troubleshooting.
+The @code{trace} command is used to toggle the @code{trace} option for troubleshooting.
 @example
 @i{node}:trace [on|off]
 @end example
@@ -673,7 +625,7 @@ The Baseline module currently implements no module level commands.
 @cindex triggers
 @cindex alert
 
-When measures reach thresholds a Baseline node issues an alert to @code{if} rules defined for the node.
+When measures reach thresholds, a Baseline node issues an alert to @code{if} rules defined for the node.
 These alerts have the following form.
 @example
 alert _measure="@i{name}",_value=@i{n},_average=@i{n},_deviation=@i{n},_threshold=@i{n},_limit=@i{n}, \

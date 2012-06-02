@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -73,6 +73,8 @@
 *            and deprecate the old listener concept.
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
+* 2012-02-07 dtl Checker updates
+* 2012-05-20 eat 0.8.9  Merged client skill which had been a separate source file
 *=============================================================================
 */
 #include "config.h"
@@ -116,7 +118,7 @@ int smtpGet(NB_IpChannel *channel){
   int len;
   char *cursor,*buffer=(char *)channel->buffer;
 
-  if((len=recv(channel->socket,buffer,NB_BUFSIZE,0))<0) return(len);
+  if((len=recv(channel->socket,buffer,NB_BUFSIZE,0))<0) return(len); //buffer[NB_BUFSIZE] (not overflow)
   if(len>4095) return(-1); /* that's too big */
   cursor=buffer+len;
   *cursor=0; cursor--;
@@ -137,21 +139,20 @@ int smtpGet(NB_IpChannel *channel){
 int smtpData(NB_IpChannel *channel,char *clienthost,char *directory,char *user){
   FILE *file;
   int len;
-  char *buffer=(char *)channel->buffer;
+  char *buffer=(char *)channel->buffer; //buffer is sizeof NB_BUFSIZE
   char *line,*cursor;
   char fname[1024];           /* name of SMTP Listener queue directory */
 
-
   nbQueueGetNewFileName(fname,directory,0,'t');
   if((file=fopen(fname,"a"))==NULL){
-    sprintf(buffer,"550 Sorry, unable to open %s\n",fname);
+    snprintf(buffer,(size_t)NB_BUFSIZE,"550 Sorry, unable to open %s\n",fname); //013112 dtl: replased sprintf
     return(0);
     }
   fprintf(file,"From: %s %s\n",channel->ipaddr,clienthost);
   fprintf(file,"To: %s\n",user);
   fprintf(file,"- - - - - - - - - - - - - - - -\n");
 
-  strcpy(buffer,"354 Enter Mail, end with \".\" on a line by itself");
+  snprintf(buffer,(size_t)NB_BUFSIZE,"%s","354 Enter Mail, end with \".\" on a line by itself"); //013112 dtl: replased strcpy 
   if((len=smtpPut(channel))<0) return(len);
 
   while((len=recv(channel->socket,buffer,NB_BUFSIZE,0))>0){
@@ -251,8 +252,8 @@ void smtpServe(nbSession *session){
         sprintf(buffer,"250 %s... Recipient ok",mailaddress);
         if((cursor=strchr(mailaddress,'@'))!=NULL) *cursor=0;
         if((cursor=strchr(mailaddress,'>'))!=NULL) *cursor=0;
-        if(*mailaddress!='<') strcpy(recipient,mailaddress);
-        else strcpy(recipient,mailaddress+1);
+        if(*mailaddress!='<') snprintf(recipient,sizeof(recipient),"%s",mailaddress); //dtl: replaced strcpy
+        else snprintf(recipient,sizeof(recipient),"%s",mailaddress+1); //2012-01-31 dtl: replaced strcpy
 	if((identity=nbIdentityGet(context,recipient))==NULL)
 	  sprintf(buffer,"550 %s Unknown",recipient);
         }
@@ -400,7 +401,7 @@ void smtpFork(nbCELL context,nbSession *session){
 // Create new server structure from server specification
 //
 //    identity@address:port
-
+#define MSG_SIZE  1024   //msg has size at least 1024
 nbServer *smtpServer(nbCELL context,char *cursor,char *qDir,char *msg){
   nbServer *server;
   char *inCursor;
@@ -428,7 +429,7 @@ nbServer *smtpServer(nbCELL context,char *cursor,char *qDir,char *msg){
   cursor++;
   server->identity=nbIdentityGet(context,server->idName);
   if(server->identity==NULL){
-    sprintf(msg,"Identity '%s' not defined",server->idName);
+    snprintf(msg,(size_t)MSG_SIZE,"Identity '%s' not defined",server->idName); //2012-01-31 dtl: replaced sprintf 
     free(server);
     return(NULL);
     }
@@ -457,7 +458,7 @@ nbServer *smtpServer(nbCELL context,char *cursor,char *qDir,char *msg){
   if(*server->address<'0' || *server->address>'9'){
     interfaceAddr=nbIpGetAddrByName(server->address);
     if(interfaceAddr==NULL){
-      sprintf(msg,"Hostname %s not resolved",server->address);
+      snprintf(msg,(size_t)MSG_SIZE,"Hostname %s not resolved",server->address); //2012-02-07 dtl: replaced sprintf
       free(server);
       return(NULL);
       }
@@ -613,5 +614,191 @@ extern void *serverBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL ar
   nbSkillSetMethod(context,skill,NB_NODE_ENABLE,serverEnable);
   nbSkillSetMethod(context,skill,NB_NODE_COMMAND,serverCommand);
   nbSkillSetMethod(context,skill,NB_NODE_DESTROY,serverDestroy);
+  return(NULL);
+  }
+/*
+* Copyright (C) 1998-2012 The Boeing Company
+*                         Ed Trettevik <eat@nodebrain.org>
+*
+* NodeBrain is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place Suite 330, Boston, MA 02111-1307, USA.
+*
+*=============================================================================
+* Program:  NodeBrain
+*
+* File:     nb_mailer.c
+*
+* Title:    NodeBrain Mailer - SMTP Client
+*
+* Function:
+*
+*   This file provides the client skill of the mail module.
+*
+* Synopsis:
+*
+*   #include "nb.h"
+*
+* Description
+*
+*=============================================================================
+* Change History:
+*
+*    Date    Name/Change
+* ---------- -----------------------------------------------------------------
+* 2012/03/16 Ed Trettevik - initial version 0.8.7
+*            [This is heavily based on Cliff Bynum's Bingo Mailer]
+*=============================================================================
+*/
+
+//#include <nb.h>
+
+/*
+*  The following structure is created by the skill module's "construct"
+*  function defined in this file.  This is a module specific structure.
+*  NodeBrain is only aware of the address of instances of this
+*  structure which it stores in a node's "handle".  The handle is passed to
+*  various functions defined in this module.
+*/
+typedef struct NB_MOD_MAIL_CLIENT{      // mailer node descriptor
+  unsigned char  trace;            // trace option
+  unsigned char  dump;             // option to dump packets in trace
+  unsigned char  echo;             // echo option
+  nbMailClient  *mailClient;    // Mail and socket information
+  } nbModMailClient;
+
+/*==================================================================================
+*
+*  M E T H O D S
+*
+*  The code above this point is very specific to the goals of this skill module. The
+*  code below this point is also specific in some of the details, but the general
+*  structure applies to any skill module.  The functions below are "methods" called
+*  by NodeBrain.  Their parameters must conform to the NodeBrain Skill Module
+*  API.  A module is not required to provide all possible methods, so modules may
+*  vary in the set of methods they implement.
+*
+*=================================================================================*/
+
+/*
+*  construct() method
+*
+*    define <term> node message.peer("<cabal>",<node>,<port>);
+*    <term>. define filelines cell <filelines>; # number of lines per file
+*/
+void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+  nbModMailClient *client;
+  nbCELL cell=NULL;
+  nbSET argSet;
+  char *cursor=text,*delim;
+  int trace=0,dump=0,echo=1;
+  int len;
+
+  argSet=nbListOpen(context,arglist);
+  cell=nbListGetCellValue(context,&argSet);
+  if(cell!=NULL) nbLogMsg(context,0,'E',"The client skill accepts no parameters - ignoring arguments.");
+  while(*cursor==' ') cursor++;
+  while(*cursor!=';' && *cursor!=0){
+    delim=strchr(cursor,' ');
+    if(delim==NULL) delim=strchr(cursor,',');
+    if(delim==NULL) delim=strchr(cursor,';');
+    if(delim!=NULL) delim=cursor+strlen(cursor);
+    len=delim-cursor;
+    if(strncmp(cursor,"trace",len)==0){trace=1;}
+    else if(strncmp(cursor,"dump",len)==0){trace=1;dump=1;}
+    else if(strncmp(cursor,"silent",len)==0) echo=0;
+    cursor=delim;
+    while(*cursor==' ' || *cursor==',') cursor++;
+    }
+  client=malloc(sizeof(nbModMailClient));
+  memset(client,0,sizeof(nbModMailClient));
+  client->trace=trace;
+  client->dump=dump;
+  client->echo=echo;
+  client->mailClient=NULL;
+  nbListenerEnableOnDaemon(context);  // sign up to enable when we daemonize
+  return(client);
+  }
+
+/*
+*  enable() method
+*
+*    enable <node>
+*/
+int clientEnable(nbCELL context,void *skillHandle,nbModMailClient *client){
+  if(!client->mailClient) client->mailClient=nbMailClientCreate(context);
+  if(!client->mailClient){
+    nbLogMsg(context,0,'E',"Unable to create mail client - terminating");
+    exit(1);
+    }
+  nbLogMsg(context,0,'I',"Enabled");
+  return(0);
+  }
+
+/*
+*  disable method
+*
+*    disable <node>
+*/
+int clientDisable(nbCELL context,void *skillHandle,nbModMailClient *client){
+  return(0);
+  }
+
+/*
+*  command() method
+*
+*    <node>[(<args>)][:<text>]
+*/
+int *clientCommand(nbCELL context,void *skillHandle,nbModMailClient *client,nbCELL arglist,char *text){
+  if(client->trace) nbLogMsg(context,0,'T',"clientCommand() text=[%s]\n",text);
+  nbCmd(context,text,1);
+  nbMailSendAlarm(context,client->mailClient);
+  if(client->trace) nbLogMsg(context,0,'E',"clientCommand(): alarm sent");
+  return(0);
+  }
+
+/*
+*  destroy() method
+*
+*    undefine <node>
+*/
+int clientDestroy(nbCELL context,void *skillHandle,nbModMailClient *client){
+  nbLogMsg(context,0,'T',"clientDestroy called");
+  nbFree(client,sizeof(nbModMailClient));
+  return(0);
+  }
+
+
+#if defined(_WINDOWS)
+_declspec (dllexport)
+#endif
+extern void *clientBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
+  nbSkillSetMethod(context,skill,NB_NODE_CONSTRUCT,clientConstruct);
+  nbSkillSetMethod(context,skill,NB_NODE_DISABLE,clientDisable);
+  nbSkillSetMethod(context,skill,NB_NODE_ENABLE,clientEnable);
+  nbSkillSetMethod(context,skill,NB_NODE_COMMAND,clientCommand);
+  nbSkillSetMethod(context,skill,NB_NODE_DESTROY,clientDestroy);
+  return(NULL);
+  }
+
+#if defined(_WINDOWS)
+_declspec (dllexport)
+#endif
+extern void *mailerBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
+  nbSkillSetMethod(context,skill,NB_NODE_CONSTRUCT,clientConstruct);
+  nbSkillSetMethod(context,skill,NB_NODE_DISABLE,clientDisable);
+  nbSkillSetMethod(context,skill,NB_NODE_ENABLE,clientEnable);
+  nbSkillSetMethod(context,skill,NB_NODE_COMMAND,clientCommand);
+  nbSkillSetMethod(context,skill,NB_NODE_DESTROY,clientDestroy);
   return(NULL);
   }

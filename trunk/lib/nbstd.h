@@ -46,6 +46,7 @@
 #ifndef _NB_STD_H_
 #define _NB_STD_H_
 
+#define NB_MSGSIZE 256           // MIN msg buffer size 
 #define NB_BUFSIZE 16*1024       // Use 16KB buffers
 #define NB_EXITCODE_BAIL    254  // User request exit on error message
 #define NB_EXITCODE_FAIL    255  // Unrequested failure

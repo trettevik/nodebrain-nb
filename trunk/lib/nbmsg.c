@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2011 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -147,6 +147,15 @@
 *            to all sink nodes.  This enables a source node to transmit to sink
 *            nodes when a firewall prevents the sink from connecting to the
 *            source but enables the source to connect to the sink.
+*
+* 2012-01-04 eat - modified to accept replacement connections
+* 2012-01-31 dtl - Checker updates
+* 2012-04-22 eat 0.8.8  Included nbMsgLogPrune function
+* 2012-04-22 eat 0.8.8  Added a one byte file status field to file header record
+*            The file status is used to mark the first file in the set.  This
+*            state is assigned to the initial file when a log is created, and
+*            set on the new first file when older files are deleted by the
+*            nbMsgLogPrune function.
 *==============================================================================
 */
 #include <ctype.h>
@@ -185,12 +194,13 @@ int nbMsgConsumerAdd(nbMsgLog *msglog,char *name){
     strcpy(consumer->name,name);
     if((consumer->socket=socket(AF_UNIX,SOCK_DGRAM,0))<0){
       outMsg(0,'E',"nbMsgConsumerAdd: Unable to get socket - %s\n",strerror(errno));
+      nbFree(consumer,sizeof(nbMsgConsumer));
       return(-1);
       }
     consumer->un_addr.sun_family=AF_UNIX;
-    sprintf(consumer->un_addr.sun_path,"message/%s/%s/%s.socket",msglog->cabal,msglog->nodeName,name);
+    snprintf(consumer->un_addr.sun_path,sizeof(consumer->un_addr.sun_path),"message/%s/%s/%s.socket",msglog->cabal,msglog->nodeName,name);
     *consumerP=consumer;
-    if(msgTrace) outMsg(0,'I',"Cabal %s node %s consumer %s added",msglog->cabal,msglog->nodeName,name);
+    if(msgTrace) outMsg(0,'I',"Cabal %s node %s consumer %s added as %s",msglog->cabal,msglog->nodeName,name,consumer->un_addr.sun_path);
     }
   //else outMsg(0,'W',"Cabal %s node %s consumer request %s is duplicate",msglog->cabal,msglog->nodeName,name);
   return(0);
@@ -212,6 +222,7 @@ int nbMsgConsumerRemove(nbMsgLog *msglog,char *name){
     }
   consumer=*consumerP;
   *consumerP=consumer->next;
+  if(consumer->socket) close(consumer->socket);
   nbFree(consumer,sizeof(nbMsgConsumer));
   return(0);
   }
@@ -221,15 +232,17 @@ int nbMsgConsumerRemove(nbMsgLog *msglog,char *name){
 */
 int nbMsgConsumerSend(nbCELL context,nbMsgLog *msglog,void *data,int len){
   nbMsgConsumer *consumer,**consumerP;
-  int rc;
+  //int rc;
   for(consumerP=&msglog->consumer;*consumerP!=NULL;){
     consumer=*consumerP;
     if(msgTrace) outMsg(0,'T',"Cabal %s node %s sending datagram message of length %d to consumer %s",msglog->cabal,msglog->nodeName,len,consumer->name);
-    if((rc=sendto(consumer->socket,data,len,MSG_DONTWAIT,(struct sockaddr *)&consumer->un_addr,sizeof(struct sockaddr_un)))<0){
+    if(msgTrace) outMsg(0,'T',"Socket %d file '%s'",consumer->socket,consumer->un_addr.sun_path);
+    if(sendto(consumer->socket,data,len,MSG_DONTWAIT,(struct sockaddr *)&consumer->un_addr,sizeof(struct sockaddr_un))<0){
       nbLogMsg(context,0,'W',"Cabal %s node %s consumer %s: %s",msglog->cabal,msglog->nodeName,consumer->name,strerror(errno));
       // 2011-01-19 eat - remove entry if consumer has gone away
       // may need to check rc and not always remove
       //nbMsgConsumerRemove(msglog,consumer->name);       
+      close(consumer->socket);
       *consumerP=consumer->next;
       nbFree(consumer,sizeof(nbMsgConsumer));
       }
@@ -448,6 +461,9 @@ int nbMsgPrint(FILE *file,nbMsgRec *msgrec){
       mTime=CNTOHL(msgid->time);
       mCount=CNTOHL(msgid->count);
       fprintf(file,"%u-%u-%u",mNode,mTime,mCount);
+      msgid++;
+      if((unsigned char *)msgid>=msgend) fprintf(file,"?00");
+      else fprintf(file,",%2.2x",*(char *)msgid);
       }
     else{
       fprintf(file,"x:");
@@ -742,8 +758,9 @@ nbMsgState *nbMsgLogStateFromRecord(nbCELL context,nbMsgRec *msgrec){
 *    count
 *    text pointer
 */
-char *nbMsgHeaderExtract(nbMsgRec *msgrec,int node,uint32_t *tranTimeP,uint32_t *tranCountP,uint32_t *recordTimeP,uint32_t *recordCountP,uint32_t *fileTimeP,uint32_t *fileCountP){
+char *nbMsgHeaderExtract(nbMsgRec *msgrec,int node,uint32_t *tranTimeP,uint32_t *tranCountP,uint32_t *recordTimeP,uint32_t *recordCountP,uint32_t *fileTimeP,uint32_t *fileCountP,char *flags){
   nbMsgId *msgid=&msgrec->si;
+  int msglen;
 
   if(msgTrace) nbMsgPrint(stderr,msgrec);
   if(msgrec->type!=NB_MSG_REC_TYPE_HEADER) return("msg type not header");
@@ -759,6 +776,10 @@ char *nbMsgHeaderExtract(nbMsgRec *msgrec,int node,uint32_t *tranTimeP,uint32_t 
   if(msgid->node!=node) return("log message id node does not match expected node");
   *fileTimeP=CNTOHL(msgid->time);
   *fileCountP=CNTOHL(msgid->count);
+  msgid++;  // see if we have flags
+  msglen=(msgrec->len[0]<<8)|msgrec->len[1];
+  if((char *)msgid>=((char *)msgrec)+msglen) *flags=0;
+  else *flags=*(char *)msgid;  // return flags 
   return(NULL);
   }
 
@@ -837,7 +858,7 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
       nbLogMsg(context,0,'L',"nbMsgLogRead: Logic error - cabal \"%s\" node %u file %s size %d is less than msglog->filesize=%u",msglog->cabal,msglog->node,filename,filestat.st_size,msglog->filesize);
       exit(1);
       }
-    if((msglog->file=open(filename,O_RDONLY))<0){
+    if((msglog->file=openRead(filename,O_RDONLY))<0){ //2012-01-26 dtl: used centralized open routine
       nbLogMsg(context,0,'E',"nbMsgLogRead: Unable to open file %s - %s",filename,strerror(errno));
       return(-1);
       }
@@ -871,7 +892,7 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
     msglog->fileCount++;
     sprintf(msglog->filename,"%10.10d.msg",msglog->fileCount);  
     sprintf(filename,"message/%s/%s/%s",msglog->cabal,msglog->nodeName,msglog->filename);
-    if((msglog->file=open(filename,O_RDONLY))<0){
+    if((msglog->file=openRead(filename,O_RDONLY))<0){ //2012-01-26 dtl: used centralized open routine
       nbLogMsg(context,0,'E',"nbMsgLogRead: Unable to open file %s - %s\n",filename,strerror(errno));
       return(-1);
       }
@@ -891,7 +912,7 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
     }
   else{
     cursor=(unsigned char *)msglog->msgrec;
-    if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogRead: Step msglog=%p to next record at %p *cursor=%2.2x%2.2x",cursor,*cursor,*(cursor+1));
+    if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogRead: Step msglog=%p to next record at %p *cursor=%2.2x%2.2x",msglog,cursor,*cursor,*(cursor+1));
     msglog->fileOffset+=(*cursor<<8)|*(cursor+1);  // update file offset
     cursor+=(*cursor<<8)|*(cursor+1);  // step to next record
     msglog->msgrec=(nbMsgRec *)cursor;
@@ -1018,6 +1039,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
   int msgbuflen;
   char *errStr;
   uint32_t tranTime,tranCount,recordTime,recordCount,fileTime,fileCount;
+  char fileState;            // flag bits on file header/footer
   char linkname[128];
   char linkedname[32];
   int linklen;
@@ -1062,7 +1084,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
     if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogOpen: linkedname=%s",linkedname);
     }
   else{
-    sprintf(linkname,"message/%s/%s/%s.msg",cabal,nodeName,nodeName);
+    snprintf(linkname,sizeof(linkname),"message/%s/%s/%s.msg",cabal,nodeName,nodeName); //2012-01-16 dtl replaced sprintf
     if(lstat(linkname,&filestat)<0){
       outMsg(0,'E',"nbMsgLogOpen: Unable to stat %s - %s",linkname,strerror(errno));
       return(NULL);
@@ -1117,7 +1139,8 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
   if(pgmState) msglog->pgmState=pgmState;
   else msglog->pgmState=msglog->logState;
   msglog->msgbuflen=0; // no data in buffer yet
-  msglog->msgbuf=(unsigned char *)malloc(NB_MSG_BUF_LEN);
+  if((msglog->msgbuf=(unsigned char *)malloc(NB_MSG_BUF_LEN))==NULL) //2012-01-26 dtl: handled error
+    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
   //msglog->msgrec=(nbMsgRec *)msglog->msgbuf;
   msglog->msgrec=NULL;  // no record yet
   // this can be removed when we start using the message.create command
@@ -1132,7 +1155,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
   // If in CURSOR mode, we position by cursor if cursor file exists.
   if(mode==NB_MSG_MODE_CURSOR){
     sprintf(cursorFilename,"message/%s/%s/%s.cursor",cabal,nodeName,basename);
-    if((msglog->cursorFile=open(cursorFilename,O_RDWR))<0){ // have a cursor file
+    if((msglog->cursorFile=openRead(cursorFilename,O_RDWR))<0){ // have a cursor file //dtl used openRead
       nbLogMsg(context,0,'I',"Cursor file '%s' not found. Assuming offset of zero.",cursorFilename);
       }
     else{
@@ -1160,7 +1183,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
     }
 
   sprintf(filename,"message/%s/%s/%s",cabal,nodeName,msglog->filename);
-  if((msglog->file=open(filename,O_RDONLY))<0){
+  if((msglog->file=openRead(filename,O_RDONLY))<0){ //2012-01-26 dtl: used centralized open routine
     fprintf(stderr,"nbMsgLogOpen: Unable to open file %s - %s\n",filename,strerror(errno));
     free(msglog->msgbuf);
     nbFree(msglog,sizeof(nbMsgLog));
@@ -1183,7 +1206,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
   msglog->fileOffset=msglen;
   if(msgTrace) outMsg(0,'T',"nbMsgLogOpen: initial msglog->fileOffset=%u",msglog->fileOffset);
   msglog->msgrec=(nbMsgRec *)msglog->msgbuf;
-  errStr=nbMsgHeaderExtract(msglog->msgrec,node,&tranTime,&tranCount,&recordTime,&recordCount,&fileTime,&fileCount); 
+  errStr=nbMsgHeaderExtract(msglog->msgrec,node,&tranTime,&tranCount,&recordTime,&recordCount,&fileTime,&fileCount,&fileState); 
   if(errStr){
     fprintf(stderr,"nbMsgLogOpen: Corrupted file %s - %s\n",filename,errStr);
     free(msglog->msgbuf);
@@ -1196,12 +1219,12 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
   msglog->recordCount=recordCount;
   if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogOpen: Extracted header time=%u count=%u fileTime=%u fileCount=%u",recordTime,recordCount,fileTime,fileCount);
   if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogOpen: msglog=%p msglog->logState=%p msglog->pgmState=%p flags=%x",msglog,msglog->logState,msglog->pgmState,flags);
-  if(mode!=NB_MSG_MODE_SINGLE && msglog->logState!=msglog->pgmState && !(flags&NB_MSG_MODE_LASTFILE)) while(!nbMsgIncludesState(msglog)){
+  if(mode!=NB_MSG_MODE_SINGLE && msglog->logState!=msglog->pgmState && !(flags&NB_MSG_MODE_LASTFILE)) while(!(fileState&NB_MSG_FILE_STATE_FIRST) && !nbMsgIncludesState(msglog)){
     if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogOpen: File %s does not include requested state",filename);
     close(msglog->file);
     msglog->filesize=0;
     sprintf(filename,"message/%s/%s/%10.10u.msg",cabal,nodeName,fileCount-1);
-    if((msglog->file=open(filename,O_RDONLY))<0){
+    if((msglog->file=openRead(filename,O_RDONLY))<0){ //2012-01-26 dtl: used centralized open routine
       fprintf(stderr,"nbMsgLogOpen: Unable to open file %s - %s\n",filename,strerror(errno));
       free(msglog->msgbuf);
       nbFree(msglog,sizeof(nbMsgLog));
@@ -1220,7 +1243,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
     msglog->fileOffset=msglen;
     fprintf(stderr,"nbMsgLogOpen: 2 msglog->fileOffset=%u\n",msglog->fileOffset);
     msglog->msgrec=(nbMsgRec *)msglog->msgbuf;
-    errStr=nbMsgHeaderExtract(msglog->msgrec,node,&tranTime,&tranCount,&recordTime,&recordCount,&fileTime,&fileCount);
+    errStr=nbMsgHeaderExtract(msglog->msgrec,node,&tranTime,&tranCount,&recordTime,&recordCount,&fileTime,&fileCount,&fileState);
     if(errStr){
       fprintf(stderr,"nbMsgLogOpen: Corrupted file %s - %s\n",filename,errStr);
       free(msglog->msgbuf);
@@ -1238,7 +1261,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
     msgcursor.recordTime=msglog->recordTime;   
     msgcursor.recordCount=msglog->recordCount;   
     if(msgTrace) outMsg(0,'T',"nbMsgLogOpen: 3 msglog->fileOffset=%u",msglog->fileOffset);
-    if((msglog->cursorFile=open(cursorFilename,O_RDWR|O_CREAT,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP))<0){ // have a cursor file
+    if((msglog->cursorFile=openCreate(cursorFilename,O_RDWR|O_CREAT,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP))<0){ // have a cursor file //dtl: use openCreate()
       nbLogMsg(context,0,'E',"nbMsgLogOpen: Unable to create file '%s'",cursorFilename);
       free(msglog->msgbuf);
       nbFree(msglog,sizeof(nbMsgLog));
@@ -1367,7 +1390,7 @@ int nbMsgLogSubscribe(nbCELL context,nbMsgLog *msglog,char *name){
     return(-1);
     }
   un_addr.sun_family=AF_UNIX;
-  sprintf(un_addr.sun_path,"message/%s/%s/~.socket",msglog->cabal,msglog->nodeName);
+  snprintf(un_addr.sun_path,sizeof(un_addr.sun_path),"message/%s/%s/~.socket",msglog->cabal,msglog->nodeName);
   if(msgTrace) outMsg(0,'T',"Cabal %s node %s sending subscription '%s' to producer",msglog->cabal,msglog->nodeName,name);
   if(sendto(sd,name,strlen(name)+1,MSG_DONTWAIT,(struct sockaddr *)&un_addr,sizeof(struct sockaddr_un))<0){
     nbLogMsg(context,0,'W',"Cabal %s node %s consumer %s subscription: %s",msglog->cabal,msglog->nodeName,name,strerror(errno));
@@ -1587,7 +1610,7 @@ int nbMsgLogEmpty(nbCELL context,char *cabal,char *nodeName){
 /*
 *  Write a state header record to an open file 
 */
-int nbMsgFileWriteState(nbCELL context,int file,nbMsgState *msgstate,int node,uint32_t recordTime,uint32_t recordCount,uint32_t fileCount){
+int nbMsgFileWriteState(nbCELL context,int file,nbMsgState *msgstate,int node,uint32_t recordTime,uint32_t recordCount,uint32_t fileCount,int fileState){
   nbMsgRec *msgrec;
   nbMsgId *msgid;
   int msgids;
@@ -1598,7 +1621,8 @@ int nbMsgFileWriteState(nbCELL context,int file,nbMsgState *msgstate,int node,ui
   int rc;
 
   if(msgTrace) outMsg(0,'T',"nbMsgFileWriteState: called 1 node=%d",node);
-  msgrec=(nbMsgRec *)malloc(sizeof(nbMsgRec)+256*sizeof(nbMsgId));
+  if((msgrec=(nbMsgRec *)malloc(sizeof(nbMsgRec)+256*sizeof(nbMsgId)))==NULL) //2012-01-26 dtl: handled error
+    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
   msgrec->type=NB_MSG_REC_TYPE_HEADER;
   msgrec->datatype=NB_MSG_REC_DATA_ID;
   msgid=&msgrec->si;
@@ -1619,8 +1643,9 @@ int nbMsgFileWriteState(nbCELL context,int file,nbMsgState *msgstate,int node,ui
   fileTime=utime;
   nbMsgIdStuff(msgid,node,fileTime,fileCount);
   msgid++;
+  *(char *)msgid=fileState;  // 2012-04-22 eat - include file state - modified by message log file management
   msgrec->msgids=msgids;
-  msglen=(char *)msgid-(char *)msgrec;
+  msglen=(char *)msgid-(char *)msgrec+1;  // +1 is for fileState
   msgrec->len[0]=msglen>>8;
   msgrec->len[1]=msglen&0xff;
   rc=write(file,msgrec,msglen);
@@ -1637,12 +1662,12 @@ int nbMsgFileCreateRegular(nbCELL context, char *cabal,char *nodeName,int node){
   nbMsgState *msgstate;
 
   sprintf(filename,"message/%s/%s/%s.msg",cabal,nodeName,nodeName);
-  if((file=open(filename,O_WRONLY|O_CREAT,S_IRWXU|S_IRGRP))<0){
+  if((file=openCreate(filename,O_WRONLY|O_CREAT,S_IRWXU|S_IRGRP))<0){ //2012-01-26 dtl: used centralized open routine
     outMsg(0,'E',"nbMsgFileCreateRegular: Unable to create file %s\n",filename);
     return(-1);
     }
   msgstate=nbMsgStateCreate(context);
-  if(nbMsgFileWriteState(context,file,msgstate,node,0,0,0)<0){
+  if(nbMsgFileWriteState(context,file,msgstate,node,0,0,0,NB_MSG_FILE_STATE_FIRST)<0){
     nbLogMsg(context,0,'E',"nbMsgFileCreateRegular: Unable to write state header to file %s - %s\n",filename,strerror(errno));
     close(file);
     nbMsgStateFree(context,msgstate);
@@ -1667,7 +1692,7 @@ int nbMsgFileCreateLinked(nbCELL context, char *cabal,char *nodeName,int node){
   // start a new file
   sprintf(linkname,"message/%s/%s/%s.msg",cabal,nodeName,nodeName);
   sprintf(filename,"message/%s/%s/%s",cabal,nodeName,filebase);
-  if((file=open(filename,O_WRONLY|O_CREAT,S_IRWXU|S_IRGRP))<0){
+  if((file=openCreate(filename,O_WRONLY|O_CREAT,S_IRWXU|S_IRGRP))<0){ //2012-01-16 dtl: use openCreate()
     outMsg(0,'E',"nbMsgFileCreateLinked: Unable to create file %s\n",filename);
     return(-1);
     }
@@ -1676,7 +1701,7 @@ int nbMsgFileCreateLinked(nbCELL context, char *cabal,char *nodeName,int node){
     return(-1);
     }
   msgstate=nbMsgStateCreate(context);
-  if(nbMsgFileWriteState(context,file,msgstate,node,0,0,1)<0){
+  if(nbMsgFileWriteState(context,file,msgstate,node,0,0,1,NB_MSG_FILE_STATE_FIRST)<0){
     outMsg(0,'E',"nbMsgLogFileCreate: Unable to write state header to file %s - %s\n",filename,strerror(errno));
     close(file);
     nbMsgStateFree(context,msgstate);
@@ -1688,6 +1713,13 @@ int nbMsgFileCreateLinked(nbCELL context, char *cabal,char *nodeName,int node){
   return(0);
   }
 
+/*
+*  When implementing these conversion functions, first attempt communcation with
+*  the udp socket interface of the producer.  If the producer is listening, send
+*  a transaction to have the producer make the switch.  That way the producer will
+*  be able to keep on writing updates.  If the producer is not listening, then
+*  the message log can be opened and the switch made by the command utility.
+*/
 int nbMsgLogConvert2Regular(nbCELL context, char *cabal,char *nodeName,int node){
   return(0);
   }
@@ -1701,14 +1733,14 @@ int nbMsgLogConvert2Linked(nbCELL context, char *cabal,char *nodeName,int node){
 *
 *  option:
 *
-*    0 - Regular state file <nodeName>.msg
-*    1 - Symbolic link state file <nodeName>.msg to regular message content file (nnnnnnnn.msg)
+*    0 - Create regular state file <nodeName>.msg
+*    1 - Create Symbolic link state file <nodeName>.msg to regular message content file (nnnnnnnn.msg)
 *    2 - Convert to regular file (state)
 *    3 - Convert to symbolic link (content)
 *    4 - Empty to regular file (state)
 *    5 - Empty to symbolic link (content);
 *
-*    See NB_MSG_INIT_OTPION_*
+*    See NB_MSG_INIT_OPTION_*
 */
 int nbMsgLogInitialize(nbCELL context,char *cabal,char *nodeName,int node,int option){
   char filename[128];
@@ -1795,6 +1827,144 @@ int nbMsgLogInitialize(nbCELL context,char *cabal,char *nodeName,int node,int op
   }
 
 /*
+*  Prune message log by removing files that only contains messages older than a specified age.
+*
+*/
+int nbMsgLogPrune(nbCELL context,char *cabal,char *nodeName,int node,int seconds){
+  char filename[128];
+  struct stat filestat;
+  uint32_t tranTime,tranCount,recordTime,recordCount,fileTime,fileCount;
+  char fileState;
+  char linkname[128];
+  char linkedname[32];
+  int linklen;
+  int file;
+  unsigned char buffer[2*1024];
+  int len;
+  int msglen;
+  char *errStr;
+  time_t utime;
+  time_t pruneTime;
+  int deleted=0;          // number of files deleted
+  int pruning=0;          // deleting files
+  char strTime[64];
+
+  // Get prune time
+  time(&utime);
+  pruneTime=utime-seconds; 
+  strcpy(strTime,ctime(&pruneTime));
+  *(strTime+strlen(strTime)-1)=0;
+  outMsg(0,'I',"Pruning cabal %s node %s intstance %d files to %s.",cabal,nodeName,node,strTime);
+
+  // Get the file name
+  snprintf(linkname,sizeof(linkname),"message/%s/%s/%s.msg",cabal,nodeName,nodeName); 
+  if(lstat(linkname,&filestat)<0){
+    outMsg(0,'E',"nbMsgLogPrune: Unable to stat %s - %s",linkname,strerror(errno));
+    return(-1);
+    }
+  if(S_ISLNK(filestat.st_mode)){
+    if(msgTrace) outMsg(0,'T',"nbMsgLogOpen: State file %s is a symbolic link",linkname);
+    // change this to retry in a loop for a few times if not mode PRODUCER because nbMsgLogFileCreate may be removing and creating link
+    linklen=readlink(linkname,linkedname,sizeof(linkedname));
+    if(linklen<0){
+      outMsg(0,'E',"Unable to read link %s - %s",linkname,strerror(errno));
+      return(-1);
+      }
+    if(linklen==sizeof(linkname)){
+      outMsg(0,'E',"Symbolic link %s point to file name too long for buffer",linkname);
+      return(-1);
+      }
+    *(linkedname+linklen)=0;
+    if(msgTrace) nbLogMsg(context,0,'T',"Cabal %s node %s content link is %s -> %s",cabal,nodeName,linkname,linkedname);
+    }
+  else if(S_ISREG(filestat.st_mode)){
+    outMsg(0,'T',"Expecting %s to be a symbolic link - can not prune state files",linkname);
+    return(-1);
+    }
+  else{
+    outMsg(0,'E',"Expecting %s to be a symbolic link or regular file",linkname);
+    return(-1);
+    }
+
+  // Open and read the bottom file
+  sprintf(filename,"message/%s/%s/%s",cabal,nodeName,linkedname);
+  if((file=openRead(filename,O_RDONLY))<0){ 
+    outMsg(0,'E',"Unable to open file %s - %s\n",filename,strerror(errno));
+    return(-1);
+    }
+  if((len=read(file,buffer,sizeof(buffer)))<0){
+    outMsg(0,'E',"Unable to read file %s - %s\n",filename,strerror(errno));
+    return(-1);
+    }
+  msglen=(buffer[0]<<8)|buffer[1];
+  if(msglen>len){
+    outMsg(0,'E',"Header record of length %d in file %s is larger than allocated buffer length %d.\n",msglen,filename,len);
+    return(-1);
+    }
+  errStr=nbMsgHeaderExtract((nbMsgRec *)buffer,node,&tranTime,&tranCount,&recordTime,&recordCount,&fileTime,&fileCount,&fileState);
+  if(errStr){
+    outMsg(0,'E',"Corrupted file %s - %s\n",filename,errStr);
+    return(-1);
+    }
+  // Step up through the files until we find one to prune
+  while(!(fileState&NB_MSG_FILE_STATE_FIRST) || pruning){
+    close(file);
+    outMsg(0,'T',"File %s time %d with %d remaining.",filename,fileTime,fileTime-pruneTime);
+    if(fileTime<pruneTime){
+      if(pruning){
+        if(unlink(filename)<0) outMsg(0,'E',"nbMsgLogPrune: Unable to remove file %s - %s\n",filename,strerror(errno));
+        else deleted++;
+        } 
+      else{             // flag new first file
+        int fileStateOffset=sizeof(nbMsgRec)+(((nbMsgRec *)buffer)->msgids+1)*sizeof(nbMsgId);
+        if(msglen<=fileStateOffset){       // obsolete file structure
+          outMsg(0,'W',"File %s header is obsolete - can not flag as first file - pruning will start later.\n",filename);
+          return(-1);
+          }
+        else{ // record contains fileState
+          if((file=openRead(filename,O_RDWR))<0){ 
+            outMsg(0,'E',"Unable to open file %s - %s\n",filename,strerror(errno));
+            return(-1);
+            }
+          if(lseek(file,fileStateOffset,SEEK_SET)<0){
+            outMsg(0,'E',"Unable to seek to file state in file %s - %s\n",filename,strerror(errno));
+            return(-1);
+            }
+          fileState|=NB_MSG_FILE_STATE_FIRST;
+          if((len=write(file,&fileState,1))<0){
+            outMsg(0,'E',"Unable to open file %s - %s\n",filename,strerror(errno));
+            return(-1);
+            }
+          close(file);
+          }     
+        pruning=1;      // start pruning
+        }
+      }
+    sprintf(filename,"message/%s/%s/%10.10u.msg",cabal,nodeName,fileCount-1);
+    if((file=openRead(filename,O_RDONLY))<0){ 
+      outMsg(0,'E',"Unable to open file %s - %s\n",filename,strerror(errno));
+      return(-1);
+      }
+    if((len=read(file,buffer,sizeof(buffer)))<0){
+      outMsg(0,'E',"Unable to read file %s - %s\n",filename,strerror(errno));
+      return(-1);
+      }
+    msglen=(buffer[0]<<8)|buffer[1];
+    if(msglen>len){
+      outMsg(0,'E',"Header record of length %d in file %s is larger than allocated buffer length %d.\n",msglen,filename,len);
+      return(-1);
+      }
+    errStr=nbMsgHeaderExtract((nbMsgRec *)buffer,node,&tranTime,&tranCount,&recordTime,&recordCount,&fileTime,&fileCount,&fileState);
+    if(errStr){
+      outMsg(0,'E',"Corrupted file %s - %s\n",filename,errStr);
+      return(-1);
+      }
+    }
+  outMsg(0,'I',"Message cabal %s node %s instance %d pruned successfully - %d files deleted.\n",cabal,nodeName,node,deleted);
+  return(0);
+  }
+
+/*
 *  Create a message log file
 *
 *  Returns:  -1 - error, 0 - success
@@ -1838,7 +2008,7 @@ int nbMsgLogFileCreate(nbCELL context,nbMsgLog *msglog){
   // start a new file
   sprintf(filebase,"%10.10d.msg",msglog->fileCount);
   sprintf(filename,"message/%s/%s/%s",msglog->cabal,msglog->nodeName,filebase);
-  if((msglog->file=open(filename,O_WRONLY|O_CREAT,S_IRWXU|S_IRGRP))<0){
+  if((msglog->file=openCreate(filename,O_WRONLY|O_CREAT,S_IRWXU|S_IRGRP))<0){ //2012-01-16 dtl: use openCreate()
     fprintf(stderr,"nbMsgLogFileCreate: Unable to creat file %s\n",filename);
     return(-1);
     }
@@ -1872,8 +2042,9 @@ int nbMsgLogFileCreate(nbCELL context,nbMsgLog *msglog){
     }
   nbMsgIdStuff(msgid,node,msglog->fileTime,msglog->fileCount);
   msgid++;
+  *((char *)msgid)=0;                    // insert fileState
   msgrec->msgids=msgids;
-  msglen=(char *)msgid-(char *)msgrec;
+  msglen=(char *)msgid-(char *)msgrec+1; // -1 is for the fileSate
   msgrec->len[0]=msglen>>8;
   msgrec->len[1]=msglen&0xff;
   if(write(msglog->file,msgrec,msglen)<0){
@@ -1937,13 +2108,13 @@ int nbMsgLogProduce(nbCELL context,nbMsgLog *msglog,unsigned int maxfilesize){
   msglog->maxfilesize=maxfilesize;
   msglog->msgrec=(nbMsgRec *)msglog->msgbuf;
   if(msglog->option&NB_MSG_OPTION_STATE){
-    if((msglog->file=open(filename,O_WRONLY))<0){
+    if((msglog->file=openRead(filename,O_WRONLY))<0){ //2012-01-16 dtl: use openRead()
       outMsg(0,'E',"nbMsgLogProduce: Unable to append to file %s",filename);
       return(-1);
       }
     }
   else{    // Prepare to communicate with consumers if we aren't just maintaining state---actually logging messages
-    if((msglog->file=open(filename,O_WRONLY|O_APPEND,S_IRWXU|S_IRGRP))<0){
+    if((msglog->file=openCreate(filename,O_WRONLY|O_APPEND,S_IRWXU|S_IRGRP))<0){ //2012-01-16 dtl: use openCreate()
       outMsg(0,'E',"nbMsgLogProduce: Unable to append to file %s",filename);
       return(-1);
       }
@@ -2086,12 +2257,16 @@ int nbMsgLogWriteString(nbCELL context,nbMsgLog *msglog,unsigned char *text){
   nbMsgId *msgid=&msgrec->si;
   time_t utime;
   int node=msglog->node;
+  size_t n,i;
 
   if(datalen>NB_MSG_REC_MAX-sizeof(nbMsgRec)){
     nbLogMsg(context,0,'E',"nbMsgLogWriteOriginal: Data length %u exceeds max of %u",datalen,NB_MSG_REC_MAX-sizeof(nbMsgRec));
     return(-1);
     }
-  memcpy(msglog->msgbuf+sizeof(nbMsgCursor)+sizeof(nbMsgRec),text,datalen);
+//2012-01-31 dtl: msgbuf has sizeof NB_MSG_BUF_LEN, safe to copy after tested
+// memcpy(msglog->msgbuf+sizeof(nbMsgCursor)+sizeof(nbMsgRec),text,datalen);
+  n=sizeof(nbMsgCursor)+sizeof(nbMsgRec); //calculate offset
+  if((n+datalen)<=NB_MSG_BUF_LEN) for(i=0;i<datalen;i++) *(msglog->msgbuf+n+i)=*(text+i); //dtl: replaced memcpy
   msglen=sizeof(nbMsgRec)+datalen;
   msgrec->type=NB_MSG_REC_TYPE_MESSAGE;
   msgrec->datatype=NB_MSG_REC_DATA_CHAR;
@@ -2111,19 +2286,23 @@ int nbMsgLogWriteString(nbCELL context,nbMsgLog *msglog,unsigned char *text){
 
 /*
 *  Write data message (may be text or binary data)
-*/
+   datalen = sizeof(data) */
 int nbMsgLogWriteData(nbCELL context,nbMsgLog *msglog,void *data,unsigned short datalen){
   unsigned short msglen;
   nbMsgRec *msgrec=(nbMsgRec *)(msglog->msgbuf+sizeof(nbMsgCursor));
   nbMsgId *msgid=&msgrec->si;
   time_t utime;
   int node=msglog->node;
+  int n,i;
  
   if(datalen>NB_MSG_REC_MAX-sizeof(nbMsgRec)){
     nbLogMsg(context,0,'E',"nbMsgLogWriteOriginal: Data length %u exceeds max of %u",datalen,NB_MSG_REC_MAX-sizeof(nbMsgRec)); 
     return(-1);
     }
-  memcpy(msglog->msgbuf+sizeof(nbMsgCursor)+sizeof(nbMsgRec),data,datalen);
+//2012-01-31 dtl: msgbuf has sizeof NB_MSG_BUF_LEN, safe to copy after tested
+//memcpy(msglog->msgbuf+sizeof(nbMsgCursor)+sizeof(nbMsgRec),data,datalen);
+  n=sizeof(nbMsgCursor)+sizeof(nbMsgRec); //offset
+  if((n+datalen)<=NB_MSG_BUF_LEN) for(i=0;i<datalen;i++) *(msglog->msgbuf+n+i)=*((unsigned char*)data +i); //dtl:replaced memcpy
   msglen=sizeof(nbMsgRec)+datalen; 
   msgrec->type=NB_MSG_REC_TYPE_MESSAGE;
   msgrec->datatype=NB_MSG_REC_DATA_BIN;
@@ -2182,7 +2361,7 @@ int nbMsgLogWriteReplica(nbCELL context,nbMsgLog *msglog,nbMsgRec *msgin){
       }
     else if(msglog->option&NB_MSG_OPTION_STATE){
       lseek(msglog->file,0,SEEK_SET);
-      if(nbMsgFileWriteState(context,msglog->file,msglog->logState,msglog->node,0,0,0)<0){
+      if(nbMsgFileWriteState(context,msglog->file,msglog->logState,msglog->node,0,0,0,NB_MSG_FILE_STATE_ONLY)<0){
         nbLogMsg(context,0,'E',"nbMsgLogWriteReplica: Cabal %s node %s - write of state header failed - %s",msglog->cabal,msglog->nodeName,strerror(errno));
         return(-1);
         }
@@ -2540,7 +2719,8 @@ nbMsgCache *nbMsgCacheAlloc(nbCELL context,char *cabal,char *nodeName,int node,i
   msgcache=(nbMsgCache *)nbAlloc(sizeof(nbMsgCache));
   memset(msgcache,0,sizeof(nbMsgCache));
   msgcache->bufferSize=size;
-  msgcache->bufferStart=malloc(size);
+  if((msgcache->bufferStart=malloc(size))==NULL) //2012-01-26 dtl: handled error
+    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
   msgcache->bufferEnd=msgcache->bufferStart+size;
   msgqrec=msgcache->bufferStart;
   *msgqrec=0xff;  // when first flag byte is 0xff we are at the end of the cache or end of cache buffer
@@ -2832,8 +3012,16 @@ static int nbMsgCabalAcceptHelloConsumer(nbCELL context,nbPeer *peer,void *handl
     return(-1);
     }
   if(msgnode->state!=NB_MSG_NODE_STATE_DISCONNECTED){
-    nbLogMsg(context,0,'E',"nbMsgCabalAcceptHelloConsumer: Node %s is not in a disconnected state - %d - shutting down new connection",msgnode->name,msgnode->state);
-    return(-1);
+    // 2012-01-04 eat - modified to accept replacement connections
+    //   The original idea was to avoid a second process stealing a connection from connected process.
+    //   However, there are cases where a client disconnects without the server getting notified.  The
+    //   connection on the server side then prevented the client from reconnecting.  This logic has
+    //   been modified to allow a new connection to replace an existing connection.
+    //nbLogMsg(context,0,'E',"nbMsgCabalAcceptHelloConsumer: Node %s is not in a disconnected state - %d - shutting down new connection",msgnode->name,msgnode->state);
+    //return(-1);
+    nbLogMsg(context,0,'E',"nbMsgCabalAcceptHelloConsumer: Node %s is not in a disconnected state - %d - shutting down old connection",msgnode->name,msgnode->state);
+    nbPeerShutdown(context,msgnode->peer,0);
+    msgnode->state=NB_MSG_NODE_STATE_DISCONNECTED;
     }
   nbLogMsg(context,0,'T',"Cabal node %s connecting",msgnode->name);
   // should check to make sure we aren't stomping on an old peer here
@@ -3007,7 +3195,8 @@ nbMsgCabal *nbMsgCabalAlloc(nbCELL context,char *cabalName,char *nodeName,int mo
   msgcabal=(nbMsgCabal *)nbAlloc(sizeof(nbMsgCabal));
   memset(msgcabal,0,sizeof(nbMsgCabal));
   msgcabal->mode=mode;
-  msgcabal->cntlMsgBuf=(unsigned char *)malloc(NB_MSG_CABAL_BUFLEN);
+  if((msgcabal->cntlMsgBuf=(unsigned char *)malloc(NB_MSG_CABAL_BUFLEN))==NULL) //2012-01-26 dtl: handled error
+    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
   strcpy(msgcabal->cabalName,cabalName);
   msgcabal->node=nbMsgNodeCreate(context,cabalName,nodeName,nodeContext,0,mode);
   if(!msgcabal->node){
@@ -3348,7 +3537,7 @@ int nbMsgCabalEnable(nbCELL context,nbMsgCabal *msgcabal){
           if(msgnode->state!=NB_MSG_NODE_STATE_CONNECTED) preferred=0;
           if(msgnode->state==NB_MSG_NODE_STATE_DISCONNECTED && msgnode->downTime<expirationTime){
             // we only want to connect from a disconnected state
-            nbLogMsg(context,0,'T',"nbMsgCabalEnable: calling nbPeerConnect for cabal %s sink node %s to source node %s",msgcabal->cabalName,msgcabal->node->name,msgnode->name);
+            nbLogMsg(context,0,'T',"nbMsgCabalEnable: calling nbPeerConnect for cabal %s source node %s to sink node %s",msgcabal->cabalName,msgcabal->node->name,msgnode->name);
             if(msgnode->peer!=msgnode->peer4Connect){
               nbPeerDestroy(context,msgnode->peer);
               msgnode->peer=msgnode->peer4Connect;
@@ -3356,7 +3545,7 @@ int nbMsgCabalEnable(nbCELL context,nbMsgCabal *msgcabal){
             msgnode->state=NB_MSG_NODE_STATE_CONNECTING;
             connected=nbPeerConnect(context,msgnode->peer,msgnode,nbMsgPeerHelloProducer,NULL,nbMsgPeerShutdown);
             if(connected<0){
-              nbLogMsg(context,0,'T',"nbMsgCabalEnable: nbPeerConnect failed for cabal %s sink node %s to source node %s",msgcabal->cabalName,msgcabal->node->name,msgnode->name);
+              nbLogMsg(context,0,'T',"nbMsgCabalEnable: nbPeerConnect failed for cabal %s source node %s to sink node %s",msgcabal->cabalName,msgcabal->node->name,msgnode->name);
               msgnode->state=NB_MSG_NODE_STATE_DISCONNECTED;
               msgnode->downTime=utime;
               preferred=0;

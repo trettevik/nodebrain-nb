@@ -103,6 +103,7 @@
 * 2008-11-11 eat 0.7.3  Changed failure exit code to NB_EXITCODE_FAIL
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2011-02-08 eat 0.8.5  Stopped echo of nbTermOptionString values
+* 2012-01-16 dtl Checker updates
 *=============================================================================
 */
 #include "nbi.h"
@@ -138,6 +139,7 @@ void termAskFile(char *name,char *value,char *filename){
   char buffer[NB_BUFSIZE];
   int len=strlen(name);
   FILE *file;
+  char *valend=value+NB_BUFSIZE; //save end pointer (value has sizeof NB_BUFSIZE)
   
   outMsg(0,'T',"Resolving \"%s\" via file : %s",name,filename);
   if((file=fopen(filename,"r"))==NULL){
@@ -146,7 +148,7 @@ void termAskFile(char *name,char *value,char *filename){
       }     
   while(fgets(buffer,NB_BUFSIZE,file)!=NULL){
     if(strncmp(buffer,name,len)==0 && *(buffer+len)==':'){
-      strcpy(value,buffer+len+1);
+      sstrcpy(value,valend,buffer+len+1); //2012-01-16 dtl used strncpy with check
       len=strlen(value);
       if(len>0 && *(value+len-1)=='\n') *(value+len-1)=0;
       fclose(file);
@@ -169,13 +171,14 @@ void termAskCommand(char *name,char *value,char *command){
   char buffer[NB_BUFSIZE];
   char cmd[NB_BUFSIZE];
   int rc,len;
+  char *valend=value+NB_BUFSIZE;  //value has sizeof NB_BUFSIZE
 
   strcpy(cmd,command);
   strcat(cmd," \"");
   strcat(cmd,name);
   strcat(cmd,"\"");
   outMsg(0,'T',"Resolving \"%s\" via command : %s",name,cmd);
-  strcpy(value,"?");
+  sstrcpy(value,valend,"?"); //2012-01-16 dtl used strncpy with check
 //#if !defined(mpe) && !defined(ANYBSD)
 //  signal(SIGCLD,SIG_DFL);
 //#endif
@@ -184,7 +187,7 @@ void termAskCommand(char *name,char *value,char *command){
     return;
     }
   if(fgets(buffer,NB_BUFSIZE,file)!=NULL){
-    strcpy(value,buffer);
+    sstrcpy(value,valend,buffer); //2012-01-16 dtl used strncpy with check
     len=strlen(value);
     if(len>0 && *(value+len-1)=='\n') *(value+len-1)=0;
     outPut("Value=(%s)\n",value);
@@ -721,18 +724,18 @@ void termUndefAll(void){
   }  
   
 void termGetName(char *name,NB_Term *term,NB_Term *refContext){
-  char *qual[50];
+  char *qual[50], *namend=name+1024; //name end pointer (name has sizeof 1024) 
   NB_Term *context;
-  int level=0;
+  int n,level=0;
   
-  *name=0;
-  if(term==gloss) return;
+//  *name=0;
+  if(term==gloss) {*name=0;return;} //dtl: moved *name=0 to here for Checker
   if(term==locGloss){  /* special case to avoid next special case */
-    strcpy(name,"@");
+    sstrcpy(name,namend,"@"); //2012-01-16 dtl used strncpy with check
     return;
     }
   if(term==refContext){ /* special case when term is the reference context */
-    strcpy(name,".");
+    sstrcpy(name,namend,"."); //2012-01-16 dtl used strncpy with check
     return;
     }
   if(term->cell.object.type!=termType){
@@ -748,10 +751,10 @@ void termGetName(char *name,NB_Term *term,NB_Term *refContext){
     context=context->context;
     }
   level=level-1;
-  strcpy(name,qual[level]);
+  sstrcpy(name,namend,qual[level]); //dtl: used strncpy with check
   for(level=level-1;level>=0;level--){
-    strcat(name,".");
-    strcat(name,qual[level]);
+    if((strlen(name)+1) < 1024) strncat(name,".",1); //dtl used strncat
+    if((strlen(name)+(n=strlen(qual[level])))<1024) strncat(name,qual[level],n); //dtl used strncat
     }
   }
   
@@ -883,6 +886,20 @@ nbCELL nbSetContext(nbCELL context){
   return(oldContext);
   }
 
+char *nbTermOptionStringTrueFalseUnknown(nbCELL context,char *name,char *defaultTrue,char *defaultFalse,char *defaultUnknown){
+  char *value=defaultUnknown;
+  nbCELL cell;
+  if((cell=nbTermLocate(context,name))!=NULL && (cell=nbCellCompute(context,cell))!=NULL){
+    if(cell==(nbCELL)NB_OBJECT_FALSE) value=defaultFalse;
+    else switch(nbCellGetType(context,cell)){
+      case NB_TYPE_STRING: value=nbCellGetString(context,cell); break;
+      case NB_TYPE_REAL: value=defaultTrue; break;
+      } 
+    }
+  nbLogMsg(context,0,'T',"%s=%s",name,value);
+  return(value);
+  }
+
 char *nbTermOptionStringSilent(nbCELL context,char *name,char *defaultValue){
   char *value=defaultValue;
   nbCELL cell;
@@ -900,7 +917,7 @@ char *nbTermOptionString(nbCELL context,char *name,char *defaultValue){
 //    && (cell=nbTermGetDefinition(context,cell))!=NULL
     && (cell=nbCellCompute(context,cell))!=NULL
     && nbCellGetType(context,cell)==NB_TYPE_STRING) value=nbCellGetString(context,cell);
-  if(trace && value) nbLogMsg(context,0,'T',"%s=%s",name,value);
+  nbLogMsg(context,0,'T',"%s=%s",name,value);
   return(value);
   }
 

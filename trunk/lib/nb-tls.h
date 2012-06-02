@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2011 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -88,29 +88,26 @@ typedef struct NB_TLS_HANDLE{   // TLS Handle
 #define NB_TLS_OPTION_KEYS    2  // Shared keys checked after TLS handshake
 #define NB_TLS_OPTION_CERT    4  // Server certificate
 #define NB_TLS_OPTION_CERTS   8  // Server and client certificates
-#define NB_TLS_OPTION_CLIENT 16  // Server and client certificates
+#define NB_TLS_OPTION_CLIENT 16  // Client
+#define NB_TLS_OPTION_SERVER 32  // Server
+#define NB_TLS_OPTION_CERTO  64  // Server and optional client certificates
+#define NB_TLS_OPTION_SSL2  128  // Enable SSLv2 for compatibility with old applications
 
-// Server options
+// Option combinations
 
-#define NB_TLS_SERVER_TCP     0  // anonymous unencrypted
-#define NB_TLS_SERVER_TLS     1  // encrypted
-#define NB_TLS_SERVER_KEYS    3  // Shared keys checked after TLS handshake
-#define NB_TLS_SERVER_CERT    5  // Server certificate
-#define NB_TLS_SERVER_CERTS  13  // Server and client certificates
-
-// Client options
-
-#define NB_TLS_CLIENT_TCP    16  // anonymous unencrypted
-#define NB_TLS_CLIENT_TLS    17  // encrypted
-#define NB_TLS_CLIENT_KEYS   19  // Shared keys checked after TLS handshake
-#define NB_TLS_CLIENT_CERT   21  // Server certificate
-#define NB_TLS_CLIENT_CERTS  29  // Server and client certificates
+#define NB_TLS_OPTIONS_TCP    0  // anonymous unencrypted
+#define NB_TLS_OPTIONS_TLS    1  // encrypted
+#define NB_TLS_OPTIONS_KEYS   3  // Shared keys checked after TLS handshake
+#define NB_TLS_OPTIONS_CERT   5  // Server certificate
+#define NB_TLS_OPTIONS_CERTS 13  // Server and client certificates
+#define NB_TLS_OPTIONS_CERTO 77  // Server and optional client certificates
 
 // Error codes
 
 #define NB_TLS_ERROR_UNKNOWN    0  // Unknown error - check errno or SSL_get_error
 #define NB_TLS_ERROR_WANT_WRITE 1  // Non-blocking - reschedule write
 #define NB_TLS_ERROR_WANT_READ  2  // Non-blocking - reschedule read
+#define NB_TLS_ERROR_HANDSHAKE  3  // Handshake error - set by nbTlsAccept on listening TLS structure when returning NULL TLS
 
 // API Functions
 

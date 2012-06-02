@@ -145,6 +145,12 @@ extern nbCELL nbSetContext(nbCELL context);
 _declspec (dllexport)
 #endif
 extern 
+char *nbTermOptionStringTrueFalseUnknown(nbCELL context,char *name,char *defaultTrue,char *defaultFalse,char *defaultUnknown);
+
+#if defined(WIN32)
+_declspec (dllexport)
+#endif
+extern 
 char *nbTermOptionStringSilent(nbCELL context,char *name,char *defaultValue);
 
 #if defined(WIN32)

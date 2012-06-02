@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -155,6 +155,8 @@
 * 2006/05/25 eat 0.6.6  chlisten() and chopen() modified to support local (unix) domain sockets
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2012-01-31 dtl 0.8.7  Checker updates
+* 2012-02-09 eat 0.8.7  Reviewed Checker
 *=============================================================================
 */
 #include "nbi.h"
@@ -439,14 +441,14 @@ extern int chput(struct CHANNEL *channel,char *buffer,int len){
   static unsigned int checksum,i;
   int sent;
 
-  if(len>NB_BUFSIZE){
+  if(len>NB_BUFSIZE || len<0){
     nbLogMsgI(0,'E',"chput: Length %u too large.",len);
     return(-1);
     }  
-  if(len==0){
+  else if(len==0){
     nbLogMsgI(0,'L',"chput: Length %u too short - use chstop",len);
     }
-  memcpy(channel->buffer,buffer,len);
+  else memcpy(channel->buffer,buffer,len); //2012-01-31 dtl: moved to if block
   if(channel->enKey.mode){
     i=((len+5+15)&0xfffffff0)-len;   /* pad up to 16 byte boundary */  
     if(i>5) memset(((unsigned char *)channel->buffer)+len,rand()&0xff,i-5);
@@ -487,13 +489,13 @@ extern int chputmsg(struct CHANNEL *channel,char *buffer,int len){
   int sent;
   unsigned char packet[NB_BUFSIZE];
 
-  if(len>NB_BUFSIZE-2){
+  if(len>NB_BUFSIZE-2 || len<0){   //2012-01-31 dtl: added neg len test
     nbLogMsgI(0,'E',"chput: Length %u too large.",len);
     return(-1);
     }  
   *(packet)=(len>>8)|0x80;
   *(packet+1)=len&255;
-  memcpy(packet+2,buffer,len);
+  memcpy(packet+2,buffer,len); //dtl: len already tested
   nbLogMsgI(0,'T',"chputmsg() len=%u ",len);
   len+=2;
   sent=send(channel->socket,packet,len,0);
@@ -582,7 +584,10 @@ extern int chget(struct CHANNEL *channel,char *buffer){
       }
     len-=*((unsigned char *)channel->buffer+len-5);
     }
-  memcpy(buffer,channel->buffer,len);
+//2012-01-31 dtl: replaced memcpy, buffer has sizeof NB_BUFSIZE, safe to copy after test
+//memcpy(buffer,channel->buffer,len);
+  if (len>0 && len<NB_BUFSIZE) for(i=0;i<len;i++) *(buffer+i)=*((char*)channel->buffer+i);  //dtl
+  else {nbLogMsgI(0,'E',"Invalid record encountered. Length = %d",len);return(-2);} //dtl
   buffer[len]=0; /* null terminate */
   return(len);    
   }

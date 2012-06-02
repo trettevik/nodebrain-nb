@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 #=============================================================================
 #
-# Copyright (C) 1998-2009 The Boeing Company
+# Copyright (C) 1998-2011 The Boeing Company
 #                         Ed Trettevik <eat@nodebrain.org>
 #
 # NodeBrain is free software; you can redistribute it and/or modify
@@ -53,16 +53,17 @@
 # 2008/11/02 Ed Trettevik (version 0.7.3)
 # 2009/02/20 eat 0.7.5 - port to other systems (windows plus others)
 # 2011/02/19 eat 0.8.5 - set optimization level
+# 2011/05/31 eat 0.8.6 - Webster API and Proxy API included in Webster Module
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([nb_module],[0.8.5],[bugs@nodebrain.org])
+AC_INIT([nb_module],[0.9.0],[bugs@nodebrain.org])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
 
-CFLAGS="-Wall -01 $CFLAGS"
+CFLAGS="-Wall -O1 $CFLAGS"
 
 #=====================================
 # LIBTOOL stuff

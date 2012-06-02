@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -261,6 +261,9 @@
 * 2008-11-11 eat 0.7.3  Changed failure exit code to NB_EXITCODE_FAIL
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2012-01-31 dtl 0.8.7  Checker updates
+* 2012-02-09 eat 0.8.7  Repaired comAuthDecode 
+* 2012-02-09 eat 0.8.7  Reviewed Checker
 *=============================================================================
 */
 #include "nbi.h"
@@ -576,7 +579,9 @@ unsigned int comAuthDecode(buffer,cipher,key,timeStamp,text,identity,blocklen)
     secretdata[k]=htonl(secretdata[k]);
     }
   if(checksum!=secretdata[k]) return(0);  
-  memcpy(timeStamp,secretdata,20);
+//2012-01-31 dtl: timeStamp sizeof 21, safe to copy, replaced memcpy //2012-02-09 eat - reverted to memcpy
+  memcpy(timeStamp,secretdata,20); // 2012-02-09 eat - this is ok - ignore Checker
+  //for(k=0;k<20;k++) *(timeStamp+k)=*(secretdata+k); //dtl  // eat - secretdata is int, so +k is multiple of sizeof(int)
   *(timeStamp+20)=0;
   bufcur=(unsigned char *)secretdata;
   bufend=bufcur+secretblocks*16-4;
@@ -644,7 +649,8 @@ int nbpMsg(struct NBP_SESSION *session,char trancode,char msgcode,char *text,int
     strcpy(msgbuf->text,text);
     len=strlen(text)+1;
     }
-  else memcpy(msgbuf->text,text,len);
+  else if(len>0 && len<NB_BUFSIZE) memcpy(msgbuf->text,text,len); //2012-01-31 dtl added check
+  else {nbLogMsgI(0,'E',"nbpMsg: chput call failed.");return(-1);} //dtl: handled fail
   len+=msgbuf->text-buffer;
   len=chput(channel,buffer,len);
   if(len<0){
@@ -1137,7 +1143,7 @@ int nbpCopy(int nbp,NB_Term *srcBrainTerm,char *srcFile,NB_Term *dstBrainTerm,ch
     }
   if(dstBrainTerm!=NULL){
     if(trace) nbLogMsgI(0,'T',"opening session with destination brain");
-    strcpy(text+2,dstFile);
+    snprintf(text+2,254,"%s",dstFile); //2012-01-31 dtl: replaced strcpy
     dstSession=nbpOpenTran(nbp,dstBrainTerm,NBP_TRAN_PUTFILE,text);
     if(dstSession==NULL){
       if(srcfile!=NULL) fclose(srcfile);
@@ -1279,7 +1285,7 @@ int nbpServeAuth(struct NBP_SESSION *session,struct NBP_MESSAGE *msgbuf,int len)
     return(-1);
     }
   if((clientIdentity=nbIdentityGet(NULL,clientId))==NULL){
-    sprintf(msgbuf->text,"NB000E Client identity \"%s\" not recognized.\n",clientId);
+    snprintf(msgbuf->text,(size_t)NB_BUFSIZE,"NB000E Client identity \"%s\" not recognized.\n",clientId); //2012-01-31 dtl replaced sprintf
     nbpMsg(session,trancode,msgcode,msgbuf->text,0);
     nbLogStr(NULL,msgbuf->text);
     return(-1);
@@ -1803,7 +1809,7 @@ void nbqSendFile(qHandle,session,dstQueBrainName)
 
   *text=qHandle->entry->type;
   *(text+1)=':';
-  strcpy(text+2,dstQueBrainName);
+  snprintf(text+2,254,"%s",dstQueBrainName); //2012-01-31 dtl replace strcpy
 // closing the file here releases the lock
 // this is a bad thing
 // however, we must have done this because of another bad thing

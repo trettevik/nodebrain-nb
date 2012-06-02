@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2011 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -49,6 +49,7 @@
 * 2008/10/23 eat 0.7.3  This nb.h replaces the old nbapi.h
 * 2009-02-22 eat 0.7.5  Renamed nbout.h to nblog.h
 * 2009-12-12 eat 0.7.7  Included nbmsg.h
+* 2011-11-05 eat 0.8.6  Included nbmail.h
 *============================================================================
 */
 #ifndef _NB_H_
@@ -91,7 +92,10 @@
 #include <nbqueue.h>       // queue routines
 #include <nbtls.h>         // TLS routines
 #include <nbpeer.h>        // peer routines
+#include <nbproxy.h>       // proxy routines
 #include <nbmsg.h>         // message routines
 #include <nbverb.h>        /* verb structure */
+#include <nbwebster.h>     // webster routines
+#include <nbmail.h>        // mail routines
 
 #endif // _NB_H_

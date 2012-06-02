@@ -11,4 +11,4 @@ define syslog node syslog("plan/syslog/syslog.nbx",50514):trace,dump;
 ~ ()
 ~ ---------- --------
 ~ 1970/01/01 00:00:02 NB000I Translator "plan/syslog/syslog.nbx" loaded successfully.
-~ 1970/01/01 00:00:03 NM000I syslog syslog: calling nbListenerEnableOnDaemon
+~ 1970/01/01 00:00:03 NM000I syslog @.syslog: calling nbListenerEnableOnDaemon

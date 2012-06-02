@@ -1,5 +1,5 @@
-@set UPDATED 11 October 2010
-@set UPDATED-MONTH October 2010
-@set EDITION 0.1
-@set VERSION 0.1
-@set NBVERSION 0.8.3
+@set UPDATED 02 June 2012
+@set UPDATED-MONTH June 2012
+@set EDITION 0.2
+@set VERSION 0.2
+@set NBVERSION 0.9.0

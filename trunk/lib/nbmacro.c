@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -75,6 +75,7 @@
 * 2003-11-17 Ed Trettevik (original prototype version)
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2012-01-26 dtl Added sstrcpy for Checker updates
 *=============================================================================
 */
 #include "nbi.h"
@@ -304,3 +305,60 @@ NB_String *nbMacroString(nbCELL context,char **cursorP){
   if(buf==NULL) return(NULL);
   return(useString(buf));
   }
+
+// Copy n bytes from value to cursor position using strncpy
+// Check buffer size before copy, copy value using strncpy, handle truncation.
+// return 0 (success), number of space needed if out of space (truncation)
+
+int sstrcpy(char *cursorP,char *bufend,char *value){
+  int buflen,vlen=strlen(value);
+  char *cursor=cursorP;
+  char *newcur=cursor+vlen;
+  if (cursor>=bufend) return(cursor-bufend+1); //checked lengths before use
+  if(newcur>=bufend){
+    if((buflen=bufend-cursor)>0) strncpy(cursor,value,buflen);
+    *(bufend-1)=0;
+    cursorP=bufend-1;
+    return(newcur-bufend+1);        // not enough spaces return
+    }
+  else strncpy(cursor,value,vlen); //Success: buffer > value
+  *(cursor+vlen)=0;                // set last byte = 0
+  return(0);                       // success return
+  }
+
+// sstrcat - strcat "value" string into "buff" string
+// Check buffer size before copy, handle truncation.
+// return 0 (normal), or number of space needed if out of space (abnormal)
+
+int sstrcat(char *buff,char *bufend,char *value){
+  int buflen,blen=strlen(buff),vlen=strlen(value);
+  char *newcur;
+  if (buff>=bufend) return(-vlen); //if buff addr is out of bound, return negative
+  newcur=buff+blen+vlen;           //calculate location of new cursor
+  if(newcur>=bufend){              //if value string too big
+    if((buflen=bufend-buff-blen-1)>0) strncat(buff,value,buflen); //truncate strcat
+    return(vlen);                  // not enough spaces, return spaces require
+    }
+  else strncat(buff,value,vlen);   //Success: strcat entire string
+  return(0);                       // success return
+  }
+
+// Open file with O_CREAT flags, validate data before open, handle open error
+// centralized data validation routines
+int openCreate(char *filename, int flags, mode_t mode){
+  int file;
+  if (filename!=NULL && *filename!=0)
+    if ((file=open(filename,flags,mode)) != -1) return(file); //Success: return != -1
+// handle error here if nee
+  return(-1);
+  }
+
+// Open file for read, validate data before open, handle open error
+int openRead(char *filename, int flags){
+  int file;
+  if (filename!=NULL && *filename!=0)
+    if ((file=open(filename,flags)) != -1) return(file); //Success: return != -1
+  // handle error here if nee
+  return(-1);
+  }
+

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2011 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -118,9 +118,22 @@
 *            the new connection is used.  A program may call this function
 *            periodically to re-establish a preferred connection. 
 * 2011-02-08 eat 0.8.5  Minor cleanup for local domain sockets
+* 2011-10-26 eat 0.8.6  Stopped requesting certificate if option is "tls" only
+* 2012-02-05 eat 0.8.7  Set unix socket file permission to 660
+* 2012-04-14 eat 0.8.7  Disabled SSLv2 and or better security
+* 2012-04-14 eat 0.8.7  Tried to clean up nbTlsCreate a bit
+*            Previously, an nbTLS client connecting to a SSL/TLS server that did not
+*            request client certificates was still required to provide certificate
+*            and key files. This defect has been fixed.  Also, clients and servers
+*            requesting an encrypted but unauthenticated connection were required
+*            to have a full set of certificates.  This defect has been fixed with
+*            little benefit since authenticated connections are prefered.
+* 2012-04-21 eat 0.8.7  Included NB_TLS_ERROR_HANDSHAKE in nbTlsAccept
+* 2012-04-21 eat 0.8.7  Included NB_TLS_OPTION_SSL2 option for compatibility with old appplications
+* 2012-05-23 eat 0.8.9  Increased nbTlsCreate max number of URI's to 4
 *==================================================================================
 */
-#include <nbcfg.h>
+#include <config.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <memory.h>
@@ -132,6 +145,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 #if !defined(WIN32)
 #include <sys/un.h>
 #endif
@@ -174,7 +188,7 @@ char *nbTlsGetUri(nbTLS *tls){
 *
 *    uriMap   - array of nbTlsUriMap structures
 *    n        - number of entries in array
-*    uriList  - string containing space separated uri list where each
+*    uriList  - string containing space or comma separated uri list where each
 *               entry if of the following form.
 *
 *                 scheme://name[:port]
@@ -210,10 +224,12 @@ int nbTlsUriParse(nbTlsUriMap *uriMap,int n,char *uriList){
     *uriMap->addr=0;
     uriMap->port=0;
     delim=strchr(uricur,' ');
+    if(!delim) delim=strchr(uricur,',');
     if(!delim) delim=strchr(uricur,0);
     if(delim-uricur>=sizeof(uriMap->uri)-1) return(-2);
     strncpy(uriMap->uri,uricur,delim-uricur);
     *(uriMap->uri+(delim-uricur))=0;
+    if(*delim==',') delim++;
     uricur=delim;
     while(*uricur==' ') uricur++;
     cursor=uriMap->uri;
@@ -249,6 +265,14 @@ int nbTlsUriParse(nbTlsUriMap *uriMap,int n,char *uriList){
   }
 
 /*
+*  Phony verification routine
+*    This is experimental - user function can be added a parameter to nbTlsCreateContext
+*/
+static int nbTlsVerify(int preverify_ok,X509_STORE_CTX *ctx){
+  return(1);
+  }
+
+/*
 * Get TLS context for server or client
 *
 *   Option: See NB_TLS_OPTION_* in nb-tls.h
@@ -258,12 +282,12 @@ nbTLSX *nbTlsCreateContext(int option,void *handle,int timeout,char *keyFile,cha
   nbTLSX *tlsx;
   SSL_METHOD *method;
   SSL_CTX    *ctx=NULL;
-  //char *anonymousCipher="ADH",*authCipher="AES",*cipher=authCipher;
-  char *anonymousCipher="ADH",*authCipher="ALL",*cipher=authCipher;
   char *ctxContext="nbTls";
   static int initialize=1; // changed to 0 after we initialize
 
-  if(option){  // not NB_TLS_OPTION_TCP
+  if(!(option&NB_TLS_OPTION_CLIENT)) option|=NB_TLS_OPTION_SERVER;  // stay compatible with code that didn't set the server bit
+  if(option&NB_TLS_OPTION_TLS){  // Using TLS/SSL
+    fprintf(stderr,"nbTlsCreateContext: option=%d\n",option);
     if(initialize){
       SSL_load_error_strings();   // readable error messages
       SSL_library_init();         // initialize library
@@ -271,72 +295,107 @@ nbTLSX *nbTlsCreateContext(int option,void *handle,int timeout,char *keyFile,cha
       // otherwise we should include a call to RAND_seed()
       initialize=0;
       }
-    // Set up the SSL context
-    //if(option&NB_TLS_OPTION_CLIENT) method=TLSv1_client_method();
-    //else method=TLSv1_server_method();
-    if(option&NB_TLS_OPTION_CLIENT) method=SSLv2_client_method();
-    else method=SSLv2_server_method();
+    // Set up the SSL context - SSLv23-SSLV2= SSLv3 or TLS1
+    if(option&NB_TLS_OPTION_CLIENT) method=SSLv23_client_method();
+    else method=SSLv23_server_method();
     ctx=SSL_CTX_new(method);
     if(!ctx){
       fprintf(stderr,"nbTlsCreateContext: Unable to create SSL context using SSL_CTX_new()\n");
       return(NULL);
+      }
+    if(!(option&NB_TLS_OPTION_SSL2)){                     // if not in old code compatibility mode
+      SSL_CTX_set_options(ctx,SSL_OP_NO_SSLv2);           // disable SSLv2 for better security
+      if(!SSL_CTX_set_cipher_list(ctx,"HIGH:MEDIUM")){    // and drop weak ciphers
+        fprintf(stderr,"nbTlsCreateContext: Unable to set cipher list.\n");
+        SSL_CTX_free(ctx);
+        return(NULL);
+        }
       }
     if(!SSL_CTX_set_session_id_context(ctx,(unsigned char *)ctxContext,strlen(ctxContext))){
       fprintf(stderr,"nbTlsCreateContext: Unable to SSL_CTX_set_session_id_context()\n");
       SSL_CTX_free(ctx);
       return(NULL);
       }
-    if(!(option&NB_TLS_OPTION_CERT)) cipher=anonymousCipher;
-    //if(!SSL_CTX_set_cipher_list(ctx,cipher)){
-    //  fprintf(stderr,"nbTlsCreateContext: Unable to set cipher list.\n");
-    //  SSL_CTX_free(ctx);
-    //  return(NULL);
-    //  }
-    //if(option&NB_TLS_OPTION_CERT){
-    if(option&NB_TLS_OPTION_TLS){
-      if(!certFile || !*certFile || !keyFile || !*keyFile){
-        fprintf(stderr,"nbTlsCreateContext: Certificate and key files required for option\n");
+    // 2012-04-14 eat 0.8.7 - changed back to checking CERT option here
+    if(option&NB_TLS_OPTION_CERT || option&NB_TLS_OPTION_SSL2){   // only fuss certificates if using CERT option - or compatibility
+      fprintf(stderr,"nbTlsCreateContext: checking for certificate files\n");
+      if(option&NB_TLS_OPTION_CERTS || option&NB_TLS_OPTION_CLIENT){   // authenticate peer to self
+        if(option&NB_TLS_OPTION_CERTO)  // NOTE: the SSL_VERIFY_FAIL_IF_NO_PEER_CERT and SSL_VERIFY_CLIENT_ONCE have no impact on clients
+          SSL_CTX_set_verify(ctx,SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE,nbTlsVerify);
+          //SSL_CTX_set_verify(ctx,SSL_VERIFY_NONE,nbTlsVerify);
+        else SSL_CTX_set_verify(ctx,SSL_VERIFY_PEER|SSL_VERIFY_FAIL_IF_NO_PEER_CERT|SSL_VERIFY_CLIENT_ONCE,NULL);
+        fprintf(stderr,"nbTlsCreateContext: checking for trusted certificates file\n");
+        if(!trustedCertsFile || !*trustedCertsFile){
+          fprintf(stderr,"nbTlsCreateContext: Trusted certificates file required for specified option.\n");
+          SSL_CTX_free(ctx);
+          return(NULL);
+          }
+        if(SSL_CTX_load_verify_locations(ctx,trustedCertsFile,NULL)<1){
+          fprintf(stderr,"nbTlsCreateContext: Unable to load trusted certificates file.\n");
+          SSL_CTX_free(ctx);
+          return(NULL);
+          }
+        }
+      if(option&NB_TLS_OPTION_CERTS || option&NB_TLS_OPTION_SERVER){ // authenticate self to peer
+        fprintf(stderr,"nbTlsCreateContext: checking for certificate and key files\n");
+        if(!certFile || !*certFile || !keyFile || !*keyFile){
+          fprintf(stderr,"nbTlsCreateContext: Certificate and key files required for option\n");
+          SSL_CTX_free(ctx);
+          return(NULL);
+          }
+        if(SSL_CTX_use_certificate_file(ctx,certFile,SSL_FILETYPE_PEM)<1){
+          fprintf(stderr,"nbTlsCreateContext: Unable to load certificate file.\n");
+          SSL_CTX_free(ctx);
+          return(NULL);
+          }
+        if(SSL_CTX_use_PrivateKey_file(ctx,keyFile,SSL_FILETYPE_PEM)<1){
+          fprintf(stderr,"nbTlsCreateContext: Unable to load key file.\n");
+          SSL_CTX_free(ctx);
+          return(NULL);
+          }
+        if(!SSL_CTX_check_private_key(ctx)){
+          fprintf(stderr,"nbTlsCreateContext: Private key does not match the certificate public key.\n");
+          SSL_CTX_free(ctx);
+          return(NULL);
+          }
+        }
+      fprintf(stderr,"nbTlsCreateContext: certificates loaded\n");
+      }
+    else{
+      fprintf(stderr,"nbTlsCreateContext: setting anonymous cipher\n");
+      if(!SSL_CTX_set_cipher_list(ctx,"ADH-AES256-SHA")){
+        fprintf(stderr,"nbTlsCreateContext: Unable to set cipher list.\n");
         SSL_CTX_free(ctx);
         return(NULL);
         }
-      if(option&NB_TLS_OPTION_CERTS) SSL_CTX_set_verify(ctx,SSL_VERIFY_PEER|SSL_VERIFY_FAIL_IF_NO_PEER_CERT|SSL_VERIFY_CLIENT_ONCE,NULL);
-      else SSL_CTX_set_verify(ctx,SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE,NULL);
-      //if(trustedCertsFile) fprintf(stderr,"trustedCertsFile=%s\n",trustedCertsFile);
-      //else fprintf(stderr,"nbTlsCreateContext: no trustedCertsFile\n");
-      if(trustedCertsFile && *trustedCertsFile && SSL_CTX_load_verify_locations(ctx,trustedCertsFile,NULL)<1){
-        fprintf(stderr,"nbTlsCreateContext: Unable to load trusted certificates file.\n");
-        SSL_CTX_free(ctx);
-        return(NULL);
-        }
-      //if(certFile) fprintf(stderr,"certFile=%s\n",certFile);
-      //else fprintf(stderr,"nbTlsCreateContext: no trustedCertsFile\n");
-      if(certFile && *certFile && SSL_CTX_use_certificate_file(ctx,certFile,SSL_FILETYPE_PEM)<1){
-        fprintf(stderr,"nbTlsCreateContext: Unable to load certificate file.\n");
-        SSL_CTX_free(ctx);
-        return(NULL);
-        }
-      //if(keyFile) fprintf(stderr,"keyFile=%s\n",keyFile);
-      //else fprintf(stderr,"nbTlsCreateContext: no trustedCertsFile\n");
-      if(keyFile && *keyFile && SSL_CTX_use_PrivateKey_file(ctx,keyFile,SSL_FILETYPE_PEM)<1){
-        fprintf(stderr,"nbTlsCreateContext: Unable to load key file.\n");
-        SSL_CTX_free(ctx);
-        return(NULL);
-        }
-      if(((certFile && *certFile) || (keyFile && *keyFile)) && !SSL_CTX_check_private_key(ctx)){
-        fprintf(stderr,"nbTlsCreateContext: Private key does not match the certificate public key.\n");
-        SSL_CTX_free(ctx);
-        return(NULL);
+      // set DH parameters if server
+      if(option&NB_TLS_OPTION_SERVER && keyFile && keyFile){
+        FILE *dhfile=fopen(keyFile,"r");
+        DH *dh;
+        if(dhfile){
+          dh=PEM_read_DHparams(dhfile, NULL, NULL, NULL);
+          fclose(dhfile);
+          }
+        else{
+          fprintf(stderr,"nbTlsCreateContext: Unable to load DH parameters from keyfile.\n");
+          SSL_CTX_free(ctx);
+          return(NULL);
+          }
+        if(SSL_CTX_set_tmp_dh(ctx,dh)<0){
+          fprintf(stderr,"nbTlsCreateContext: Unable to set DH parameters.\n");
+          SSL_CTX_free(ctx);
+          return(NULL);
+          }
         }
       }
-    else SSL_CTX_set_verify(ctx,SSL_VERIFY_NONE,NULL);
-    // 2010-05-31 eat - commented out the following debugging line
-    SSL_CTX_set_verify(ctx,SSL_VERIFY_NONE,NULL);
     }
   tlsx=malloc(sizeof(nbTLSX)); 
   memset(tlsx,0,sizeof(nbTLSX));
   tlsx->option=option;
   tlsx->timeout=timeout;
   tlsx->ctx=ctx;
+  // 2012-05-22 eat - ending the experimenting - had code depending on it
+  // 2012-05-15 eat - experimenting without handle on tlsx
   tlsx->handle=handle;
   return(tlsx);
   }
@@ -363,8 +422,10 @@ nbTLS *nbTlsCreate(nbTLSX *tlsx,char *uri){
   tls=(nbTLS *)malloc(sizeof(nbTLS));
   memset(tls,0,sizeof(nbTLS));
   tls->tlsx=tlsx;
+  // 2012-05-22 eat - ending experimenting  - had code depending on it
+  // 2012-05-15 eat - experimenting without handle on tlsx
   if(tlsx) tls->handle=tlsx->handle;
-  uriCount=nbTlsUriParse(tls->uriMap,3,uri);
+  uriCount=nbTlsUriParse(tls->uriMap,4,uri);
   if(uriCount<1){
     free(tls);
     return(NULL);
@@ -417,6 +478,8 @@ int nbTlsConnected(nbTLS *tls){
     }
   if(tlsx){
     tls->option=tlsx->option;
+    // 2012-05-22 eat - ended the experiment - had code depending on this
+    // 2012-05-15 eat - experimenting without handle on tlsx
     tls->handle=tlsx->handle;
     }
   else tls->option=NB_TLS_OPTION_TCP;
@@ -448,7 +511,7 @@ int nbTlsConnectNonBlocking(nbTLS *tls){
   if(tls->uriMap[tls->uriIndex].scheme==NB_TLS_SCHEME_UNIX){
     domain=AF_UNIX;
     if(strlen(name)>sizeof(un_addr.sun_path)){
-      fprintf(stderr,"nbTlsnbTlsConnectNonBlocking: Local domain socket path too long - %s\n",name);
+      fprintf(stderr,"nbTlsConnectNonBlocking: Local domain socket path too long - %s\n",name);
       return(-1);
       }
     }
@@ -463,6 +526,14 @@ int nbTlsConnectNonBlocking(nbTLS *tls){
     in_addr.sin_family=AF_INET;
     in_addr.sin_addr.s_addr=inet_addr(addr);   // host IP
     in_addr.sin_port=htons(port);              // port number
+    // 2012-02-09 eat - set SO_KEEPALIVE to prevent firewalls from closing connection for return packets
+    int keepalive=1;
+    if(setsockopt(sd,SOL_SOCKET,SO_KEEPALIVE,&keepalive,(socklen_t)sizeof(keepalive))<0) {
+      fprintf(stderr,"nbTlsConnectNonBlocking: setsockopt SO_KEEPALIVE failed: %s\n",strerror(errno));
+      close(sd);
+      return(-1);
+      }
+    if(tlsTrace) fprintf(stderr,"nbTlsConnectNonBlocking: set SO_KEEPALIVE on sd=%d\n",sd);
     }
   else{
     un_addr.sun_family=AF_UNIX;
@@ -476,11 +547,13 @@ int nbTlsConnectNonBlocking(nbTLS *tls){
   rc=setsockopt(sd,SOL_SOCKET,SO_RCVTIMEO,(void *)&tv,sizeof(tv));
   if(rc<0){
     fprintf(stderr,"nbTlsConnectNonBlocking: setsockopt SO_RCVTIMEO failed: %s\n",strerror(errno));
+    close(sd);
     return(-1);
     }
   rc=setsockopt(sd,SOL_SOCKET,SO_SNDTIMEO,(void *)&tv,sizeof(tv));
   if(rc<0){
     fprintf(stderr,"nbTlsConnectNonBlocking: setsockopt SO_SNDTIMEO failed: %s\n",strerror(errno));
+    close(sd);
     return(-1);
     }
 #endif
@@ -579,7 +652,9 @@ int nbTlsConnectWithinUriCount(nbTLS *tls,int uriCount){
       if(tls->socket) close(tls->socket),tls->socket=0;
       tls->socket=sd;
       tls->ssl=ssl;
-      tls->handle=tls->tlsx->handle;
+      // 2012-05-22 eat - ending this experimenting - had code depending on it
+      // 2012-05-15 eat - experimenting without handle on tlsx
+      if(tls->tlsx) tls->handle=tls->tlsx->handle;
       return(nbTlsConnected(tls));
       }
     }
@@ -731,18 +806,19 @@ int nbTlsListen(nbTLS *tls){
     }
 #if !defined(WIN32)
   else{  // handle local (unix) domain sockets
+    mode_t mask;
     un_addr.sun_family=AF_UNIX;
     strcpy(un_addr.sun_path,name);
     unlink(name);
+    mask=umask(0); // save umask
+    fchmod(sd,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);  // set file permissions to 660
     if(bind(sd,(struct sockaddr *)&un_addr,sizeof(un_addr))<0){
+      umask(mask); // restore umask
       fprintf(stderr,"nbTlsListen: Unable to bind to local domain socket %s - %s\n",name,strerror(errno));
-#if defined(WIN32)
-      closesocket(sd);
-#else
       close(sd);
-#endif
       return(-1);
       }
+    umask(mask); // restore umask
     }
 #endif
   if(listen(sd,10)!=0) {
@@ -779,7 +855,10 @@ int nbTlsAcceptHandshake(nbTLS *tls){
   if(tlsTrace) fprintf(stderr,"nbTlsAcceptHandshake: Issuing SSL_accept on socket %d\n",tls->socket);
   tls->error=NB_TLS_ERROR_UNKNOWN;
   rc=SSL_accept(tls->ssl);
-  if(rc>=0) return(rc);
+  if(rc>0){
+    if(tlsTrace) fprintf(stderr,"nbTlsAcceptHandshake: SSL connection using %s\n",SSL_get_cipher(tls->ssl));
+    return(rc);   // 2011-05-25 eat - changed from rc>=0 because wee need to the error
+    }
   error=SSL_get_error(tls->ssl,rc);
   if(error==SSL_ERROR_WANT_READ) tls->error=NB_TLS_ERROR_WANT_READ;
   else if(error==SSL_ERROR_WANT_WRITE) tls->error=NB_TLS_ERROR_WANT_WRITE;
@@ -787,6 +866,7 @@ int nbTlsAcceptHandshake(nbTLS *tls){
     fprintf(stderr,"nbTlsAcceptHandshake: SSL_accept rc=%d code=%d\n",rc,error);
     fprintf(stderr,"nbTlsAcceptHandshake: %s\n",ERR_error_string(error,errbuf));
     ERR_print_errors_fp(stderr);
+    tls->error=0;
     }
   return(rc);
   }
@@ -808,6 +888,10 @@ int nbTlsAcceptHandshake(nbTLS *tls){
 *    for NB_TLS_ERROR_WANT_WRITE or NB_TLS_ERROR_WANT_READ.  On these
 *    error codes schedule calls to nbTlsAcceptHandshake when the
 *    write or read can be satisified.
+*
+*    When a NULL value is returned, the error value on the TLS listener
+*    is set to NB_TLS_ERROR_HANDSHAKE to indicate a handshake error
+*    distinct from a more fundamental socket error.
 */
 nbTLS *nbTlsAccept(nbTLS *tlsListener){
   nbTLS *tls;
@@ -817,6 +901,7 @@ nbTLS *nbTlsAccept(nbTLS *tlsListener){
   int sd,rc;
   char *protocol;
   struct sockaddr_in client;
+  int keepalive=1;
 #if defined(WIN32) || defined(mpe) || defined(SOLARIS) || defined(MACOS)
   size_t sockaddrlen;
 #else
@@ -825,19 +910,27 @@ nbTLS *nbTlsAccept(nbTLS *tlsListener){
   int socket=tlsListener->socket;
   sockaddrlen=sizeof(client);
 
+  tlsListener->error=0; // clear error
 #if defined(MACOS)
   sd=accept(socket,(struct sockaddr *)&client,(int *)&sockaddrlen);
 #else
   sd=accept(socket,(struct sockaddr *)&client,&sockaddrlen);
 #endif
   if(sd<0){
-    if(errno!=EINTR) fprintf(stderr,"nbTlsAccept: accept failed - %s",strerror(errno));
+    if(errno!=EINTR) fprintf(stderr,"nbTlsAccept: accept failed - %s\n",strerror(errno));
     return(NULL);
     }
 #if !defined(WIN32)
   fcntl(sd,F_SETFD,FD_CLOEXEC);
   // 2011-02-05 eat - if listener is non-blocking, make new socket non-blocking
   if(fcntl(socket,F_GETFL)&O_NONBLOCK) fcntl(sd,F_SETFL,fcntl(sd,F_GETFL)|O_NONBLOCK);
+  if(setsockopt(sd,SOL_SOCKET,SO_KEEPALIVE,&keepalive,(socklen_t)sizeof(keepalive))<0) {
+    fprintf(stderr,"nbTlsAccept: setsockopt SO_KEEPALIVE failed: %s\n",strerror(errno));
+    close(sd);
+    return(NULL);
+    }
+  if(tlsTrace) fprintf(stderr,"nbTlsAccept: set SO_KEEPALIVE on sd=%d\n",sd);
+
 #endif
 #if !defined(HPUX) && !defined(SOLARIS)
   if(tlsListener->tlsx) tv.tv_sec=tlsListener->tlsx->timeout;
@@ -846,17 +939,20 @@ nbTLS *nbTlsAccept(nbTLS *tlsListener){
   rc=setsockopt(sd,SOL_SOCKET,SO_RCVTIMEO,(void *)&tv,sizeof(tv));
   if(rc==-1){
     fprintf(stderr,"nbTlsAccept: setsockopt SO_RCVTIMEO failed: %s\n",strerror(errno));
+    close(sd);
     return(NULL);
     }
   rc=setsockopt(sd,SOL_SOCKET,SO_SNDTIMEO,(void *)&tv,sizeof(tv));
   if(rc==-1){
     fprintf(stderr,"nbTlsAccept: setsockopt SO_SNDTIMEO failed: %s\n",strerror(errno));
+    close(sd);
     return(NULL);
     }
 #endif
   // Create the nbTLS structure
   tls=malloc(sizeof(nbTLS));
   memset(tls,0,sizeof(nbTLS));
+  if(tlsTrace) fprintf(stderr,"nbTlsAccept: tlsListener->tlsx=%p\n",tlsListener->tlsx);
   if(tlsListener->tlsx) tls->option=tlsListener->tlsx->option,tls->uriMap[0].scheme=NB_TLS_SCHEME_TLS;
   else tls->option=NB_TLS_OPTION_TCP,tls->uriMap[0].scheme=NB_TLS_SCHEME_TCP;
   tls->socket=sd;
@@ -889,6 +985,7 @@ nbTLS *nbTlsAccept(nbTLS *tlsListener){
     if(tlsTrace) fprintf(stderr,"nbTlsAccept: Issuing SSL_accept on socket %d\n",sd);
     rc=nbTlsAcceptHandshake(tls);
     if(rc==0 || (rc==-1 && tls->error!=NB_TLS_ERROR_WANT_READ && tls->error!=NB_TLS_ERROR_WANT_WRITE)){
+      tlsListener->error=NB_TLS_ERROR_HANDSHAKE; 
       nbTlsFree(tls);
       return(NULL);
       }
@@ -902,6 +999,8 @@ nbTLS *nbTlsAccept(nbTLS *tlsListener){
   if(tls->uriMap[0].scheme==NB_TLS_SCHEME_UNIX)
     sprintf(tls->uriMap[0].uri,"unix://%s",tls->uriMap[0].name);
   else sprintf(tls->uriMap[0].uri,"%s://%s:%d",protocol,tls->uriMap[0].addr,tls->uriMap[0].port);
+  // 2012-05-22 eat - ending the experimenting - had code depending on it
+  // 2012-05-15 eat - experimenting without handle on tlsx
   if(tls->tlsx) tls->handle=tls->tlsx->handle;
   return(tls);
   }
@@ -932,7 +1031,7 @@ int nbTlsRead(nbTLS *tls,char *buffer,size_t size){
   len=SSL_read(tls->ssl,buffer,size);
   if(len<0){
     error=SSL_get_error(tls->ssl,len);
-    fprintf(stderr,"nbTlsRead: SSL_read rc=%d code=%d\n",len,error);
+    fprintf(stderr,"nbTlsRead: SSL_read rc=%d code=%d sd=%d\n",len,error,tls->socket);
     ERR_print_errors_fp(stderr);
     if(error==SSL_ERROR_WANT_READ) tls->error=NB_TLS_ERROR_WANT_READ;
     else if(error==SSL_ERROR_WANT_WRITE) tls->error=NB_TLS_ERROR_WANT_WRITE;
@@ -967,7 +1066,7 @@ int nbTlsWrite(nbTLS *tls,char *buffer,size_t size){
   len=SSL_write(tls->ssl,buffer,size);
   if(len<0){
     error=SSL_get_error(tls->ssl,len);
-    fprintf(stderr,"nbTlsWrite: SSL_write rc=%d code=%d\n",len,error);
+    fprintf(stderr,"nbTlsWrite: SSL_write rc=%d code=%d sd=%d\n",len,error,tls->socket);
     ERR_print_errors_fp(stderr);
     if(error==SSL_ERROR_WANT_READ) tls->error=NB_TLS_ERROR_WANT_READ;
     else if(error==SSL_ERROR_WANT_WRITE) tls->error=NB_TLS_ERROR_WANT_WRITE;
@@ -990,8 +1089,10 @@ int nbTlsClose(nbTLS *tls){
     }
   if(tls->socket){
 #if defined(WIN32)
+    shutdown(tls->socket,SD_BOTH);
     rc=closesocket(tls->socket);
 #else
+    shutdown(tls->socket,SHUT_RDWR);
     rc=close(tls->socket);
 #endif
     tls->socket=0;

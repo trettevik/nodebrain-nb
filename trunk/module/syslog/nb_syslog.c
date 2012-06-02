@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2005-2010 The Boeing Company
+* Copyright (C) 2005-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -24,23 +24,80 @@
 *
 * Function:
 *
-*   This program is a NodeBrain skill module for monitoring syslog
-*   data exported from remote servers.
+*   This program is a NodeBrain skill module for logging local syslog
+*   messages, sending syslog messages to remote servers, and monitoring
+*   syslog messages from remote servers.
 *   
 * Reference:    RFC 3164 - "The BSD syslog Protocol"
+*               RFC 5424 - "The Syslog Protocol"
+*
+* See also:     logger, syslogd, syslog-ng
 *
 * Description:
 *
-*   This is an experimental syslog monitor.  Unless you have a special
-*   reason to accept syslog data directly for monitoring, you may prefer
-*   to use a standard syslogd to accept the UDP packets and use NodeBrain
-*   to monitor the syslog file.
+*   This module provides an interface between NodeBrain and the system
+*   logging facility found on UNIX and Linux servers.  There are three
+*   node skills provided by this module:
 *
-*   This module listens on UDP port 514, although an alternate port may be
-*   used for experimentation. 
+*     logger - send message to the local syslog facility
+*     client - send message to a remote syslog facility
+*     server - receive and process messages via the syslog protocol
 *
+*   The logger skill provides a simple method of logging syslog messages
+*   without having to invoke the shell to run the logger command.
+*
+*     Syntax:
+*
+*       define <term> node syslog.logger[("<ident>")][:<options>];
+*
+*       <ident>  - identifier to be included in the message
+*                  <date> <host> <ident>[<pid>] <message>
+*                  Default is "nodebrain"
+*                  
+*       <term>:<message>  # log a message
+*
+*     Example:
+*
+*       define log node syslog.logger;
+*
+*       log:This is an example
+*     
+*       Feb 26 07:48:52 myhostname nodebrain[6770]: This is an example
+*
+*   The client skill is like the logger skill, except messages are sent to
+*   remote syslog servers directly.  Using the logger skill you can configure
+*   the local syslogd or syslog-ng to forward messages to remote syslog
+*   servers.  The client skill only adds value when you want to export messages
+*   without depending on a functioning syslog daemon.  This should be rare,
+*   but one example might be to report a tampering with syslog daemon 
+*   configuration.
+*
+*     Syntax:
+*
+*       define <term> node syslog.client("<ident>","<uri>")[:<options>];
+*
+*       <ident>  - same as logger above
+*
+*       <uri>    - syslog server specifications
+*
+*                  udp://<hostname>[:<port>],...
+*
+*   The server skill provides a syslog monitoring capability, but not a
+*   log management capability, because received messages are not stored.
+*   Although the server skill can be used to accept syslog on the standard
+*   port (UDP 514), this is not recommended.  Instead, you should generally
+*   reserve UDP 514 for a standard syslog server (syslogd or syslog-ng).
+*   A NodeBrain syslog server node provides a monitoring service in addition
+*   to whatever log management solution you select.
+*
+*   It is convenient to combine NodeBrain syslog server nodes with syslog-ng,
+*   because syslog-ng can take care of routing messages to the appropriate log
+*   files, and routing of messages to appropriate monitoring nodes.  This is
+*   done by configuring syslog-ng to forward to local domain sockets for
+*   monitoring by syslog server nodes.
+*   
 *   You may define one or more syslog nodes, but only one can listen
-*   to a give port on a given interface.
+*   to a give socket.
 *
 *     Syntax:
 *
@@ -62,12 +119,12 @@
 *                        silent  - don't echo generated NodeBrain commands
 *     Examples:
 *
-*       define syslog node syslog("syslog.nbx"); 
-*       define syslog node syslog("syslog.nbx","127.0.0.1"); # bind to local host 
-*       define syslog node syslog("syslog.nbx",50514);  # alternate port
-*       define syslog node syslog("syslog.nbx","127.0.0.1:50514");  # both
-*       define syslog node syslog("syslog.nbx"):dump;  # specify an option
-*       define syslog node syslog("syslog.nbx",50514):silent; # specify port and option
+*       define syslog node syslog.server("syslog.nbx"); 
+*       define syslog node syslog.server("syslog.nbx","127.0.0.1"); # bind to local host 
+*       define syslog node syslog.server("syslog.nbx",50514);  # alternate port
+*       define syslog node syslog.server("syslog.nbx","127.0.0.1:50514");  # both
+*       define syslog node syslog.server("syslog.nbx"):dump;  # specify an option
+*       define syslog node syslog.server("syslog.nbx",50514):silent; # specify port and option
 *
 *   All input packets are passed to the translator.  It is the translator's job to
 *   match lines of syslog text to regular expressions and issue NodeBrain commands
@@ -86,13 +143,13 @@
 *
 *     nbSkillSetMethod()  - Used to tell NodeBrain about our methods.  
 *
-*       syslogConstruct()  - construct an syslog node
-*       syslogEnable()     - start listening
-*       syslogDisable()    - stop listening
-*       syslogCommand()    - handle a custom command
-*       syslogDestroy()    - clean up when the node is destroyed
+*       serverConstruct()  - construct an syslog node
+*       serverEnable()     - start listening
+*       serverDisable()    - stop listening
+*       serverCommand()    - handle a custom command
+*       serverDestroy()    - clean up when the node is destroyed
 *
-*   Interface to NodeBrain objects (primarily used in syslogConstruct)
+*   Interface to NodeBrain objects (primarily used in serverConstruct)
 *
 *     nbCellCreate()      - Create a new cell
 *     nbCellGetType()     - Identify the type of a cell
@@ -115,7 +172,7 @@
 *
 *     nbListenerAdd()     - Start listening to file/socket
 *
-*       syslogRead()      - Handler passed to nbListenerAdd()   
+*       serverRead()      - Handler passed to nbListenerAdd()   
 *
 *     nbListenerRemove()  - Stop listening to file/socket
 *
@@ -144,30 +201,33 @@
 * 2006-10-30 eat 0.6.6  Modified to use NodeBrain Translator
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
+* 2011-02-23 eat 0.8.5  Included logger skill
+* 2011-02-26 eat 0.8.5  Included client skill
+* 2011-02-26 eat 0.8.5  Modified server skill to support local domain sockets
 *=====================================================================
 */
 #include "config.h"
 #include <nb.h>
+#include <syslog.h>
 
 /*
 *  The following structure is created by the skill module's "construct"
-*  function (syslogContruct) defined in this file.  This is a module specific
+*  function (serverContruct) defined in this file.  This is a module specific
 *  structure.  NodeBrain is only aware of the address of instances of this
 *  structure which it stores in a node's "handle".  The handle is passed to
 *  various functions defined in this module.
 */
-struct NB_MOD_SYSLOG{              /* SYSLOG node descriptor */
+typedef struct NB_MOD_SERVER{      /* syslog.server node descriptor */
+  char          *uri;              /* uri of socket we listen on */
   unsigned int   socket;           /* server socket for datagrams */
-  char interfaceAddr[16];              /* interface address to bind listener */
+  char interfaceAddr[512];          /* interface address to bind listener */
   unsigned short port;             /* UDP port of listener */
-  struct NB_CELL *translator;             /* syslog message text translator */
+  struct NB_CELL *translator;      /* syslog message text translator */
   unsigned char  trace;            /* trace option */
   unsigned char  dump;             /* option to dump packets in trace */
   unsigned char  echo;             /* echo option */
   unsigned int   sourceAddr;       /* source address */
-  };
-
-typedef struct NB_MOD_SYSLOG NB_MOD_Syslog;
+  } NB_MOD_Server;
 
 /*================================================================================*/
 
@@ -247,7 +307,7 @@ typedef struct NB_MOD_SYSLOG NB_MOD_Syslog;
 *  structure applies to any skill module.  The functions below are "methods" called
 *  by NodeBrain.  Their parameters must conform to the NodeBrain Skill Module
 *  API.  A module is not required to provide all possible methods, so modules may
-*  vary in the set of methods they implement.  For example, syslogRead() is an
+*  vary in the set of methods they implement.  For example, serverRead() is an
 *  example of a method that would only be used by a module that "listens".
 *
 *=================================================================================*/
@@ -255,8 +315,8 @@ typedef struct NB_MOD_SYSLOG NB_MOD_Syslog;
 /*
 *  Read incoming packets
 */
-void syslogRead(nbCELL context,int serverSocket,void *handle){
-  NB_MOD_Syslog *syslog=handle;
+void serverRead(nbCELL context,int serverSocket,void *handle){
+  NB_MOD_Server *server=handle;
   char buffer[NB_BUFSIZE];
   size_t buflen=NB_BUFSIZE;
   int  len;
@@ -264,11 +324,11 @@ void syslogRead(nbCELL context,int serverSocket,void *handle){
   char daddr[40],raddr[40];
 
   nbIpGetSocketAddrString(serverSocket,daddr);
-  len=nbIpGetDatagram(context,serverSocket,&syslog->sourceAddr,&rport,(unsigned char *)buffer,buflen);
-	if(syslog->trace) nbLogMsg(context,0,'I',"Datagram %s:%5.5u -> %s len=%d",nbIpGetAddrString(raddr,syslog->sourceAddr),rport,daddr,len);
-  if(syslog->dump) nbLogDump(context,buffer,len);
+  len=nbIpGetDatagram(context,serverSocket,&server->sourceAddr,&rport,(unsigned char *)buffer,buflen);
+  if(server->trace) nbLogMsg(context,0,'I',"Datagram %s:%5.5u -> %s len=%d",nbIpGetAddrString(raddr,server->sourceAddr),rport,daddr,len);
+  if(server->dump) nbLogDump(context,buffer,len);
   *(buffer+len)=0;  // make sure we have a null terminator
-  nbTranslatorExecute(context,syslog->translator,buffer);
+  nbTranslatorExecute(context,server->translator,buffer);
   }
 
 /*
@@ -283,26 +343,27 @@ void syslogRead(nbCELL context,int serverSocket,void *handle){
 *                     dump    - display dump of syslog packets
 *                     silent  - don't echo generated NodeBrain commands 
 *
-*    define syslog node syslog("syslog.nbx");
-*    define syslog node syslog("syslog.nbx"):dump,silent;
-*    define syslog node syslog("syslog.nbx","127.0.0.1");
-*    define syslog node syslog("syslog.nbx",50162);
-*    define syslog node syslog("syslog.nbx","127.0.0.1:50162");
-*    define syslog node syslog("syslog.nbx","127.0.0.1:50162"):silent;
+*    define syslog node syslog.server("syslog.nbx");
+*    define syslog node syslog.server("syslog.nbx"):dump,silent;
+*    define syslog node syslog.server("syslog.nbx","127.0.0.1");
+*    define syslog node syslog.server("syslog.nbx",50162);
+*    define syslog node syslog.server("syslog.nbx","127.0.0.1:50162");
+*    define syslog node syslog.server("syslog.nbx","127.0.0.1:50162"):silent;
 */
-void *syslogConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
-  NB_MOD_Syslog *syslog;
+void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+  NB_MOD_Server *server;
   nbCELL cell=NULL;
   nbSET argSet;
   char *cursor=text,*delim,saveDelim;
   double r,d;
-  char interfaceAddr[16];
+  char interfaceAddr[512];
   unsigned int port=514;
   int type,trace=0,dump=0,echo=1;
   int len;
   char *str;
   char *transfilename;
   nbCELL translator;
+  char *uri="";;
 
   *interfaceAddr=0;
 
@@ -318,7 +379,7 @@ void *syslogConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
     return(NULL);
     }
   transfilename=nbCellGetString(context,cell);
-  translator=nbTranslatorCompile(context,transfilename);
+  translator=nbTranslatorCompile(context,0,transfilename);
   if(translator==NULL){
     nbLogMsg(context,0,'E',"Unable to load translator '%s'",transfilename);
     return(NULL);
@@ -328,11 +389,18 @@ void *syslogConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
     type=nbCellGetType(context,cell);
     if(type==NB_TYPE_STRING){
       str=nbCellGetString(context,cell);
+      uri=strdup(str);
+      if(strncmp(str,"udp://",6)==0) str+=6;  // allow for uri
       delim=strchr(str,':');
       if(delim==NULL) len=strlen(str);
       else len=delim-str;
-      if(len>15){
+      if(len>15 && *str>='0' && *str<='9'){
         nbLogMsg(context,0,'E',"Inteface IP address may not be greater than 15 characters");
+        nbCellDrop(context,cell);
+        return(NULL);
+        }
+      if(len>sizeof(interfaceAddr)-1){
+        nbLogMsg(context,0,'E',"Socket specification too long for buffer at--->%s",str);
         nbCellDrop(context,cell);
         return(NULL);
         }
@@ -355,7 +423,7 @@ void *syslogConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
         }
       }
     else{
-      nbLogMsg(context,0,'E',"Expecting interface (\"address[:port]\") or (port) as argument list");
+      nbLogMsg(context,0,'E',"Expecting (\"file\") or (\"address[:port]\") or (port) as argument list");
       return(NULL);
       }
     cell=nbListGetCellValue(context,&argSet);
@@ -380,17 +448,18 @@ void *syslogConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
     if(*cursor==',') cursor++;
     while(*cursor==' ' || *cursor==',') cursor++;
     }
-  syslog=malloc(sizeof(NB_MOD_Syslog));
-  syslog->socket=0;
-  strcpy(syslog->interfaceAddr,interfaceAddr);
-  syslog->port=port;
-  syslog->translator=translator;
-  syslog->trace=trace;
-  syslog->dump=dump;
-  syslog->echo=echo;
+  server=malloc(sizeof(NB_MOD_Server));
+  server->uri=uri;
+  server->socket=0;
+  strcpy(server->interfaceAddr,interfaceAddr);
+  server->port=port;
+  server->translator=translator;
+  server->trace=trace;
+  server->dump=dump;
+  server->echo=echo;
   nbLogMsg(context,0,'I',"calling nbListenerEnableOnDaemon");
   nbListenerEnableOnDaemon(context);  // sign up to enable when we daemonize
-  return(syslog);
+  return(server);
   }
 
 /*
@@ -398,13 +467,14 @@ void *syslogConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
 *
 *    enable <node>
 */
-int syslogEnable(nbCELL context,void *skillHandle,NB_MOD_Syslog *syslog){
-  if((syslog->socket=nbIpGetUdpServerSocket(context,syslog->interfaceAddr,syslog->port))<0){
-    nbLogMsg(context,0,'E',"Unable to listen on port %s\n",syslog->port);
+static int serverEnable(nbCELL context,void *skillHandle,NB_MOD_Server *server){
+  if((server->socket=nbIpGetUdpServerSocket(context,server->interfaceAddr,server->port))<0){
+    nbLogMsg(context,0,'E',"Unable to listen on port %s\n",server->port);
     return(1);
     }
-  nbListenerAdd(context,syslog->socket,syslog,syslogRead);
-  nbLogMsg(context,0,'I',"Listening on UDP port %u for syslog",syslog->port);
+  nbListenerAdd(context,server->socket,server,serverRead);
+  if(strncmp(server->uri,"udp://",6)==0) nbLogMsg(context,0,'I',"Listening on %s for syslog",server->uri);
+  else nbLogMsg(context,0,'I',"Listening on UDP port %u for syslog",server->port);
   //nbLogMsg(context,0,'I',"This is version 0.6.5");
   return(0);
   }
@@ -414,14 +484,14 @@ int syslogEnable(nbCELL context,void *skillHandle,NB_MOD_Syslog *syslog){
 * 
 *    disable <node>
 */
-int syslogDisable(nbCELL context,void *skillHandle,NB_MOD_Syslog *syslog){
-  nbListenerRemove(context,syslog->socket);
+static int serverDisable(nbCELL context,void *skillHandle,NB_MOD_Server *server){
+  nbListenerRemove(context,server->socket);
 #if defined(WIN32)
-  closesocket(syslog->socket);
+  closesocket(server->socket);
 #else
-  close(syslog->socket);
+  close(server->socket);
 #endif
-  syslog->socket=0;
+  server->socket=0;
   return(0);
   }
 
@@ -430,35 +500,368 @@ int syslogDisable(nbCELL context,void *skillHandle,NB_MOD_Syslog *syslog){
 *
 *    <node>[(<args>)][:<text>]
 */
-int *syslogCommand(nbCELL context,void *skillHandle,NB_MOD_Syslog *syslog,nbCELL arglist,char *text){
-  if(syslog->trace){
-    nbLogMsg(context,0,'T',"nb_syslog:syslogCommand() text=[%s]\n",text);
+static int *serverCommand(nbCELL context,void *skillHandle,NB_MOD_Server *server,nbCELL arglist,char *text){
+  if(server->trace){
+    nbLogMsg(context,0,'T',"serverCommand: text=[%s]\n",text);
     }
   /* insert command parsing code here */
   return(0);
   }
-
 
 /*
 *  destroy() method
 *
 *    undefine <node>
 */
-int syslogDestroy(nbCELL context,void *skillHandle,NB_MOD_Syslog *syslog){
-  nbLogMsg(context,0,'T',"syslogDestroy called");
-  if(syslog->socket!=0) syslogDisable(context,skillHandle,syslog);
-  free(syslog);
+static int serverDestroy(nbCELL context,void *skillHandle,NB_MOD_Server *server){
+  nbLogMsg(context,0,'T',"serverDestroy called");
+  if(server->socket!=0) serverDisable(context,skillHandle,server);
+  free(server);
   return(0);
   }
 
 #if defined(_WINDOWS)
 _declspec (dllexport)
 #endif
+extern void *serverBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
+  nbSkillSetMethod(context,skill,NB_NODE_CONSTRUCT,serverConstruct);
+  nbSkillSetMethod(context,skill,NB_NODE_DISABLE,serverDisable);
+  nbSkillSetMethod(context,skill,NB_NODE_ENABLE,serverEnable);
+  nbSkillSetMethod(context,skill,NB_NODE_COMMAND,serverCommand);
+  nbSkillSetMethod(context,skill,NB_NODE_DESTROY,serverDestroy);
+  return(NULL);
+  }
+
+// User the server skill as default
+
+#if defined(_WINDOWS)
+_declspec (dllexport)
+#endif
 extern void *syslogBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
-  nbSkillSetMethod(context,skill,NB_NODE_CONSTRUCT,syslogConstruct);
-  nbSkillSetMethod(context,skill,NB_NODE_DISABLE,syslogDisable);
-  nbSkillSetMethod(context,skill,NB_NODE_ENABLE,syslogEnable);
-  nbSkillSetMethod(context,skill,NB_NODE_COMMAND,syslogCommand);
-  nbSkillSetMethod(context,skill,NB_NODE_DESTROY,syslogDestroy);
+  nbSkillSetMethod(context,skill,NB_NODE_CONSTRUCT,serverConstruct);
+  nbSkillSetMethod(context,skill,NB_NODE_DISABLE,serverDisable);
+  nbSkillSetMethod(context,skill,NB_NODE_ENABLE,serverEnable);
+  nbSkillSetMethod(context,skill,NB_NODE_COMMAND,serverCommand);
+  nbSkillSetMethod(context,skill,NB_NODE_DESTROY,serverDestroy);
+  return(NULL);
+  }
+
+/*=========================================================
+* Client
+* 
+* NOTE: The client skill is currently the same as logger, 
+* but will be modified to send UDP syslog packets directly
+* to a syslog receiver.  This functionality may be desired
+* in some cases where export is needed even if syslogd or
+* syslog-ng is down. It may also be helpful to support the
+* TLS option for sending remotely to syslog-ng.  This is not
+* a high priority because syslog-ng can be used for this
+* purpose in most cases.
+*==========================================================
+*/
+/*
+*  The following structure is created by the skill module's "construct"
+*  function (clientContruct) defined in this file.  This is a module specific
+*  structure.  NodeBrain is only aware of the address of instances of this
+*  structure which it stores in a node's "handle".  The handle is passed to
+*  various functions defined in this module.
+*/
+typedef struct NB_MOD_CLIENT{      // syslog.client node descriptor
+  char          *ident;            // message identifier - default "nodebrain"
+  char          *uri;              // udp://filename | udp://hostname[:port]
+  struct sockaddr_un un_addr;      // unix domain socket address
+  int            socket;
+  unsigned char  trace;            // trace option 
+  unsigned char  dump;             // option to dump packets in trace
+  unsigned char  echo;             // echo option
+  } NB_MOD_Client;
+
+/*
+*  construct() method
+*
+*    define <term> node <skill>[("<ident>"[,<uri>])][:<text>]
+*
+*    <ident> - name of translator file
+*    <uri>   - <proto>://<spec>
+*
+*              <proto> - only "udp" supported currently
+*              <spec>  - only local domain socket file supported currently
+*
+*    <text>  - flag keywords
+*                trace   - display input packets
+*                dump    - display dump of syslog packets
+*                silent  - don't echo generated NodeBrain commands
+*
+*    define syslog node syslog.client("foobar");
+*/
+void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+  NB_MOD_Client *client;
+  nbCELL cell=NULL;
+  nbSET argSet;
+  char *cursor=text,*delim,saveDelim;
+  int trace=0,dump=0,echo=1;
+  char *ident="nodebrain"; 
+  char *uri="udp://127.0.0.1:514";
+  char *socketname=uri+6;
+  int sd;
+
+  argSet=nbListOpen(context,arglist);
+  cell=nbListGetCellValue(context,&argSet);
+  if(cell!=NULL){
+    if(nbCellGetType(context,cell)!=NB_TYPE_STRING){
+      nbLogMsg(context,0,'E',"First argument must be string message identifier");
+      return(NULL);
+      }
+    ident=strdup(nbCellGetString(context,cell));
+    nbCellDrop(context,cell);
+    }
+  cell=nbListGetCellValue(context,&argSet);
+  if(cell){
+    if(nbCellGetType(context,cell)!=NB_TYPE_STRING){
+      nbLogMsg(context,0,'E',"Second argument must be string uri");
+      return(NULL);
+      }
+    uri=strdup(nbCellGetString(context,cell));
+    nbCellDrop(context,cell);
+    cell=nbListGetCellValue(context,&argSet);
+    if(cell){
+      nbLogMsg(context,0,'E',"The syslog.client skill only accepts two arguments.");
+      return(NULL);
+      }
+    }
+  while(*cursor==' ') cursor++;
+  while(*cursor!=';' && *cursor!=0){
+    delim=strchr(cursor,' ');
+    if(delim==NULL) delim=strchr(cursor,',');
+    if(delim==NULL) delim=strchr(cursor,';');
+    if(delim==NULL) delim=strchr(cursor,0);
+    saveDelim=*delim;
+    *delim=0;
+    if(strcmp(cursor,"trace")==0){trace=1;}
+    else if(strcmp(cursor,"dump")==0){trace=1;dump=1;}
+    else if(strcmp(cursor,"silent")==0) echo=0;
+    *delim=saveDelim;
+    cursor=delim;
+    if(*cursor==',') cursor++;
+    while(*cursor==' ' || *cursor==',') cursor++;
+    }
+  // figure out the uri
+  if(strncmp(uri,"udp://",6)){
+    nbLogMsg(context,0,'E',"Expecting uri to start with 'udp://' - found %s",uri);
+    return(NULL);
+    }
+  socketname=uri+6;
+  // add code here to determine if local or remote
+  sd=socket(AF_UNIX,SOCK_DGRAM,0);
+  if(sd<0){
+    nbLogMsg(context,0,'E',"Unable to obtain socket for %s",uri);
+    return(NULL);
+    }
+  client=malloc(sizeof(NB_MOD_Client));
+  client->ident=ident;
+  client->uri=uri;
+  client->un_addr.sun_family=AF_UNIX;
+  sprintf(client->un_addr.sun_path,"%s",socketname);
+  client->socket=sd;
+  client->trace=trace;
+  client->dump=dump;
+  client->echo=echo;
+  return(client);
+  }
+
+/*
+*  enable() method
+*
+*    enable <node>
+*/
+static int clientEnable(nbCELL context,void *skillHandle,NB_MOD_Client *client){
+  return(0);
+  }
+
+/*
+*  disable method
+*
+*    disable <node>
+*/
+static int clientDisable(nbCELL context,void *skillHandle,NB_MOD_Client *client){
+  return(0);
+  }
+
+/*
+*  command() method
+*
+*    <node>[(<args>)][:<text>]
+*/
+static int *clientCommand(nbCELL context,void *skillHandle,NB_MOD_Client *client,nbCELL arglist,char *text){
+  char buffer[4096];
+  struct tm *tm;
+  time_t utime;
+  int rc;
+  if(client->trace){
+    nbLogMsg(context,0,'T',"clientCommand() text=[%s]\n",text);
+    }
+  time(&utime);
+  tm=gmtime(&utime);
+  sprintf(buffer,"<131>1 %4.4d-%2.2d-%2.2dT%2.2d:%2.2d:%2.2dZ %s",tm->tm_year+1900,tm->tm_mon+1,tm->tm_mday,tm->tm_hour,tm->tm_min,tm->tm_sec,text); 
+  rc=sendto(client->socket,buffer,strlen(buffer),MSG_DONTWAIT,(struct sockaddr *)&client->un_addr,sizeof(struct sockaddr_un));
+  if(rc<0){
+    nbLogMsg(context,0,'E',"Unable to send syslog message");
+    }
+  return(0);
+  }
+
+/*
+*  destroy() method
+*
+*    undefine <node>
+*/
+static int clientDestroy(nbCELL context,void *skillHandle,NB_MOD_Client *client){
+  nbLogMsg(context,0,'T',"clientDestroy called");
+  free(client);
+  return(0);
+  }
+
+#if defined(_WINDOWS)
+_declspec (dllexport)
+#endif
+extern void *clientBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
+  nbSkillSetMethod(context,skill,NB_NODE_CONSTRUCT,clientConstruct);
+  nbSkillSetMethod(context,skill,NB_NODE_DISABLE,clientDisable);
+  nbSkillSetMethod(context,skill,NB_NODE_ENABLE,clientEnable);
+  nbSkillSetMethod(context,skill,NB_NODE_COMMAND,clientCommand);
+  nbSkillSetMethod(context,skill,NB_NODE_DESTROY,clientDestroy);
+  return(NULL);
+  }
+
+/*=========================================================
+* Logger
+*==========================================================
+*/
+/*
+*  The following structure is created by the skill module's "construct"
+*  function (loggerContruct) defined in this file.  This is a module specific
+*  structure.  NodeBrain is only aware of the address of instances of this
+*  structure which it stores in a node's "handle".  The handle is passed to
+*  various functions defined in this module.
+*/
+typedef struct NB_MOD_LOGGER{      // syslog.logger node descriptor
+  char          *ident;            // message identifier - default "nodebrain"
+  unsigned char  trace;            // trace option
+  unsigned char  dump;             // option to dump packets in trace
+  unsigned char  echo;             // echo option
+  } NB_MOD_Logger;
+
+/*
+*  construct() method
+*
+*    define <term> node <skill>[("<ident>")][:<text>]
+*
+*    <ident> - name of translator file
+*    <text>  - flag keywords
+*                trace   - display input packets
+*                dump    - display dump of syslog packets
+*                silent  - don't echo generated NodeBrain commands
+*
+*    define logger node syslog.logger("foobar");
+*/
+void *loggerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+  NB_MOD_Logger *logger;
+  nbCELL cell=NULL;
+  nbSET argSet;
+  char *cursor=text,*delim,saveDelim;
+  int trace=0,dump=0,echo=1;
+  char *ident="nodebrain";
+
+  argSet=nbListOpen(context,arglist);
+  cell=nbListGetCellValue(context,&argSet);
+  if(cell!=NULL){
+    if(nbCellGetType(context,cell)!=NB_TYPE_STRING){
+      nbLogMsg(context,0,'E',"First argument must be string message identifier");
+      return(NULL);
+      }
+    ident=strdup(nbCellGetString(context,cell));
+    }
+  cell=nbListGetCellValue(context,&argSet);
+  if(cell!=NULL){
+    nbLogMsg(context,0,'E',"The syslog.logger skill only accepts one argument.");
+    return(NULL);
+    }
+  while(*cursor==' ') cursor++;
+  while(*cursor!=';' && *cursor!=0){
+    delim=strchr(cursor,' ');
+    if(delim==NULL) delim=strchr(cursor,',');
+    if(delim==NULL) delim=strchr(cursor,';');
+    if(delim==NULL) delim=strchr(cursor,0);
+    saveDelim=*delim;
+    *delim=0;
+    if(strcmp(cursor,"trace")==0){trace=1;}
+    else if(strcmp(cursor,"dump")==0){trace=1;dump=1;}
+    else if(strcmp(cursor,"silent")==0) echo=0;
+    *delim=saveDelim;
+    cursor=delim;
+    if(*cursor==',') cursor++;
+    while(*cursor==' ' || *cursor==',') cursor++;
+    }
+  logger=malloc(sizeof(NB_MOD_Logger));
+  logger->ident=ident;
+  logger->trace=trace;
+  logger->dump=dump;
+  logger->echo=echo;
+  openlog(logger->ident,LOG_PID,LOG_LOCAL0);
+  return(logger);
+  }
+
+/*
+*  enable() method
+*
+*    enable <node>
+*/
+static int loggerEnable(nbCELL context,void *skillHandle,NB_MOD_Logger *logger){
+  openlog(logger->ident,LOG_PID,LOG_LOCAL0);
+  return(0);
+  }
+
+/*
+*  disable method
+*
+*    disable <node>
+*/
+static int loggerDisable(nbCELL context,void *skillHandle,NB_MOD_Logger *logger){
+  closelog();
+  return(0);
+  }
+
+/*
+*  command() method
+*
+*    <node>[(<args>)][:<text>]
+*/
+static int *loggerCommand(nbCELL context,void *skillHandle,NB_MOD_Logger *logger,nbCELL arglist,char *text){
+  if(logger->trace){
+    nbLogMsg(context,0,'T',"loggerCommand: text=[%s]\n",text);
+    }
+  syslog(LOG_INFO,"%s",text);
+  return(0);
+  }
+
+/*
+*  destroy() method
+*
+*    undefine <node>
+*/
+static int loggerDestroy(nbCELL context,void *skillHandle,NB_MOD_Logger *logger){
+  free(logger);
+  return(0);
+  }
+
+#if defined(_WINDOWS)
+_declspec (dllexport)
+#endif
+extern void *loggerBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
+  nbSkillSetMethod(context,skill,NB_NODE_CONSTRUCT,loggerConstruct);
+  nbSkillSetMethod(context,skill,NB_NODE_DISABLE,loggerDisable);
+  nbSkillSetMethod(context,skill,NB_NODE_ENABLE,loggerEnable);
+  nbSkillSetMethod(context,skill,NB_NODE_COMMAND,loggerCommand);
+  nbSkillSetMethod(context,skill,NB_NODE_DESTROY,loggerDestroy);
   return(NULL);
   }

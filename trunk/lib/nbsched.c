@@ -222,7 +222,10 @@ struct SCHED *newSched(nbCELL context,char symid,char *source,char **delim,char 
   interval=0;
   duration=0;
   if(schedType==schedTypeTime){  /* new syntax time conditions */
-    if((tcdef=tcParse(context,&cursor,msg))==NULL) return(NULL);
+    if((tcdef=tcParse(context,&cursor,msg))==NULL){
+      *delim=cursor;
+      return(NULL);
+      }
     domainBegin=tcTime();
     queue=tcQueueNew(tcdef,domainBegin,domainBegin+60);
     }

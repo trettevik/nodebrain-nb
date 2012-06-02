@@ -36,11 +36,11 @@ NodeBrain(TM) is a trademark of The Boeing Company.   All other trademarks and r
 @item @tab Ed Trettevik <eat@@nodebrain.org>
 @end multitable
 
-The Message NodeBrain Module is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by theFree Software Foundation; either version 2 of the License, or (at your option)any later version.
+The Message NodeBrain Module is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option)any later version.
 
-This program is distributed in the hope that it will be useful,but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General PublicLicense along with this program; if not, write to Free Software Foundation,Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+You should have received a copy of the GNU General Public License along with this program; if not, write to Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 @end copying
 
 @iftex
@@ -99,9 +99,9 @@ We expect it to evolve as we gain experience.
 
 This module was developed in support of a specific application requiring multi-master replication of data objects
 managed by a proprietary module.  
-However, it provides a generic message server and a Nodebrain command specific message client,
+However, it provides a generic message server and a NodeBrain command-specific message client,
 making it useful to various NodeBrain applications.
-Custom modules can use the NodeBrain Message API to impliment application specific message clients.  It is the
+Custom modules can use the NodeBrain Message API to implement application-specific message clients.  It is the
 responsibility of a message client to handle conflict resolution.
 
 In November 2010, this module was first used in a production application supporting a form
@@ -167,13 +167,13 @@ Here we introduce some basic concepts of the API.
 @section Message Log
 @cindex message log
 
-A message log is a directory containing files used to manage the delivery of messages from one node to another within a set of nodes that share messages.  We call this set of nodes a "cabal".
+A message log is a directory containing files used to manage the delivery of messages from one node to another within a set of nodes that share messages.  This set of nodes is a "cabal."
 The relative path for a message log directory within a NodeBrain caboodle is @code{message/@i{cabal}/@i{node}}.
 
 @multitable {-----------------------} {-----------------------------------------------------------------------------------------}
 @item @code{@i{name}.msg}@w{         }
 @tab A named message file identifies the last message received from every node within a cabal.
-We call this information the "state" of the node, and sometimes refer to a named message file as a "state file."
+This information is the "state" of the node and a named message file is sometimes referred to as a "state file."
 This file may be a symbolic link to the active numbered message file.
 
 @item @code{@i{nnnnnnnn}.msg}
@@ -183,7 +183,7 @@ The number @i{nnnnnnnn} starts at 00000001 and increments each time a new file i
 A new file is created when the active file reaches a specified size.
 All message files other than the active one end with a footer record.
 Every record in a message log file contains a header portion and a data portion.
-The header portion of each record, and the header and footer records, are used to manage
+The header portion of each record and the header and footer records are used to manage
 message delivery.  The data portion of a message record contains the application message to be delivered.
 An application message may be text or binary data.
 
@@ -194,7 +194,7 @@ A cursor file is not required by processes that maintain state in some other way
 
 @item @code{~.socket}
 @tab Each message log has a single "producer"---a process that writes to the log. 
-A producer file is a local domain socket that can be used by "consumers" (processes that read from the log) to request a stream of new measages via UDP packets. 
+A producer file is a local domain socket that can be used by "consumers" (processes that read from the log) to request a stream of new messages via UDP packets. 
 
 @item @code{@i{name}.socket}
 @tab A consumer file is a local domain socket used for sending messages via UDP packets from the producer to a consumer.
@@ -208,15 +208,15 @@ A producer file is a local domain socket that can be used by "consumers" (proces
 A message producer is a component that writes to a message log.
 A message consumer is a component that reads from a message log.
 Consumers keep track of their position within the message log by updating a cursor file.
-A consumer may receive messages by polling the message log for new messages, or by requesting that the producer provide a stream of new messages via UDP.
+A consumer may receive messages by polling the message log for new messages or by requesting that the producer provide a stream of new messages via UDP.
 
 A consumer that requests a UDP stream of messages doesn't have to read the message log, unless a missed packet is detected.
-The UDP packets are numbered to enable the detection of a missed packet, and include the offset
+The UDP packets are numbered to enable the detection of a missed packet and include the offset
 within the message log where the next message will be stored.  This enables the message server
 to start reading directly at the message contained in a missed packet.
 
 The goal of this design is to ensure rapid delivery when both the producer and server
-are running efficiently, but also decouple the producer and server so either one can operate without the other,
+are running efficiently, but also to decouple the producer and server so either one can operate without the other,
 or at different speeds, at any given time. 
 
 
@@ -231,7 +231,7 @@ a message server, messages will continue to stream in near real-time as generate
 The connection between a client and server can actually be requested by either the client or the server,
 meaning the client and server are peers.
 
-It is often the case that a component is both a message client and a message producer, where the component logs messages it
+Often a component is both a message client and a message producer, and the component logs messages it
 receives from servers as well as messages it originates.
 The corresponding message server is then able to serve messages originating at multiple producers.
 Because a server is a consumer, the communication between a producer and a server is described in the previous section.
@@ -243,10 +243,10 @@ This is because a server always uses the node name as the consumer name.
 @cindex source
 @cindex sink
 
-We call a message node a "source" when the producer is not also a client.  
+A message node is a "source" when the producer is not also a client.  
 The message log produced by such a node contains only messages it generates.
-We call a message node a "sink" when it has a client but no server.
-A client of a "sink" node may replicate recieved messages, in which case it is a producer and may have consumers.
+A message node is a "sink" when it has a client but no server.
+A client of a "sink" node may replicate received messages, in which case it is a producer and may have consumers.
 The use of source and sink nodes is appropriate in cases where you simply want to collect messages from one or more
 nodes and process the messages at one or more other nodes.
 
@@ -264,7 +264,7 @@ A client's state is passed to a message server when a connection is established,
 deliver messages the client is not known to have already received.
 
 
-@section Adaptive Ring, Hub and Spoke Topology
+@section Adaptive Ring, Hub, and Spoke Topology
 @cindex adaptive topology
 @cindex ring
 @cindex hub
@@ -281,30 +281,30 @@ This strategy depends on the type of node.
 @item spoke client  @tab request connection to preferred hub server
 @end multitable
 
-Sink and source nodes use a one directional many-to-many topology.  Hub nodes form a ring topology, enabling efficient and scalable
+Sink and source nodes use a one-directional, many-to-many topology.  Hub nodes form a ring topology, enabling efficient and scalable
 message broadcasting to all nodes.  Spoke nodes are able to tap into any hub node, enabling access to all broadcast messages without
 having to be a conduit for the ring.
 
-For hub and spoke nodes, an ordered list of all cabal nodes specifies the preferred connections: "@i{node1},@i{node2},...,@i{nodeN}".
+For hub and spoke nodes, an ordered list of all cabal nodes specifies the preferred connections: @i{node1},@i{node2},...,@i{nodeN}.
 This list is circular, so @i{node1} follows @i{nodeN}.  
 A hub server prefers connecting to the first hub client following it in the circular list.
 If the connection fails, it continues through the list until a connection to a hub client is made, or there are no more hub clients (reached self in list).  A hub client prefers connecting to the first hub server prior to it in the circular list.  Like a server, it continues through the list (only backwards) until a connection succeeds or there are no more hub servers (wrapped around to self).  Spoke clients use the same strategy as hub clients to search the list backwards for the first hub for which a connection succeeds.  Sink clients search the list and attempt to connect to every source server.
 
-The most interesting connections are those between hub clients and hub servers.  These can be requested and accepted by both clients and servers. So our use of the terms "client" and "server" is a bit awkward.  If we think of hub nodes as peers, they each want a connection to the first hub node ahead and behind themself in the circular list, forming a ring.  
+The most interesting connections are those between hub clients and hub servers.  These can be requested and accepted by both clients and servers. So using the terms "client" and "server" is a bit awkward.  If you think of hub nodes as peers, they each want a connection to the first hub node ahead and behind themselves in the circular list, forming a ring.  
 If a given node is down or unreachable it is bypassed and a smaller ring is formed. 
 
 When a node does not have a preferred set of connections, it periodically attempts to establish a preferred set of connections.
 Once a preferred connection is established, an alternate connection requested by the node is dropped.  
-Extra connections requested by peers are maintained until the peers decides to drop them.  In other words, the node that requests a connection is responsible for deciding when it is no longer needed.
+Extra connections requested by peers are maintained until the peers decide to drop them.  In other words, the node that requests a connection is responsible for deciding when it is no longer needed.
 
 This strategy enables replication on broadcast rings to adapt to network or system problems.
-For example, if a set of five nodes in a ring of ten nodes becomes isolated from the other five because of a network problem, both sets of five will form into separate rings.  When the network problem is resolved,the larger ten node ring will form again.
+For example, if a set of five nodes in a ring of ten nodes becomes isolated from the other five because of a network problem, both sets of five will form into separate rings.  When the network problem is resolved, the larger ten-node ring will form again.
 
 @section Delivery Sequence
 @cindex delivery
 @cindex sequence
 
-Messages originating at any given node are delivered in sequence, once and only once, to every subscribing node.  By "delivery" we mean complete delivery.  In a scenario where a ring adapts to a problem and is in the process of repairing itself, it is possible to have redundant transport, or partial delivery, of a message within the messaging layer. 
+Messages originating at any given node are delivered in sequence, once and only once, to every subscribing node.  By "delivery," we mean complete delivery.  In a scenario where a ring adapts to a problem and is in the process of repairing itself, it is possible to have redundant transport, or partial delivery, of a message within the messaging layer. 
 However, only messages not yet received will make it through final delivery to the application layer.
 
 Messages originating on two different nodes can arrive at a third node in any order.  Let's say node A and node B are originating messages and node C subscribes to both.  Messages from A will arrive in order at C, once and only once.  Messages from B will arrive in order at C, once and only once.  However, a message A1 originating at node A before a message B2 originates at B, may arrive at C before or after B2.  It is like shuffling a deck of cards with a stack from A in the left hand and a stack from B in the right hand.  The cards from a given hand stay in order, but there are many ways the two stacks might merge.
@@ -320,7 +320,7 @@ When using the NodeBrain Message API to implement multi-master object replicatio
 @item Include an instance attribute for every object.  This identifies the instance that originated the last update.
 @item Include a version number attribute for every object. 
 @item Include an update time stamp attribute for every object.  This not required, but nice to have.
-@item When an object is added or updated, assign the local instance number, increment the version number, stamp the current time, and issue an "assert" transaction message including a complete copy (specification) of the updated object and both the instance number and version number  prior to update.
+@item When an object is added or updated, assign the local instance number, increment the version number, stamp the current time, and issue an "assert" transaction message including a complete copy (specification) of the updated object and both the instance number and version number prior to update.
 @item When an object is deleted, issue a "delete" transaction message including object identifier, instance, and version.
 @item When processing an "assert" transaction message for an object that doesn't already exist, add the object.
 @item When processing an "assert" for an existing object and the instance and version are the ones the transaction claims were updated on the original node, then apply the update.  Otherwise, apply the update only if the new instance number is lower than the existing instance number.
@@ -328,9 +328,8 @@ When using the NodeBrain Message API to implement multi-master object replicatio
 @end itemize
 
 This approach ensures that all instances of the object store remain synchronized over time, although they can be a bit off at any given moment.
-This is not the same as saying all object stores will be "correct".  
-We are only claiming they will be the same.  A simultaneous delete and update on two different object stores will preserve the update and drop the delete at every store.  This seems like a best result for many applications, but for others it might be the wrong result.  Simultaneous updates at two different stores will preserve the update from the lower numbered instance.  This ensures all object stores end up the same, but which update should actually win is not clear.  For a given application there may be additional factors for making this determination, perhaps a ranking of users initiating the update, or perhaps the updates can be merged to accept both updates.
-So the conflict resolution logic must be designed for the application.  The approach outlined above can be used for many applications, and can be used as a starting point for designing others.  
+This is not the same as saying all object stores will be "correct."  We are only claiming they will be the same.  A simultaneous delete and update on two different object stores will preserve the update and drop the delete at every store.  This seems like a best result for many applications, but for others it might be the wrong result.  Simultaneous updates at two different stores will preserve the update from the lower numbered instance.  This ensures all object stores end up the same, but which update should actually win is not clear.  For a given application, there may be additional factors for making this determination, perhaps a ranking of users initiating the update, or perhaps the updates can be merged to accept both updates.
+So the conflict resolution logic must be designed for the application.  The approach outlined above can be used for many applications and can be used as a starting point for designing others.  
 
 @node Tutorial
 @chapter Tutorial
@@ -376,7 +375,7 @@ define @i{node} node message.producer("@i{cabal}","@i{nodename}",@i{nodenumber})
 This is a directory containing message logs for every node in the cabal that run within the application on the local host.
 
 @item @i{nodename} @tab
-Identifies a node within the cabal, and a message log (directory) within the cabal subdirectory.
+Identifies a node within the cabal and a message log (directory) within the cabal subdirectory.
 
 @item @i{nodenumber} @tab
 The unique node number from 1 to 255 assigned to this message log within a cabal, or 0 for nodes with no server.
@@ -405,7 +404,7 @@ define @i{node} node message.consumer("@i{cabal}","@i{nodename}",@i{nodenumber},
 This is a directory containing message logs for every node in the cabal that run within the application on the local host.
 
 @item @i{nodename} @tab
-Identifies a node within the cabal, and a message log (directory) wihin the cabal subdirectory.
+Identifies a node within the cabal, and a message log (directory) within the cabal subdirectory.
 
 @item @i{nodenumber} @tab
 A unique node number from 1 to 255 assigned to this message log within a cabal, or 0 for nodes with no server.
@@ -424,7 +423,7 @@ The @code{trace} option is used to generate log messages for troubleshooting.
 @cindex define
 
 A @code{message.server} node accepts connections from clients and delivers messages that are
-new releative to a client's state.  A state is defined by the last message identifier received by the client from each
+new relative to a client's state.  A state is defined by the last message identifier received by the client from each
 non-zero node number within the cabal.
 
 @example
@@ -441,7 +440,7 @@ The parameter also identifies a subordinate rule node for cabal configuration.  
 
 @item @i{nodename} @tab
 Identifies a node within the cabal, a message log (directory) within the cabal subdirectory, and subordinate cabal
-node configuration rule node.  See "Cabal Configuration".
+node configuration rule node.  See "Cabal Configuration."
 
 @item @b{Option}@tab @b{Description}
 
@@ -467,13 +466,13 @@ define @i{node} node message.client("@i{cabal}","@i{nodename}")[:@i{option}[,...
 
 @item @i{cabal}
 @tab Identifies a cabal subdirectory in the message subdirectory of a caboodle (root directory of NodeBrain application).
-This is a directory containing messaoge logs for every node in the cabal that run within the application on the local host.
+This is a directory containing message logs for every node in the cabal that run within the application on the local host.
 The parameter also identifies a subordinate rule node for cabal configuration.
 See "Define Server" for a description of cabal configuration.
 
 @item @i{nodename} @tab
 Identifies a node within the cabal, a message log (directory) within the cabal subdirectory, and a subordinate rule node
-configuring the node within the cabal.  See "Cabal Configuration".
+configuring the node within the cabal.  See "Cabal Configuration."
 
 @item @b{Option}@tab @b{Description}
 
@@ -513,7 +512,7 @@ define @i{nodeN} node;
 
 When all nodes are running on the same host, you may specify clients and servers using local domain sockets as @code{"unix://@i{path}"}.
 If security is not an issue, you may also replace "tls" with "tcp" for remote clients and servers.
-In all cases, it is important to use idential cabal configuration files for every node in the cabal.
+In all cases, it is important to use identical cabal configuration files for every node in the cabal.
 The client and server entries for a given node tell it how to listen for connections as well as telling every other node how to connect.
 
 
@@ -541,7 +540,7 @@ This section describes commands implemented by the Message module for use with d
 @subsection Trace
 @cindex trace
 
-The @code{trace} command is used to toggle the trace option for troubleshooting.
+The @code{trace} command is used to toggle the @code{trace} option for troubleshooting.
 @example
 @i{node}:trace [on|off]
 @end example
@@ -588,8 +587,8 @@ The default value is "./message", which assumes the command is executed with a N
 @item @i{type}
 @tab When the @i{nodenumber} is zero (a message log with no server), specify @code{content} if you want messages logged, or @code{state} to simply maintain a node's message state.  
 When @code{state} is specified, the state is stored as a message log file header record and updated as each message arrives.
-This option may be  used by "sink" and "spoke" client nodes to keep track of their state without using up file space to store messages.  
-There are times where it is desireable to store message content at "sink" and "spoke" client nodes for visibility or for sharing with local consumer nodes.
+This option may be used by "sink" and "spoke" client nodes to keep track of their state without using up file space to store messages.  
+There are times where it is desirable to store message content at "sink" and "spoke" client nodes for visibility or for sharing with local consumer nodes.
 When the @i{nodenumber} is non-zero, the @i{type} may be omitted, or a value of @code{content} may be specified.
 A value of @code{state} is not allowed with a non-zero @i{nodenumber}.
 
@@ -619,7 +618,7 @@ In either case, the named message file can be read to determine the state of the
 @subsection Export
 @cindex export command
 
-The export command is used to convert a message log file into text.
+The @code{export} command is used to convert a message log file into text.
 This may be useful for troubleshooting.
 In the future, we anticipate providing a corresponding @code{import} command,
 which would enable repairs to corrupted log files using a text editor.
@@ -658,7 +657,39 @@ The full path to the message log exported is shown below.
 @i{path}/@i{cabal}/@i{nodename}/@i{filename}
 @end example
 
+@subsection Prune
+@cindex prune command
 
+The @code{prune} command is used to retire message files older than specified time period.
+
+@example
+message.prune [@i{path}] @i{cabal} @i{nodename} @i{nodenumber} @i{retention}
+@end example
+
+@multitable {--------------------} {--------------------------------------------------------------------------------------}
+@item @b{Element}@w{         }@tab @b{Description}
+
+@item @i{path}
+@tab Specifies a path to a directory containing message logs.
+When specified, a path must start with "/" or "./".  The default path is "./message".
+
+@item @i{cabal}
+@tab Specify the name of the cabal in which the message log participates.
+
+@item @i{nodename}
+@tab Specify the name of the cabal node.
+
+@item @i{nodenumber}
+@tab Number from 0 to 255 assigned to the specified node within the specified cabal.
+The @i{nodenumber} parameters is currently required by the NodeBrain Message API for validation.
+If the specified @i{filename} is not for the specified @i{nodenumber}, an error is displayed and the log is not pruned.
+While this validation is appropriate for other uses of the Message API, a future enhancement to the
+API may enable the @code{prune} command to work without requiring the @i{nodenumber}.
+
+@item @i{retension}
+@tab Specify a number @i{n} followed by a letter identifying the time unit: (d)ay, (h)our, (m)inute, (s) second.
+For example, @code{20d} specifies a retention of 20 days.
+@end multitable
 
 @node Triggers
 @chapter Triggers

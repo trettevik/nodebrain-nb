@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -187,46 +187,100 @@
 * 2003-10-27 eat 0.5.5  Included bfiConflict_ function.
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages.
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2012-01-26 dtl 0.8.6  Checker updates
 *=============================================================================
 */
 #include "nbi.h"
 
 /**************************************************************************
 * Index Routines
+* parse string format: from1_to1,from2_to2,..
+* Return NULL if syntax error or input s too big
 **************************************************************************/       
-struct bfiindex *bfiIndexParse(char *s){
+
+
+/*
+*  Determine if character string is an integer
+*
+*  Returns:  1 - true (is integer), 0 - false (is not integer)
+*/
+int bfiIsInteger(char *cursor){
+  if(*cursor=='-' || *cursor=='+') cursor++;
+  while(isdigit(*cursor)) cursor++;
+  if(*cursor) return(0);
+  return(1);
+  }
+
+/*
+*  Free index list
+*/
+void bfiIndexFree(struct bfiindex *top){
+  struct bfiindex *entry;
+  while(top){ // clean up list
+    entry=top->next;
+    nbFree(top,sizeof(struct bfiindex));
+    top=entry;
+    }
+  }
+
+/*
+*  Verify number
+*/
+
+/*
+*  Parse index specification
+*
+*  Syntax:
+*
+*     index   ::= element[[,element]...]
+*
+*     element ::=  n | n_n | n..n
+*
+*     n       ::= number
+* 
+*  Returns: Index structure list or NULL on syntax error.
+*
+*/
+#define NB_BFI_INDEX_SIZE 64   // index element buffer size
+
+struct bfiindex *bfiIndexParse(char *s,char *msg,int msglen){
   int type=0,min=32000,max=-32000;
   struct bfiindex *top=NULL,*entry;  
-  char *cursor=s,*comma,element[60],sfrom[20],sto[20];
+  char *cursor=s,*comma,element[NB_BFI_INDEX_SIZE],sfrom[NB_BFI_INDEX_SIZE],sto[NB_BFI_INDEX_SIZE];
     
   while(*cursor!=0){
-    if((comma=strchr(cursor,','))==NULL){
-      strcpy(element,cursor);
-      comma=strchr(cursor,0);
+    if((comma=strchr(cursor,','))==NULL) comma=strchr(cursor,0);
+    if((comma-cursor)<sizeof(element)) strcpy(element,cursor);
+    else{
+      snprintf(msg,msglen,"Index element exceeds maximum size of %d characters at: %s",NB_BFI_INDEX_SIZE-1,cursor);
+      *(msg+msglen-1)=0; // make sure we have a null terminator
+      bfiIndexFree(top);
+      return(NULL);
       }
-    else{ 
-      *comma=0;
-      strcpy(element,cursor);
-      *comma=',';
-      }
-    if((cursor=strchr(element,'_'))!=NULL){
+    if((cursor=strchr(element,'_'))!=NULL){ //if '_' found
       type=Span;
       *cursor=0;
-      strcpy(sfrom,element);
-      strcpy(sto,cursor+1);
+      strcpy(sfrom,element); // safe - ignore Checker
+      strcpy(sto,cursor+1);  // safe - ignore Checker
       }
-    else if((cursor=strstr(element,".."))!=NULL){
+    else if((cursor=strstr(element,".."))!=NULL){ //if ".." found
       type=Range;
       *cursor=0;
-      strcpy(sfrom,element);
-      strcpy(sto,cursor+2);
+      strcpy(sfrom,element); // safe - ignore Checker
+      strcpy(sto,cursor+2);  // safe - ignore Checker
       }
     else{
       type=Simple;
-      strcpy(sfrom,element);
-      strcpy(sto,element);
+      strcpy(sfrom,element); // safe - ignore Checker
+      strcpy(sto,element);   // safe - ignore Checker
       }      
-    entry=malloc(sizeof(struct bfiindex));  /* allocate new entry */
+    if(!bfiIsInteger(sfrom) || !bfiIsInteger(sto)){
+      snprintf(msg,msglen,"Index element \"%s\" has non-integer component",element);
+      *(msg+msglen-1)=0; // make sure we have a null terminator
+      bfiIndexFree(top);
+      return(NULL);
+      }
+    entry=nbAlloc(sizeof(struct bfiindex));
     entry->type=type;
     if((entry->from=atoi(sfrom))<min) min=entry->from;
     if(entry->from>max) max=entry->from;    
@@ -237,7 +291,7 @@ struct bfiindex *bfiIndexParse(char *s){
     cursor=comma;
     if(*cursor) cursor++;
     }  
-  entry=malloc(sizeof(struct bfiindex));    /* insert the min/max entry */
+  entry=nbAlloc(sizeof(struct bfiindex));  /* insert the min/max entry */ 
   entry->type=type;
   entry->from=min;
   entry->to=max;
@@ -447,16 +501,18 @@ void bfiPrint(bfi f,char *label){
 
 /*
 *  Parse a bfi definition string for debugging
+*
+*  Returns: bfi or NULL if syntax error
 */
+
 bfi bfiParse(char *s){
   bfi f;
   char *comma,*colon,*bar;
   long start,end;
   
-
-  colon=strchr(s,':');
-  *colon=0;
-  bar=strchr(s,'_');
+  if((colon=strchr(s,':'))==NULL) return(NULL); //2012-01-09 dtl added check // 2012-01-25 eat - added return
+  *colon=0; 
+  if((bar=strchr(s,'_'))==NULL) return(NULL);  //2012-01-09 dtl added check // 2012-01-25 eat - added return
   *bar=0;
   start=atoi(s);
   end=atoi(bar+1)+1;

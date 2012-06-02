@@ -692,7 +692,7 @@ static void treeStore(nbCELL context,BTreeSkill *skillHandle,BTree *tree,nbCELL 
 // Prune a tree at the selected node without removing the selected node
 //
 static void treePrune(nbCELL context,BTreeSkill *skillHandle,BTree *tree,nbCELL arglist,char *text){
-  BTreeNode *node;
+  BTreeNode *node=NULL;
   nbSET argSet;
   nbCELL argCell;
   void *ptr;

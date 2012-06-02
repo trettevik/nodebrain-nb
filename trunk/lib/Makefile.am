@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 ## =============================================================================
 ##
-## Copyright (C) 1998-2010 The Boeing Company
+## Copyright (C) 1998-2012 The Boeing Company
 ##                         Ed Trettevik <eat@nodebrain.org>
 ##
 ## NodeBrain is free software; you can redistribute it and/or modify
@@ -42,7 +42,8 @@
 ##
 ## Date       Name/Change
 ## ---------- -----------------------------------------------------------------
-## 2008/10/27 Ed Trettevik (version 0.7.3 - split out from nb package)
+## 2008-10-27 Ed Trettevik (version 0.7.3 - split out from nb package)
+## 2011-11-05 eat - included nbmail.c and nbtext.c
 ##=============================================================================
      
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
@@ -65,6 +66,7 @@ libnb_a_HEADERS = \
   nblist.h \
   nblistener.h \
   nblog.h \
+  nbmail.h \
   nbmedulla.h \
   nbmodule.h \
   nbmsg.h \
@@ -72,6 +74,7 @@ libnb_a_HEADERS = \
   nbobject.h \
   nbparse.h \
   nbpeer.h \
+  nbproxy.h \
   nbqueue.h \
   nbrule.h \
   nbservice.h \
@@ -82,15 +85,16 @@ libnb_a_HEADERS = \
   nbstem.h \
   nbsynapse.h \
   nbterm.h \
+  nbtext.h \
   nb-tls.h \
   nbtls.h \
   nbtranslator.h \
   nbtree.h \
-  nbverb.h
+  nbverb.h \
+  nbwebster.h
 
 # library gets installed 
 
-#lib_LTLIBRARIES = libnb.la libnbp.la
 lib_LTLIBRARIES = libnb.la
 
 libnb_la_LDFLAGS= -release ${PACKAGE_VERSION}
@@ -113,6 +117,7 @@ libnb_la_SOURCES = \
   nblistener.c \
   nblog.c \
   nbmacro.c \
+  nbmail.c \
   nbmath.c \
   nbmedulla.c \
   nbmodule.c \
@@ -122,6 +127,7 @@ libnb_la_SOURCES = \
   nbpeer.c \
   nbparse.c \
   nbplus.c \
+  nbproxy.c \
   nbqueue.c \
   nbreal.c \
   nbregex.c \
@@ -137,12 +143,14 @@ libnb_la_SOURCES = \
   nbsynapse.c \
   nbsym.c \
   nbterm.c \
+  nbtext.c \
   nbtime.c \
   nb-tls.c \
   nbtls.c \
   nbtree.c \
   nbtranslator.c \
   nbverb.c \
+  nbwebster.c \
   nb.h \
   nbi.h \
   nbassertion.h \
@@ -169,6 +177,7 @@ libnb_la_SOURCES = \
   nblog.h \
   nbparse.h \
   nbpeer.h \
+  nbproxy.h \
   nbqueue.h \
   nbreal.h \
   nbregex.h \
@@ -184,6 +193,7 @@ libnb_la_SOURCES = \
   nbstring.h \
   nbsynapse.h \
   nbterm.h \
+  nbtext.h \
   nbtime.h \
   nb-tls.h \
   nbtls.h \
@@ -207,6 +217,7 @@ nb_SOURCES = nb.c
 
 #nb_LDADD = .libs/libnb.so
 nb_LDADD = .libs/libnb.la
+nb_DEPENDENCIES = .libs/libnb-${PACKAGE_VERSION}.so
 
 EXTRA_DIST = nbcfgw.h
 

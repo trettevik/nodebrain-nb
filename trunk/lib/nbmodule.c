@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -107,6 +107,7 @@
 * 2009-02-13 eat 0.7.4  Fixed bug in "show +m" on OS X
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2012-02-06 dtl Checker updates
 *=============================================================================
 */
 #include <nbi.h>
@@ -183,16 +184,16 @@ void *nbModuleLoad(char *name,int export,char *msg){
   const char *error;
   int flag=RTLD_LAZY;
   
-  *msg=0;
   if(export) flag=RTLD_NOW|RTLD_GLOBAL;      // adjust flag for export request 
   handle=dlopen(name,flag);
   if(!handle){
     error=dlerror();
-    if(error!=NULL) sprintf(msg,"Unable to load %s - %s",name,error);
-    else sprintf(msg,"Unable to load %s - error unknown",name);
+    if(error!=NULL) snprintf(msg,(size_t)NB_MSGSIZE,"Unable to load %s - %s",name,error); //2012-01-26 dtl use snprintf
+    else snprintf(msg,(size_t)NB_MSGSIZE,"Unable to load %s - error unknown",name); //dtl use snprintf
     return(NULL);
     }
   if(trace) outMsg(0,'T',"Module %s loaded",name);
+  *msg=0;
   return(handle);
   }
 
@@ -252,11 +253,11 @@ void *nbModuleSym(void *handle,char *symbol,char *msg){
 void *nbModuleSym(void *handle,char *symbol,char *msg){
   void *addr;
 
-  *msg=0;
   if((addr=dlsym(handle,symbol))==NULL){
-    sprintf(msg,"Unable to locate \"%s\" - %s",symbol,dlerror());
+    snprintf(msg,(size_t)NB_MSGSIZE,"Unable to locate \"%s\" - %s",symbol,dlerror()); //2012-01-26 dtl use snprintf
     return(NULL);
     }
+  *msg=0; //dtl: moved here Checker (it complained msg has sizeof 1)
   return(addr);
   }
 
@@ -308,18 +309,18 @@ static struct NB_MODULE *newModule(char *path,char *name,NB_List *args,char *tex
   }
 
 void *nbModuleSearchPath(char *path,char *filename,char *msg){
-  char fullname[512],*cursor=path,*delim,*separator;
+  char fullname[512],*cursor=path,*delim,*separator,*namend=fullname+sizeof(fullname);
   void *handle;
 
   if(trace) outMsg(0,'T',"nbModuleSearchPath(\"%s\",\"%s\") called",path,filename);
   delim=strchr(cursor,',');   // platform independent separator
-  separator=strchr(cursor,NB_MODULE_PATH_SEPARATOR);
+  separator=strchr(cursor,NB_MODULE_PATH_SEPARATOR); //':' or ';'
   if(separator!=NULL && (delim==NULL || separator<delim)) delim=separator;
   while(delim!=NULL){
     strncpy(fullname,cursor,delim-cursor);
     *(fullname+(delim-cursor))=0;
     strcat(fullname,"/");
-    strcat(fullname,filename);
+    sstrcat(fullname,namend,filename); //2012-02-06 dtl replace strcat
     if(trace) outMsg(0,'T',"calling nbModuleLoad(\"%s\")",fullname);
     handle=nbModuleLoad(fullname,0,msg); 
     if(handle!=NULL) return(handle);
@@ -330,7 +331,7 @@ void *nbModuleSearchPath(char *path,char *filename,char *msg){
     }
   strcpy(fullname,cursor);
   strcat(fullname,"/");
-  strcat(fullname,filename);
+  sstrcat(fullname,namend,filename); //2012-02-06 dtl replace strcat
   if(trace) outMsg(0,'T',"calling nbModuleLoad(\"%s\")",fullname);
   handle=nbModuleLoad(fullname,0,msg);
   return(handle);
@@ -500,7 +501,7 @@ void nbModuleBind(nbCELL context,char *name,char *msg){
     // implicitly declare the module if necessary
     term=nbModuleDeclare((struct NB_TERM *)context,name,name);
     if(term==NULL){
-      sprintf(msg,"Module \"%s\" not declared and not found",name);
+      snprintf(msg,(size_t)NB_MSGSIZE,"Module \"%s\" not declared and not found",name); //2012-01-26 dtl use snprintf
       return;
       }
     }
@@ -531,19 +532,23 @@ void *nbModuleSymbol(NB_Term *context,char *ident,char *suffix,void **moduleHand
   struct NB_MODULE *module;
   char *cursor=ident,modName[256],symName[256];
   void *(*symbol)();
+  int n;
 
-  while(*cursor!='.' && *cursor!=0) cursor++;
-  if(*cursor=='.'){
-    strncpy(modName,ident,cursor-ident);
-    *(modName+(cursor-ident))=0;
-    strcpy(symName,cursor+1);
+//2012-01-26 dtl updated this if block: strcpy, strncpy, added test:
+  while(*cursor!='.' && *cursor!=0) cursor++; //search for '.'
+  if(*cursor=='.'){   //if '.' found, cursor position is valid
+//  strncpy(modName,ident,cursor-ident);
+//  *(modName+(cursor-ident))=0;
+    if((n=cursor-ident)<sizeof(modName)){strncpy(modName,ident,n);*(modName+n)=0;} //dtl: added check
+    else {strncpy(modName,ident,255);*(modName+255)=0;} //dtl: added to handle truncation copy
+    snprintf(symName,sizeof(symName),"%s",cursor+1); //dtl: replaced strcpy
     }
   else{
-    strcpy(modName,ident);
-    strcpy(symName,ident);
+    if((n=strlen(ident))<sizeof(modName)) strncpy(modName,ident,n+1); //idtl:use strncpy include 0 byte
+    if((n=strlen(ident))<sizeof(symName)) strncpy(symName,ident,n+1);
     }
   if(trace) outMsg(0,'T',"module=\"%s\",symbol=\"%s\"",modName,symName);
-  strcat(symName,suffix);
+  if((n=strlen(suffix))<sizeof(symName)) strncat(symName,suffix,n); //dtl used strncat
   if((term=nbTermFind(moduleC,modName))==NULL){
     // implicitly declare the module if necessary
     term=nbModuleDeclare(context,modName,modName);
@@ -590,8 +595,8 @@ void nbModuleShowPath(nbCELL context,char *pathcur){
       pathcur+=strlen(pathcur);
       }
     outPut("\n  %s\n",dirname);
-	if((dir=FindFirstFile(dirname,&info))!=INVALID_HANDLE_VALUE){
-	  do{
+    if((dir=FindFirstFile(dirname,&info))!=INVALID_HANDLE_VALUE){
+      do{
         cursor=info.cFileName;
         if(strncmp(cursor,"nb_",3)==0){
           cursor+=3;
@@ -602,9 +607,9 @@ void nbModuleShowPath(nbCELL context,char *pathcur){
               cursor=delim+strlen(LT_MODULE_EXT);
               if(*cursor=='.' && strcmp(cursor+1,NB_API_VERSION)==0){
                 sprintf(path,"%s/%s",dirname,info.cFileName);
-				if(GetFullPathName(path,sizeof(fullpathbuf),fullpathbuf,NULL)>0)
-					fullpath=fullpathbuf;
-				else fullpath=path;
+		if(GetFullPathName(path,sizeof(fullpathbuf),fullpathbuf,NULL)>0)
+                  fullpath=fullpathbuf;
+		else fullpath=path;
                 outPut("    %s -> %s\n",modname,fullpath);
                 }
               }
@@ -621,18 +626,18 @@ void nbModuleShowPath(nbCELL context,char *pathcur){
   char *fullpath,*cursor,*delim,*separator;
   char modname[512],path[1024],fullpathbuf[1024],dirname[1024];
   DIR *dir;
+  int n;
 
   while(*pathcur){
     delim=strchr(pathcur,',');
     separator=strchr(pathcur,NB_MODULE_PATH_SEPARATOR);
     if(separator!=NULL && (delim==NULL || separator<delim)) delim=separator;
     if(delim){
-      strncpy(dirname,pathcur,delim-pathcur);
-      *(dirname+(delim-pathcur))=0;
+      if((n=delim-pathcur)>0 && n<sizeof(dirname)) {strncpy(dirname,pathcur,n);*(dirname+n)=0;}// dtl added check
       pathcur=delim+1;
       }
     else{
-      strcpy(dirname,pathcur);
+      snprintf(dirname,sizeof(dirname),"%s",pathcur); //2012-01-31 dtl: replaced strcpy
       pathcur+=strlen(pathcur);
       }
     outPut("\n  %s\n",dirname);
@@ -688,8 +693,9 @@ _declspec (dllexport)
 extern int nbSkillDeclare(nbCELL context,void *(*bindFunction)(),void *moduleHandle,char *moduleName,char *skillName,nbCELL arglist,char *text){
   NB_Skill *skill;
   char ident[256];
+  int n;
 
-  if(*moduleName==0) strcpy(ident,skillName);
+  if(*moduleName==0) {if((n=strlen(skillName))<sizeof(ident)) strncpy(ident,skillName,n+1);} //dtl cp include 0 byyte
   else sprintf(ident,"%s.%s",moduleName,skillName);
   if(NULL==(skill=nbSkillNew(ident,(NB_List *)arglist,text))){
     outMsg(0,'L',"API nbSkillDeclare() - unable to create skill \"%s.%s\".",moduleName,skillName);
@@ -715,7 +721,8 @@ int nbSkillSetMethod(nbCELL context,nbCELL skill,int methodId,void *method){
   NB_Facet *facet=((NB_Skill *)skill)->facet;
   if(nb_opt_shim){
     if(facet->shim==NULL){
-      facet->shim=malloc(sizeof(struct NB_FACET_SHIM));
+      if((facet->shim=malloc(sizeof(struct NB_FACET_SHIM)))==NULL) //2012-01-26 dtl: handled error
+        {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
       memset(facet->shim,0,sizeof(struct NB_FACET_SHIM));
       }
     switch(methodId){

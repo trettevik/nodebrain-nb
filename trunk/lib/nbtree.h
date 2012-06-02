@@ -37,6 +37,7 @@
 * 2006/09/02 Ed Trettevik - first prototype
 * 2007/05/22 eat 0.6.8 - split out header and made part of API
 * 2008/02/08 eat 0.6.9 - included iterator macros
+* 2011-07-09 eat 0.8.6 - included NB_TREE_ITERATE_ORDER_STRING_CASE_AFTER macro
 *=============================================================================
 */
 #ifndef _NB_TREE_H_
@@ -130,6 +131,31 @@ typedef struct NB_TREE_ITERATOR{
   if(NODE->right!=NULL){ \
     NODE=NODE->right; \
     while(NODE->left!=NULL){ \
+      *ITERATOR.rightP=NODE; \
+      ITERATOR.rightP++; \
+      NODE=NODE->left; \
+      } \
+    } \
+  else{ \
+    ITERATOR.rightP--; \
+    if(ITERATOR.rightP<&ITERATOR.right[0]) break; \
+    NODE=*ITERATOR.rightP; \
+    }
+
+#define NB_TREE_ITERATE_ORDER_STRING_CASE_AFTER(ITERATOR,NODE,ROOT,AFTER) \
+  NODE=(NB_TreeNode *)ROOT; \
+  ITERATOR.rightP=&ITERATOR.right[0]; \
+  if(NODE!=NULL) while(NODE->left!=NULL && strcasecmp(NODE->key,AFTER)>0){ \
+    *ITERATOR.rightP=NODE; \
+    ITERATOR.rightP++; \
+    NODE=NODE->left; \
+    } \
+  if(NODE!=NULL) while(1)
+
+#define NB_TREE_ITERATE_ORDER_STRING_CASE_AFTER_NEXT(ITERATOR,NODE,AFTER) \
+  if(NODE->right!=NULL){ \
+    NODE=NODE->right; \
+    while(NODE->left!=NULL && strcasecmp(NODE->key,AFTER)>0){ \
       *ITERATOR.rightP=NODE; \
       ITERATOR.rightP++; \
       NODE=NODE->left; \

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -70,6 +70,7 @@
 * 2004-12-02 Ed Trettevik (original prototype version)
 * 2005-04-07 eat 0.6.2  Enhanced nbStreamClose()
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2012-01-16 dtl Checker updates
 *=============================================================================
 */
 #include "nbi.h"
@@ -188,7 +189,7 @@ int nbStreamOpen(NB_Cell *context,char *streamName,void *session,void (*subscrib
   if(stream==NULL) return(0); 
   for(sub=stream->sub;sub!=NULL && (sub->session!=session || sub->subscriber!=subscriber);sub=sub->next);
   if(sub==NULL){
-    sub=(NB_StreamSubscription *)malloc(sizeof(NB_StreamSubscription));
+    if((sub=(NB_StreamSubscription *)malloc(sizeof(NB_StreamSubscription)))==NULL) return(0); //dlt: add chk
     sub->stream=stream;
     sub->session=session;
     sub->subscriber=subscriber;

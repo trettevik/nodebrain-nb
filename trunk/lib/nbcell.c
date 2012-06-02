@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2011 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -323,6 +323,7 @@
 * 2007-01-02 eat 0.6.6  Slight enhancement to loop protection in nbCellLevel()
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2011-11-05 eat 0.8.6  Included nbCellGetText
 *=============================================================================
 */
 #include "nbi.h"
@@ -919,6 +920,11 @@ NB_Cell *nbCellCreateString(NB_Cell *context,char *string){
 char *nbCellGetString(NB_Cell *context,NB_Cell *cell){
   if(cell==NULL || cell->object.type!=strType) return(NULL);
   return(((NB_String *)cell)->value);
+  }
+
+char *nbCellGetText(NB_Cell *context,NB_Cell *cell){
+  if(cell==NULL || cell->object.type!=textType) return(NULL);
+  return(((NB_Text *)cell)->value);
   }
 
 NB_Cell *nbCellCreateReal(NB_Cell *context,double real){

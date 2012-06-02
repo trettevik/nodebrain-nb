@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2005-2010 The Boeing Company
+* Copyright (C) 2005-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -50,6 +50,7 @@
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2012-01-31 dtl 0.8.6  Checker updates
 *=====================================================================
 */
 #include "nbi.h"
@@ -64,6 +65,7 @@ char *nbIpGetName(unsigned int ipaddr,char *name,int len){
   struct hostent *host;
   char addr[16];
   unsigned char *ipad=(unsigned char *)&ipaddr;
+  char *namend=name+len; //end of name string location
 
   sprintf(addr,"%u.%u.%u.%u",*ipad,*(ipad+1),*(ipad+2),*(ipad+3));
   if((host=gethostbyaddr((char *)&ipaddr,sizeof(ipaddr),AF_INET))==NULL){
@@ -71,11 +73,13 @@ char *nbIpGetName(unsigned int ipaddr,char *name,int len){
     outMsg(0,'E',"unable to get host name");
     }
   else{
-    if(strlen(host->h_name)<(size_t)len-1) strcpy(name,host->h_name);
-    else{
-      strncpy(name,host->h_name,len-1);
-      *(name+len-1)=0;
-      }
+//2012-01-31 dtl sstrcpy(): strncpy,test before copy, handled smaller "name" string
+    sstrcpy(name,namend,host->h_name); //dtl replaced if block of strcpy & strncpy
+//    if(strlen(host->h_name)<(size_t)len-1) strcpy(name,host->h_name);
+//    else{
+//      strncpy(name,host->h_name,len-1);
+//      *(name+len-1)=0;
+//      }
     }
   return(name);
   }
@@ -149,10 +153,11 @@ int nbIpGetUdpClientSocket(unsigned short clientPort,char *addr,unsigned short p
   }
 
 int nbIpPutUdpClient(int socket,char *text){
-  char buffer[NB_BUFSIZE];
+  char buffer[NB_BUFSIZE],*bufend=buffer+NB_BUFSIZE;
   int rc;
   *buffer=0;
-  strcpy(buffer+1,text);
+// strcpy(buffer+1,text);
+  sstrcpy(buffer+1,bufend,text); //2012-01-31 dtl: replaced strcpy, test before copy
   rc=send(socket,buffer,strlen(text)+1,0);
   if(rc<0) fprintf(stderr,"nbIpPutUdpClient: send failed - %s\n",strerror(errno));
   return(rc);
@@ -475,7 +480,8 @@ int nbIpGetUdpSocketPair(int *socket1,int *socket2){
 struct IP_CHANNEL *nbIpAlloc(void){
   NB_IpChannel *channel;
 
-  channel=malloc(sizeof(NB_IpChannel));
+  if ((channel=malloc(sizeof(NB_IpChannel)))==NULL) //2012-01-31 dtl: handled error
+    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);}
   channel->socket=0;
   *(channel->ipaddr)=0;
   *(channel->unaddr)=0;
@@ -627,7 +633,7 @@ int nbIpPut(NB_IpChannel *channel,char *buffer,int len){
   if(len==0){
     outMsg(0,'L',"chput: Length %u too short - use chstop",len);
     }
-  memcpy(channel->buffer,buffer,len);
+  if (len>0) memcpy(channel->buffer,buffer,len); //dtl: added len check 
   channel->len=htons((unsigned short)len);
   len+=2;
   sent=send(channel->socket,(unsigned char *)&(channel->len),len,0);
@@ -658,7 +664,8 @@ int nbIpPutMsg(NB_IpChannel *channel,char *buffer,int len){
     }
   *(packet)=(len>>8)|0x80;
   *(packet+1)=len&255;
-  memcpy(packet+2,buffer,len);
+  if (len>0 && len<(NB_BUFSIZE-2)) memcpy(packet+2,buffer,len);  //2012-01-09 dtl: validated len
+  else {outMsg(0,'E',"chput: Length %u out of bound.",len);return(-1);} //dtl: skip invalid len
   outMsg(0,'T',"chputmsg() len=%u ",len);
   len+=2;
   sent=send(channel->socket,packet,len,0);
@@ -725,7 +732,9 @@ int nbIpGet(NB_IpChannel *channel,char *buffer){
     outMsg(0,'E',"chget: Invalid record encountered. Expecting %d more bytes. Received %d.  errno=%d",expect,i,errno);
     return(-3);
     }
-  memcpy(buffer,channel->buffer,len);
+//2012-01-31 dtl: len already checked, "buffer" has sizeof NB_BUFSIZE, safe to copy
+// memcpy(buffer,channel->buffer,len); //Checker severity 5
+  for(i=0;i<len;i++) *(buffer+i)=*((char*)channel->buffer+i);       
   buffer[len]=0; /* null terminate */
   return(len);
   }

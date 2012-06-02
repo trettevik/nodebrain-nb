@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -48,10 +48,11 @@
 * 2005/12/12 eat 0.6.4  included options parameter to nbChild
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2010-10-16 eat 0.8.4  Changed order of setuid and setgid in nbChildOpen to do group first
+* 2012-04-22 eat 0.8.8  Switched from nbcfg.h with standard config.h
 *=============================================================================
 */
 //#include "nbstd.h"
-#include <nbcfg.h>
+#include <config.h>
 #include <nbspine.h>
 
 // 2005-12-12 eat 0.6.4 - not using sigaction

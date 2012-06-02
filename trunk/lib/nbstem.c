@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -50,6 +50,7 @@
 * 2010-06-19 eat 0.8.2  Included support for commands provided by modules
 * 2010-10-14 eat 0.8.4  Included initialization of servepid.
 * 2010-10-16 eat 0.8.4  Included initialization of servegroup.
+* 2012-01-16 dtl 0.8.5  Checker updates
 *============================================================================*/
 #include "nbi.h"
 #include "nbmedulla.h"
@@ -77,6 +78,7 @@ void nbStemInit(NB_Stem *stem){
   initHash(stem);
   initReal(stem);
   initString(stem);
+  initText(stem);
   nbCellInit(stem);
   nbSynapseInit(stem);
   initMath(stem);
@@ -185,7 +187,8 @@ void nbLoadUserProfile(nbCELL context){
   char filename[1024];
   FILE *file;
 
-  sprintf(filename,"%s/%s",myuserdir,"user.nb");
+  snprintf(filename,sizeof(filename),"%s/%s",myuserdir,"user.nb"); //2012-01-16 dtl: used snprintf
+  
   //outMsg(0,'T',"filename:%s\n",filename);
   if((file=fopen(filename,"r"))==NULL){
     sprintf(filename,"%s/%s",myuserdir,"profile.nb");
@@ -312,7 +315,7 @@ nbCELL nbStart(int argc,char *argv[]){
 /*
 *  Create the stem cell
 */
-  stem=(NB_Stem *)malloc(sizeof(NB_Stem)); /* pass to all init(init) functions who pass to all newType() calls */
+  if((stem=(NB_Stem *)malloc(sizeof(NB_Stem)))==NULL) return(NULL); /* pass to all init(init) functions who pass to all newType() calls */
   memset(stem,0,sizeof(NB_Stem));
   //stem->parentChannel=NULL;
   stem->exitcode=0; 
@@ -447,6 +450,7 @@ nbCELL nbStart(int argc,char *argv[]){
   //nbTermNew(nb_TypeGloss,"translator",useString("translator"));
   nbTermNew(nb_TypeGloss,"node",useString("node"));
   nbTermNew(nb_TypeGloss,"macro",useString("macro"));
+  nbTermNew(nb_TypeGloss,"text",useString("text"));
   //nbTermNew(nb_TypeGloss,"verb",useString("verb"));
 
   

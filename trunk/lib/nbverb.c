@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -57,6 +57,7 @@
 * 2010-06-19 eat 0.8.2  Making verbs objects so modules can contribute extensions
 *            By making verbs objects we can manage them via the API in a way 
 *            consistent with other types of objects.
+* 2012-01-16 dtl  Checker updates.
 *=============================================================================
 */
 #include "nbi.h"
@@ -81,12 +82,12 @@ int nbVerbDeclare(nbCELL context,char *ident,int authmask,int flags,void *handle
 
 void nbVerbLoad(nbCELL context,char *ident){
   char *cursor,modName[256],msg[1024];
+  int n;
 
   cursor=ident;
   while(*cursor!='.' && *cursor!=0) cursor++;
   if(*cursor!='.') return;
-  strncpy(modName,ident,cursor-ident);
-  *(modName+(cursor-ident))=0;
+  if((n=cursor-ident)>0 && n<sizeof(modName)){strncpy(modName,ident,n);*(modName+n)=0;} //2012-01-16 dtl used strncpy
   nbModuleBind(context,modName,msg);
   }
 

@@ -222,6 +222,7 @@ extern void nbObjectShowTypes(void);
 #define NB_TYPE_TERM         7
 #define NB_TYPE_NODE         8
 #define NB_TYPE_VERB         9
+#define NB_TYPE_TEXT        10
 
 #if defined(WIN32)
 __declspec(dllexport)

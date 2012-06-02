@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -137,6 +137,7 @@
 * 2008-11-11 eat 0.7.3  Changed failure exit code to NB_EXITCODE_FAIL
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2012-01-26 dtl Checker updates
 *=============================================================================
 */
 #include "nbi.h"
@@ -218,9 +219,11 @@ int nbQueueOpenFileName(char *filename,int option,int type){
   int rc;
   int file;
 #if defined(mpe) || defined(ANYBSD)
-  if((file=open(filename,O_RDWR|O_CREAT,S_IRUSR|S_IWUSR))<=0){
+//2012-01-26 dtl: replaced open() with centralised routine openCreate()
+//  if((file=open(filename,O_RDWR|O_CREAT,S_IRUSR|S_IWUSR))<=0){
+  if((file=openCreate(filename,O_RDWR|O_CREAT,S_IRUSR|S_IWUSR))<=0){ //dtl: updated
 #else
-  if((file=open(filename,O_RDWR|O_CREAT|O_SYNC,S_IRUSR|S_IWUSR))<=0){
+  if((file=openCreate(filename,O_RDWR|O_CREAT|O_SYNC,S_IRUSR|S_IWUSR))<=0){ //dtl:updated
 #endif
     outMsg(0,'E',"Unable to open %s",filename);
     return(NBQFILE_ERROR);
@@ -256,7 +259,7 @@ long nbQueueReadFile(file,buffer,size)
   }
 #else
 long nbQueueReadFile(int file,char *buffer,size_t size){
-  return(read(file,buffer,size));
+  return(read(file,buffer,size)); //size = sizeof(buffer) 
   }
 #endif
 
@@ -397,8 +400,8 @@ int nbQueueGetFile(char *filename,char *dirname,char *identityName,int qsec,int 
     }
   //outMsg(0,'T',"Closing control file");
   nbQueueCloseFile(hFile);
-  if(type==' ') sprintf(filename,"%s.%s",newtime,newcount);
-  else sprintf(filename,"%s/%s/%s.%s.%c",dirname,identityName,newtime,newcount,type);
+  if(type==' ') snprintf(filename,256,"%s.%s",newtime,newcount); //2012-01-16 dtl: used snprintf
+  else snprintf(filename,256,"%s/%s/%s.%s.%c",dirname,identityName,newtime,newcount,type); //dtl used snprint
   return(0);
   }
 
@@ -430,7 +433,7 @@ int nbQueueGetNewFileName(char *qname,char *directory,int option,char type){
 void nbQueueCommit(char *filename){
   char *cursor,newname[512];
 
-  strcpy(newname,filename);
+  snprintf(newname,sizeof(newname),"%s",filename); //2012-01-16 dtl: replaced strcpy
   cursor=newname+strlen(newname)-2;
   if(cursor<newname || *cursor!='%'){
     outMsg(0,'L',"nbQueueCommit() unrecognized file name \"%s\"",newname);
@@ -544,9 +547,10 @@ int nbQueueOpenFileP(filename) char *filename;{
   int rc;
   int file;
 #if defined(mpe) || defined(ANYBSD)
-  if((file=open(filename,O_RDWR|O_CREAT,S_IRUSR|S_IWUSR))<=0){
+//2012-01-26 dtl: replaced open() with centralised routine openCreate()
+  if((file=openCreate(filename,O_RDWR|O_CREAT,S_IRUSR|S_IWUSR))<=0){ //dtl replaced open
 #else
-  if((file=open(filename,O_RDWR|O_CREAT|O_SYNC,S_IRUSR|S_IWUSR))<=0){
+  if((file=openCreate(filename,O_RDWR|O_CREAT|O_SYNC,S_IRUSR|S_IWUSR))<=0){ //dtl replaced open
 #endif
     outMsg(0,'E',"Unable to open %s",filename);
     return(-1);
@@ -728,7 +732,8 @@ static void nbqAddEntry(qHandle,identity,filename)
   if(*cursor!='.') return;
   if(*(cursor+1)=='Q') return;
 
-  entry=(struct NBQ_ENTRY *)malloc(sizeof(struct NBQ_ENTRY));
+  if((entry=(struct NBQ_ENTRY *)malloc(sizeof(struct NBQ_ENTRY)))==NULL) //2012-01-26 dtl: handled error
+    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
   entry->identity=identity;
   entry->context=NULL;              /* later */
   strcpy(entry->filename,filename);
@@ -766,7 +771,8 @@ struct NBQ_HANDLE *nbQueueOpenDir(char *dirname,char *siName,int mode){
 #endif
   char   iSearchName[512];
   if(trace) outMsg(0,'T',"nbQueueOpenDir() called");
-  qHandle=malloc(sizeof(struct NBQ_HANDLE));
+  if((qHandle=malloc(sizeof(struct NBQ_HANDLE)))==NULL) //2012-01-26 dtl: handled error
+    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
   qHandle->pollSynapse=NULL;
   qHandle->yieldSynapse=NULL;
   strcpy(qHandle->qname,dirname);
@@ -855,10 +861,7 @@ struct NBQ_HANDLE *nbQueueOpenDir(char *dirname,char *siName,int mode){
 /*
 *  Process a "q" file
 */
-static void nbqProcQ(qHandle,context)
-  struct NBQ_HANDLE *qHandle;
-  NB_Term *context; {
-
+static void nbqProcQ(struct NBQ_HANDLE *qHandle,nbCELL context){
   char *cmd;
 
   if(trace) outMsg(0,'T',"nbqProcQ() called for %s",qHandle->filename);
@@ -870,7 +873,7 @@ static void nbqProcQ(qHandle,context)
     }
   outMsg(0,'I',"NBQ File %s",qHandle->filename);
   while((cmd=nbQueueRead(qHandle))!=NULL){
-    nbCmdSid((nbCELL)context,cmd+1,1,qHandle->entry->identity);
+    nbCmdSid(context,cmd+1,1,qHandle->entry->identity);
     outFlush();
     }
   outMsg(0,'I',"NBQ File %s processed",qHandle->filename);
@@ -881,10 +884,7 @@ static void nbqProcQ(qHandle,context)
 /*
 *  Process a "t" file - Stub
 */
-void nbqProcT(qHandle,context)
-  struct NBQ_HANDLE *qHandle;
-  NB_Term *context; {
-
+void nbqProcT(struct NBQ_HANDLE *qHandle,nbCELL context){
   outMsg(0,'T',"nbqProcT() called for %s",qHandle->filename);
   nbQueueCloseFile(qHandle->file);
   }
@@ -892,10 +892,7 @@ void nbqProcT(qHandle,context)
 /*
 *  Process a "c" file - Stub
 */
-void nbqProcC(qHandle,context)
-  struct NBQ_HANDLE *qHandle;
-  NB_Term *context; {
-
+void nbqProcC(struct NBQ_HANDLE *qHandle,nbCELL context){
   outMsg(0,'T',"nbqProcC() called for %s",qHandle->filename);
   nbQueueCloseFile(qHandle->file);
   }

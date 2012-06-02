@@ -51,6 +51,7 @@
 * 2007-07-22 eat 0.6.8  Corrected rule assertion and command firing sequence error
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2012-01-26 dtl - Checker updates
 *=============================================================================
 */
 #include "nbi.h"
@@ -316,7 +317,7 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
       sign=symid;
       symid=nbParseSymbol(ident,&cursor);
       if(symid!='i'){
-        sprintf(msg,"NB000E Expecting integer at \"%s\".",cursave);
+        snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Expecting integer at \"%s\".",cursave); //dtl: used snprintf
         return(NULL);
         }
       count-=atoi(ident);
@@ -325,7 +326,7 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
     if(*cursor=='{'){
       cursor++;   /* step over '{' */
       if(count<0){
-        sprintf(msg,"NB000E Negative repeat count on procedure at \"%s\".",cursor);
+        snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Negative repeat count on procedure at \"%s\".",cursor); //dtl: used snprintf
         return(NULL);
         }
       if(count>1){
@@ -355,12 +356,12 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
         }
       }
     else if(count==0){
-      sprintf(msg,"NB000E Expecting '{' at \"%s\".",cursor);
+      snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Expecting '{' at \"%s\".",cursor); //dtl: used snprintf
       return(NULL);
       }
     else if(*cursor=='('){
       if(count<0){
-        sprintf(msg,"NB000E Negative step not currently supported on time condition at \"%s\".",cursor);
+        snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Negative step not currently supported on time condition at \"%s\".",cursor); //dtl: used snprintf
         return(NULL);
         }
       if(NULL==(tcdef=tcParse(context,&cursor,msg))) return(NULL);
@@ -381,8 +382,8 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
         case 'm': step=&tcStepMinute; break;
         case 's': step=&tcStepSecond; break;
         default:
-          if(count==0) sprintf(msg,"NB000E Expecting '{', '(' or unit code at \"%s\"",cursor);
-          else sprintf(msg,"NB000E Expecting /\\?*{( or integer at \"%s\".",cursor); 
+          if(count==0) snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Expecting '{', '(' or unit code at \"%s\"",cursor); //dtl: used snprintf
+          else snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Expecting /\\?*{( or integer at \"%s\".",cursor); //dtl: used snprintf
           return(NULL);
         }
       cursor++;
@@ -404,7 +405,8 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
       if(strcmp(ident,"=")==0) tmValue->op=(NB_PlanOp)&nbPlanValue; 
       else if(strcmp(ident,"==")==0) tmValue->op=(NB_PlanOp)&nbPlanDefine;
       else{
-        sprintf(msg,"NB000E Unexpected relational operator - \"%s\".",ident);
+        snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Unexpected relational operator - \"%s\".",ident); //dtl: used snprintf
+
         return(NULL);
         }
       if(NULL==(tmValue->value=nbParseCell((NB_Term *)context,&cursor,0))){
@@ -427,7 +429,7 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
         return(NULL);
         }
       if(*cursor!=')'){
-        sprintf(msg,"NB000E Expecting ')' at \"%s\".",cursor);
+        snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Expecting ')' at \"%s\".",cursor); //dtl: used snprintf
         return(NULL);
         }
       cursor++;
@@ -442,7 +444,7 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
     else if(strcmp(ident,"if")==0){ /* if(..) <them> else <else> */
       while(*cursor==' ') cursor++;
       if(*cursor!='('){
-        sprintf(msg,"NB000E Expecting '(' at \"%s\".",cursor);
+        snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Expecting '(' at \"%s\".",cursor); //dtl: used snprintf
         return(NULL);
         }
       cursor++;
@@ -453,7 +455,7 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
         return(NULL);
         }
       if(*cursor!=')'){
-        sprintf(msg,"NB000E Expecting ')' at \"%s\".",cursor);
+        snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Expecting ')' at \"%s\".",cursor); //dtl: used snprintf
         return(NULL);
         }
       cursor++;
@@ -487,7 +489,7 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
         return(NULL);
         }
       if(*cursor!=';'){
-        sprintf(msg,"NB000E Expecting ';' at \"%s\".",cursor);
+        snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Expecting ';' at \"%s\".",cursor); //dtl: used snprintf
         return(NULL);
         }
       cursor++;
@@ -506,7 +508,7 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
       cursave=cursor;
       while(*cursor!=';' && *cursor!=0) cursor++;
       if(*cursor!=';'){
-        sprintf(msg,"NB000E Command not terminated with ; at \"%s\"",cursave);
+        snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Command not terminated with ; at \"%s\"",cursave); //dtl: used snprintf
         return(NULL);
         }
       *cursor=0;
@@ -586,7 +588,8 @@ NB_Plan *nbRuleParsePlan(nbCELL context,int opt,char **source,char *msg){
   tmExit->op=(NB_PlanOp)&nbPlanExit;
   ip+=sizeof(struct NB_PLAN_EXIT);
   size=ip-codebuf;
-  plan->codeBegin=malloc(size);
+  if((plan->codeBegin=malloc(size))==NULL) //2012-01-26 dtl: handled out of memory
+    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
   plan->codeEnd=plan->codeBegin+size;
   memcpy(plan->codeBegin,codebuf,size);
   savechar=*cursor;

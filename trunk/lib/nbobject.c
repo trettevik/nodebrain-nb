@@ -179,6 +179,7 @@
 * 2003/11/18 eat 0.5.5  Merged nbtype.c into nbobject.c
 * 2008/01/22 eat 0.6.9  Improved management of object memory
 * 2008-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2012-01-25 eat - included check for malloc failures in nbAlloc
 *=============================================================================
 */
 #include "nbi.h"
@@ -317,15 +318,30 @@ void *newObject(struct TYPE *type,void **pool,int size){
   return(object);
   }
 
+// 2012-01-25 eat - included check for malloc failures
+
 void *nbAlloc(int size){
   NB_Object *object,**freeItemP;
 
-  if(size>NB_OBJECT_MANAGED_SIZE) return(malloc(size));
+  //outMsg(0,'T',"nbAlloc: size=%d",size);
+  if(size>NB_OBJECT_MANAGED_SIZE){
+    object=(NB_Object *)malloc(size);
+    if(!object){ 
+      fprintf(stderr,"NodeBrain out of memory.  Terminating\n");
+      exit(NB_EXITCODE_FAIL);
+      }
+    //outMsg(0,'T',"nbAlloc: object=%p size=%d",object,size);
+    return(object);
+    }
   size=(size+7)&-8;  // convert to index rounded to 8 byte units
   freeItemP=(NB_Object **)&nb_ObjectPool->vector[(size-1)>>3];  // index in 8 byte units
   if((object=*freeItemP)==NULL){
     if((objectHeap->top)-(char *)&objectHeap->space<size){
       struct NB_OBJECT_PAGE *newPage=malloc(NB_OBJECT_PAGE_SIZE);
+      if(!newPage){
+        fprintf(stderr,"NodeBrain out of memory.  Terminating\n");
+        exit(NB_EXITCODE_FAIL);
+        }
       newPage->next=objectHeap;
       objectHeap=newPage;
       objectHeap->top=(char *)objectHeap+NB_OBJECT_PAGE_SIZE;
@@ -334,14 +350,16 @@ void *nbAlloc(int size){
     object=(NB_Object *)objectHeap->top;
     }
   else *freeItemP=object->next;
+  //outMsg(0,'T',"nbAlloc: object=%p size=%d",object,size);
   return(object); 
   }
 
 void nbFree(void *object,int size){
   NB_Object **freeItemP;
 
+  //outMsg(0,'T',"nbFree: object=%p size=%d",object,size);
   if(size>NB_OBJECT_MANAGED_SIZE){
-    outMsg(0,'T',"Freeing unmanaged size %d",size);
+    //outMsg(0,'T',"Freeing unmanaged size %d",size);
     free(object);
     return;
     }

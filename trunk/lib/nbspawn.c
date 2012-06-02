@@ -88,6 +88,7 @@
 * 2007/12/26 eat 0.6.8  Added null closer to nbMedullaProcessOpen call
 * 2008/03/27 eat 0.7.0  Removed old spawnSkull function no longer used
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2012/01/16 dtl 0.8.5  Checker updates.
 *=============================================================================
 */
 #include "nbi.h"
@@ -166,6 +167,7 @@ int nbSpawnSkull(nbCELL context,char *oar,char *cursor){
   char filename[514];
   time_t systemTime;
   static int count=0;
+  int n;
 
   time(&systemTime);
   count++;
@@ -174,7 +176,7 @@ int nbSpawnSkull(nbCELL context,char *oar,char *cursor){
   else sprintf(command,"=>\"%s\" @\"%s\" ",filename,mypath);
   if(*cursor!=0){
     strcat(command,"\"");
-    if(strchr(cursor,'"')==NULL) strcat(command,cursor);
+    if(strchr(cursor,'"')==NULL){if(((n=strlen(cursor))+strlen(command))<NB_BUFSIZE) strncat(command,cursor,n);} //2012-01-16 dtl used strncat
     else{
       curcmd=command+strlen(command);
       while(*cursor!=0){

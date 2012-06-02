@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -56,13 +56,14 @@
 #if defined(WIN32)
 #include <nbcfgw.h>       /* tweeked config file */
 #else
-#include <nbcfg.h>        /* Definitions provided by configure script */
+#include <config.h>        /* Definitions provided by configure script */
 #endif
 
 #include <nbstd.h>         // define some standard system stuff
 #include <nbhash.h>        /* hash table of objects */
 //#include <nbverb.h>        /* verb structure */
 #include <nbstring.h>      /* string object */
+#include <nbtext.h>        /* text object */
 
 #include <nbglobal.h>      /* global variables */
 

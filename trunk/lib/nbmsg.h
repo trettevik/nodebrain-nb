@@ -54,6 +54,9 @@
 #define NB_MSG_REC_MAX 64*1024  // maximum msg record length
 #define NB_MSG_BUF_LEN 64*1024  // maximum msg record length
 
+#define NB_MSG_FILE_STATE_FIRST 1 // first file - ignore any files before this one
+#define NB_MSG_FILE_STATE_ONLY  2 // only a state header
+
 typedef struct NB_MSG_ID{   // Message Id in binary - network byte order
   unsigned char node;       // node number 0 to 255
   unsigned char time[4];    // UTC time
@@ -168,10 +171,11 @@ typedef struct NB_MSG_LOG{
 
 // Options for nbMsgLogInitialize
 
-#define NB_MSG_INIT_OPTION_STATE    0 // on - write messages to log, off - write state file only
-#define NB_MSG_INIT_OPTION_CONTENT  1 // on - write messages to log, off - write state file only
-#define NB_MSG_INIT_OPTION_CONVERT  2 // on - convert with emptying
-#define NB_MSG_INIT_OPTION_EMPTY    4 // on - empty
+#define NB_MSG_INIT_OPTION_STATE    0 // Target is state file
+#define NB_MSG_INIT_OPTION_CONTENT  1 // Target is content file
+#define NB_MSG_INIT_OPTION_CREATE   0 // Create state or content file
+#define NB_MSG_INIT_OPTION_CONVERT  2 // Convert to state or content file
+#define NB_MSG_INIT_OPTION_EMPTY    4 // Empty to state or content file
 
 int nbMsgLogSetState(nbCELL context,nbMsgLog *msglog,nbMsgRec *msgrec);
 int nbMsgLogWrite(nbCELL context,nbMsgLog *msglog,int msglen);
@@ -180,6 +184,7 @@ int nbMsgLogFileCreate(nbCELL context,nbMsgLog *msglog);
 // Message Log API
 
 extern int nbMsgLogInitialize(nbCELL context,char *cabal,char *nodeName,int node,int option);
+extern int nbMsgLogPrune(nbCELL context,char *cabal,char *nodeName,int node,int seconds);
 extern int nbMsgLogStateToRecord(nbCELL context,nbMsgLog *msglog,unsigned char *buffer,int buflen);
 extern nbMsgState *nbMsgLogStateFromRecord(nbCELL context,nbMsgRec *msgrec);
 

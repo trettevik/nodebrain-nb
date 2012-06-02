@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 #=============================================================================
 #
-# Copyright (C) 1998-2010 The Boeing Company
+# Copyright (C) 1998-2012 The Boeing Company
 #                         Ed Trettevik <eat@nodebrain.org>
 #
 # NodeBrain is free software; you can redistribute it and/or modify
@@ -78,10 +78,14 @@
 # 2010/09/06 eat 0.8.3  Baseline module
 # 2010/10/14 eat 0.8.4  Patches and pid file
 # 2010-11-07 eat 0.8.5  Line continue "\" in source files
+# 2012-02-06 eat 0.8.7  Checker changes
+# 2012-04-22 eat 0.8.8  TLS and Message API changes
+# 2012-05-11 eat 0.8.9  New version
+# 2012-06-02 eat 0.9.0  New version for release
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([nodebrain],[0.8.5],[bugs@nodebrain.org])
+AC_INIT([nodebrain],[0.9.0],[bugs@nodebrain.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SUBDIRS([lib module])
 AM_INIT_AUTOMAKE

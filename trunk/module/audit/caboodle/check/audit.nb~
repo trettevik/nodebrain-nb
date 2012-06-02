@@ -25,8 +25,8 @@ audit:trace
 ~ > audit:trace
 enable audit;
 ~ > enable audit;
-~ 1970/01/01 00:00:01 NM000T audit audit: auditEnable() called log/audit.log using
-~ 1970/01/01 00:00:02 NM000I audit audit: Enabled audit of log/audit.log using plan/audit/audit.nbx
+~ 1970/01/01 00:00:01 NM000T audit @.audit: auditEnable() called log/audit.log using
+~ 1970/01/01 00:00:02 NM000I audit @.audit: Enabled audit of log/audit.log using plan/audit/audit.nbx
 -echo "this is really something silly" >> log/audit.log
 ~ > -echo "this is really something silly" >> log/audit.log
 ~ [0] Started: -echo "this is really something silly" >> log/audit.log
@@ -43,7 +43,7 @@ assert trigger;
 ~ ] this is not really that silly
 ~ > audit. assert !really;
 ~ ---------- --------
-~ 1970/01/01 00:00:01 NM000T audit audit: File size=61
+~ 1970/01/01 00:00:01 NM000T audit @.audit: File size=61
 assert !trigger;
 ~ > assert !trigger;
 audit:notrace;
@@ -62,7 +62,7 @@ assert trigger;
 ~ > audit. assert !really;
 disable audit;
 ~ > disable audit;
-~ 1970/01/01 00:00:01 NM000I audit audit: Disabled audit of log/audit.log using plan/audit/audit.nbx
+~ 1970/01/01 00:00:01 NM000I audit @.audit: Disabled audit of log/audit.log using plan/audit/audit.nbx
 undefine audit;
 ~ > undefine audit;
 
@@ -81,7 +81,7 @@ assert !trigger;
 ~ > assert !trigger;
 enable audit;
 ~ > enable audit;
-~ 1970/01/01 00:00:01 NM000I audit audit: Enabled audit of log/audit.log using plan/audit/audit.nbx
+~ 1970/01/01 00:00:01 NM000I audit @.audit: Enabled audit of log/audit.log using plan/audit/audit.nbx
 -echo "this is really something silly" >> log/audit.log
 ~ > -echo "this is really something silly" >> log/audit.log
 ~ [0] Started: -echo "this is really something silly" >> log/audit.log
@@ -96,4 +96,4 @@ assert trigger;
 ~ > audit. assert !really;
 undefine audit;  # undefine without disabling first
 ~ > undefine audit;  # undefine without disabling first
-~ 1970/01/01 00:00:01 NM000I audit audit: Disabled audit of log/audit.log using plan/audit/audit.nbx
+~ 1970/01/01 00:00:01 NM000I audit @.audit: Disabled audit of log/audit.log using plan/audit/audit.nbx

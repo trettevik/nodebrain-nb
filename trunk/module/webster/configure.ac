@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 #=============================================================================
 #
-# Copyright (C) 1998-2009 The Boeing Company
+# Copyright (C) 1998-2011 The Boeing Company
 #                         Ed Trettevik <eat@nodebrain.org>
 #
 # NodeBrain is free software; you can redistribute it and/or modify
@@ -57,7 +57,7 @@
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([nb_webster],[0.0.2],[bugs@nodebrain.org])
+AC_INIT([nb_webster],[0.9.0],[bugs@nodebrain.org])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])

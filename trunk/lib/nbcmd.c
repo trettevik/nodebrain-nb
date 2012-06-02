@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2011 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -235,6 +235,9 @@
 * 2010-11-07 eat 0.8.5  Split out nbSource commands to nbsource.c
 * 2011-02-08 eat 0.8.5  Updated copyright
 * 2011-02-26 eat 0.8.5  Renamed iLet to nbLet and added to check for invalid cell expression;
+* 2011-05-08 eat 0.8.5  Included traceProxy setting
+* 2012-02-16 eat 0.8.7  Included traceWebster setting
+* 2012-05-20 eat 0.8.9  Included traceMail settin
 *==============================================================================
 */
 #include "nbi.h"
@@ -316,7 +319,7 @@ int nbGetCmdInteractive(char *cmd){
 void printVersion(void){
   printf("nb %s\n\n",PACKAGE_VERSION);
   printf("N o d e B r a i n\n");
-  printf("Copyright (C) 1998-2011 The Boeing Company\n");
+  printf("Copyright (C) 1998-2012 The Boeing Company\n");
   printf("GNU General Public License\n\n");
   }
 
@@ -378,7 +381,7 @@ void showVersion(void){
 
 void showCopyright(void){
   showVersion();
-  outPut("Copyright (C) 1998-2011 The Boeing Company\n");
+  outPut("Copyright (C) 1998-2012 The Boeing Company\n");
   outPut("GNU General Public License\n");
   outPut("----------------------------------------------------------------\n\n");
   }
@@ -1013,14 +1016,16 @@ int nbCmdSet(nbCELL context,void *handle,char *verb,char *cursor){
       else if(strcmp(ident,"shim")==0); /* this option is processed earlier */
       else if(strcmp(ident,"t")==0 || strcmp(ident,"trace")==0)   trace=1;
       else if(strcmp(ident,"T")==0 || strcmp(ident,"noTrace")==0) trace=0;
-      else if(strcmp(ident,"traceTls")==0) tlsTrace=1;
-      else if(strcmp(ident,"notraceTls")==0) tlsTrace=0;
+      else if(strcmp(ident,"traceMail")==0) mailTrace=1;
+      else if(strcmp(ident,"notraceMail")==0) mailTrace=0;
       else if(strcmp(ident,"traceParse")==0) parseTrace=1;
       else if(strcmp(ident,"notraceParse")==0) parseTrace=0;
       else if(strcmp(ident,"tracePeer")==0) peerTrace=1;
       else if(strcmp(ident,"notracePeer")==0) peerTrace=0;
-      //else if(strcmp(ident,"traceFile")==0) fileTrace=1;
-      //else if(strcmp(ident,"notraceFile")==0) fileTrace=0;
+      else if(strcmp(ident,"traceProxy")==0) proxyTrace=1;
+      else if(strcmp(ident,"notraceProxy")==0) proxyTrace=0;
+      else if(strcmp(ident,"traceWebster")==0) nb_websterTrace=1;
+      else if(strcmp(ident,"notraceWebster")==0) nb_websterTrace=0;
       else if(strcmp(ident,"traceMessage")==0) msgTrace=1;
       else if(strcmp(ident,"notraceMessage")==0) msgTrace=0;
       else if(strcmp(ident,"traceQuery")==0) queryTrace=1;
@@ -1031,6 +1036,8 @@ int nbCmdSet(nbCELL context,void *handle,char *verb,char *cursor){
       else if(strcmp(ident,"notraceSource")==0) sourceTrace=0;
       else if(strcmp(ident,"traceSymbolic")==0) symbolicTrace=1;
       else if(strcmp(ident,"notraceSymbolic")==0) symbolicTrace=0;
+      else if(strcmp(ident,"traceTls")==0) tlsTrace=1;
+      else if(strcmp(ident,"notraceTls")==0) tlsTrace=0;
       /* continue to support old option names for a few versions - now 0.5.1 */
       else if(strcmp(ident,"parseTrace")==0) parseTrace=1;
       else if(strcmp(ident,"noparseTrace")==0) parseTrace=0;
@@ -1042,6 +1049,8 @@ int nbCmdSet(nbCELL context,void *handle,char *verb,char *cursor){
       else if(strcmp(ident,"nosourceTrace")==0) sourceTrace=0;
       else if(strcmp(ident,"symbolicTrace")==0) symbolicTrace=1;
       else if(strcmp(ident,"nosymbolicTrace")==0) symbolicTrace=0;
+      else if(strcmp(ident,"websterTrace")==0) nb_websterTrace=1;
+      else if(strcmp(ident,"nowebsterTrace")==0) nb_websterTrace=0;
       /* 
       *  Debugging options used by "show" command
       */
@@ -1089,21 +1098,27 @@ int nbCmdAssert(nbCELL context,void *handle,char *verb,char *cursor){
 
   /* handle cache reference */
   while(*cursor==' ') cursor++;
-  assertion=nbParseAssertion((NB_Term *)context,(NB_Term *)context,&cursor);
-  if(*cursor!=';' && *cursor!=0){
-    outMsg(0,'E',"Unrecognized at-->%s",cursor);
-    dropMember(assertion);
-    return(1);
+  if(*cursor!=':'){
+    assertion=nbParseAssertion((NB_Term *)context,(NB_Term *)context,&cursor);
+    if(*cursor!=':' && *cursor!=';' && *cursor!=0){
+      outMsg(0,'E',"Unrecognized at-->%s",cursor);
+      dropMember(assertion);
+      return(1);
+      }
+    if(assertion!=NULL){
+      assert(assertion,alert);  // assert or alert
+      dropMember(assertion);
+      }
+    if(alert){
+      // This alertCount is used to avoid alerting the address context if a skill already did
+      alertCount=((NB_Node *)((NB_Term *)context)->def)->alertCount;
+      nbRuleReact(); // react to changing conditions
+      if(alertCount==((NB_Node *)((NB_Term *)context)->def)->alertCount) contextAlert((NB_Term *)context);
+      }
     }
-  if(assertion!=NULL){
-    assert(assertion,alert);  // assert or alert
-    dropMember(assertion);
-    }
-  if(alert){
-    // This alertCount is used to avoid alerting the address context if a skill already did
-    alertCount=((NB_Node *)((NB_Term *)context)->def)->alertCount;
-    nbRuleReact(); // react to changing conditions
-    if(alertCount==((NB_Node *)((NB_Term *)context)->def)->alertCount) contextAlert((NB_Term *)context);
+  if(*cursor==':'){
+    cursor++;
+    nbCmd(context,cursor,0);
     }
   return(0);
   }
@@ -1117,8 +1132,46 @@ int nbCmdAssert(nbCELL context,void *handle,char *verb,char *cursor){
 *  Return Code:
 *   -1 - error
 *    0 - success
-*/   
+*/
 int nbLet(char *cursor,NB_Term *context,int mode){
+  NB_Link *assertion=NULL;
+  //char ident[256],operator[256],token[4096],*cursave;
+  //NB_Term *term;
+  //NB_Object *object;
+  //int found;
+  //char symid=',';
+
+  if(!(clientIdentity->authority&AUTH_ASSERT)){
+    outMsg(0,'E',"Identity \"%s\" does not have authority to assign symbolic values.",clientIdentity->name->value);
+    return(-1);
+    }
+  /* handle cache reference */
+  while(*cursor==' ') cursor++;
+  assertion=nbParseAssertion((NB_Term *)context,(NB_Term *)context,&cursor);
+  if(*cursor!=':' && *cursor!=';' && *cursor!=0 && *cursor!='\n'){
+    outMsg(0,'E',"Unrecognized at-->%s",cursor);
+    dropMember(assertion);
+    return(-1);
+    }
+  if(assertion!=NULL){
+    assert(assertion,mode<<1);  // assert 
+    dropMember(assertion);
+    }
+  return(0);
+  }
+
+
+/*
+*  Set symbolic variables
+*     <parm1>=<value1>,<parm2>="<value2>",...
+*
+*     mode: 0 - update or create [assert] ; 1 - create only [default]
+*
+*  Return Code:
+*   -1 - error
+*    0 - success
+*/   
+int nbLetOld(char *cursor,NB_Term *context,int mode){
   char ident[256],operator[256],token[4096],*cursave;
   NB_Term *term;
   NB_Object *object;
@@ -1214,23 +1267,6 @@ int nbCmdEnable(nbCELL context,void *handle,char *verb,char *cursor){
   return(0);
   }
 
-//struct SCHED *iSchedule(cursor) char **cursor; {
-//  char *delim,msg[256];
-//  char symid,ident[256];
-//  struct SCHED *sched;
-  
-//  symid=nbParseSymbol(ident,cursor);
-//  if(trace) outMsg(0,'T',"Calling newSched A [%s].",ident); 
-//  sched=newSched(symid,ident,&delim,msg,1);
-//  if(trace) outMsg(0,'T',"Back from newSched A.");
-//  if(sched==NULL){
-//    outPut("%s\n",msg);
-//    return(NULL);
-//    }
-//  if(trace) outMsg(0,'T',"Schedule structure generated.");
-//  return(sched);
-//  }
-  
 int nbCmdArchive(nbCELL context,void *handle,char *verb,char *cursor){
   char prefix[100],target[100];
   size_t len;
@@ -1603,7 +1639,7 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
       outMsg(0,'E',"Expecting ';' at [%s].",cursor);
       return(1);
       }
-    if(object==NULL) object=nb_Unknown; /* perhaps nbParseCell should return it, but...*/
+    if(object==NULL) object=nb_Unknown;  // accept empty expression here
     nbTermNew((NB_Term *)context,ident,object);
     }
   else if(strcmp(type,"translator")==0){
@@ -1612,7 +1648,7 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     delim=cursor;
     while(*delim!=0 && *delim!=';') delim++;
     *delim=0;
-    translator=(NB_Translator *)nbTranslatorCompile(context,cursor);
+    translator=(NB_Translator *)nbTranslatorCompile(context,0,cursor);
     outFlush();
     if(translator!=NULL) nbTermNew((NB_Term *)context,ident,translator);
     }
@@ -1623,6 +1659,21 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     NB_Macro *macro;
     if(NULL!=(macro=nbMacroParse(context,&cursor)))
       nbTermNew((NB_Term *)context,ident,macro);
+    }
+  else if(strcmp(type,"text")==0){
+    NB_Text *text;
+    while(*cursor==' ') cursor++;
+    if(*cursor==':'){
+      cursor++;
+      text=nbTextCreate(cursor);
+      }
+    else{
+      delim=cursor;
+      while(*delim!=0 && *delim!=';') delim++;
+      *delim=0;
+      text=nbTextLoad(cursor);
+      }
+    if(text!=NULL) nbTermNew((NB_Term *)context,ident,text);
     }
   else outMsg(0,'E',"Type \"%s\" not recognized.",type);
   return(0);
@@ -1937,6 +1988,34 @@ void nbCmdTranslate(nbCELL context,char *verb,char *cursor){
   outFlush(); 
   nbTranslatorExecuteFile(context,(nbCELL)(xtrTerm->def),filename);
   }
+
+/*
+*  "IF" command
+*/
+int nbCmdIf(nbCELL context,char cmdopt,char *cursor){
+  NB_Object *object,*value;
+
+  /* get condition object */
+  if(NULL==(object=nbParseCell((NB_Term *)context,&cursor,0))){
+    outMsg(0,'E',"Error in IF condition.");
+    return(1);
+    }
+  grabObject(object);
+  if(*cursor!=')'){
+    outMsg(0,'E',"Error in IF condition - expecting ')' at-->%s",cursor);
+    return(1);
+    }
+  cursor++;
+  if(trace){
+    outPut("Condition: ");
+    printObject(object);
+    outPut("\n");
+    }
+  if((value=object->type->compute(object))!=NB_OBJECT_FALSE && value!=nb_Unknown)
+    nbCmdAssert((NB_Cell *)context,context->object.type->stem,"assert",cursor);
+  dropObject(object);
+  return(0);  // when nbCmd is modified to return int we'll return what we get
+  }
    
 //
 // Load Shared Library for use by modules
@@ -2153,11 +2232,11 @@ void nbCmd(nbCELL context,char *cursor,int cmdopt){
     case '{':
       nbRuleExec(context,cursor);                           /* AUTH_DEFINE */
       break;
-    case '(':{
+    case '[':{
       int savetrace=trace;
       if(strstr(cursor,"!trace")!=NULL) trace=0;
       else if(strstr(cursor,"trace")!=NULL) trace=1;
-      while(*cursor!=0 && *cursor!=')') cursor++;
+      while(*cursor!=0 && *cursor!=']') cursor++;
       if(*cursor!=0){
         cursor++;
         nbCmd((NB_Cell *)context,cursor,(char)(cmdopt&NB_CMDOPT_HUSH));
@@ -2165,7 +2244,9 @@ void nbCmd(nbCELL context,char *cursor,int cmdopt){
       trace=savetrace;
       }
       break;
-    case '?':  // comput a cell expression 
+    case '(': nbCmdIf(context,cmdopt,cursor);
+      break;
+    case '?':  // compute a cell expression 
       if(*cursor==0) nbCmdShow(context,stem,"show",cursor);
       else{
         NB_Object *object,*cell;

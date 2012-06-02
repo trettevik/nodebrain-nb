@@ -353,15 +353,19 @@ static void nbPeerAcceptHandshaker(nbCELL context,int sd,void *handle){
     peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
     }
   else if(rc==-1){
-    if(rc==-1 && peer->tls->error==NB_TLS_ERROR_WANT_WRITE){
+    if(peer->tls->error==NB_TLS_ERROR_WANT_WRITE){
       if(peerTrace) nbLogMsg(context,0,'T',"nbPeerAcceptHandshaker: SSL_ERROR_WANT_WRITE");
       nbListenerAddWrite(context,sd,peer,nbPeerAcceptHandshaker);
       peer->flags|=NB_PEER_FLAG_WRITE_WAIT;
       }
-    if(rc==-1 && peer->tls->error==NB_TLS_ERROR_WANT_READ){
+    else if(peer->tls->error==NB_TLS_ERROR_WANT_READ){
       if(peerTrace) nbLogMsg(context,0,'T',"nbPeerAcceptHandshaker: SSL_ERROR_WANT_READ");
       nbListenerAdd(context,sd,peer,nbPeerAcceptHandshaker);
       peer->flags|=NB_PEER_FLAG_READ_WAIT;
+      }
+    else{
+      nbLogMsg(context,0,'T',"nbPeerAcceptHandshaker: handshake failed");
+      nbPeerShutdown(context,peer,-1);
       }
     }
   else{

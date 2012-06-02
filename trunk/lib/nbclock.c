@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2011 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -125,6 +125,7 @@
 * 2011-02-08 eat 0.8.5  Modified nbClockSetTimer to reset object timers
 *            Previously it considered an attempt to reset a timer a logic error
 *            and required a timer to be cleared before setting a new one.
+* 2012-01-09 dtl 0.8.6 Checker updates
 *=============================================================================
 */
 #include "nbi.h" 
@@ -295,6 +296,7 @@ char *nbClockToBuffer(char *buffer){
 /*
 *  Convert UTC time to character string (nb_clockFormat determines format)
 */    
+#define CTIME_SIZE 30    //buffer has at least sizeof 30 
 char *nbClockToString(time_t utc,char *buffer){
   struct tm *printTm;
 
@@ -303,7 +305,7 @@ char *nbClockToString(time_t utc,char *buffer){
     return(buffer);
     }
   printTm=nbClockGetTm(nb_clockClock,utc);
-  sprintf(buffer,"%.4d/%.2d/%.2d %.2d:%.2d:%.2d ",
+  snprintf(buffer,(size_t)CTIME_SIZE,"%.4d/%.2d/%.2d %.2d:%.2d:%.2d ",  //2012-01-09 dtl use snprintf
     printTm->tm_year+1900,printTm->tm_mon+1,printTm->tm_mday,
     printTm->tm_hour,printTm->tm_min,printTm->tm_sec); 
   return(buffer);

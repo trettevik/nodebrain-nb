@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -98,13 +98,15 @@
 * 2010/02/28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2010-10-16 eat 0.8.4  Included group option in shell commands
 *                       =[<user>:<group>]<command>
+* 2012-01-09 dtl 0.8.6  Checker updates
+* 2012-04-22 eat 0.8.8  Switched from nbcfg.h to standard config.h
 *=============================================================================
 */
 #define NB_INTERNAL
 #if defined(WIN32)
 #include <nbcfgw.h>
 #else
-#include <nbcfg.h>
+#include <config.h>
 #endif
 #include <nbmedulla.h>
 
@@ -1364,7 +1366,7 @@ int nbMedullaProcessEnable(
 //
 int nbMedullaParseFileSpec(char filename[512],char **cursorP,char *msgbuf){
   char *cursor=*cursorP,*delim;
-  int code=4;
+  int n,code=4;
   *filename=0;
   if(*cursor=='!'){
     cursor++;
@@ -1390,25 +1392,26 @@ int nbMedullaParseFileSpec(char filename[512],char **cursorP,char *msgbuf){
       cursor++;
       code=5;
       }
-    while(*cursor==' ') cursor++;
-    if(*cursor=='"'){
-      cursor++;
-      delim=strchr(cursor,'"');
-      if(delim==NULL){
+    while(*cursor==' ') cursor++; //skip blank bytes
+    if(*cursor=='"'){  // if left " found, expect format "filename"
+      cursor++;        // next byte
+      delim=strchr(cursor,'"'); //search for right "
+      if(delim==NULL){          //right " not found
         sprintf(msgbuf,"Unbalanced quotes '\"' on output file name\n");
-        return(-1);
+        return(-1); //return error
         }
       }
-    else{
-      delim=strchr(cursor,' ');
-      if(delim==NULL) delim=strchr(cursor,0);
+    else{                       //cursor it not a ", expect filename not in ""
+      delim=strchr(cursor,' '); //mark end of filename at 1st blank
+      if(delim==NULL) delim=strchr(cursor,0); //if blank not found, mark filename to end of string
       } 
-    if(delim-cursor>=512){
+    if((n=delim-cursor)<=0 || n>=512){ //dtl: added negative len check
       sprintf(msgbuf,"Output file name too large for buffer\n");
       return(-1);
       } 
-    strncpy(filename,cursor,delim-cursor);
-    *(filename+(delim-cursor))=0;
+//  strncpy(filename,cursor,delim-cursor);
+    else strncpy(filename,cursor,n); //dtl: moved to if block for Checker 
+    *(filename+(delim-cursor))=0;    
     cursor=delim+1;
     while(*cursor==' ') cursor++;
     *cursorP=cursor;
@@ -1496,7 +1499,7 @@ nbPROCESS nbMedullaProcessOpen(
   //fprintf(stderr,"nbMedullaProcessOpen %s\n",cmd);
   // limit the number of children we can start.
   if(nb_medulla_child_count>=nb_medulla_child_max){
-    sprintf(msgbuf,"Attempt to start more than %d children - request denied\n",nb_medulla_child_max);
+    snprintf(msgbuf,(size_t)NB_BUFSIZE,"Attempt to start more than %d children - request denied\n",nb_medulla_child_max); //2012-01-09 dtl use snprintf
     return(NULL);
     }
   // parse cmd into elements

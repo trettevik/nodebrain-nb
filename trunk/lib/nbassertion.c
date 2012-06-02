@@ -126,6 +126,7 @@ void printAssertions(NB_Link *link){
 *
 *   mode=0  - assert
 *   mode=1  - alert
+*   mode=2  - default (only set if unknown)
 */
 void assert(NB_Link *member,int mode){
   struct ASSERTION *assertion,*target;
@@ -142,7 +143,9 @@ void assert(NB_Link *member,int mode){
     object=assertion->object;
     term=(NB_Term *)assertion->target;
     if(assertion->target->type==termType){
-      if(assertion->cell.object.type==assertTypeDef)
+      // 2011-03-19 eat - don't assert if default mode and value is not unknown
+      if(mode&2 && term->def!=nb_Unknown);
+      else if(assertion->cell.object.type==assertTypeDef)
         nbTermAssign(term,object);
       else if(assertion->cell.object.type==assertTypeRef){
         outMsg(0,'T',"assigning reference");
@@ -184,7 +187,7 @@ void assert(NB_Link *member,int mode){
         }
       facet=skill->facet;
       arglist=grabObject((NB_List *)target->object);
-      if(mode) (*facet->alert)(term,skill->handle,node->knowledge,(NB_Cell *)arglist,(NB_Cell *)object);
+      if(mode&1) (*facet->alert)(term,skill->handle,node->knowledge,(NB_Cell *)arglist,(NB_Cell *)object);
       else (*facet->assert)(term,skill->handle,node->knowledge,(NB_Cell *)arglist,(NB_Cell *)object);
       dropObject(arglist);
       dropObject(object);   /* 2004/08/28 eat */

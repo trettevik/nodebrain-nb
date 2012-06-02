@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -177,6 +177,7 @@
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2010-02-26 eat 0.7.9  Fixed bug in vlidiv - not yet tested
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2012-02-07 dtl Checker updates
 *=============================================================================
 */
 //#include "nb.h"
@@ -879,15 +880,17 @@ void vligetd(vliWord *x,unsigned char *s){
 *  Convert a vli to decimal character string 
 *    This can be modified to use much larger powers of ten.
 *    It should use several digits at a time.
+*    "ssize" is sizeof string "s" 
 */
-void vliputd(vliWord *x,unsigned char *s){
+void vliputd(vliWord *x,unsigned char *s,size_t ssize){
   vliWord ten[2],*Q,*X;
   unsigned char *c,*ds,*es;
+  int n;
   
   *ten=1;
   *(ten+1)=10;
   if(*x==0){
-    strcpy((char *)s,"0");
+    if(ssize>1) *((char *)s)='0',*((char *)s+1)=0; //2012-02-07 dtl: replaced strcpy(s,"0")
     return;
     }
   ds=(unsigned char *)malloc((*x*5+1));
@@ -906,7 +909,8 @@ void vliputd(vliWord *x,unsigned char *s){
     vlicopy(X,Q);
     }
   c++;
-  strcpy((char *)s,(char *)c);
+  if((n=strlen((char *)c))<ssize) strncpy((char *)s,(char *)c,n),*(s+n)=0; //2012-02-07 dtl: replaced strcpy
+  else strncpy((char *)s,(char *)c,ssize),*(s+ssize-1)=0;          //dtl: copy upto ssize
   free(ds);
   free(Q);
   free(X);
@@ -938,22 +942,22 @@ int vligetx(vliWord *x,unsigned char *s){
 
 /*
 *  Convert a vli number x to a hexidecimal string
-*
+*  "s" must have size at least of 5 bytes  
 */
 void vliputx(vliWord *x,char *s){
   vliWord a,*cx=x+1,*ex=x+*x+1;    /* accumulator and cursors */
   unsigned short i;                /* nibble counter */
 
   if(*x==0){
-    strcpy(s,"0");
+    sprintf(s,"0"); //2012-02-07 dtl: replaced strcpy (sizeof s defined 512)
     return;
     }
   while(cx<ex){          /* handle each word - reverse nibbles */
     a=*cx;
     for(i=0;i<4;i++){
-      sprintf(s,"%1.1x",a&15);
-      a=a>>4;
-      s++;
+      sprintf(s,"%1.1x",a&15); //print 1 byte to s (1 hex value)
+      a=a>>4;                  //shift left 1 hex
+      s++;                     //move to next byte
       }
     cx++;
     }

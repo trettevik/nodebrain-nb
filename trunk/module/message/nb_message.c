@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2009-2011 The Boeing Company
+* Copyright (C) 2009-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -89,6 +89,7 @@
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2010-04-26 eat 0.7.9  Included optional node number argument to message.producer
 * 2011-02-08 eat 0.8.5  Started to unify message.(client|server|peer)
+* 2012-04-22 eat 0.8.8  Included message.prune command
 *===================================================================================
 */
 #include "config.h"
@@ -939,27 +940,86 @@ int messageCmdParseLogIdentifiers(nbCELL context,char **cursorP,char *cabalName,
   return(0);
   }
 
-int messageCmdCreate(nbCELL context,void *handle,char *verb,char *cursor){
+int messageCmdInitialize(nbCELL context,void *handle,char *verb,char *cursor){
   char cabalName[64],nodeName[64];
   int instance;
   char *delim;
   int len;
   int option;
 
+  if(strcmp(verb,"message.create")==0) option=NB_MSG_INIT_OPTION_CREATE;
+  else if(strcmp(verb,"message.convert")==0) option=NB_MSG_INIT_OPTION_CONVERT;
+  else if(strcmp(verb,"message.empty")==0) option=NB_MSG_INIT_OPTION_EMPTY;
+  else{
+    nbLogMsg(context,0,'E',"Message verb %s not recognized.",verb);
+    return(1);
+    }
+  if(option!=NB_MSG_INIT_OPTION_CREATE){
+    nbLogMsg(context,0,'E',"Message verb %s not implemented.",verb);
+    return(1);
+    }
   if(messageCmdParseLogIdentifiers(context,&cursor,cabalName,nodeName,&instance)) return(1);
   while(*cursor==' ') cursor++;
   delim=cursor;
-  while(*delim && *delim!=' ') delim++;
+  while(*delim && *delim!=' ' && *delim!=';') delim++;
   len=delim-cursor;
-  if(len==0 || (len==7 && strncmp(cursor,"content",7)==0)) option=NB_MSG_INIT_OPTION_CONTENT;
-  else if(len==5 && strncmp(cursor,"state",5)==0) option=NB_MSG_INIT_OPTION_STATE;
+  if(len==0 || (len==7 && strncmp(cursor,"content",7)==0)) option|=NB_MSG_INIT_OPTION_CONTENT;
+  else if(len==5 && strncmp(cursor,"state",5)==0) option|=NB_MSG_INIT_OPTION_STATE;
   else{
     nbLogMsg(context,0,'E',"Expecting type of 'content' or 'state' at:%s",cursor);
+    return(1);
+    }
+  while(*delim==' ') delim++;
+  if(*delim && *delim!=';'){
+    nbLogMsg(context,0,'E',"Unexpecting text at:%s",delim);
     return(1);
     }
   if(nbMsgLogInitialize(context,cabalName,nodeName,instance,option)) return(1);
   return(0);
   }
+
+/*
+*  Retire message files older than a specified time period
+*
+*     message.prune <cabal> <node> <instance> <n><timeunit>
+*
+*     <n>        - number of time units to retain before retiring
+*     <timeunit> - time unit (d)ay, (h)our, (m)inute, (s) second
+*
+*  At least one file will always be retained, and may be open for
+*  writing by the owning process. 
+*/
+int messageCmdRetire(nbCELL context,void *handle,char *verb,char *cursor){
+  char cabalName[64],nodeName[64];
+  int instance;
+  char *delim;
+  int seconds;
+
+  if(messageCmdParseLogIdentifiers(context,&cursor,cabalName,nodeName,&instance)) return(1);
+  while(*cursor==' ') cursor++;
+  delim=cursor;
+  while(*delim && *delim!=' ' && *delim!=';') delim++;
+  seconds=atoi(cursor); // get number
+  while(*cursor>='0' && *cursor<='9') cursor++; // step over n
+  switch(*cursor){
+    case 'd': seconds*=24;
+    case 'h': seconds*=60;
+    case 'm': seconds*=60;
+    case 's': break;
+    default:
+      nbLogMsg(context,0,'E',"Expecting time unit of 'd', 'h', 'm', or 's' at:%s",cursor);
+      return(1);
+    }
+  cursor++;
+  while(*cursor==' ') cursor++;
+  if(*cursor && *cursor!=';'){
+    nbLogMsg(context,0,'E',"Unexpecting text at:%s",cursor);
+    return(1);
+    }
+  if(nbMsgLogPrune(context,cabalName,nodeName,instance,seconds)) return(1);
+  return(0);
+  }
+
 
 /*
 *  Export a message file converting to text.
@@ -1045,7 +1105,10 @@ int messageCmdExport(nbCELL context,void *handle,char *verb,char *cursor){
 _declspec (dllexport)
 #endif
 extern void *nbBind(nbCELL context,char *ident,nbCELL arglist,char *text){
-  nbVerbDeclare(context,"message.create",NB_AUTH_CONTROL,0,NULL,&messageCmdCreate,"<cabal> <node> <instance> [content|state]");
+  nbVerbDeclare(context,"message.create",NB_AUTH_CONTROL,0,NULL,&messageCmdInitialize,"<cabal> <node> <instance> [content|state]");
+  nbVerbDeclare(context,"message.convert",NB_AUTH_CONTROL,0,NULL,&messageCmdInitialize,"<cabal> <node> <instance> [content|state]");
+  nbVerbDeclare(context,"message.empty",NB_AUTH_CONTROL,0,NULL,&messageCmdInitialize,"<cabal> <node> <instance> [content|state]");
+  nbVerbDeclare(context,"message.prune",NB_AUTH_CONTROL,0,NULL,&messageCmdRetire,"<cabal> <node> <instance> [<n><period>]");
   nbVerbDeclare(context,"message.export",NB_AUTH_CONTROL,0,NULL,&messageCmdExport,"<cabal> <node> <instance> <file>");
   return(NULL);
   }

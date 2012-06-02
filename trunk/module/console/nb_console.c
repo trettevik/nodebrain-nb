@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2004-2010 The Boeing Company
+* Copyright (C) 2004-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -57,6 +57,7 @@
 * 2005-05-14 eat 0.6.3  consoleBind() modified to accept moduleHandle
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
+* 2012-01-31 dtl Checker updates
 *=====================================================================
 */
 #include "config.h"
@@ -241,7 +242,8 @@ void *consoleConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *tex
   console->sessions=NULL;
   console->serverSocket=0;
   console->port=port;
-  strncpy(console->dirname,dirname,255);
+  strncpy(console->dirname,dirname,255); 
+  *(console->dirname+255)=0; //2012-01-31 dtl: added string terminator
   console->trace=trace;
   nbListenerEnableOnDaemon(context);  // sign up to enable when we daemonize
   return(console);

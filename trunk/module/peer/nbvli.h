@@ -77,7 +77,7 @@ void vlipow(vliWord *x,vliWord *m,vliWord *e);
 void vligetb(vliWord *x,unsigned char *b,unsigned int l);
 void vliputb(vliWord *x,unsigned char *b,unsigned int l);
 void vligetd(vliWord *x,unsigned char *s);
-void vliputd(vliWord *x,unsigned char *s);
+void vliputd(vliWord *x,unsigned char *s,size_t ssize); //dtl added ssize
 void vliputx(vliWord *x,char *s);
 void vlipprime(vli x);
 void vlirprime(vli x,vli y);

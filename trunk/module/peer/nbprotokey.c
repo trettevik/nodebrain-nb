@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -64,6 +64,7 @@
 * 2001/07/21 Ed Trettevik (original prototype version 0.2.8)
 *             1) This code has been pulled from nodebrain.c.
 * 2008/10/31 eat 0.7.3  Renamed key file to nb_peer.key
+* 2012-01-12 dtl Vercadode updates
 *=============================================================================
 */
 #include "nbi.h"
@@ -88,7 +89,11 @@ int nbpSetIdentity(NB_PeerKey *peerKey,char *key){
   int len,part=0;
   char *value,*cursor; 
 
-  strcpy(keybuf,key);
+  if(snprintf(keybuf,sizeof(keybuf),"%s",key)>=sizeof(keybuf)){ //2012-01-31 dtl: replaced strcpy
+    // 2012-02-09 eat - included error response when key too large for buffer
+    nbLogMsgI(0,'E',"Invalid peer key \"%s\". Length greater than max of %d",key,sizeof(keybuf)-1);
+    return(1);
+    }
   len=strspn(keybuf,"0123456789abcdef");
   value=keybuf;
   cursor=value+len;

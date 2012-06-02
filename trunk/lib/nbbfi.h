@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -55,7 +55,7 @@ struct bfiindex{
 #define Range     2
 #define Span      3
 
-struct bfiindex *bfiIndexParse(char *s);
+struct bfiindex *bfiIndexParse(char *s,char *msg,int msglen);
 void   bfiIndexPrint(struct bfiindex *index);
 
 /*************************************************************************

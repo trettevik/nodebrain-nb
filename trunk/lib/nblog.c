@@ -118,6 +118,8 @@
 * 2008/11/11 eat 0.7.3  Changed "bail" exit code to 255.
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2012-01-26 dtl 0.8.6  Checker updates
+* 2012-05-12 eat 0.8.9  Increased width of dump lines from 16 to 32
 *=============================================================================
 */
 #include "nbi.h"
@@ -255,7 +257,7 @@ void outCheckReset(int opt,FILE *file){
  
 void outBail(){
   outStamp();
-  outPut("NB000I Bail option forced termination - exec code=%d",NB_EXITCODE_BAIL);
+  outPut("NB000I Bail option forced termination - exec code=%d\n",NB_EXITCODE_BAIL);
   outFlush();
   exit(NB_EXITCODE_BAIL);
   }
@@ -272,11 +274,18 @@ int outCheck(int option,char *cursor){
   static FILE *file;
   char filename[256];
   char *newline,*newlineIn;
+  int n;
 
   switch(option){
     case NB_CHECK_START: /* Allocate a buffer and open an output file */
-      strcpy(filename,cursor);
-      strcat(filename,"~");
+//    strcpy(filename,cursor);
+//    strcat(filename,"~");
+//2012-01-26 dtl: validate input string before use
+      if(((n=strlen(cursor))+1)<sizeof(filename)) {
+        strncpy(filename,cursor,n+1); //dtl: cp include 0 byte
+        strcat(filename,"~");         //dtl: checked len
+        }
+      else {outMsg(0,'E',"Input too big, length= %d",n);return(1);} //dtl: return error
       if(nb_OutCheckBuf==NULL) nb_OutCheckBuf=malloc(NB_BUFSIZE);
       *nb_OutCheckBuf=0;
       nb_OutCheckCur=nb_OutCheckBuf;
@@ -580,12 +589,15 @@ char *outUserDir(char *name){
 int nbLogMsg(nbCELL context,int msgNumber,char msgType,char *format,...){
   va_list args;
   int len;
-  char *termName,*skillName;
+  char termName[512];
+  //char *termName;
+  char *skillName;
   if(context->object.type!=termType){
     outMsg(0,'L',"Skill module called nbLogMsg() with invalid context - ignoring call");
     return(-1);
     }
-  termName=((NB_Term *)context)->word->value;
+  termGetName(termName,(NB_Term *)context,gloss);
+  //termName=((NB_Term *)context)->word->value;
   if(((NB_Node *)(((NB_Term *)context)->def))->cell.object.type!=nb_NodeType){
     outMsg(0,'L',"Skill module called nbLogMsg() with term %s which is not a node - ignoring call",termName);
     return(-1);
@@ -636,15 +648,15 @@ int nbLogPut(nbCELL context,char *format,...){
 */
 int nbLogDump(nbCELL context,void *data,int len){
   unsigned char *cursor=(unsigned char *)data,*dataend=(unsigned char *)data+len,*wordend;
-  unsigned char str[17],*strcur;
+  unsigned char str[33],*strcur;
   int word;
 
   while(cursor<dataend){
-    strcpy((char *)str,"................");
+    strcpy((char *)str,"................................");
     strcur=str;
     //nbLogPut(context,"%8.8x %4.4x ",cursor,cursor-(unsigned char *)data);
     nbLogPut(context,"%16.16x %4.4x ",cursor,cursor-(unsigned char *)data);
-    for(word=0;word<4 && cursor<dataend;word++){
+    for(word=0;word<8 && cursor<dataend;word++){
       wordend=cursor+4;
       while(cursor<wordend && cursor<dataend){
         nbLogPut(context,"%2.2x",*cursor);
@@ -662,7 +674,7 @@ int nbLogDump(nbCELL context,void *data,int len){
         }
       nbLogPut(context," ");
       }
-    for(;word<4;word++) nbLogPut(context,"........ ");
+    for(;word<8;word++) nbLogPut(context,"........ ");
     *strcur=0;
     nbLogPut(context,"%s\n",str);
     }

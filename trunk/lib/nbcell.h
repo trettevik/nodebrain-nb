@@ -85,7 +85,6 @@ void nbCellTypeSub(
 void *nbCellNew(NB_Type *type,void **pool,int length);
 NB_Object *nbCellSolve_(NB_Cell *cell);
 NB_Object *nbCellCompute_(NB_Cell *cell);
-void nbCellPublish(NB_Cell *pub);
 void nbCellShowSub(NB_Cell *cell);
 void nbCellShowImpact(NB_Cell *cell);
 void nbCellLevel(NB_Cell *pub);
@@ -215,21 +214,34 @@ extern nbCELL nbCellCompute(nbCELL context,nbCELL cell);
 __declspec(dllexport)
 #endif
 extern nbCELL nbCellSolve(nbCELL context,nbCELL cell);
+
+#if defined(WIN32)
+__declspec(dllexport)
+#endif
+extern void nbCellPublish(nbCELL pub);
+
 /* API String Functions */
 #if defined(WIN32)
 __declspec(dllexport)
 #endif
 extern nbCELL nbCellCreateString(nbCELL context,char *string);
+
 #if defined(WIN32)
 __declspec(dllexport)
 #endif
 extern char *nbCellGetString(nbCELL context,nbCELL cell);
+
+#if defined(WIN32)
+__declspec(dllexport)
+#endif
+extern char *nbCellGetText(nbCELL context,nbCELL cell);
 
 /* API Real Functions */
 #if defined(WIN32)
 __declspec(dllexport)
 #endif
 extern nbCELL nbCellCreateReal(nbCELL context,double real);
+
 #if defined(WIN32)
 __declspec(dllexport)
 #endif

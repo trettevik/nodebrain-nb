@@ -59,6 +59,10 @@
 * 2007/06/23 Ed Trettevik - original skill module prototype version
 * 2007/06/23 eat 0.6.8  Structured skill module around old FIFO listener code
 * 2007/07/22 eat 0.6.8  Modified reader to handle incomplete commands at end of buffer
+* 2011/06/23 eat 0.8.6  Remove and add listener when pipe is closed and reopened
+*            This is necessary because when a lower file descriptor is available,
+*            the close and open switches the pipe to the lower file descriptor.
+*            so we need to switch the listener.
 *=====================================================================
 */
 #include "config.h"
@@ -141,7 +145,9 @@ void pipeRead(nbCELL context,int serverSocket,void *handle){
     }
   else{
     if(pipe->trace) nbLogMsg(context,0,'T',"pipeRead: end of file reached");
+    nbListenerRemove(context,pipe->fildes);
     close(pipe->fildes);
+    pipe->fildes=0;
     if(pipe->cursor!=pipe->buffer){
       *(pipe->cursor)=0;
       nbLogPut(context,"] %s\n",pipe->buffer);
@@ -156,6 +162,7 @@ void pipeRead(nbCELL context,int serverSocket,void *handle){
 #endif
       nbLogMsg(context,0,'E',"pipeRead: unable to open FIFO %s (%d)",pipe->filename,pipe->fildes);
       }
+    nbListenerAdd(context,pipe->fildes,pipe,pipeRead);
     }
   }
 
@@ -262,6 +269,7 @@ int serverDisable(nbCELL context,void *skillHandle,NB_MOD_PipeReader *pipe){
   pipe->fildes=0;
   return(0);
   }
+
 
 /*
 *  command() method

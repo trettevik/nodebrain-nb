@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -19,7 +19,7 @@
 *=============================================================================
 * Program:  NodeBrain
 *
-* File:     nbstring.h 
+* File:     nbstring.c 
 *
 * Title:    String Object Methods
 *
@@ -90,6 +90,7 @@
 *            different.  Using int avoids that problem.
 * 2008-01-22 eat 0.6.9  Modified string allocation scheme
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2012-02-07 dtl Checker updates
 *=============================================================================
 */
 #include "nbi.h"
@@ -196,7 +197,7 @@ void initString(NB_Stem *stem){
 
 struct STRING *useString(char *value){
   struct STRING *string,**stringP,**freeStringP;
-  int size;
+  int size,i,valueSize;
   char *cursor;
   int r=1;  /* temp relation <0, 0, >0 */
   unsigned long h=0;
@@ -212,12 +213,14 @@ struct STRING *useString(char *value){
     stringP=(struct STRING **)&(string->object.next);
   if(string!=NULL && r==0) return(string);
 
-  size=sizeof(struct STRING)+strlen(value)+1;
+  valueSize=strlen(value)+1; //size of string->value which newObject will create
+  size=sizeof(struct STRING)+valueSize; //dtl: used valueSize (included string->value spaces) 
   if(size>NB_OBJECT_MANAGED_SIZE) freeStringP=NULL;
   else freeStringP=&nb_StringPool->vector[(size+7)/8]; 
   string=(struct STRING *)newObject(strType,(void **)freeStringP,sizeof(struct STRING)+size);
   string->object.next=(NB_Object *)*stringP;     
   *stringP=string;  
-  strcpy(string->value,value);
+//2012-02-07 dtl: above newObject() allocated spaces for string->value, safe to copy.
+  for(i=0;i<valueSize;i++) *(string->value+i)=*(value+i); //dtl: replace strcpy
   return(string);
   }

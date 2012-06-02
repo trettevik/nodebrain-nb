@@ -217,7 +217,7 @@ void *translatorConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *
   strcpy(translate->filename,filename);
   translate->trace=trace;
   translate->echo=echo;
-  translate->translator=nbTranslatorCompile(context,translate->filename);
+  translate->translator=nbTranslatorCompile(context,0,translate->filename);
   if(translate->translator==NULL){
     nbLogMsg(context,0,'E',"Unable to load translator");
     return(NULL);
@@ -248,6 +248,39 @@ int translatorAssert(nbCELL context,void *skillHandle,NB_MOD_Translator *transla
     cell=nbListGetCellValue(context,&argSet);
     }
   return(0);
+  }
+
+/*
+*  evaluate() method
+*
+*    ... <node>[(<args>)] ...
+*
+*    define c1 cell translator("str1","str2",...);
+*
+*    Each argument string is passed to the translator until a value other than
+*    "Unknown" is returned.  The value of the cell is the first "known" value,
+*    or "Unknown" if not value matches.
+*/
+static nbCELL translatorEvaluate(nbCELL context,void *skillHandle,NB_MOD_Translator *translate,nbCELL arglist){
+  nbCELL cell=NULL,value=NB_CELL_UNKNOWN;
+  nbSET argSet;
+  int type;
+  char *text;
+
+  argSet=nbListOpen(context,arglist);
+  cell=nbListGetCellValue(context,&argSet);
+  while(cell!=NULL){
+    type=nbCellGetType(context,cell);
+    if(type==NB_TYPE_STRING){
+      text=nbCellGetString(context,cell);
+      if(*text!=0){
+        value=nbTranslatorExecute(context,translate->translator,text);
+        if(value!=NB_CELL_UNKNOWN) return(value);
+        }
+      }
+    cell=nbListGetCellValue(context,&argSet);
+    }
+  return(value);
   }
 
 /*
@@ -290,6 +323,8 @@ int translatorCommand(nbCELL context,NB_MOD_TranslatorSkill *skillHandle,NB_MOD_
     }
   else if(cell==skillHandle->doStr){
     nbTranslatorDo(context,translate->translator,text);
+    nbCellPublish(context); // publish update to re-evaluate cell expressions
+    nbRuleReact();
     }
   else{
     nbLogMsg(context,0,'E',"Command not recognized");
@@ -297,6 +332,7 @@ int translatorCommand(nbCELL context,NB_MOD_TranslatorSkill *skillHandle,NB_MOD_
     }
   while((cell=nbListGetCellValue(context,&argSet))!=NULL){
     nbLogMsg(context,0,'W',"Extra argument ignored: %s",nbCellGetString(context,cell));
+    nbCellDrop(context,cell);
     }
   return(0);
   }
@@ -332,6 +368,7 @@ extern void *translatorBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCEL
 
   nbSkillSetMethod(context,skill,NB_NODE_CONSTRUCT,translatorConstruct);
   nbSkillSetMethod(context,skill,NB_NODE_ASSERT,translatorAssert);
+  nbSkillSetMethod(context,skill,NB_NODE_EVALUATE,translatorEvaluate);
   nbSkillSetMethod(context,skill,NB_NODE_SHOW,translatorShow);
   nbSkillSetMethod(context,skill,NB_NODE_COMMAND,translatorCommand);
   nbSkillSetMethod(context,skill,NB_NODE_DESTROY,translatorDestroy);

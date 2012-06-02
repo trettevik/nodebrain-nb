@@ -33,11 +33,11 @@
 *
 *   #include "nb.h"
 *
-*   nbCELL nbTranslatorCompile(nbCELL context,char *filename);
+*   nbCELL nbTranslatorCompile(nbCELL context,int reFlags,char *filename);
 *
-*   void nbTranslatorExecute(nbCELL context,nbCELL translator,char *string);
+*   nbCELL nbTranslatorExecute(nbCELL context,nbCELL translator,char *string);
 *
-*   void nbTranslatorExecuteFile(nbCELL context,nbCELL translator,char *filename);
+*   nbCELL nbTranslatorExecuteFile(nbCELL context,nbCELL translator,char *filename);
 *
 * Description:
 *
@@ -133,6 +133,14 @@
 *
 *          : any NodeBrain command to end-of-line
 *
+*     $( - set return value to present value of cell expression
+*
+*          $(<cellExpression>)
+*
+*     $  - include statement (sources in another translator file)
+*  
+*          $filename
+*
 *     ~  - "link" statement (links to another translator file)
 *
 *          ~filename
@@ -141,7 +149,7 @@
 *     
 *     ^     - verify branches exist up until next
 *     ?     - show after update (follows branch)
-
+*
 *   Edit Operators:
 *     
 *     >[n]  - insert after statement n (after last if n not specified)
@@ -296,6 +304,17 @@
 * 2010-02-26 eat 0.7.9  cleaned up to remove -Wall warning messages (gcc 4.1.2)
 * 2010-02-28 eat 0.7.9  cleaned up to remove -Wall warning messages (gcc 4.5.0)
 * 2011-02-10 eat 0.8.5  turned echo off on call to nbCmd
+* 2011-10-15 eat 0.8.6  modified nbTranslatorExecute to return a cell value
+*                       
+*            This enables the use of a translator for classification.  For
+*            example, URL strings might be classified to determine the level
+*            of authority required for access at a web site.
+*
+*            We've included "$" as a valid first character of a translator
+*            line for this purpose.  It must be followed immediately by a
+*            cell expression enclosed in parentheses, "$(<expression)", which
+*            is consistent with the "value of" syntax in NodeBrain cell
+*            expressions.
 *=============================================================================
 */
 #include "nbi.h"
@@ -691,6 +710,13 @@ void nbTranslatorShowInstruction(struct NB_XI *xi,int level,struct REGEXP_STACK 
         xi=xi->next;
         }
       break;
+    case NB_XI_OPER_VALUE:
+      outPut("$(");
+      printObject((NB_Object *)xi->item.cell);
+      outPut(")");
+      if(xi->nest) nbTranslatorShowList(xi->nest,level+1,reStackP);
+      else outPut("\n");
+      break;
     default:
       outPut("?OPER?");
       if(xi->nest) nbTranslatorShowList(xi->nest,level+1,reStackP);
@@ -804,7 +830,8 @@ struct NB_XI_STACK_ENTRY{
   struct NB_XI_STACK_ENTRY *matchThruP;
   };
 
-void nbTranslatorExecute(NB_Cell *context,NB_Cell *translator,char *source){
+nbCELL nbTranslatorExecute(NB_Cell *context,NB_Cell *translator,char *source){
+  nbCELL value=NB_CELL_UNKNOWN;
   struct NB_XI    *xi,*xiNode;
   char *cursor,*found;
   int i,len;
@@ -870,6 +897,7 @@ void nbTranslatorExecute(NB_Cell *context,NB_Cell *translator,char *source){
           xcStackP->textbuf=textbuf;      // keep track of buffer for generating new text
           text=text+xcStackP->ovector[1]; // match on rest of text by default
           xi=xi->nest;
+          if(!xi) value=NB_CELL_TRUE;
           }
         else xcStackP--,xi=xi->next;
         break;
@@ -886,10 +914,10 @@ void nbTranslatorExecute(NB_Cell *context,NB_Cell *translator,char *source){
             }
           else xiStackP=xiStackP->matchThruP;
           xi=xiNode->nest;
+          if(!xi) value=NB_CELL_TRUE;
           }
         nbCellDrop(context,stringCell);
         break;
-
       case NB_XI_OPER_TRANSFORM:
         xiStackP++;
         xiStackP->xi=xi;
@@ -962,6 +990,10 @@ void nbTranslatorExecute(NB_Cell *context,NB_Cell *translator,char *source){
           xi=xi->nest;
           }
         break;
+      case NB_XI_OPER_VALUE:  // assign value
+        value=xi->item.cell;
+        xi=xi->next;
+        break;
       default:
         if(xi->oper&NB_XI_OPER_DISABLED) xi=xi->next;
         else{
@@ -979,6 +1011,7 @@ void nbTranslatorExecute(NB_Cell *context,NB_Cell *translator,char *source){
       }
     //else outMsg(0,'T',"Not trying to continue");
     }
+  return(value);   // return last assigned value
   }
 
 void nbTranslatorExecuteFile(nbCELL context,nbCELL translator,char *filename){
@@ -1166,7 +1199,7 @@ struct NB_XI *nbTranslatorInsertBranch(struct NB_XI *xiParent,nbCELL object,unsi
   return(xi);
   }
 
-int nbTranslatorInclude(nbCELL context,char *filename,struct REGEXP_STACK *reStackP,int nsub[],int level,int *depthP,struct NB_XI *xiParent);
+static int nbTranslatorInclude(nbCELL context,char *filename,struct REGEXP_STACK *reStackP,int nsub[],int level,int *depthP,struct NB_XI *xiParent,int reFlags);
 
 /*
 *  Parse translator statement
@@ -1176,7 +1209,7 @@ int nbTranslatorInclude(nbCELL context,char *filename,struct REGEXP_STACK *reSta
 *     0 - syntax error
 *     1 - valid statement
 */
-int nbTranslatorParseStmt(nbCELL context,char *cursor,char *source,FILE *file,struct REGEXP_STACK *reStackP,int nsub[],int level,int *depthP,struct NB_XI *xiParent,unsigned char flag){
+static int nbTranslatorParseStmt(nbCELL context,char *cursor,char *source,FILE *file,struct REGEXP_STACK *reStackP,int nsub[],int level,int *depthP,struct NB_XI *xiParent,unsigned char flag,int reFlags){
   //char symid;
   char ident[512];
   //struct NB_XI **xiP;
@@ -1291,7 +1324,7 @@ int nbTranslatorParseStmt(nbCELL context,char *cursor,char *source,FILE *file,st
 
     case '?':
       cursor++;
-      rc=nbTranslatorParseStmt(context,cursor,source,file,reStackP,nsub,level,depthP,xiParent,flag);
+      rc=nbTranslatorParseStmt(context,cursor,source,file,reStackP,nsub,level,depthP,xiParent,flag,reFlags);
       outPut("-->\n  ");
       nbTranslatorShowInstruction(xiParent,1,reStackP);
       outPut("--<\n  ");
@@ -1302,7 +1335,7 @@ int nbTranslatorParseStmt(nbCELL context,char *cursor,char *source,FILE *file,st
       xi=nbAlloc(sizeof(struct NB_XI));
       memset(xi,0,sizeof(struct NB_XI));
       xi->oper=NB_XI_OPER_LABEL;
-      if(!nbTranslatorParseStmt(context,cursor,source,file,reStackP,nsub,level,&depth,xi,0)){
+      if(!nbTranslatorParseStmt(context,cursor,source,file,reStackP,nsub,level,&depth,xi,0,reFlags)){
         nbTranslatorFreeList(xi);
         return(0);
         }
@@ -1345,7 +1378,7 @@ int nbTranslatorParseStmt(nbCELL context,char *cursor,char *source,FILE *file,st
           *delim=0;
           delim--;
           }
-        if(!nbTranslatorParseStmt(context,cursor,source,file,reStackP,nsub,level,depthP,xiNode,flag)) return(0);
+        if(!nbTranslatorParseStmt(context,cursor,source,file,reStackP,nsub,level,depthP,xiNode,flag,reFlags)) return(0);
         }
       outMsg(0,'E',"End of file reached before closing brace '}'");
       return(0);
@@ -1370,7 +1403,7 @@ int nbTranslatorParseStmt(nbCELL context,char *cursor,char *source,FILE *file,st
       stringCell=nbCellCreateString(context,cursor);
       xi=nbTranslatorInsertBranch(xiNode,(nbCELL)stringCell,NB_XI_OPER_STRING,flag,position,cursor);
       if(!xi) return(0);
-      if(!nbTranslatorParseStmt(context,delim+1,source,file,reStackP,nsub,level,depthP,xi,flag)) return(0);
+      if(!nbTranslatorParseStmt(context,delim+1,source,file,reStackP,nsub,level,depthP,xi,flag,reFlags)) return(0);
       return(1);
 
     case '(':
@@ -1390,7 +1423,9 @@ int nbTranslatorParseStmt(nbCELL context,char *cursor,char *source,FILE *file,st
       curthen--;
       *curthen=0; /* terminate regular expression */
 
-      regexCell=newRegexp(cursor,0);
+      //regexCell=newRegexp(cursor,0);
+      //regexCell=newRegexp(cursor,PCRE_MULTILINE);
+      regexCell=newRegexp(cursor,reFlags);
       if(!regexCell) return(0);
       grabObject(regexCell);
       if(regexCell->nsub>PROJECTION_PARENS){
@@ -1410,7 +1445,7 @@ int nbTranslatorParseStmt(nbCELL context,char *cursor,char *source,FILE *file,st
       reStackP->count++;         // increment regular expression count
       cursor=curthen+1;
       while(*cursor==' ') cursor++;
-      if(!nbTranslatorParseStmt(context,cursor,source,file,reStackP,nsub,level+1,depthP,xi,flag)) return(0);
+      if(!nbTranslatorParseStmt(context,cursor,source,file,reStackP,nsub,level+1,depthP,xi,flag,reFlags)) return(0);
       reStackP->count=reCount;   // restore regular expression count
       return(1);
 
@@ -1440,7 +1475,7 @@ int nbTranslatorParseStmt(nbCELL context,char *cursor,char *source,FILE *file,st
       if(xi==NULL) return(0);
       cursor=curthen+1;
       nsub[level+1]=nsub[level];
-      if(!nbTranslatorParseStmt(context,cursor,source,file,reStackP,nsub,level+1,depthP,xi,0)) return(0);
+      if(!nbTranslatorParseStmt(context,cursor,source,file,reStackP,nsub,level+1,depthP,xi,0,reFlags)) return(0);
       if(xi->nest==NULL) outMsg(0,'W',"Projection branch has no content");
       return(1);
 
@@ -1461,14 +1496,42 @@ int nbTranslatorParseStmt(nbCELL context,char *cursor,char *source,FILE *file,st
       if(!nbTranslatorInsertList(xi,xiParent,flag,position)) return(0);
       return(1);
 
-    case '$':  // translator file include
+    case '$':  // translator file include or return value setting
       cursor++;
-      while(*cursor==' ') cursor++;
+      if(*cursor=='('){  // return value setting
+        cursor++;
+        xi=nbAlloc(sizeof(struct NB_XI));
+        memset(xi,0,sizeof(struct NB_XI));
+        xi->item.cell=(nbCELL)nbParseCell((NB_Term *)context,&cursor,0);
+        if(!xi->item.cell){
+          outMsg(0,'E',"Syntax error at-->%s",*cursor);
+          nbFree(xi,sizeof(struct NB_XI));
+          return(0);
+          }
+        if(*cursor!=')'){
+          outMsg(0,'E',"Unbalanced parentheses [%s].",*cursor);
+          nbFree(xi,sizeof(struct NB_XI));
+          return(0);
+          }
+        xi->item.cell=nbCellCompute(context,xi->item.cell);  // get the value of the cell
+        if(flag&NB_XI_FLAG_MATCHTHRU){
+          outMsg(0,'W',"Continue operator '@' is implied for command statement.");
+          flag^=NB_XI_FLAG_MATCHTHRU;
+          }
+        xi->oper=NB_XI_OPER_VALUE;
+        xi->flag|=flag;
+        if(!nbTranslatorInsertList(xi,xiParent,flag,position)) return(0);
+        outMsg(0,'T',"Inserted value operation");
+        return(1);
+        }
+        
+      // translator file include
+      while(*cursor==' ') cursor++;    
       xiNode=nbAlloc(sizeof(struct NB_XI));
       memset(xiNode,0,sizeof(struct NB_XI));
       xiNode->oper=NB_XI_OPER_FILE;
       nsub[level+1]=nsub[level];
-      if(!nbTranslatorInclude(context,cursor,reStackP,nsub,level+1,depthP,xiNode)){
+      if(!nbTranslatorInclude(context,cursor,reStackP,nsub,level+1,depthP,xiNode,reFlags)){
         nbTranslatorFreeList(xiNode);
         return(0);
         }
@@ -1481,7 +1544,7 @@ int nbTranslatorParseStmt(nbCELL context,char *cursor,char *source,FILE *file,st
       cursor++;
       while(*cursor==' ') cursor++;
       //if((translator=(NB_Translator *)nbTranslatorParse(context,cursor,nsub))==NULL){
-      if((translator=(NB_Translator *)nbTranslatorCompile(context,cursor))==NULL){
+      if((translator=(NB_Translator *)nbTranslatorCompile(context,reFlags,cursor))==NULL){
         outMsg(0,'E',"Unable to load nested translator \"%s\"",cursor);
         return(0);
         }
@@ -1514,7 +1577,7 @@ int nbTranslatorParseStmt(nbCELL context,char *cursor,char *source,FILE *file,st
         xi=nbTranslatorInsertBranch(xiParent,(nbCELL)stringCell,NB_XI_OPER_LABEL,flag|NB_XI_FLAG_FAILTHRU,position,cursor);
         if(!xi) return(0);
         nsub[level+1]=nsub[level];
-        if(!nbTranslatorParseStmt(context,cursor,source,file,reStackP,nsub,level+1,depthP,xi,flag)) return(0);
+        if(!nbTranslatorParseStmt(context,cursor,source,file,reStackP,nsub,level+1,depthP,xi,flag,reFlags)) return(0);
         if(xi->nest==NULL) outMsg(0,'W',"Label branch has no content");
         return(1);
         }
@@ -1532,7 +1595,7 @@ int nbTranslatorParseStmt(nbCELL context,char *cursor,char *source,FILE *file,st
 *  Load translator command list
 */
 
-int nbTranslatorInclude(nbCELL context,char *filename,struct REGEXP_STACK *reStackP,int nsub[],int level,int *depthP,struct NB_XI *xiParent){
+static int nbTranslatorInclude(nbCELL context,char *filename,struct REGEXP_STACK *reStackP,int nsub[],int level,int *depthP,struct NB_XI *xiParent,int reFlags){
   char source[NB_BUFSIZE];
   FILE *file;
   char *delim;
@@ -1556,7 +1619,7 @@ int nbTranslatorInclude(nbCELL context,char *filename,struct REGEXP_STACK *reSta
       *delim=0;
       delim--;
       }   
-    if(!nbTranslatorParseStmt(context,source,source,file,reStackP,nsub,level,depthP,xiParent,0)){
+    if(!nbTranslatorParseStmt(context,source,source,file,reStackP,nsub,level,depthP,xiParent,0,reFlags)){
       fclose(file);
       outBar();
       outMsg(0,'E',"Translator \"%s\" failed to load.",filename);
@@ -1569,7 +1632,7 @@ int nbTranslatorInclude(nbCELL context,char *filename,struct REGEXP_STACK *reSta
   return(1);
   }
 
-nbCELL nbTranslatorCompile(nbCELL context,char *filename){
+nbCELL nbTranslatorCompile(nbCELL context,int reFlags,char *filename){
   NB_Translator *translator,**translatorP;
   struct NB_XI *xi;
   NB_String *filenameObject;
@@ -1591,7 +1654,7 @@ nbCELL nbTranslatorCompile(nbCELL context,char *filename){
   memset(xi,0,sizeof(struct NB_XI));
   xi->item.cell=(nbCELL)filenameObject;
   xi->oper=NB_XI_OPER_FILE;
-  if(!nbTranslatorInclude(context,filename,&reStack,nsub,1,&depth,xi)){
+  if(!nbTranslatorInclude(context,filename,&reStack,nsub,1,&depth,xi,reFlags)){
     dropObject(filenameObject);
     nbTranslatorFreeList(xi);
     return(NULL);
@@ -1618,7 +1681,7 @@ int nbTranslatorRefresh(nbCELL context,nbCELL translatorCell){
   xiNode=nbAlloc(sizeof(struct NB_XI));
   memset(xiNode,0,sizeof(struct NB_XI));
   xiNode->oper=NB_XI_OPER_FILE;
-  if(!nbTranslatorInclude(context,translator->filename->value,&reStack,nsub,1,&depth,xiNode)){
+  if(!nbTranslatorInclude(context,translator->filename->value,&reStack,nsub,1,&depth,xiNode,translator->reFlags)){
     nbTranslatorFreeList(xiNode);
     return(-1);
     }
@@ -1638,6 +1701,6 @@ int nbTranslatorDo(nbCELL context,nbCELL translatorCell,char *text){
 
   reStack.count=0;
   nsub[0]=0;
-  if(!nbTranslatorParseStmt(context,text,source,file,&reStack,nsub,level,&depth,translator->xi,flag)) return(-1);
+  if(!nbTranslatorParseStmt(context,text,source,file,&reStack,nsub,level,&depth,translator->xi,flag,translator->reFlags)) return(-1);
   return(0);
   }

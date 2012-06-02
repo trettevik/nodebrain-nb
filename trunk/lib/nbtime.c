@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -155,6 +155,7 @@
 * 2008/02/08 eat 0.6.9  Removed calendar hash
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010/02/28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2012-01-26 dtl Checker updates
 *=============================================================================
 */
 #define _USE_32BIT_TIME_T
@@ -199,8 +200,8 @@ char *tcTimeString(char *str,long timer){
   day[5]="fr";
   day[6]="sa";
   timeTm=localtime((const time_t *)&timer);
-  if(timeTm==NULL) strcpy(str,".................................");
-  else sprintf(str,"%s %4.4d/%2.2d/%2.2d %2.2d:%2.2d:%2.2d %10.10ld",day[timeTm->tm_wday],timeTm->tm_year+1900,timeTm->tm_mon+1,timeTm->tm_mday,timeTm->tm_hour,timeTm->tm_min,timeTm->tm_sec,timer);
+  if(timeTm==NULL) snprintf(str,34,"%s",".................................");
+  else snprintf(str,34,"%s %4.4d/%2.2d/%2.2d %2.2d:%2.2d:%2.2d %10.10ld",day[timeTm->tm_wday],timeTm->tm_year+1900,timeTm->tm_mon+1,timeTm->tm_mday,timeTm->tm_hour,timeTm->tm_min,timeTm->tm_sec,timer);
   return(str);
   }
   
@@ -286,7 +287,7 @@ long tcAlignYearMonth(long timer,int month){
   timeTm=localtime((const time_t *)&timer);
   if(timeTm==NULL) return(never);
   if(timeTm->tm_mon>month) timeTm->tm_year++;
-  timeTm->tm_mon=month-1;
+  if((month-1)>=INT_MIN) timeTm->tm_mon=month-1; //dtl: added check
   timeTm->tm_mday=1;
   timeTm->tm_hour=0;
   timeTm->tm_min=0;
@@ -326,7 +327,7 @@ long tcAlignWeekDay(long timer,int wday){
   
   timeTm=localtime((const time_t *)&timer);
   if(timeTm==NULL) return(never);
-  if(timeTm->tm_wday>wday) wday=wday+7;
+  if(timeTm->tm_wday>wday && (wday+7)<=INT_MAX) wday=wday+7; //dtl: added check
   timeTm->tm_mday+=wday-timeTm->tm_wday;
   timeTm->tm_hour=0;
   timeTm->tm_min=0;
@@ -1249,7 +1250,8 @@ struct tcParm *tcParseParm(struct tcFunction *function,char **source,char *msg){
     }
   (*source)++;
   while(1){
-    tcParm=(struct tcParm *)malloc(sizeof(struct tcParm));
+    if((tcParm=(struct tcParm *)malloc(sizeof(struct tcParm)))==NULL) //2012-01-26 dtl: handled out of memory
+      {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
     tcParm->next=tcParmnext;        
     if(!tcParsePattern(tcParm->start,function,source,msg)){
       tcParmFree(tcParm);
@@ -1323,7 +1325,7 @@ tc tcParseFunction(char **source,char *msg){
   if(*name>='A' && *name<='Z'){  /* user declared time expression */
     if((term=nbTimeLocateCalendar(name))==NULL){
       *cursor=mark;   /* repare the source */
-      sprintf(msg,"NB000E Time function \"%s\" not declared.",name);
+      snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Time function \"%s\" not declared.",name); //dtl used snprintf
       return(NULL);  /* return without updating the source pointer */
       }
     *cursor=mark;   /* repare the source */
@@ -1351,7 +1353,8 @@ tc tcParseFunction(char **source,char *msg){
       }
     }
   /* build a tcDef structure */
-  tcdef=(tc)malloc(sizeof(struct tcDef));
+  if((tcdef=(tc)malloc(sizeof(struct tcDef)))==NULL) //2012-01-26 dtl: handled out of memory
+    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
   tcdef->operation=operation;
   tcdef->left=function;
   tcdef->right=right;  
@@ -1381,7 +1384,8 @@ tc tcParseLeft(nbCELL context,char **source,char *msg){
   if(*cursor=='{'){  /* plan? */
     cursor++;
     if((right=(void *)nbRuleParse(context,1,&cursor,msg))==NULL) return(NULL);
-    tcdef=(tc)malloc(sizeof(struct tcDef));
+    if((tcdef=(tc)malloc(sizeof(struct tcDef)))==NULL) //2012-01-26 dtl: handled out of memory
+      {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
     tcdef->operation=tcPlan;
     tcdef->left=((NB_Rule *)right)->plan;
     tcdef->right=right;
@@ -1414,7 +1418,8 @@ tc tcParseLeft(nbCELL context,char **source,char *msg){
     return(NULL);
     }
   /* build a tcDef structure */
-  tcdef=(struct tcDef *)malloc(sizeof(struct tcDef));
+  if((tcdef=(struct tcDef *)malloc(sizeof(struct tcDef)))==NULL) //2012-01-26 dtl: handled out of memory
+    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
   tcdef->operation=operation;
   tcdef->left=left;
   tcdef->right=right;
@@ -1427,6 +1432,7 @@ tc tcParse(nbCELL context,char **source,char *msg){
   char *cursor=*source,*index;
   bfi (*operation)();
   void *right;
+  char indexMsg[512];
 
   if((left=tcParseLeft(context,&cursor,msg))==NULL){
     *source=cursor;
@@ -1459,14 +1465,16 @@ tc tcParse(nbCELL context,char **source,char *msg){
     *  Note: need to change bfiIndexParse to conform to tcParse routines
     *          right=bfiIndexParse(&index,msg);
     */
-    if((right=bfiIndexParse(index))==NULL){
-      sprintf(msg,"NB000E Invalid index \"%s\" index.",index);
+    if((right=bfiIndexParse(index,indexMsg,sizeof(indexMsg)))==NULL){
+      sprintf(msg,"NB000E Invalid index \"%s\". %s",index,indexMsg);
       *source=cursor;
+      *cursor=']';
       return(NULL);
       }
     *cursor=']';
     /* build a tcDef structure for index operation */
-    tcdef=(tc)malloc(sizeof(struct tcDef));
+    if((tcdef=(tc)malloc(sizeof(struct tcDef)))==NULL) //2012-01-26 dtl: handled out of memory
+      {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
     tcdef->operation=tcIndex;
     tcdef->left=left;
     tcdef->right=right;
@@ -1499,7 +1507,8 @@ tc tcParse(nbCELL context,char **source,char *msg){
     return(NULL);
     }  
   /* build a tcDef structure */
-  tcdef=(tc)malloc(sizeof(struct tcDef));
+  if((tcdef=(tc)malloc(sizeof(struct tcDef)))==NULL) //2012-01-26 dtl: handled out of memory
+    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
   tcdef->operation=operation;
   tcdef->left=left;
   tcdef->right=right;
@@ -1522,7 +1531,8 @@ tc tcParse(nbCELL context,char **source,char *msg){
 tcq tcQueueNew(tc tcdef,long begin,long end){
   tcq queue;
   
-  queue=(tcq)malloc(sizeof(struct tcQueue));
+  if((queue=(tcq)malloc(sizeof(struct tcQueue)))==NULL) //2012-01-26 dtl: handled out of memory
+    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
   queue->tcdef=tcdef;
   /* we don't cast a stand-alone time procedure */
   /* instead we let schedNext() call nbRuleStep() */
@@ -1605,7 +1615,7 @@ NB_Term *nbTimeDeclareCalendar(nbCELL context,char *ident,char **source,char *ms
   struct STRING *text;
   char *cursor=*source,*string,delim;
   if(nbTermFind(nb_TimeCalendarContext,ident)!=NULL){
-    sprintf(msg,"NB000E Calendar \"%s\" already declared.",ident);
+    snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Calendar \"%s\" already declared.",ident); //dtl used snprintf
     return(NULL);
     }
   while(*cursor==' ') cursor++;

@@ -152,7 +152,7 @@ int nbSourceIf(nbCELL context,FILE *file,char *buf,char *cursor){
     cursor++;
     addrContext=symContext;
     if(NULL==(object=grabObject(nbParseCell(symContext,&cursor,0)))){
-      outMsg(0,'E',"Error in %cif condition - script terminating.");
+      outMsg(0,'E',"Error in %%if condition - script terminating.");
       addrContext=addrContextSave;
       return(-1);
       }
@@ -162,7 +162,7 @@ int nbSourceIf(nbCELL context,FILE *file,char *buf,char *cursor){
       outPut("\n");
       }
     addrContext=addrContextSave;
-    if((value=object->type->compute(object))==NB_OBJECT_TRUE) doif=1;
+    if((value=object->type->compute(object))!=NB_OBJECT_FALSE && value!=nb_Unknown) doif=1;
     dropObject(object);
     if(sourceTrace){
       outPut("Value: ");
@@ -257,8 +257,12 @@ int nbSourceTil(nbCELL context,FILE *file){
           else if(strcmp(ident,"else")==0) return(2);
           else if(strcmp(ident,"elseif")==0) return(3);
           else if(strcmp(ident,"if")==0) nbSourceIf(context,file,buf,cursor);
-          else if(strcmp(ident,"assert")==0 && nbLet(cursor,symContext,0)!=0) return(-1);
-          else if(strcmp(ident,"default")==0 && nbLet(cursor,symContext,1)!=0) return(-1);
+          else if(strcmp(ident,"assert")==0){
+            if(nbLet(cursor,symContext,0)!=0) return(-1);
+            }
+          else if(strcmp(ident,"default")==0){
+            if(nbLet(cursor,symContext,1)!=0) return(-1);
+            }
           else if(strcmp(ident,"include")==0) nbSource(context,cursor);
           else{
             outMsg(0,'E',"Directive \"%s\" not recognized.",ident);

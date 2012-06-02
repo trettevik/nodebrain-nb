@@ -203,7 +203,7 @@ void *auditConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text)
     return(NULL);
     }
 
-  translatorCell=nbTranslatorCompile(context,translatorName);
+  translatorCell=nbTranslatorCompile(context,0,translatorName);
   if(translatorCell==NULL){
     nbLogMsg(context,0,'E',"Unable to load translator '%s'",translatorName);
     return(NULL);

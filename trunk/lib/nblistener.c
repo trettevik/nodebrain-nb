@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -85,6 +85,7 @@
 * 2008-11-11 eat 0.7.3  Changed failure exit code to NB_EXITCODE_FAIL
 * 2010-01-02 eat 0.7.7  Included type to enable separate read and write listeners
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2012-01-31 dtl 0.8.6  Checker updates
 *=============================================================================
 */
 #include "nbi.h"
@@ -325,7 +326,9 @@ extern int nbListenerStart(nbCELL context){
       }
     // change root directory (jail) if requested
     if(*servejail!=0){
-      if(chroot(servejail)<0){
+//    if(chroot(servejail)<0){
+      if(chroot(servejail)>=0) chdir(servejail); //2012-01-31 dtl: added chdir for safe 
+      else{
         outMsg(0,'E',"Unable to change root directory to %s - errno=%d",servejail,errno);
         exit(NB_EXITCODE_FAIL);
         }

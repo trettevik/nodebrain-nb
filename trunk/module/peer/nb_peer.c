@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -99,6 +99,8 @@
 * 2008/03/07 eat 0.6.9  Moved parsing for self identity to nbBrainNew()
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
+* 2012-01-31 dtl 0.8.7  Checker updates.
+* 2012-02-09 eat 0.8.7  Reviewed Checker
 *=====================================================================
 */
 //#include "config.h"
@@ -156,7 +158,7 @@ nbServer *newServer(nbCELL context,char *cursor,char *oar,char *msg){
   cursor++;
   server->identity=nbpGetPeerKey(server->idName);
   if(server->identity==NULL){
-    sprintf(msg,"Identity '%s' not defined",server->idName);
+    snprintf(msg,(size_t)NB_MSGSIZE,"Identity '%s' not defined",server->idName); //2012-01-31 dtl: replaced sprintf
     free(server);
     return(NULL);
     }
@@ -173,7 +175,7 @@ nbServer *newServer(nbCELL context,char *cursor,char *oar,char *msg){
       strcpy(server->hostname,server->address);
       interfaceAddr=chgetaddr(server->address);
       if(interfaceAddr==NULL){
-        sprintf(msg,"Hostname %s not resolved",server->hostname);
+        snprintf(msg,(size_t)NB_MSGSIZE,"Hostname %s not resolved",server->hostname); //2012-01-31 dtl: replaced sprintf
         free(server);
         return(NULL);
         }
@@ -185,7 +187,7 @@ nbServer *newServer(nbCELL context,char *cursor,char *oar,char *msg){
       else strcpy(server->hostname,interfaceAddr);
       }
     if(*cursor!=':'){
-      sprintf(msg,"Expecting ':port' at: %s",cursor);
+      snprintf(msg,(size_t)NB_MSGSIZE,"Expecting ':port' at: %s",cursor); //2012-01-31 dtl: replaced sprintf
       free(server);
       return(NULL);
       }
@@ -226,7 +228,7 @@ void serverAccept(nbCELL context,int serverSocket,void *handle){
     }
   else{
     //2008-06-11 eat - the next line is a goofy attept to provide a Unix domain socket name for nbpServe to print
-    if(server->port==0) strcpy(session->channel->unaddr,server->address); 
+    if(server->port==0) snprintf(session->channel->unaddr,256,"%s",server->address); //2012-01-31 dtl: replaced strcpy
     nbpServe(server->ear,session,1,server->oar);
     }
   }
@@ -563,8 +565,8 @@ int clientCommand(nbCELL context,void *skillHandle,nbClient *peer,nbCELL arglist
     /* in the future allow an option to declare a peer as not embraceable---never connecting back */
     if(nb_mode_embraceable && option!=0){
       char name[512];
-      if(option==2) sprintf(cmd,":%s:%s",nbNodeGetNameFull(context,name),text);
-      else sprintf(cmd,":%s(%d):%s",nbNodeGetNameFull(context,name),option,text);
+      if(option==2) snprintf(cmd,sizeof(cmd),":%s:%s",nbNodeGetNameFull(context,name),text); //dtl: replaced sprintf
+      else snprintf(cmd,sizeof(cmd),":%s(%d):%s",nbNodeGetNameFull(context,name),option,text); //dtl: replaced sprintf
       nbSpawnSkull(context,NULL,cmd);
       nbIdentitySetActive(context,clientIdentityStore);
       return(0);
@@ -935,7 +937,7 @@ void *skullConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text)
     }
   session->channel->socket=socket;
   nbIpGetSocketIpAddrString(socket,ipaddr);
-  strcpy(session->channel->ipaddr,ipaddr);
+  snprintf(session->channel->ipaddr,16,"%s",ipaddr); //2012-02-07 dtl: replaced strcpy
   nbLogMsg(context,0,'I',"Reading from %s socket %d",session->channel->ipaddr,session->channel->socket);
   nbLogFlush(context);
   skull_socket=socket;      // set global variable
