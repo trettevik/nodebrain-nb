@@ -1,8 +1,8 @@
-makeinfo --html --no-split --number-sections baseline.texi
-makeinfo --plaintext --no-split --number-sections --output=baseline.txt baseline.texi
-makeinfo --docbook --no-split --number-sections --output=baselineDocBook.xml baseline.texi
-makeinfo --xml --no-split --number-sections baseline.texi
-makeinfo --no-split --number-sections baseline.texi
+makeinfo --html --no-split --number-sections nb_baseline.texi
+makeinfo --plaintext --no-split --number-sections --output=nb_baseline.txt nb_baseline.texi
+makeinfo --docbook --no-split --number-sections --output=nb_baselineDocBook.xml nb_baseline.texi
+makeinfo --xml --no-split --number-sections nb_baseline.texi
+makeinfo --no-split --number-sections nb_baseline.texi
 
-./texi4pdf baseline.texi > baseline.texi4pdf
-texi2pdf -D -V -o baseline.pdf baseline.texi4pdf
+./texi4pdf nb_baseline.texi > nb_baseline.texi4pdf
+texi2pdf -D -V -o nb_baseline.pdf nb_baseline.texi4pdf
