@@ -1,0 +1,596 @@
+\input texinfo   @c -*-texinfo-*-
+@c %**start of header
+@setfilename nb_cache.info
+@include version.texi
+@settitle Cache Module
+@c %**end of header
+
+@finalout
+@paragraphindent none
+@setchapternewpage odd
+
+@copying
+Cache Module@*
+March 2011@*
+The Boeing Company,  P.O. Box 3707, Seattle, WA 98124, USA
+
+@sp 2
+@b{Release 0.8}
+
+Author: Ed Trettevik <eat@@nodebrain.org>
+
+Copyright @copyright{} 2006, 2007, 2008, 2009, 2010, 2011 The Boeing Company
+
+@sp 1
+Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} preceding the index at the end of this document.
+
+@sp 1
+NodeBrain(TM) is a trademark of The Boeing Company.   All other trademarks and registered trademarks referenced in this document are the trademarks of their respective owners.
+
+@sp 2
+@b{Software License}
+
+@multitable {------------------------------} {----------------------------------------------------}
+@item Copyright @copyright{} 1998--2010 @tab The Boeing Company
+@item @tab Ed Trettevik <eat@@nodebrain.org>
+@end multitable
+
+NodeBrain is free software; you can redistribute it and/or  modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option)any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License formore details.
+
+You should have received a copy of the GNU General PublicLicense along with this program; if not, write to Free Software Foundation,Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+@end copying
+
+@iftex
+@titlepage
+@c @image{./image001,32pt,32pt,,gif}
+
+@titlefont{Cache Module}
+@sp 1
+@tex
+\vskip4pt \hrule height 3pt width \hsize
+@end tex
+@sp 3
+@b{Release @value{VERSION}}
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+
+@c History Preface and Document Conventions 
+@page
+@b{History}
+
+@multitable {-------------} {--------------------------------------------------------------------------------------------------------}
+@item 2005-10-12 @tab
+Title: @i{NodeBrain  Tutorial}@*  
+Author: Ed  Trettevik <eat@@nodebrain.org>@*
+Publisher: The Boeing Company
+
+@item 2010-12-31 @tab
+Release 0.8.3
+@itemize @bullet
+@item Updates - still needed
+@end itemize
+
+@end multitable
+
+@page
+@b{Preface}
+
+@sp 1
+This tutorial is intended for readers seeking an introduction to NodeBrain through a series of simple examples.  Other documents are available for readers looking for a more complete reference to the rule language, modules, or API (application programmatic interface).
+
+The intent of the examples in this tutorial is to illustrate individual concepts, not to provide complete working applications or show all related options.
+We avoid formal syntax descriptions, thinking you are here because you want to figure it out from examples.  
+
+Files referenced in this tutorial are included in the tutorial directory of the NodeBrain distribution.  
+
+See www.nodebrain.org for more information and the latest update to this document.
+
+@sp 2
+@b{Documents}
+@sp 1
+@quotation
+@i{NodeBrain Tutorial}
+
+@i{NodeBrain User Guide}
+
+@i{NodeBrain Language Reference}
+
+@i{NodeBrain Module Reference}
+
+@i{NodeBrain API Reference}
+@end quotation
+
+@sp 2
+@b{Document Conventions}
+@sp 1
+Sample code and input/output examples are displayed in a monospace font, indented in HTML and Info, and enclosed
+in a box in PDF or printed copies.
+Bold text is used to bring the reader's attention to specific portions of an example.
+In the following example, the first and last line are associated with the host shell and the lines in between are input or output unique to NodeBrain.
+The @code{define} command is highlighted, indicating it is the focus of the example.
+Lines starting with "@dots{}" are a continuation of the previous line ending with "@dots{}".
+This is not part of the language, just one way of breaking up single lines to fit on a printed page.
+If you copy an example, you must remove the dots and combine the lines into a single line.
+
+@example
+$ nb
+> @b{define myFirstRule on(a=1 and b=2) mood="happy";}
+> assert mood="sad";
+> show mood
+mood = "sad"
+> assert a=1,b=2,c=3,d="This is an example of a long single line that", @dots{}
+@dots{} e="we depict on multiple lines to fit on the documnet page";
+2008/06/05 12:09:08 NB000I Rule myFirstRule fired(mood="happy")
+> show mood
+mood = "happy"
+> quit
+$
+@end example
+
+@end titlepage
+
+@end iftex
+
+@c ----------------------------------------------------------
+@c Not printed document
+
+@ifnottex
+@node Top
+@top NodeBrain Tutorial @value{VERSION}
+
+This tutorial is for NodeBrain (version @value{VERSION}, @value{UPDATED}), an open source agent
+for state and event monitoring.
+
+Copyright @copyright{} 2006, 2007, 2008, 2009, 2010, 2011 The Boeing Company
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} preceding the index at the end of this document.
+@end quotation
+
+@ifnotplaintext
+@b{Rule Engine Tutorials}
+@end ifnotplaintext
+@menu
+@end menu
+
+@ifnotplaintext
+@b{Node Module Tutorials}
+@end ifnotplaintext
+@menu
+@end menu
+
+@ifnotplaintext
+@b{References}
+@end ifnotplaintext
+@menu
+* Index::
+@end menu
+@end ifnottex
+
+@c Set page footings
+@oddfooting @thistitle @| @| @thispage
+@evenfooting @thispage @| @| @thistitle
+
+@c Contents
+@oddheading @| @| 
+@evenheading @| @|
+@contents
+
+@c Set page headings for document
+@oddheading @thischapter @| @| @value{UPDATED-MONTH}
+@evenheading @value{UPDATED-MONTH} @| @| @thischapter
+
+
+
+@section Cache Module
+@cindex cache
+
+The Cache module implements a single skill by the same name.  A cache node is a table whose rows can be set to expire if not refreshed within some interval of time.  
+
+@subsection Event Cache Concepts
+@cindex event cache
+
+To perform real-time event correlation on a stream of events, you compare the parameters of each new event with parameters of prior events.  For this purpose, NodeBrain provides a simple structure called an @i{event cache}, a memory resident table for relatively short-term storage of events.
+
+An event cache is logically a table where each row represents an event, defined by the values in each column.  NodeBrain implemented an event cache as a tree structure with embedded counters for measuring repetition and variation.  There may be any number of attributes (columns), but three attributes are used here to illustrate the concepts.
+
+ 
+@image{cache1} 
+
+Each node in a cache structure contains an event attribute value and three counters: hits, kids, and rows.
+
+@itemize @bullet
+@item Hits--number of times the value is represented by a node
+@item Kids--number of subordinate nodes in the next column (branches)
+@item Rows--number of rows in the subordinate sub-cache (leaves)
+@end itemize
+
+The hit count is used to measure repetition.  When you “add” a row (set of values) to an event cache, if a node already exists for a given value, it increments the hit counter instead of inserting a new node. In the illustration above, the first number below a box (node) represents the hit count.  You will notice that hit counts sum from right to left, so the hit count in a given node is the sum of the hit counts of the child nodes in the next column to the right.
+  
+The kid and row counts are used to measure variation.  These counts appear above as the second and third number below a box.  The root node in the example has 3 kids and 7 rows.  The first node in the Attribute 1 column has 2 kids and 3 rows.
+  
+You can also represent an event cache as a sideways tree (see illustration below).  What is called the kid count is just the number of branches on the right side of a node.  What is called the row count is just the number of final nodes to the right of a node.  A final node on the right represents a complete row and only has a hit count.  The event (A,B,B) has occurred 7 times (hit count is 7).  The event (A,B) has a hit count of 9, a kid count of 2, and a row count of 2.  The event (A) has a hit count of 14, a kid count of 2, and a row count of 3.  Notice that both hits and rows sum from right to left.
+
+@image{cache2} 
+  
+Events are retained in an event cache for a specified interval.  Let’s say the cache interval is 4 hours and last asserted (B,B,A) at 02:00.  At 06:00, the hit counter on the final node A of (B,B,A) is decremented.  NodeBrain moves from right to left decrementing counts down to the root node.  If a hit counter goes to zero, the node is removed.  This causes the kid count on the node to the left to be decremented.  So at any time the counters represent what has happened over the past cache interval.  This is a sliding interval, not a fixed interval.  At 06:23, the cache represents the activity from 02:23 to 06:23.
+
+This enables easy implementation of rules of the forms listed below.  Here a cache (@i{x,y}) with an interval of T is used.  In both cases, asserting (@i{x},@i{y}) gets (A,@i{x},@i{y}).  In the first case, when you get (C,@i{x},@i{y}), you test for (@i{x},@i{y}) and it responds on true.  In the second case when you get (@i{x},@i{y}), it asserts not (@i{x},@i{y}).  In the second case, it responds when any (@i{x},@i{y}) expires. 
+
+@enumerate
+@item
+if (A,@i{x},@i{y}) occurs followed by (C,@i{x},@i{y}) within T seconds, then …
+@item
+if (A,@i{x},@i{y}) occurs without (C,@i{x},@i{y}) within T seconds, then …
+@end enumerate
+
+Up to three thresholds may be defined for each type of counter (hits, kids, rows) for each attribute (column).  A reset threshold may also be specified.
+
+@image{cache3}  
+
+When a counter crosses a threshold for the first time, it triggers a response.  A trigger point is represented with a vertical bar in the figure above.  The actual response is determined by rules that are described later.  For now, let’s just say the cache triggers the response rules.  Any given threshold (minor, major, or critical) will not trigger a second time for a given counter until the count has dropped to the reset threshold.  The reset threshold is used as evidence that an abnormal episode ended and was returned to a normal state.  If a threshold is crossed again, it is treated as a new episode.  If a reset threshold is not specified, it defaults to zero.
+
+@subsection Cache Definition
+@cindex cache definition
+
+@subheading Syntax
+
+@table @command
+	 
+
+	@item cacheDefineCmd	
+	::= define š term š node cache[(cacheRelease)] : [š cacheSpec ] • 	   
+			   
+	@item cacheRelease		
+	::= cellExpression 	   
+			   
+	@item cacheSpec		
+	::= ( [ cacheRootSpec : ] cacheAttrList ) 	   
+			   
+	@item cacheRootSpec
+	::= [ ! ] [ cacheInterval ] [ cacheThresholds ] 	   
+			   
+	@item cacheInterval		
+	::= ~ “(“ integer ( s | m | h | d ) “)”	   
+			   
+	@item cacheThresholds		
+	::= [ cacheHitSpec ] [ cacheKidSpec ] [ cacheRowSpec ]	   
+	
+	@item cacheHitSpec		
+	::= “(“ cacheThreshold “)”
+	   
+	@item cacheKidSpec		
+	::= “[“ cacheThreshold “]”	
+   
+	@item cacheRowSpec		
+	::= “@{“ cacheThreshold “@}”
+	   
+	@item cacheThreshold		
+	::= [ ^ integer  , ] integer [ , integer [ , integer ] ]	   
+			   
+	@item cacheAttrList		
+	::= cacheAttrSpec @{ , cacheAttrSpect @}
+	   
+	@item cacheAttrSpec
+	::= term [ cacheThresholds ]	
+@end table   
+			 
+
+The cache module supports a relatively complex syntax for specifying various cache parameters.  This complexity is illustrated by the following example.
+
+@example
+define connie node cache(~(d)):(~(3h):x(100,200,300)[3,6,9]@{10,20,30@},y);
+@end example
+
+The individual parameters are covered in the following sections on related topics.
+
+@subsection Cache Attributes
+@cindex cache attributes
+
+Cache attributes are specified as a list of names within parentheses.  To define a cache named abc with attributes a, b, and c, the following define statement is used.
+
+@example
+define abc node cache:(a,b,c);
+@end example
+
+The terms a, b, and c are automatically defined within the context and may be referenced as if they had been explicitly defined as follows.
+
+@example
+abc. define a cell;
+abc. define b cell;
+abc. define c cell;
+@end example
+
+@subsection Cache Assertions
+@cindex cache assertions
+
+Rows are added to a cache and counters incremented, when you assert values.
+
+@example
+abc. assert (“NodeBrain”,”patch”,”Solaris”);
+abc. assert (“NodeBrain”,”patch”,”Linux”);
+abc. assert (“NodeBrain”,”defect”,”HP-UX”);
+abc. assert (“NodeBrain”,”patch”,”Linux”);
+abc. assert (“cron”,”patch”,”Linux”);
+@end example
+
+After the assertions above, the abc cache root node would have 5 hits, 4 rows, and 2 kids.  Each unique partial row would have counts as shown. 
+
+@example
+() 5 hits, 4 rows, 2 kids
+(“NodeBrain”) 4 hits, 3 rows, 2 kids
+(“NodeBrain”,”patch”) 3 hits, 2 rows, 2 kids
+(“NodeBrain”,”patch”,”Solaris”) 1 hits
+(“NodeBrain”,”patch”,”Linux”) 2 hits
+(“NodeBrain”,”defect”) 1 hits, 1 rows, 1 kids
+(“NodeBrain”,”defect”,”Linux”) 1 hits
+(“cron”) 1 hits, 1 rows, 1 kids
+(“cron”,”patch”) 1 hits, 1 rows, 1 kids
+(“cron”,”patch”,”Linux”) 1 hits
+@end example
+
+The assertion syntax illustrated below is normally used when you want to include assertions for terms within the node’s context that are not managed by the node module.  This provides additional information for use by the node’s rules.
+
+@example	
+abc. assert (“NodeBrain”,”patch”,”Solaris”),component=”nb”,status=”beta”;
+@end example
+
+If that is not a requirement, you may prefer the following syntax.
+
+@example
+assert abc(“NodeBrain”,”patch”,”Linux”);
+@end example
+
+When a cache assertion is a rule action, avoiding the context prefix enables the elimination of the verb ASSERT and simplifies the reference to terms within the context where the rule is defined.
+
+@example
+define failedNode node cache:(~(20m):node);
+define event node;
+event. assert ?.type,?.system,?.text;
+
+event. define r1 on(type=”Failed”) failedSystem(system);
+… instead of …
+event. define r1 on(type=”Failed”):failedSystem. assert (event.system);
+…
+event. alert type=”Failed”,system=”happynode.com”;
+@end example
+
+
+@subsection Cache Intervals
+@cindex cache intervals
+
+A cache interval is optional.  If specified, it determines the life of cache assertions.  The following example specifies a cache interval of 4 hours.
+
+@example
+define abc node cache:(~(4h):a,b,c);
+@end example
+
+Four hours after a row is asserted to this cache, the hit counter for that row is decremented.  When a hit counter goes to zero, a row is removed.  This may have an impact on cache conditions and rules.
+
+@example
+abc(“fred”,”joe”,”sam”)		# cache condition
+	
+abc. assert (“fred”,”joe”,”sam”);	# cache assertion
+@end example
+
+If the assertion above is not repeated within four hours, the cache condition will transition from true to false when the row expires.  As long as the assertion is repeated in less than 4 hours, the cache condition remains true.
+
+Specifying an exclamation point (!) in front of the time interval will cause the context to be alerted each time a row expires.
+
+@example	
+define abc node cache:(!~(4h):a,b,c);
+@end example
+
+
+@subsection Cache Thresholds
+@cindex cache thresholds
+
+Cache thresholds are specified as a list of numbers following an attribute.  The type of threshold is specified by the choice of enclosing symbols.
+
+@table @samp
+
+	@item ()	
+	hits
+	@item []	
+	kids
+	@item @{@}
+	rows
+
+@end table 
+
+The command below defines a cache with a hit threshold of 20, a kid threshold of 3, and a row threshold of 10 for the attribute a.
+	
+@example
+define abc node cache:(a(20)[3]@{10@},b,c);
+@end example
+
+When a set of values are asserted to a cache and a threshold is reached, the cache node is automatically alerted.  Rules are written to respond to these alerts.  We’ll cover that in a bit.
+
+Four thresholds may be set for each attribute: reset, minor, major, and critical.  If a reset threshold is specified, it must be the first value in the list and prefixed with a toggle (^).  The following example specifies thresholds of 20, 100, and 250 for the hit count on any row in the cache.  A reset threshold of 5 is specified. 
+
+@example	
+define abc node cache:(a,b,c(^5,20,100,250));
+@end example
+
+When a threshold is reached on a given counter the node’s context is alerted.  For a given counter to trigger on the same threshold again, it must first drop down to the reset threshold.  By default, the reset threshold is zero.
+
+The following example specifies thresholds of 3, 9, and 27 for (a,b) kids, or the number of unique values of c for a given value of a and b. 
+
+@example
+define abc node cache:(a,b[3,9,27],c);
+@end example
+
+All of these examples may be combined in a single statement because each type of threshold may be specified for any attribute.  Actually the last attribute only has a hit counter since there are no kids or subordinate rows.
+
+@example
+define abc context cache:(a(20)[3]@{10@},b[3,9,27],c(^5,20,100,250));
+@end example
+
+To specify thresholds at the cache root level, use a colon before the first attribute.  The following definition establishes a hit threshold of 1000 and a kid threshold of 3 at the cache root level.  The abc node will be alerted when 3 unique values of a are asserted or 1000 assertions are made.
+
+@example
+define abc node cache:((1000)[3]:a,b[3,9,27],c);
+@end example
+
+
+@subsection Cache Rules
+@cindex cache rules
+
+Cache rules operate like any other rule within a context, but you need to base them on terms that are implicitly defined and alert commands that come from “within” a cache when thresholds are reached.  Consider the following definitions.
+
+@example
+define abc node cache:(~(4h):a,b[10,20],c(40,60));
+
+abc. define r1 if(b._kidState):$ @i{action} including $$@{a@} $$@{b@} $$@{b._kids@}
+abc. define r2 if(c._hitState):$ @i{action} including $$@{a@} $$@{b@} $$@{c@} $$@{c._hits@}
+@end example
+
+When a cache assertion causes a counter to hit a threshold, the context is alerted with values assigned to special terms that describe the threshold condition.  For example, suppose the following assertion produces a tenth value of c for (a,b).  In other words, “sam” is the tenth value of c for (“fred”,”joe”) within the previous 4 hours.
+
+@example
+abc. assert (“fred”,”joe”,”sam”);
+@end example
+
+The internal alert is equivalent to the following.
+
+@example
+abc. alert a=”fred”, b=”joe”, c=”sam”, b._kidState=1, b._kids=10;
+@end example
+
+@subsection Cache Terms
+@cindex cache terms
+
+The referenced terms are automatically defined when a cache is defined and asserted by a cache when it alerts the context.  Here is a list of them.
+
+@table @samp
+
+	@headitem @i{attribute}		
+	cache attribute (one for each column)
+
+	@item @i{attribute}._hits		
+	number of times the node has been asserted
+
+	@item @i{attribute}._kids	
+	number of nodes in the next column
+
+	@item @i{attribute}._rows	
+	number of rows a node participates in
+
+	@item @i{attribute}._hit	
+	State	hit threshold reached
+
+	@item @i{attribute}._kid	
+	State	kid threshold reached
+
+	@item @i{attribute}._row	
+	State	row threshold reached
+			
+	@item _interval		
+	cache interval in text appropriate for a message
+
+	@item _action
+	“expire” (only when “!” precedes the interval)
+
+@end table 
+
+
+@subsection Cache Conditions
+@cindex cache conditions
+
+A cache condition returns a value of True if the parameter list matches a row in the cache, a value of Unknown if any of the arguments are Unknown, and otherwise returns False.  
+
+Suppose you want to take some action when an event of Type T2 occurs within 5 minutes after an event of Type T1 if both events have the same value for attributes A and B.  This could be accomplished with the following rule set.
+ 
+@example
+define event node;     # define a context to be alerted
+event. define t1ab node cache:(~(5m):a,b);		# define cache 
+event. define r1 if(Type=”T1”) t1ab(A,B);  		# populate cache 
+event. define r2 if(Type=”T2” and @b{t1ab(A,B)}):@i{action}	# lookup
+@end example
+
+The highlighted cache condition is True when the t1ab cache contains an entry for the current values of A and B.  If either A or B is Unknown, the cache condition is Unknown.  Otherwise, the cache condition is False.  
+
+The event stream for this context is generated through a series of commands of the following form.
+
+	
+@example
+event. alert Type=”@i{type}”,A=”@i{a}”,B=”@i{b}”;
+@end example
+
+When an event of type T1 occurs, rule r1 asserts (A,B) to the cache.  This inserts an entry for the current value A and B.  This entry will expire within 5 minutes.  When an event of type T2 occurs, rule r2 will fire if the cache contains an entry for the values of A and B.  If the following events occur within a 5-minute period, the final event will cause rule r2 to fire.
+
+@example
+event. alert Type=”T1”,A=”man”,B=”happy”;
+event. alert Type=”T2”,A=”pilot”,B=52;
+event. alert Type=”T1”,A=”sister”,B=”good”;
+event. alert Type=”T0”,A=”buddy”,B=”cool”;
+event. alert Type=”T2”,A=”man”,B=”happy”;
+@end example
+	
+If you defined the cache without scheduled expiration of entries, you must explicitly delete entries when appropriate.
+
+@example
+event. define t1ab node cache:(a,b);	# define cache
+event.t1ab. assert (“abc”,”xyz”);		# insert entry if new
+event.t1ab. assert !(“abc”,”xyz”);		# delete entry
+event.t1ab. assert !(“abc”);			# delete group of entries
+event.t1ab. assert !();				# delete all entries
+@end example
+
+With or without an expiration period, you may want to delete entries based on some condition.  This is simply a way of forcing the cache condition to be False, just as asserting an entry forces it to be True.  So, you can think of a cache condition as a dynamic set of named Boolean switches.  You address a specific switch via the argument list.
+
+Because a cache condition cache(x) is False when cache(x) has not been asserted or the assertion has expired, we say that a cache uses the closed world assumption.  This is just a way of saying what isn’t known to be true is assumed to be false.  Because of this assumption, a cache condition will never return a value of Unknown when the arguments are known---it is always True or False.  This means the condition ?@i{cache}(x) is never true.
+
+Although it may seem logically inconsistent, a cache will accept an assertion to an Unknown state and arrive at a False state.
+
+@example	
+assert ?@i{cache}(x);  # make the condition @i{cache}(x) false
+@end example
+
+This is consistent with the closed world assumption.  Once you no longer know something to be True, it is immediately assumed to be False.
+
+@subsection Cache Release Condition
+@cindex cache release condition
+
+A cache release condition provides a convenient way to empty a cache on a predefined condition.  Normally the condition is a time condition used to periodically empty the cache.  The following cache is emptied on the hour.
+
+@example	
+define abcCache node cache(~(h)):(~(10m):a,b,c);
+@end example
+
+The following cache and rule implement the same functionality.
+
+@example
+define abcCache node cache:(~(10m):a,b,c);
+abcCache. define release on(~(h)) ?abcCache();
+@end example
+
+Sometimes a cache release condition should be used instead of an interval, and other times it should be used in addition to an interval.  Consider the following two cache nodes.
+
+@example	
+define A node cache:(~(2h):a,b,c(20));
+define B node cache(~(2h)):(a,b,c(20));
+@end example
+
+Node A uses an interval, while node B uses a release condition.  There is a significant difference.  Assertions to node A expire 2 hours after they are last made, and the cache keeps track of how many times a given assertion was made in the last 2 hours.  Assertions to node B expire at the end of the current 2-hour release period---anywhere from 1 second to 2 hours.  For node B, it is not necessary for the cache to set timers for every assertion because all assertions to the cache expire at the same time.  When the threshold is reached for a given assertion to node A, it is not reset as long the assertion is repeated within 2 hours.  With node B, all counters are reset every 2 hours, so the threshold may be reached once within every 2-hour release period for a continuously repeating assertion.  So node A is handy when you want to respond only once for each episode, and node B is handy when you want a reminder every 2 hours that an episode is continuing.
+
+Now let’s consider the following node C that has both a release condition and an interval.  It will detect 20 assertions within a sliding 5-minute interval and not trigger again for continuing episodes until the end of an 8-hour release period.
+
+@example
+define C node cache(~(8h)):(~(5m):a,b,c(20));
+@end example
+
+
+The release condition is a cell expression---not necessarily a time condition.  Here’s an example using a release condition based on x and y.
+
+@example
+define D node cache(x>27 and y):( ~(5m):a,b,c(20));
+@end example
+
+@node Index 
+@unnumbered Index 
+@printindex cp 
+@bye 
