@@ -51,6 +51,7 @@
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2012-01-31 dtl 0.8.6  Checker updates
+* 2012-05-30 eat 0.8.10 Fixed nbIpGetDatagram - wasn't portable
 *=====================================================================
 */
 #include "nbi.h"
@@ -280,8 +281,10 @@ int nbIpGetDatagram(NB_Cell *context,int socket,unsigned int *raddr,unsigned sho
       }
     return(len);
     }
-  memcpy(raddr,&client.sin_addr,sizeof(raddr));
-  *rport=client.sin_port;
+  //memcpy(raddr,&client.sin_addr,sizeof(raddr));  // 2012-05-30 eat - size corrected
+  memcpy(raddr,&client.sin_addr,sizeof(int));  
+  //*rport=client.sin_port; // 2012-05-30 eat - in network byte order
+  *rport=ntohs(client.sin_port);
   return(len);
   }
 
