@@ -1,6 +1,6 @@
 \input texinfo   @c -*-texinfo-*-
 @c %**start of header
-@setfilename message.info
+@setfilename nb_message.info
 @include version.texi
 @settitle Message NodeBrain Module
 @c %**end of header
