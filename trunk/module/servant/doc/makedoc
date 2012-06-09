@@ -1,0 +1,8 @@
+makeinfo --html --no-split --number-sections nb_servant.texi
+makeinfo --plaintext --no-split --number-sections --output=nb_servant.txt nb_servant.texi
+makeinfo --docbook --no-split --number-sections --output=nb_servantDocBook.xml nb_servant.texi
+makeinfo --xml --no-split --number-sections nb_servant.texi
+makeinfo --no-split --number-sections nb_servant.texi
+
+./texi4pdf nb_servant.texi > nb_servant.texi4pdf
+texi2pdf -D -V -o nb_servant.pdf nb_servant.texi4pdf

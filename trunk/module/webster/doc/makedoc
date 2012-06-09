@@ -1,0 +1,8 @@
+makeinfo --html --no-split --number-sections webster.texi
+makeinfo --plaintext --no-split --number-sections --output=webster.txt webster.texi
+makeinfo --docbook --no-split --number-sections --output=websterDocBook.xml webster.texi
+makeinfo --xml --no-split --number-sections webster.texi
+makeinfo --no-split --number-sections webster.texi
+
+./texi4pdf webster.texi > webster.texi4pdf
+texi2pdf -D -V -o webster.pdf webster.texi4pdf

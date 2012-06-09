@@ -1,0 +1,8 @@
+makeinfo --html --no-split --number-sections nb_toy.texi
+makeinfo --plaintext --no-split --number-sections --output=nb_toy.txt nb_toy.texi
+makeinfo --docbook --no-split --number-sections --output=nb_toyDocBook.xml nb_toy.texi
+makeinfo --xml --no-split --number-sections nb_toy.texi
+makeinfo --no-split --number-sections nb_toy.texi
+
+./texi4pdf nb_toy.texi > nb_toy.texi4pdf
+texi2pdf -D -V -o nb_toy.pdf nb_toy.texi4pdf

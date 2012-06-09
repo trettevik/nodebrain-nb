@@ -1,0 +1,8 @@
+makeinfo --html --no-split --number-sections nb_peer.texi
+makeinfo --plaintext --no-split --number-sections --output=nb_peer.txt nb_peer.texi
+makeinfo --docbook --no-split --number-sections --output=nb_peerDocBook.xml nb_peer.texi
+makeinfo --xml --no-split --number-sections nb_peer.texi
+makeinfo --no-split --number-sections nb_peer.texi
+
+./texi4pdf nb_peer.texi > nb_peer.texi4pdf
+texi2pdf -D -V -o nb_peer.pdf nb_peer.texi4pdf

@@ -1,0 +1,8 @@
+makeinfo --html --no-split --number-sections nb_pipe.texi
+makeinfo --plaintext --no-split --number-sections --output=nb_pipe.txt nb_pipe.texi
+makeinfo --docbook --no-split --number-sections --output=nb_pipeDocBook.xml nb_pipe.texi
+makeinfo --xml --no-split --number-sections nb_pipe.texi
+makeinfo --no-split --number-sections nb_pipe.texi
+
+./texi4pdf nb_pipe.texi > nb_pipe.texi4pdf
+texi2pdf -D -V -o nb_pipe.pdf nb_pipe.texi4pdf
