@@ -10,4 +10,6 @@ nb_audit_la_LDFLAGS = -module -version-info 0:1
 EXTRA_DIST = \
   caboodle/check/audit.nb~ \
   caboodle/log/README \
-  caboodle/plan/audit/audit.nbx  
+  caboodle/plan/audit/audit.nbx \
+  doc/nb_audit.texi \
+  doc/version.texi

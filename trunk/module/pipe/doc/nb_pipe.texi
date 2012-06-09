@@ -1,0 +1,270 @@
+@section Pipe Module
+@cindex pipe module
+
+\input texinfo   @c -*-texinfo-*-
+@c %**start of header
+@setfilename nb_pipe.info
+@include version.texi
+@settitle Pipe Module
+@c %**end of header
+
+@finalout
+@paragraphindent none
+@setchapternewpage odd
+
+@copying
+Pipe Module@*
+August 2011@*
+The Boeing Company,  P.O. Box 3707, Seattle, WA 98124, USA
+
+@sp 2
+@b{Release 0.8}
+
+Author: Ed Trettevik <eat@@nodebrain.org>
+
+Copyright @copyright{} 2006, 2007, 2008, 2009, 2010, 2011 The Boeing Company
+
+@sp 1
+Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts. A copy of the license is included in the section titled @i{GNU Free Documentation License} preceding the index at the end of this document.
+
+@sp 1
+NodeBrain(TM) is a trademark of The Boeing Company. All other trademarks and registered trademarks referenced in this document are the trademarks of their respective owners.
+
+@sp 2
+@b{Software License}
+
+@multitable {------------------------------} {----------------------------------------------------}
+@item Copyright @copyright{} 1998--2010 @tab The Boeing Company
+@item @tab Ed Trettevik <eat@@nodebrain.org>
+@end multitable
+
+NodeBrain is free software; you can redistribute it and/or  modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option)any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License formore details.
+
+You should have received a copy of the GNU General PublicLicense along with this program; if not, write to Free Software Foundation,Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+@end copying
+
+@iftex
+@titlepage
+@c @image{./image001,32pt,32pt,,gif}
+
+@titlefont{Pipe Module}
+@sp 1
+@tex
+\vskip4pt \hrule height 3pt width \hsize
+@end tex
+@sp 3
+@b{Release @value{VERSION}}
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+
+@c History Preface and Document Conventions 
+@page
+@b{History}
+
+@multitable {-------------} {--------------------------------------------------------------------------------------------------------}
+@item 2005-10-12 @tab
+Title: @i{NodeBrain  Tutorial}@*  
+Author: Ed  Trettevik <eat@@nodebrain.org>@*
+Publisher: The Boeing Company
+
+@item 2010-12-31 @tab
+Release 0.8.3
+@itemize @bullet
+@item Updates - still needed
+@end itemize
+
+@end multitable
+
+@page
+@b{Preface}
+
+@sp 1
+This tutorial is intended for readers seeking an introduction to NodeBrain through a series of simple examples. Other documents are available for readers looking for a more complete reference to the rule language, modules, or API (application programmatic interface).
+
+The intent of the examples in this tutorial is to illustrate individual concepts, not to provide complete working applications or show all related options.
+We avoid formal syntax descriptions, thinking you are here because you want to figure it out from examples.  
+
+Files referenced in this tutorial are included in the tutorial directory of the NodeBrain distribution.  
+
+See www.nodebrain.org for more information and the latest update to this document.
+
+@sp 2
+@b{Documents}
+@sp 1
+@quotation
+@i{NodeBrain Tutorial}
+
+@i{NodeBrain User Guide}
+
+@i{NodeBrain Language Reference}
+
+@i{NodeBrain Module Reference}
+
+@i{NodeBrain API Reference}
+@end quotation
+
+@sp 2
+@b{Document Conventions}
+@sp 1
+Sample code and input/output examples are displayed in a monospace font, indented in HTML and Info, and enclosed
+in a box in PDF or printed copies.
+Bold text is used to bring the reader's attention to specific portions of an example.
+In the following example, the first and last line are associated with the host shell and the lines in between are input or output unique to NodeBrain.
+The @code{define} command is highlighted, indicating it is the focus of the example.
+Lines starting with "@dots{}" are a continuation of the previous line ending with "@dots{}".
+This is not part of the language, just one way of breaking up single lines to fit on a printed page.
+If you copy an example, you must remove the dots and combine the lines into a single line.
+
+@example
+$ nb
+> @b{define myFirstRule on(a=1 and b=2) mood="happy";}
+> assert mood="sad";
+> show mood
+mood = "sad"
+> assert a=1,b=2,c=3,d="This is an example of a long single line that", @dots{}
+@dots{} e="we depict on multiple lines to fit on the documnet page";
+2008/06/05 12:09:08 NB000I Rule myFirstRule fired(mood="happy")
+> show mood
+mood = "happy"
+> quit
+$
+@end example
+
+@end titlepage
+
+@end iftex
+
+@c ----------------------------------------------------------
+@c Not printed document
+
+@ifnottex
+@node Top
+@top NodeBrain Tutorial @value{VERSION}
+
+This tutorial is for NodeBrain (version @value{VERSION}, @value{UPDATED}), an open source agent for state and event monitoring.
+
+Copyright @copyright{} 2006, 2007, 2008, 2009, 2010, 2011 The Boeing Company
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} preceding the index at the end of this document.
+@end quotation
+
+@ifnotplaintext
+@b{Rule Engine Tutorials}
+@end ifnotplaintext
+@menu
+@end menu
+
+@ifnotplaintext
+@b{Node Module Tutorials}
+@end ifnotplaintext
+@menu
+@end menu
+
+@ifnotplaintext
+@b{References}
+@end ifnotplaintext
+@menu
+* Index::
+@end menu
+@end ifnottex
+
+@c Set page footings
+@oddfooting @thistitle @| @| @thispage
+@evenfooting @thispage @| @| @thistitle
+
+@c Contents
+@oddheading @| @| 
+@evenheading @| @|
+@contents
+
+@c Set page headings for document
+@oddheading @thischapter @| @| @value{UPDATED-MONTH}
+@evenheading @value{UPDATED-MONTH} @| @| @thischapter
+
+@section Pipe Module
+@cindex pipe module
+
+
+The Pipe module provides a simple unauthenticated method of communication between NodeBrain and external programs running on the same system. A pipe server node is used to accept input from other programs while a pipe node is used to write output to another program. You must use file permissions on the pipe (FIFO) file for security. An identity is associated with input commands to enable restrictions on the input commands.
+
+@subsection	Pipe Server Definition
+@cindex pipe server definition
+ 
+@subheading Syntax
+@table @command	   
+	@item @i{pipeServerDefineCmd}	
+	::= @b{define} @v{s} @i{term} @v{s} @b{node} [@v{s} pipeServerDef ] @bullet{}	   
+			   
+	@item @i{pipeServerDef}	
+	::= @b{pipe.server(} @code{@i{“ identity @ fileName ”}} @b{);}	   
+			   
+	@item @i{Identify}	
+	::= name of identity to associate with input commands	   
+			   
+	@item @i{Filename}	
+	::= name of input pipe (FIFO)	   
+@end table			 
+
+The identity must be declared prior to pipe server definition.  The FIFO identified by @code{@i{fileName}} must exist when a pipe server is enabled.
+
+@example
+
+	declare fred identity @dots{} ; 
+	define mypipe node pipe(”fred@@pipe/myhose”);
+	@dots{} include rules here@dots{} 
+
+@end example
+@subsection Pipe Server Commands
+@cindex pipe server commands
+
+The @command{ENABLE} and @command{DISABLE} commands are supported. Node commands and assertions are not currently supported.
+
+@subsection Pipe Server Rules
+@cindex piper server rules
+
+Commands read from the pipe file are interpreted in the context of the pipe server node. Rules defined in this context must be designed for compatibility with the commands written to the pipe by the external program.
+
+@subsection Pipe Definition
+@cindex pipe defintion
+
+ 
+@subheading Syntax
+@table @command	   
+	@item @i{pipeDefineCmd}	
+	::= @b{define} @v{s} @i{term} @v{s} @b{node} [@v{s} @i{pipeDef }] @bullet{}	   
+			   
+	@item @i{pipeDef}	
+	::= @b{pipe(} @i{“ fileName ”} @b{);}	   
+			   
+	@item @i{Filename}	
+	::= name of output pipe (FIFO)
+	   
+@end table			 
+
+The FIFO identified by @code{@i{fileName}} must exist when a command is issued to the pipe node.
+
+@example
+	define mypipe node pipe("pipe/myhose");
+@end example
+	
+@subsection Pipe Commands
+@cindex pipe commands
+
+Commands directed to a pipe node are simply written to the pipe (FIFO) file. 
+
+@example
+	@i{node:@dots{} any text@dots{}}
+@end example
+
+The @command{ENABLE} and @command{DISABLE} commands and assertions are not supported.
+
+@node Index 
+@unnumbered Index 
+@printindex cp 
+@bye 
+
+ 
