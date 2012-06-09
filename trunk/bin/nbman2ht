@@ -51,7 +51,8 @@ sub format{
   $text=join("\&lt;",split(/\</,$text));     # replace < with &lt;
   # Note: This would not handle \\fB or \\fI properly - but don't do that
   $text=join("\\",split(/\\\\/,$text));      # replace \\ with \
-  if($text=~/^(.*) $/){$text=$1;}            # take space off the end 
+  $text=join("`",split(/\\`/,$text));        # replace \` with `
+  if($text=~/^(.*)\s+$/){$text=$1;}          # take space off the end 
   while($text=~/^(.*?)\\fB(.*)$/){$text=$1."<b>".&formatstop($2,"b");}
   while($text=~/^(.*?)\\fI(.*)$/){$text=$1."<i>".&formatstop($2,"i");}
   if($nf){$text.="<br>\n";}
