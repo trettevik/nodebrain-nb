@@ -1,7 +1,7 @@
 .\" Process this file with "groff -man -Tascii foo.1" or "nbman2ht foo.1"
 .\" See NodeBrain Developer Guide for project standards
 .\"
-.TH nb 1 "October 2010" "NodeBrain 0.8.4" "NodeBrain Administrator Guide"
+.TH nb 1 "June 2012" "NodeBrain 0.8.10" "NodeBrain Administrator Guide"
 .SH NAME
 \fBnb\fP - NodeBrain Interpreter, Agent, Client, and Utility.
 .SH SYNOPSIS
@@ -55,15 +55,19 @@
 |
 .B --noTrace
 | 
-.B --pidfile=\fIfile\fP
+\fB--pidfile=\fP\fIfile\fP
 |
-.B --log=\fIlogfile\fP
+\fB--logfile=\fP\fIfile\fP
 |
-.IB "variable" "=" "value"
+\fB--outdir=\fP\fIdir\fP
 |
-\fB\`\fP\fIassertion\fP
+\fB--user=\fP\fIuser\fP 
 |
-.BI ":" "command"
+\fB--group=\fP\fIgroup\fP 
+|
+\fIvariable\fP\fB=\fP\fIvalue\fP
+|
+\fB:"\fP\fIcommand\fP\fB"\fP
 |
 .B -
 |
@@ -91,14 +95,14 @@ Options begin with a minus sign ("-").  They may be specified as a single charac
 following a single minus, or as a word following a double minus ("--").  See
 the \fBOPTIONS\fP section for a description of available options.
 .IP
-.BI "-" "o"
+\fB-\fP\fIo\fP
 .IP
-.BI "--" "option"
+\fB--\fP\fIoption\fP
 .P
 Variable settings start with a double minus ("--") followed be a setting assignment.
 See the \fBSETTINGS\fP section for a description of available settings.
 .IP
-.BI "--" "variable" = "value"
+\fB--\fP\fIsetting\fP\fB=\fP\fIvalue\fP
 .P
 Source variables may be assigned for symbolic
 substitution or conditional command interpretation within scripts.  These are application
@@ -121,7 +125,7 @@ or ':assert name="john doe";'.
 .IP
 .nf
 \fB:\fP\fIcommand\fP
-\fB":\fP\fIcommand\fP\fB"\fP
+\fB:"\fP\fIcommand\fP\fB"\fP
 .fi
 .P
 A command file may be specified with an optional assertion to set local source variables for
@@ -170,15 +174,15 @@ a command within a NodeBrain script.
 .IP
 .\"ht table
 .nf
-Argument Syntax                Script Command Syntax
+Argument Syntax                Command Syntax
 ---------------------------    --------------------------
 -d                             set daemon;
 --noDaemon                     set noDaemon;
 a=1                            %assert ..a=1;
 b="abc"                        %assert ..b="abc";
 c=abc                          %assert ..c="abc";
-":assert a=1,b=\\"hello\\""      assert a=1,b="hello";
-":show -t"                     show -t; 
+:"assert a=1,b=\\"hello\\""      assert a=1,b="hello";
+:"show -t"                     show -t 
 myscript.nb                    source myscript.nb;
 myscript.nb,a=1,b=2            source myscript.nb,a=1,b=2;
 .fi
@@ -238,13 +242,13 @@ The --noTrace option turns off the --trace option.
 .SH SETTINGS
 Settings passed as arguments may be used as an alternative to specifying settings using a \fBset\fP command within a script.
 They can also be used to override settings within a script if specified later in the sequence of parameters.
-.IP --logfile=\fIfilename\fP
+.IP --logfile=\fIfile\fP
 The logfile setting specifies a file where the log is written when nb daemonizes.  An alias of "--log" is
 recognized for compatibility with earlier version.
-.IP --outdir=\fIdirectory\fP
+.IP --outdir=\fIdir\fP
 The outdir setting specifies a directory where output of a spawned process is stored if not directed elsewhere.
 An alias of "--out" is recognized for compatibility with earlier versions.
-.IP --pidfile=\fIfilename\fP
+.IP --pidfile=\fIfile\fP
 The pidfile setting specifies a file where the process identifier (PID) is to be stored when daemonizing.
 This can be used by init scripts (/etc/init.d).
 .IP --user=\fIuser\fP
@@ -282,7 +286,7 @@ and therefore not what you might expect in a scripting language.  However,
 it may be a bit more convenient to invoke NodeBrain and a set of rules
 by coding a shebang ("#!") line on the rule file.
 
-  \fB#!/usr/local/bin/nb\fP \fIargument\fP
+  \fB#!/usr/bin/nb\fP \fIargument\fP
   ... commands ... 
 
 If our example file is named "myscript", we could invoke it as
@@ -296,9 +300,9 @@ instead of
 saving a few keystrokes. This is a Unix/Linux feature supported by NodeBrain
 simply because lines starting with hash ("#") are treated as comments.
 .SH Nodes
-The notion of a \fbnode\fP in the NodeBrain model is similar to that of
+The notion of a \fBnode\fP in the NodeBrain model is similar to that of
 a function in other languages.  Sets of rules are associated with nodes.
-\fbNode modules\fP provide extended capabilities for knowledge representation
+\fBNode modules\fP provide extended capabilities for knowledge representation
 and evaluation.  Communication between nodes is supported by the interpreter
 for nodes within a single NodeBrain process (skull), and node modules support
 communication between nodes in separate NodeBrain processes, including processes
