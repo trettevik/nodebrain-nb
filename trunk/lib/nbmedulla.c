@@ -100,6 +100,7 @@
 *                       =[<user>:<group>]<command>
 * 2012-01-09 dtl 0.8.6  Checker updates
 * 2012-04-22 eat 0.8.8  Switched from nbcfg.h to standard config.h
+* 2012-05-29 eat 0.8.10 Fixed to recognize buffer size limitation problem in nbMedullaQueueGet
 *=============================================================================
 */
 #define NB_INTERNAL
@@ -2084,7 +2085,15 @@ int nbMedullaQueueGet(nbQUEUE queue,char *msg,size_t size){
     len=buf->free-buf->data;
     delim=memchr(buf->data,'\n',len); 
     }
-  if(delim==NULL) return(-1);
+  // 2012-05-29 eat - modified to detect hopeless situation
+  //if(delim==NULL) return(-1);
+  if(delim==NULL){
+    fprintf(stderr,"logic error in nbMedullaQueueGet - newline not found within size of the following return buffer\n");
+    *(msg+size-1)=0;
+    fprintf(stderr,"%s\n",msg);
+    fprintf(stderr,"fatal error - terminating\n");
+    exit(NB_EXITCODE_FAIL);
+    }
   len=delim-buf->data;
   if(len>msgleft) len=msgleft;
   strncpy(msg,buf->data,len);
