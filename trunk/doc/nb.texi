@@ -1,7 +1,7 @@
 \input texinfo   @c -*-texinfo-*-
 @c %**start of header
 @setfilename nb.info
-@include version-nb.texi
+@include version.texi
 @settitle NodeBrain Documents
 @dircategory NodeBrain Agent
 @direntry
