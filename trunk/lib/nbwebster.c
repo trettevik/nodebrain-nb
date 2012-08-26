@@ -138,6 +138,7 @@
 *               option) to tell the server not to close connections from the
 *               proxy.
 *            Note: There is still a memory leak when forwarding.
+* 2012-08-26 eat 0.8.10 - Stopped echo of URL not found to avoid XSS vulnerability
 *==============================================================================
 */
 #include <nbi.h>
@@ -741,12 +742,14 @@ static void nbWebsterResourceNotFound(nbCELL context,nbWebServer *webster,nbWebS
     "<title>404 Not Found</title>\n"
     "</head>\n<body>\n"
     "<h1>Not Found</h1>\n"
-    "<p>The requested resource /%s was not found on this server. "
-    "If you are submitting a form, go back to make sure you enter proper values in each field and submit again.</p>\n"
+    "<p>The requested resource was not found on this server. "
+    //"<p>The requested resource /%s was not found on this server. "
+    //"If you are submitting a form, go back to make sure you enter proper values in each field and submit again.</p>\n"
     "<hr>\n"
     "<address>NodeBrain Webster 0.8.9 OpenSSL Server at %s</address>\n"
     "</body></html>\n",
-    session->resource,session->reqhost);
+    //session->resource,session->reqhost);
+    session->reqhost);
   contentLength=strlen(content);
   snprintf((char *)data,size,
     "HTTP/1.1 404 Not Found\r\n"
@@ -905,11 +908,13 @@ static void nbWebsterServe(nbCELL context,nbWebServer *webster,nbWebSession *ses
       "<title>404 Not Found</title>\n"
       "</head>\n<body>\n"
       "<h1>Not Found</h1>\n"
-      "<p>The requested URL /%s was not found on this server.</p>\n"
+      //"<p>The requested URL /%s was not found on this server.</p>\n"
+      "<p>The requested resource was not found on this server.</p>\n"
       "<hr>\n"
       "<address>NodeBrain Webster 0.8.9 OpenSSL Server at %s</address>\n"
       "</body></html>\n",
-      filename,session->reqhost);
+      //filename,session->reqhost);
+      session->reqhost);
     contentLength=strlen(content);
     snprintf((char *)data,size,
       "HTTP/1.1 404 Not Found\r\n"
