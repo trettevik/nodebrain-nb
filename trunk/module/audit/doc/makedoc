@@ -3,6 +3,4 @@ makeinfo --plaintext --no-split --number-sections --output=nb_audit.txt nb_audit
 makeinfo --docbook --no-split --number-sections --output=nb_audit_DocBook.xml nb_audit.texi
 makeinfo --xml --no-split --number-sections nb_audit.texi
 makeinfo --no-split --number-sections nb_audit.texi
-
-#./texi4pdf nb_audit.texi > nb_audit.texi4pdf
 texi2pdf -D -V -o nb_audit.pdf nb_audit.texi
