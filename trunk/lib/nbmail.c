@@ -90,11 +90,13 @@ static int nbMailWrite(nbCELL context,nbMailClient *client,char *buffer,int len)
 /*
 *  Read 
 */
-static int nbMailRead(nbCELL context,nbMailClient *client,char *buffer,int len){
-  if(nbTlsRead(client->tls,buffer,len)<=0){
+static int nbMailRead(nbCELL context,nbMailClient *client,char *buffer,int buflen){
+  int len;
+  if((len=nbTlsRead(client->tls,buffer,buflen))<=0){
     nbTlsClose(client->tls);
     return(-1);
     }
+  *(buffer+len)=0;
   if(mailTrace) nbLogMsg(context,0,'T',"Reply:\n%s",buffer);
   return(0);
   }
@@ -113,6 +115,7 @@ int nbMailSend(nbCELL context,nbMailClient *client,char *from,char *to,char *top
     nbLogMsg(context,0,'E',"nbMailSend: unable to connect to relay");
     return(-1);
     }
+  if(nbMailRead(context,client,buffer,sizeof(buffer))) return(-1);
   sprintf(buffer,"EHLO %s\n",client->host);
   if(nbMailWrite(context,client,buffer,strlen(buffer))) return(-1);
   if(nbMailRead(context,client,buffer,sizeof(buffer))) return(-1);
@@ -165,11 +168,11 @@ int nbMailSendAlarm(nbCELL context,nbMailClient *client){
   to=nbCellGetString(context,toCell); 
   topic=nbCellGetString(context,topicCell); 
   tweet=nbCellGetString(context,tweetCell);
-  form=nbCellGetText(context,formCell);
   if(!from || !to || !topic || !tweet){
     nbLogMsg(context,0,'T',"_from, _to, _topic, or _tweet not defined as string");
     return(-1);
     }
+  form=nbCellGetText(context,formCell);
   if(form) body=nbSymCmd(context,form,"${}"); 
   if(nbMailSend(context,client,from,to,topic,tweet,body)){
     nbLogMsg(context,0,'E',"nbMailSendAlarm: Unable to send message:\nFrom: %s\nTo: %s\nSubject: %s%s\n%s",from,to,topic,tweet,body);
