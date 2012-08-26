@@ -1,3 +1,57 @@
+NodeBrain 0.8.10 Change Summary
+
+* Released September 2, 2012 (target)
+
+     Versions 0.8.4 through 0.8.9 were not released.
+     Although 0.8.3 software was released, the website
+     was not updated with new documentation.
+
+* Theme: Patches and Document Format Changes
+
+     This is a patch release, so no new functionality
+     is provided.  However, 0.8 documentation was not
+     previously released, so the new functionality of
+     the 0.8.3 release will likely seem new. See news
+     below for NodeBrain 0.8.3.
+
+* Documentation:
+
+  o  Started converting documents from MS Word to Texinfo.
+     Note: We anticipate switching from Texinfo to DocBook
+     as the master format in the future. 
+
+  o  The NodeBrain Module Reference has been replaced by
+     individual texi manuals for each module.
+
+* Incompatibilities
+
+  o  We messed up and broke binary compatibility with 0.8.3
+     in 0.8.9.  Because documentation for 0.8.3 was not
+     released and it had few downloads, we did not resolve
+     this problem in 0.8.10.  We are treating 0.8.10
+     effectively as the first real 0.8.x release.  The
+     incompatibility is in the Message API introduced in
+     0.8.3.
+
+  o  The Webster module is changed since 0.7.4, requiring
+     modification to configuration rules.
+
+* New Fetures
+
+  o  None
+
+* Deprecated Syntax:
+
+  o  None 
+
+* Bug fixes:
+
+  o  A bug was fixed in an internal message queueing
+     mechanism that malfunctioned when messages longer
+     then 4K were queued.  This condition could occur
+     when passing messages as input to a Servant node.
+ 
+
 NodeBrain 0.8.3 Change Summary
 
 * Released September 6, 2010
@@ -22,7 +76,8 @@ NodeBrain 0.8.3 Change Summary
     
 * Documentation:
 
-  o  *** need to document Message and Baseline modules ***
+  o  Message and Baseline modules have been documented
+     in separate Texinfo files.
 
 * Incompatibilities:
 
