@@ -71,7 +71,7 @@
 *
 *   This object type was inspired by work Cliff Bynum did on an application
 *   called Bingo.  The application needed to send form letters and the forms
-*   were managed as files but loaded into memory for quick reference.  Those
+*   were managed as files, but loaded into memory for quick reference.  Those
 *   forms are now NodeBrain text objects.
 *
 *=============================================================================
