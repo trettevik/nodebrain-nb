@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -258,6 +258,7 @@
 *             1) Included skeSeedCipher, skeRandCipher, and skeKeyData routines
 *                for generation of random keys.        
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2012-06-16 eat 0.8.10 Replaced rand with random
 *=============================================================================
 */
 //#include "nb.h"
@@ -739,8 +740,8 @@ void skeSeedCipher(unsigned int cipher[4]){
   unsigned int w,k;
   
   for(k=0;k<4;k++){
-    w=rand();
-    cipher[k]=(w<<16)|rand();    /* random word */
+    w=random();
+    cipher[k]=(w<<16)|random();    /* random word */
     }
   }
 
@@ -766,8 +767,8 @@ void skeKeyData(unsigned int keySize,unsigned int keyData[]){
   unsigned int w,k;
   
   for(k=0;k<keySize;k++){
-    w=rand();
-    keyData[k]=(w<<16)|rand();    /* random word */
+    w=random();
+    keyData[k]=(w<<16)|random();    /* random word */
     }
   }
   

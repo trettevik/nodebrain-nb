@@ -264,6 +264,7 @@
 * 2012-01-31 dtl 0.8.7  Checker updates
 * 2012-02-09 eat 0.8.7  Repaired comAuthDecode 
 * 2012-02-09 eat 0.8.7  Reviewed Checker
+* 2012-06-16 eat 0.8.10 Replaced rand with random
 *=============================================================================
 */
 #include "nbi.h"
@@ -498,7 +499,7 @@ unsigned int comAuthEncode(
   unsigned int  k,w,checksum;
   unsigned int  secretkey[8],keydata[4],secretdata[24];
   unsigned char *bufcur=buffer,*stext,*cursor;
-  unsigned char randstr[10];
+  unsigned char randstr[20];
   unsigned int secretblocks,words;
 
   skeSeedCipher(cipher);       /* generate random 128-bit CBC key */
@@ -507,7 +508,7 @@ unsigned int comAuthEncode(
   for(k=0;k<keylen;k++) secretkey[k+4]=htonl(keydata[k]); /* pass in network byte order */
   bufcur+=pkeEncrypt(bufcur,identity->exponent,identity->modulus,(unsigned char *)&secretkey[0],(k+4)*4);
   nbClockToBuffer((char *)timeStamp);
-  sprintf((char *)randstr,"%5.5d",rand());        /* generate time stamp */
+  sprintf((char *)randstr,"%ld",random());        /* generate time stamp */
   *(timeStamp+4)=*(randstr+0);
   *(timeStamp+7)=*(randstr+1);
   *(timeStamp+10)=*(randstr+2);
@@ -520,11 +521,12 @@ unsigned int comAuthEncode(
   words=6+strlen((char *)text)/4;                 /* words of secret data */
   stext=(unsigned char *)secretdata;      /* pad last data word */ 
   for(cursor=stext+strlen((char *)stext)+1;cursor<stext+words*4;cursor++)
-    *cursor=rand();
+    *cursor=random();
   secretblocks=words/4+1;                 /* number of 16 byte blocks */
   for(k=words;k<(secretblocks*4-1);k++){  /* pad with random words */
-    w=rand();
-    secretdata[k]=(w<<16)|rand();
+    //w=random();
+    //secretdata[k]=(w<<16)|random();
+    secretdata[k]=random();
     }
   skeKey(key,-keylen,keydata);                   /* generate decryption key */
   checksum=0;

@@ -178,6 +178,7 @@
 * 2010-02-26 eat 0.7.9  Fixed bug in vlidiv - not yet tested
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2012-02-07 dtl Checker updates
+* 2012-06-16 eat 0.8.10 Replaced rand with random
 *=============================================================================
 */
 //#include "nb.h"
@@ -268,10 +269,10 @@ void vlirand(vliWord *x,unsigned int l){
   *x=l/16;
   if(l&15) (*x)++;
   ex=x+*x;  
-  for(x=x+1;x<ex;x++) *x=rand();
+  for(x=x+1;x<ex;x++) *x=random();
   if((i=l&15)!=0){            /* if 16 does not divide l */
     m=m>>(16-i);              /* mask for extra bits */
-    *x=(rand()&m)|((m>>1)+1); /* random extra bits with last bit forced on */ 
+    *x=(random()&m)|((m>>1)+1); /* random extra bits with last bit forced on */ 
     }
   else *x=*x|0x8000;    
   }

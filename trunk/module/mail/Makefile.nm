@@ -8,4 +8,6 @@ nb_mail_la_CFLAGS  = $(NB_INCLUDE)
 nb_mail_la_LDFLAGS = -module -version-info 0:1
 
 EXTRA_DIST = \
+  caboodle/check/client.nb \
+  caboodle/check/mail.form \
   caboodle/check/mail.nb-

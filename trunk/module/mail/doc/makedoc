@@ -1,8 +1,6 @@
-makeinfo --html --no-split --number-sections nb_mail.texi
+makeinfo --html --no-split --number-sections --css-include=../../doc/style.css nb_mail.texi
 makeinfo --plaintext --no-split --number-sections --output=nb_mail.txt nb_mail.texi
-makeinfo --docbook --no-split --number-sections --output=nb_mailDocBook.xml nb_mail.texi
+makeinfo --docbook --no-split --number-sections --output=nb_mail_DocBook.xml nb_mail.texi
 makeinfo --xml --no-split --number-sections nb_mail.texi
 makeinfo --no-split --number-sections nb_mail.texi
-
-./texi4pdf nb_mail.texi > nb_mail.texi4pdf
-texi2pdf -D -V -o nb_mail.pdf nb_mail.texi4pdf
+texi2pdf -D -V -o nb_mail.pdf nb_mail.texi

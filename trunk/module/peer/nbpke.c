@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -93,6 +93,7 @@
 * 2008-11-11 eat 0.7.3  Change failure exit code to NB_EXITCODE_FAIL
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2012-06-10 eat 0.8.10 Replaced rand with random
 *=============================================================================
 */
 #include "nbi.h"
@@ -241,7 +242,7 @@ void pkeTestCipher(vli e,vli n,vli d){
     
   strcpy((char *)s,"abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ~!@#$%^&*()_+{}[]`,./<>?;':|\\\"");
   slen=strlen((char *)s);
-  slen=rand()%slen;
+  slen=random()%slen;
   *(s+slen)=0;
   strcpy((char *)t,(char *)s); 
   len=pkeEncrypt(ciphertext,e,n,s,slen);
@@ -372,9 +373,9 @@ void pkeGenKey(unsigned int l,vli e,vli n,vli d){
     printf("NB000L pkeGenKey: parameter l=%u is out of range.\n",l);
     exit(NB_EXITCODE_FAIL);
     }
-  if(seed==0) srand(seed=time(NULL)); /* seed the random number generator */
+  if(seed==0) srandom(seed=time(NULL)); /* seed the random number generator */
   /* calculate p and q */
-  b=rand()%l;
+  b=random()%l;
   if(b<2) b=2;
   vlirand(p,b);
   vlipprime(p);           /* increment p to a probable prime */

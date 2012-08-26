@@ -116,9 +116,9 @@ of user authentication requiring high availability.
 
 @ifnottex
 @node Top
-@top Message NodeBrain Module @value{VERSION}
+@top Message NodeBrain Module
 
-This manual is for the Message NodeBrain Module (version @value{VERSION}, @value{UPDATED}), a plug-in module for broadcasting
+This manual is for the Message NodeBrain Module (version @value{VERSION}, @value{UPDATED-MONTH}), a plug-in module for broadcasting
 messages to multiple NodeBrain agents.
 
 Copyright @copyright{} 2010, 2011 The Boeing Company.
@@ -363,9 +363,11 @@ This section describes the syntax for defining Message nodes.
 
 The @code{message.producer} node is used to write NodeBrain commands to a message log for processing by other members of a message cabal.
 
-@example
+@cartouche
+@smallexample
 define @i{node} node message.producer("@i{cabal}","@i{nodename}",@i{nodenumber})[:@i{option}[,...]];
-@end example
+@end smallexample
+@end cartouche
 
 @multitable {--------------------} {--------------------------------------------------------------------------------------}
 @item @b{Parameter}@w{         }@tab @b{Description}
@@ -392,9 +394,11 @@ The @code{trace} option is used to generate log messages for troubleshooting.
 
 A @code{message.consumer} node is used to read NodeBrain commands from a message log and pass them to the interpreter.
 
-@example
+@cartouche
+@smallexample
 define @i{node} node message.consumer("@i{cabal}","@i{nodename}",@i{nodenumber},"@i{name}")[:@i{option}[,...]];
-@end example
+@end smallexample
+@end cartouche
 
 @multitable {--------------------} {--------------------------------------------------------------------------------------}
 @item @b{Parameter}@w{         }@tab @b{Description}
@@ -426,9 +430,11 @@ A @code{message.server} node accepts connections from clients and delivers messa
 new relative to a client's state.  A state is defined by the last message identifier received by the client from each
 non-zero node number within the cabal.
 
-@example
+@cartouche
+@smallexample
 define @i{node} node message.server("@i{cabal}","@i{nodename}")[:@i{option}[,...]];
-@end example
+@end smallexample
+@end cartouche
 
 @multitable {--------------------} {--------------------------------------------------------------------------------------}
 @item @b{Parameter}@w{         }@tab @b{Description}
@@ -457,9 +463,11 @@ A @code{message.client} node connects to one or more Message servers and request
 that are new relative to the client's state.  A state is defined by the last message identifier received for
 each producer within the cabal.
 
-@example
+@cartouche
+@smallexample
 define @i{node} node message.client("@i{cabal}","@i{nodename}")[:@i{option}[,...]];
-@end example
+@end smallexample
+@end cartouche
 
 @multitable {--------------------} {--------------------------------------------------------------------------------------}
 @item @b{Parameter}@w{         }@tab @b{Description}
@@ -488,14 +496,17 @@ Server and client nodes reference a cabal configuration rule set.
 These rules identify all nodes in the cabal and information needed to communicate.
 
 A cabal configuration node identified by the cabal parameter is defined as follows.
-@example
+@cartouche
+@smallexample
 define @i{node} node message.@{server|client@}("@i{cabal}","@i{nodeI}")[:@i{option}[,...]];
 @i{node}. define @i{cabal} node;
 @i{node}.@i{cabal}. source agent/@i{cabal}.nb;
-@end example
+@end smallexample
+@end cartouche
 
 The @code{agent/@i{cabal}.nb} file looks like this.
-@example
+@cartouche
+@smallexample
 define ring cell "@i{node1},...,@i{nodeI},...,@i{nodeN}";
 define @i{node1} node;
 ...
@@ -508,7 +519,8 @@ define @i{nodeI} node;
 #
 define @i{nodeN} node;
 ...
-@end example
+@end smallexample
+@end cartouche
 
 When all nodes are running on the same host, you may specify clients and servers using local domain sockets as @code{"unix://@i{path}"}.
 If security is not an issue, you may also replace "tls" with "tcp" for remote clients and servers.
@@ -541,9 +553,11 @@ This section describes commands implemented by the Message module for use with d
 @cindex trace
 
 The @code{trace} command is used to toggle the @code{trace} option for troubleshooting.
-@example
+@cartouche
+@smallexample
 @i{node}:trace [on|off]
-@end example
+@end smallexample
+@end cartouche
 
 @node Module Commands
 @section Module Commands
@@ -553,18 +567,22 @@ The Message module provides commands for managing message logs.  These commands 
 command interpreter so they may be invoked without first defining a node.  These commands start with @code{message}
 followed by a period and then a verb.
 
-@example
+@cartouche
+@smallexample
 message.@i{verb} @i{body}
-@end example
+@end smallexample
+@end cartouche
 
 @subsection Create
 @cindex create command
 
 The @code{message.create} command is used to initialize a message log before using for the first time with a message node.
 
-@example
+@cartouche
+@smallexample
 message.create [@i{path}] @i{cabal} @i{nodename} @i{nodenumber} [@i{type}]
-@end example
+@end smallexample
+@end cartouche
 
 @multitable {--------------------} {--------------------------------------------------------------------------------------}
 @item @b{Element}@w{         }@tab @b{Description}
@@ -601,17 +619,21 @@ A value of @code{state} is not allowed with a non-zero @i{nodenumber}.
 When the @code{content} option is specified, or used by default, a numbered message file is created with a named symbolic link.
 The numbered message file is initialized with a header record.
 
-@example
+@cartouche
+@smallexample
 @i{path}/@i{cabal}/@i{nodename}/@i{nodename}.msg -> 00000001.msg    
 @i{path}/@i{cabal}/@i{nodename}/00000001.msg
-@end example
+@end smallexample
+@end cartouche
 
 When the @code{state} option is specified, the named message file is created as a regular file with a header record.
 The content of the named file is the same as the numbered file created under the @code{content} option.
 
-@example
+@cartouche
+@smallexample
 @i{path}/@i{cabal}/@i{nodename}/@i{nodename}.msg
-@end example
+@end smallexample
+@end cartouche
 
 In either case, the named message file can be read to determine the state of the message log.
 
@@ -623,9 +645,11 @@ This may be useful for troubleshooting.
 In the future, we anticipate providing a corresponding @code{import} command,
 which would enable repairs to corrupted log files using a text editor.
 
-@example
+@cartouche
+@smallexample
 message.export [@i{path}] @i{cabal} @i{nodename} @i{nodenumber} @i{filename}
-@end example
+@end smallexample
+@end cartouche
 
 @multitable {--------------------} {--------------------------------------------------------------------------------------}
 @item @b{Element}@w{         }@tab @b{Description}
@@ -653,18 +677,22 @@ API may enable the @code{export} command to work without requiring the @i{nodenu
 
 The full path to the message log exported is shown below.
 
-@example
+@cartouche
+@smallexample
 @i{path}/@i{cabal}/@i{nodename}/@i{filename}
-@end example
+@end smallexample
+@end cartouche
 
 @subsection Prune
 @cindex prune command
 
 The @code{prune} command is used to retire message files older than specified time period.
 
-@example
+@cartouche
+@smallexample
 message.prune [@i{path}] @i{cabal} @i{nodename} @i{nodenumber} @i{retention}
-@end example
+@end smallexample
+@end cartouche
 
 @multitable {--------------------} {--------------------------------------------------------------------------------------}
 @item @b{Element}@w{         }@tab @b{Description}

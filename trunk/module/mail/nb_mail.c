@@ -119,7 +119,7 @@ int smtpGet(NB_IpChannel *channel){
   char *cursor,*buffer=(char *)channel->buffer;
 
   if((len=recv(channel->socket,buffer,NB_BUFSIZE,0))<0) return(len); //buffer[NB_BUFSIZE] (not overflow)
-  if(len>4095) return(-1); /* that's too big */
+  if(len>=NB_BUFSIZE) return(-1); /* that's too big */
   cursor=buffer+len;
   *cursor=0; cursor--;
   if(*cursor==10){*cursor=0; cursor--; len--;}
@@ -145,27 +145,24 @@ int smtpData(NB_IpChannel *channel,char *clienthost,char *directory,char *user){
 
   nbQueueGetNewFileName(fname,directory,0,'t');
   if((file=fopen(fname,"a"))==NULL){
-    snprintf(buffer,(size_t)NB_BUFSIZE,"550 Sorry, unable to open %s\n",fname); //013112 dtl: replased sprintf
+    snprintf(buffer,(size_t)NB_BUFSIZE,"550 Sorry, unable to open %s\n",fname); // 2012-01-31 dtl: replased sprintf
     return(0);
     }
   fprintf(file,"From: %s %s\n",channel->ipaddr,clienthost);
   fprintf(file,"To: %s\n",user);
   fprintf(file,"- - - - - - - - - - - - - - - -\n");
 
-  snprintf(buffer,(size_t)NB_BUFSIZE,"%s","354 Enter Mail, end with \".\" on a line by itself"); //013112 dtl: replased strcpy 
+  snprintf(buffer,(size_t)NB_BUFSIZE,"%s","354 Enter Mail, end with \".\" on a line by itself"); // 2012-01-31 dtl: replased strcpy 
   if((len=smtpPut(channel))<0) return(len);
 
-  while((len=recv(channel->socket,buffer,NB_BUFSIZE,0))>0){
+  while((len=recv(channel->socket,buffer,NB_BUFSIZE-1,0))>0){
     *(buffer+len)=0;
     line=buffer;
     while(line<buffer+len){
       cursor=strchr(line,10);               /* look for newline character */
       if(cursor==NULL) cursor=buffer+len;
       *cursor=0;      // discard newline
-      if(*(cursor-1)==13){
-        cursor--;
-        *cursor=0;    // discard carriage return
-        }
+      if(*(cursor-1)==13) *(cursor-1)=0; // discard carriage return;
       if(*line=='.' && *(line+1)==0){
         fclose(file);
         strcpy(buffer,"250 ... Message accepted for delivery");
@@ -203,15 +200,16 @@ void smtpServe(nbSession *session){
   NB_IpChannel *channel=session->channel;
   int len,state=1;
   char *buffer=(char *)channel->buffer;
-  char mailaddress[4096],*cursor;
+  char cmd[512];
+  char mailaddress[341],*cursor;
+  char *recipient;
   char clienthost[256];
-  char recipient[256];
   char hostname[256];
   //struct IDENTITY *identity=NULL;
   nbIDENTITY identity=NULL;
   nbCELL context=session->context;
 
-  strcpy(hostname,"anonymous");  /* replace this with chgethost() */
+  if(gethostname(hostname,sizeof(hostname))) strcpy(hostname,"anonymous");
 
   sprintf(buffer,"220 %s NodeBrain SMTP Alert Server Ready",hostname);
   while(state){
@@ -237,7 +235,8 @@ void smtpServe(nbSession *session){
     else if(strncmp(buffer,"MAIL FROM:",10)==0 || strncmp(buffer,"MAIL From:",10)==0){
       cursor=buffer+10;
       while(*cursor==' ') cursor++;
-      strcpy(mailaddress,cursor);
+      strncpy(mailaddress,cursor,sizeof(mailaddress));
+      *(mailaddress+sizeof(mailaddress)-1)=0;
       sprintf(buffer,"250 %s... Sender ok",mailaddress);
       state=2;
       }
@@ -248,20 +247,26 @@ void smtpServe(nbSession *session){
       else{
         cursor=buffer+8;
         while(*cursor==' ') cursor++;
-        strcpy(mailaddress,cursor);
+        strncpy(mailaddress,cursor,sizeof(mailaddress));
+        *(mailaddress+sizeof(mailaddress)-1)=0;
         sprintf(buffer,"250 %s... Recipient ok",mailaddress);
         if((cursor=strchr(mailaddress,'@'))!=NULL) *cursor=0;
         if((cursor=strchr(mailaddress,'>'))!=NULL) *cursor=0;
-        if(*mailaddress!='<') snprintf(recipient,sizeof(recipient),"%s",mailaddress); //dtl: replaced strcpy
-        else snprintf(recipient,sizeof(recipient),"%s",mailaddress+1); //2012-01-31 dtl: replaced strcpy
+        if(*mailaddress=='<') recipient=mailaddress+1;
+        else recipient=mailaddress;
+        //if(*mailaddress!='<') snprintf(recipient,sizeof(recipient),"%s",mailaddress); //dtl: replaced strcpy
+        //else snprintf(recipient,sizeof(recipient),"%s",mailaddress+1); //2012-01-31 dtl: replaced strcpy
 	if((identity=nbIdentityGet(context,recipient))==NULL)
 	  sprintf(buffer,"550 %s Unknown",recipient);
         }
       }
     else if(strncmp(buffer,"DATA",4)==0 || strncmp(buffer,"data",4)==0){
       char directory[1024];
-      sprintf(directory,"%s/%s",server->qDir,nbIdentityGetName(context,identity));
-      if(smtpData(channel,clienthost,directory,nbIdentityGetName(context,identity))<0) state=0;
+      if(!identity) strcpy(buffer,"503 Need RCPT before DATA");
+      else{
+        sprintf(directory,"%s/%s",server->qDir,nbIdentityGetName(context,identity));
+        if(smtpData(channel,clienthost,directory,nbIdentityGetName(context,identity))<0) state=0;
+        }
       }
     else if(strncmp(buffer,"RSET",4)==0 || strncmp(buffer,"rset",4)==0){
       state=1;
@@ -271,8 +276,9 @@ void smtpServe(nbSession *session){
       strcpy(buffer,"550 String does not match anything.");
       }
     else{
-      strcpy(mailaddress,buffer);
-      sprintf(buffer,"500 Command unrecognized: \"%s\"",mailaddress);
+      strncpy(cmd,buffer,sizeof(cmd));
+      *(cmd+sizeof(cmd)-1)=0;
+      sprintf(buffer,"500 Command unrecognized: \"%s\"",cmd);
       }
     }
   nbIpClose(channel);

@@ -1,8 +1,6 @@
-makeinfo --html --no-split --number-sections webster.texi
-makeinfo --plaintext --no-split --number-sections --output=webster.txt webster.texi
-makeinfo --docbook --no-split --number-sections --output=websterDocBook.xml webster.texi
-makeinfo --xml --no-split --number-sections webster.texi
-makeinfo --no-split --number-sections webster.texi
-
-./texi4pdf webster.texi > webster.texi4pdf
-texi2pdf -D -V -o webster.pdf webster.texi4pdf
+makeinfo --html --no-split --number-sections --css-include=../../doc/style.css nb_webster.texi
+makeinfo --plaintext --no-split --number-sections --output=nb_webster.txt nb_webster.texi
+makeinfo --docbook --no-split --number-sections --output=nb_webster_DocBook.xml nb_webster.texi
+makeinfo --xml --no-split --number-sections nb_webster.texi
+makeinfo --no-split --number-sections nb_webster.texi
+texi2pdf -D -V -o nb_webster.pdf nb_webster.texi

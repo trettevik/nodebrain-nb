@@ -13,3 +13,4 @@ peer:show server
 peer:assert a=1;
 peer:show -t
 peer:stop
+-rm log/server.log

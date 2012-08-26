@@ -157,6 +157,7 @@
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2012-01-31 dtl 0.8.7  Checker updates
 * 2012-02-09 eat 0.8.7  Reviewed Checker
+* 2012-06-16 eat 0.8.10 Replaced rand with random
 *=============================================================================
 */
 #include "nbi.h"
@@ -451,7 +452,7 @@ extern int chput(struct CHANNEL *channel,char *buffer,int len){
   else memcpy(channel->buffer,buffer,len); //2012-01-31 dtl: moved to if block
   if(channel->enKey.mode){
     i=((len+5+15)&0xfffffff0)-len;   /* pad up to 16 byte boundary */  
-    if(i>5) memset(((unsigned char *)channel->buffer)+len,rand()&0xff,i-5);
+    if(i>5) memset(((unsigned char *)channel->buffer)+len,random()&0xff,i-5);
     len+=i;
     *((unsigned char *)channel->buffer+len-5)=i;
     checksum=0;                                 /* initialize checksum */
