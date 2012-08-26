@@ -41,6 +41,6 @@ declare check identity;
 =|:bin/nb check/client.nb
 
 # Define a rule to stop if it takes too long
-define giveup on(~(2s)):exit(1);
+define giveup on(~(2s)):exit 1 ;
 
 #set trace;
