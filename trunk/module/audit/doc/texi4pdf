@@ -43,7 +43,7 @@
 # 2009-03-04 Ed Trettevik
 #=================================================================
 while(<>){
-  if(/^\@example/){print("\@cartouche\n\@smallexample\n\@group\n");}
-  elsif(/^\@end example/){print("\@end group\n\@end smallexample\n\@end cartouche\n");}
+  if(/^\@example/){print("\@cartouche\n\@smallexample\n");}
+  elsif(/^\@end example/){print("\n\@end smallexample\n\@end cartouche\n");}
   else{print;}
   }

@@ -2,7 +2,7 @@
 @c %**start of header
 @setfilename nb_audit.info
 @include version.texi
-@settitle Audit Module
+@settitle Audit NodeBrain Module
 @c %**end of header
 
 @finalout
@@ -10,7 +10,7 @@
 @setchapternewpage odd
 
 @copying
-Audit Module@*
+Audit NodeBrain Module@*
 June 2012@*
 The Boeing Company, P.O. Box 3707, Seattle, WA 98124, USA
 
@@ -22,7 +22,7 @@ Author: Ed Trettevik <eat@@nodebrain.org>
 Copyright @copyright{} 2012 The Boeing Company
 
 @sp 1
-Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} preceding the index at the end of this document.
+Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
 
 @sp 1
 NodeBrain(TM) is a trademark of The Boeing Company.   All other trademarks and registered trademarks referenced in this document are the trademarks of their respective owners.
@@ -86,47 +86,7 @@ on NodeBrain.
 The function this module performs was included in the original prototype of NodeBrain as a "log listener", but the code was
 later removed from the intepreter and repackaged as the Audit module.  
 
-@sp 2
-@b{Documents}
-@sp 1
-@quotation
-@i{NodeBrain Tutorial}
-
-@i{NodeBrain User Guide}
-
-@i{NodeBrain Language Reference}
-
-@i{NodeBrain Module Reference}
-
-@i{NodeBrain API Reference}
-@end quotation
-
-@sp 2
-@b{Document Conventions}
-@sp 1
-Sample code and input/output examples are displayed in a monospace font, indented in HTML and Info, and enclosed
-in a box in PDF or printed copies.
-Bold text is used to bring the reader's attention to specific portions of an example.
-In the following example, the first and last line are associated with the host shell and the lines in between are input or output unique to NodeBrain.
-The @code{define} command is highlighted, indicating it is the focus of the example.
-Lines starting with "@dots{}" are a continuation of the previous line ending with "@dots{}".
-This is not part of the language, just one way of breaking up single lines to fit on a printed page.
-If you copy an example, you must remove the dots and combine the lines into a single line.
-
-@example
-$ nb
-> @b{define myFirstRule on(a=1 and b=2) mood="happy";}
-> assert mood="sad";
-> show mood
-mood = "sad"
-> assert a=1,b=2,c=3,d="This is an example of a long single line that", @dots{}
-@dots{} e="we depict on multiple lines to fit on the documnet page";
-2008/06/05 12:09:08 NB000I Rule myFirstRule fired(mood="happy")
-> show mood
-mood = "happy"
-> quit
-$
-@end example
+@include conventions.texi
 
 @end titlepage
 
@@ -137,9 +97,9 @@ $
 
 @ifnottex
 @node Top
-@top Audit NodeBrain Module @value{VERSION}
+@top Audit NodeBrain Module
 
-This manual is for the Audit NodeBrain Module (version @value{VERSION}, @value{UPDATED}) used to monitor system and application log files.
+This manual is for the Audit NodeBrain Module (version @value{VERSION}, @value{UPDATED-MONTH}) used to monitor system and application log files.
 @*@*
 Copyright @copyright{} 2012 The Boeing Company
 @quotation
@@ -205,222 +165,36 @@ If your application can not tolerate missed messages, however seldom, you should
 @node Tutorial
 @chapter Tutorial
 @cindex tutorial
-
-@quotation
-@i{If Edison had a needle to find in a haystack, he would proceed at once with the diligence of the bee to examine straw after straw until he found the object of his search.... I was a sorry witness of such doings, knowing that a little theory and calculation would have saved him ninety per cent of his labor.}
----Nikola Tesla (1857--1943), @i{New York Times}, October 19, 1931
-@end quotation
-
-Effective review of system and application logs can be like trying to find a needle in a haystack.  It requires at least one Edison and one Tesla working as a team.  The Audit node module works like Edison when reviewing logs so you can work like Tesla.
-
-An Audit node is similar to the Translator node covered in an earlier tutorial, but differs in the way lines of text are input for translation.  An Audit node starts at the end of a log file and periodically checks for new lines to translate.  When a log file rolls, the Audit node starts at the beginning of the new log file.
-
-The content of system and application log files can vary significantly depending on the mix of applications on a system and how they are configured.  A good strategy is to treat log entries as worthy of investigation by default.  Duplicate suppression and other flood protection techniques are helpful when using this strategy.  As new log entries are reported and investigated, you can decide if they should be suppressed or handled in a special way.
-
-@section Agent Rules
-
-The @code{syslog.nb} file below provides an agent with an Audit node to monitor a log file called @code{syslog}.
-It specifies a translator named @code{syslog.nbx} and a polling interval of 10 seconds.
-(A longer interval is recommended for real applications.)
-It also includes a deduplication cache.
-@example
-#!/usr/local/bin/nb -d
-# File: tutorial/Audit/syslog.nb
-set log="syslog.log",out=".";
-define syslog node cache(~(h(8))):(~(1h):route,appl,group,node,object,severity,text(1));
-syslog. define alarm if(text._hitState):$ -|mail.form @dots{}
-@dots{} source=tutorial route="$@{route@}" appl="$@{appl@}" group="$@{group@}" @dots{}
-@dots{} node="$@{node@}" severity="$@{severity@}" text="$@{text@}" >> mail.log
-@b{syslog. define audit node audit("syslog","syslog.nbx",~(10s));}
-@end example
-
-@section Sample Log
-
-Here's a small sample of a log file in the format to use for this tutorial.
-A copy of this file is stored as @code{tutorial/Audit/syslog.sample}.
-
-@example
-Feb  1 19:00:04 smk001 sshd[3972]: Accepted publickey for myuser @dots{}
-@dots{} from ::ffff:192.168.1.100 port 53403 ssh2
-Feb  1 19:00:06 smk001 sshd[3980]: Accepted publickey for myuser @dots{}
-@dots{} from ::ffff:192.168.1.101 port 53410 ssh2
-Feb  1 19:00:16 smk001 kernel: z90crypt: probe_crypto_domain -> @dots{}
-@dots{} Unable to find crypto domain: No devices found
-Feb  1 19:00:46 smk001 kernel: z90crypt: probe_crypto_domain -> @dots{}
-@dots{} Unable to find crypto domain: No devices found
-Feb  1 19:01:16 smk001 kernel: z90crypt: probe_crypto_domain -> @dots{}
-@dots{} Unable to find crypto domain: No devices found
-Feb  1 19:01:19 smk001 su: (to root) myuser on /dev/pts/1
-@end example
-
-@section Translation Rules
-
-Here's a small translator called @code{syslog.nbx} designed for the log format above.
-
-@example
-# File: tutorial/Audit/syslog.nbx
-([a-zA-Z]+ +\d+ \d\d:\d\d:\d\d [^ ]+ )@{
-  (^-- MARK --)
-  (^\/USR\/SBIN\/CRON\[\d+\]: [^ ]+ CMD)
-  (^last message repeated \d+ times)
-  (^kernel: )@{
-    (^z90crypt: probe_crypto_domain -> Unable to find crypto domain: No devices found)
-    (^end_request: I\/O error)
-    (^dasd_erp.*:Perform logging requested)
-    (^dasd:.*:ERP successful)
-    :syslog. assert ("syslog","syslog","OS","","","normal","SYS0000 kernel: $[=]");
-    @}
-  (^su: )@{
-    (^pam_unix2: session (started|finished) for user (nobody|root|wwwadm|cyrus), service su)
-    (^\(to (nobody|cyrus)\) root on none)
-    :syslog. assert ("syslog","syslog","OS","","","normal","SYS0000 su: $[=]");
-    @}
-  (^sshd\[\d+\]: )@{
-    (^Accepted password for myuser from ::ffff:.* port \d+ ssh2)
-    (^Accepted publickey for myuser from ::ffff:.* port \d+ ssh2)
-    (^error: Could not get shadow information for NOUSER)
-    (^(?'preport'.*port) \d+ )@{
-      :syslog. assert ("syslog","syslog","OS","","","normal", @dots{}
-      @dots{} "SYS0000 sshd[*]: $[preport]port * $[=]");
-      @}
-    :syslog. assert ("syslog","syslog","OS","","","normal","SYS0000 sshd[*]: $[=]");
-    @}
-  @}
-():syslog. assert ("syslog","syslog","OS","","","critical","SYS0000 $[-]");
-@end example
-
-@page
-@section Start the Agent
-
-Before starting the agent, you must touch  @code{syslog} to make sure it exists.
-
-@example
-$ ./syslog.nb
-2009/02/01 19:56:57 NB000I Argument [1] -d
-2009/02/01 19:56:57 NB000I Argument [2] ./syslog.nb
-> #!/usr/local/bin/nb -d
-> # File: tutorial/Audit/syslog.nb
-> set log="syslog.log",out=".";
-2009/02/01 19:56:57 NB000I NodeBrain nb will log to syslog.log
-> define syslog node cache(~(h(8))):(~(1h):route,appl,group,node,object,severity,text(1));
-> syslog. define alarm if(text._hitState):$ -|mail.form @dots{}
-@dots{} source=tutorial route="$@{route@}" appl="$@{appl@}" group="$@{group@}" @dots{}
-@dots{} node="$@{node@}" severity="$@{severity@}" text="$@{text@}" >> mail.log
-> syslog. define audit node audit("syslog","syslog.nbx",~(10s));
-2009/02/01 19:56:57 NB000I Loading translator "syslog.nbx"
----------- --------
-# File: tutorial/Audit/syslog.nbx
-([a-zA-Z]+ +\d+ \d\d:\d\d:\d\d [^ ]+ )@{
-  (^-- MARK --)
-  (^\/USR\/SBIN\/CRON\[\d+\]: [^ ]+ CMD)
-  (^last message repeated \d+ times)
-  (^kernel: )@{
-    (^z90crypt: probe_crypto_domain -> Unable to find crypto domain: No devices found)
-    (^end_request: I\/O error)
-    (^dasd_erp.*:Perform logging requested)
-    (^dasd:.*:ERP successful)
-    :syslog. assert ("syslog","syslog","OS","","","normal","SYS0000 kernel: $[=]");
-    @}
-  (^su: )@{
-    (^pam_unix2: session (started|finished) for user (nobody|root|wwwadm|cyrus), service su)
-    (^\(to (nobody|cyrus)\) root on none)
-    :syslog. assert ("syslog","syslog","OS","","","normal","SYS0000 su: $[=]");
-    @}
-  (^sshd\[\d+\]: )@{
-    (^Accepted password for myuser from ::ffff:.* port \d+ ssh2)
-    (^Accepted publickey for myuser from ::ffff:.* port \d+ ssh2)
-    (^error: Could not get shadow information for NOUSER)
-    (^(?'preport'.*port) \d+ )@{
-      :syslog. assert ("syslog","syslog","OS","","","normal", @dots{}
-      @dots{} "SYS0000 sshd[*]: $[preport]port * $[=]");
-      @}
-    :syslog. assert ("syslog","syslog","OS","","","normal","SYS0000 sshd[*]: $[=]");
-    @}
-  @}
-():syslog. assert ("syslog","syslog","OS","","","critical","SYS0000 $[-]");
----------- --------
-2009/02/01 19:56:57 NB000I Translator "syslog.nbx" loaded successfully.
-2009/02/01 19:56:57 NB000I Source file "./syslog.nb" included. size=425
-2009/02/01 19:56:57 NB000I NodeBrain nb[6749,3352] daemonizing
-$
-@end example
-
-@section Grow the Log
-
-Use a shell script to append the sample log file @code{syslog.sample} to the monitored @code{syslog} file three times.
-
-@example
-# File: tutorial/Audit/syslog.sh
-cat syslog.sample >> syslog
-cat syslog.sample >> syslog
-cat syslog.sample >> syslog
-@end example
-
-@section Review the Agent Log
-
-After executing the @code{syslog.sh} script above, your @code{syslog.log} file should look like this.
-
-@example
-2009/02/01 19:59:35 NB000I Agent log is syslog.log
-2009/02/01 19:59:35 NM000I audit audit: Enabled audit of syslog using syslog.nbx
-> syslog. assert ("syslog","syslog","OS","","","normal", @dots{}
-@dots{} "SYS0000 su: (to root) myuser on /dev/pts/1");
-2009/02/01 20:00:05 NB000I Rule syslog.alarm fired
-: syslog. -|mail.form source=tutorial route="syslog" appl="syslog" group="OS" @dots{}
-@dots{} node="" severity="normal" text="SYS0000 su: (to root) myuser on /dev/pts/1" >> mail.log
-[6957] Started: -|mail.form source=tutorial route="syslog" appl="syslog" group="OS" @dots{}
-@dots{} node="" severity="normal" @dots{}
-@dots{} text="SYS0000 su: (to root) myuser on /dev/pts/1" >> mail.log
-[6957] Exit(0)
-> syslog. assert ("syslog","syslog","OS","","","normal", @dots{}
-@dots{} "SYS0000 su: (to root) myuser on /dev/pts/1");
-> syslog. assert ("syslog","syslog","OS","","","normal", @dots{}
-@dots{} "SYS0000 su: (to root) myuser on /dev/pts/1");
-> syslog. assert ("syslog","syslog","OS","","","normal", @dots{}
-@dots{} "SYS0000 su: (to root) myuser on /dev/pts/1");
-@end example
-
-Notice that the translator only asserted the @code{su} log entries to the @code{syslog} cache.
-This is because the translator was coded to ignore the other entries in the sample log file.
-Notice also that the agent only generated an alarm once.
-This is because the @code{syslog} cache node was coded to ignore duplicates until 8:00 AM unless they are separated by 1 hour.
-
-Although you used a system log for this tutorial, you can code a translator for application logs as well.
-In fact, the more unique your application log, the more likely you will need to construct your own custom log monitor.
-
-If you started the agent for this tutorial, you should kill it now.
-
+@include nb_audit_tutorial.texi
 
 @node Commands
 @chapter Commands
 @cindex commands
 
-This section describes define commands used with an Audit node.
+This section describes commands used with an Audit node.
  
 @section Define
 @cindex define command
 
 The @command{define} command is used to create an Audit node.
  
-@subheading Syntax
-@multitable {---------------------} {---------------------------------------------------------------}
-	   
-	@item @i{auditDefineCmd}	
-	@tab ::= @b{define} @v{s} @i{term} @v{s} @b{node} [@v{s}@i{audiDef} ] @bullet{} 	   
-			   
-	@item @i{auditDef}	
-	@tab ::= @b{audit(} "@i{filename} " , " @i{translatorName} " , @i{schedule} @b{)};	   
-			   
-	@item @i{filename}	
-	@tab ::= name of file to audit	   
-			   
-	@item @i{translatorName}	
-	@tab ::= name of translator file (*.nbx)	   
-			   
-	@item @i{schedule}	
-	@tab ::= @i{cellExpression}    	   
 
-        @end multitable		 
+@cartouche
+@*
+@b{Syntax}
+@multitable {---------------------} {-------------------------------------------------------------------------}
+@item @i{auditDefineCmd}
+@tab ::= @b{define} @ringaccent{s} @i{term} @ringaccent{s} @b{node} [ @ringaccent{s} @i{auditDef} ] @bullet{}
+@item @i{auditDef}
+@tab ::= @b{audit(}"@i{filename}","@i{translatorName}",@i{schedule}@b{)};
+@item @i{filename}
+@tab ::= name of file to audit
+@item @i{translatorName}
+@tab ::= name of translator file (*.nbx)
+@item @i{schedule}
+@tab ::= @i{cellExpression}
+@end multitable		 
+@end cartouche
 
 @*
 The @i{filename} and @i{translatorName} arguments may be any cell expression that resolves to a string value containing a filename. The value at definition time is used. An audit node will not response to or recognize changes to the value of expressions for these parameters.
@@ -429,9 +203,11 @@ The @i{translatorName} by convention has a ".nbx" suffix. See "Translators" unde
 
 The schedule parameter may be any cell expression. New lines in the audit file are translated each time the schedule parameter transitions to TRUE. Normally a time condition is used to check the audit file for new lines on a periodic basis (e.g., every 10 seconds) as show in the following example.
 
-@example
-	define msgAudit node audit("/var/adm/messages","messages.nbx",~(10s));
-@end example
+@cartouche
+@smallexample
+define logaudit node audit("/var/adm/messages","messages.nbx",~(10s));
+@end smallexample
+@end cartouche
 
 @section Assert
 @cindex assert command
@@ -443,18 +219,22 @@ Assertions are not supported by this module.
 
 The @command{disable} commands may be used to stop the node from listening for syslog messages on the specified port.
 
-@example
-disable @i{node}
-@end example
+@cartouche
+@smallexample
+disable @i{node};
+@end smallexample
+@end cartouche
 
 @section Enable
 @cindex enable command
 
 The @command{enable} command may be used to start listening for syslog messages on the specified port.
 
-@example
-enable @i{node}
-@end example
+@cartouche
+@smallexample
+enable @i{node};
+@end smallexample
+@end cartouche
 
 An Audit node is automatically enabled when an agent goes into background mode (daemonizes).  So the enable command is
 only required if you want to enable it when running in a different mode, or to re-enable the node after it has been
@@ -466,10 +246,12 @@ disabled.
 
 A trace mode can be toggled on or off to assist in debugging translator rules. When trace is on, lines from the file are displayed when processed.
 
-@example
-	@i{node}:@b{trace}
-	@i{node}:@b{notrace}
-@end example
+@cartouche
+@smallexample
+@i{node}:@b{trace}
+@i{node}:@b{notrace}
+@end smallexample
+@end cartouche
 
 @section Module Commands
 
