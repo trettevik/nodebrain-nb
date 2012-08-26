@@ -51,6 +51,7 @@
 * 2010-10-14 eat 0.8.4  Included initialization of servepid.
 * 2010-10-16 eat 0.8.4  Included initialization of servegroup.
 * 2012-01-16 dtl 0.8.5  Checker updates
+* 2012-06-16 eat 0.8.10 Replaced srand with srandom
 *============================================================================*/
 #include "nbi.h"
 #include "nbmedulla.h"
@@ -384,7 +385,7 @@ nbCELL nbStart(int argc,char *argv[]){
     }
 
   showHeading();
-  srand(time(NULL));    /* seed the random number generator */
+  srandom(time(NULL));    /* seed the random number generator */
 
   /* initialize nodebrain logic structures */
   /* first set the trace shim */  
