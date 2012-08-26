@@ -103,6 +103,7 @@ In August 2010, disruption on another project requiring a temporary halt for red
 nice opportunity to work on this task until the dust settled on the higher priority project.
 A several year old draft design was reviewed and then mostly discarded and replaced by a very simple approach based on the existing Tree module.  This made it possible to create the initial prototype in a couple days.
 
+@include conventions.texi
 
 @end titlepage
 @end iftex
@@ -112,9 +113,9 @@ A several year old draft design was reviewed and then mostly discarded and repla
 
 @ifnottex
 @node Top
-@top Baseline NodeBrain Module @value{VERSION}
+@top Baseline NodeBrain Module
 
-This manual is for the Baseline NodeBrain Module (version @value{VERSION}, @value{UPDATED}), a statistical anomaly detection module.
+This manual is for the Baseline NodeBrain Module (version @value{VERSION}, @value{UPDATED-MONTH}), a statistical anomaly detection module.
 
 Copyright @copyright{} 2010, 2011, 2012 The Boeing Company.
 @quotation
@@ -130,10 +131,6 @@ Permission is granted to copy, distribute and/or modify this document under the 
 * Commands:: Syntax and Semantics
 * Triggers:: Conditions and Response
 @end menu
-
-@ifnotplaintext
-@b{References}
-@end ifnotplaintext
 @menu
 * GNU Free Documentation License::
 * Index::
@@ -166,9 +163,11 @@ measure and alerts when a measure is considered an anomaly relative to the stati
 
 An exponentially weighted moving average (EWMA) is maintained for each measure.  This is a common technique for calculating an average with a different weight given to the more recent values.  It also has the advantage of not requiring the storage of past values.
 
-@example
+@cartouche
+@smallexample
 a[i] = w v[i] + (1-w) a[i-1]    where a is EWMA, w is a weight 0<=w<=1, and v is a value 
-@end example
+@end smallexample
+@end cartouche
 
 The contribution of a new value to the average is determined by the weight @code{w}.  The weight also determines the rate at which this contribution decays as new values are included.  Larger values of @code{w} give more input to a new value, but also cause this contribution to decay more quickly as new values are included.
 
@@ -177,15 +176,19 @@ The contribution of a new value to the average is determined by the weight @code
 
 The difference between a new value and the current average is called the deviation.
 
-@example
+@cartouche
+@smallexample
 d[i] = v[i] - a[i-1]
-@end example
+@end smallexample
+@end cartouche
 
 You can restate the formula for the exponentially weighted moving average as an adjustment using the product of weight and deviation.
 
-@example
+@cartouche
+@smallexample
 a[i] = a[i-1] + w d[i]
-@end example
+@end smallexample
+@end cartouche
 
 @section Average Deviation
 @cindex average deviation
@@ -193,24 +196,30 @@ a[i] = a[i-1] + w d[i]
 The average deviation of actual values from the expected values is also computed as an EWMA.  
 This is an approach for measuring the amount of variation in a measure.  It is calculated like the average except the value is replaced by the absolute difference between the new value and prior average value.
 
-@example
+@cartouche
+@smallexample
 D[i] = w abs(d[i]) + (1-w) D[i-1]     where D is the average deviation
-@end example
+@end smallexample
+@end cartouche
 
 Restating this as an adjustment, it looks like this.
 
-@example
+@cartouche
+@smallexample
 D[i] = D[i-1] + w abs(d[i]-D[i-1])
-@end example
+@end smallexample
+@end cartouche
 
 @section Standard Deviation
 @cindex standard deviation
 
 The average deviation is expected to be 0.8 of the standard deviation for a normal distribution.  Use this to approximate a standard deviation by multiplying the average deviation by 1.25.  Specify the threshold as a factor times the approximate standard deviation.  It is common to consider a value more than three standard deviations (3-sigma) an anomaly.  For a normal distribution, 3-sigma will include 97 percent of the values in the normal range.  
 
-@example
+@cartouche
+@smallexample
 s = 1.25 D     where D is the average deviation and s is an approximate standard deviation
-@end example
+@end smallexample
+@end cartouche
 
 @section Weight
 @cindex Weight
@@ -229,11 +238,13 @@ A Baseline node is assigned a tolerance factor that specifies how "abnormal" a v
 
 A threshold is an amount of deviation from the average, beyond which a new value is considered an anomaly.  You can define a threshold unit for any given measure as the tolerance times the standard deviation.
 
-@example
+@cartouche
+@smallexample
 u[i] = t s[i-1]       where u is the threshold unit, t is the tolerance, and s is the approximate standard deviation
 u[i] = 1.25 t D[i-1]  substituting 1.25 D for s  
 u[i] = T D[i-1]       where T is an internal tolerance factor 1.25 t
-@end example
+@end smallexample
+@end cartouche
 
 A threshold is established at every positive integer multiple of the threshold unit.  The first threshold is at 1u, the second at 2u, and so on.
 
@@ -242,9 +253,11 @@ A threshold is established at every positive integer multiple of the threshold u
 
 For each measure, a Baseline node maintains a current anomaly level, which is the last deviation divided by the threshold unit rounded down to the nearest integer.
 
-@example
+@cartouche
+@smallexample
 L[i] = int( d[i-1] / u[i-1] )
-@end example
+@end smallexample
+@end cartouche
 
 Alerts are triggered when the anomaly level of a measure increases.
 
@@ -255,10 +268,12 @@ A control process has upper and lower limits that define the range of normal val
 
 To avoid triggering alerts for each new data point during an anomalous episode (period of abnormal values), the upper and lower limits open when the anomaly level increases (this is when an alert triggers) and close down when the anomaly level decreases.  In the formulas below, @code{a} is the average value, @code{n} = 1 + @code{L}, where @code{L} is the anomaly level, and @code{u} is the threshold unit.
 
-@example
+@cartouche
+@smallexample
 UL = a + n u     upper limit
 LL = a - n u     lower limit
-@end example
+@end smallexample
+@end cartouche
 
 @section Cycle Duration
 @cindex cycle
@@ -276,199 +291,46 @@ The cycle time is divided into shorter periods of equal duration.  The statistic
 
 A Baseline statistical profile is maintained as a set of files in a directory.  Each file contains a profile for a single period, providing the average value and average deviation for each measure.  A period profile is just a set of Baseline node commands.
 
-@example
+@cartouche
+@smallexample
 .(@i{arg1},@i{arg2},...):set @i{averageValue},@i{averageDeviation};
 ...
-@end example
+@end smallexample
+@end cartouche
 
 Here's an example with two measures.
 
-@example
+@cartouche
+@smallexample
 .("cpu utilization"):set 60.456,10.45;
 .("disk utilization"):set 50.48,20.984;
-@end example
+@end smallexample
+@end cartouche
 
 The filename of a period profile is based on the number of seconds from the start of a cycle.
 
-@example
+@cartouche
+@smallexample
 nnnnnnnn.nb
-@end example
+@end smallexample
+@end cartouche
 
 If a one-hour period is used, the filenames will increment by 60*60 or 3600.  At any given UTC time, you can compute which profile to use as follows.
 
-@example
+@cartouche
+@smallexample
 t =: UTC time
 c =: cycle duration
 p =: period duration
 T = t % c               time within the cycle
 F = int ( T / p ) * p   file time
-@end example
+@end smallexample
+@end cartouche
 
 @node Tutorial
 @chapter Tutorial
 @cindex tutorial
-
-This section illustrates the use of the Baseline module with simple examples.  
-
-@section Creating Profile Directory
-@cindex profile
-
-Create a directory for storing period profiles.  Since you are going to create a statistical profile for weather measurements, name the directory @code{weather}, and create it in the @code{cache/baseline} subdirectory of the caboodle (NodeBrain application directory).
-
-@example
-$ cd CABOODLE
-$ mkdir -p cache/baseline/weather
-@end example 
-
-@section Constant Expectation
-@cindex constant expectation
-
-Let's say you are monitoring the temperature and humidity inside a house where it is expected to be relatively constant over time.  There is no need to manage multiple period profiles, nor is there a reason to learn a statistical definition of normal.  Instead, you can use a single period with a static profile that you define manually.
-
-@example
-# cache/baseline/weather/00000000.nb
-.("temperature"):set 68,2;
-.("humidity"):set 45,5;
-@end example
-
-In this case, define the Baseline node as follows.
-
-@example
-# arguments: directory, weight, tolerance, cycle, period
-define indoor node baseline("cache/baseline/weather",0,0.8,60,60):static;
-@end example
-
-Here's a quick explanation of your choices.
-
-@itemize @bullet
-@item The @code{static} option is used to avoid updating the profile at the end of a period. 
-@item A weight of 0 is used to avoid adjusting the average based on new actual values.
-This is not technically required under the @code{static} option, but any other value would be misleading.
-@item A tolerance of 0.8 is specified so you can express the range of normal values in the same units as the measure.
-This may seem a bit odd, but because of the approximation of standard deviation, 0.8 standard deviation is 1 average deviation.  Since the profile contains average deviation, you can set it to half the normal range and set the average to the center of the normal range.
-@item A one-hour (60 minute) cycle and period are used so only one period profile is needed.  Since the period duration divides into the cycle duration one time, keep repeating a single period.
-@end itemize
-
-@section Asserting Values
-@cindex assert
-
-There is nothing special about the way to make assertions to a Baseline node.
-You assert values in the same way you would assert to a Tree node.
-Here are some examples.
-
-@example
-indoor. assert ("temperature")=67.4,("humidity")=45.3;
-assert x=1,y="abc",indoor("temperature")=67.4,indoor("humidity")=45.3;
-indoor. assert x=2,("temperature")=73;
-@end example
-
-@section Anomaly Response Rules
-@cindex response rules
-
-Given the last assertion above, where temperature is asserted to be 73, you may expect the following alert to be generated by the "indoor" node shown previously.
-@example
-alert _measure="'temperature'",_value=73,_average=68,_sigma=2.5,_deviation=5, \
-      _threshold=5,_level=1;
-@end example
-
-By itself this alert does nothing.  You need to provide rules to specify a response.
-Here's an example that simply echoes an entry out to an application log, and when it is a temperature anomaly also logs to the system log.
-
-@example
-# arguments: directory, weight, tolerance, cycle, period
-define indoor node baseline("cache/baseline/weather",0,0.8,60,60):static;
-# alert _measure="...",_value=n,_average=n,_sigma=n,_deviation=n,_threshold=n,_level=n;
-indoor. define logecho if(1):$ =echo `date` "$@{_measure@} value of $@{_value@} is out of  \
-                                     range - threshold is $@{_threshold@}" >> weather.log
-indoor. define logger if(_measure="'temperature'"):$ =logger -p local0.notice -t WEATHER \
-                                      "$@{_measure@}=$@{_value@} threshold=$@{threshold@}"
-@end example
-
-Here's another example where the response is more complicated.  The @code{alarmit} rule invokes the @code{alarm} macro, which is defined on the third line.  The macro makes an assertion to the @code{alarmMessage} cache.  The cache logs a message to the system log, but only when the measure has had no anomaly
-alerts for at least 1 hour prior.  The @code{cacheit} rule asserts the measure name to the @code{anomaly} cache, which can be used to check whether a measure has had an anomaly alert in the past 2 hours.
-
-@example
-define alarmMessage node cache(~(h):measure,message(1));
-alarmMessage. define alarmit if(message._hitState):$ =logger -p local0.notice -t WEATHER \
-                                                                            "$@{message@}"
-
-define alarm macro(msgid,measure,text):% alarmMessage. assert ("%@{measure@}","%@{msgid@} %@{text@}");
-
-# keep track of anomalies within the past 2 hours
-define anomaly node cache:(~(2h):measure);
-
-# arguments: directory, weight, tolerance, cycle, period
-define indoor node baseline("cache/baseline/weather",0,0.8,60,60):static;
-# alert _measure="...",_value=n,_average=n,_sigma=n,_deviation=n,_threshold=n,_level=n;
-indoor. define alarmit if(1):$ $alarm("XYZ0001","$@{_measure@}", \
-                   "Weather measure $@{_measure@}=$@{_value@} threshold=$@{_threshold@}");
-indoor. define cacheit if(1) anomaly(_measure);
-@end example
-
-@section Periodicity
-@cindex periodicity
-
-Now let's suppose you live in a barn, where the temperature and humidity are not so constant,
-but where the temperature values are expected to vary by time of day. You may want a profile for every 4-hour period during the day. There would be six periods per day.  The period profiles are stored in files with names incrementing by 4*60*60, or 14400 seconds.
-
-@multitable {-------------------} {------------------------}
-@item @b{Period} @tab @b{Profile}
-@item 00:00 to 04:00 @tab 00000000.nb
-@item 04:00 to 08:00 @tab 00014400.nb
-@item 08:00 to 12:00 @tab 00028800.nb
-@item 12:00 to 16:00 @tab 00043200.nb
-@item 16:00 to 20:00 @tab 00057600.nb
-@item 20:00 to 00:00 @tab 00072000.nb
-@end multitable
-
-The Baseline node now has a 24-hour cycle time and a 4-hour period.
-
-@example
-# arguments: directory, weight, tolerance, cycle, period
-define indoor node baseline("cache/baseline/weather",0,0.8,@b{24*}60,@b{4*}60):static;
-@end example
-
-@section Learning
-@cindex learning
-
-Suppose you don't have a preconceived notion of what a normal range of values is for your measures.
-In this case, you want to let the Baseline module create the profiles for you and adjust the average
-value and average deviation based on actual values experience while learning is enabled.  To do this, simply remove the @code{static} option from the Baseline node definition and provide a non-zero weight to control how fast to adapt averages to new actuals.  Because you no longer know the range of normal values, you express the tolerance in standard deviations (e.g., 3 below).
-
-@example
-# arguments: directory, weight, tolerance, cycle, period
-define indoor node baseline("cache/baseline/weather",@b{0.2},@b{3},@b{24*}60,@b{4*}60);
-@end example
-
-At the end of each period, the profile is updated with weight-adjusted averages for each measure's value and deviation.
-
-@section Computer Network Periods
-@cindex periods
-
-Measurements within a computer network (e.g., number of packets by protocol) typically vary based on user and software schedules that vary by time of day and day of week.  If you are monitoring measures with this type of periodicity, it is appropriate to use a weekly cycle and hourly period.
-
-@example
-# arguments: directory, weight, tolerance, cycle, period
-define packets node baseline("cache/baseline/@b{packetsbyprotocol}",0.2,3,@b{7*24*60},@b{60});
-@end example
-
-@section Summation
-@cindex summation
-
-When your measures are counts (e.g., number of packets by protocol), your information source may provide counts over units of time much smaller than the period duration.  In this case, you want to sum up the counts from the information source over the period duration.  You do this by specifying the @code{sum} option.
-
-@example
-# arguments: directory, weight, tolerance, cycle, period
-define packets node baseline("cache/baseline/packetsbyprotocol",0.2,3,7*24*60,60):@b{sum};
-@end example
-
-Now when you assert values to measures within the Baseline node, the measures are incremented instead of being set to the new value.
-
-@example
-packets. assert ("icmp")=465,("http")=1024,("smtp")=34; # increment measures
-@end example
-
-At the end of each period, the measures are all reset to zero when the @code{sum} option is used.
+@include nb_baseline_tutorial.texi
 
 @node Commands
 @chapter Commands
@@ -486,9 +348,11 @@ This section describes define commands the Baseline module supports.
 
 The @code{define} command is used to create a Baseline node.  
 
-@example
+@cartouche
+@smallexample
 define @i{node} node baseline("@i{directory}",@i{weight},@i{tolerance},@i{cycle},@i{period})[:@i{options}];
-@end example
+@end smallexample
+@end cartouche
 
 
 @multitable {--------------------} {--------------------------------------------------------------------------------------}
@@ -503,13 +367,17 @@ define @i{node} node baseline("@i{directory}",@i{weight},@i{tolerance},@i{cycle}
 @item @b{Option}@tab @b{Description}
 @item found @tab The @code{found} option is assigned a cell expression to be used as a default value when an element is found by an evaluation but has no value.  This happens when an evaluation has fewer arguments than the assertion
 that created the element.  For example, if you assert @code{foobar("abc","def")=5} and evaluate @code{foobar("abc")}, the "abc" element is found, but has no value, assuming it was not explicitly asserted also.  By default, ? (unknown) is returned. 
-@example
+@cartouche
+@smallexample
 found=@i{cellExpression}
-@end example
+@end smallexample
+@end cartouche
 @item notfound @tab The @code{notfound} option provides a default value when an element is not found during an evaluation.  The default value for @code{notfound} is ? (unknown).  A value of 0 can be used to implement the "closed world assumption," where anything not known to be true is assumed to be false.
-@example
+@cartouche
+@smallexample
 notfound=@i{cellExpression}
-@end example
+@end smallexample
+@end cartouche
 @item order @tab The @code{order} option specifies the use of argument values for comparison when searching and maintaining binary trees within a Baseline node.  By default, comparisons are performed on the address of argument value objects for added efficiency.   This is possible because NodeBrain maintains only one object for any given value.
 @item partition @tab
 The @code{partition} option implies the @code{order} option and changes the evaluation operation to match an argument to the element with the maximum value less than or equal to the argument value.  This enables a domain of values to be partitioned into ranges of values.  For example, a partitioned Baseline node might be used to monitor the number of traffic accidents by driver age ranges in 10-year increments.
@@ -527,9 +395,11 @@ When the sum reaches an upper limit and the assertion and average are both posit
 @cindex alert
 
 The Baseline module supports assertions within @code{assert} or @code{alert} commands.  
-@example
+@cartouche
+@smallexample
 assert @i{node}(@i{arg1}[,@i{arg2},...])[=@i{value}];  # value must be number or ? (Unknown)
-@end example
+@end smallexample
+@end cartouche
 The semantics are similar to the Tree module, except the value assigned to an element within a Baseline node must be a number.  Strings are not allowed.  When the @code{sum} option is used by a Baseline node, an assertion to a Baseline node will add to the current value, otherwise it replaces the current value.  If no value is specified, 1 is assumed.  If an unknown value ("?") is assigned, the element is removed.
 
 @section Cell Expressions
@@ -540,45 +410,55 @@ The semantics are similar to the Tree module, except the value assigned to an el
 When a Baseline node is referenced in a cell expression, it presents the value of the specified element.
 The example shows a reference within a cell expression of a simple @code{define} statement.
 
-@example
+@cartouche
+@smallexample
 define @i{term} cell @i{node}(@i{arg1}[,@i{arg2},...]);  # term has value of specified element
-@end example
+@end smallexample
+@end cartouche
 
 @section Node Commands
 @cindex node commands
 
 This section describes commands implemented by the Baseline module for use with defined nodes.
 
-@example
+@cartouche
+@smallexample
 @i{node}[(@i{arg1}[,@i{arg2},...])]:@i{verb} [@i{arguments}]
-@end example
+@end smallexample
+@end cartouche
 
 @subsection Balance
 @cindex balance
 
 The @code{balance} command is used to rebalance the trees within a Baseline node after @code{flatten} or @code{prune} commands have made the trees unbalanced.
 
-@example
+@cartouche
+@smallexample
 @i{node}:balance
-@end example
+@end smallexample
+@end cartouche
 
 @subsection Flatten
 @cindex flatten
 
 The @code{balance} command is used to completely unbalance the trees within a Baseline node so they effectively become lists.
 
-@example
+@cartouche
+@smallexample
 @i{node}:flatten
-@end example
+@end smallexample
+@end cartouche
 
 @subsection Prune
 @cindex prune
 
 The @code{prune} command is used to remove elements from a Baseline node.
 
-@example
+@cartouche
+@smallexample
 @i{node}[(@i{arg1}[,@i{arg2},...])]:prune
-@end example
+@end smallexample
+@end cartouche
 
 Unlike an assertion that an element is unknown, which removes the identified element and the subordinate tree, the @code{prune} command only removes the subordinate tree.  Using a table model, it deletes the subordinate table, emptying the cells to the right of the identified cell and deleting all rows represented by the subordinate table.
 
@@ -587,9 +467,11 @@ Unlike an assertion that an element is unknown, which removes the identified ele
 
 The @code{set} command is used to assign the average value and average deviation for an element in a Baseline node.
 
-@example
+@cartouche
+@smallexample
 @i{node}(@i{arg1}[,@i{arg2},...]):set @i{averageValue},@i{averageDeviation};
-@end example
+@end smallexample
+@end cartouche
 
 Although @code{set} commands can be issued at any time, they are primarily used in period profiles.  A period profile is just a file containing @code{set} commands.  These files are processed ("sourced") at the start of a period and optionally updated at the end of a period.  
 
@@ -598,10 +480,12 @@ Although @code{set} commands can be issued at any time, they are primarily used 
 
 The @code{store} command is used to write the current measures within a Baseline node to a file in the form of assertions.
 
-@example
+@cartouche
+@smallexample
 assert (@i{arg1}[,@i{arg2},...])=@i{value};
 ...
-@end example
+@end smallexample
+@end cartouche
 
 The node name is not included in the assertions.  This enables the assertions to be easily applied to a different node---perhaps not even a Baseline node.
 
@@ -609,9 +493,11 @@ The node name is not included in the assertions.  This enables the assertions to
 @cindex trace
 
 The @code{trace} command is used to toggle the @code{trace} option for troubleshooting.
-@example
+@cartouche
+@smallexample
 @i{node}:trace [on|off]
-@end example
+@end smallexample
+@end cartouche
 
 @section Module Commands
 @cindex module commands
@@ -626,10 +512,12 @@ The Baseline module currently implements no module level commands.
 
 When measures reach thresholds, a Baseline node issues an alert to @code{if} rules defined for the node.
 These alerts have the following form.
-@example
+@cartouche
+@smallexample
 alert _measure="@i{name}",_value=@i{n},_average=@i{n},_deviation=@i{n},_threshold=@i{n},_limit=@i{n}, \
       _sigma=@i{n},_level=@i{n};
-@end example
+@end smallexample
+@end cartouche
 
 @multitable {--------------------} {--------------------------------------------------------------------------------------}
 @item @b{Attribute}@w{        }@tab @b{Description}
