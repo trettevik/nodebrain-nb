@@ -133,10 +133,10 @@ void destroyReal(struct REAL *real){
   realP=locateReal(real->value);
   if(*realP!=real){
     outMsg(0,'L',"destroyReal: unable to locate real object.");
-	  outPut("value: ");
-	  printReal(real);
-	  outPut("\n");
-	  outFlush();
+    outPut("value: ");
+    printReal(real);
+    outPut("\n");
+    outFlush();
     return;
     }
   *realP=(struct REAL *)real->object.next;
