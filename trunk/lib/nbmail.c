@@ -41,7 +41,7 @@
 */
 #include <nbi.h>
 
-extern int mailTrace=0;  // debugging
+int mailTrace=0;  // debugging
 
 char *nbSymCmd(nbCELL context,char *source,char *style);
 
