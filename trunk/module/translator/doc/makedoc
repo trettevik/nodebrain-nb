@@ -1,4 +1,4 @@
-makeinfo --html --no-split --number-sections --css-include=../../doc/style.css nb_translator.texi
+makeinfo --html --no-split --number-sections --css-include=../../model/doc/style.css nb_translator.texi
 makeinfo --plaintext --no-split --number-sections --output=nb_translator.txt nb_translator.texi
 makeinfo --docbook --no-split --number-sections --output=nb_translator_DocBook.xml nb_translator.texi
 makeinfo --xml --no-split --number-sections nb_translator.texi

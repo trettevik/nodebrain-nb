@@ -1,4 +1,4 @@
-makeinfo --html --no-split --number-sections --css-include=../../doc/style.css nb_webster.texi
+makeinfo --html --no-split --number-sections --css-include=../../model/doc/style.css nb_webster.texi
 makeinfo --plaintext --no-split --number-sections --output=nb_webster.txt nb_webster.texi
 makeinfo --docbook --no-split --number-sections --output=nb_webster_DocBook.xml nb_webster.texi
 makeinfo --xml --no-split --number-sections nb_webster.texi

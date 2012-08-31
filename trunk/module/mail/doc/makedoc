@@ -1,4 +1,4 @@
-makeinfo --html --no-split --number-sections --css-include=../../doc/style.css nb_mail.texi
+makeinfo --html --no-split --number-sections --css-include=../../model/doc/style.css nb_mail.texi
 makeinfo --plaintext --no-split --number-sections --output=nb_mail.txt nb_mail.texi
 makeinfo --docbook --no-split --number-sections --output=nb_mail_DocBook.xml nb_mail.texi
 makeinfo --xml --no-split --number-sections nb_mail.texi

@@ -1,4 +1,4 @@
-makeinfo --html --no-split --number-sections --css-include=../../doc/style.css nb_message.texi
+makeinfo --html --no-split --number-sections --css-include=../../model/doc/style.css nb_message.texi
 makeinfo --plaintext --no-split --number-sections --output=nb_message.txt nb_message.texi
 makeinfo --docbook --no-split --number-sections --output=nb_message_DocBook.xml nb_message.texi
 makeinfo --xml --no-split --number-sections nb_message.texi

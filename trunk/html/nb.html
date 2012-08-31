@@ -14,7 +14,7 @@
 <table width="100%"><tr>
 <td align="left" width="20%">nb(1)</td>
 <td align="center" width="60%"><span style="font-size: 14pt">NodeBrain Administrator Guide</span>
-<br>Version 0.8.4 - October 2010</td>
+<br>Version 0.8.10 - June 2012</td>
 <td align="right" width="20%">nb(1)</td>
 </tr></table>
 <p style="font-size: 7pt">
@@ -102,15 +102,19 @@
 |
 <b>--noTrace</b>
 | 
-<b>--pidfile=<i>file</i></b>
+<b>--pidfile=</b><i>file</i>
 |
-<b>--log=<i>logfile</i></b>
+<b>--logfile=</b><i>file</i>
 |
-<i>variable</i> <b>=</b> <i>value</i> 
+<b>--outdir=</b><i>dir</i>
 |
-<b>\`</b><i>assertion</i>
+<b>--user=</b><i>user</i> 
 |
-<b>:</b> <i>command</i> 
+<b>--group=</b><i>group</i> 
+|
+<i>variable</i><b>=</b><i>value</i>
+|
+<b>:&quot;</b><i>command</i><b>&quot;</b>
 |
 <b>-</b>
 |
@@ -148,16 +152,16 @@ following a single minus, or as a word following a double minus (&quot;--&quot;)
 the <b>OPTIONS</b> section for a description of available options.
 <p><table width="100%" border="0" cellspacing="0" cellpadding="5">
 <tr><td width="5%" align="left" valign="top">&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
-<b>-</b> <i>o</i> 
+<b>-</b><i>o</i>
 </td></tr>
 <tr><td width="5%" align="left" valign="top">&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
-<b>--</b> <i>option</i> 
+<b>--</b><i>option</i>
 </td></tr></table>
 Variable settings start with a double minus (&quot;--&quot;) followed be a setting assignment.
 See the <b>SETTINGS</b> section for a description of available settings.
 <p><table width="100%" border="0" cellspacing="0" cellpadding="5">
 <tr><td width="5%" align="left" valign="top">&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
-<b>--</b> <i>variable</i> <b>=</b> <i>value</i> 
+<b>--</b><i>setting</i><b>=</b><i>value</i>
 </td></tr></table>
 Source variables may be assigned for symbolic
 substitution or conditional command interpretation within scripts.  These are application
@@ -179,7 +183,7 @@ or ':assert name=&quot;john doe&quot;;'.
 <p><table width="100%" border="0" cellspacing="0" cellpadding="5">
 <tr><td width="5%" align="left" valign="top">&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
 <b>:</b><i>command</i><br>
-<b>&quot;:</b><i>command</i><b>&quot;</b><br>
+<b>:&quot;</b><i>command</i><b>&quot;</b><br>
 </td></tr></table>
 A command file may be specified with an optional assertion to set local source variables for
 symbolic substitution (%<i>variable</i> or %{<i>variable</i>}) and/or conditional interpretation.  Special file names of &quot;-&quot; and &quot;=&quot;
@@ -223,14 +227,14 @@ a command within a NodeBrain script.
 <p><table width="100%" border="0" cellspacing="0" cellpadding="5">
 <tr><td width="5%" align="left" valign="top">&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
 <p><table border="0" cols="2">
-<tr><th width="5%" align="left" valign="top">Argument Syntax&nbsp;&nbsp;&nbsp;</th><th width="90%" align="left" valign="top">Script Command Syntax&nbsp;&nbsp;&nbsp;</th></tr>
+<tr><th width="5%" align="left" valign="top">Argument Syntax&nbsp;&nbsp;&nbsp;</th><th width="90%" align="left" valign="top">Command Syntax&nbsp;&nbsp;&nbsp;</th></tr>
 <tr><td width="5%" align="left" valign="top">-d&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">set daemon;&nbsp;&nbsp;&nbsp;</td></tr>
 <tr><td width="5%" align="left" valign="top">--noDaemon&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">set noDaemon;&nbsp;&nbsp;&nbsp;</td></tr>
 <tr><td width="5%" align="left" valign="top">a=1&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">%assert ..a=1;&nbsp;&nbsp;&nbsp;</td></tr>
 <tr><td width="5%" align="left" valign="top">b=&quot;abc&quot;&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">%assert ..b=&quot;abc&quot;;&nbsp;&nbsp;&nbsp;</td></tr>
 <tr><td width="5%" align="left" valign="top">c=abc&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">%assert ..c=&quot;abc&quot;;&nbsp;&nbsp;&nbsp;</td></tr>
-<tr><td width="5%" align="left" valign="top">&quot;:assert a=1,b=\&quot;hello\&quot;&quot;&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">assert a=1,b=&quot;hello&quot;;&nbsp;&nbsp;&nbsp;</td></tr>
-<tr><td width="5%" align="left" valign="top">&quot;:show -t&quot;&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">show -t;&nbsp;&nbsp;&nbsp;</td></tr>
+<tr><td width="5%" align="left" valign="top">:&quot;assert a=1,b=\&quot;hello\&quot;&quot;&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">assert a=1,b=&quot;hello&quot;;&nbsp;&nbsp;&nbsp;</td></tr>
+<tr><td width="5%" align="left" valign="top">:&quot;show -t&quot;&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">show -t&nbsp;&nbsp;&nbsp;</td></tr>
 <tr><td width="5%" align="left" valign="top">myscript.nb&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">source myscript.nb;&nbsp;&nbsp;&nbsp;</td></tr>
 <tr><td width="5%" align="left" valign="top">myscript.nb,a=1,b=2&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">source myscript.nb,a=1,b=2;&nbsp;&nbsp;&nbsp;</td></tr>
 </table>
@@ -313,15 +317,15 @@ The --noTrace option turns off the --trace option.
 Settings passed as arguments may be used as an alternative to specifying settings using a <b>set</b> command within a script.
 They can also be used to override settings within a script if specified later in the sequence of parameters.
 <p><table width="100%" border="0" cellspacing="0" cellpadding="5">
-<tr><td width="5%" align="left" valign="top">--logfile=<i>filename</i>&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
+<tr><td width="5%" align="left" valign="top">--logfile=<i>file</i>&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
 The logfile setting specifies a file where the log is written when nb daemonizes.  An alias of &quot;--log&quot; is
 recognized for compatibility with earlier version.
 </td></tr>
-<tr><td width="5%" align="left" valign="top">--outdir=<i>directory</i>&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
+<tr><td width="5%" align="left" valign="top">--outdir=<i>dir</i>&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
 The outdir setting specifies a directory where output of a spawned process is stored if not directed elsewhere.
 An alias of &quot;--out&quot; is recognized for compatibility with earlier versions.
 </td></tr>
-<tr><td width="5%" align="left" valign="top">--pidfile=<i>filename</i>&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
+<tr><td width="5%" align="left" valign="top">--pidfile=<i>file</i>&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
 The pidfile setting specifies a file where the process identifier (PID) is to be stored when daemonizing.
 This can be used by init scripts (/etc/init.d).
 </td></tr>
@@ -374,7 +378,7 @@ and therefore not what you might expect in a scripting language.  However,
 it may be a bit more convenient to invoke NodeBrain and a set of rules
 by coding a shebang (&quot;#!&quot;) line on the rule file.
 <p><ul>
-<b>#!/usr/local/bin/nb</b> <i>argument</i><br>
+<b>#!/usr/bin/nb</b> <i>argument</i><br>
 ... commands ... <br>
 </ul>
 <p>If our example file is named &quot;myscript&quot;, we could invoke it as
@@ -393,9 +397,9 @@ simply because lines starting with hash (&quot;#&quot;) are treated as comments.
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
 <tr><td width="5%">&nbsp;</td>
 <td width="94%" valign="top" align="left">
-The notion of a \fbnode\fP in the NodeBrain model is similar to that of
+The notion of a <b>node</b> in the NodeBrain model is similar to that of
 a function in other languages.  Sets of rules are associated with nodes.
-\fbNode modules\fP provide extended capabilities for knowledge representation
+<b>Node modules</b> provide extended capabilities for knowledge representation
 and evaluation.  Communication between nodes is supported by the interpreter
 for nodes within a single NodeBrain process (skull), and node modules support
 communication between nodes in separate NodeBrain processes, including processes
@@ -582,4 +586,4 @@ Ed Trettevik &lt;eat@nodebrain.org&gt;
 <p><p>[6] <a href="http://www.nodebrain.org "><i>NodeBrain API Reference</i></a><br>
 </td></table>
 <hr>
-<table width="100%"><tr><td align="left" width="33%">NodeBrain 0.8.4</td><td align="center" width="34%">October 2010</td><td align="right" width="33%">nb(1)</td></tr></table>
+<table width="100%"><tr><td align="left" width="33%">NodeBrain 0.8.10</td><td align="center" width="34%">June 2012</td><td align="right" width="33%">nb(1)</td></tr></table>

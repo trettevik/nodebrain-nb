@@ -1,4 +1,4 @@
-makeinfo --html --no-split --number-sections --css-include=../../doc/style.css nb_baseline.texi
+makeinfo --html --no-split --number-sections --css-include=../../model/doc/style.css nb_baseline.texi
 makeinfo --plaintext --no-split --number-sections --output=nb_baseline.txt nb_baseline.texi
 makeinfo --docbook --no-split --number-sections --output=nb_baseline_DocBook.xml nb_baseline.texi
 makeinfo --xml --no-split --number-sections nb_baseline.texi

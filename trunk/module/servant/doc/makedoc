@@ -1,4 +1,4 @@
-makeinfo --html --no-split --number-sections --css-include=../../doc/style.css nb_servant.texi
+makeinfo --html --no-split --number-sections --css-include=../../model/doc/style.css nb_servant.texi
 makeinfo --plaintext --no-split --number-sections --output=nb_servant.txt nb_servant.texi
 makeinfo --docbook --no-split --number-sections --output=nb_servant_DocBook.xml nb_servant.texi
 makeinfo --xml --no-split --number-sections nb_servant.texi
