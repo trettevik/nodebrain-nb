@@ -1,8 +1,8 @@
-NodeBrain 0.8.10 Change Summary
+NodeBrain 0.8.11 Change Summary
 
-* Released September 2, 2012 (target)
+* Released September 22, 2012 (target)
 
-     Versions 0.8.4 through 0.8.9 were not released.
+     Versions 0.8.4 through 0.8.10 were not released.
      Although 0.8.3 software was released, the website
      was not updated with new documentation.
 
@@ -50,6 +50,8 @@ NodeBrain 0.8.10 Change Summary
      mechanism that malfunctioned when messages longer
      then 4K were queued.  This condition could occur
      when passing messages as input to a Servant node.
+
+  o  A couple security flaws were fixed in the Webster API.
  
 
 NodeBrain 0.8.3 Change Summary

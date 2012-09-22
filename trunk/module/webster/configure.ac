@@ -55,10 +55,11 @@
 # 2010-02-26 John Ellson - fix libtoolize warning
 # 2011-02-19 eat 0.8.5 - set optimization level
 # 2012-06-02 eat 0.8.10 - new version
+# 2012-09-17 eat 0.8.11 - new version
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([nb_webster],[0.8.10],[bugs@nodebrain.org])
+AC_INIT([nb_webster],[0.8.11],[bugs@nodebrain.org])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])

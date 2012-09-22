@@ -82,10 +82,11 @@
 # 2012-04-22 eat 0.8.8  TLS and Message API changes
 # 2012-05-11 eat 0.8.9  New version
 # 2012-06-02 eat 0.8.10 New version
+# 2012-09-17 eat 0.8.11 New version - fixing webster buffer overflow conditions
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([nodebrain],[0.8.10],[bugs@nodebrain.org])
+AC_INIT([nodebrain],[0.8.11],[bugs@nodebrain.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SUBDIRS([lib module])
 AM_INIT_AUTOMAKE

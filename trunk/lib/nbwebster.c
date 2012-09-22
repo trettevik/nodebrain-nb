@@ -139,6 +139,7 @@
 *               proxy.
 *            Note: There is still a memory leak when forwarding.
 * 2012-08-26 eat 0.8.10 - Stopped echo of URL not found to avoid XSS vulnerability
+* 2012-09-17 eat 0.8.11 - Fixed some buffer overflows
 *==============================================================================
 */
 #include <nbi.h>
@@ -351,6 +352,7 @@ static int nbWebsterDecodeRequest(nbCELL context,nbWebSession *session,char *req
   session->content=NULL;
   session->contentLength=-1;
   strcpy(session->reqhost,"?");
+  session->resource="?";
   if(nb_websterTrace) nbLogMsg(context,0,'T',"nbWebsterDecodeRequest: get resource");
   // decode the URL
   if(strncmp(cursor,"GET /",5)==0){
@@ -464,7 +466,7 @@ static void nbWebsterError(nbCELL context,nbWebSession *session,char *text){
   int   size;
 
   page=nbProxyPageOpen(context,&data,&size);
-  nbLogMsg(context,0,'T',"Error returned by webCgi");
+  nbLogMsg(context,0,'T',"Internal server error");
   sprintf(content,
     "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n"
     "<html>\n<head>\n"
@@ -475,14 +477,14 @@ static void nbWebsterError(nbCELL context,nbWebSession *session,char *text){
     "<p>If you think the resource name <i><b>%s</b></i> is valid, please contact the webmaster\n"
     "<hr>\n%s"
     "<hr>\n"
-    "<i>NodeBrain Webster 0.8.9 OpenSSL Server at %s</i>\n"
+    "<i>NodeBrain Webster 0.8.11 OpenSSL Server at %s</i>\n"
     "</body>\n</html>\n",
     session->resource,text,session->reqhost);
   contentLength=strlen(content);
   sprintf((char *)data,
     "HTTP/1.1 500 Internal Server Error\r\n"
     "Date: Thu, 16 Aug 2007 04:04:33 GMT\r\n"
-    "Server: NodeBrain Webster 0.8.9\r\n"
+    "Server: NodeBrain Webster 0.8.11\r\n"
     "Location: https://%s/%s\r\n"
     "Connection: close\r\n"
     "Content-Length: %d\r\n"
@@ -493,6 +495,45 @@ static void nbWebsterError(nbCELL context,nbWebSession *session,char *text){
   nbProxyPageProduced(context,page,strlen((char *)data));
   nbProxyPutPage(context,session->client,page);
   }
+
+// try it using the nbProxy routines
+static void nbWebsterBadRequest(nbCELL context,nbWebSession *session,char *text){
+  char content[1024];
+  int contentLength;
+  nbProxyPage *page;
+  void *data;
+  int   size;
+
+  page=nbProxyPageOpen(context,&data,&size);
+  nbLogMsg(context,0,'T',"Internal server error");
+  sprintf(content,
+    "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n"
+    "<html>\n<head>\n"
+    "<title>400 Bad Request</title>\n"
+    "</head>\n<body>\n"
+    "<b><big>400 Bad Request</big></b>\n"
+    "<p>The server encountered an unsupported request.</p>\n"
+    "<hr>\n%s\n"
+    "<hr>\n"
+    "<i>NodeBrain Webster 0.8.11 OpenSSL Server at %s</i>\n"
+    "</body>\n</html>\n",
+    text,session->reqhost);
+  contentLength=strlen(content);
+  sprintf((char *)data,
+    "HTTP/1.1 400 Bad Request\r\n"
+    "Date: Thu, 16 Aug 2007 04:04:33 GMT\r\n"
+    "Server: NodeBrain Webster 0.8.11\r\n"
+    "Location: https://%s/%s\r\n"
+    "Connection: close\r\n"
+    "Content-Length: %d\r\n"
+    "Content-Type: text/html; charset=iso-8859-1\r\n\r\n"
+    "%s",
+    session->reqhost,session->resource,contentLength,content);
+  nbLogMsg(context,0,'T',"Returning:\n%s\n",data);
+  nbProxyPageProduced(context,page,strlen((char *)data));
+  nbProxyPutPage(context,session->client,page);
+  }
+
 
 static void webContentHeading(nbCELL context,nbWebSession *session,char *code,char *type,char *subtype,int length){
   char ctimeCurrent[32],ctimeExpires[32];
@@ -514,7 +555,7 @@ static void webContentHeading(nbCELL context,nbWebSession *session,char *code,ch
   snprintf(data,size,
     "HTTP/1.1 %s\r\n"
     "Date: %s\r\n"
-    "Server: NodeBrain Webster 0.8.9\r\n"
+    "Server: NodeBrain Webster 0.8.11\r\n"
     "Last-Modified: %s\r\n"
     "Expires: %s\r\n"
     "Connection: %s\r\n"
@@ -564,7 +605,7 @@ static int nbWebsterCgiCloser(nbPROCESS process,int pid,void *processSession){
   snprintf(data,size,
     "HTTP/1.1 %s\r\n"
     "Date: %s\r\n"
-    "Server: NodeBrain Webster 0.8.9\r\n"
+    "Server: NodeBrain Webster 0.8.11\r\n"
     "Last-Modified: %s\r\n"
     "Connection: %s\r\n"
     "Accept-Ranges: none\r\n"
@@ -650,7 +691,7 @@ static int nbWebsterCgi(nbCELL context,nbWebSession *session,char *file,char *qu
   nbProxyProducer(context,session->client,session,NULL); // remove producer
   nbProxyBookClose(context,&session->book);  // make sure we have a closed book
   // set environment variables for the cgi program
-  setenv("SERVER_SOFTWARE","NodeBrain Webster/0.8.9",1);
+  setenv("SERVER_SOFTWARE","NodeBrain Webster/0.8.11",1);
   setenv("GATEWAY_INTERFACE","CGI/1.1",1);
   setenv("SERVER_PROTOCOL","HTTP/1.1",1);
   setenv("SSL_CLIENT_S_DN_CN",session->userid,1);
@@ -746,7 +787,7 @@ static void nbWebsterResourceNotFound(nbCELL context,nbWebServer *webster,nbWebS
     //"<p>The requested resource /%s was not found on this server. "
     //"If you are submitting a form, go back to make sure you enter proper values in each field and submit again.</p>\n"
     "<hr>\n"
-    "<address>NodeBrain Webster 0.8.9 OpenSSL Server at %s</address>\n"
+    "<address>NodeBrain Webster 0.8.11 OpenSSL Server at %s</address>\n"
     "</body></html>\n",
     //session->resource,session->reqhost);
     session->reqhost);
@@ -754,7 +795,7 @@ static void nbWebsterResourceNotFound(nbCELL context,nbWebServer *webster,nbWebS
   snprintf((char *)data,size,
     "HTTP/1.1 404 Not Found\r\n"
     "Date: Thu, 16 Aug 2007 04:04:33 GMT\r\n"
-    "Server: NodeBrain Webster 0.8.9\r\n"
+    "Server: NodeBrain Webster 0.8.11\r\n"
     "Location: https://%s/%s/index.html\r\n"
     "Connection: close\r\n"
     "Content-Length: %d\r\n"
@@ -844,14 +885,14 @@ static void nbWebsterServe(nbCELL context,nbWebServer *webster,nbWebSession *ses
         "<p>The server encountered an internal error and was unable to complete your request.</p>\n"
         "<p>If you think the resource name <i><b>%s</b></i> is valid, please contact the webmaster\n"
         "<hr>\n"
-        "<i>NodeBrain Webster 0.8.9 OpenSSL Server at %s</i>\n"
+        "<i>NodeBrain Webster 0.8.11 OpenSSL Server at %s</i>\n"
         "</body>\n</html>\n",
         filename,session->reqhost);
       contentLength=strlen(content);
       sprintf((char *)data,
         "HTTP/1.1 500 Internal Server Error\r\n"
         "Date: Thu, 16 Aug 2007 04:04:33 GMT\r\n"
-        "Server: NodeBrain Webster 0.8.9\r\n"
+        "Server: NodeBrain Webster 0.8.11\r\n"
         "Location: https://%s/%s\r\n"
         "Connection: close\r\n"
         "Content-Length: %d\r\n"
@@ -878,14 +919,14 @@ static void nbWebsterServe(nbCELL context,nbWebServer *webster,nbWebSession *ses
       "<h1>Moved Permanently</h1>\n"
       "<p>The document has moved <a href='https://%s/%s/index.html'>here</a>.</p>\n"
       "<hr/>\n"
-      "<address>NodeBrain Webster 0.8.9 OpenSSL Server at %s</address>\n"
+      "<address>NodeBrain Webster 0.8.11 OpenSSL Server at %s</address>\n"
       "</body>\n</html>\n",
       session->reqhost,filename,session->reqhost);
     contentLength=strlen(content);
     sprintf((char *)data,
       "HTTP/1.1 301 Moved Permanently\r\n"
       "Date: Thu, 16 Aug 2007 04:04:33 GMT\r\n"
-      "Server: NodeBrain Webster 0.8.9\r\n"
+      "Server: NodeBrain Webster 0.8.11\r\n"
       "Location: https://%s/%s/index.html\r\n"
       "Connection: close\r\n"
       "Content-Length: %d\r\n"
@@ -911,7 +952,7 @@ static void nbWebsterServe(nbCELL context,nbWebServer *webster,nbWebSession *ses
       //"<p>The requested URL /%s was not found on this server.</p>\n"
       "<p>The requested resource was not found on this server.</p>\n"
       "<hr>\n"
-      "<address>NodeBrain Webster 0.8.9 OpenSSL Server at %s</address>\n"
+      "<address>NodeBrain Webster 0.8.11 OpenSSL Server at %s</address>\n"
       "</body></html>\n",
       //filename,session->reqhost);
       session->reqhost);
@@ -919,7 +960,7 @@ static void nbWebsterServe(nbCELL context,nbWebServer *webster,nbWebSession *ses
     snprintf((char *)data,size,
       "HTTP/1.1 404 Not Found\r\n"
       "Date: Thu, 16 Aug 2007 04:04:33 GMT\r\n"
-      "Server: NodeBrain Webster 0.8.9\r\n"
+      "Server: NodeBrain Webster 0.8.11\r\n"
       "Location: https://%s/%s/index.html\r\n"
       "Connection: close\r\n"
       "Content-Length: %d\r\n"
@@ -981,13 +1022,13 @@ static void webRequirePassword(nbCELL context,nbWebSession *session){
     "browser doesn't understand how to supply\n"
     "the credentials required.<P>\n"
     "<HR>\n"
-    "<ADDRESS>NodeBrain Webster 0.8.9 OpenSSL Server at %s</ADDRESS>\n"
+    "<ADDRESS>NodeBrain Webster 0.8.11 OpenSSL Server at %s</ADDRESS>\n"
     "</BODY></HTML>\n\n",
     session->reqhost);
   sprintf((char *)data,
     "HTTP/1.1 401 Authorization Required\r\n"
     "Date: Fri, 17 Aug 2007 17:49:03 GMT\r\n"
-    "Server: NodeBrain Webster 0.8.9 OpenSSL\r\n"
+    "Server: NodeBrain Webster 0.8.11 OpenSSL\r\n"
     "WWW-Authenticate: Basic realm=\"Webster\"\r\n"
     "Connection: close\r\n"
     "Content-Length: %d\r\n"
@@ -1232,9 +1273,10 @@ static int nbWebsterRequest(nbCELL context,nbProxy *proxy,void *handle){
   nbLogMsg(context,0,'T',"nbWebsterRequest: calling nbWebsterDecodeRequest");
   if((rc=nbWebsterDecodeRequest(context,session,(char *)data,len))!=0){
     if(rc<0){
-      nbWebsterError(context,session,(char *)data);
+      nbWebsterBadRequest(context,session,"Sorry, no hints.");
       nbLogMsg(context,0,'T',"nbWebsterRequest: nbWebsterDecodeRequest returned non-zero");
-      return(-1); // force end of session
+      //return(-1); // force end of session
+      return(0); // let's not force end of session
       }
     nbLogMsg(context,0,'T',"nbWebsterRequest: did not get the full request - waiting for more input");
     return(0); // need content wait for call again
@@ -1703,7 +1745,7 @@ int *nbWebsterReply(nbCELL context,nbWebSession *session){
   snprintf(data,size,
     "HTTP/1.1 %s\r\n"
     "Date: %s\r\n"
-    "Server: NodeBrain Webster 0.8.9\r\n"
+    "Server: NodeBrain Webster 0.8.11\r\n"
     "Last-Modified: %s\r\n"
     "Expires: %s\r\n" 
     "Connection: %s\r\n"

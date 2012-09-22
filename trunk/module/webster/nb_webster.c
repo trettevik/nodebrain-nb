@@ -209,7 +209,7 @@ static void webHeading(nbCELL context,nbWebSession *session){
 
 static void webFooting(nbCELL context,nbWebSession *session){
   static char *html=
-   "\n</td></tr></table>\n<hr>\n<span class='foot'>&nbsp;NodeBrain Webster 0.8.9 OpenSSL Server</span>\n</body>\n</html>\n";
+   "\n</td></tr></table>\n<hr>\n<span class='foot'>&nbsp;NodeBrain Webster 0.8.11 OpenSSL Server</span>\n</body>\n</html>\n";
   nbWebsterPutText(context,session,html);
   }
 

@@ -82,10 +82,11 @@
 # 2012/05/11 eat 0.8.9  New version
 # 2012/05/12 eat 0.8.9  Set optimization to 0 because nbproxy.c has a problem with optimization
 # 2012/06/02 eat 0.8.10 New version for release
+# 2012/09/17 eat 0.8.11 New release to fix webster buffer overflow conditions
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([libnb],[0.8.10],[bugs@nodebrain.org])
+AC_INIT([libnb],[0.8.11],[bugs@nodebrain.org])
 AC_CONFIG_SRCDIR([nb.h])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(config)

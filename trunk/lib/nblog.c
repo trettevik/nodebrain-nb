@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -120,6 +120,7 @@
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2012-01-26 dtl 0.8.6  Checker updates
 * 2012-05-12 eat 0.8.9  Increased width of dump lines from 16 to 32
+* 2012-09-16 eat 0.8.11 replaced vsprintf with vsnprintf to avoid buffer overflows
 *=============================================================================
 */
 #include "nbi.h"
@@ -427,7 +428,8 @@ void outPut(char * format,...){
   va_list args;
   int len;
   va_start(args,format);
-  vsprintf(nb_OutLine,format,args);
+  len=vsnprintf(nb_OutLine,NB_BUFSIZE,format,args);
+  if(len>=NB_BUFSIZE) strcpy(nb_OutLine+NB_BUFSIZE-4,"...");
   va_end(args);
   len=strlen(nb_OutLine);
   /* remove next two lines after all calls starting with NB have been changed to outMsg */
@@ -448,7 +450,8 @@ void nbLogPutI(char * format,...){
   va_list args;
   int len;
   va_start(args,format);
-  vsprintf(nb_OutLine,format,args);
+  len=vsnprintf(nb_OutLine,NB_BUFSIZE,format,args);
+  if(len>=NB_BUFSIZE) strcpy(nb_OutLine+NB_BUFSIZE-4,"...");
   va_end(args);
   len=strlen(nb_OutLine);
   /* remove next two lines after all calls starting with NB have been changed to outMsg */
@@ -477,7 +480,8 @@ void outMsgHdr(int msgid,char msgclass,char *format,...){
   va_list args;
   int len;
   va_start(args,format);
-  vsprintf(nb_OutLine,format,args);
+  len=vsnprintf(nb_OutLine,NB_BUFSIZE,format,args);
+  if(len>=NB_BUFSIZE) strcpy(nb_OutLine+NB_BUFSIZE-4,"...");
   va_end(args);
   len=strlen(nb_OutLine);
   if((nb_OutCursor+len)>=(nb_OutBuffer+NB_BUFSIZE-20)) outFlush();
@@ -499,7 +503,8 @@ void outMsg(int msgid,char msgclass,char *format,...){
   va_list args;
   int len;
   va_start(args,format);
-  vsprintf(nb_OutLine,format,args);
+  len=vsnprintf(nb_OutLine,NB_BUFSIZE,format,args);
+  if(len>=NB_BUFSIZE) strcpy(nb_OutLine+NB_BUFSIZE-4,"...");
   va_end(args);
   len=strlen(nb_OutLine);
   if((nb_OutCursor+len)>=(nb_OutBuffer+NB_BUFSIZE-20)) outFlush();
@@ -527,7 +532,8 @@ void nbLogMsgI(int msgid,char msgclass,char *format,...){
   va_list args;
   int len;
   va_start(args,format);
-  vsprintf(nb_OutLine,format,args);
+  len=vsnprintf(nb_OutLine,NB_BUFSIZE,format,args);
+  if(len>=NB_BUFSIZE) strcpy(nb_OutLine+NB_BUFSIZE-4,"...");
   va_end(args);
   len=strlen(nb_OutLine);
   if((nb_OutCursor+len)>=(nb_OutBuffer+NB_BUFSIZE-20)) outFlush();
@@ -605,7 +611,8 @@ int nbLogMsg(nbCELL context,int msgNumber,char msgType,char *format,...){
   if(((NB_Node *)((NB_Term*)context)->def)->skill!=NULL) skillName=((NB_Node *)((NB_Term*)context)->def)->skill->ident->value;
   else skillName="skull";
   va_start(args,format);
-  vsprintf(nb_OutLine,format,args);
+  len=vsnprintf(nb_OutLine,NB_BUFSIZE,format,args);
+  if(len>=NB_BUFSIZE) strcpy(nb_OutLine+NB_BUFSIZE-4,"...");
   va_end(args);
   len=strlen(nb_OutLine);
   if((nb_OutCursor+len)>=(nb_OutBuffer+NB_BUFSIZE-20)) outFlush();
@@ -634,7 +641,8 @@ int nbLogPut(nbCELL context,char *format,...){
   va_list args;
   int len;
   va_start(args,format);
-  vsprintf(nb_OutLine,format,args);
+  len=vsnprintf(nb_OutLine,NB_BUFSIZE,format,args);
+  if(len>=NB_BUFSIZE) strcpy(nb_OutLine+NB_BUFSIZE-4,"...");
   va_end(args);
   len=strlen(nb_OutLine);
   if((nb_OutCursor+len)>=(nb_OutBuffer+NB_BUFSIZE)) outFlush();

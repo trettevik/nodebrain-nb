@@ -238,6 +238,7 @@
 * 2011-05-08 eat 0.8.5  Included traceProxy setting
 * 2012-02-16 eat 0.8.7  Included traceWebster setting
 * 2012-05-20 eat 0.8.9  Included traceMail settin
+* 2012-09-17 eat 0.8.11 Added return code for text object in nbCmdDefine.
 *==============================================================================
 */
 #include "nbi.h"
@@ -1674,6 +1675,7 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
       text=nbTextLoad(cursor);
       }
     if(text!=NULL) nbTermNew((NB_Term *)context,ident,text);
+    else return(1); // 2012-09-16 eat - notify caller it didn't work
     }
   else outMsg(0,'E',"Type \"%s\" not recognized.",type);
   return(0);
