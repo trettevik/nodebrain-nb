@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2009-2010 The Boeing Company
+* Copyright (C) 2009-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -73,6 +73,7 @@
 * 2009/06/28 Ed Trettevik - original prototype version 0.7.6
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010/02/26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
+* 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 *=====================================================================
 */
 #include "config.h"
@@ -250,7 +251,7 @@ static void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
     if(*cursor==',') cursor++;
     while(*cursor==' ' || *cursor==',') cursor++;
     }
-  server=malloc(sizeof(NB_MOD_Server));
+  server=nbAlloc(sizeof(NB_MOD_Server));
   server->prefix=prefix;
   server->socket=0;
   strcpy(server->interfaceAddr,interfaceAddr);
@@ -316,7 +317,7 @@ static int *serverCommand(nbCELL context,void *skillHandle,NB_MOD_Server *server
 static int serverDestroy(nbCELL context,void *skillHandle,NB_MOD_Server *server){
   nbLogMsg(context,0,'T',"serverDestroy called");
   if(server->socket!=0) serverDisable(context,skillHandle,server);
-  free(server);
+  nbFree(server,sizeof(NB_MOD_Server));
   return(0);
   }
 
@@ -423,7 +424,7 @@ static void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
     if(*cursor==',') cursor++;
     while(*cursor==' ' || *cursor==',') cursor++;
     }
-  client=malloc(sizeof(NB_MOD_Server));
+  client=nbAlloc(sizeof(NB_MOD_Client));
   client->prefix=prefix;
   client->socket=0;
   strcpy(client->address,serverAddr);
@@ -497,7 +498,7 @@ static int *clientCommand(nbCELL context,void *skillHandle,NB_MOD_Client *client
 static int clientDestroy(nbCELL context,void *skillHandle,NB_MOD_Client *client){
   nbLogMsg(context,0,'T',"clientDestroy called");
   if(client->socket!=0) clientDisable(context,skillHandle,client);
-  free(client);
+  nbFree(client,sizeof(NB_MOD_Client));
   return(0);
   }
 

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2005-2009 The Boeing Company
+* Copyright (C) 2005-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -107,6 +107,7 @@
 * 2005/04/09 eat 0.6.2  adapted to API changes
 * 2005/05/14 eat 0.6.3  translateBind() updated for moduleHandle
 * 2007/06/26 eat 0.6.8  updated to satisfy original intent 
+* 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 *=====================================================================
 */
 #include "config.h"
@@ -213,7 +214,7 @@ void *translatorConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *
     if(*cursor==',') cursor++;
     while(*cursor==' ') cursor++;
     }
-  translate=malloc(sizeof(NB_MOD_Translator));
+  translate=nbAlloc(sizeof(NB_MOD_Translator));
   strcpy(translate->filename,filename);
   translate->trace=trace;
   translate->echo=echo;
@@ -345,7 +346,7 @@ int translatorCommand(nbCELL context,NB_MOD_TranslatorSkill *skillHandle,NB_MOD_
 */
 int translatorDestroy(nbCELL context,void *skillHandle,NB_MOD_Translator *translate){
   nbLogMsg(context,0,'T',"translatorDestroy called");
-  free(translate);
+  nbFree(translate,sizeof(NB_MOD_Translator));
   return(0);
   }
 

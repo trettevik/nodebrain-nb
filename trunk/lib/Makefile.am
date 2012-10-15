@@ -86,8 +86,8 @@ libnb_a_HEADERS = \
   nbsynapse.h \
   nbterm.h \
   nbtext.h \
-  nb-tls.h \
   nbtls.h \
+  nb-tls.h \
   nbtranslator.h \
   nbtree.h \
   nbverb.h \
@@ -145,7 +145,6 @@ libnb_la_SOURCES = \
   nbterm.c \
   nbtext.c \
   nbtime.c \
-  nb-tls.c \
   nbtls.c \
   nbtree.c \
   nbtranslator.c \
@@ -195,7 +194,6 @@ libnb_la_SOURCES = \
   nbterm.h \
   nbtext.h \
   nbtime.h \
-  nb-tls.h \
   nbtls.h \
   nbtree.h \
   nbtranslator.h \

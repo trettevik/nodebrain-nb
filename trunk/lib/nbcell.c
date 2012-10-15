@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2011 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -324,6 +324,7 @@
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2011-11-05 eat 0.8.6  Included nbCellGetText
+* 2012-10-13 eat 0.8.12 Replace remaining malloc with nbAlloc
 *=============================================================================
 */
 #include "nbi.h"
@@ -467,7 +468,7 @@ void nbCellType(NB_Type *type,void (*solve)(),NB_Object * (*eval)(),void (*enabl
   else type->disable=disable;
 #if !defined(WIN32)
   if(nb_opt_shim){
-    shim=malloc(sizeof(struct NB_TYPE_SHIM));
+    shim=nbAlloc(sizeof(struct NB_TYPE_SHIM));
     memset(shim,0,sizeof(struct NB_TYPE_SHIM));
     type->shim=shim;
     shim->alarm=type->alarm;

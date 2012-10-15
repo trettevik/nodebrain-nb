@@ -26,9 +26,9 @@
 * Function:
 *
 *   This file provides functions that make up a platform independent API
-*   to system services.  This file must have no dependence on a NodeBrain
-*   environment.  It must compile without referencing any NodeBrain headers
-*   except nbspine.h
+*   to system services.  This file must not include or reference any
+*   functions that require a NodeBrain context to make the API more easily
+*   reused.
 *
 * Synopsis:
 *
@@ -49,16 +49,11 @@
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2010-10-16 eat 0.8.4  Changed order of setuid and setgid in nbChildOpen to do group first
 * 2012-04-22 eat 0.8.8  Switched from nbcfg.h with standard config.h
+* 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
+* 2012-10-13 eat 0.8.12 Switched to nb header
 *=============================================================================
 */
-//#include "nbstd.h"
-#include <config.h>
-#include <nbspine.h>
-
-// 2005-12-12 eat 0.6.4 - not using sigaction
-//#if !defined(WIN32)
-//struct sigaction sigact;
-//#endif
+#include <nb.h>
 
 // nbFileClose - maybe this should be a macro
 
@@ -247,7 +242,7 @@ nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cld
   if(cldin!=NULL) CloseHandle(cldin);  
   if(cldout!=NULL) CloseHandle(cldout);
   if(clderr!=NULL) CloseHandle(clderr);
-  child=malloc(sizeof(NB_Child));
+  child=nbAlloc(sizeof(NB_Child));
   child->handle=piProcInfo.hProcess;
   child->pid=piProcInfo.dwProcessId;
   //CloseHandle(piProcInfo.hProcess);
@@ -279,7 +274,7 @@ nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cld
     close(cldin);  // close the files in the parent process
     close(cldout);
     close(clderr);
-    child=malloc(sizeof(NB_Child));
+    child=nbAlloc(sizeof(NB_Child));
     child->pid=pid;
     return(child);
     }
@@ -396,6 +391,6 @@ nbCHILD nbChildClose(nbCHILD child){
 #if defined(WIN32)
   CloseHandle(child->handle);
 #endif
-  free(child);
+  nbFree(child,sizeof(NB_Child));
   return(NULL);
   }

@@ -52,6 +52,7 @@
 * 2010-10-16 eat 0.8.4  Included initialization of servegroup.
 * 2012-01-16 dtl 0.8.5  Checker updates
 * 2012-06-16 eat 0.8.10 Replaced srand with srandom
+* 2012-10-13 eat 0.8.13 Replaced malloc with nbAlloc
 *============================================================================*/
 #include "nbi.h"
 #include "nbmedulla.h"
@@ -70,12 +71,12 @@ char *nbGetUserDir(void){
   }
 
 void nbStemInit(NB_Stem *stem){
-  nb_cmd_prefix=malloc(NB_CMD_PROMPT_LEN);
+  nb_cmd_prefix=nbAlloc(NB_CMD_PROMPT_LEN);
   *nb_cmd_prefix=0;
-  nb_cmd_prompt=malloc(NB_CMD_PROMPT_LEN);
+  nb_cmd_prompt=nbAlloc(NB_CMD_PROMPT_LEN);
   strcpy(nb_cmd_prompt,"> ");
-  nbParseInit();
   nbObjectInit(stem);
+  nbParseInit();
   initHash(stem);
   initReal(stem);
   initString(stem);
@@ -293,7 +294,8 @@ nbCELL nbStart(int argc,char *argv[]){
   char mypid[20];
   NB_Stem *stem;
  
-  bufin=(char *)malloc(NB_BUFSIZE);
+  nbHeap();  // allocate the object heap so we can call nbAlloc
+  bufin=(char *)nbAlloc(NB_BUFSIZE);
 /*
 *  Handle informational options that must stand alone
 *  and that don't require any initialization
@@ -316,7 +318,7 @@ nbCELL nbStart(int argc,char *argv[]){
 /*
 *  Create the stem cell
 */
-  if((stem=(NB_Stem *)malloc(sizeof(NB_Stem)))==NULL) return(NULL); /* pass to all init(init) functions who pass to all newType() calls */
+  if((stem=(NB_Stem *)nbAlloc(sizeof(NB_Stem)))==NULL) return(NULL); /* pass to all init(init) functions who pass to all newType() calls */
   memset(stem,0,sizeof(NB_Stem));
   //stem->parentChannel=NULL;
   stem->exitcode=0; 
@@ -331,8 +333,8 @@ nbCELL nbStart(int argc,char *argv[]){
   *servepid=0;   // pid file 
   *serveuser=0;  // su user
   *servegroup=0; // sg group
-  nb_symBuf1=malloc(NB_BUFSIZE);
-  nb_symBuf2=malloc(NB_BUFSIZE);
+  nb_symBuf1=nbAlloc(NB_BUFSIZE);
+  nb_symBuf2=nbAlloc(NB_BUFSIZE);
   *lname=0;
   //*quedir=0;
   jfile=NULL;
@@ -377,7 +379,7 @@ nbCELL nbStart(int argc,char *argv[]){
   while(cursor>mypath && *cursor!='/' && *cursor!='\\') cursor--;
   if(*cursor=='/' || *cursor=='\\') cursor++;
   myname=cursor;
-  mycommand=(char *)malloc(NB_BUFSIZE);
+  mycommand=(char *)nbAlloc(NB_BUFSIZE);
   *mycommand=0;
   for(i=0;i<argc;i++) {
     strcat(mycommand,argv[i]);

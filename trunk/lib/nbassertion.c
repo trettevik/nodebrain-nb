@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -55,6 +55,7 @@
 * 2005-04-27 eat 0.6.2  included alert method support for cache module
 * 2007-06-26 eat 0.6.8  Changed "expert" terminology to "node".
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2012-10-12 eat 0.8.12 Replaced malloc with nbAlloc
 *=============================================================================
 */
 #include <nbi.h>
@@ -229,7 +230,7 @@ int nbAssertionAddTermValue(nbCELL context,nbSET *set,nbCELL term,nbCELL cell){
   NB_Link   *entry;
   NB_Object *object;                  
   object=(NB_Object *)useCondition(0,assertTypeVal,term,cell);
-  if((entry=nb_LinkFree)==NULL) entry=malloc(sizeof(NB_Link));
+  if((entry=nb_LinkFree)==NULL) entry=nbAlloc(sizeof(NB_Link));
   else nb_LinkFree=entry->next;                  
   entry->object=grabObject(object);
   entry->next=*set;

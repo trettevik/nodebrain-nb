@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -82,6 +82,7 @@
 *               mynode(a,,b)  - alternate syntax using implicit placeholder
 *            
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2010-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 *=============================================================================
 */
 #include <nbi.h>
@@ -98,7 +99,7 @@ void listInsert(NB_Link **memberP,void *object){
   *  Insert object in unordered list.
   */
   NB_Link *list;
-  if((list=nb_LinkFree)==NULL) list=malloc(sizeof(NB_Link));
+  if((list=nb_LinkFree)==NULL) list=nbAlloc(sizeof(NB_Link));
   else nb_LinkFree=list->next;
   list->next=*memberP;
   list->object=object;
@@ -112,7 +113,7 @@ int listInsertUnique(NB_Link **memberP,void *object){
   NB_Link *list;
   for(;*memberP!=NULL && (*memberP)->object<(NB_Object *)object;memberP=&((*memberP)->next));
   if(*memberP!=NULL && (*memberP)->object==(NB_Object *)object) return(0);
-  if((list=nb_LinkFree)==NULL) list=malloc(sizeof(NB_Link));
+  if((list=nb_LinkFree)==NULL) list=nbAlloc(sizeof(NB_Link));
   else nb_LinkFree=list->next;
   list->next=*memberP;
   list->object=object;
@@ -157,7 +158,7 @@ NB_List *nbListCompute(NB_List *cellList){
 
   next=&(head);
   for(item=cellList->link;item!=NULL;item=item->next){
-    if((entry=nb_LinkFree)==NULL) entry=malloc(sizeof(NB_Link));
+    if((entry=nb_LinkFree)==NULL) entry=nbAlloc(sizeof(NB_Link));
     else nb_LinkFree=entry->next;
     *next=entry;
     entry->next=NULL;
@@ -193,7 +194,7 @@ NB_Link *newMember(NB_Term *context,char **cursor){
   next=&member;
   while(symid==','){
     if(NULL==(object=nbParseCell(context,cursor,0))) object=nb_Placeholder;
-    if((entry=nb_LinkFree)==NULL) entry=malloc(sizeof(NB_Link));
+    if((entry=nb_LinkFree)==NULL) entry=nbAlloc(sizeof(NB_Link));
     else nb_LinkFree=entry->next;
     *next=entry;
     entry->next=NULL;
@@ -450,7 +451,7 @@ void *nbListOpen(nbCELL context,nbCELL list){
 */
 void *nbListInsertCell(nbCELL context,nbSET *setP,nbCELL cell){
   NB_Link *link;
-  if((link=nb_LinkFree)==NULL) link=malloc(sizeof(NB_Link));
+  if((link=nb_LinkFree)==NULL) link=nbAlloc(sizeof(NB_Link));
   else nb_LinkFree=link->next;
   link->next=*setP;
   link->object=(NB_Object *)cell;

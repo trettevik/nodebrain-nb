@@ -108,6 +108,7 @@
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2012-02-06 dtl Checker updates
+* 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 *=============================================================================
 */
 #include <nbi.h>
@@ -721,8 +722,9 @@ int nbSkillSetMethod(nbCELL context,nbCELL skill,int methodId,void *method){
   NB_Facet *facet=((NB_Skill *)skill)->facet;
   if(nb_opt_shim){
     if(facet->shim==NULL){
-      if((facet->shim=malloc(sizeof(struct NB_FACET_SHIM)))==NULL) //2012-01-26 dtl: handled error
-        {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+      //if((facet->shim=malloc(sizeof(struct NB_FACET_SHIM)))==NULL) //2012-01-26 dtl: handled error
+      //  {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+      facet->shim=nbAlloc(sizeof(struct NB_FACET_SHIM));
       memset(facet->shim,0,sizeof(struct NB_FACET_SHIM));
       }
     switch(methodId){

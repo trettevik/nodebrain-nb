@@ -81,12 +81,12 @@ extern int chopen(struct CHANNEL *channel,char *ipaddr,unsigned short port);
 #if defined(WIN32)
 _declspec (dllexport)
 #endif
-extern int chput(struct CHANNEL *channel,char *buffer,int len);
+extern int chput(struct CHANNEL *channel,char *buffer,size_t len);
 
 #if defined(WIN32)
 _declspec (dllexport)
 #endif
-extern int chputmsg(struct CHANNEL *channel,char *buffer,int len);
+extern int chputmsg(struct CHANNEL *channel,char *buffer,size_t len);
 
 #if defined(WIN32)
 _declspec (dllexport)

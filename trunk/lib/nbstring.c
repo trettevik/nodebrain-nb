@@ -91,6 +91,7 @@
 * 2008-01-22 eat 0.6.9  Modified string allocation scheme
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2012-02-07 dtl Checker updates
+* 2012-10-12 eat 0.8.12 Replaced malloc with nbAlloc
 *=============================================================================
 */
 #include "nbi.h"
@@ -188,7 +189,7 @@ void destroyString(struct STRING *str){
 * Public Methods
 **********************************************************************/
 void initString(NB_Stem *stem){
-  nb_StringPool=(struct NB_STRING_POOL *)malloc(sizeof(struct NB_STRING_POOL));
+  nb_StringPool=(struct NB_STRING_POOL *)nbAlloc(sizeof(struct NB_STRING_POOL));
   memset(nb_StringPool,0,sizeof(struct NB_STRING_POOL));
   strH=newHash(100003);
   strType=newType(stem,"string",strH,0,printString,destroyString);

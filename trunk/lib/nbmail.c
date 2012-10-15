@@ -37,6 +37,7 @@
 *            This enables failover which is built into the TLS routines and
 *            prepares for the support of SMTPS.
 * 2012-05-20 eat - include mailTrace (traceMail) for debugging
+* 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 *============================================================================
 */
 #include <nbi.h>
@@ -50,7 +51,7 @@ char *nbSymCmd(nbCELL context,char *source,char *style);
 */
 nbMailClient *nbMailClientCreate(nbCELL context){
   nbMailClient *client;
-  client=(nbMailClient *)malloc(sizeof(nbMailClient));
+  client=(nbMailClient *)nbAlloc(sizeof(nbMailClient));
   memset(client,0,sizeof(nbMailClient));
   client->from=nbTermLocateHere(context,"_from"); // reply address term
   if(!client->from) client->from=nbTermCreate(context,"_from",nbCellCreateString(context,"root@localhost"));

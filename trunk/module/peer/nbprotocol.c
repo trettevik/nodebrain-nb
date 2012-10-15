@@ -265,6 +265,9 @@
 * 2012-02-09 eat 0.8.7  Repaired comAuthDecode 
 * 2012-02-09 eat 0.8.7  Reviewed Checker
 * 2012-06-16 eat 0.8.10 Replaced rand with random
+* 2012-08-31 dtl 0.8.12 Checker updates
+* 2012-10-13 eat 0.8.12 Replace malloc/free with nbAlloc/nbFree
+* 2012-10-13 eat 0.8.12 Checker updates
 *=============================================================================
 */
 #include "nbi.h"
@@ -320,7 +323,7 @@ static void nbpClientOut(nbCELL context,void *session,char *buffer){
 struct LISTENER *nbpListenerNew(nbCELL context){
   struct LISTENER *ear;
   //ear=nbCellNew(listenerTypeNbp,&listenerFree,sizeof(struct LISTENER));
-  if((ear=listenerFree)==NULL) ear=malloc(sizeof(struct LISTENER));
+  if((ear=listenerFree)==NULL) ear=nbAlloc(sizeof(struct LISTENER));
   else listenerFree=(struct LISTENER *)ear->cell.object.next;
   ear->cell.object.value=(NB_Object *)NB_CELL_DISABLED;
   ear->version=1;                   // listener for transitioning to nodes
@@ -401,7 +404,7 @@ void nbpSessionAlert(nbCELL context,int socket,void *handle){
 struct LISTENER *nbpCloneListener(struct LISTENER *parent,int fildes,void *session){
   struct LISTENER *ear;
   //ear=nbCellNew(type,&listenerFree,sizeof(struct LISTENER));
-  if((ear=listenerFree)==NULL) ear=malloc(sizeof(struct LISTENER));
+  if((ear=listenerFree)==NULL) ear=nbAlloc(sizeof(struct LISTENER));
   else listenerFree=(struct LISTENER *)ear->cell.object.next;
   //we don't put on the used list because we are managing it under the new listener scheme
   //ear->cell.object.next=(NB_Object *)listenerUsed;
@@ -501,14 +504,16 @@ unsigned int comAuthEncode(
   unsigned char *bufcur=buffer,*stext,*cursor;
   unsigned char randstr[20];
   unsigned int secretblocks,words;
+  size_t textlen=strlen((char *)text);
 
+  if(textlen>75) nbExit("comAuthEncode: text too long for buffer - len=%d",textlen); // 2012-10-13 eat - checker
   skeSeedCipher(cipher);       /* generate random 128-bit CBC key */
   skeKeyData(keylen,keydata);  /* generate random Rijndael key data */  
   for(k=0;k<4;k++) secretkey[k]=htonl(cipher[k]);         /* pass in network byte order */
   for(k=0;k<keylen;k++) secretkey[k+4]=htonl(keydata[k]); /* pass in network byte order */
   bufcur+=pkeEncrypt(bufcur,identity->exponent,identity->modulus,(unsigned char *)&secretkey[0],(k+4)*4);
   nbClockToBuffer((char *)timeStamp);
-  sprintf((char *)randstr,"%ld",random());        /* generate time stamp */
+  sprintf((char *)randstr,"%d",(int)(random()%INT_MAX));        /* generate time stamp */
   *(timeStamp+4)=*(randstr+0);
   *(timeStamp+7)=*(randstr+1);
   *(timeStamp+10)=*(randstr+2);
@@ -517,15 +522,13 @@ unsigned int comAuthEncode(
   *(timeStamp+19)=*(randstr+0);
   *(timeStamp+20)=0;
   memcpy(secretdata,timeStamp,20);        /* put time stamp in secret data */
-  memcpy(secretdata+5,text,strlen((char *)text)+1);
-  words=6+strlen((char *)text)/4;                 /* words of secret data */
+  memcpy(secretdata+5,text,textlen+1);  // secretdata+5 is +20 bytes
+  words=6+textlen/4;                 /* words of secret data */
   stext=(unsigned char *)secretdata;      /* pad last data word */ 
   for(cursor=stext+strlen((char *)stext)+1;cursor<stext+words*4;cursor++)
     *cursor=random();
   secretblocks=words/4+1;                 /* number of 16 byte blocks */
   for(k=words;k<(secretblocks*4-1);k++){  /* pad with random words */
-    //w=random();
-    //secretdata[k]=(w<<16)|random();
     secretdata[k]=random();
     }
   skeKey(key,-keylen,keydata);                   /* generate decryption key */
@@ -581,9 +584,7 @@ unsigned int comAuthDecode(buffer,cipher,key,timeStamp,text,identity,blocklen)
     secretdata[k]=htonl(secretdata[k]);
     }
   if(checksum!=secretdata[k]) return(0);  
-//2012-01-31 dtl: timeStamp sizeof 21, safe to copy, replaced memcpy //2012-02-09 eat - reverted to memcpy
   memcpy(timeStamp,secretdata,20); // 2012-02-09 eat - this is ok - ignore Checker
-  //for(k=0;k<20;k++) *(timeStamp+k)=*(secretdata+k); //dtl  // eat - secretdata is int, so +k is multiple of sizeof(int)
   *(timeStamp+20)=0;
   bufcur=(unsigned char *)secretdata;
   bufend=bufcur+secretblocks*16-4;
@@ -606,7 +607,7 @@ unsigned int comAuthDecode(buffer,cipher,key,timeStamp,text,identity,blocklen)
 struct NBP_SESSION *nbpNewSessionHandle(NB_PeerKey *identity){
   struct NBP_SESSION *session;
 
-  session=(struct NBP_SESSION *)malloc(sizeof(struct NBP_SESSION));
+  session=(struct NBP_SESSION *)nbAlloc(sizeof(struct NBP_SESSION));
   if(session==NULL) return(session);
   session->version=0;
   session->status=0;
@@ -630,7 +631,7 @@ struct NBP_SESSION *nbpNewSessionHandle(NB_PeerKey *identity){
 int nbpFreeSessionHandle(struct NBP_SESSION *session){
   if(session==NULL) return(-1);
   chfree(session->channel);
-  free(session);
+  nbFree(session,sizeof(struct NBP_SESSION));
   return(0);
   }
 
@@ -638,21 +639,24 @@ int nbpFreeSessionHandle(struct NBP_SESSION *session){
 *  Write a single NBP message
 *
 *    This should be revised to use a session handle instead of a channel handle
+*    If len=0 then we assume a null terminated string
 */
-int nbpMsg(struct NBP_SESSION *session,char trancode,char msgcode,char *text,int len){
+int nbpMsg(struct NBP_SESSION *session,char trancode,char msgcode,char *text,size_t len){
   struct CHANNEL *channel=session->channel;
   struct NBP_MESSAGE *msgbuf;
   char buffer[NB_BUFSIZE];
+  size_t prefix;
 
   msgbuf=(struct NBP_MESSAGE *)buffer;
   msgbuf->trancode=trancode;
   msgbuf->msgcode=msgcode;
-  if(len==0){
-    strcpy(msgbuf->text,text);
-    len=strlen(text)+1;
+  prefix=msgbuf->text-buffer;
+  if(len==0) len=strlen(text)+1;
+  if(len+prefix>NB_BUFSIZE){
+    nbLogMsgI(0,'E',"nbpMsg: text too large for buffer - len=%d",len);
+    return(-1);
     }
-  else if(len>0 && len<NB_BUFSIZE) memcpy(msgbuf->text,text,len); //2012-01-31 dtl added check
-  else {nbLogMsgI(0,'E',"nbpMsg: chput call failed.");return(-1);} //dtl: handled fail
+  memcpy(msgbuf->text,text,len);
   len+=msgbuf->text-buffer;
   len=chput(channel,buffer,len);
   if(len<0){
@@ -670,7 +674,7 @@ int nbpMsg(struct NBP_SESSION *session,char trancode,char msgcode,char *text,int
 *  A special context "@" is used to request that the peer
 *  spawn a skull to handle the session.
 */
-struct NBP_SESSION *nbpOpen(int nbp,NB_Term *peer,char *context){
+struct NBP_SESSION *nbpOpen(char nbp,NB_Term *peer,char *context){
   struct NBP_SESSION *session;
   char *brainName;
   struct BRAIN *brain;
@@ -1145,7 +1149,12 @@ int nbpCopy(int nbp,NB_Term *srcBrainTerm,char *srcFile,NB_Term *dstBrainTerm,ch
     }
   if(dstBrainTerm!=NULL){
     if(trace) nbLogMsgI(0,'T',"opening session with destination brain");
-    snprintf(text+2,254,"%s",dstFile); //2012-01-31 dtl: replaced strcpy
+    len=snprintf(text+2,sizeof(text)-2,"%s",dstFile); //2012-01-31 dtl: replaced strcpy
+    if(len>=sizeof(text)-2){
+      if(srcfile!=NULL) fclose(srcfile);
+      else nbpClose(srcSession);
+      return(-1);
+      }
     dstSession=nbpOpenTran(nbp,dstBrainTerm,NBP_TRAN_PUTFILE,text);
     if(dstSession==NULL){
       if(srcfile!=NULL) fclose(srcfile);
@@ -1811,7 +1820,11 @@ void nbqSendFile(qHandle,session,dstQueBrainName)
 
   *text=qHandle->entry->type;
   *(text+1)=':';
-  snprintf(text+2,254,"%s",dstQueBrainName); //2012-01-31 dtl replace strcpy
+  len=snprintf(text+2,sizeof(text)-2,"%s",dstQueBrainName); //2012-01-31 dtl replace strcpy
+  if(len>=sizeof(text)-2){
+    nbLogMsgI(0,'E',"nbqSendFile: destination queue name too long for buffer - '%s'",dstQueBrainName);
+    return;
+    }
 // closing the file here releases the lock
 // this is a bad thing
 // however, we must have done this because of another bad thing
@@ -1912,7 +1925,7 @@ void nbqSend(NB_Term *brainTerm){
       nbqSendFile(qHandle,session,dstQueBrainName);
       }
     qHandle->entry=qEntry->next;
-    free(qEntry);
+    nbFree(qEntry,sizeof(struct NBQ_ENTRY));
     }
   if(trace) nbLogMsgI(0,'T',"nbqSend() done processing queue");
   if(session!=NULL){

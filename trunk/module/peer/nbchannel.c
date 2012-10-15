@@ -158,6 +158,8 @@
 * 2012-01-31 dtl 0.8.7  Checker updates
 * 2012-02-09 eat 0.8.7  Reviewed Checker
 * 2012-06-16 eat 0.8.10 Replaced rand with random
+* 2012-08-31 dtl 0.8.12 Checker updates
+* 2012-10-31 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 *=============================================================================
 */
 #include "nbi.h"
@@ -176,7 +178,7 @@ _declspec (dllexport)
 extern struct CHANNEL *challoc(void){
   struct CHANNEL *channel;
    
-  channel=malloc(sizeof(struct CHANNEL));
+  channel=nbAlloc(sizeof(struct CHANNEL));
   channel->enKey.mode=0;
   channel->deKey.mode=0;
   channel->socket=0;
@@ -265,7 +267,9 @@ extern int chlisten(char *addr,unsigned short port){
   else{  // handle local (unix) domain sockets
     un_addr.sun_family=AF_UNIX;
     strcpy(un_addr.sun_path,addr);
-    unlink(addr);
+    //unlink(addr);
+    if(unlink(addr));         //2012-08-31 dtl: checked unlink result
+      //nbLogMsgI(0,'E',"chlisten: unlink() failed.");  // 2012-10-13 eat - this may be ok if not found, let bind complain if necessary
     if(bind(server_socket,(struct sockaddr *)&un_addr,sizeof(un_addr))<0){
       nbLogMsgI(0,'E',"chlisten: Unable to bind to local domain socket %s. errno=%d",addr,errno);
       chclosesocket(server_socket);
@@ -438,23 +442,24 @@ extern int chopen(struct CHANNEL *channel,char *addr,unsigned short port){
 #if defined(WIN32)
 _declspec (dllexport)
 #endif
-extern int chput(struct CHANNEL *channel,char *buffer,int len){
+extern int chput(struct CHANNEL *channel,char *buffer,size_t len){  // 2012-10-13 eat changed len from int to size_t
   static unsigned int checksum,i;
   int sent;
 
-  if(len>NB_BUFSIZE || len<0){
+  if(len>NB_BUFSIZE-20){
     nbLogMsgI(0,'E',"chput: Length %u too large.",len);
     return(-1);
     }  
   else if(len==0){
     nbLogMsgI(0,'L',"chput: Length %u too short - use chstop",len);
+    return(-1);
     }
-  else memcpy(channel->buffer,buffer,len); //2012-01-31 dtl: moved to if block
+  memcpy(channel->buffer,buffer,len);
   if(channel->enKey.mode){
-    i=((len+5+15)&0xfffffff0)-len;   /* pad up to 16 byte boundary */  
+    i=((len+5+15)&0xfffffff0)-len;   /* pad up to 16 byte boundary */ // 2012-10-13 eat - Note: 5 <= i <= 20 
     if(i>5) memset(((unsigned char *)channel->buffer)+len,random()&0xff,i-5);
-    len+=i;
-    *((unsigned char *)channel->buffer+len-5)=i;
+    len+=i; // 2012-1013 eat - len>5 now because i>=5 and len was >0
+    *((unsigned char *)channel->buffer+len-5)=i;  // 2012-10-13 eat - don't worry, len>5 and i<=20
     checksum=0;                                 /* initialize checksum */
     for(i=0;i<(unsigned short)(len/4-1);i++){
       channel->buffer[i]=ntohl(channel->buffer[i]);
@@ -486,11 +491,11 @@ extern int chput(struct CHANNEL *channel,char *buffer,int len){
 *     x8000 Off - Conversation
 *           On  - Message
 */
-extern int chputmsg(struct CHANNEL *channel,char *buffer,int len){
+extern int chputmsg(struct CHANNEL *channel,char *buffer,size_t len){
   int sent;
   unsigned char packet[NB_BUFSIZE];
 
-  if(len>NB_BUFSIZE-2 || len<0){   //2012-01-31 dtl: added neg len test
+  if(len>NB_BUFSIZE-2){   //2012-01-31 dtl: added neg len test
     nbLogMsgI(0,'E',"chput: Length %u too large.",len);
     return(-1);
     }  
@@ -585,10 +590,13 @@ extern int chget(struct CHANNEL *channel,char *buffer){
       }
     len-=*((unsigned char *)channel->buffer+len-5);
     }
-//2012-01-31 dtl: replaced memcpy, buffer has sizeof NB_BUFSIZE, safe to copy after test
-//memcpy(buffer,channel->buffer,len);
-  if (len>0 && len<NB_BUFSIZE) for(i=0;i<len;i++) *(buffer+i)=*((char*)channel->buffer+i);  //dtl
-  else {nbLogMsgI(0,'E',"Invalid record encountered. Length = %d",len);return(-2);} //dtl
+  //2012-01-31 dtl: replaced memcpy, buffer has sizeof NB_BUFSIZE, safe to copy after test
+  //if (len>0 && len<NB_BUFSIZE) for(i=0;i<len;i++) *(buffer+i)=*((char*)channel->buffer+i);  //dtl // 2012-10-13 eat memcpy should be good
+  if(len>0 && len<NB_BUFSIZE) memcpy(buffer,channel->buffer,len); // 2012-01-31 dtl - length check 
+  else{
+    nbLogMsgI(0,'E',"Invalid record encountered. Length = %d",len);
+    return(-2);
+    } 
   buffer[len]=0; /* null terminate */
   return(len);    
   }
@@ -616,6 +624,6 @@ extern int chclose(struct CHANNEL *channel){
 _declspec (dllexport)
 #endif
 extern int chfree(struct CHANNEL *channel){
-  free(channel);
+  nbFree(channel,sizeof(struct CHANNEL));
   return(0);
   }

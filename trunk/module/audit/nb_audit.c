@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -62,6 +62,7 @@
 * 2007/06/25 Ed Trettevik - original skill module prototype version
 * 2007/06/25 eat 0.6.8  Structured skill module around old LOG listener code
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 *=====================================================================
 */
 #include "config.h"
@@ -208,7 +209,7 @@ void *auditConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text)
     nbLogMsg(context,0,'E',"Unable to load translator '%s'",translatorName);
     return(NULL);
     }
-  audit=malloc(sizeof(struct NB_MOD_AUDIT));
+  audit=nbAlloc(sizeof(struct NB_MOD_AUDIT));
   audit->file=NULL;
   audit->pos=0;
   audit->fileNameCell=fileNameCell;
@@ -298,7 +299,7 @@ int auditDestroy(nbCELL context,void *skillHandle,nbAudit *audit){
   nbCellDrop(context,audit->scheduleCell);
   nbCellDrop(context,audit->translatorCell);
   nbCellDrop(context,audit->translatorNameCell);
-  free(audit);
+  nbFree(audit,sizeof(struct NB_MOD_AUDIT));
   return(0);
   }
 

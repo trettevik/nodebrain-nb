@@ -111,6 +111,16 @@ extern void nbLogPutI(char * format,...);
 #if defined(WIN32)
 __declspec(dllexport)
 #endif
+extern void nbExit(char *format,...);
+
+#if defined(WIN32)
+__declspec(dllexport)
+#endif
+extern void nbAbort(char *format,...);
+
+#if defined(WIN32)
+__declspec(dllexport)
+#endif
 extern void nbLogBar(nbCELL context);
 
 #if defined(WIN32)

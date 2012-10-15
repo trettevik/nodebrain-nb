@@ -52,6 +52,7 @@
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2012-01-31 dtl 0.8.6  Checker updates
 * 2012-05-30 eat 0.8.10 Fixed nbIpGetDatagram - wasn't portable
+* 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 *=====================================================================
 */
 #include "nbi.h"
@@ -483,8 +484,9 @@ int nbIpGetUdpSocketPair(int *socket1,int *socket2){
 struct IP_CHANNEL *nbIpAlloc(void){
   NB_IpChannel *channel;
 
-  if ((channel=malloc(sizeof(NB_IpChannel)))==NULL) //2012-01-31 dtl: handled error
-    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);}
+  //if ((channel=malloc(sizeof(NB_IpChannel)))==NULL) //2012-01-31 dtl: handled error
+  //  {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);}
+  channel=nbAlloc(sizeof(NB_IpChannel));
   channel->socket=0;
   *(channel->ipaddr)=0;
   *(channel->unaddr)=0;
@@ -756,7 +758,7 @@ int nbIpClose(NB_IpChannel *channel){
 *  Free channel descriptor
 */
 int nbIpFree(NB_IpChannel *channel){
-  free(channel);
+  nbFree(channel,sizeof(NB_IpChannel));
   return(0);
   }
 

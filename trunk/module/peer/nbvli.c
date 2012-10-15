@@ -179,9 +179,12 @@
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2012-02-07 dtl Checker updates
 * 2012-06-16 eat 0.8.10 Replaced rand with random
+* 2012-08-31 dtl 0.8.12 handled error
+* 2012-12-13 eat 0.8.12 Replaced exit with nbExit
+* 2012-12-13 eat 0.8.12 Replace printf with fprintf(stderr,...) in case we are a servant
 *=============================================================================
 */
-//#include "nb.h"
+#include "nb.h"
 #include "nbvli.h"
 
 /*
@@ -191,14 +194,14 @@ void vliprint(vliWord *x,char *label){
   vliWord *cx,*ex=x+*x;    /* cursors */
 
   if(*x==0){
-    printf("%s=[0];\n",label);
+    fprintf(stderr,"%s=[0];\n",label);
     return;
     }
-  printf("%s=[%u]",label,*x);
+  fprintf(stderr,"%s=[%u]",label,*x);
   for(cx=x+1;cx<ex;cx++){
-    printf("%4.4x.",*cx);
+    fprintf(stderr,"%4.4x.",*cx);
     }
-  printf("%4.4x;\n",*cx);
+  fprintf(stderr,"%4.4x;\n",*cx);
   }
 
 /*
@@ -210,10 +213,8 @@ vli vlinew(unsigned int l){
   
   bytes=l/8+2;
   if(l&15) bytes++;
-  if((x=(vliWord *)malloc(bytes))==NULL){
-    printf("NB000E vlinew unable to allocate vli area.\n");
-    exit(NB_EXITCODE_FAIL);
-    }
+  x=(vliWord *)malloc(bytes);
+  if(!x) nbExit("vlinew: out of memory - terminating.");
   return(x);
   }
 
@@ -223,10 +224,8 @@ vli vlinew(unsigned int l){
 char *vlistr(unsigned int l){
   char *s;
 
-  if((s=(char *)malloc(6+l/3))==NULL){
-    printf("NB000E vlistr unable to allocate string area.\n");
-    exit(NB_EXITCODE_FAIL);
-    }
+  s=(char *)malloc(6+l/3);
+  if(!s) nbExit("vlistr: out of memory - terminting.");
   return(s);
   }  
     
@@ -384,10 +383,7 @@ void vlidec(vliWord *x){
   while(cx<ex && *cx==0){
     *cx=0xffff;
     }
-  if(cx==ex){
-    printf("NB000L vlidec: value is not in normal form.\n");
-    exit(NB_EXITCODE_FAIL);
-    }
+  if(cx==ex) nbExit("vlidec: value is not in normal form - terminating.");
   (*cx)--;
   if(*(x+*x)==0) *x-=1;  /* normalize vli x */
   }
@@ -399,10 +395,7 @@ void vlisub(vliWord *x,vliWord *y){
   unsigned int a,m,b=0;  /* accumulator, minus value and borrow */
   vliWord *cx=x+1,*cy=y+1,*ex=x+*x+1,*ey=y+*y+1; /* cursors */
 
-  if(*y>*x){
-    printf("NB000L vlisub: y may not be greater than x.\n");
-    exit(NB_EXITCODE_FAIL);
-    }
+  if(*y>*x) nbExit("vlisub: y may not be greater than x - terminating.");
   while(cy<ey){
     a=*cx;
     m=*cy+b;
@@ -414,10 +407,7 @@ void vlisub(vliWord *x,vliWord *y){
     cy++;
     }
   if(b){
-    if(cx==ex){
-      printf("NB000L vlisub: y may not be greater than x.\n");
-      exit(NB_EXITCODE_FAIL);
-      }
+    if(cx==ex) nbExit("vlisub: y may not be greater than x - terminating.");
     (*cx)--;
     }
   else cx--;
@@ -504,10 +494,7 @@ unsigned int vlimod(vli x,vli n){
 //  unsigned long a,b,ah,m,d=*(n+*n)+1,p,loop=0,w;
   unsigned int a,b,ah,m,d=*(n+*n)+1,p,loop=0,w;
 
-  if(nl==0){
-    printf("NB000L vlimod zero modulus is invalid.\n");
-    exit(NB_EXITCODE_FAIL);
-    }
+  if(nl==0) nbExit("vlimod: zero modulus is invalid - terminating.");
   while(1){
     if(xl<nl) return(loop);
     /* compare high order part of x to n */
@@ -605,10 +592,7 @@ unsigned int vlidiv(vliWord *x,vliWord *m,vliWord *q){
    
   if(q!=NULL) *q=0;
   if(*x==0) return(loop);  /* special case when x is zero */
-  if(*m==0){
-    printf("NB000L vlidiv zero modulus is invalid.\n");
-    exit(NB_EXITCODE_FAIL);
-    }
+  if(*m==0) nbExit("vlidiv: zero modulus is invalid - terminating.");
   if(*x>256){
     /* Note: the +12 in the malloc below is crutching a bug that I have not
        been able to locate.  This should be removed and debugged when time
@@ -619,10 +603,7 @@ unsigned int vlidiv(vliWord *x,vliWord *m,vliWord *q){
        area has not revealed the problem.
     */
     G=(vliWord *)malloc(2*(*x+1)*sizeof(vliWord)+300);
-    if(G==NULL){
-      printf("NB000E vlidiv unable to allocate memory.\n");
-      exit(NB_EXITCODE_FAIL);
-      }
+    if(!G) nbExit("vlidiv: out of memory - terminating.");
     P=G+((*x+1)*sizeof(vliWord));
     debug=P+((*x+1)*sizeof(vliWord));
     }
@@ -647,9 +628,9 @@ unsigned int vlidiv(vliWord *x,vliWord *m,vliWord *q){
             if(q!=NULL) vliinc(q);   /* inc quotient */
             }
           if(G!=G2048){
-            /*printf("vlidiv debug=");
-            for(cx=debug;cx<debug+8;cx++) printf("%4.4x",*debug);
-            printf("\n");*/
+            //fprintf(stderr,"vlidiv debug=");
+            //for(cx=debug;cx<debug+8;cx++) fprintf(stderr,"%4.4x",*debug);
+            //fprintf(stderr,"\n");
             free(G);
             }
           return(loop);
@@ -729,10 +710,7 @@ unsigned int vlidiv(vliWord *x,vliWord *m,vliWord *q){
       *cG=f;
       }
     *G=cG-G;
-    if(*G==0){ 
-      printf("NB000L vlidiv len(x)=%d,len(m)=%d,*G=%d,rx=%d,rm=%d,f=rx/rm=%d\n",nx,nm,*G,rx,rm,f);
-      exit(NB_EXITCODE_FAIL);
-      }
+    if(*G==0) nbExit("vlidiv: len(x)=%d,len(m)=%d,*G=%d,rx=%d,rm=%d,f=rx/rm=%d - terminating\n",nx,nm,*G,rx,rm,f);
     if(q!=NULL) vliadd(q,G);    /* build quotient */
     if(*G==1 && *(G+1)==1){     /* avoid multipliplying by 1 */
       vlisub(x,m);
@@ -756,19 +734,24 @@ void vlipow(vliWord *x,vliWord *m,vliWord *e){
   unsigned int n;
   unsigned short b;
 
-  if(*x>256) X=(vliWord *)malloc((size_t)((*x+1)*sizeof(vliWord))); 
+  if(*x>256){
+    X=(vliWord *)malloc((size_t)((*x+1)*sizeof(vliWord))); 
+    if(!X) nbExit("vlipow: out of memory - terminating.");
+    }
   if(m!=NULL) n=*m*2;
   else{
     vligeti(X2048,*x);
     vlimul(X2048,e,P2048);
     if(*P2048>1){
-      printf("NB000L vlipow exponent is too large for call without modulus.\n");
       vliprint(P2048,"NB000E length(x)*e");
-      exit(NB_EXITCODE_FAIL);
+      nbExit("vlipow: exponent is too large for call without modulus - terminating.");
       } 
     n=*(P2048+1);   /* *x*e */  
     } 
-  if(n>256) P=(vliWord *)malloc((size_t)((n+1)*sizeof(vliWord)));
+  if(n>256){
+    P=(vliWord *)malloc((size_t)((n+1)*sizeof(vliWord)));
+    if(!P) nbExit("vlipow: out of memory - terminating.");
+    }
   vlicopy(X,x);   /* make a copy of x for use by vlipower */    
   if(*e==0){      /* x^0=1 */
     vligeti(x,1);
@@ -776,10 +759,7 @@ void vlipow(vliWord *x,vliWord *m,vliWord *e){
     }
   else if(*e==1 && *(e+1)==1) return;     /* x^1=x */
   for(b=0x8000;b>0 && !(b&*ce);b=b>>1);   /* mask for highest used bit */ 
-  if(b==0){
-    printf("NB000E vlipow exponent is not normalized.\n");
-    exit(NB_EXITCODE_FAIL);
-    }
+  if(b==0) nbExit("vlipow exponent is not normalized - terminating.");
   b=b>>1;
   for(;ce>e;ce--){  
     while(b>0){
@@ -860,6 +840,7 @@ void vligetd(vliWord *x,unsigned char *s){
   vliWord *P,ten[2],digit[2];
 
   P=(vliWord *)malloc(4+strlen((char *)s)); /* this could be refined to use less space */
+  if(!P) nbExit("vligetd: out of memory - terminating.");
   *ten=1;
   *(ten+1)=10;
   *digit=1;
@@ -895,9 +876,12 @@ void vliputd(vliWord *x,unsigned char *s,size_t ssize){
     return;
     }
   ds=(unsigned char *)malloc((*x*5+1));
+  if(!ds) nbExit("vliputd: out of memory - terminating.");
   es=ds+*x*5+1;
   Q=(vliWord *)malloc((*x+1)*sizeof(vliWord));
+  if(!Q) nbExit("vliputd: out of memory - terminating.");
   X=(vliWord *)malloc((*x+1)*sizeof(vliWord));
+  if(!X) nbExit("vliputd: out of memory - terminating.");
   vlicopy(X,x);
   *(es-1)=0;
   for(c=es-2;*X>0 && c>=ds;c--){
@@ -1001,8 +985,7 @@ void vlipprime(vli x){
       }    
     if(i==7) return;
     }
-  printf("NB000L vlipprime exceeded iteration limit.\n");
-  exit(NB_EXITCODE_FAIL);  
+  nbExit("vlipprime exceeded iteration limit - terminating.");
   }
 
 /*

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -77,6 +77,7 @@
 *            to localhost and 127.0.0.1 when hostname was not resolved.
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2012-10-31 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 *=============================================================================
 */
 #include <nbi.h>
@@ -125,7 +126,7 @@ void destroyBrain(struct BRAIN *brain){
   //dropObject(brain->dir);
   //brain->object.next=(NB_Object *)nb_BrainFree;
   //nb_BrainFree=brain;
-  free(brain);
+  nbFree(brain,sizeof(struct BRAIN));
   }
     
 // Create new brain object
@@ -155,7 +156,7 @@ struct BRAIN * nbBrainNew(int version,char *string){
   struct BRAIN *brain;
 
   //brain=(struct BRAIN *)newObject(nb_BrainType,&nb_BrainFree,sizeof(struct BRAIN));
-  brain=(struct BRAIN *)malloc(sizeof(struct BRAIN));
+  brain=(struct BRAIN *)nbAlloc(sizeof(struct BRAIN));
   brain->version=version;
   brain->context=NULL;
   brain->myId=NULL;

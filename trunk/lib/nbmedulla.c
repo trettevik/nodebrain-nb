@@ -101,6 +101,7 @@
 * 2012-01-09 dtl 0.8.6  Checker updates
 * 2012-04-22 eat 0.8.8  Switched from nbcfg.h to standard config.h
 * 2012-05-29 eat 0.8.10 Fixed to recognize buffer size limitation problem in nbMedullaQueueGet
+* 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 *=============================================================================
 */
 #define NB_INTERNAL
@@ -109,6 +110,7 @@
 #else
 #include <config.h>
 #endif
+#include <nbi.h>
 #include <nbmedulla.h>
 
 nbMEDULLA nb_medulla=NULL;
@@ -167,7 +169,7 @@ void nbMedullaEventSchedule(void *session,char *msg,int (*handler)(void *session
   struct NB_MEDULLA_EVENT *event;
   __try{
     EnterCriticalSection(&nb_medulla_event_section);
-    if((event=nb_medulla_event_free)==NULL) event=malloc(sizeof(struct NB_MEDULLA_EVENT));
+    if((event=nb_medulla_event_free)==NULL) event=nbAlloc(sizeof(struct NB_MEDULLA_EVENT));
     else nb_medulla_event_free=event->next;
     event->next=nb_medulla_event_used;
     event->session=session;
@@ -211,8 +213,8 @@ struct NB_MEDULLA_BUFFER *nbMedullaBufferAlloc(){
   struct NB_MEDULLA_BUFFER *buf;
   //fprintf(stderr,"nbMedullaBufferAlloc\n");
   if((buf=nb_free_buffer)==NULL){
-    buf=malloc(sizeof(struct NB_MEDULLA_BUFFER));
-    buf->page=malloc(NB_BUFSIZE);
+    buf=nbAlloc(sizeof(struct NB_MEDULLA_BUFFER));
+    buf->page=nbAlloc(NB_BUFSIZE);
     buf->end=buf->page+NB_BUFSIZE;
     }
   else{
@@ -233,8 +235,8 @@ void nbMedullaBufferFree(struct NB_MEDULLA_BUFFER *buf){
     nb_free_buffer_count++;
     return;
     }
-  free(buf->page);
-  free(buf);
+  nbFree(buf->page,NB_BUFSIZE);
+  nbFree(buf,sizeof(struct NB_MEDULLA_BUFFER));
   }
 
 void nbMedullaExit(void){
@@ -454,7 +456,7 @@ int nbMedullaOpen(void *session,int (*scheduler)(void *session),int (*processHan
 #if defined(WIN32)
   nbMedullaEventInit();
 #endif
-  nb_medulla=malloc(sizeof(struct NB_MEDULLA));
+  nb_medulla=nbAlloc(sizeof(struct NB_MEDULLA));
 #if defined(WIN32)
   nb_medulla->waitCount=0;
 #else
@@ -470,7 +472,7 @@ int nbMedullaOpen(void *session,int (*scheduler)(void *session),int (*processHan
   nb_medulla->serving=0;
 
   // Initialize a header entry for the thread list
-  thread=malloc(sizeof(NB_Thread));
+  thread=nbAlloc(sizeof(NB_Thread));
   thread->handler=NULL;
   thread->session=NULL;
   thread->next=thread;
@@ -478,7 +480,7 @@ int nbMedullaOpen(void *session,int (*scheduler)(void *session),int (*processHan
   nb_medulla->thread=thread;
   nb_medulla->thread_count=0;
 
-  nb_process=malloc(sizeof(struct NB_MEDULLA_PROCESS));
+  nb_process=nbAlloc(sizeof(struct NB_MEDULLA_PROCESS));
   nb_process->pid=getpid();
 #if defined(WIN32)
   nb_process->getpipe=nbMedullaFileOpen(1,GetStdHandle(STD_INPUT_HANDLE),nb_process,nbMedullaProcessWriter);
@@ -574,7 +576,7 @@ int nbMedullaWaitEnable(int type,nbFILE fildes,void *session,NB_MEDULLA_WAIT_HAN
 
   for(medfile=nb_medulla->handler;medfile!=NULL && (type!=medfile->type || fildes!=medfile->fildes);medfile=medfile->next);
   if(medfile==NULL){
-    if((medfile=nb_medulla->handled)==NULL) medfile=malloc(sizeof(struct NB_MEDULLA_WAIT));
+    if((medfile=nb_medulla->handled)==NULL) medfile=nbAlloc(sizeof(struct NB_MEDULLA_WAIT));
     else nb_medulla->handled=nb_medulla->handled->next;
     medfile->type=type;
     medfile->fildes=fildes;
@@ -1661,7 +1663,7 @@ nbPROCESS nbMedullaProcessOpen(
     return(NULL);
     }  
 
-  process=malloc(sizeof(struct NB_MEDULLA_PROCESS));
+  process=nbAlloc(sizeof(struct NB_MEDULLA_PROCESS));
   process->status=0;
   if(outspec==3 || errspec==3) process->status|=NB_MEDULLA_PROCESS_STATUS_GENFILE;
   *process->exittype=0;
@@ -1763,7 +1765,7 @@ nbPROCESS nbMedullaProcessOpen(
 
   process->child=nbChildOpen(process->options,process->uid,process->gid,process->pgm,process->cmd,cldin,cldout,clderr,msgbuf);
   if(process->child==NULL){
-    free(process);
+    nbFree(process,sizeof(struct NB_MEDULLA_PROCESS));
     return(NULL);
     }
   process->pid=process->child->pid;
@@ -1824,7 +1826,7 @@ nbPROCESS nbMedullaProcessOpen(
 
 nbPROCESS nbMedullaProcessAdd(int pid,char *cmd){
   nbPROCESS process;
-  process=malloc(sizeof(struct NB_MEDULLA_PROCESS));
+  process=nbAlloc(sizeof(struct NB_MEDULLA_PROCESS));
   process->pid=pid;
 #if defined(WIN32)
   process->putfile=NULL;
@@ -1983,7 +1985,7 @@ nbPROCESS nbMedullaProcessClose(nbPROCESS process){
   if(!(process->status&NB_MEDULLA_PROCESS_STATUS_REUSE)){ // release memory if not reused
     process->prior->next=process->next;
     process->next->prior=process->prior;
-    free(process); // put this back just checking
+    nbFree(process,sizeof(struct NB_MEDULLA_PROCESS)); // put this back just checking
     }
   nb_medulla_child_count--;
   return(NULL);
@@ -2004,7 +2006,7 @@ nbPROCESS nbMedullaProcessFind(int pid){
 nbQUEUE nbMedullaQueueOpen(void){
   nbQUEUE queue;
   //fprintf(stderr,"nbMedullaQueueOpen\n");
-  queue=malloc(sizeof(struct NB_MEDULLA_QUEUE));
+  queue=nbAlloc(sizeof(struct NB_MEDULLA_QUEUE));
   queue->getbuf=NULL;
   queue->putbuf=NULL;
   return(queue);
@@ -2017,7 +2019,7 @@ nbQUEUE nbMedullaQueueClose(nbQUEUE queue){
     nextbuf=buf->next; 
     nbMedullaBufferFree(buf);
     }
-  free(queue);
+  nbFree(queue,sizeof(struct NB_MEDULLA_QUEUE));
   //fprintf(stderr,"nbMedullaQueueClose returning\n");
   return(NULL);
   }
@@ -2133,7 +2135,7 @@ int nbMedullaQueueGet(nbQUEUE queue,char *msg,size_t size){
 NB_MedullaFile *nbMedullaFileOpen(int option,nbFILE file,void *session,int (*handler)(void *medFile)){
   NB_MedullaFile *mfile;
 
-  mfile=malloc(sizeof(NB_MedullaFile));
+  mfile=nbAlloc(sizeof(NB_MedullaFile));
   mfile->option=option;
 #if defined(WIN32)
   memset(&mfile->olap,0,sizeof(OVERLAPPED));
@@ -2157,7 +2159,7 @@ int nbMedullaFileClose(NB_MedullaFile *mfile){
   close(mfile->file);
 #endif
   nbMedullaQueueClose(mfile->queue);
-  free(mfile);
+  nbFree(mfile,sizeof(NB_MedullaFile));
   return(0);
   }
 
@@ -2194,7 +2196,7 @@ int nbMedullaFileDisable(NB_MedullaFile *mfile){
 void nbMedullaThreadCreate(NB_MEDULLA_WAIT_HANDLER handler,void *session){
   NB_Thread *thread;
 
-  thread=malloc(sizeof(NB_Thread));
+  thread=nbAlloc(sizeof(NB_Thread));
   thread->handler=handler;
   thread->session=session;
   thread->next=nb_medulla->thread;
@@ -2218,7 +2220,7 @@ void nbMedullaThreadServe(){
       thread->prior->next=thread->next;
       thread->next->prior=thread->prior;
       prior=thread->prior;
-      free(thread);
+      nbFree(thread,sizeof(NB_Thread));
       nb_medulla->thread_count--;
       thread=prior;
       }

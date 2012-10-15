@@ -86,6 +86,7 @@
 * 2010-01-02 eat 0.7.7  Included type to enable separate read and write listeners
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2012-01-31 dtl 0.8.6  Checker updates
+* 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 *=============================================================================
 */
 #include "nbi.h"
@@ -142,7 +143,7 @@ int nbListenerEnableOnDaemon(nbCELL context){
      outMsg(0,'W',"Node must be enabled via enable command");
      return(0);
      }
-  if(NULL==(sel=selectFree)) sel=malloc(sizeof(NB_Listener));
+  if(NULL==(sel=selectFree)) sel=nbAlloc(sizeof(NB_Listener));
   else selectFree=sel->next;
   memset(sel,0,sizeof(NB_Listener)); // clear unneeded fields
   sel->context=context;
@@ -154,7 +155,7 @@ int nbListenerEnableOnDaemon(nbCELL context){
 int nbListenerAdd(NB_Cell *context,int fildes,void *session,void (*handler)(struct NB_CELL *,int fildes,void *session)){
   NB_Listener *sel;
   
-  if(NULL==(sel=selectFree)) sel=malloc(sizeof(NB_Listener));
+  if(NULL==(sel=selectFree)) sel=nbAlloc(sizeof(NB_Listener));
   else selectFree=sel->next;
   sel->context=context;
   sel->type=0;
@@ -178,7 +179,7 @@ int nbListenerAdd(NB_Cell *context,int fildes,void *session,void (*handler)(stru
 int nbListenerAddWrite(NB_Cell *context,int fildes,void *session,void (*handler)(struct NB_CELL *context,int fildes,void *session)){
   NB_Listener *sel;
 
-  if(NULL==(sel=selectFree)) sel=malloc(sizeof(NB_Listener));
+  if(NULL==(sel=selectFree)) sel=nbAlloc(sizeof(NB_Listener));
   else selectFree=sel->next;
   sel->context=context;
   sel->type=1;

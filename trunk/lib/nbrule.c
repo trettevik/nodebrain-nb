@@ -52,6 +52,7 @@
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2012-01-26 dtl - Checker updates
+* 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 *=============================================================================
 */
 #include "nbi.h"
@@ -588,8 +589,10 @@ NB_Plan *nbRuleParsePlan(nbCELL context,int opt,char **source,char *msg){
   tmExit->op=(NB_PlanOp)&nbPlanExit;
   ip+=sizeof(struct NB_PLAN_EXIT);
   size=ip-codebuf;
-  if((plan->codeBegin=malloc(size))==NULL) //2012-01-26 dtl: handled out of memory
-    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+  //if((plan->codeBegin=malloc(size))==NULL) //2012-01-26 dtl: handled out of memory
+  //  {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+  // 2012-10-13 eat - replaced malloc()
+  plan->codeBegin=nbAlloc(size);
   plan->codeEnd=plan->codeBegin+size;
   memcpy(plan->codeBegin,codebuf,size);
   savechar=*cursor;
@@ -976,7 +979,8 @@ void nbRuleShowItem(NB_Rule *rule){
 void destroyPlan(struct NB_PLAN *plan){
   dropMember(plan->objects);
   if(plan->codeBegin!=NULL){
-    free(plan->codeBegin);
+    // 2012-10-13 eat - replaced free()
+    nbFree(plan->codeBegin,plan->codeEnd-plan->codeBegin);
     plan->codeBegin=NULL;
     }
   plan->source=dropObject(plan->source);

@@ -1,4 +1,4 @@
 @set UPDATED 30 August 2012
 @set UPDATED-MONTH August 2012
-@set EDITION 0.8.11
-@set VERSION 0.8.11
+@set EDITION 0.8.12
+@set VERSION 0.8.12

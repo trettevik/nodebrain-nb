@@ -76,6 +76,7 @@
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2012-01-26 dtl Added sstrcpy for Checker updates
+* 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 *=============================================================================
 */
 #include "nbi.h"
@@ -139,7 +140,7 @@ NB_Link *nbMacroParseTermList(nbCELL context,char **source){
       return(nb_MacroBadMember);
       }
     object=(NB_Object *)nbTermNew((NB_Term *)context,ident,nb_Unknown);
-    if((entry=nb_LinkFree)==NULL) entry=malloc(sizeof(NB_Link));
+    if((entry=nb_LinkFree)==NULL) entry=nbAlloc(sizeof(NB_Link));
     else nb_LinkFree=entry->next;
     *next=entry;
     entry->next=NULL;

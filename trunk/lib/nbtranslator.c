@@ -996,10 +996,7 @@ nbCELL nbTranslatorExecute(NB_Cell *context,NB_Cell *translator,char *source){
         break;
       default:
         if(xi->oper&NB_XI_OPER_DISABLED) xi=xi->next;
-        else{
-          outMsg(0,'L',"Unrecognized translator instruction operation=%d",xi->oper);
-          exit(NB_EXITCODE_FAIL);
-          }
+        else nbExit("Unrecognized translator instruction operation=%d - terminating",xi->oper);
       }
     // see if we need to continue after processing a command list
     if(xi==NULL && (xi=xiStackP->xi)!=NULL){

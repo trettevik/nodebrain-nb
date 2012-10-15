@@ -239,6 +239,7 @@
 * 2012-02-16 eat 0.8.7  Included traceWebster setting
 * 2012-05-20 eat 0.8.9  Included traceMail settin
 * 2012-09-17 eat 0.8.11 Added return code for text object in nbCmdDefine.
+* 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 *==============================================================================
 */
 #include "nbi.h"
@@ -1596,7 +1597,8 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
       return(1);
       }
     else cursor=NULL;  // rule has no action
-    action=malloc(sizeof(struct ACTION));
+    // 2012-10-13 eat - replaced malloc
+    action=nbAlloc(sizeof(struct ACTION));
     action->nextAct=NULL;
     action->priority=rulePrty;
     if(strcmp(type,"on")==0) rule_type=condTypeOnRule;
@@ -1798,8 +1800,10 @@ int nbCmdForecast(nbCELL context,void *handle,char *verb,char *cursor){
   schedPrintDump(sched);
   time(&floor);
   for(i=1;i<30;i++){
+    printf("calling schedNext i=%d\n",i);
     start=schedNext(floor,sched); /* start */
-    if(start<=0 || start==eternity.end){
+    //if(start<=0 || start==eternity.end){
+    if(start<=0 || start>=eternity.end){
       outMsg(0,'I',"Forecast stopped in January of 2038.");
       return(0);
       }
@@ -1869,7 +1873,8 @@ char *nbGets(int file,char *strbuf,size_t strbuflen){
 
   *strcur=0;  /* start with null string */
   if(buf==NULL){
-    buf=malloc(NB_BUFSIZE);
+    // 2012-10-13 eat - replaced malloc
+    buf=nbAlloc(NB_BUFSIZE);
     bufend=buf;
     bufcur=buf;
     }

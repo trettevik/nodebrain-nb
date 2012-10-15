@@ -101,6 +101,8 @@
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2012-01-31 dtl 0.8.7  Checker updates.
 * 2012-02-09 eat 0.8.7  Reviewed Checker
+* 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
+* 2012-10-13 eat 0.8.12 Replaced exit with nbExit
 *=====================================================================
 */
 //#include "config.h"
@@ -137,12 +139,12 @@ typedef struct NB_MOD_NBP_SERVER{
 //
 //    identity@address:port
 
-nbServer *newServer(nbCELL context,char *cursor,char *oar,char *msg){
+static nbServer *newServer(nbCELL context,char *cursor,char *oar,char *msg){
   nbServer *server;
   char *inCursor;
   char *interfaceAddr;
 
-  server=malloc(sizeof(nbServer));
+  server=nbAlloc(sizeof(nbServer));
   inCursor=server->idName;
   while(*cursor==' ') cursor++;
   while(*cursor && *cursor!='@'){
@@ -159,7 +161,7 @@ nbServer *newServer(nbCELL context,char *cursor,char *oar,char *msg){
   server->identity=nbpGetPeerKey(server->idName);
   if(server->identity==NULL){
     snprintf(msg,(size_t)NB_MSGSIZE,"Identity '%s' not defined",server->idName); //2012-01-31 dtl: replaced sprintf
-    free(server);
+    nbFree(server,sizeof(nbServer));
     return(NULL);
     }
   inCursor=server->address; 
@@ -176,7 +178,7 @@ nbServer *newServer(nbCELL context,char *cursor,char *oar,char *msg){
       interfaceAddr=chgetaddr(server->address);
       if(interfaceAddr==NULL){
         snprintf(msg,(size_t)NB_MSGSIZE,"Hostname %s not resolved",server->hostname); //2012-01-31 dtl: replaced sprintf
-        free(server);
+        nbFree(server,sizeof(nbServer));
         return(NULL);
         }
       strcpy(server->address,interfaceAddr);
@@ -188,7 +190,7 @@ nbServer *newServer(nbCELL context,char *cursor,char *oar,char *msg){
       }
     if(*cursor!=':'){
       snprintf(msg,(size_t)NB_MSGSIZE,"Expecting ':port' at: %s",cursor); //2012-01-31 dtl: replaced sprintf
-      free(server);
+      nbFree(server,sizeof(nbServer));
       return(NULL);
       }
     cursor++;
@@ -196,7 +198,7 @@ nbServer *newServer(nbCELL context,char *cursor,char *oar,char *msg){
     while(*cursor>='0' && *cursor<='9') cursor++;
     if(*cursor!=0){
       sprintf(msg,"Port not numeric in server specification - expecting identity@address:port");
-      free(server);
+      nbFree(server,sizeof(nbServer));
       return(NULL);
       }
     server->port=atoi(inCursor);
@@ -211,7 +213,7 @@ nbServer *newServer(nbCELL context,char *cursor,char *oar,char *msg){
 //
 // Handle connection requests
 //
-void serverAccept(nbCELL context,int serverSocket,void *handle){
+static void serverAccept(nbCELL context,int serverSocket,void *handle){
   nbServer *server=handle;
   struct NBP_SESSION *session;
 
@@ -240,7 +242,7 @@ void serverAccept(nbCELL context,int serverSocket,void *handle){
 *
 *    define <term> node peer.server("<serverSpec>"[,<oar>]);
 */
-void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+static void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   nbServer *server;
   nbCELL cell=NULL,specCell=NULL;
   nbSET argSet;
@@ -289,7 +291,7 @@ void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
 *
 *    enable <node>
 */
-int serverEnable(nbCELL context,void *skillHandle,nbServer *server){
+static int serverEnable(nbCELL context,void *skillHandle,nbServer *server){
   // we should use an API function here
   if((server->socket=nbIpListen(server->address,server->port))<0){
     nbLogMsg(context,0,'E',"Unable to listen on %s:%u",server->address,server->port);
@@ -308,7 +310,7 @@ int serverEnable(nbCELL context,void *skillHandle,nbServer *server){
 * 
 *    disable <node>
 */
-int serverDisable(nbCELL context,void *skillHandle,nbServer *server){
+static int serverDisable(nbCELL context,void *skillHandle,nbServer *server){
   nbListenerRemove(context,server->socket);
 #if defined(WIN32)
   closesocket(server->socket);
@@ -324,7 +326,7 @@ int serverDisable(nbCELL context,void *skillHandle,nbServer *server){
 *
 *    <node>[(<args>)][:<text>]
 */
-int *serverCommand(nbCELL context,void *skillHandle,nbServer *server,nbCELL arglist,char *text){
+static int *serverCommand(nbCELL context,void *skillHandle,nbServer *server,nbCELL arglist,char *text){
   /* process commands here */
   return(0);
   }
@@ -335,10 +337,10 @@ int *serverCommand(nbCELL context,void *skillHandle,nbServer *server,nbCELL argl
 *    undefine <node>
 *
 */
-int serverDestroy(nbCELL context,void *skillHandle,nbServer *server){
+static int serverDestroy(nbCELL context,void *skillHandle,nbServer *server){
   nbLogMsg(context,0,'T',"serverDestroy called");
   if(server->socket!=0) serverDisable(context,skillHandle,server);
-  free(server);
+  nbFree(server,sizeof(nbServer));
   return(0);
   }
 
@@ -385,23 +387,23 @@ typedef struct NB_MOD_NBP_CLIENT{
 // Check for new queue files
 //   This function is scheduled by queueEnable() using nbSynapseOpen()
 
-void clientAlarm(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL cell){
-  nbClient *peer=(nbClient *)nodeHandle;
+static void clientAlarm(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL cell){
+  nbClient *client=(nbClient *)nodeHandle;
   nbCELL value=nbCellGetValue(context,cell);
 
   if(value!=NB_CELL_TRUE) return;  // only act when schedule toggles to true
-  nbqSend(peer->ear->brainTerm);  // send queue to the peer
+  nbqSend(client->ear->brainTerm);  // send queue to the peer
   }
 
 /*
 *  Skull client
 */
-void peerSkullClient(nbCELL context,nbClient *peer,char *cursor){
+static void peerSkullClient(nbCELL context,nbClient *client,char *cursor){
   char buffer[NB_BUFSIZE];
 
   /* nbpSkull(session,brainTerm); */
   nbLogMsg(context,0,'I',"peerSkullClient calling nbpOpen");
-  if((currentSession=nbpOpen(1,peer->brainTerm,"@"))==NULL){
+  if((currentSession=nbpOpen(1,client->brainTerm,"@"))==NULL){
     nbLogMsg(context,0,'E',"Unable to open a skull session");
     return;
     }
@@ -423,8 +425,8 @@ void peerSkullClient(nbCELL context,nbClient *peer,char *cursor){
 *
 *    define <term> node <node>[(<args>)][:<text>]
 */
-void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
-  nbClient *peer;
+static void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+  nbClient *client;
   nbCELL cell=NULL;
   nbSET argSet;
   int type;
@@ -442,69 +444,67 @@ void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
     return(NULL);
     }
   brainSpec=nbCellGetString(context,cell);
-  peer=malloc(sizeof(nbClient));
+  client=nbAlloc(sizeof(nbClient));
   // get identity to portray
-  peer->self=NULL;
+  client->self=NULL;
   *portrayIdent=0;
-  peer->brain=nbBrainNew(1,brainSpec);
-  if(peer->brain==NULL){
+  client->brain=nbBrainNew(1,brainSpec);
+  if(client->brain==NULL){
     nbLogMsg(context,0,'E',"Peer specification not recognized");
     nbCellDrop(context,cell);
-    free(peer);
+    nbFree(client,sizeof(nbClient));
     return(NULL);
     }
-  if(peer->brain->id==NULL){
+  if(client->brain->id==NULL){
     nbLogMsg(context,0,'E',"Required identity not found in peer specification");
     nbCellDrop(context,cell);
-    free(peer);
+    nbFree(client,sizeof(nbClient));
     return(NULL);
     }
-  if(peer->brain->myId==NULL) peer->brain->myId=peer->brain->id;
-  peer->self=nbIdentityGet(context,peer->brain->myId);
-  //if((peer->self=peer->brain->myIdentity)==NULL) peer->self=nbIdentityGet(context,peer->brain->id);
-  if(peer->brain->dir==NULL) peer->option=2;       // write directly to socket if queue not specified
-  else if(peer->brain->hostname==NULL) peer->option=0; // store if socket not specified
-  else peer->option=1;                               // store and forward if socket and queue specified
-  //nbLogMsg(context,0,'T',"option=%d based on first argument",peer->option);
-  peer->brainTerm=nbBrainMakeTerm((struct TERM *)context,peer->brain);
-  peer->ear=NULL;
-  peer->specCell=cell;
-  peer->scheduleCell=NULL;
-  peer->synapseCell=NULL;
+  if(client->brain->myId==NULL) client->brain->myId=client->brain->id;
+  client->self=nbIdentityGet(context,client->brain->myId);
+  if(client->brain->dir==NULL) client->option=2;       // write directly to socket if queue not specified
+  else if(client->brain->hostname==NULL) client->option=0; // store if socket not specified
+  else client->option=1;                               // store and forward if socket and queue specified
+  //nbLogMsg(context,0,'T',"option=%d based on first argument",client->option);
+  client->brainTerm=nbBrainMakeTerm((struct TERM *)context,client->brain);
+  client->ear=NULL;
+  client->specCell=cell;
+  client->scheduleCell=NULL;
+  client->synapseCell=NULL;
   cell=nbListGetCell(context,&argSet);              // check for optional schedule cell - not value
   if(cell){
-    if(peer->brain->dir==NULL){
+    if(client->brain->dir==NULL){
       nbLogMsg(context,0,'E',"Schedule parameter ignored when queue not specified.");
       }
     else{
-      peer->option=1;                             // store and use scheduled forward
-      nbLogMsg(context,0,'T',"option=%d based on second argument",peer->option);
+      client->option=1;                             // store and use scheduled forward
+      nbLogMsg(context,0,'T',"option=%d based on second argument",client->option);
       // create old listener to support transition
-      peer->ear=nbpListenerNew(context);  // using NBP because we no longer need NBQ object methods
-      peer->ear->brainTerm=(NB_Term *)nbCellGrab(context,(nbCELL)peer->brainTerm);
-      if(peer->brain->hostname!=NULL) peer->ear->dstBrain=(NB_Term *)nbCellGrab(context,(nbCELL)peer->brainTerm);
-      //peer->ear->schedule=cell;
-      peer->scheduleCell=cell;
+      client->ear=nbpListenerNew(context);  // using NBP because we no longer need NBQ object methods
+      client->ear->brainTerm=(NB_Term *)nbCellGrab(context,(nbCELL)client->brainTerm);
+      if(client->brain->hostname!=NULL) client->ear->dstBrain=(NB_Term *)nbCellGrab(context,(nbCELL)client->brainTerm);
+      client->scheduleCell=cell;
       nbListenerEnableOnDaemon(context);  // sign up to enable when we daemonize
       }
     if(nbListGetCellValue(context,&argSet)!=NULL){
       nbLogMsg(context,0,'E',"The peer skill only accepts two argument.");
-      nbCellDrop(context,(nbCELL)peer->ear->brainTerm);
-      nbCellDrop(context,(nbCELL)peer->ear);
-      free(peer);
+      nbCellDrop(context,(nbCELL)client->ear->brainTerm);
+      nbCellDrop(context,(nbCELL)client->ear);
+      nbFree(client,sizeof(nbClient));
       return(NULL);
       }
     }
-  return(peer);
+  return(client);
   }
 
-int clientShow(nbCELL context,void *skillHandle,nbClient *peer,int option){
+static int clientShow(nbCELL context,void *skillHandle,nbClient *client,int option){
   if(option!=NB_SHOW_REPORT) return(0);
-  nbLogPut(context," using %s ",peer->self->name->value);
-  nbCellShow(context,(nbCELL)peer->self);
+  nbLogPut(context," using %s ",client->self->name->value);
+  nbCellShow(context,(nbCELL)client->self);
   nbLogPut(context,"\n specification: ");
   //nbCellShow(context,(nbCELL)peer->brain);
-  printBrain(peer->brain);
+  printBrain(client->brain);
   nbLogPut(context,"\n");
   return(0);
   }
@@ -516,14 +516,13 @@ int clientShow(nbCELL context,void *skillHandle,nbClient *peer,int option){
 *
 *    <node>[(0|1|2|3)][:<text>]
 */
-int clientCommand(nbCELL context,void *skillHandle,nbClient *peer,nbCELL arglist,char *text){
+static int clientCommand(nbCELL context,void *skillHandle,nbClient *client,nbCELL arglist,char *text){
   char *cursor=text;
   char cmd[NB_BUFSIZE];
   nbCELL cell=NULL;
   nbSET argSet;
   double optionReal;  // 0 - store, 1 - store and forward, 2 - send directly, 3 - skull
-  int option=peer->option;
-//  nbIDENTITY clientIdentityStore=clientIdentity;
+  int option=client->option;
   nbIDENTITY clientIdentityStore=nbIdentityGetActive(context);
   
   if(arglist!=NULL){
@@ -539,7 +538,7 @@ int clientCommand(nbCELL context,void *skillHandle,nbClient *peer,nbCELL arglist
       nbLogMsg(context,0,'E',"Expecting 0, 1, 2, or 3 as first argument");
       return(1);
       }
-    switch(peer->option){
+    switch(client->option){
       case 0:
         if(optionReal!=0) nbLogMsg(context,0,'E',"Socket not defined for node - option ignored.");
         break;
@@ -552,11 +551,11 @@ int clientCommand(nbCELL context,void *skillHandle,nbClient *peer,nbCELL arglist
         break;
       }
     }
-  if(peer->self) nbIdentitySetActive(context,peer->self);  // restore at any exit point
+  if(client->self) nbIdentitySetActive(context,client->self);  // restore at any exit point
   else nbLogMsg(context,0,'E',"Self identity not defined");
   while(*cursor==' ') cursor++;
   if(option==3){
-    peerSkullClient(context,peer,cursor);
+    peerSkullClient(context,client,cursor);
     nbIdentitySetActive(context,clientIdentityStore);
     return(0);
     }
@@ -573,16 +572,16 @@ int clientCommand(nbCELL context,void *skillHandle,nbClient *peer,nbCELL arglist
       }
     // 2006-05-25 eat - included test for hostname to cover local (unix) domain sockets
     //                  We may want to change this to test for non-NULL ipaddr---local domain sockets have "" ipaddr
-    if(option==2 && (((struct BRAIN *)peer->brainTerm->def)->port!=0 || ((struct BRAIN *)peer->brainTerm->def)->hostname!=NULL)){
-      nbpSend(1,peer->brainTerm,"",cursor);
+    if(option==2 && (((struct BRAIN *)client->brainTerm->def)->port!=0 || ((struct BRAIN *)client->brainTerm->def)->hostname!=NULL)){
+      nbpSend(1,client->brainTerm,"",cursor);
       nbIdentitySetActive(context,clientIdentityStore);
       return(0);
       }
     /* assuming \ or / */
-    nbqStoreCmd(peer->brainTerm,cursor);
+    nbqStoreCmd(client->brainTerm,cursor);
     }
   if(option==1){
-    nbqSend(peer->brainTerm); /* forward */
+    nbqSend(client->brainTerm); /* forward */
     }
   nbIdentitySetActive(context,clientIdentityStore);
   return(0);
@@ -593,7 +592,7 @@ int clientCommand(nbCELL context,void *skillHandle,nbClient *peer,nbCELL arglist
 *
 *    enable <node>
 */
-int clientEnable(nbCELL context,void *skillHandle,nbClient *client){
+static int clientEnable(nbCELL context,void *skillHandle,nbClient *client){
   if(client->synapseCell!=NULL) return(0);
   client->synapseCell=nbSynapseOpen(context,skillHandle,client,client->scheduleCell,clientAlarm);
   nbLogMsg(context,0,'I',"Enabled %s",nbCellGetString(context,client->specCell));
@@ -606,7 +605,7 @@ int clientEnable(nbCELL context,void *skillHandle,nbClient *client){
 *
 *    disable <node>
 */
-int clientDisable(nbCELL context,void *skillHandle,nbClient *client){
+static int clientDisable(nbCELL context,void *skillHandle,nbClient *client){
   if(client->synapseCell==NULL) return(0);
   client->synapseCell=nbSynapseClose(context,client->synapseCell);  // release the synapse
   nbLogMsg(context,0,'I',"Disabled %s",nbCellGetString(context,client->specCell));
@@ -620,12 +619,11 @@ int clientDisable(nbCELL context,void *skillHandle,nbClient *client){
 *    undefine <node>
 *
 */
-int clientDestroy(nbCELL context,void *skillHandle,nbClient *client){
-  //nbLogMsg(context,0,'T',"clientDestroy called");
+static int clientDestroy(nbCELL context,void *skillHandle,nbClient *client){
   clientDisable(context,skillHandle,client);
   if(client->ear!=NULL) nbCellDrop(context,(nbCELL)client->ear);
   nbCellDrop(context,client->specCell);
-  free(client);
+  nbFree(client,sizeof(nbClient));
   return(0);
   }
 
@@ -660,7 +658,7 @@ extern void *clientBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL ar
 
 // Lookup a brain term for a specified client node identifier
 
-NB_Term *getClientBrainTerm(nbCELL context,char *label,char *name){
+static NB_Term *getClientBrainTerm(nbCELL context,char *label,char *name){
     nbClient *client;
     nbCELL cell;
     int cellType;
@@ -690,7 +688,7 @@ NB_Term *getClientBrainTerm(nbCELL context,char *label,char *name){
 *
 *
 */
-int serviceCmdCopy(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL arglist,char *text){
+static int serviceCmdCopy(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL arglist,char *text){
   char *cursor=text;
   char mode;
   NB_Term *srcBrainTerm=NULL,*dstBrainTerm=NULL;
@@ -767,7 +765,7 @@ int serviceCmdCopy(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL argl
   return(0);
   }
 
-int peerCmdIdentify(nbCELL context,void *handle,char *verb,char *text){
+static int peerCmdIdentify(nbCELL context,void *handle,char *verb,char *text){
   char *cursor=text;
   unsigned int bits;   /* number of bits */
   unsigned char symid,bitsStr[10],identityName[256];
@@ -834,17 +832,17 @@ int peerCmdIdentify(nbCELL context,void *handle,char *verb,char *text){
   return(0);
   }
 
-int serviceCmdIdentify(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL arglist,char *text){
+static int serviceCmdIdentify(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL arglist,char *text){
   peerCmdIdentify(context,NULL,"peer.identify",text);
   return(0);
   }
 
-int serviceCmdShow(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL arglist,char *text){
+static int serviceCmdShow(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL arglist,char *text){
   nbTermPrintGloss(NULL,(nbCELL)brainC);
   return(0);
   }
 
-int serviceCommand(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL arglist,char *text){
+static int serviceCommand(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL arglist,char *text){
   char *verb,*cursor=text;
   while(*cursor==' ') cursor++;
   verb=cursor;
@@ -893,7 +891,7 @@ extern void *serviceBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL a
 *
 *    define <term> node <node>[(<args>)][:<text>]
 */
-void *skullConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+static void *skullConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   char *identityName;                   // identity name
   NB_PeerKey *skullIdentity;      // server identity
   nbCELL cell=NULL;
@@ -930,11 +928,7 @@ void *skullConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text)
     }
 
   /* create a session handle for calling nbp functions */
-  if((session=nbpNewSessionHandle(skullIdentity))==NULL){
-    nbLogMsg(context,0,'L',"Unable to obtain a session handle.");
-    nbLogFlush(context);
-    exit(1);
-    }
+  if((session=nbpNewSessionHandle(skullIdentity))==NULL) nbExit("skullConstruct unable to obtain a session handle - terminating");
   session->channel->socket=socket;
   nbIpGetSocketIpAddrString(socket,ipaddr);
   snprintf(session->channel->ipaddr,16,"%s",ipaddr); //2012-02-07 dtl: replaced strcpy
@@ -956,7 +950,7 @@ extern void *skullBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arg
 /*====================================================================================
 *
 ====================================================================================*/
-typedef struct NB_MOD_NBQ_READER{
+typedef struct NB_MOD_QUEUE{
   nbCELL           nameCell;      // queue name
   nbCELL           scheduleCell;  // schedule 
   nbCELL           synapseCell;   // synapse - used to respond to schedule
@@ -965,7 +959,7 @@ typedef struct NB_MOD_NBQ_READER{
 // Check for new queue files
 //   This function is scheduled by queueEnable() using nbSynapseOpen()
 
-void queueAlarm(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL cell){
+static void queueAlarm(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL cell){
   nbQueue *queue=(nbQueue *)nodeHandle;
   nbCELL value=nbCellGetValue(context,cell);
 
@@ -978,7 +972,7 @@ void queueAlarm(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL cell){
 *
 *    define <term> node <node>[(<args>)][:<text>]
 */
-void *queueConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+static void *queueConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   nbQueue *queue;
   nbCELL nameCell=NULL;
   nbCELL scheduleCell=NULL;
@@ -1004,7 +998,7 @@ void *queueConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text)
     return(NULL);
     }
 
-  queue=malloc(sizeof(struct NB_MOD_NBQ_READER));
+  queue=nbAlloc(sizeof(nbQueue));
   queue->nameCell=nameCell;
   queue->scheduleCell=scheduleCell;
   queue->synapseCell=NULL; 
@@ -1018,7 +1012,7 @@ void *queueConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text)
 *
 *    enable <node>
 */
-int queueEnable(nbCELL context,void *skillHandle,nbQueue *queue){
+static int queueEnable(nbCELL context,void *skillHandle,nbQueue *queue){
   if(queue->synapseCell!=NULL) return(0);
   queue->synapseCell=nbSynapseOpen(context,skillHandle,queue,queue->scheduleCell,queueAlarm);
   nbLogMsg(context,0,'I',"Enabled queue %s",nbCellGetString(context,queue->nameCell));
@@ -1031,7 +1025,7 @@ int queueEnable(nbCELL context,void *skillHandle,nbQueue *queue){
 *
 *    disable <node>
 */
-int queueDisable(nbCELL context,void *skillHandle,nbQueue *queue){
+static int queueDisable(nbCELL context,void *skillHandle,nbQueue *queue){
   if(queue->synapseCell==NULL) return(0);
   queue->synapseCell=nbSynapseClose(context,queue->synapseCell);  // release the synapse
   nbLogMsg(context,0,'I',"Disabled queue %s",nbCellGetString(context,queue->nameCell));
@@ -1044,7 +1038,7 @@ int queueDisable(nbCELL context,void *skillHandle,nbQueue *queue){
 *
 *    <node>[(<args>)][:<text>]
 */
-int *queueCommand(nbCELL context,void *skillHandle,nbQueue *queue,nbCELL arglist,char *text){
+static int *queueCommand(nbCELL context,void *skillHandle,nbQueue *queue,nbCELL arglist,char *text){
   /* process commands here */
   return(0);
   }
@@ -1055,12 +1049,12 @@ int *queueCommand(nbCELL context,void *skillHandle,nbQueue *queue,nbCELL arglist
 *    undefine <node>
 *
 */
-int queueDestroy(nbCELL context,void *skillHandle,nbQueue *queue){
+static int queueDestroy(nbCELL context,void *skillHandle,nbQueue *queue){
   nbLogMsg(context,0,'T',"queueDestroy called");
   nbCellDrop(context,queue->nameCell);
   nbCellDrop(context,queue->scheduleCell);
   nbCellDrop(context,queue->synapseCell);
-  free(queue);
+  nbFree(queue,sizeof(nbQueue));
   return(0);
   }
 
@@ -1079,7 +1073,7 @@ extern void *queueBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arg
 //=====================================================================
 // Commands
 
-int peerCmdShow(struct NB_CELL *context,void *handle,char *verb,char *cursor){
+static int peerCmdShow(struct NB_CELL *context,void *handle,char *verb,char *cursor){
   nbTermPrintGloss(NULL,(nbCELL)brainC);
   return(0);
   }
@@ -1091,7 +1085,6 @@ int peerCmdShow(struct NB_CELL *context,void *handle,char *verb,char *cursor){
 _declspec (dllexport)
 #endif
 extern void *nbBind(nbCELL context,char *ident,nbCELL arglist,char *text){
-  // nbLogMsg(context,0,'T',"nbBind() called for \"%s\".",ident);
   nbVerbDeclare(context,"peer.identify",NB_AUTH_CONTROL,0,NULL,&peerCmdIdentify,"<identity> [bits]");
   nbVerbDeclare(context,"peer.show",NB_AUTH_CONNECT,0,NULL,&peerCmdShow,"");
   return(NULL);

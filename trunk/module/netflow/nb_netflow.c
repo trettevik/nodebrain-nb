@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2004-2010 The Boeing Company
+* Copyright (C) 2004-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -73,6 +73,8 @@
 * 2005-05-14 eat 0.6.3  netflowBind() modified to accept moduleHandle
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
+* 2012-08-31 dtl 0.8.12 handled err
+* 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree for fixed blocks
 *=====================================================================
 */
 #include <config.h>
@@ -306,13 +308,13 @@ int openHistory(char *filename,int periods,size_t len){
 #endif
       return(file);
       }
-    buffer=malloc(len);
+    buffer=nbAlloc(len);
     memset(buffer,0,len);
     while(periods>0){
       write(file,buffer,len);
       periods--;
       }
-    free(buffer);
+    nbFree(buffer,len);
     }
   return(file);
   }
@@ -398,7 +400,7 @@ void format7(nbCELL context,unsigned char *buf,int len){
 void *hashNew(int modulo){
   struct NB_MOD_NETFLOW_HASH *hash;
   int vectsize=modulo*sizeof(void *);
-  hash=malloc(sizeof(struct NB_MOD_NETFLOW_HASH)-sizeof(void *)+vectsize);
+  hash=nbAlloc(sizeof(struct NB_MOD_NETFLOW_HASH)-sizeof(void *)+vectsize);
   hash->modulo=modulo;
   hash->free=NULL;
   memset(&hash->vector,0,vectsize);
@@ -426,16 +428,28 @@ void hashReset(struct NB_MOD_NETFLOW_HASH *hash){
     }
   }
 
-void hashFree(struct NB_MOD_NETFLOW_HASH *hash){
+void hashFreeAddr(struct NB_MOD_NETFLOW_HASH *hash){
   //struct NB_MOD_NETFLOW_ADDR **entryP=(struct NB_MOD_NETFLOW_ADDR **)&(hash->free),*entry,*next;
   struct NB_MOD_NETFLOW_ADDR *entry,*next;
   hashReset(hash);
   for(entry=hash->free;entry!=NULL;entry=next){
     next=entry->next; 
-    free(entry);
+    nbFree(entry,sizeof(struct NB_MOD_NETFLOW_ADDR));
     }
-  free(hash);
+  nbFree(hash,sizeof(struct NB_MOD_NETFLOW_HASH)-sizeof(void *)+hash->modulo*sizeof(void *));
   }
+
+void hashFreeFlow(struct NB_MOD_NETFLOW_HASH *hash){
+  //struct NB_MOD_NETFLOW_ADDR **entryP=(struct NB_MOD_NETFLOW_ADDR **)&(hash->free),*entry,*next;
+  struct NB_MOD_NETFLOW_FLOW *entry,*next;
+  hashReset(hash);
+  for(entry=hash->free;entry!=NULL;entry=next){
+    next=entry->next;
+    nbFree(entry,sizeof(struct NB_MOD_NETFLOW_FLOW));
+    }
+  nbFree(hash,sizeof(struct NB_MOD_NETFLOW_HASH)-sizeof(void *)+hash->modulo*sizeof(void *));
+  }
+
 
 /********************************************************************************
 *  Cache table routines
@@ -471,7 +485,7 @@ void setSeq(NB_MOD_Netflow *netflow,unsigned int address,unsigned char engineid,
   for(device=*deviceP;device!=NULL && (address>device->address || (address==device->address && engineid>device->engineid));device=*deviceP)
     deviceP=(struct NB_MOD_NETFLOW_DEVICE **)&(device->next);
   if(device==NULL || address<device->address || engineid<device->engineid){
-    device=malloc(sizeof(struct NB_MOD_NETFLOW_DEVICE));
+    device=nbAlloc(sizeof(struct NB_MOD_NETFLOW_DEVICE));
     device->address=address;
     device->engineid=engineid;
     nbIpGetName(address,(char *)device->name,sizeof(device->name));
@@ -547,7 +561,7 @@ unsigned short setAttr(NB_MOD_Netflow *netflow,unsigned int address,unsigned sho
     attrP=(struct NB_MOD_NETFLOW_ATTR **)&(attr->next);
   if(attr==NULL || address<attr->address){
     if(NULL!=(attr=hash->free)) hash->free=attr->next;
-    else attr=malloc(sizeof(struct NB_MOD_NETFLOW_ATTR));
+    else attr=nbAlloc(sizeof(struct NB_MOD_NETFLOW_ATTR));
     attr->address=address;
     attr->flags=0;
     attr->next=*attrP;
@@ -744,7 +758,7 @@ struct NB_MOD_NETFLOW_ADDR *assertAddr(nbCELL context,NB_MOD_Netflow *netflow,un
     addrP=(struct NB_MOD_NETFLOW_ADDR **)&(addr->next);
   if(addr==NULL || address<addr->address){
     if(NULL!=(addr=hash->free)) hash->free=addr->next;
-    else addr=malloc(sizeof(struct NB_MOD_NETFLOW_ADDR));
+    else addr=nbAlloc(sizeof(struct NB_MOD_NETFLOW_ADDR));
     addr->address=address;
     addr->fromFlows=0;
     addr->toFlows=0;
@@ -794,7 +808,7 @@ struct NB_MOD_NETFLOW_FLOW *assertFlow(nbCELL context,NB_MOD_Netflow *netflow,un
     }
   if(flow==NULL || fromAddr<flow->fromAddr || toAddr<flow->toAddr || protocol<flow->protocol || toPort<flow->toPort){
     if(NULL!=(flow=hash->free)) hash->free=flow->next;
-    else flow=malloc(sizeof(struct NB_MOD_NETFLOW_FLOW));
+    else flow=nbAlloc(sizeof(struct NB_MOD_NETFLOW_FLOW));
     flow->packets=packets;
     flow->bytes=bytes;
     flow->fromAddr=fromAddr;
@@ -1043,6 +1057,10 @@ void *netflowConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *tex
       }
     hfilename=nbCellGetString(context,cell);
     hfilename=strdup(hfilename);
+    if(!hfilename){ //2012-08-31 dtl handled err
+      nbLogMsg(context,0,'E',"Out of memory");
+      exit(NB_EXITCODE_FAIL);
+      }
     nbCellDrop(context,cell);
     hfile=openHistory(hfilename,7*24,sizeof(struct NB_MOD_NETFLOW_PERIOD));
     if(hfile<0){
@@ -1071,7 +1089,7 @@ void *netflowConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *tex
     if(*cursor==',') cursor++;
     while(*cursor==' ') cursor++;
     }
-  netflow=malloc(sizeof(NB_MOD_Netflow));
+  netflow=nbAlloc(sizeof(NB_MOD_Netflow));
   netflow->socket=0;
   netflow->port=port;
   netflow->hfile=hfile;
@@ -1167,9 +1185,9 @@ int *netflowCommand(nbCELL context,void *skillHandle,NB_MOD_Netflow *netflow,nbC
 int netflowDestroy(nbCELL context,void *skillHandle,NB_MOD_Netflow *netflow){
   nbLogMsg(context,0,'T',"netflowDestroy called");
   if(netflow->socket!=0) netflowDisable(context,skillHandle,netflow);
-  hashFree(netflow->hashFlow);
-  hashFree(netflow->hashAddr);
-  free(netflow);
+  hashFreeFlow(netflow->hashFlow);
+  hashFreeAddr(netflow->hashAddr);
+  nbFree(netflow,sizeof(NB_MOD_Netflow));
   return(0);
   }
 

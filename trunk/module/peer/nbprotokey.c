@@ -64,7 +64,8 @@
 * 2001/07/21 Ed Trettevik (original prototype version 0.2.8)
 *             1) This code has been pulled from nodebrain.c.
 * 2008/10/31 eat 0.7.3  Renamed key file to nb_peer.key
-* 2012-01-12 dtl Vercadode updates
+* 2012-01-12 dtl        Checker updates
+* 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 *=============================================================================
 */
 #include "nbi.h"
@@ -143,7 +144,7 @@ NB_PeerKey *nbpNewPeerKey(char *name,char *key){
 
   treeKey=nbCellCreateString(NULL,name);
   if(nbTreeLocate(&path,treeKey,(NB_TreeNode **)&nb_PeerKeyTree)!=NULL) return(NULL);
-  if((peerKey=nb_PeerKeyFree)==NULL) peerKey=malloc(sizeof(NB_PeerKey));
+  if((peerKey=nb_PeerKeyFree)==NULL) peerKey=nbAlloc(sizeof(NB_PeerKey));
   else nb_PeerKeyFree=(NB_PeerKey *)peerKey->node.left;
   peerKey->identity=nbIdentityGet(NULL,name);
   peerKey->authority=0;

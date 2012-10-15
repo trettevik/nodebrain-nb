@@ -71,6 +71,7 @@
 * 2005-04-07 eat 0.6.2  Enhanced nbStreamClose()
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2012-01-16 dtl Checker updates
+* 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 *=============================================================================
 */
 #include "nbi.h"
@@ -189,7 +190,9 @@ int nbStreamOpen(NB_Cell *context,char *streamName,void *session,void (*subscrib
   if(stream==NULL) return(0); 
   for(sub=stream->sub;sub!=NULL && (sub->session!=session || sub->subscriber!=subscriber);sub=sub->next);
   if(sub==NULL){
-    if((sub=(NB_StreamSubscription *)malloc(sizeof(NB_StreamSubscription)))==NULL) return(0); //dlt: add chk
+    // 2012-10-13 eat - replaced malloc
+    //if((sub=(NB_StreamSubscription *)malloc(sizeof(NB_StreamSubscription)))==NULL) return(0); //dlt: add chk
+    sub=(NB_StreamSubscription *)nbAlloc(sizeof(NB_StreamSubscription));
     sub->stream=stream;
     sub->session=session;
     sub->subscriber=subscriber;

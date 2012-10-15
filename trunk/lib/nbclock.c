@@ -125,7 +125,8 @@
 * 2011-02-08 eat 0.8.5  Modified nbClockSetTimer to reset object timers
 *            Previously it considered an attempt to reset a timer a logic error
 *            and required a timer to be cleared before setting a new one.
-* 2012-01-09 dtl 0.8.6 Checker updates
+* 2012-01-09 dtl 0.8.6  Checker updates
+* 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 *=============================================================================
 */
 #include "nbi.h" 
@@ -172,7 +173,7 @@ void nbClockSetTimer(time_t etime,NB_Cell *object){
     outMsg(0,'W',"Object timer was reset.");
     }
   else if(etime==0) return;
-  if(nb_timerFree==NULL) newTimer=malloc(sizeof(NB_Timer));
+  if(nb_timerFree==NULL) newTimer=nbAlloc(sizeof(NB_Timer));
   else{
     newTimer=nb_timerFree;
     nb_timerFree=newTimer->next;

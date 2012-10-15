@@ -57,30 +57,27 @@
 * 2005-05-14 eat 0.6.3  consoleBind() modified to accept moduleHandle
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
-* 2012-01-31 dtl Checker updates
+* 2012-01-31 dtl 0.8.10 Checker updates
+* 2012-10-31 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 *=====================================================================
 */
 #include "config.h"
 #include <nb.h>
 
-struct NB_MOD_CONSOLE{
+typedef struct NB_MOD_CONSOLE{
   unsigned short port;            /* TCP port of listener */
   char           dirname[256];    /* configuration directory name */
   int            serverSocket;    /* server Socket */
   struct NB_MOD_CONSOLE_SESSION *sessions;  /* list of sessions */
   char           trace;
-  };
+  } NB_MOD_Console;
 
-typedef struct NB_MOD_CONSOLE NB_MOD_Console;
-
-struct NB_MOD_CONSOLE_SESSION{
+typedef struct NB_MOD_CONSOLE_SESSION{
   struct NB_MOD_CONSOLE_SESSION *next; /* next session */
   struct NB_MOD_CONSOLE *console;      /* console structure */
   NB_IpChannel          *channel;      /* communcations channel */
   char                  dirname[25];   /* session directory name */
-  };
-
-typedef struct NB_MOD_CONSOLE_SESSION NB_MOD_ConsoleSession;
+  } NB_MOD_ConsoleSession;
 
 /*================================================================================*/
 void consoleOutputHandler(nbCELL context,void *session,char *buffer){
@@ -135,7 +132,7 @@ void consoleService(nbCELL context,int socket,void *handle){
     nbIpClose(channel);
     nbListenerRemove(context,socket);
     nbStreamClose(context,NULL,session,consoleStreamHandler);
-    free(session);  /* should put on reuse list */
+    nbFree(session,sizeof(struct NB_MOD_CONSOLE_SESSION));
     }
   nbLogMsg(context,0,'T',"Request length=%d\n",len);
   if(len==0) return;
@@ -167,7 +164,7 @@ void consoleAccept(nbCELL context,int serverSocket,void *handle){
   /* here's where we need to do authentication */
   /* only listen to local host on user workstation until we beef this up */
 
-  session=malloc(sizeof(struct NB_MOD_CONSOLE_SESSION));
+  session=nbAlloc(sizeof(struct NB_MOD_CONSOLE_SESSION));
   session->next=console->sessions;
   console->sessions=session; 
   session->console=console;
@@ -238,7 +235,7 @@ void *consoleConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *tex
     if(*cursor==',') cursor++;
     while(*cursor==' ') cursor++;
     }
-  console=malloc(sizeof(NB_MOD_Console));
+  console=nbAlloc(sizeof(NB_MOD_Console));
   console->sessions=NULL;
   console->serverSocket=0;
   console->port=port;
@@ -282,7 +279,7 @@ int consoleDisable(nbCELL context,void *skillHandle,NB_MOD_Console *console){
     nbIpClose(session->channel);
     nbIpFree(session->channel);
     session=session->next;
-    free(session);
+    nbFree(session,sizeof(struct NB_MOD_CONSOLE_SESSION));
     }
   return(0);
   }
@@ -311,7 +308,7 @@ int *consoleCommand(nbCELL context,void *skillHandle,NB_MOD_Console *console,nbC
 int consoleDestroy(nbCELL context,void *skillHandle,NB_MOD_Console *console){
   nbLogMsg(context,0,'T',"consoleDestroy called");
   if(console->serverSocket!=0) consoleDisable(context,skillHandle,console);
-  free(console);
+  nbFree(console,sizeof(NB_MOD_Console));
   return(0);
   }
 

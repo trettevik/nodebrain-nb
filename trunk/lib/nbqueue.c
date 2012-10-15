@@ -137,7 +137,8 @@
 * 2008-11-11 eat 0.7.3  Changed failure exit code to NB_EXITCODE_FAIL
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
-* 2012-01-26 dtl Checker updates
+* 2012-01-26 dtl 0.8.11 Checker updates
+* 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 *=============================================================================
 */
 #include "nbi.h"
@@ -449,9 +450,9 @@ void nbQueueCloseDir(struct NBQ_HANDLE *qHandle){
   if(qHandle->qfile!=NBQFILE_ERROR) nbQueueCloseFile(qHandle->qfile);
   while((entry=qHandle->entry)!=NULL){
     qHandle->entry=entry->next;
-    free(entry);
+    nbFree(entry,sizeof(struct NBQ_ENTRY));
     }
-  free(qHandle);
+  nbFree(qHandle,sizeof(struct NBQ_HANDLE));
   }
  
 #if defined(WIN32)
@@ -732,8 +733,7 @@ static void nbqAddEntry(qHandle,identity,filename)
   if(*cursor!='.') return;
   if(*(cursor+1)=='Q') return;
 
-  if((entry=(struct NBQ_ENTRY *)malloc(sizeof(struct NBQ_ENTRY)))==NULL) //2012-01-26 dtl: handled error
-    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+  entry=(struct NBQ_ENTRY *)nbAlloc(sizeof(struct NBQ_ENTRY));
   entry->identity=identity;
   entry->context=NULL;              /* later */
   strcpy(entry->filename,filename);
@@ -771,8 +771,7 @@ struct NBQ_HANDLE *nbQueueOpenDir(char *dirname,char *siName,int mode){
 #endif
   char   iSearchName[512];
   if(trace) outMsg(0,'T',"nbQueueOpenDir() called");
-  if((qHandle=malloc(sizeof(struct NBQ_HANDLE)))==NULL) //2012-01-26 dtl: handled error
-    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+  qHandle=nbAlloc(sizeof(struct NBQ_HANDLE));
   qHandle->pollSynapse=NULL;
   qHandle->yieldSynapse=NULL;
   strcpy(qHandle->qname,dirname);
@@ -793,7 +792,7 @@ struct NBQ_HANDLE *nbQueueOpenDir(char *dirname,char *siName,int mode){
   if(iDir==INVALID_HANDLE_VALUE){
     if(GetLastError()==ERROR_NO_MORE_FILES) return(qHandle);
     outMsg(0,'E',"Unable to read queue %s - errno=%d",qHandle->qname,GetLastError());
-    free(qHandle);
+    nbFree(qHandle,sizeof(struct NBQ_HANDLE));
     if(lFile) nbQueueCloseFile(lFile);
     return(NULL);
     }
@@ -835,7 +834,7 @@ struct NBQ_HANDLE *nbQueueOpenDir(char *dirname,char *siName,int mode){
 #else
   if((iDir=opendir(qHandle->qname))==NULL){
     outMsg(0,'E',"Unable to open %s",qHandle->qname);
-    free(qHandle);
+    nbFree(qHandle,sizeof(struct NBQ_HANDLE));
     return(NULL);
     }
   while((iEnt=readdir(iDir))!=NULL){
@@ -924,7 +923,7 @@ static int nbqThread(void *session){
       }
     }
   qHandle->entry=qEntry->next;
-  free(qEntry);
+  nbFree(qEntry,sizeof(struct NBQ_ENTRY));
   clientIdentity=saveClientIdentity;
   return(0);
   }

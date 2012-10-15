@@ -333,7 +333,8 @@ time_t schedNext(time_t floor,struct SCHED *sched){
     ceiling=floor+8*60*60;          /* 8 hour domain - is extended as necessary to find next interval */
     sched->period.start=tcQueueTrue(sched->queue,floor,ceiling);
     sched->period.end=tcQueueFalse(sched->queue);
-    /* tcPrintSeg(sched->period.start,sched->period.end,"Test"); */
+    // 2012-10-12 eat - troubleshoot
+    tcPrintSeg(sched->period.start,sched->period.end,"Test"); 
     return(sched->period.start);
     }
   outMsg(0,'L',"schedNext() schedule type not recognized.");

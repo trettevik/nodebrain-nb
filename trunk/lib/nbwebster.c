@@ -140,6 +140,7 @@
 *            Note: There is still a memory leak when forwarding.
 * 2012-08-26 eat 0.8.10 - Stopped echo of URL not found to avoid XSS vulnerability
 * 2012-09-17 eat 0.8.11 - Fixed some buffer overflows
+* 2012-10-13 eat 0.8.12 - Replaced malloc/free with nbAlloc/nbFree
 *==============================================================================
 */
 #include <nbi.h>
@@ -1201,7 +1202,8 @@ static int websterLoadAccessList(nbCELL context,nbWebServer *webster,char *filen
         }
       key=nbCellCreateString(context,cursor);
       if(nbTreeLocate(&path,key,(NB_TreeNode **)&webster->userTree)==NULL){
-        userNode=malloc(sizeof(nbWebUser));
+        // 2012-10-13 eat - replaced malloc
+        userNode=nbAlloc(sizeof(nbWebUser));
         userNode->node.left=NULL;
         userNode->node.right=NULL;
         strncpy(userNode->userid,cursor,maxUserLen+1);
@@ -1246,7 +1248,8 @@ static void nbWebsterShutdown(nbCELL context,nbProxy *proxy,void *handle,int cod
     nbLogMsg(context,0,'W',"Shutting down Webster session while process is still running\n");
     session->process->closer=NULL; // cancel nbWebsterCgiCloser
     }
-  free(session);
+  // 2012-10-13 eat - replaced free
+  nbFree(session,sizeof(nbWebSession));
   nbLogMsg(context,0,'T',"nbWebsterShutdown: Connection is shut down");
   }
 
@@ -1351,8 +1354,8 @@ static int nbWebsterAccept(nbCELL context,nbProxy *proxy,void *handle){
 
   nbLogMsg(context,0,'T',"nbWebsterAccept: Connection %s",nbTlsGetUri(proxy->tls));
   nbLogMsg(context,0,'T',"nbWebsterAccept: webster=%p",webster);
-  //session=(nbWebSession *)nbAlloc(sizeof(nbWebSession));
-  session=(nbWebSession *)malloc(sizeof(nbWebSession));
+  // 2012-10-13 eat - replaced malloc
+  session=(nbWebSession *)nbAlloc(sizeof(nbWebSession));
   memset(session,0,sizeof(nbWebSession));
   session->webster=webster;
   session->role=NB_WEBSTER_ROLE_REJECT;
@@ -1394,7 +1397,8 @@ nbWebServer *nbWebsterOpen(nbCELL context,nbCELL siteContext,void *handle,
   nbWebServer *webster;
   char *delim;
 
-  webster=malloc(sizeof(nbWebServer));
+  // 2012-10-13 eat - replaced malloc
+  webster=nbAlloc(sizeof(nbWebServer));
   memset(webster,0,sizeof(nbWebServer));
   webster->context=context;
   webster->siteContext=siteContext;
@@ -1548,7 +1552,8 @@ int nbWebsterRegisterResource(nbCELL context,nbWebServer *webster,char *name,voi
     *(qualifier+len)=0;
     key=nbCellCreateString(context,qualifier);
     if((res=nbTreeLocate(&path,key,(NB_TreeNode **)&resource->child))==NULL){
-      resource=malloc(sizeof(nbWebResource));
+      // 2012-10-13 eat - replaced malloc
+      resource=nbAlloc(sizeof(nbWebResource));
       resource->node.left=NULL;
       resource->node.right=NULL;
       resource->child=NULL;
@@ -1790,6 +1795,7 @@ nbWebServer *nbWebsterClose(nbCELL context,nbWebServer *webster){
   if(!webster) return(NULL);
   nbWebsterDisable(context,webster);
   // include code to clean up better
-  free(webster);
+  // 2012-10-13 eat - replaced free()
+  nbFree(webster,sizeof(nbWebServer));
   return(NULL);
   }

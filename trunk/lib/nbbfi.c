@@ -188,6 +188,7 @@
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages.
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2012-01-26 dtl 0.8.6  Checker updates
+* 2012-08-31 dtl 0.8.12 Checker updates: handled malloc error
 *=============================================================================
 */
 #include "nbi.h"
@@ -329,6 +330,10 @@ bfi bfiAlloc(void){
   bfi s;
   
   bfifree=(bfi)malloc(256*sizeof(struct bfiseg));
+  if(!bfifree){  //2012-08-31 dtl - handle malloc() err
+    fprintf(stderr,"Out of memory\n");
+    exit(NB_EXITCODE_FAIL);
+    }
   for(s=bfifree;s<bfifree+254;s++){
     s->next=s+1;
     }
@@ -510,9 +515,9 @@ bfi bfiParse(char *s){
   char *comma,*colon,*bar;
   long start,end;
   
-  if((colon=strchr(s,':'))==NULL) return(NULL); //2012-01-09 dtl added check // 2012-01-25 eat - added return
+  if((colon=strchr(s,':'))==NULL) return(NULL); // 2012-01-25 eat - added return
   *colon=0; 
-  if((bar=strchr(s,'_'))==NULL) return(NULL);  //2012-01-09 dtl added check // 2012-01-25 eat - added return
+  if((bar=strchr(s,'_'))==NULL) return(NULL);   // 2012-01-25 eat - added return
   *bar=0;
   start=atoi(s);
   end=atoi(bar+1)+1;
@@ -906,6 +911,10 @@ bfi bfiIndex(bfi g,struct bfiindex *index){
   if(index->from>0){     /* we can bound the indexing by the maximum index */
     int stop=index->to;
     array=(bfi *)malloc(sizeof(bfi)*stop);
+    if(!array){  //2012-08-31 dtl - handle malloc() err
+      fprintf(stderr,"Out of memory\n");
+      exit(NB_EXITCODE_FAIL);
+      }
     for(s=g->next;s!=g && n<stop && s->start<g->start;s=s->next) if(s->end>g->end){
       *(array+n)=s;
       n++;
@@ -914,6 +923,10 @@ bfi bfiIndex(bfi g,struct bfiindex *index){
   else{                  /* we need to index the complete list */ 
     int entries=500;
     array=(bfi *)malloc(sizeof(bfi)*entries);
+    if(!array){  //2012-08-31 dtl - handle malloc() err
+      fprintf(stderr,"Out of memory\n");
+      exit(NB_EXITCODE_FAIL);
+      }
     for(s=g->next;s!=g && s->start<g->start;s=s->next) if(s->end>g->end){
       *(array+n)=s;
       n++;

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2005-2010 The Boeing Company
+* Copyright (C) 2005-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -245,6 +245,7 @@
 *              myhandler:'1.3.6.1.4.1.6101.141.0.0':<variable bindings>
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
+* 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 *=====================================================================
 */
 #include "config.h"
@@ -944,7 +945,7 @@ static void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
       while(*cursor==' ') cursor++;
       }
     }
-  snmptrap=malloc(sizeof(NB_MOD_Snmptrap));
+  snmptrap=nbAlloc(sizeof(NB_MOD_Snmptrap));
   snmptrap->socket=0;
   strcpy(snmptrap->interfaceAddr,interfaceAddr);
   snmptrap->port=port;
@@ -1014,7 +1015,7 @@ static int *serverCommand(nbCELL context,void *skillHandle,NB_MOD_Snmptrap *snmp
 static int serverDestroy(nbCELL context,void *skillHandle,NB_MOD_Snmptrap *snmptrap){
   nbLogMsg(context,0,'T',"serverDestroy called");
   if(snmptrap->socket!=0) serverDisable(context,skillHandle,snmptrap);
-  free(snmptrap);
+  nbFree(snmptrap,sizeof(NB_MOD_Snmptrap));
   return(0);
   }
 
@@ -1239,7 +1240,7 @@ static void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
     nbLogMsg(context,0,'E',"Unable to obtain client UDP socket %s:%d",serverAddr,port);
     return(NULL);
     }
-  client=malloc(sizeof(NB_MOD_Client));
+  client=nbAlloc(sizeof(NB_MOD_Client));
   client->socket=clientSocket;
   strcpy(client->address,serverAddr);
   client->port=port;
@@ -1365,7 +1366,7 @@ static int clientCommand(nbCELL context,void *skillHandle,NB_MOD_Client *client,
 static int clientDestroy(nbCELL context,void *skillHandle,NB_MOD_Client *client){
   nbLogMsg(context,0,'T',"clientDestroy called");
   if(client->socket!=0) clientDisable(context,skillHandle,client);
-  free(client);
+  nbFree(client,sizeof(NB_MOD_Client));
   return(0);
   }
 

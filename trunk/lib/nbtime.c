@@ -156,6 +156,7 @@
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010/02/28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2012-01-26 dtl Checker updates
+* 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 *=============================================================================
 */
 #define _USE_32BIT_TIME_T
@@ -178,7 +179,8 @@ void tcParmFree(struct tcParm *tcParm){
   struct tcParm *tcParmnext;
   while(tcParm!=NULL){
     tcParmnext=tcParm->next;
-    free(tcParm);
+    //free(tcParm); // 2012-10-12 eat - switch to nbFree
+    nbFree(tcParm,sizeof(struct tcParm));
     tcParm=tcParmnext;
     }
   }
@@ -285,10 +287,13 @@ long tcAlignQuarter(long timer){
 long tcAlignYearMonth(long timer,int month){
   struct tm *timeTm;
   
+  fprintf(stderr,"tcAlignYearMonth called: %ld %d\n",timer,month);
   timeTm=localtime((const time_t *)&timer);
   if(timeTm==NULL) return(never);
   if(timeTm->tm_mon>month) timeTm->tm_year++;
-  if((month-1)>=INT_MIN) timeTm->tm_mon=month-1; //dtl: added check
+  // 2012-10-12 eat - can't be smaller than the minimum value
+  //if((month-1)>=INT_MIN) timeTm->tm_mon=month-1; //dtl: added check
+  timeTm->tm_mon=month-1; //eat
   timeTm->tm_mday=1;
   timeTm->tm_hour=0;
   timeTm->tm_min=0;
@@ -328,7 +333,9 @@ long tcAlignWeekDay(long timer,int wday){
   
   timeTm=localtime((const time_t *)&timer);
   if(timeTm==NULL) return(never);
-  if(timeTm->tm_wday>wday && (wday+7)<=INT_MAX) wday=wday+7; //dtl: added check
+  // 2012-10-12 eat - can't be greater than the maximum value
+  //if(timeTm->tm_wday>wday && (wday+7)<=INT_MAX) wday=wday+7; //dtl: added check
+  if(timeTm->tm_wday>wday) wday+=7; //eat
   timeTm->tm_mday+=wday-timeTm->tm_wday;
   timeTm->tm_hour=0;
   timeTm->tm_min=0;
@@ -424,6 +431,7 @@ long tcStepDecade(long timer,int n){
 long tcStepYear(long timer,int n){
   struct tm *timeTm;
   
+  fprintf(stderr,"tcStepYear called: timer=%ld n=%d\n",timer,n); 
   timeTm=localtime((const time_t *)&timer);
   if(timeTm==NULL) return(never);
   if(n==0) n=1;
@@ -1251,8 +1259,9 @@ struct tcParm *tcParseParm(struct tcFunction *function,char **source,char *msg){
     }
   (*source)++;
   while(1){
-    if((tcParm=(struct tcParm *)malloc(sizeof(struct tcParm)))==NULL) //2012-01-26 dtl: handled out of memory
-      {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+    //if((tcParm=(struct tcParm *)malloc(sizeof(struct tcParm)))==NULL) //2012-01-26 dtl: handled out of memory
+    //  {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+    tcParm=(struct tcParm *)nbAlloc(sizeof(struct tcParm));
     tcParm->next=tcParmnext;        
     if(!tcParsePattern(tcParm->start,function,source,msg)){
       tcParmFree(tcParm);
@@ -1354,8 +1363,9 @@ tc tcParseFunction(char **source,char *msg){
       }
     }
   /* build a tcDef structure */
-  if((tcdef=(tc)malloc(sizeof(struct tcDef)))==NULL) //2012-01-26 dtl: handled out of memory
-    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+  //if((tcdef=(tc)malloc(sizeof(struct tcDef)))==NULL) //2012-01-26 dtl: handled out of memory
+  //  {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+  tcdef=(tc)nbAlloc(sizeof(struct tcDef));
   tcdef->operation=operation;
   tcdef->left=function;
   tcdef->right=right;  
@@ -1385,8 +1395,9 @@ tc tcParseLeft(nbCELL context,char **source,char *msg){
   if(*cursor=='{'){  /* plan? */
     cursor++;
     if((right=(void *)nbRuleParse(context,1,&cursor,msg))==NULL) return(NULL);
-    if((tcdef=(tc)malloc(sizeof(struct tcDef)))==NULL) //2012-01-26 dtl: handled out of memory
-      {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+    //if((tcdef=(tc)malloc(sizeof(struct tcDef)))==NULL) //2012-01-26 dtl: handled out of memory
+    //  {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+    tcdef=(tc)nbAlloc(sizeof(struct tcDef)); 
     tcdef->operation=tcPlan;
     tcdef->left=((NB_Rule *)right)->plan;
     tcdef->right=right;
@@ -1419,8 +1430,9 @@ tc tcParseLeft(nbCELL context,char **source,char *msg){
     return(NULL);
     }
   /* build a tcDef structure */
-  if((tcdef=(struct tcDef *)malloc(sizeof(struct tcDef)))==NULL) //2012-01-26 dtl: handled out of memory
-    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+  //if((tcdef=(struct tcDef *)malloc(sizeof(struct tcDef)))==NULL) //2012-01-26 dtl: handled out of memory
+  //  {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+  tcdef=(struct tcDef *)nbAlloc(sizeof(struct tcDef));
   tcdef->operation=operation;
   tcdef->left=left;
   tcdef->right=right;
@@ -1474,8 +1486,9 @@ tc tcParse(nbCELL context,char **source,char *msg){
       }
     *cursor=']';
     /* build a tcDef structure for index operation */
-    if((tcdef=(tc)malloc(sizeof(struct tcDef)))==NULL) //2012-01-26 dtl: handled out of memory
-      {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+    //if((tcdef=(tc)malloc(sizeof(struct tcDef)))==NULL) //2012-01-26 dtl: handled out of memory
+    //  {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+    tcdef=(tc)nbAlloc(sizeof(struct tcDef));
     tcdef->operation=tcIndex;
     tcdef->left=left;
     tcdef->right=right;
@@ -1508,8 +1521,9 @@ tc tcParse(nbCELL context,char **source,char *msg){
     return(NULL);
     }  
   /* build a tcDef structure */
-  if((tcdef=(tc)malloc(sizeof(struct tcDef)))==NULL) //2012-01-26 dtl: handled out of memory
-    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+  //if((tcdef=(tc)malloc(sizeof(struct tcDef)))==NULL) //2012-01-26 dtl: handled out of memory
+  //  {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+  tcdef=(tc)nbAlloc(sizeof(struct tcDef));
   tcdef->operation=operation;
   tcdef->left=left;
   tcdef->right=right;
@@ -1532,8 +1546,9 @@ tc tcParse(nbCELL context,char **source,char *msg){
 tcq tcQueueNew(tc tcdef,long begin,long end){
   tcq queue;
   
-  if((queue=(tcq)malloc(sizeof(struct tcQueue)))==NULL) //2012-01-26 dtl: handled out of memory
-    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+  //if((queue=(tcq)malloc(sizeof(struct tcQueue)))==NULL) //2012-01-26 dtl: handled out of memory
+  //  {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+  queue=(tcq)nbAlloc(sizeof(struct tcQueue));
   queue->tcdef=tcdef;
   /* we don't cast a stand-alone time procedure */
   /* instead we let schedNext() call nbRuleStep() */
@@ -1592,7 +1607,8 @@ void nbTimePrintCalendar(NB_Calendar *calendar){
 void nbTimeDestroyCalendar(NB_Calendar *calendar){
   /* free tcdef here */
   dropObject(calendar->text);
-  free(calendar); 
+  //free(calendar); // 2012-10-12 eat - witch to nbFree
+  nbFree(calendar,sizeof(NB_Calendar)); 
   }
 
 void nbTimeInit(NB_Stem *stem){

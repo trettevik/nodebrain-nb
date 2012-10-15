@@ -211,8 +211,8 @@ extern struct LISTENER *listenerFree; /* free listener list */
 
 /* functions */
 
-int nbpMsg(struct NBP_SESSION *session,char trancode,char msgcode,char *text,int len);
-struct NBP_SESSION *nbpOpen(int nbp,NB_Term *peer,char *context);
+int nbpMsg(struct NBP_SESSION *session,char trancode,char msgcode,char *text,size_t len);
+struct NBP_SESSION *nbpOpen(char nbp,NB_Term *peer,char *context);
 int nbpClose(struct NBP_SESSION *session);
 int nbpPut(struct NBP_SESSION *session,char *command); 
 void nbpStop(struct NBP_SESSION *session);

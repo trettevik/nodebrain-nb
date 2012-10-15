@@ -140,6 +140,7 @@
 *            nbProxyConnect, adding overhead and a memory leak impacting high
 *            frequency callers.
 * 2012-05-19 eat 0.8.9  Included connection failover
+* 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 *==============================================================================
 */
 #include <nb.h>
@@ -157,7 +158,7 @@ nbProxyPage *nbProxyPageOpen(nbCELL context,void **data,int *size){
 
   if((page=nb_proxy_page)==NULL){
     page=(nbProxyPage *)nbAlloc(sizeof(nbProxyPage)); 
-    page->data=malloc(NB_PROXY_PAGESIZE);
+    page->data=nbAlloc(NB_PROXY_PAGESIZE);
     page->size=NB_PROXY_PAGESIZE;
     if(proxyTrace) nbLogMsg(context,0,'T',"nbProxyPageOpen: page=%p allocated",page);
     }
@@ -276,8 +277,8 @@ int nbProxyBookProduced(nbCELL context,nbProxyBook *book,int len){
   }
 
 int nbProxyBookReadWhere(nbCELL context,nbProxyBook *book,void **data){
-  if(proxyTrace) nbLogMsg(context,0,'T',"nbProxyBookReadWhere: called");
   nbProxyPage *page=book->readPage;
+  if(proxyTrace) nbLogMsg(context,0,'T',"nbProxyBookReadWhere: called");
   if(proxyTrace) nbLogMsg(context,0,'T',"nbProxyBookReadWhere: page=%p",page);
   if(!page) return(0);
   if(proxyTrace) nbLogMsg(context,0,'T',"nbProxyBookReadWhere: have page");

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2011 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -120,6 +120,7 @@
 * 2010/02/26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2010/06/06 eat 0.8.2  Added client parameter to nbTlsLoadContext parameter
 * 2011-02-08 eat 0.8.5  Refined non-blocking SSL handshake
+* 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 *==============================================================================
 */
 #include <nb.h>
@@ -396,9 +397,9 @@ static void nbPeerAccepter(nbCELL context,int sd,void *handle){
   peer=(nbPeer *)nbAlloc(sizeof(nbPeer));
   memcpy(peer,lpeer,sizeof(nbPeer));
   peer->tls=tls;
-  if(!peer->wbuf) peer->wbuf=(unsigned char *)malloc(NB_PEER_BUFLEN);
+  if(!peer->wbuf) peer->wbuf=(unsigned char *)nbAlloc(NB_PEER_BUFLEN);
   peer->wloc=peer->wbuf;
-  if(!peer->rbuf) peer->rbuf=(unsigned char *)malloc(NB_PEER_BUFLEN);
+  if(!peer->rbuf) peer->rbuf=(unsigned char *)nbAlloc(NB_PEER_BUFLEN);
   peer->rloc=peer->rbuf;
   // 2011-02-05 eat - this has been reworked for non-blocking IO
   if(tls->option==NB_TLS_OPTION_TCP || tls->error==NB_TLS_ERROR_UNKNOWN){
@@ -503,9 +504,9 @@ int nbPeerConnect(nbCELL context,nbPeer *peer,void *handle,
     }
   //nbLogMsg(context,0,'I',"Attempting peer connection with %s",peer->tls->uriMap[0].uri);
   nbLogMsg(context,0,'I',"Attempting peer connection with %s",nbTlsGetUri(peer->tls));
-  if(!peer->wbuf) peer->wbuf=(unsigned char *)malloc(NB_PEER_BUFLEN);
+  if(!peer->wbuf) peer->wbuf=(unsigned char *)nbAlloc(NB_PEER_BUFLEN);
   peer->wloc=peer->wbuf;
-  if(!peer->rbuf) peer->rbuf=(unsigned char *)malloc(NB_PEER_BUFLEN);
+  if(!peer->rbuf) peer->rbuf=(unsigned char *)nbAlloc(NB_PEER_BUFLEN);
   peer->rloc=peer->rbuf;
   peer->handle=handle;
   peer->producer=producer;
@@ -639,9 +640,9 @@ int nbPeerShutdown(nbCELL context,nbPeer *peer,int code){
     }
   if(peer->tls) nbTlsClose(peer->tls); // do this after the removes because it clears the socket
   peer->flags&=0xff-NB_PEER_FLAG_WRITE_ERROR;
-  if(peer->wbuf) free(peer->wbuf);
+  if(peer->wbuf) nbFree(peer->wbuf,NB_PEER_BUFLEN);
   peer->wbuf=NULL;
-  if(peer->rbuf) free(peer->rbuf);
+  if(peer->rbuf) nbFree(peer->rbuf,NB_PEER_BUFLEN);
   peer->rbuf=NULL;
   peer->producer=NULL;
   peer->consumer=NULL;
@@ -653,8 +654,8 @@ int nbPeerDestroy(nbCELL context,nbPeer *peer){
   if(peerTrace) nbLogMsg(context,0,'T',"nbPeerDestroy: called");
   if(peer->tls) nbLogMsg(context,0,'T',"nbPeerDestroy: uri=%s",peer->tls->uriMap[0].uri);
   if(peer->tls) nbTlsFree(peer->tls);
-  if(peer->wbuf) free(peer->wbuf);
-  if(peer->rbuf) free(peer->rbuf);
+  if(peer->wbuf) nbFree(peer->wbuf,NB_PEER_BUFLEN);
+  if(peer->rbuf) nbFree(peer->rbuf,NB_PEER_BUFLEN);
   nbFree(peer,sizeof(nbPeer));
   return(0);
   }

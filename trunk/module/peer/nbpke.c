@@ -182,6 +182,7 @@ unsigned int pkeEncrypt(unsigned char *ciphertext,vli exponent,vli modulus,unsig
   unsigned int blocksize,len,inblocksize;
 
   blocksize=vlibytes(modulus);
+  if(blocksize<3) nbExit("pkeEncrypt encounter invalid vli blocksize of %d - terminating",blocksize);
   inblocksize=blocksize-1;
   end=plaintext+length-inblocksize;
   out=ciphertext+1;
@@ -195,11 +196,13 @@ unsigned int pkeEncrypt(unsigned char *ciphertext,vli exponent,vli modulus,unsig
   memcpy(out,ciphertext+1,inblocksize-1);
   if(len>0) memcpy(out,in,len);
   out+=inblocksize-1;
+  if(len>255) nbExit("pkeEncrypt encountered invalid ciphertext length of %d - terminating",len);
   *out=len;
   out++;
   *out=0;
   out++;
   len=out-ciphertext;
+  if(len>255) nbExit("pkeEncrypt encountered invalid ciphertext length of %d - terminating",len);
   *ciphertext=len;
   pkeCipher(ciphertext,exponent,modulus);
   return(len);
@@ -215,6 +218,7 @@ unsigned int pkeDecrypt(unsigned char *ciphertext,vli exponent,vli modulus,unsig
 
   if(pkeCipher(ciphertext,exponent,modulus)!=0) return(0); /* ciphertext & modulus mismatch */
   cblocksize=vlibytes(modulus);
+  if(cblocksize<3) nbExit("pkeDecrypt encounter invalid vli blocksize of %d - terminating",cblocksize);
   pblocksize=cblocksize-1;
   pend=plaintext+length-pblocksize;     
   clastblock=ciphertext+*ciphertext-cblocksize;

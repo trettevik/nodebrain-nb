@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -63,6 +63,7 @@
 *            This is necessary because when a lower file descriptor is available,
 *            the close and open switches the pipe to the lower file descriptor.
 *            so we need to switch the listener.
+* 2012-10-13 eat 0.8.12 Replace malloc/free with nbAlloc/nbFree
 *=====================================================================
 */
 #include "config.h"
@@ -70,7 +71,7 @@
 
 //=============================================================================
  
-typedef struct NB_MOD_PIPE_READER{
+typedef struct NB_MOD_SERVER{
   struct IDENTITY *identity;      // identity
   char             idName[64];    // identity name
   char             filename[512]; // file name
@@ -79,7 +80,7 @@ typedef struct NB_MOD_PIPE_READER{
   char            *cursor;        // location of next read
   unsigned char    ignore2eol;    // ignore to end of line
   unsigned char    trace;         // trace option
-  } NB_MOD_PipeReader;
+  } NB_MOD_Server;
 
 //==================================================================================
 //
@@ -87,82 +88,82 @@ typedef struct NB_MOD_PIPE_READER{
 //
 //   this routine replaces fifoAlertListener
 //
-void pipeRead(nbCELL context,int serverSocket,void *handle){
-  NB_MOD_PipeReader *pipe=handle;
+void serverRead(nbCELL context,int serverSocket,void *handle){
+  NB_MOD_Server *server=handle;
   size_t len;
   char *bufcur,*bufeol;
 
-  if(pipe->trace) nbLogMsg(context,0,'T',"pipeRead: called");
-  len=read(pipe->fildes,pipe->cursor,sizeof(pipe->buffer)-(pipe->cursor-pipe->buffer));
+  if(server->trace) nbLogMsg(context,0,'T',"serverRead: called");
+  len=read(server->fildes,server->cursor,sizeof(server->buffer)-(server->cursor-server->buffer));
   while(len==-1 && errno==EINTR){
-    len=read(pipe->fildes,pipe->cursor,sizeof(pipe->buffer)-(pipe->cursor-pipe->buffer));
+    len=read(server->fildes,server->cursor,sizeof(server->buffer)-(server->cursor-server->buffer));
     }
   if(len>0){
-    len+=(pipe->cursor-pipe->buffer);     // adjust length for part we already had maybe
-    pipe->cursor=pipe->buffer;            // assume next read will be fresh until we learn otherwise
-    if(pipe->ignore2eol){
+    len+=(server->cursor-server->buffer);     // adjust length for part we already had maybe
+    server->cursor=server->buffer;            // assume next read will be fresh until we learn otherwise
+    if(server->ignore2eol){
       nbLogMsg(context,0,'W',"Ignoring to end of line");
-      if((bufeol=memchr(pipe->buffer,'\n',len))==NULL){
-        *(pipe->buffer+len)=0;
-        nbLogPut(context,"] %s\n",pipe->buffer);
+      if((bufeol=memchr(server->buffer,'\n',len))==NULL){
+        *(server->buffer+len)=0;
+        nbLogPut(context,"] %s\n",server->buffer);
         return;  // continue reading until end of line or end of file
         }
       *bufeol=0;                                                  // drop LF - 10
-      if(bufeol>pipe->buffer && *(bufeol-1)==13) *(bufeol-1)=0;   // drop CR - 13
-      nbLogPut(context,"] %s\n",pipe->buffer);
+      if(bufeol>server->buffer && *(bufeol-1)==13) *(bufeol-1)=0;   // drop CR - 13
+      nbLogPut(context,"] %s\n",server->buffer);
       bufcur=bufeol+1;
-      len-=bufeol+1-pipe->buffer;
-      pipe->ignore2eol=0;
+      len-=bufeol+1-server->buffer;
+      server->ignore2eol=0;
       }
     else{
-      nbLogMsg(context,0,'I',"FIFO %s@%s",pipe->idName,pipe->filename);
-      bufcur=pipe->buffer;
+      nbLogMsg(context,0,'I',"FIFO %s@%s",server->idName,server->filename);
+      bufcur=server->buffer;
       }
     while(len>0 && (bufeol=memchr(bufcur,'\n',len))!=NULL){
       *bufeol=0;                                           /* drop LF - 10 */
       if(bufeol>bufcur && *(bufeol-1)==13) *(bufeol-1)=0;  /* drop CR - 13 */
-      if(pipe->trace) nbLogPut(context,"] %s\n",bufcur);
-      nbCmdSid(context,bufcur,1,pipe->identity);
+      if(server->trace) nbLogPut(context,"] %s\n",bufcur);
+      nbCmdSid(context,bufcur,1,server->identity);
       nbLogFlush(context);
       len-=bufeol+1-bufcur;
       bufcur=bufeol+1;
       }
     if(len>0){
-      if(len>=sizeof(pipe->buffer)){
-        *(pipe->buffer+sizeof(pipe->buffer)-1)=0;
-        nbLogMsg(context,0,'E',"Command fills %d character buffer before end of line - ignoring to end of line.",sizeof(pipe->buffer));
-        nbLogPut(context,"] %s\n",pipe->buffer);
-        pipe->ignore2eol=1;
-        pipe->cursor=pipe->buffer;
+      if(len>=sizeof(server->buffer)){
+        *(server->buffer+sizeof(server->buffer)-1)=0;
+        nbLogMsg(context,0,'E',"Command fills %d character buffer before end of line - ignoring to end of line.",sizeof(server->buffer));
+        nbLogPut(context,"] %s\n",server->buffer);
+        server->ignore2eol=1;
+        server->cursor=server->buffer;
         }
       else{
-        strncpy(pipe->buffer,bufcur,len);
-        pipe->cursor=pipe->buffer+len;  // next read is continuation of last command;
-        *(pipe->cursor)=0;
-        if(pipe->trace) nbLogPut(context,"Looking for more to go with: %s\n",pipe->buffer);
+        strncpy(server->buffer,bufcur,len);
+        server->cursor=server->buffer+len;  // next read is continuation of last command;
+        *(server->cursor)=0;
+        if(server->trace) nbLogPut(context,"Looking for more to go with: %s\n",server->buffer);
         }
       }
     }
   else{
-    if(pipe->trace) nbLogMsg(context,0,'T',"pipeRead: end of file reached");
-    nbListenerRemove(context,pipe->fildes);
-    close(pipe->fildes);
-    pipe->fildes=0;
-    if(pipe->cursor!=pipe->buffer){
-      *(pipe->cursor)=0;
-      nbLogPut(context,"] %s\n",pipe->buffer);
+    if(server->trace) nbLogMsg(context,0,'T',"serverRead: end of file reached");
+    nbListenerRemove(context,server->fildes);
+    close(server->fildes);
+    server->fildes=0;
+    if(server->cursor!=server->buffer){
+      *(server->cursor)=0;
+      nbLogPut(context,"] %s\n",server->buffer);
       nbLogMsg(context,0,'E',"Command ended without newline character ignored.");
       }
-    pipe->cursor=pipe->buffer;
-    pipe->ignore2eol=0;
+    server->cursor=server->buffer;
+    server->ignore2eol=0;
 #if defined(WIN32)
-    if((pipe->fildes=open(pipe->filename,O_RDONLY))<0){
+    if((server->fildes=open(server->filename,O_RDONLY))<0){
 #else
-    if((pipe->fildes=open(pipe->filename,O_RDONLY|O_NONBLOCK))<0){
+    if((server->fildes=open(server->filename,O_RDONLY|O_NONBLOCK))<0){
 #endif
-      nbLogMsg(context,0,'E',"pipeRead: unable to open FIFO %s (%d)",pipe->filename,pipe->fildes);
+      nbLogMsg(context,0,'E',"serverRead: unable to open FIFO %s (%d)",server->filename,server->fildes);
       }
-    nbListenerAdd(context,pipe->fildes,pipe,pipeRead);
+    nbListenerAdd(context,server->fildes,server,serverRead);
     }
   }
 
@@ -174,7 +175,7 @@ void pipeRead(nbCELL context,int serverSocket,void *handle){
 *    define <term> node pipe.server("<identity>@<filename>");
 */
 void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
-  NB_MOD_PipeReader *pipe;
+  NB_MOD_Server *server;
   nbCELL cell=NULL;
   nbSET argSet;
   char *inCursor,*cursor;
@@ -186,8 +187,8 @@ void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
     return(NULL);
     }
   cursor=nbCellGetString(context,cell);
-  pipe=malloc(sizeof(NB_MOD_PipeReader));
-  inCursor=pipe->idName;
+  server=nbAlloc(sizeof(NB_MOD_Server));
+  inCursor=server->idName;
   while(*cursor==' ') cursor++;
   while(*cursor && *cursor!='@'){
     *inCursor=*cursor;
@@ -200,32 +201,32 @@ void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
     return(NULL);
     }
   cursor++;
-  pipe->identity=nbIdentityGet(context,pipe->idName);
-  if(pipe->identity==NULL){
-    nbLogMsg(context,0,'E',"Identity '%s' not defined",pipe->idName);
-    free(pipe);
+  server->identity=nbIdentityGet(context,server->idName);
+  if(server->identity==NULL){
+    nbLogMsg(context,0,'E',"Identity '%s' not defined",server->idName);
+    nbFree(server,sizeof(NB_MOD_Server));
     return(NULL);
     }
-  inCursor=pipe->filename;
+  inCursor=server->filename;
   while(*cursor){
     *inCursor=*cursor;
     inCursor++;
     cursor++;
     }
   *inCursor=0;
-  if(*pipe->filename==0){
+  if(*server->filename==0){
     nbLogMsg(context,0,'E',"File name not found in pipe specification - expecting identity@filename");
-    free(pipe);
+    nbFree(server,sizeof(NB_MOD_Server));
     return(NULL);
     }
-  pipe->fildes=0;
-  *pipe->buffer=0;
-  pipe->cursor=pipe->buffer;
-  pipe->ignore2eol=0;
-  pipe->trace=0;
+  server->fildes=0;
+  *server->buffer=0;
+  server->cursor=server->buffer;
+  server->ignore2eol=0;
+  server->trace=0;
   nbCellDrop(context,cell);
   nbListenerEnableOnDaemon(context);  // sign up to enable when we daemonize
-  return(pipe);
+  return(server);
   }
 
 /*
@@ -233,28 +234,28 @@ void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
 *
 *    enable <node>
 */
-int serverEnable(nbCELL context,void *skillHandle,NB_MOD_PipeReader *pipe){
+int serverEnable(nbCELL context,void *skillHandle,NB_MOD_Server *server){
 #if defined(WIN32)
-  if((pipe->fildes=open(pipe->filename,O_RDONLY))<0){
+  if((server->fildes=open(server->filename,O_RDONLY))<0){
     // insert windows CreateNamedPipe here, unless we have to make separate funtions
 #else
-  if((pipe->fildes=open(pipe->filename,O_RDONLY|O_NONBLOCK))<0){
-    if(mknod(pipe->filename,S_IFIFO|0600,0)<0){
-      nbLogMsg(context,0,'E',"Unable to create FIFO %s - %s",pipe->filename,strerror(errno));
+  if((server->fildes=open(server->filename,O_RDONLY|O_NONBLOCK))<0){
+    if(mknod(server->filename,S_IFIFO|0600,0)<0){
+      nbLogMsg(context,0,'E',"Unable to create FIFO %s - %s",server->filename,strerror(errno));
       return(1);
       }
 #endif
 #if defined(WIN32)
-    if((pipe->fildes=open(pipe->filename,O_RDONLY))<0){
+    if((server->fildes=open(server->filename,O_RDONLY))<0){
 #else
-    if((pipe->fildes=open(pipe->filename,O_RDONLY|O_NONBLOCK))<0){
+    if((server->fildes=open(server->filename,O_RDONLY|O_NONBLOCK))<0){
 #endif
-      nbLogMsg(context,0,'E',"Unable to open FIFO %s - %s",pipe->filename,strerror(errno));
+      nbLogMsg(context,0,'E',"Unable to open FIFO %s - %s",server->filename,strerror(errno));
       return(1);
       }
     }
-  nbListenerAdd(context,pipe->fildes,pipe,pipeRead);
-  nbLogMsg(context,0,'I',"Listening for FIFO connections as %s@%s",pipe->idName,pipe->filename);
+  nbListenerAdd(context,server->fildes,server,serverRead);
+  nbLogMsg(context,0,'I',"Listening for FIFO connections as %s@%s",server->idName,server->filename);
   return(0);
   }
 
@@ -263,10 +264,10 @@ int serverEnable(nbCELL context,void *skillHandle,NB_MOD_PipeReader *pipe){
 * 
 *    disable <node>
 */
-int serverDisable(nbCELL context,void *skillHandle,NB_MOD_PipeReader *pipe){
-  nbListenerRemove(context,pipe->fildes);
-  close(pipe->fildes);
-  pipe->fildes=0;
+int serverDisable(nbCELL context,void *skillHandle,NB_MOD_Server *server){
+  nbListenerRemove(context,server->fildes);
+  close(server->fildes);
+  server->fildes=0;
   return(0);
   }
 
@@ -278,9 +279,9 @@ int serverDisable(nbCELL context,void *skillHandle,NB_MOD_PipeReader *pipe){
 *
 *    <node>:trace,notrace
 */
-int *serverCommand(nbCELL context,void *skillHandle,NB_MOD_PipeReader *pipe,nbCELL arglist,char *text){
-  if(strstr(text,"notrace")) pipe->trace=0;
-  else if(strstr(text,"trace")) pipe->trace=1;
+int *serverCommand(nbCELL context,void *skillHandle,NB_MOD_Server *server,nbCELL arglist,char *text){
+  if(strstr(text,"notrace")) server->trace=0;
+  else if(strstr(text,"trace")) server->trace=1;
   return(0);
   }
 
@@ -290,10 +291,10 @@ int *serverCommand(nbCELL context,void *skillHandle,NB_MOD_PipeReader *pipe,nbCE
 *    undefine <node>
 *
 */
-int serverDestroy(nbCELL context,void *skillHandle,NB_MOD_PipeReader *pipe){
-  if(pipe->trace) nbLogMsg(context,0,'T',"serverDestroy called");
-  if(pipe->fildes!=0) serverDisable(context,skillHandle,pipe);
-  free(pipe);
+int serverDestroy(nbCELL context,void *skillHandle,NB_MOD_Server *server){
+  if(server->trace) nbLogMsg(context,0,'T',"serverDestroy called");
+  if(server->fildes!=0) serverDisable(context,skillHandle,server);
+  nbFree(server,sizeof(NB_MOD_Server));
   return(0);
   }
 
@@ -323,12 +324,12 @@ extern void *readerBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL ar
 
 //=============================================================================================
 
-typedef struct NB_MOD_PIPE{
+typedef struct NB_MOD_CLIENT{
   nbCELL  filenamecell;      // cell containing file name - drop on destroy
   char   *filename;          // file name
   int     fildes;            // file descriptor
   char    buffer[NB_BUFSIZE];      // input buffer
-  } NB_MOD_Pipe;
+  } NB_MOD_Client;
 
 /*
 *  construct() method
@@ -338,7 +339,7 @@ typedef struct NB_MOD_PIPE{
 *    define <term> node pipe.reader("<identity>@<filename>");
 */
 void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
-  NB_MOD_Pipe *pipe;
+  NB_MOD_Client *client;
   nbCELL cell;
   nbSET argSet;
 
@@ -348,10 +349,10 @@ void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
     nbLogMsg(context,0,'E',"Expecting string pipe file name as first parameter");
     return(NULL);
     }
-  pipe=malloc(sizeof(NB_MOD_Pipe));
-  pipe->filenamecell=cell;
-  pipe->filename=nbCellGetString(context,cell);
-  return(pipe);
+  client=nbAlloc(sizeof(NB_MOD_Client));
+  client->filenamecell=cell;
+  client->filename=nbCellGetString(context,cell);
+  return(client);
   }
 
 /*
@@ -359,11 +360,11 @@ void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
 *
 *    <node>[(<args>)][:<text>]
 */
-int *clientCommand(nbCELL context,void *skillHandle,NB_MOD_Pipe *pipe,nbCELL arglist,char *text){
-  sprintf(pipe->buffer,"%s\n",text);
-  pipe->fildes=open(pipe->filename,O_WRONLY|O_APPEND);
-  write(pipe->fildes,pipe->buffer,strlen(pipe->buffer));
-  close(pipe->fildes);
+int *clientCommand(nbCELL context,void *skillHandle,NB_MOD_Client *client,nbCELL arglist,char *text){
+  sprintf(client->buffer,"%s\n",text);
+  client->fildes=open(client->filename,O_WRONLY|O_APPEND);
+  write(client->fildes,client->buffer,strlen(client->buffer));
+  close(client->fildes);
   return(0);
   }
 
@@ -372,9 +373,9 @@ int *clientCommand(nbCELL context,void *skillHandle,NB_MOD_Pipe *pipe,nbCELL arg
 *
 *    undefine <node>
 */
-int clientDestroy(nbCELL context,void *skillHandle,NB_MOD_Pipe *pipe){
-  nbCellDrop(context,pipe->filenamecell);
-  free(pipe);
+int clientDestroy(nbCELL context,void *skillHandle,NB_MOD_Client *client){
+  nbCellDrop(context,client->filenamecell);
+  nbFree(client,sizeof(NB_MOD_Client));
   return(0);
   }
 

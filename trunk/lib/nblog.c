@@ -120,7 +120,8 @@
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2012-01-26 dtl 0.8.6  Checker updates
 * 2012-05-12 eat 0.8.9  Increased width of dump lines from 16 to 32
-* 2012-09-16 eat 0.8.11 replaced vsprintf with vsnprintf to avoid buffer overflows
+* 2012-09-16 eat 0.8.11 Replaced vsprintf with vsnprintf to avoid buffer overflows
+* 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 *=============================================================================
 */
 #include "nbi.h"
@@ -165,15 +166,15 @@ void outStd(char *buffer){
 */
 int outInit(void){
   if(nb_OutBuffer!=NULL) return(0);
-  nb_OutLine=(char *)malloc(NB_BUFSIZE);
-  nb_OutBuffer=(char *)malloc(NB_BUFSIZE);
+  nb_OutLine=(char *)nbAlloc(NB_BUFSIZE);
+  nb_OutBuffer=(char *)nbAlloc(NB_BUFSIZE);
   nb_OutCursor=nb_OutBuffer;
   OUT_stream0=&outStd;
-  nb_OutDirName=(char *)malloc(512);
+  nb_OutDirName=(char *)nbAlloc(512);
   *nb_OutDirName=0;
-  nb_OutLogName=(char *)malloc(512);
+  nb_OutLogName=(char *)nbAlloc(512);
   *nb_OutLogName=0;
-  nb_OutUserDir=(char *)malloc(512);
+  nb_OutUserDir=(char *)nbAlloc(512);
   *nb_OutUserDir=0;
   return(1);
   }
@@ -287,7 +288,7 @@ int outCheck(int option,char *cursor){
         strcat(filename,"~");         //dtl: checked len
         }
       else {outMsg(0,'E',"Input too big, length= %d",n);return(1);} //dtl: return error
-      if(nb_OutCheckBuf==NULL) nb_OutCheckBuf=malloc(NB_BUFSIZE);
+      if(nb_OutCheckBuf==NULL) nb_OutCheckBuf=nbAlloc(NB_BUFSIZE);
       *nb_OutCheckBuf=0;
       nb_OutCheckCur=nb_OutCheckBuf;
       if((file=fopen(filename,"w"))==NULL){
@@ -494,6 +495,59 @@ void outMsgHdr(int msgid,char msgclass,char *format,...){
   }
 
 /*
+*  Print message to output streams and exit
+*
+*    nbExit(exitcode,msgclass,format,arg1,arg2,...);
+*
+*/
+void nbExit(char *format,...){
+  va_list args;
+  int len;
+  va_start(args,format);
+  len=vsnprintf(nb_OutLine,NB_BUFSIZE,format,args);
+  if(len>=NB_BUFSIZE) strcpy(nb_OutLine+NB_BUFSIZE-4,"...");
+  va_end(args);
+  len=strlen(nb_OutLine);
+  if((nb_OutCursor+len)>=(nb_OutBuffer+NB_BUFSIZE-20)) outFlush();
+  outStamp();
+  if((nb_OutCursor+len)>=(nb_OutBuffer+NB_BUFSIZE-256)) outFlush();
+  sprintf(nb_OutCursor,"NB998X %s",nb_OutLine);
+  len=strlen(nb_OutCursor);
+  nb_OutCursor+=len;
+  *nb_OutCursor='\n';
+  nb_OutCursor++;
+  outFlush();
+  exit(NB_EXITCODE_FAIL);
+  }
+
+/*
+*  Print message to output streams and abort
+*
+*    outMsg(msgid,msgclass,format,arg1,arg2,...);
+*
+*/
+void nbAbort(char *format,...){
+  va_list args;
+  int len;
+  va_start(args,format);
+  len=vsnprintf(nb_OutLine,NB_BUFSIZE,format,args);
+  if(len>=NB_BUFSIZE) strcpy(nb_OutLine+NB_BUFSIZE-4,"...");
+  va_end(args);
+  len=strlen(nb_OutLine);
+  if((nb_OutCursor+len)>=(nb_OutBuffer+NB_BUFSIZE-20)) outFlush();
+  outStamp();
+  if((nb_OutCursor+len)>=(nb_OutBuffer+NB_BUFSIZE-256)) outFlush();
+  sprintf(nb_OutCursor,"NB999X %s",nb_OutLine);
+  len=strlen(nb_OutCursor);
+  nb_OutCursor+=len;
+  *nb_OutCursor='\n';
+  nb_OutCursor++;
+  outFlush();
+  abort();
+  }
+
+
+/*
 *  Print message to output streams
 *
 *    outMsg(msgid,msgclass,format,arg1,arg2,...);
@@ -698,7 +752,7 @@ int nbLogHandlerAdd(NB_Cell *context,void *session,void (*handler)(NB_Cell *cont
   struct NB_OUTPUT_HANDLER *outputHandler;
 
   outFlush(); /* make sure it doesn't get buffered output */
-  if((outputHandler=nb_OutputHandlerFree)==NULL) outputHandler=malloc(sizeof(struct NB_OUTPUT_HANDLER));
+  if((outputHandler=nb_OutputHandlerFree)==NULL) outputHandler=nbAlloc(sizeof(struct NB_OUTPUT_HANDLER));
   outputHandler->next=nb_OutputHandler;
   outputHandler->context=context;
   outputHandler->session=session;

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2003-2010 The Boeing Company
+* Copyright (C) 2003-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -106,6 +106,7 @@
 * 2005-04-09 eat 0.6.2  adapted to API changes
 * 2005-05-14 eat 0.6.3  countBind() and addBind() updated for moduleHandle
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 *=============================================================================
 */
 #include "config.h"
@@ -383,7 +384,7 @@ void *countConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text)
     nbLogMsg(context,0,'E',"One argument cell expression required");
     return(NULL);
     }
-  counter=malloc(sizeof(NB_MOD_Counter));
+  counter=nbAlloc(sizeof(NB_MOD_Counter));
   counter->count=0;
   counter->cell=cell;
   counter->isTrue=0;
@@ -517,7 +518,7 @@ int countShow(nbCELL context,void *skillHandle,NB_MOD_Counter *counter,int optio
 int countDestroy(nbCELL context,void *skillHandle,NB_MOD_Counter *counter){
   nbLogMsg(context,0,'T',"counterDestroy called");
   if(counter->cell!=NULL) nbCellDrop(context,counter->cell);
-  free(counter);
+  nbFree(counter,sizeof(NB_MOD_Counter));
   return(0);
   }
 

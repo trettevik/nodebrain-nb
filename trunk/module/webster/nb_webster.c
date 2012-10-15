@@ -68,8 +68,10 @@
 *            configuration file.
 *
 * 2011-10-22 eat 0.8.6 - removed old code from before Webster API
-* 2012-02-07 dtl Checker updates
-* 2012-04-21 eat 0.8.7 - removed some obsolete SSL references
+* 2012-02-07 dtl 0.8.7  Checker updates
+* 2012-04-21 eat 0.8.7  removed some obsolete SSL references
+* 2012-08-31 dtl 0.8.12 handled err
+* 2012-10-13 eat 0.8.12 Replace malloc/free with nbAlloc/nbFree
 *=====================================================================
 */
 #include "config.h"
@@ -89,8 +91,14 @@ int setenv(char *name,char *value,int option){  // wrap win function
 #if !defined(HAVE_SETENV)
 int setenv(char *name,char *value,int option){
   char buf[1024];
+  char *var;
   sprintf(buf,"%s=%s",name,value);
-  return(putenv(strdup(buf)));
+  var=strdup(buf);
+  if(!var){
+    nbLogMsg(context,0,'E',"Out of memory - terminating");
+    exit(NB_EXITCODE_FAIL);
+    }
+  return(putenv(var));
   }
 #endif
 
@@ -391,10 +399,10 @@ static void webDir(nbCELL context,nbWebSession *session,char *name){
   struct FILE_ENTRY *nextent;
   struct FILE_ENTRY *rootdocent,*curdocent;
 
-  rootent=malloc(sizeof(struct FILE_ENTRY));
+  rootent=nbAlloc(sizeof(struct FILE_ENTRY));
   *rootent->name=0;
   rootent->next=NULL;
-  rootdocent=malloc(sizeof(struct FILE_ENTRY));
+  rootdocent=nbAlloc(sizeof(struct FILE_ENTRY));
   *rootdocent->name=0;
   rootdocent->next=NULL;
   curdocent=rootdocent;
@@ -427,7 +435,7 @@ static void webDir(nbCELL context,nbWebSession *session,char *name){
       if(len>8 && len<sizeof(curdocent->name)+9){
         extension=filename+len-8;
         if(strcmp(extension,".webster")==0){
-          curdocent->next=malloc(sizeof(struct FILE_ENTRY));
+          curdocent->next=nbAlloc(sizeof(struct FILE_ENTRY));
           curdocent=curdocent->next;
           curdocent->next=NULL;
           strncpy(curdocent->name,filename+1,len-9); // get just "NAME" of ".NAME.webster"
@@ -437,7 +445,7 @@ static void webDir(nbCELL context,nbWebSession *session,char *name){
         }
       }
     else{
-      nextent=malloc(sizeof(struct FILE_ENTRY));
+      nextent=nbAlloc(sizeof(struct FILE_ENTRY));
       strncpy(nextent->name,filename,sizeof(nextent->name)-1);
       *(nextent->name+sizeof(nextent->name)-1)=0;  // make sure we have a null char delimiter when truncated
       for(curent=rootent;curent->next!=NULL && strcasecmp(curent->next->name,filename)<0;curent=curent->next);
@@ -485,11 +493,11 @@ static void webDir(nbCELL context,nbWebSession *session,char *name){
   // free list
   for(curent=rootent->next;curent!=NULL;curent=nextent){
     nextent=curent->next;
-    free(curent);
+    nbFree(curent,sizeof(struct FILE_ENTRY));
     }
   for(curent=rootdocent->next;curent!=NULL;curent=nextent){
     nextent=curent->next;
-    free(curent);
+    nbFree(curent,sizeof(struct FILE_ENTRY));
     }
   }
 
@@ -716,7 +724,7 @@ static void webLinkDir(nbCELL context,nbWebSession *session,char *path){
   struct FILE_ENTRY *curent;
   struct FILE_ENTRY *nextent;
 
-  rootent=malloc(sizeof(struct FILE_ENTRY));
+  rootent=nbAlloc(sizeof(struct FILE_ENTRY));
   *rootent->name=0;
   rootent->next=NULL;
   sprintf(text,"%s/webster/%s",webster->rootdir,path);
@@ -728,7 +736,7 @@ static void webLinkDir(nbCELL context,nbWebSession *session,char *path){
     }
   while((ent=readdir(dir))!=NULL){
     if(*ent->d_name!='.'){
-      nextent=malloc(sizeof(struct FILE_ENTRY));
+      nextent=nbAlloc(sizeof(struct FILE_ENTRY));
       strncpy(nextent->name,ent->d_name,sizeof(nextent->name)-1);
       *(nextent->name+sizeof(nextent->name)-1)=0;  // make sure we have a null char delimiter when truncated
       for(curent=rootent;curent->next!=NULL && strcasecmp(curent->next->name,ent->d_name)<0;curent=curent->next);
@@ -805,7 +813,7 @@ static void webLinkDir(nbCELL context,nbWebSession *session,char *path){
   // free list
   for(curent=rootent->next;curent!=NULL;curent=nextent){
     nextent=curent->next;
-    free(curent);
+    nbFree(curent,sizeof(struct FILE_ENTRY));
     }
   }
 #endif
@@ -1090,7 +1098,7 @@ static void *websterConstruct(nbCELL context,void *skillHandle,nbCELL arglist,ch
     return(NULL);
     }
   str=nbCellGetString(context,cell);
-  webster=malloc(sizeof(nbWebster));
+  webster=nbAlloc(sizeof(nbWebster));
   memset(webster,0,sizeof(nbWebster));
   webster->context=context;
   strncpy(webster->idName,str,sizeof(webster->idName));
@@ -1098,19 +1106,23 @@ static void *websterConstruct(nbCELL context,void *skillHandle,nbCELL arglist,ch
   webster->identity=nbIdentityGet(context,webster->idName);
   if(webster->identity==NULL){
     nbLogMsg(context,0,'E',"Identity '%s' not defined",webster->idName);
-    free(webster);
+    nbFree(webster,sizeof(nbWebster));
     return(NULL);
     }
   webster->webserver=nbWebsterOpen(context,context,webster,NULL);
   if(!webster->webserver){
     nbLogMsg(context,0,'E',"Unable to open web server");
-    free(webster);
+    nbFree(webster,sizeof(nbWebster));
     return(NULL);
     }
   if(getcwd(webster->dir,sizeof(webster->dir))<0) *webster->dir=0;
   delim=webster->dir;
   while((delim=strchr(delim,'\\'))!=NULL) *delim='/',delim++; // Unix the path
   webster->rootdir=strdup(webster->dir);
+  if(!webster->rootdir){ //2012-08-31 dtl handled err
+    nbLogMsg(context,0,'E',"Out of memory - terminating");
+    exit(NB_EXITCODE_FAIL);
+    } 
   strcpy(webster->cabTitle,"MyCaboodle");
   *webster->cabVersion=0;
   strcpy(webster->cabLink,"http://nodebrain.org");
@@ -1142,7 +1154,12 @@ static int websterEnable(nbCELL context,void *skillHandle,nbWebster *webster){
   nbWebsterRegisterResource(context,webster->webserver,":nb",webster,webCommand);
   nbWebsterRegisterResource(context,webster->webserver,":help",webster,webHelp);
   // get options
+  if(webster->rootdir) free(webster->rootdir);
   webster->rootdir=strdup(getOption(context,"DocumentRoot","web"));
+  if(!webster->rootdir){ 
+    nbLogMsg(context,0,'E',"Out of memory - terminating");
+    exit(NB_EXITCODE_FAIL);
+    }
   if(*webster->rootdir!='/'){
     sprintf(rootdir,"%s/%s",webster->dir,webster->rootdir);
     free(webster->rootdir);
@@ -1203,7 +1220,7 @@ static int websterDisable(nbCELL context,void *skillHandle,nbWebster *webster){
 static int websterDestroy(nbCELL context,void *skillHandle,nbWebster *webster){
   nbLogMsg(context,0,'T',"websterDestroy called");
   if(webster->webserver) nbWebsterClose(context,webster->webserver);
-  free(webster);
+  nbFree(webster,sizeof(nbWebster));
   return(0);
   }
 

@@ -124,6 +124,7 @@
 *                       assert x,y;
 *                       define z cell c and $(a);
 * 2010-09-17 eat 0.8.3  fixed crash on unbalanced parens or braces in nbParseTimeSymbol
+* 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 *==============================================================================
 */
 #include "nbi.h"
@@ -1229,7 +1230,8 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
       list=NULL;
       }
     else object=(NB_Object *)useCondition(0,type,term,object);
-    if((entry=nb_LinkFree)==NULL) entry=malloc(sizeof(NB_Link));
+    // 2012-10-13 eat - replaced malloc
+    if((entry=nb_LinkFree)==NULL) entry=nbAlloc(sizeof(NB_Link));
     else nb_LinkFree=entry->next;
     *next=entry;
     entry->next=NULL;
@@ -1250,7 +1252,8 @@ int nbAssertionListAddTermValue(nbCELL context,nbSET *set,nbCELL term,nbCELL cel
   NB_Link   *entry;
   NB_Object *object;
   object=(NB_Object *)useCondition(0,assertTypeVal,term,cell);
-  if((entry=nb_LinkFree)==NULL) entry=malloc(sizeof(NB_Link));
+  // 2012-10-13 eat - replace malloc
+  if((entry=nb_LinkFree)==NULL) entry=nbAlloc(sizeof(NB_Link));
   else nb_LinkFree=entry->next;
   entry->object=grabObject(object);
   entry->next=*set;

@@ -227,6 +227,11 @@ extern void nbObjectShowTypes(void);
 #if defined(WIN32)
 __declspec(dllexport)
 #endif
+extern void *nbHeap();
+
+#if defined(WIN32)
+__declspec(dllexport)
+#endif
 extern void *nbAlloc(int size);
 
 #if defined(WIN32)

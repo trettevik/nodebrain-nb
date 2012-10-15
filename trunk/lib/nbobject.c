@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -180,6 +180,8 @@
 * 2008/01/22 eat 0.6.9  Improved management of object memory
 * 2008-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2012-01-25 eat - included check for malloc failures in nbAlloc
+* 2012-10-13 eat 0.8.12 Replaced other uses malloc with nbAlloc
+* 2012-10-13 eat 0.8.12 Added nbHeap function (was first part of nbObjectInit)
 *=============================================================================
 */
 #include "nbi.h"
@@ -247,13 +249,23 @@ void nbTypeShow(NB_Type *type){
   outPut("type %s",type->name);
   }
 
-void nbObjectInit(NB_Stem *stem){
+void *nbHeap(){
   objectHeap=malloc(NB_OBJECT_PAGE_SIZE);
+  if(!objectHeap){
+    fprintf(stderr,"NodeBrain out of memory.  Terminating\n");
+    exit(NB_EXITCODE_FAIL);
+    }
   objectHeap->next=NULL;
   objectHeap->top=(char *)objectHeap+NB_OBJECT_PAGE_SIZE;
   nb_ObjectPool=malloc(sizeof(struct NB_OBJECT_POOL));
+  if(!objectHeap){
+    fprintf(stderr,"NodeBrain out of memory.  Terminating\n");
+    exit(NB_EXITCODE_FAIL);
+    }
   memset(nb_ObjectPool,0,sizeof(struct NB_OBJECT_POOL));
+  }
 
+void nbObjectInit(NB_Stem *stem){
   nb_DisabledType=newType(stem,"disabled",NULL,TYPE_SPECIAL,nbDisabledShow,NULL);
   nb_DisabledType->apicelltype=NB_TYPE_DISABLED;
   nb_Disabled=newObject(nb_DisabledType,NULL,sizeof(NB_Object));
@@ -295,13 +307,19 @@ void nbObjectInit(NB_Stem *stem){
 */
 void *newObject(struct TYPE *type,void **pool,int size){
   NB_Object *object,**freeItemP;
-  if(size>NB_OBJECT_MANAGED_SIZE) object=malloc(size);
+  if(size>NB_OBJECT_MANAGED_SIZE){
+    object=malloc(size);
+    if(!object){ 
+      fprintf(stderr,"NodeBrain out of memory.  Terminating\n");
+      exit(NB_EXITCODE_FAIL);
+      }
+    }
   else if(pool==NULL || (object=*pool)==NULL){
     size=(size+7)&-8;  // convert to index rounded to 8 byte units
     freeItemP=(NB_Object **)&nb_ObjectPool->vector[(size-1)>>3];  // index in 8 byte units
     if((object=*freeItemP)==NULL){
       if((objectHeap->top)-(char *)&objectHeap->space<size){
-        struct NB_OBJECT_PAGE *newPage=malloc(NB_OBJECT_PAGE_SIZE);
+        struct NB_OBJECT_PAGE *newPage=nbAlloc(NB_OBJECT_PAGE_SIZE);
         newPage->next=objectHeap;
         objectHeap=newPage;
         objectHeap->top=(char *)objectHeap+NB_OBJECT_PAGE_SIZE;
@@ -585,7 +603,7 @@ void disableBug(NB_Object *object){
 */
 struct TYPE *newType(NB_Stem *stem,char *name,struct HASH *hash,int  attributes,void (*showExpr)(),void (*destroy)()){
   struct TYPE *type;
-  type=malloc(sizeof(struct TYPE));
+  type=nbAlloc(sizeof(struct TYPE));
   type->object.type=nb_TypeType;
   type->object.next=(NB_Object *)nb_TypeList;
   nb_TypeList=type;

@@ -156,6 +156,7 @@
 *            state is assigned to the initial file when a log is created, and
 *            set on the new first file when older files are deleted by the
 *            nbMsgLogPrune function.
+* 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 *==============================================================================
 */
 #include <ctype.h>
@@ -273,18 +274,13 @@ void nbMsgStatePrint(FILE *file,nbMsgState *msgstate,char *title){
 */
 nbMsgState *nbMsgStateCreate(nbCELL context){
   nbMsgState *state;
-  //outMsg(0,'T',"nbMsgStateCreate calling malloc for %d bytes",sizeof(nbMsgState));
-  state=(nbMsgState *)malloc(sizeof(nbMsgState));
-  if(!state){
-    outMsg(0,'E',"Fatal error - %s - terminating",strerror(errno));
-    exit(1);
-    }
+  state=(nbMsgState *)nbAlloc(sizeof(nbMsgState));
   memset(state,0,sizeof(nbMsgState));
   return(state);
   }
 
 void nbMsgStateFree(nbCELL context,nbMsgState *msgState){
-  free(msgState);
+  nbFree(msgState,sizeof(nbMsgState));
   }
 
 /*
@@ -1139,18 +1135,9 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
   if(pgmState) msglog->pgmState=pgmState;
   else msglog->pgmState=msglog->logState;
   msglog->msgbuflen=0; // no data in buffer yet
-  if((msglog->msgbuf=(unsigned char *)malloc(NB_MSG_BUF_LEN))==NULL) //2012-01-26 dtl: handled error
-    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+  msglog->msgbuf=(unsigned char *)nbAlloc(NB_MSG_BUF_LEN);
   //msglog->msgrec=(nbMsgRec *)msglog->msgbuf;
   msglog->msgrec=NULL;  // no record yet
-  // this can be removed when we start using the message.create command
-  //if(strcmp(linkedname,"empty")==0 && mode&NB_MSG_MODE_PRODUCER){  // PRODUCER (includes SPOKE)
-  //  if(nbMsgLogFileCreate(context,msglog)!=0){
-  //    nbLogMsg(context,0,'E',"nbMsgLogOpen: Unable to create file for cabal \"%s\" node %d",msglog->cabal,msglog->node);
-  //    free(msglog->msgbuf);
-  //    nbFree(msglog,sizeof(nbMsgLog));
-  //    return(NULL);
-  //    }
   //  }
   // If in CURSOR mode, we position by cursor if cursor file exists.
   if(mode==NB_MSG_MODE_CURSOR){
@@ -1185,7 +1172,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
   sprintf(filename,"message/%s/%s/%s",cabal,nodeName,msglog->filename);
   if((msglog->file=openRead(filename,O_RDONLY))<0){ //2012-01-26 dtl: used centralized open routine
     fprintf(stderr,"nbMsgLogOpen: Unable to open file %s - %s\n",filename,strerror(errno));
-    free(msglog->msgbuf);
+    nbFree(msglog->msgbuf,NB_MSG_BUF_LEN);
     nbFree(msglog,sizeof(nbMsgLog));
     return(NULL);
     }
@@ -1194,7 +1181,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
   if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogOpen: Reading header record cabal \"%s\" node %u fildes=%d file %s",msglog->cabal,msglog->node,msglog->file,filename);
   if((msgbuflen=read(msglog->file,msglog->msgbuf,NB_MSG_BUF_LEN))<0){
     fprintf(stderr,"nbMsgLogOpen: Unable to read file %s - %s\n",filename,strerror(errno));
-    free(msglog->msgbuf);
+    nbFree(msglog->msgbuf,NB_MSG_BUF_LEN);
     nbFree(msglog,sizeof(nbMsgLog));
     return(NULL);
     }
@@ -1209,7 +1196,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
   errStr=nbMsgHeaderExtract(msglog->msgrec,node,&tranTime,&tranCount,&recordTime,&recordCount,&fileTime,&fileCount,&fileState); 
   if(errStr){
     fprintf(stderr,"nbMsgLogOpen: Corrupted file %s - %s\n",filename,errStr);
-    free(msglog->msgbuf);
+    nbFree(msglog->msgbuf,NB_MSG_BUF_LEN);
     nbFree(msglog,sizeof(nbMsgLog));
     return(NULL);  
     }
@@ -1226,13 +1213,13 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
     sprintf(filename,"message/%s/%s/%10.10u.msg",cabal,nodeName,fileCount-1);
     if((msglog->file=openRead(filename,O_RDONLY))<0){ //2012-01-26 dtl: used centralized open routine
       fprintf(stderr,"nbMsgLogOpen: Unable to open file %s - %s\n",filename,strerror(errno));
-      free(msglog->msgbuf);
+      nbFree(msglog->msgbuf,NB_MSG_BUF_LEN);
       nbFree(msglog,sizeof(nbMsgLog));
       return(NULL);
       }
     if((msgbuflen=read(msglog->file,msglog->msgbuf,NB_MSG_BUF_LEN))<0){
       fprintf(stderr,"nbMsgLogOpen: Unable to read file %s - %s\n",filename,strerror(errno));
-      free(msglog->msgbuf);
+      nbFree(msglog->msgbuf,NB_MSG_BUF_LEN);
       nbFree(msglog,sizeof(nbMsgLog));
       return(NULL);
       }
@@ -1246,7 +1233,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
     errStr=nbMsgHeaderExtract(msglog->msgrec,node,&tranTime,&tranCount,&recordTime,&recordCount,&fileTime,&fileCount,&fileState);
     if(errStr){
       fprintf(stderr,"nbMsgLogOpen: Corrupted file %s - %s\n",filename,errStr);
-      free(msglog->msgbuf);
+      nbFree(msglog->msgbuf,NB_MSG_BUF_LEN);
       nbFree(msglog,sizeof(nbMsgLog));
       return(NULL);
       }
@@ -1263,13 +1250,13 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
     if(msgTrace) outMsg(0,'T',"nbMsgLogOpen: 3 msglog->fileOffset=%u",msglog->fileOffset);
     if((msglog->cursorFile=openCreate(cursorFilename,O_RDWR|O_CREAT,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP))<0){ // have a cursor file //dtl: use openCreate()
       nbLogMsg(context,0,'E',"nbMsgLogOpen: Unable to create file '%s'",cursorFilename);
-      free(msglog->msgbuf);
+      nbFree(msglog->msgbuf,NB_MSG_BUF_LEN);
       nbFree(msglog,sizeof(nbMsgLog));
       return(NULL);
       }
     if(write(msglog->cursorFile,(void *)&msgcursor,sizeof(msgcursor))<0){
       nbLogMsg(context,0,'E',"nbMsgLogOpen: Unable to write cursor to file %s - %s\n",filename,strerror(errno));
-      free(msglog->msgbuf);
+      nbFree(msglog->msgbuf,NB_MSG_BUF_LEN);
       nbFree(msglog,sizeof(nbMsgLog));
       return(NULL);
       }
@@ -1621,8 +1608,7 @@ int nbMsgFileWriteState(nbCELL context,int file,nbMsgState *msgstate,int node,ui
   int rc;
 
   if(msgTrace) outMsg(0,'T',"nbMsgFileWriteState: called 1 node=%d",node);
-  if((msgrec=(nbMsgRec *)malloc(sizeof(nbMsgRec)+256*sizeof(nbMsgId)))==NULL) //2012-01-26 dtl: handled error
-    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+  msgrec=(nbMsgRec *)nbAlloc(sizeof(nbMsgRec)+256*sizeof(nbMsgId));
   msgrec->type=NB_MSG_REC_TYPE_HEADER;
   msgrec->datatype=NB_MSG_REC_DATA_ID;
   msgid=&msgrec->si;
@@ -1649,7 +1635,7 @@ int nbMsgFileWriteState(nbCELL context,int file,nbMsgState *msgstate,int node,ui
   msgrec->len[0]=msglen>>8;
   msgrec->len[1]=msglen&0xff;
   rc=write(file,msgrec,msglen);
-  free(msgrec);
+  nbFree(msgrec,sizeof(nbMsgRec)+256*sizeof(nbMsgId));
   return(rc);
   }
 
@@ -2022,7 +2008,7 @@ int nbMsgLogFileCreate(nbCELL context,nbMsgLog *msglog){
     return(-1);
     }
   strcpy(msglog->filename,filebase);
-  if(!msglog->hdrbuf) msglog->hdrbuf=(nbMsgRec *)malloc(sizeof(nbMsgRec)+256*sizeof(nbMsgId)); // allocate header buffer
+  if(!msglog->hdrbuf) msglog->hdrbuf=(nbMsgRec *)nbAlloc(sizeof(nbMsgRec)+256*sizeof(nbMsgId)); // allocate header buffer
   msgrec=msglog->hdrbuf;
   msgrec->type=NB_MSG_REC_TYPE_HEADER;  
   msgrec->datatype=NB_MSG_REC_DATA_ID;  
@@ -2702,7 +2688,7 @@ int nbMsgCacheInsert(nbCELL context,void *handle,nbMsgRec *msgrec){
 *  Free up a message cache structure
 */
 void nbMsgCacheFree(nbCELL context,nbMsgCache *msgcache){
-  if(msgcache->bufferStart) free(msgcache->bufferStart);
+  if(msgcache->bufferStart) nbFree(msgcache->bufferStart,msgcache->bufferSize);
   if(msgcache->startState) nbMsgStateFree(context,msgcache->startState);
   if(msgcache->endState) nbMsgStateFree(context,msgcache->endState);
   nbFree(msgcache,sizeof(nbMsgCache));
@@ -2719,8 +2705,7 @@ nbMsgCache *nbMsgCacheAlloc(nbCELL context,char *cabal,char *nodeName,int node,i
   msgcache=(nbMsgCache *)nbAlloc(sizeof(nbMsgCache));
   memset(msgcache,0,sizeof(nbMsgCache));
   msgcache->bufferSize=size;
-  if((msgcache->bufferStart=malloc(size))==NULL) //2012-01-26 dtl: handled error
-    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+  msgcache->bufferStart=nbAlloc(size);
   msgcache->bufferEnd=msgcache->bufferStart+size;
   msgqrec=msgcache->bufferStart;
   *msgqrec=0xff;  // when first flag byte is 0xff we are at the end of the cache or end of cache buffer
@@ -3195,8 +3180,7 @@ nbMsgCabal *nbMsgCabalAlloc(nbCELL context,char *cabalName,char *nodeName,int mo
   msgcabal=(nbMsgCabal *)nbAlloc(sizeof(nbMsgCabal));
   memset(msgcabal,0,sizeof(nbMsgCabal));
   msgcabal->mode=mode;
-  if((msgcabal->cntlMsgBuf=(unsigned char *)malloc(NB_MSG_CABAL_BUFLEN))==NULL) //2012-01-26 dtl: handled error
-    {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
+  msgcabal->cntlMsgBuf=(unsigned char *)nbAlloc(NB_MSG_CABAL_BUFLEN);
   strcpy(msgcabal->cabalName,cabalName);
   msgcabal->node=nbMsgNodeCreate(context,cabalName,nodeName,nodeContext,0,mode);
   if(!msgcabal->node){
