@@ -1,0 +1,201 @@
+.\" Process this file with "groff -man -Tascii foo.1" or "nbman2ht foo.1"
+.\" See NodeBrain Developer Guide for project standards
+.\"
+.TH nb.mod 7 "June 2012" "NodeBrain 0.8.10" "NodeBrain Administrator Guide"
+.SH NAME
+nb.mod - NodeBrain Node Modules (plug-ins)
+.SH SYNOPSIS
+.B #include <nb/nb.h> 
+
+.BI "int " "skillAssert" "(nbCELL " "context" ", void *" "skillHandle" ", void *" "knowledgeHandle" ", nbCELL " "arglist" ");"
+
+.BI "nbCELL " "skillEvaluate" "(nbCELL " "context" ", void *" "skillHandle" ", void *" "knowledgeHandle" ", nbCELL " "arglist" ");"
+
+.BI "void *" "skillBind" "(nbCELL " "context" ",nbCELL " "skill" ",nbCELL " "arglist" ",char *" "text" "){"
+.IP
+.BI "nbSkillSetMethod(" "context" "," "skill" ",NB_EXPERT_ASSERT," "skillAssert" ");"
+
+.BI "nbSkillSetMethod(" "context" "," "skill" ",NB_EXPERT_EVALUATE," "skillEvaluate" ");"
+
+ ... create \fIskillHandle\fP here using \fIarglist\fP and \fItext\fP ...
+
+.BI "return(" "skillHandle" ");"
+
+.B }
+.P
+.BI "declare " "module  " "module"
+\fIpath\fP\fB/nb_mod_\fP\fIpackage\fP\fB.\fP(\fBso\fP|\fBdylib\fP|\fBdll\fP)\fB;\fP
+
+.BI "declare " "module  " "module" 
+[ \fB{"\fP\fIpath\fP\fB"}\fP ] [ \fIpackage\fP [ \fB(\fP\fIargs\fP\fB)\fP ] [ \fB;\fP | \fB:\fP\fItext\fP ]
+
+.BI "declare " "skill   " "skill"
+[ \fImodule\fP\fB.\fP ] \fIskill\fP [ \fB(\fP\fIargs\fP\fB)\fP ] [ \fB;\fP | \fB:\fP\fItext\fP ]
+
+.BI "define  " "term    " "node"
+[ \fIskill\fP [ \fB(\fP\fIargs\fP\fB)\fP ] ] [ \fB;\fP | \fB:\fP\fItext\fP ]
+
+.SH DESCRIPTION
+NodeBrain modules
+are dynamic load libraries used as plug-ins to extend the capabilities of NodeBrain,
+.\"ht page
+\fBnb\fP(1),
+using a defined application program interface (API). There is presently only one
+such interface defined - 
+.I NodeBrain Node Module C API. 
+Within the context of NodeBrain, we refer to modules that use this interface simply as  
+"node modules." A node module implements one or more skills.  For each skill, the 
+module must implement one or more skill methods (functions) within a defined set. Once
+declared, a skill may be associated with any number of nodes.  A node is an object
+that has the defined skill, but also (often) the ability to accumulate a set of knowledge
+independent of other nodes with the same skill.
+
+You will not find enough information here to learn how to write a node module. For that,
+you will need to study the
+\fINodeBrain API Reference\fP. Here we
+only provide enough information, hopefully, to demystify NodeBrain modules for
+those installing or using an existing module.
+
+See http://www.nodebrain.org for more information.
+.SH FILES
+.IP \fB/usr/local/include/nb/nb.h\fP
+NodeBrain API header file.
+.IP \fB/usr/local/lib/nb/x.x/nb_\fP\fImodule.suffix\fP
+NodeBrain modules may be located anywhere, provided you direct nb to them using the
+NB_MODULE_PATH environment variable or a path in a module declaration command.  If no path
+is specified and a module is not found using the native search path, NodeBrain checks
+in /usr/local/lib/nb/x.x as show above, where \fIsuffix\fP is determined by the platform.
+.IP \fBnb_mod_\fP\fImodule\fP\fB.so\fP
+[Solaris and Linux]
+.IP \fBnb_mod_\fP\fImodule\fP\fB.sl\fP
+[HP-UX]
+.IP \fBnb_mod_\fP\fImodule\fP\fB.dylib\fP
+[Mac OS x]
+.IP \fBnb_mod_\fP\fImodule\fP\fB.dll\fP
+[Windows]     
+.P
+.SH RULES
+Here we use the \fBTree\fP node module included in the NodeBrain distribution to 
+illustrate how a module is referenced in rules (commands). The Tree module implements a table using a
+tree structure internally. In this example, we define two Tree nodes---one
+for a critical device table and one for a problem device table.
+
+  # declare module - unnecessary if the module is in the standard directory
+
+  declare tree module {"."}tree;  
+
+  # declare skill - unnecessary if no special parameters are specified
+
+  declare tree skill tree:trace; 
+
+  # table of critical devices
+
+  define criticalDevice node tree;
+
+  # table of problem devices
+
+  define problemDevice node tree;
+
+  # rules that respond when a device has a new problem
+
+  define event node;
+
+  event. define r1 if(type="problem" and ?problemDevice(device)) problemDevice(device):\fIactionA\fP
+
+  event. define r2 if(type="problem" and ?problemDevice(device) and criticalDevice(device)):\fIactionB\fP
+
+  event. define r3 if(type="restored") ?problemDevice(device);
+
+  # sample initialization of the critical device table
+
+  assert criticalDevice("abc");
+
+  assert criticalDevice("def");
+
+  # sample events from a monitoring application
+
+  event. alert type="problem",device="abc";
+
+  event. alert type="restored",device="abc";
+.SH ENVIRONMENT
+Some of the C functions nb
+calls (e.g. for loading dynamic modules) are influenced by environment variables in
+ways we assume you can figure out for your environment.
+.IP NB_MODULE_PATH
+The NB_MODULE_PATH environment variable provides a platform independent way of specifying a path
+for locating node modules.  This path overrides the native system
+search paths by qualifying module names so that a search is avoided.  The following
+example illustrates a setting that directs NodeBrain to search the current directory
+first and then the parent directory when loading modules (plug-ins).
+
+NB_MODULE_PATH="./:../" nb myscript.nb
+.P
+.SH DIAGNOSTICS
+If NodeBrain is unable to load a module an error message is displayed.
+
+  \fIyyyy/mm/dd hh:mm:ss\fP \fBNB000E Unable to load\fP \fIfile\fP
+
+When a module is successfully loaded but the symbol referenced in a skill declaration
+is not found, a message is displayed.
+
+  \fIyyyy/mm/dd hh:mm:ss\fP \fBNB000E Symbol\fP \fIsymbol\fP \fBnot found\fP
+
+NodeBrain does not attempt to load a module when it is declared.  Instead, it waits
+until a module is referenced by a DEFINE command for a node to avoid loading
+modules unnecessarily.  For this reason, either of the messages above will follow a
+node definition when there is an error.
+.P
+.SH "HISTORY"
+Node modules (plug-ins) were introduced in NodeBrain prototype release 0.6.0 in April, 2004.
+.SH BUGS
+Node modules are currently only supported on the following platforms.
+
+  Linux, Solaris, HP-UX, OS X, and Windows
+
+For a complete and current list of bugs, you should refer to the project web site. 
+
+Please report bugs by linking to the project page from the home page, 
+http://www.nodebrain.org, or send email to <bugs@nodebrain.org>.
+.SH AUTHOR
+Ed Trettevik <eat@nodebrain.org>
+.SH "SEE ALSO"
+.\"ht page
+\fBnb\fP(1),    
+.\"ht page
+\fBnb.man\fP(7),
+.\"ht page
+\fBnb.cfg\fP(5),
+.\"ht page
+\fBnb.syn\fP(5),
+.\"ht page
+\fBnb.lib\fP(3) 
+
+.\"ht doc
+[1]
+.I NodeBrain Home Page
+- http://www.nodebrain.org  
+
+.\"ht doc
+[2]
+.I NodeBrain Tutorial 
+- http://www.nodebrain.org  
+
+.\"ht doc
+[3]
+.I NodeBrain User Guide 
+- http://www.nodebrain.org  
+
+.\"ht doc
+[4]
+.I NodeBrain Language Reference
+- http://www.nodebrain.org  
+
+.\"ht doc
+[5]
+.I NodeBrain Module Reference
+- http://www.nodebrain.org  
+
+.\"ht doc
+[6]
+.I NodeBrain API Reference
+- http://www.nodebrain.org  

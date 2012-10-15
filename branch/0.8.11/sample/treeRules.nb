@@ -1,0 +1,48 @@
+#!../nb
+#
+# File:   treeRules.nb
+#
+# Title:  Rules to illustrate module nb_mod_tree.
+#
+# Description:
+#   
+#   This rule file may be used to study nb_mod_tree
+#   behavior to better understand ModeBrain Expert
+#   Skill Modules.  Use in combination with an
+#   event file like treeEvents.nb
+#
+#   ./treeRules.nb treeEvents.nb
+#
+# 2004/04/05 eat 0.6.0  constructed
+#=======================================================
+
+# Declare module
+#
+#   Only required to execute from the sample directory
+#   with a module built in the parent directory.
+
+declare tree module {".."};     
+
+# Declare skill
+#
+#   Here we use the tree skill to implement a skill
+#   called table.  This is not necessary here, but may
+#   be used in situations where you want to create a
+#   skill with special options.  Also provides an easy
+#   way to try an alternate implementation of a skill
+#   without modifying the expert definition commands.  
+
+declare table skill tree;
+
+# Define experts
+#
+define tab expert table;
+
+# Define rules
+#  
+#   o  We just want to see when the rules fire, so
+#      have not included actions.
+#
+define rTrue    on(tab(a,b,c));
+define rFalse   on(!tab(a,b,c));
+define rUnknown on(?tab(a,b,c));

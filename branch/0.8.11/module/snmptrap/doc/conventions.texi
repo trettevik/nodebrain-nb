@@ -1,0 +1,43 @@
+@c This file is included at the end of the preface and before @end titlepage in a module document
+@sp 2
+@b{Documents}
+@sp 1
+@quotation
+@i{NodeBrain Tutorial}
+
+@i{NodeBrain User Guide}
+
+@i{NodeBrain Language Reference}
+
+@i{NodeBrain API Reference}
+@end quotation
+
+@sp 2
+@b{Document Conventions}
+@sp 1
+Sample code and input/output examples are displayed in a monospace font, indented in HTML and Info, and enclosed
+in a box in PDF or printed copies.
+Bold text is used to bring the reader's attention to specific portions of an example.
+In the following example, the first and last line are associated with the host shell and the lines in between are input or output unique to NodeBrain.
+The @code{define} command is highlighted, indicating it is the focus of the example.
+Lines ending with a backslash \ indicate when a command is continued on the next displayed line.
+This is supported by the language within source files, but not for other methods of command input.
+If you copy an example of a command displayed over multiple lines, you must enter it as a single
+line when used outside the context of a source file.
+
+@cartouche
+@smallexample
+$ nb
+> @b{define myFirstRule on(a=1 and b=2) mood="happy";}
+> assert mood="sad";
+> show mood
+mood = "sad"
+> assert a=1,b=2,c=3,d="This is an example of a long single line that",\
+    e="we depict on multiple lines to fit on the documnet page";
+2008/06/05 12:09:08 NB000I Rule myFirstRule fired(mood="happy")
+> show mood
+mood = "happy"
+> quit
+$
+@end smallexample
+@end cartouche

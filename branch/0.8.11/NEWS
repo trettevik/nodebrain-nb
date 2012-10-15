@@ -1,0 +1,1190 @@
+NodeBrain 0.8.11 Change Summary
+
+* Released September 22, 2012 (target)
+
+     Versions 0.8.4 through 0.8.10 were not released.
+     Although 0.8.3 software was released, the website
+     was not updated with new documentation.
+
+* Theme: Patches and Document Format Changes
+
+     This is a patch release, so no new functionality
+     is provided.  However, 0.8 documentation was not
+     previously released, so the new functionality of
+     the 0.8.3 release will likely seem new. See news
+     below for NodeBrain 0.8.3.
+
+* Documentation:
+
+  o  Started converting documents from MS Word to Texinfo.
+     Note: We anticipate switching from Texinfo to DocBook
+     as the master format in the future. 
+
+  o  The NodeBrain Module Reference has been replaced by
+     individual texi manuals for each module.
+
+* Incompatibilities
+
+  o  We messed up and broke binary compatibility with 0.8.3
+     in 0.8.9.  Because documentation for 0.8.3 was not
+     released and it had few downloads, we did not resolve
+     this problem in 0.8.10.  We are treating 0.8.10
+     effectively as the first real 0.8.x release.  The
+     incompatibility is in the Message API introduced in
+     0.8.3.
+
+  o  The Webster module is changed since 0.7.4, requiring
+     modification to configuration rules.
+
+* New Fetures
+
+  o  None
+
+* Deprecated Syntax:
+
+  o  None 
+
+* Bug fixes:
+
+  o  A bug was fixed in an internal message queueing
+     mechanism that malfunctioned when messages longer
+     then 4K were queued.  This condition could occur
+     when passing messages as input to a Servant node.
+
+  o  A couple security flaws were fixed in the Webster API.
+ 
+
+NodeBrain 0.8.3 Change Summary
+
+* Released September 6, 2010
+
+     Versions 0.7.5 through 0.7.9 were not released.
+     Versions 0.8.0 through 0.8.2 were not released.
+     Actually 0.8.0 was released to SourceForge, but this
+     release was not documented at www.nodebrain.org.
+     
+* Theme: Message Cabals and Statistical Anomaly Detection
+
+     A NodeBrain message cabal is a set of nodes that
+     broadcast messages to every node in the cabal.  The
+     goal is to ensure rapid one-time delivery of each
+     message to every other node in sequence for each
+     originating node.  This enables a collection of
+     NodeBrain agents to share a set of knowledge more
+     efficiently and reliably than is possible using the
+     peer module.
+
+     Statistical anomaly detection capability
+    
+* Documentation:
+
+  o  Message and Baseline modules have been documented
+     in separate Texinfo files.
+
+* Incompatibilities:
+
+  o  None intended since 0.7.4
+ 
+* New Features:
+ 
+  o  Node modules may now implement commands independent
+     of nodes using the following syntax.
+
+         <module>.<verb> <body>
+
+     This is an alternative to a node module providing a
+     utility skill and requiring the user to first create
+     a utility node.
+
+         define <node> node <module>.utility;
+         <node>:<verb> <body> 
+
+     Either of these approaches is appropriate in cases
+     where module specific commands are needed to configure
+     a node module in some way (e.g. define keys for a
+     communications module) or operate on files managed
+     by a node module.
+
+  o  Included the NodeBrain Message Cabal feature.  This
+     provides a set of C API functions for reading and
+     writing messages to a message log and sharing the
+     content of a message log between nodes.  This is 
+     intended as both a performance and functional
+     enhancement over NodeBrain queues.  In addition to
+     the API functions, a "message" module is included
+     that implements the message cabal feature for
+     NodeBrain commands.  Other modules may use the API
+     to implement the message cabal feature for different
+     types of messages.
+
+  o  Statistical anomaly detection is supported by a new
+     module, Baseline.  This module maintains two statistics,
+     average value and average deviation, for any number of
+     measures.  It alerts when values are outside of user
+     defined limits expressed as a tolerance factor in units
+     of sigma (standard deviation).
+
+* Deprecated Syntax:
+
+  o  None intended since 0.7.4
+
+* Bug fixes:
+
+  o  Cntl-D at command line crashed under 0.7.4 and was
+     fixed in 0.7.5.
+
+  o  Expression reduction error for xor and nor was fixed
+     in 0.7.9.  Prior versions incorrectly reduced these
+     expressions to the left expression.
+
+  o  Expression reduction error for "not closed world"
+     causing "![]a" to be reduced to "0" was fixed in
+     0.7.9
+
+=========================================================
+NodeBrain 0.7.4 Change Summary
+
+* Released February 9, 2009 
+
+* Theme: Nodes and Performance
+
+     Since this is the first public release since
+     0.6.4 and 0.6.5 in April of 2006, this is an
+     accumulation of changes applied to multiple
+     versions over this period.  We are restating
+     these changes here to clarify, particularly
+     since this version make obsolete several
+     features that were only deprecated previously.
+
+* Documentation:
+
+  o  NodeBrain Tutorial has been expanded to include
+     some distributed node modules.
+
+  o  NodeBrain Tutorial has been converted to GNU Texinfo
+     format. 
+ 
+  o  Other documents will be provided in PDF format only
+     until converted to GNU Texinfo format.
+
+  o  Many updates applied to support syntax changes.
+
+* Incompatibilities:
+
+  o  Symbolic substitution has changed.
+
+  o  ADDRESS command replaced by single quote prefix
+
+  o  In a DEFINE command, "listener" is replaced by various
+     types of nodes.  New skill modules are included to
+     provide the same functionality as deprecated listeners.
+
+  o  In a DECLARE command, "brain" is replaced by a DEFINE
+     command for peer node; that is, a node using the peer
+     skill module.
+
+  o  The PORTRAY command is replaced by an option of the
+     peer skill module.
+
+  o  The COPY command is replaced by the peer skill module.
+
+  o  The >, / and \ commands are replaced by options of the
+     peer skill module.
+
+  o  In a DEFINE command, "file" is replaced by an audit node;
+     that is, a node using the audit skill module.
+
+  o  The PIPE command is replaced by the audit skill module.
+
+  o  The CONSULT command is replaced by the - and = commands.
+
+  o  The TRANSLATE command is replaced by the translator node
+     module.
+
+  o  The action priority is now called the action slice, and
+     the polarity has changes.
+
+  o  The IDENTIFY command is now a peer module command.
+     
+* New Features:
+
+  o  Translator symbolic substitution supports alternate
+     character replacement. 
+
+  o  Translator feature now supports a hierachical syntax.
+
+  o  New peer skill module replaces NBP and NBQ listeners
+     and all related commands.
+
+  o  New audit skill modules replaces LOG listener, FILE
+     object type, and PIPE command.
+
+  o  New pipe skill module replaces FIFO listener.
+
+  o  New mail skill module replaces SMTP listener.
+
+  o  Updated syslog skill module is ready for use.
+
+  o  The Perl Compatible Regular Expression (PCRE) library
+     is now used on Unix, Linux, and Windows.  We previously
+     used the native regcomp and regexec functions on Unix
+     and Linux and the rxspencer.dll from GnuWin32 on Windows.
+     The libpcre.so and libpcreposix.so libraries are now
+     prerequisits on Unix and Linux (see www.pcre.org).  For
+     Windows, we distribute with NodeBrain a precompiled
+     pcre3.dll and pcreprosix3.dll obtained from the GnuWin32
+     project.  This change makes NodeBrain translator files
+     portable across platforms and provides enhanced functionality
+     and performance on some platforms.
+
+  o  The GNU readline function is used on Unix/Linux to enable
+     history and input editing.  We elected not to use this on
+     Windows because history and input editing are natively
+     supported.  It seems better for the user experience
+     to match the platform in this case.
+
+* Deprecated Syntax:
+
+  o  In a DEFINE command, "node" replaces "expert".  This
+     change was made with the hope that it would help users
+     better visualize the structure of NodeBrain rules.
+
+  o  The reqular expression match operator "~" replaces
+     "~~".
+
+* Bug fixes:
+
+     Several bugs were fixed, created, and fixed.  They
+     were not recorded and tracked properly to enable
+     listing here.
+
+=========================================================
+NodeBrain 0.6.9 Change Summary
+
+* Internal March 10, 2008
+
+* Theme: Nodes and Performance
+
+     Since 0.6.8 was not released to the open source
+     project, the theme of this release is primarily 
+     that of version 0.6.8---Nodes.  Version 0.6.9
+     adds some internal changes that improve performance
+     for applications with high transaction rates.  More
+     performance enhancements are planned for future
+     releases.
+
+* Documentation:
+
+     Minor corrections to 0.6.8 document updates.
+
+* Incompatibilities:
+
+     None - see 0.6.8
+
+* New Features:
+ 
+     None - see 0.6.8
+
+* Deprecated Syntax:
+
+     None - see 0.6.8
+
+* Bug fixes:
+
+=========================================================
+NodeBrain 0.6.8 Change Summary
+
+* Internal August 5, 2007 
+
+* Theme: Nodes
+
+     This release is designed as a path to a planned
+     release 7.0.  We are placing built-in functionality
+     with skill modules where the functionality is not
+     a central part of the interpreter.  This separation
+     is intended to simplify enhancement via skill module
+     substitution.  A node is now the object implemented
+     by a skill module (prevously "expert"), and features
+     previously built-in as "listeners" are now implemented
+     by new skill modules.  In particular, the NodeBrain
+     protocol (NBP) has moved to the peer skill module.  All
+     commands related to NBP are now extended commands of
+     the peer skill module.  You should now visualize a
+     NodeBrain process as a collection of nodes that may
+     interact with one another, and in some cases provide
+     communication with external elements, including nodes
+     within other NodeBrain processes.
+
+* Documentation:
+
+     All released documents have updates.  There are
+     several syntax changes introduced in this release.
+     Deprecated syntax is now undocumented, even though
+     support continues until the next release.
+
+* Incompatibilities:
+
+     The ADDRESS command is no longer supported.  This
+     was a feature used only in interactive mode, so no
+     rule files should be impacted.  In interactive mode,
+     the single quote (') special symbol command is now 
+     used to establish a command prefix.  However, it
+     differs significantly from the ADDRESS commmand.
+
+* New Features:
+
+  o  Translator symbolic substitution supports alternate
+     character replacement.
+
+  o  New peer skill module replaces NBP and NBQ listeners
+     and all related commands.
+ 
+  o  New audit skill modules replaces LOG listener, FILE
+     object type, and PIPE command.
+
+  o  New pipe skill module replaces FIFO listener.
+
+  o  New mail skill module replaces SMTP listener.
+
+  o  Updated syslog skill module is ready for use.
+
+  o  The Perl Compatible Regular Expression (PCRE) library
+     is now used on Unix, Linux, and Windows.  We previously
+     used the native regcomp and regexec functions on Unix
+     and Linux and the rxspencer.dll from GnuWin32 on Windows.
+     The libpcre.so and libpcreposix.so libraries are now
+     prerequisits on Unix and Linux (see www.pcre.org).  For
+     Windows, we distribute with NodeBrain a precompiled
+     pcre3.dll and pcreprosix3.dll obtained from the GnuWin32
+     project.  This change makes NodeBrain translator files
+     portable across platforms and provides enhanced functionality
+     and performance on some platforms.
+
+  o  The GNU readline function is used on Unix/Linux to enable
+     history and input editing.  We elected not to use this on
+     Windows because history and input editing are natively
+     supported.  It seems better for the user experience
+     to match the platform in this case.
+
+* Deprecated Syntax:
+
+  o  In a DEFINE command, "node" replaces "expert".  This
+     change was made with the hope that it would help users
+     better visualize the structure of NodeBrain rules.   
+
+  o  In a DEFINE command, "listener" is replaced by various
+     types of nodes.  New skill modules are included to
+     provide the same functionality as deprecated listeners.
+
+  o  In a DECLARE command, "brain" is replaced by a DEFINE
+     command for peer node; that is, a node using the peer
+     skill module.
+
+  o  The PORTRAY command is replaced by an option of the
+     peer skill module.
+
+  o  The COPY command is replaced by the peer skill module.
+
+  o  The >, / and \ commands are replaced by options of the
+     peer skill module.
+
+  o  In a DEFINE command, "file" is replaced by an audit node;
+     that is, a node using the audit skill module.
+     
+  o  The PIPE command is replaced by the audit skill module.
+
+  o  The CONSULT command is replaced by the - and = commands. 
+
+* Bug Fixes:
+
+=========================================================
+NodeBrain 0.6.5 Change Summary
+
+* Released April 20, 2006
+
+* Theme: Servant Program Interface (Windows)
+
+     This is essentially a re-release of 0.6.4 with fixes
+     for defects discovered on Windows after 0.6.4 was
+     release for Unix and Linux.
+
+* Documentation:
+
+     We are not releasing document updates with this 
+     release.  Changes described in this file will be
+     incorporated into the 0.7.0 document release.
+
+* Incompatibiilties: 
+
+     None
+
+* New Features;
+
+  o  A "^" symbol may be used instead of ":" for sending
+     messages to stdout.  Since we use ":" to override a
+     remote prompt in interactive mode, we had no way to 
+     send a message to the parent of a remote agent.  By
+     using "^" instead of ":" you can avoid this conflict.
+     We expect to deprecate and then drop support of ":"
+     to send messages to stdout in future releases.
+
+  o  The source file directive %include has been added as
+     an alternative to the SOURCE command.  A directive
+     seems more appropriate because the optional assertion
+     following the file name is intepreted within the
+     local context like other directives instead of the
+     current command context.  
+
+* Deprecated Syntax: 
+
+     None
+
+* Bug Fixes
+
+  o  The -d (daemon) option is now implied when running
+     as a Windows service.  Without this fix a Windows
+     service would stop after loading the configuration
+     file if there were no "old style" listeners defined.
+
+  o  A bug was causing NodeBrain to automatically restart
+     under some conditions when running as a Windows
+     service a and receiving a stop request.
+
+  o  A console is now allocated when running as a service
+     to enable management of servants as console groups.
+     Without a console NodeBrain was not properly cleaning
+     up servants when shutting down.
+
+  o  When an expert was defined without a skill module
+     and then referenced in an expert command, condition
+     or assertion, the interpreter crashed with an 
+     addressing exception.  This has been fixed. 
+
+  o  Identifiers starting with "@." were not properly
+     handled as a reference to the root context.  This
+     has been fixed.
+
+  o  The special case of ". " used for a context prefix
+     was not recognized.  We now recognize it as a
+     reference to the current context, which has no
+     impact.
+
+=========================================================
+NodeBrain 0.6.4 Change Summary
+
+* Released April 1, 2006
+
+* Theme: Servant Program Interface (Unix/Linux)
+
+     This release introduces a new interface for extending
+     NodeBrain functionality by writing "servant" programs
+     or scripts in any language.  Using this interface a
+     servant program communicates with NodeBrain using stdin,
+     stdout and stderr.  This is a much simpler interface to
+     use than the C API introduced in prior releases.
+
+     Because this is new functionality, and because we have
+     introduced some incompatibilities, this should not be
+     treated as a patch release as the number would indicate.
+
+* Documentation:
+
+     Because of new features and incompatibilities we have
+     updated the documentation.  We also elected to split
+     the old NodeBrain User's Guide into multiple documents.
+
+        NodeBrain User Guide
+        NodeBrain Language Reference
+        NodeBrain Module Reference
+        NodeBrain API Reference
+
+* Incompatibilities:
+ 
+  o  The underscore ("_") may no longer be used within a 
+     simple term.  For example, the following definition
+     will produce an error message.
+
+        define user_cpu cell 5;
+
+  o  The -s option for nb is now used for the --servant
+     instead of the --solve option.
+
+  o  A verb may no longer be terminated by the symbols
+     "(" or ":".  These terminators now cause a verb to
+     be interpreted as a skill module extended expert
+     reference.  The use of the "+" prefix for this purpose
+     is now deprecated.
+
+  o  Context prefixes without a trailing period are no
+     longer supported and will be interpreted as a verb.
+     When a command starts with an expert name, the name
+     must be terminated with ".", "(", or ":".
+
+* New Features:
+
+  o  The "-" and "=" prefix commands are now called
+     "servant" commands and support a more complete
+     syntax.  For example, when these symbols are follows
+     by a semicolon (":"), NodeBrain interprets the stdout
+     of the child process as NodeBrain commands.
+
+  o  A "+" is no longer required as a prefix when sending
+     commands to a skill module extended expert.  The
+     terminating symbol is now the differentiator between
+     an expert reference and a verb.
+
+  o  A servant module is provided for the definition of
+     servants that accept commands on stdin.  Commands
+     sent to experts extended by this skill module are
+     forwarded on to the servant program.
+
+* Deprecated Syntax: 
+
+  o  The "+" prefix for referencing skill module extended
+     experts is now deprecated.
+
+=========================================================
+NodeBrain 0.6.3 
+
+     We elected not to release the 0.6.3 version, a patch
+     release applied to the author's applications.
+=========================================================
+NodeBrain 0.6.2 Change Summary
+
+* Released May 8, 2005
+
+* Theme: API Cleanup
+
+     In release 0.6.2 a new header (nbapi.h) is introduced
+     to avoid exposing NodeBrain's internal structures
+     to programs using the C API.  This should help
+     programmers avoid dependence on NodeBrain internals
+     and reduce the opportunities for API programs to break
+     under new releases.  After all, that's one of the points
+     of an API.  In addition, new API functions are included,
+     more attentions has been given to using the API from a
+     custom main routine, and it is now a bit easier to
+     statically link extended skills into a program as an
+     alternative to the preferred dynamic modules.
+
+     Because there are few, if any, people programming skill
+     modules at this point, it was decided to go ahead and
+     create incompatibilities with the 0.6.1 API. 
+
+* Documentation:
+
+  o  Normally we don't plan to release document updates
+     with patch releases.  However, we've slipped some
+     enhancements and incompatibilities into 0.6.1 and 0.6.2
+     that require document updates.  Rather than waiting to
+     roll these into documentation for 0.7.0, we've elected
+     to update the documentation with this release.
+
+* Incompatibilities:
+
+  o  We have changed the naming standard for skill binding
+     functions in an expert skill module.
+
+       INIT() changed to nbBind()
+       <name> changed to  <name>Bind()
+
+  o  Numerous changes where made to API function parameters
+     and skill module API methods.
+
+  o  A cache no longer creates terms for the threshold levels.
+
+	_threshold0="normal"
+        _threshold1="minor"
+        _threshold2="major"
+        _threshold3="critical"
+
+     We stopped doing this because there were few cases where
+     it seemed useful to have the terms defined.  Now the values
+     remain the same, but you have no access to modify these
+     values.  If alternate values are required a translation 
+     table can be implemented using a tree.  For example, you
+     could use the following tree to translate them into numbers.        
+
+        define myThreshold expert tree;
+	myThreshold. assert ("normal")=0,("minor")=1,("major")=2,("critical")=3;
+
+     This tree could be combined with a cache like this.
+
+        define myCache expert cache:(a(3,6,9));
+        myCache. define r1 if(myThreshold(a._hitState)>1);
+
+     Another possibility for the future would be to support assignment
+     of these values at skill definition time.  This is just hypothetical.
+     We do not support this currently.
+
+	define mycache skill cache:thresholds("ok","oops","ohmygosh","panic");
+        define myCache expert mycache:(a(3,6,9));
+       
+
+* Bug fixes:
+
+  o  SOURCE command supports quoted file names with spaces.
+     This was required on systems that allow spaces in file
+     names.
+
+  o  Regular expressions are now supported on Windows with
+     the help of the rxspencer.dll from the GnuWin32 project's
+     "RegEx-Spencer" package.  Source code and updates are
+     available at gnuwin32.sourceforge.net
+
+* New Features: 
+
+  o  The tree skill is now included in the NodeBrain 
+     library (libnb.a) in addition to a dynamic module.
+
+  o  The cache skill is now implemented using the skill
+     module API although it is still statically linked
+     into nb.
+
+  o  A new WINDOWS command verb SHOWENV has been included.
+
+       > windows showenv;
+
+  o  New API functions have been included for skill module
+     development.
+
+       nbListenerReplace()
+       nbListenerEnableOnDaemon()
+       nbOutputHandlerAdd()
+       nbOutputHandlerRemove()
+       nbSynapseOpen()
+       nbSynapseClose()
+
+  o  An environment variable NB_MOD_PATH may be used to
+     assist NodeBrain in locating skill modules.  This is
+     similar to the PATH environment variable.  Since
+     NodeBrain uses the native interface for loading modules
+     you may use platform specific environment variables
+     to direct the loader.  The NB_MOD_PATH variable
+     provides an "almost" platform independent method of
+     specifying the directory search order for skill modules.
+     The path separator is different on Windows from other
+     platforms: ';' on Windows and ':' on other platforms.
+     Here's an example where the variable is passed to nb
+     on a Unix/Linux system.
+
+       NB_MOD_PATH=".:/tmp" ./nb mytest.nb
+     
+  o  You may now specify a path with multiple directories
+     when declaring a module. 
+
+       declare tree module {".:/tmp"}tree;
+  
+     This syntax is preferred even when you only specify
+     one directory, because it allows NodeBrain to construct
+     the file name for you, causing your rules to be more        
+     platform independent.
+
+       declare tree module {"/tmp"}tree; # This is preferred
+       declare tree module "/tmp/nb_mod_tree.so"; # over this
+
+     If you know your rules will be used on only one platform,
+     you may actually prefer the second line above because it
+     is easier to read.  You have a choice.  But the first line
+     above is easier to modify to add more directories later
+     and you never know when you may want to port rules from
+     Linux to OS X.
+
+* Experimental Features:
+
+  We refer to these features as "experimental" because we
+  are introducing a "preliminary implementation" that is
+  likely to undergo refinement relatively quickly.  In
+  other words, the design is unstable.
+
+  o  Internet Protocol (IP) API functions for skill
+     module development
+
+       nbIpGetName()
+       nbIpGetUdpServerSocket()
+       nbIpGetDatagram()
+       nbIpGetAddrString()
+       nbIpGetSocketAddrString()
+
+  o  Stream API functions for skill module development
+
+       nbStreamProducerOpen()
+       nbStreamConsumerOpen()
+       nbStreamConsumerClose()
+       nbStreamMsg()
+
+  o  Translation API functions
+
+       nbLoadTranslator()
+       nbTranslate()
+
+  o  Console skill module
+
+     When NodeBrain runs as a monitoring agent there are
+     two major functions that require a user interface:
+
+       1) rule configuration, and
+       2) visibility of the state of monitored elements.
+
+     In prior releases we have been content to rely on
+     existing user interfaces for these functions.  For
+     example, an SSH client can be used with VI to edit
+     rule configuration files and an email inbox can be
+     used as an alert viewer.  The NodeBrain interpreter,
+     nb, is itself a line mode client that can be used
+     for remote configuration of an agent, and for
+     viewing the internal state of rule conditions.
+     However, for some applications of NodeBrain, it
+     seems that a graphical user interface (GUI) will be
+     more appropriate.  Although we didn't plan to
+     entertain this notion in a 0.6.x release, we have
+     decided to build a console GUI to support an
+     application that uses one of our private Expert
+     Skill Modules.  We have generalized the required
+     enhancements to nb by extending the Expert Skill
+     Module API.  The prototype NodeBrain Console itself
+     is a Java application that will be released as a
+     separate package.
+
+  o  Other skill modules
+
+       netflow   - worm detection
+       snmptrap  - V1 SNMP Trap monitor
+       syslog    - remote syslog monitor (UDP port 514)
+       translate - execute NodeBrain translation rules
+
+* Deprecated Syntax: 
+
+  o  Enhancements to the module declaration syntax make
+     it unnecessary to support the ".?" wild character
+     in module declarations and this is now deprecated.
+
+       declare fred module /tmp/nb_mod_tree.?;  (old)
+
+       declare fred module {"/tmp"}tree;        (new)
+ 
+       declare fred module nb_mod_tree.?;       (old)
+
+       declare fred module tree;                (new)
+
+     It is no longer necessary to declare installed
+     modules with matching skill and module names
+     when you reference them by this name.
+
+       # This declare is unnecessary. 
+       declare mymod module /usr/local/lib/nb/nb_mod_mymod.so; 
+       # NodeBrain will find the installed module.
+       define mystuff expert mymod(1,2,3);
+
+     If the skill and module names don't match, you can
+     still avoid the module declaration for install modules.
+
+       define mystuff expert mymod.stuff(1,2,3);
+
+  o  It is no longer necessary to enable experts that
+     use skill modules (e.g. snmptrap) that listen.  These
+     modules will now enable automatically when NodeBrain
+     becomes a daemon/service.
+
+       define snmptrap expert snmptrap;
+       enable snmptrap; # don't need this to start listening
+
+     Once in deamon/service mode, you may elect to disable
+     and enable a listening expert.  It just isn't necessary
+     to enable it the first time.
+
+  o  The syntax for cache definitions has changed slightly.
+
+       define processes expert cache(~(h):parent,child);  (old)
+       define processes expert cache:(~(h):parent,child); (new)
+
+     This is necessary to get the old built-in cache feature
+     to conform to the syntax for experts.
+
+       define <term> expert <skill>[(arglist)][:text]
+
+     NodeBrain parses everything up to the text, and the skill
+     module parses the text.  For compatibility with existing
+     rules, the interpreter still recognizes cache as a special
+     case and will pretend the ":" was coded after cache.  An
+     warning message is produced to encourage an update to the
+     rules.  The deprecated syntax will be an error in some
+     future release.
+
+* Packaging:
+
+  o  A Microsoft Installer (nb.msi) file is now provided
+     to support installation on Windows following native
+     customs that support Add/Remove.
+
+  o  A Windows help file has been included in the Windows
+     binary distribution.
+
+=========================================================
+
+NodeBrain 0.6.1 Change Summary
+
+* Released October 11, 2004
+
+* Theme: Cleaning up bits and pieces.
+
+     As a patch release, there is no one grand theme
+     here.  However, there are small enhanecments and
+     some bug fixes that I found useful in my own
+     applications.  For my own purposes, this release
+     has been more reliable than 0.6.0.
+
+     What's Next?
+
+     Starting to look forward to a 0.7.0 release.  My
+     current plan is to focus on three things.
+
+       1) Systematic testing
+       2) Sample application(s)
+       3) Skill module enhancements
+
+     Better testing is needed to achieve the level of
+     reliability needed before going to a 1.0 version.
+     It works fine now for my own applications, but I
+     use it the way it works.  It needs to be more 
+     graceful in responding to the random command syntax
+     a new user might try.  And at least one complete
+     sample application is needed to get people started. 
+ 
+* Documentation:
+
+  o  At the time of this release, the "NodeBrain User's
+     Guide" has not been updated to reflect changes in
+     this release.  When updated, the document will be
+     posted on the webset, www.nodebrain.org.  A document
+     release file will be posted on the SourceForge
+     project page.  Please use the online 0.6.0 document
+     for now.
+
+* Incompatibilities:
+
+  o  Nested symbolic substitution for generating terms,
+     ${{a}{b}}, is no longer supported.  This feature
+     had little merit and conflicted with our desire to
+     support symbolic substitution using cell expressions.
+
+  o  Expert skill module compute() methods are now   
+     expected to return a grabbed cell.  It is unlikely
+     anyone out there has dabbled with writing skill
+     modules yet.
+
+  o  Rule actions are no longer performed when a rule
+     condition changes after the action is scheduled.
+     When a change causes multiple rules to fire, the
+     action of one rule may change the condition of
+     another.  If this happens, NodeBrain now considers
+     it unsafe to perform a scheduled action whose
+     condition has changed.  This is because actions
+     often use terms within the condition as parameters.
+     An "action priority" option has been included to
+     help avoid this situation.
+
+* Bugs Fixed:
+
+  o  Multiple bugs related to releasing of objects.
+
+  o  Corrected the order of symbolic substitution and
+     reduction.  This does not impact commands injected
+     by rules, but does resolve a problem for user
+     entered commands starting with a reduction ("$ ").
+
+  o  Eliminated unnecessary pass through symbolic    
+     substitution logic for rule action commands that
+     don't need it. Check is made at rule definition time 
+     now instead of every time the command is parsed.
+
+  o  Symbolic reduction "$  $${..}" to "${..}" is done
+     for rule action commands at rule definition time 
+     now.  Stopped doing every time the command is parsed.
+
+  o  Rules are no longer allowed to fire more than once
+     in a given command cycle. This was documented but 
+     not implemented prior to this release.
+ 
+  o  Fixed bugs related to the use of rule terms in cell
+     expressions.  A rule term may be used as a name for
+     the rule condition cell.  Notice r1 in this example.
+
+       define r1 on(a=1 and b=2):-echo hi
+       define r2 on(r1 or c=3):-echo ho
+
+  o  Fixed bugs in the "solve" command.  The solve
+     command may now be used multiple times in the
+     same context.  State changes may cause "solve"
+     to resolve previously unresolved terms. You may
+     also assert terms to be unknown, causing solve
+     to resolve them again if necessary. 
+
+  o  The "show" command reveals context a little better.
+     A context prefix is included when rules are displayed,
+     unless the context matches the current context.  When
+     a context terms is shown, it is reduced to ".".  A
+     period may also be used as an abbreviation in the show
+     command.  > show .
+
+  o  The new form of cache assertion introduced in 0.6.0
+     was not properly reacting when a threshold was hit.
+     The has been fixed, but the fix introduces an 
+     unfortunate inconsistency in the assert command. As
+     "fixed" the following example will cause rFirst to
+     fire twice, once for 1, and once for 2.
+
+        define johnny expert cache(~(5m):x(1));
+        johnny. define rFirst if(x._hitState);
+	define rAssert on(a=1) johnny(1),johnny(2);
+   
+     For the moment, I've designed myself into a corner
+     here.  Previously we have said that all assertions
+     in a given command are applied "concurrently" and
+     then rules respond to the collective assertion.
+     However, when a cache hits a threshold it forces
+     an immediate response.  This means the assertions
+     on a single command are no longer "always" applied
+     "concurrently".  Here is an example of a situation
+     that violates our promise of "concurrent" assignment.
+
+	define c expert cache(x(1));
+	define r1 on(a=1);
+	define r2 on(a=2);
+	define r3 on(a=3);
+	assert a=1,c(1),a=2,c(2),a=3,c(3);
+ 
+     In this case, r1, r2, and r3 all respond because
+     c(1), c(2), and c(3) all hit a threshold and force
+     an immediate reaction.  Had the assertion been as
+     follows, only r3 whould fire.
+
+        assert a=1,a=2,a=3;
+
+     In this example, it almost seems like a good thing.
+     But, when we change the rules a bit, the problem
+     is exposed.  Rules r1 and r2 both fire instead of
+     just r2.
+
+        define c expert cache(x(1));
+	define r1 on(a=1 and b<>2);
+	define r2 on(a=1 and b=2);
+        assert a=0,b=0;
+	assert a=1,c(1),b=2;
+
+     For now we need to be aware of this and avoid coding
+     rules that are sensitive to this problem.  In practice
+     it will not be difficult to avoid it, but I'm not
+     comfortable with this as a final solution.
+
+* New Features:
+
+  o  Symbolic substitution supports cell expressions
+
+       define r1 on(a=1) x=${trouble(y)*10+3}
+
+  o  Show command supports cell expressions enclosed
+     in parentheses as alternative to a term.
+
+       show (<expression>) [<option>]
+
+  o  A rule action priority has been added to avoid cycle errors.
+     Rules that fire in the same action cycle will run in
+     priority order from high to low (127 to -128).  
+
+     define term on(<cond>)["["<prty>"]"][<assertion>][:<command>][;] 
+  
+  o  A feature for testing nb called "check scripts" has been
+     included.  One first builds a script to test a set of
+     features.  The "show" command is used as necessary to make
+     sure internal results are as expected.  Then the test script
+     is run in check mode to create a check script by prefixing
+     the file name with "~".
+
+        nb ~<name>.nb
+
+     The generated check script is named "<name>.nb~". This script
+     is a copy of the one executed, but with "check lines" included.
+     A check line is identified by a "~" in column 1. The check
+     operation is specified in column 2.
+
+        ' ' - Match column 3 to end of line with a line of output.
+              e.g. "~ text to match goes here"
+        '^' - Reset the check buffer as if we matched everything.
+              e.g. "~^ "
+        '#' - Check comment---no operation
+              e.g. "~# Checking to make sure ..."
+
+     A check script is run in check mode to make sure we get
+     identical results (based on output) later.
+
+	nb -b ~<name>.nb~
+
+     The bail option "-b" in check mode will only bail out on
+     the first check error, not on a normal error.  So a check
+     script can verify that normal error messages are produced.
+
+     A check line is "hidden" when a check script is run in normal
+     mode, and displays when running in check mode.
+
+     This release provides a few check scripts for verifying a
+     build.  New ones will be added in the future.
+
+* Experimental Features: (These may change.)
+
+  o  Expression evaluation shortcut makes it easy to test
+     expressions.  
+
+       ?(<expression>)
+
+  o  Command option prefix
+
+       (trace,...) <command>
+
+  o  Logging options are supported at the expert (context)
+     level.  If you don't need or want an audit log of every
+     rule that fires, you can turn off the audit trail.
+
+       <expert>. use(hush)
+       <expert>. use(!hush)
+       <expert>. use(audit)
+       <expert>. use(!audit)
+       <expert>. use(trace)
+       <expert>. use(!trace)
+
+  o  A global "audit" option sets a default option for all
+     experts.  There are eight silly ways to set one option
+     on or off.
+
+	nb -a   [audit]
+	nb -A   [noAudit]
+        nb --audit
+        nb --noAudit
+
+        set a
+	set A
+	set audit
+	set noAudit
+
+     The default is "audit" (on).  There is no harm in
+     leaving audit on unless you decide it is just spitting
+     out too much information.  Once your rules have been
+     tested you can switch to the -A option.
+
+        #!/usr/local/bin/nb -A
+        ...
+     
+
+* Deprecated Syntax: (none - see Incompatibilities above)
+
+
+* Packaging:
+
+  o  A new startup message shows the compile time and
+     platform as provided by GNU autoconf/autoheader.
+
+  o  A "test" directory was added, providing simple
+     scripts for testing a build.  This will be expanded
+     in future releases.
+
+  o  The SourceForge Compiler Farm was used to get the
+     configure and make processes working on six new
+     platforms ("*" below).     
+
+     * OpenBSD 3.4 on x86 architecture 
+     * Sun Solaris 9 on x86 architecture 
+       Debian GNU/Linux 2.2 running Linux 2.4 kernel on x86 architecture 
+       Red Hat Linux 9 running Linux 2.4 kernel on x86 architecture 
+     * FreeBSD 4.8 on x86 architecture 
+     * NetBSD 1.6.1 on x86 architecture 
+     * SuSE 8 ES running Linux 2.4 kernel on AMD64 Opteron 
+     * Debian GNU/Linux 3.0 running Linux 2.2 kernel on DEC Alpha (Alpha ev67) 
+       Apple Mac OS X 10.1 Server on Apple Mac G4 (PPC) with Fink 
+       Apple Mac OS X 10.2 Server on Apple Mac G4 (PPC) with Fink 
+       Sun Solaris 9 on Sun Ultra Enterprise R220 (Sparc), two machines 
+
+     The build process seems to work on all of the
+     SourceForge systems, with two exceptions to be
+     resolved later.
+
+  o  Binary release files were not provided for 0.6.0,
+     but will be provided for 0.6.1.  
+      
+  o  Two new make targets have been included in the make
+     file for creating source and binary distributions.
+
+       make srcdist
+       make bindist
+
+     These targets automate the process of creating and
+     verifying that a distribution can be used to create
+     a "working" binary.  Both use the dist target
+     provided by autoconf/automake.
+
+       nb-0.6.1.tar.gz          [make dist]
+       nb-0.6.1-source.tar.gz   [make srcdist]
+       nb-0.6.1-bindist.tar.gz  [make bindist]
+
+  o  A "bin" directory was included with scripts that
+     support the creation and testing of distributions.
+     
+=========================================================
+ 
+NodeBrain 0.6.0 Change Summary
+
+* Released April 7, 2004
+
+* Theme: Expert Skill Module API
+
+* Incompatibilities:
+
+  o  Version 0.5.4 prefix operator "??" is now "?".
+  o  Version 0.5.4 value "?" (unknown) is now "??".
+
+* Bugs Fixed:
+
+  o  FIFO listener dropping input
+  o  Piped stdin dropping input
+  0  Missing LF after input commands in "tee" trace file
+  o  Time conditions firing out of order in interactive mode
+  o  Client identity not set for FIFO listener
+  o  Error in real number object management
+
+* New Features:
+
+  o  Persistent peer connections
+  o  Calendar declarations
+  o  Additional time condition operators 
+  o  Time sequences
+  o  Sequence rules
+  o  Expert skill module API
+
+* Deprecated Syntax:
+
+  o  SYSTEM command - see "-" prefix command
+  o  EXEC command - see "=" prefix command
+  o  DEFAULT command - see %DEFAULT directive
+  o  LET command - see %ASSERT directive
+  o  LOAD command - see SOURCE command
+  o  Context object type - see DEFINE command - expert object type
+  o  Context prefix without trailing period - see Chapter 10, Commands
+
+* Packaging
+
+  o  The source release file is now packaged pretty much as a
+     normal GNU distribution.  The automake and autoconf tools
+     are used to create the Makefile and configure script.
+  o  A few man pages have been included.  HTML versions of the
+     man pages are included in the distribution, but do not
+     install.  These are available online as well.
+  o  A preliminary version of a NodeBrain function library is
+     built and installed in the lib directory.  For example,
+     on Linux it is installed as /usr/local/lib/libnb.a.  The
+     headers are not installed, so experimentation requires    
+     use of the headers in the distribution directory.
+  o  Two skill modules nb_mod_simple and nb_mod_tree are included
+     and install in the pkglib directory.  For example, on Linux
+     they are installed to /usr/local/lib/nb/.
+  o  A sample directory is included in the distribution with
+     rule and event files for experimenting with the sample
+     skill modules.

@@ -1,0 +1,13 @@
+This program is a NodeBrain node module.  
+
+See Nodebrain Module Reference for more information.
+
+Build and install using parent directory.
+
+Once you have executed ./configure in ithe parent
+directory, you can work in this directory if needed
+to resolve a problem.
+
+make
+make check
+make install

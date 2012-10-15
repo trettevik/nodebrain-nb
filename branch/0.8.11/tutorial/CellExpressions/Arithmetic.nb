@@ -1,0 +1,15 @@
+#!/usr/local/bin/nb
+define a cell 5+4;
+define b cell a+3;
+show a
+show b
+define rule1 on(b<20);
+show a
+show b
+assert a=19;
+show a
+show b
+assert a=1;
+show b
+assert a=5*15/7+2;
+show a
