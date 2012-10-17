@@ -159,9 +159,11 @@
 * 2012-02-09 eat 0.8.7  Reviewed Checker
 * 2012-06-16 eat 0.8.10 Replaced rand with random
 * 2012-08-31 dtl 0.8.12 Checker updates
-* 2012-10-31 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
+* 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
+* 2012-10-16 eat 0.8.12 Checker updates
 *=============================================================================
 */
+#include <openssl/rand.h>
 #include "nbi.h"
 #include "nbske.h"
 #include "nbchannel.h"
@@ -457,7 +459,8 @@ extern int chput(struct CHANNEL *channel,char *buffer,size_t len){  // 2012-10-1
   memcpy(channel->buffer,buffer,len);
   if(channel->enKey.mode){
     i=((len+5+15)&0xfffffff0)-len;   /* pad up to 16 byte boundary */ // 2012-10-13 eat - Note: 5 <= i <= 20 
-    if(i>5) memset(((unsigned char *)channel->buffer)+len,random()&0xff,i-5);
+    //if(i>5) memset(((unsigned char *)channel->buffer)+len,random()&0xff,i-5);
+    if(i>5) RAND_bytes(((unsigned char *)channel->buffer)+len,i-5); // 2012-10-16 eat - pad with randdom bytes
     len+=i; // 2012-1013 eat - len>5 now because i>=5 and len was >0
     *((unsigned char *)channel->buffer+len-5)=i;  // 2012-10-13 eat - don't worry, len>5 and i<=20
     checksum=0;                                 /* initialize checksum */

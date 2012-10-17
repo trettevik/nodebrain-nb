@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -84,6 +84,7 @@
 * 2005/12/29 Ed Trettevik (original prototype version 0.6.4)
 * 2007/12/26 eat 0.6.8  Inserted null closer in call to nbMedullaProcessOpen
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2012-10-16 eat 0.8.12 Checker updates
 *=============================================================================
 */
 #include "config.h"
@@ -124,6 +125,7 @@ int cmdMsgWriter(nbPROCESS process,int pid,void *session){
 void *servantConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   struct NB_MOD_SERVANT *servant;
   static unsigned char filecount=0;
+  int len;
 
   if(strlen(text)>=sizeof(servant->cmd)){
     nbLogMsg(context,0,'E',"Command text len=%d too long for buffer len=%d\n",strlen(text),sizeof(servant->cmd));
@@ -132,7 +134,8 @@ void *servantConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *tex
   servant=malloc(sizeof(struct NB_MOD_SERVANT));
   servant->context=context;
   servant->process=NULL;
-  strncpy(servant->cmd,text,sizeof(servant->cmd));
+  //strncpy(servant->cmd,text,sizeof(servant->cmd));
+  strcpy(servant->cmd,text);  // 2012-10-16 eat - length checked above
   //nbLogMsg(context,0,'T',"Command: %s",servant->cmd);
   filecount++;  // modulo 256
   sprintf(servant->log,"servant.%8.8d.%3.3d.out",(int)time(NULL),filecount);

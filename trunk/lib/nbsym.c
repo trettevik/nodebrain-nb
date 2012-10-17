@@ -94,7 +94,8 @@
 *
 * 2005/10/03 eat 0.6.3  "??" substitures for Unknown values
 * 2006/10/28 eat 0.6.6  Removed [] experiment from nbSymCmd().
-* 2012/01/26 dtl Checker updates
+* 2012/01/26 dtl 0.8.7  Checker updates
+* 2012-10-16 eat 0.8.12 Checker updates
 *=============================================================================
 */
 #include "nbi.h"
@@ -144,7 +145,8 @@ char *nbSymCell(nbCELL context,char **target,char *targetend,char *source,char c
     return(NULL);
     }
   else strncpy(*target,cursor,n+1); //2012-01-16 dtl:moved into if block,used strncpy,cp include 0 byte
-  *target=strchr(*target,0);
+  //*target=strchr(*target,0);      // 2012-10-16 eat - checker uncheck return code false positive
+  *target=*target+strlen(*target); 
   dropObject(object);
   return(source);
   }

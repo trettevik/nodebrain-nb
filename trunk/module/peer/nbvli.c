@@ -186,6 +186,7 @@
 */
 #include "nb.h"
 #include "nbvli.h"
+#include "nbrand.h"
 
 /*
 *  Print vli x (for debugging only)
@@ -259,6 +260,14 @@ unsigned int vlibits(vli x){
 *  Make x a random number with l used bits.
 *
 *  The random number is from  2^(l-1) to 2^l-1
+*
+*  This function does not assume the work has been
+*  initialized, and can not check the size of x.
+*  The calling function is expected to ensure that
+*  x can hold l bits, just as in other function calles
+*  a character buffer must be as large a claimed in a
+*  size_t length parameter.
+*    
 */
 void vlirand(vliWord *x,unsigned int l){
   unsigned int i;
@@ -268,10 +277,10 @@ void vlirand(vliWord *x,unsigned int l){
   *x=l/16;
   if(l&15) (*x)++;
   ex=x+*x;  
-  for(x=x+1;x<ex;x++) *x=random();
+  for(x=x+1;x<ex;x++) *x=nbRandom();
   if((i=l&15)!=0){            /* if 16 does not divide l */
     m=m>>(16-i);              /* mask for extra bits */
-    *x=(random()&m)|((m>>1)+1); /* random extra bits with last bit forced on */ 
+    *x=(nbRandom()&m)|((m>>1)+1); /* random extra bits with last bit forced on */ 
     }
   else *x=*x|0x8000;    
   }

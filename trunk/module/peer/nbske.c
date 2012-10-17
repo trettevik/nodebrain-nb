@@ -259,10 +259,12 @@
 *                for generation of random keys.        
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2012-06-16 eat 0.8.10 Replaced rand with random
+* 2012-10-16 eat 0.8.12 Replaced random with nbRandom
 *=============================================================================
 */
 //#include "nb.h"
 #include "nbske.h"
+#include "nbrand.h"
 
 typedef unsigned int		word32;
 
@@ -740,8 +742,8 @@ void skeSeedCipher(unsigned int cipher[4]){
   unsigned int w,k;
   
   for(k=0;k<4;k++){
-    w=random();
-    cipher[k]=(w<<16)|random();    /* random word */
+    w=nbRandom();
+    cipher[k]=(w<<16)|nbRandom();    /* random word */
     }
   }
 
@@ -767,8 +769,8 @@ void skeKeyData(unsigned int keySize,unsigned int keyData[]){
   unsigned int w,k;
   
   for(k=0;k<keySize;k++){
-    w=random();
-    keyData[k]=(w<<16)|random();    /* random word */
+    w=nbRandom();
+    keyData[k]=(w<<16)|nbRandom();    /* random word */
     }
   }
   

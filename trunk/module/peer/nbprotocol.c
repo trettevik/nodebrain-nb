@@ -268,11 +268,13 @@
 * 2012-08-31 dtl 0.8.12 Checker updates
 * 2012-10-13 eat 0.8.12 Replace malloc/free with nbAlloc/nbFree
 * 2012-10-13 eat 0.8.12 Checker updates
+* 2012-10-16 eat 0.8.12 Replaced random with nbRandom
 *=============================================================================
 */
 #include "nbi.h"
 #include "nbprotocol.h"
 #include "nb_peer.h"
+#include "nbrand.h"
 
 int trace=0;             // trace option
 //int  nbpmin=0;           /* lowest supported protocol version */
@@ -506,14 +508,14 @@ unsigned int comAuthEncode(
   unsigned int secretblocks,words;
   size_t textlen=strlen((char *)text);
 
-  if(textlen>75) nbExit("comAuthEncode: text too long for buffer - len=%d",textlen); // 2012-10-13 eat - checker
+  if(textlen>56) nbExit("comAuthEncode: text too long for buffer - len=%d",textlen); // 2012-10-13 eat - checker
   skeSeedCipher(cipher);       /* generate random 128-bit CBC key */
   skeKeyData(keylen,keydata);  /* generate random Rijndael key data */  
   for(k=0;k<4;k++) secretkey[k]=htonl(cipher[k]);         /* pass in network byte order */
   for(k=0;k<keylen;k++) secretkey[k+4]=htonl(keydata[k]); /* pass in network byte order */
   bufcur+=pkeEncrypt(bufcur,identity->exponent,identity->modulus,(unsigned char *)&secretkey[0],(k+4)*4);
   nbClockToBuffer((char *)timeStamp);
-  sprintf((char *)randstr,"%d",(int)(random()%INT_MAX));        /* generate time stamp */
+  sprintf((char *)randstr,"%d",(int)(nbRandom()%INT_MAX));        /* generate time stamp */
   *(timeStamp+4)=*(randstr+0);
   *(timeStamp+7)=*(randstr+1);
   *(timeStamp+10)=*(randstr+2);
@@ -526,10 +528,10 @@ unsigned int comAuthEncode(
   words=6+textlen/4;                 /* words of secret data */
   stext=(unsigned char *)secretdata;      /* pad last data word */ 
   for(cursor=stext+strlen((char *)stext)+1;cursor<stext+words*4;cursor++)
-    *cursor=random();
+    *cursor=nbRandom();
   secretblocks=words/4+1;                 /* number of 16 byte blocks */
   for(k=words;k<(secretblocks*4-1);k++){  /* pad with random words */
-    secretdata[k]=random();
+    secretdata[k]=nbRandom();
     }
   skeKey(key,-keylen,keydata);                   /* generate decryption key */
   checksum=0;

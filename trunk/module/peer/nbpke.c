@@ -94,11 +94,13 @@
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2012-06-10 eat 0.8.10 Replaced rand with random
+* 2012-10-16 eat 0.8.12 Replaced random with nbRandom
 *=============================================================================
 */
 #include "nbi.h"
 #include "nbvli.h"
 #include "nbpke.h"
+#include "nbrand.h"
 
 /*
 *  The NodeBrain very large integer arithmetic routines included above
@@ -246,7 +248,8 @@ void pkeTestCipher(vli e,vli n,vli d){
     
   strcpy((char *)s,"abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ~!@#$%^&*()_+{}[]`,./<>?;':|\\\"");
   slen=strlen((char *)s);
-  slen=random()%slen;
+  //slen=random()%slen; // 2012-10-16 eat - enhancing entropy
+  slen=nbRandom()%slen;
   *(s+slen)=0;
   strcpy((char *)t,(char *)s); 
   len=pkeEncrypt(ciphertext,e,n,s,slen);
@@ -371,15 +374,16 @@ void pkeTestKey(int c,vli e,vli n,vli d){
 void pkeGenKey(unsigned int l,vli e,vli n,vli d){    
   unsigned int b;
   vli2048 p,q,m;
-  static long seed=0;
+  //static long seed=0; // 2012-10-16 eat - no longer required
 
   if(l<9 || l>1024){
     printf("NB000L pkeGenKey: parameter l=%u is out of range.\n",l);
     exit(NB_EXITCODE_FAIL);
     }
-  if(seed==0) srandom(seed=time(NULL)); /* seed the random number generator */
+  //if(seed==0) srandom(seed=time(NULL)); /* seed the random number generator */  // 2012-10-16 eat - no longer required
   /* calculate p and q */
-  b=random()%l;
+  //b=random()%l;  // 2012-10-16 eat - enhancing entropy
+  b=nbRandom()%l;
   if(b<2) b=2;
   vlirand(p,b);
   vlipprime(p);           /* increment p to a probable prime */
