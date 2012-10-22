@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -89,6 +89,8 @@
 * 2008/03/27 eat 0.7.0  Removed old spawnSkull function no longer used
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2012/01/16 dtl 0.8.5  Checker updates.
+* 2012-10-18 eat 0.8.12 Replaced rand with random
+* 2012-10-19 eat 0.8.12 Replaced random with pid plus counter since we needed unique instead of random
 *=============================================================================
 */
 #include "nbi.h"
@@ -126,6 +128,7 @@ int nbLogMsgReader(nbPROCESS process,int pid,void *session,char *msg){
 int nbSpawnChild(nbCELL context,int options,char *cursor){
   char outname[1024],msgbuf[1024];
   nbPROCESS process;
+  static unsigned short childwrap=0;
 
   if(!(clientIdentity->authority&AUTH_SYSTEM)){
     outMsg(0,'E',"Identity \"%s\" does not have system authority.",clientIdentity->name->value);
@@ -137,7 +140,8 @@ int nbSpawnChild(nbCELL context,int options,char *cursor){
   // or perhaps it should be done at the command intepreter to cover all commands
   // We have to decide if we want special controls on the system commands
   
-  sprintf(outname,"%sservant.%.10u.%.3u.out",outDirName(NULL),(unsigned int)time(NULL),rand()%1000);
+  childwrap=(childwrap+1)%1000; 
+  sprintf(outname,"%sservant.%.10u.%.5.%.3u.out",outDirName(NULL),(unsigned int)time(NULL),getpid(),childwrap);
   process=nbMedullaProcessOpen(options,cursor,outname,(NB_Term *)context,NULL,NULL,nbCmdMsgReader,nbLogMsgReader,msgbuf);
   if(process==NULL){
     outMsg(0,'E',"%s",msgbuf);

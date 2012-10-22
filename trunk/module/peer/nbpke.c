@@ -94,13 +94,16 @@
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2012-06-10 eat 0.8.10 Replaced rand with random
-* 2012-10-16 eat 0.8.12 Replaced random with nbRandom
+* 2012-10-16 eat 0.8.12 Replaced random with nbRand32
 *=============================================================================
 */
 #include "nbi.h"
 #include "nbvli.h"
 #include "nbpke.h"
 #include "nbrand.h"
+
+static void pkegetj(vli j,vli x,vli y);
+static void pkegetk(vli k,vli x,vli y);
 
 /*
 *  The NodeBrain very large integer arithmetic routines included above
@@ -116,7 +119,7 @@
 *  we don't need to understand it here.
 */
 
-void pkePrint(unsigned char *ciphertext){
+static void pkePrint(unsigned char *ciphertext){
   unsigned char *cursor=ciphertext;
   unsigned short len;
   
@@ -144,7 +147,7 @@ void pkePrint(unsigned char *ciphertext){
 *       >0 - modulus does not match the ciphertext block length
 *    
 */  
-unsigned int pkeCipher(unsigned char *ciphertext,vli exponent,vli modulus){
+static unsigned int pkeCipher(unsigned char *ciphertext,vli exponent,vli modulus){
   vli2048 T;
   unsigned char *cursor=ciphertext+1,*lastblock;
   unsigned int blocksize;	
@@ -249,7 +252,7 @@ void pkeTestCipher(vli e,vli n,vli d){
   strcpy((char *)s,"abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ~!@#$%^&*()_+{}[]`,./<>?;':|\\\"");
   slen=strlen((char *)s);
   //slen=random()%slen; // 2012-10-16 eat - enhancing entropy
-  slen=nbRandom()%slen;
+  slen=nbRand32()%slen;
   *(s+slen)=0;
   strcpy((char *)t,(char *)s); 
   len=pkeEncrypt(ciphertext,e,n,s,slen);
@@ -289,7 +292,7 @@ void pkeTestCipher(vli e,vli n,vli d){
 *    x is e
 *    y is m
 */ 
-void pkegetj(vli j,vli x,vli y){
+static void pkegetj(vli j,vli x,vli y){
   /* (xj-1)/y is an integer */
   /* j=(y/x)k+((y%x)k+1)/x */
   vli2048 f,k,r,p;
@@ -313,7 +316,7 @@ void pkegetj(vli j,vli x,vli y){
   vliadd(j,f);            /* j=f*k+(y*k+1)/x; */  
   }
   
-void pkegetk(vli k,vli x,vli y){
+static void pkegetk(vli k,vli x,vli y){
   /* (xk+1)/y is an integer */ 
   /* (xk+1)=yj */
   /* xk=yj-1 */
@@ -343,7 +346,7 @@ void pkegetk(vli k,vli x,vli y){
 /*
 *  Test encryption key on random vli numbers
 */  
-void pkeTestKey(int c,vli e,vli n,vli d){  
+static void pkeTestKey(int c,vli e,vli n,vli d){  
   vli2048 x,X;
   vliWord *cX,*cx,*ex;
   int i,l;
@@ -383,7 +386,7 @@ void pkeGenKey(unsigned int l,vli e,vli n,vli d){
   //if(seed==0) srandom(seed=time(NULL)); /* seed the random number generator */  // 2012-10-16 eat - no longer required
   /* calculate p and q */
   //b=random()%l;  // 2012-10-16 eat - enhancing entropy
-  b=nbRandom()%l;
+  b=nbRand32()%l;
   if(b<2) b=2;
   vlirand(p,b);
   vlipprime(p);           /* increment p to a probable prime */

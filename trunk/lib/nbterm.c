@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2011 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -103,7 +103,9 @@
 * 2008-11-11 eat 0.7.3  Changed failure exit code to NB_EXITCODE_FAIL
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2011-02-08 eat 0.8.5  Stopped echo of nbTermOptionString values
-* 2012-01-16 dtl Checker updates
+* 2012-01-16 dtl 0.8.7  Checker updates
+* 2012-10-17 eat 0.8.12 Changed name from termGetName to nbTermName
+* 2012-10-17 eat 0.8.12 Added size parameter
 *=============================================================================
 */
 #include "nbi.h"
@@ -123,7 +125,7 @@ NB_Term *symContext=NULL;    /* symbolic context */
 *  Ask user for string value
 *    Value must be NB_BUFSIZE characters;
 */    
-void termAskUser(char *name,char *value){
+static void termAskUser(char *name,char *value){
   outPut("\nEnter cell %s==",name);
   outFlush();
   nbGets(0,value,NB_BUFSIZE);
@@ -134,35 +136,52 @@ void termAskUser(char *name,char *value){
 *
 *     File line format is
 *        name:value
+*
+*  Return Code:
+*    -2 - file contains value string too long for buffer
+*    -1 - Unable to open file
+*     0 - value not found
+*     1 - value found 
 */
-void termAskFile(char *name,char *value,char *filename){
+static int termAskFile(char *name,char *value,size_t size,char *filename){
   char buffer[NB_BUFSIZE];
   int len=strlen(name);
   FILE *file;
-  char *valend=value+NB_BUFSIZE; //save end pointer (value has sizeof NB_BUFSIZE)
+  char *cursor;
   
+  *value=0;
   outMsg(0,'T',"Resolving \"%s\" via file : %s",name,filename);
   if((file=fopen(filename,"r"))==NULL){
-      outMsg(0,'E',"termAskFile: Unable to open '%s'",filename);
-      return;
-      }     
+    outMsg(0,'E',"termAskFile: Unable to open '%s'",filename);
+    return(-1);
+    }     
   while(fgets(buffer,NB_BUFSIZE,file)!=NULL){
     if(strncmp(buffer,name,len)==0 && *(buffer+len)==':'){
-      sstrcpy(value,valend,buffer+len+1); //2012-01-16 dtl used strncpy with check
-      len=strlen(value);
-      if(len>0 && *(value+len-1)=='\n') *(value+len-1)=0;
+      cursor=buffer+len+1;
+      len=strlen(cursor);
+      if(len==0) return(0);
+      if(*(cursor+len-1)=='\n'){
+        *(cursor+len-1)=0;
+        len--;
+        }
+      if(len>=size){
+        outMsg(0,'E',"termAskFile: Value too long for buffer - file '%s' term '%s' value:%s",filename,name,cursor);
+        return(-2);
+        }
+      strcpy(value,cursor);
       fclose(file);
-      return;
+      return(1);
       }
     }
   fclose(file);
+  return(0);
   } 
    
 /*
 *  Ask command for string value
 *    Note: This will not work on windows because it uses popen
 */   
-void termAskCommand(char *name,char *value,char *command){
+static void termAskCommand(char *name,char *value,size_t size,char *command){
 #if defined(WIN32)  
   outMsg(0,'E',"termAskCommand: Not supported on windows");
   strcpy(value,"?"); 
@@ -171,14 +190,18 @@ void termAskCommand(char *name,char *value,char *command){
   char buffer[NB_BUFSIZE];
   char cmd[NB_BUFSIZE];
   int rc,len;
-  char *valend=value+NB_BUFSIZE;  //value has sizeof NB_BUFSIZE
+  char *cursor;
 
   strcpy(cmd,command);
   strcat(cmd," \"");
   strcat(cmd,name);
   strcat(cmd,"\"");
   outMsg(0,'T',"Resolving \"%s\" via command : %s",name,cmd);
-  sstrcpy(value,valend,"?"); //2012-01-16 dtl used strncpy with check
+  if(size<2){
+    outMsg(0,'L',"termAskCommand: return buffer too small - size=%d",size);
+    return;
+    }
+  strcpy(value,"?");
 //#if !defined(mpe) && !defined(ANYBSD)
 //  signal(SIGCLD,SIG_DFL);
 //#endif
@@ -186,10 +209,17 @@ void termAskCommand(char *name,char *value,char *command){
     outMsg(0,'E',"Unable to execute command. errno=%d",errno);
     return;
     }
-  if(fgets(buffer,NB_BUFSIZE,file)!=NULL){
-    sstrcpy(value,valend,buffer); //2012-01-16 dtl used strncpy with check
-    len=strlen(value);
-    if(len>0 && *(value+len-1)=='\n') *(value+len-1)=0;
+  if(fgets(buffer,sizeof(buffer),file)!=NULL){
+    len=strlen(buffer);
+    if(len>0 && *(buffer+len-1)=='\n'){
+      *(buffer+len-1)=0;
+      len--;
+      }
+    if(len>=size){
+      outMsg(0,'L',"termAskCommand: return string too long for buffer - len=%d buffer size=%d",len,size);
+      return;
+      }
+    strcpy(value,buffer);
     outPut("Value=(%s)\n",value);
     }
   else outMsg(0,'E',"No value returned.");   
@@ -236,7 +266,7 @@ void termResolve(NB_Term *term){
     context=context->context;
 
   if(context==NULL){  /* ask user if we don't find a source command */
-    termGetName(name,term,addrContext);
+    nbTermName(name,sizeof(name),term,addrContext);
     if(!nb_opt_prompt){
       outMsg(0,'W',"No consultant for %s",name);
       return;
@@ -247,9 +277,9 @@ void termResolve(NB_Term *term){
     }
   else{
     struct STRING *string=((NB_Node *)context->def)->source; 
-    termGetName(name,term,context);
-    if(*(string->value)=='<') termAskFile(name,value,string->value+1);
-    else termAskCommand(name,value,string->value);
+    nbTermName(name,sizeof(name),term,context);
+    if(*(string->value)=='<') termAskFile(name,value,sizeof(value),string->value+1);
+    else termAskCommand(name,value,sizeof(value),string->value);
     }
   cursor=value;
   for(context=term->context;context!=NULL && context->def->type!=nb_NodeType;context=context->context);
@@ -723,58 +753,73 @@ void termUndefAll(void){
   */
   }  
   
-void termGetName(char *name,NB_Term *term,NB_Term *refContext){
-  char *qual[50], *namend=name+1024; //name end pointer (name has sizeof 1024) 
+// 2012-10-17 eat - changed name from termGetName to nbTermName
+// 2012-10-17 eat - added size parameter
+void nbTermName(char *name,size_t size,NB_Term *term,NB_Term *refContext){
+  char *qual[50];  
   NB_Term *context;
   int n,level=0;
+  char *cursor=name;
   
-//  *name=0;
-  if(term==gloss) {*name=0;return;} //dtl: moved *name=0 to here for Checker
+  *name=0;
+  if(term==gloss) return; //dtl: moved *name=0 to here for Checker // 2012-10-17 eat - changed back just to see what happens
+  if(size<2){
+    }
   if(term==locGloss){  /* special case to avoid next special case */
-    sstrcpy(name,namend,"@"); //2012-01-16 dtl used strncpy with check
+    strcpy(name,"@");
     return;
     }
   if(term==refContext){ /* special case when term is the reference context */
-    sstrcpy(name,namend,"."); //2012-01-16 dtl used strncpy with check
+    strcpy(name,".");
     return;
     }
   if(term->cell.object.type!=termType){
-    outMsg(0,'L',"termGetName: term address calculation error");
+    outMsg(0,'L',"nbTermName: term address calculation error");
     exit(NB_EXITCODE_FAIL);
     }
   qual[0]=term->word->value;
   context=term->context;
   for(level=1;level<50 && context!=gloss && context!=refContext && context!=symContext && context!=NULL;level++){
-    //outMsg(0,'T',"termGetName reverse level=%d",level);
+    //outMsg(0,'T',"nbTermName reverse level=%d",level);
     qual[level]=context->word->value;
-    //outMsg(0,'T',"termGetName qualifier=%s",qual[level]);
+    //outMsg(0,'T',"nbTermName qualifier=%s",qual[level]);
     context=context->context;
     }
   level=level-1;
-  sstrcpy(name,namend,qual[level]); //dtl: used strncpy with check
+  n=strlen(qual[level]);
+  if(n>=size){
+    }
+  strcpy(name,qual[level]); 
+  size-=n;
+  cursor+=n;
   for(level=level-1;level>=0;level--){
-    if((strlen(name)+1) < 1024) strncat(name,".",1); //dtl used strncat
-    if((strlen(name)+(n=strlen(qual[level])))<1024) strncat(name,qual[level],n); //dtl used strncat
+    n=strlen(qual[level]);
+    if(n+1>=size){
+      } 
+    strcpy(cursor,".");
+    strcpy(cursor+1,qual[level]);
+    size-=n;
+    cursor+=n;
     }
   }
   
 void termPrintName(NB_Term *term){
   char name[1024];
   
-  termGetName(name,term,addrContext);
+  nbTermName(name,sizeof(name),term,addrContext);
   outPut("%s",name);
   } 
  
 void termPrintFullName(NB_Term *term){
   char name[1024];
   
-  termGetName(name,term,gloss);
+  nbTermName(name,sizeof(name),term,gloss);
   outPut("%s",name);
   }   
 
 void nbTermPrintLongName(NB_Term *term){
   char name[1024];
-  termGetName(name,term,locGloss);
+  nbTermName(name,sizeof(name),term,locGloss);
   outPut("%s",name);
   }
 

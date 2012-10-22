@@ -85,21 +85,22 @@
 * 2007/12/26 eat 0.6.8  Inserted null closer in call to nbMedullaProcessOpen
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2012-10-16 eat 0.8.12 Checker updates
+* 2012-10-17 eat 0.8.12 Checker updates
 *=============================================================================
 */
 #include "config.h"
 #include <nb.h>
 
-struct NB_MOD_SERVANT{
+typedef struct NB_MOD_SERVANT{
   nbCELL context;
   nbPROCESS process;
   char cmd[1024];     // command
   char log[256];      // logfile
-  };
+  } nbServant;
 
 // read a stderr line and write it to the log
 int logMsgReader(nbPROCESS process,int pid,void *session,char *msg){
-  struct NB_MOD_SERVANT *servant=session;
+  nbServant *servant=session;
   //nbLogMsg(servant->context,0,'T',"logMsgReader called");
   nbLogMsg(servant->context,0,'W',"%s",msg);
   return(0);
@@ -107,7 +108,7 @@ int logMsgReader(nbPROCESS process,int pid,void *session,char *msg){
 
 // read a command and pass it to the interpreter
 int cmdMsgReader(nbPROCESS process,int pid,void *session,char *msg){
-  struct NB_MOD_SERVANT *servant=session;
+  nbServant *servant=session;
   //nbLogMsg(servant->context,0,'T',"cmdMsgReader called");
   nbCmd(servant->context,msg,1);
   return(0);
@@ -123,15 +124,15 @@ int cmdMsgWriter(nbPROCESS process,int pid,void *session){
 //******************************************************
 // Construct a servant
 void *servantConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
-  struct NB_MOD_SERVANT *servant;
+  nbServant *servant;
   static unsigned char filecount=0;
-  int len;
+  //int len;
 
   if(strlen(text)>=sizeof(servant->cmd)){
     nbLogMsg(context,0,'E',"Command text len=%d too long for buffer len=%d\n",strlen(text),sizeof(servant->cmd));
     return(NULL);
     }
-  servant=malloc(sizeof(struct NB_MOD_SERVANT));
+  servant=nbAlloc(sizeof(nbServant));
   servant->context=context;
   servant->process=NULL;
   //strncpy(servant->cmd,text,sizeof(servant->cmd));
@@ -144,11 +145,11 @@ void *servantConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *tex
   return(servant);
   }
 
-int servantAssert(nbCELL context,void *skillHandle,struct NB_MOD_SERVANT *servant,nbCELL arglist,nbCELL value){
+int servantAssert(nbCELL context,void *skillHandle,nbServant *servant,nbCELL arglist,nbCELL value){
   return(0);
   }
 
-int servantEnable(nbCELL context,void *skillHandle,struct NB_MOD_SERVANT *servant,nbCELL arglist,nbCELL value){
+int servantEnable(nbCELL context,void *skillHandle,nbServant *servant,nbCELL arglist,nbCELL value){
   char msgbuf[1024];
   nbLogMsg(context,0,'I',"Enabling %s",servant->cmd);
   servant->process=nbMedullaProcessOpen(NB_CHILD_TERM|NB_CHILD_SESSION,servant->cmd,servant->log,servant,NULL,cmdMsgWriter,cmdMsgReader,logMsgReader,msgbuf);
@@ -160,11 +161,11 @@ int servantEnable(nbCELL context,void *skillHandle,struct NB_MOD_SERVANT *servan
   return(0);
   }
 
-int servantDisable(nbCELL context,void *skillHandle,struct NB_MOD_SERVANT *servant,nbCELL arglist,nbCELL value){
+int servantDisable(nbCELL context,void *skillHandle,nbServant *servant,nbCELL arglist,nbCELL value){
   return(0);
   }
 
-int servantCommand(nbCELL context,void *skillHandle,struct NB_MOD_SERVANT *servant,nbCELL arglist,char *text){
+int servantCommand(nbCELL context,void *skillHandle,nbServant *servant,nbCELL arglist,char *text){
   char msgbuf[NB_BUFSIZE];
   int len;
 
@@ -193,12 +194,12 @@ int servantCommand(nbCELL context,void *skillHandle,struct NB_MOD_SERVANT *serva
 /*
 *  Show skull
 */
-int servantShow(nbCELL context,void *skillHandle,struct NB_MOD_SERVANT *servant,int option){
+int servantShow(nbCELL context,void *skillHandle,nbServant *servant,int option){
   return(0);
   }
 
-void *servantDestroy(nbCELL context,void *skillHandle,struct NB_MOD_SERVANT *servant,int option){
-  free(servant);
+void *servantDestroy(nbCELL context,void *skillHandle,nbServant *servant,int option){
+  nbFree(servant,sizeof(nbServant));
   return(NULL);
   }
 

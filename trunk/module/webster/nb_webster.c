@@ -1164,6 +1164,7 @@ static int websterEnable(nbCELL context,void *skillHandle,nbWebster *webster){
     sprintf(rootdir,"%s/%s",webster->dir,webster->rootdir);
     free(webster->rootdir);
     webster->rootdir=strdup(rootdir);
+    if(!webster->rootdir) nbExit("websterEnable: Out of memory - terminating");
     }
   nbLogMsg(context,0,'T',"DocumentRoot=%s",webster->rootdir);
   rc=nbWebsterEnable(context,webster->webserver);

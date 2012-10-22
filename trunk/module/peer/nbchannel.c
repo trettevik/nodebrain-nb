@@ -161,6 +161,7 @@
 * 2012-08-31 dtl 0.8.12 Checker updates
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 * 2012-10-16 eat 0.8.12 Checker updates
+* 2012-10-18 eat 0.8.12 Checker updates
 *=============================================================================
 */
 #include <openssl/rand.h>
@@ -269,9 +270,8 @@ extern int chlisten(char *addr,unsigned short port){
   else{  // handle local (unix) domain sockets
     un_addr.sun_family=AF_UNIX;
     strcpy(un_addr.sun_path,addr);
-    //unlink(addr);
-    if(unlink(addr));         //2012-08-31 dtl: checked unlink result
-      //nbLogMsgI(0,'E',"chlisten: unlink() failed.");  // 2012-10-13 eat - this may be ok if not found, let bind complain if necessary
+    if(unlink(addr) && errno!=ENOENT)         //2012-08-31 dtl: checked unlink result
+      nbLogMsgI(0,'E',"chlisten: unlink() failed. errno=%d",errno,strerror(errno));  // 2012-10-17 eat - ok if not found, let bind complain further if necessary
     if(bind(server_socket,(struct sockaddr *)&un_addr,sizeof(un_addr))<0){
       nbLogMsgI(0,'E',"chlisten: Unable to bind to local domain socket %s. errno=%d",addr,errno);
       chclosesocket(server_socket);
@@ -458,11 +458,14 @@ extern int chput(struct CHANNEL *channel,char *buffer,size_t len){  // 2012-10-1
     }
   memcpy(channel->buffer,buffer,len);
   if(channel->enKey.mode){
-    i=((len+5+15)&0xfffffff0)-len;   /* pad up to 16 byte boundary */ // 2012-10-13 eat - Note: 5 <= i <= 20 
+    i=(len+5)%16;  // pad len+5 to 16 byte boundary - set i to padding length
+    if(i==0) i=5;  // fits exactly, no need to pad up, set i to unpadded trailer size
+    else i=5+16-i; // set i to padded trailer size
+    //i=((len+5+15)&0xfffffff0)-len;   /* pad up to 16 byte boundary */ // 2012-10-13 eat - Note: 5 <= i <= 20 
     //if(i>5) memset(((unsigned char *)channel->buffer)+len,random()&0xff,i-5);
-    if(i>5) RAND_bytes(((unsigned char *)channel->buffer)+len,i-5); // 2012-10-16 eat - pad with randdom bytes
+    if(i>5) RAND_bytes(((unsigned char *)channel->buffer)+len,i-5); // 2012-10-16 eat - pad with random bytes
     len+=i; // 2012-1013 eat - len>5 now because i>=5 and len was >0
-    *((unsigned char *)channel->buffer+len-5)=i;  // 2012-10-13 eat - don't worry, len>5 and i<=20
+    *((unsigned char *)channel->buffer+len-5)=i%256;  // 2012-10-13 eat - don't worry, len>5 and i<=20 - %256 to make it clear to checker
     checksum=0;                                 /* initialize checksum */
     for(i=0;i<(unsigned short)(len/4-1);i++){
       channel->buffer[i]=ntohl(channel->buffer[i]);
@@ -536,7 +539,7 @@ extern int chstop(struct CHANNEL *channel){
 #if defined(WIN32)
 _declspec (dllexport)
 #endif
-extern int chget(struct CHANNEL *channel,char *buffer){
+extern int chget(struct CHANNEL *channel,char *buffer,size_t size){
   static unsigned short len,expect;
   static unsigned int checksum;
   static char *cursor;
@@ -595,11 +598,12 @@ extern int chget(struct CHANNEL *channel,char *buffer){
     }
   //2012-01-31 dtl: replaced memcpy, buffer has sizeof NB_BUFSIZE, safe to copy after test
   //if (len>0 && len<NB_BUFSIZE) for(i=0;i<len;i++) *(buffer+i)=*((char*)channel->buffer+i);  //dtl // 2012-10-13 eat memcpy should be good
-  if(len>0 && len<NB_BUFSIZE) memcpy(buffer,channel->buffer,len); // 2012-01-31 dtl - length check 
-  else{
+  //if(len<=0 || len>=NB_BUFSIZE){  // 2012-10-18 eat - help checker
+  if(len<=0 || len>=size){
     nbLogMsgI(0,'E',"Invalid record encountered. Length = %d",len);
     return(-2);
     } 
+  memcpy(buffer,channel->buffer,len); // 2012-01-31 dtl - length check 
   buffer[len]=0; /* null terminate */
   return(len);    
   }

@@ -1442,6 +1442,10 @@ int nbCmdDeclare(nbCELL context,void *handle,char *verb,char *cursor){
       if(strchr(string,'.')) outMsg(0,'W',"Obsolete key ignored in '%s' identity declaration.",ident);
       else authmask=nbGetAuthMask(string);
       }
+    if(strlen(ident)>NB_IDENTITY_MAXLEN){
+      outMsg(0,'E',"Identity may not exceed %d characters",NB_IDENTITY_MAXLEN);
+      return(1);
+      }
     if((identity=nbIdentityNew(ident,0))==NULL){
       outMsg(0,'E',"Identity declaration failed.");
       return(1);

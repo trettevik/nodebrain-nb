@@ -103,6 +103,7 @@
 * 2012-02-09 eat 0.8.7  Reviewed Checker
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 * 2012-10-13 eat 0.8.12 Replaced exit with nbExit
+* 2012-10-17 eat 0.8.12 Added size parameter to nbNodeGetNameFull
 *=====================================================================
 */
 //#include "config.h"
@@ -564,8 +565,8 @@ static int clientCommand(nbCELL context,void *skillHandle,nbClient *client,nbCEL
     /* in the future allow an option to declare a peer as not embraceable---never connecting back */
     if(nb_mode_embraceable && option!=0){
       char name[512];
-      if(option==2) snprintf(cmd,sizeof(cmd),":%s:%s",nbNodeGetNameFull(context,name),text); //dtl: replaced sprintf
-      else snprintf(cmd,sizeof(cmd),":%s(%d):%s",nbNodeGetNameFull(context,name),option,text); //dtl: replaced sprintf
+      if(option==2) snprintf(cmd,sizeof(cmd),":%s:%s",nbNodeGetNameFull(context,name,sizeof(name)),text); //dtl: replaced sprintf
+      else snprintf(cmd,sizeof(cmd),":%s(%d):%s",nbNodeGetNameFull(context,name,sizeof(name)),option,text); //dtl: replaced sprintf
       nbSpawnSkull(context,NULL,cmd);
       nbIdentitySetActive(context,clientIdentityStore);
       return(0);

@@ -90,6 +90,8 @@
 * 2010-04-26 eat 0.7.9  Included optional node number argument to message.producer
 * 2011-02-08 eat 0.8.5  Started to unify message.(client|server|peer)
 * 2012-04-22 eat 0.8.8  Included message.prune command
+* 2012-10-17 eat 0.8.12 Checker updates
+* 2012-10-18 eat 0.8.12 Checker updates
 *===================================================================================
 */
 #include "config.h"
@@ -209,7 +211,7 @@ void *producerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *te
     delim=strchr(cursor,' ');
     if(delim==NULL) delim=strchr(cursor,',');
     if(delim==NULL) delim=strchr(cursor,';');
-    if(delim==NULL) delim=strchr(cursor,0);
+    if(delim==NULL) delim=cursor+strlen(cursor);
     saveDelim=*delim;
     *delim=0;
     if(strcmp(cursor,"trace")==0){trace=1;}
@@ -473,7 +475,7 @@ void *consumerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *te
     delim=strchr(cursor,' ');
     if(delim==NULL) delim=strchr(cursor,',');
     if(delim==NULL) delim=strchr(cursor,';');
-    if(delim==NULL) delim=strchr(cursor,0);
+    if(delim==NULL) delim=cursor+strlen(cursor);
     saveDelim=*delim;
     *delim=0;
     if(strcmp(cursor,"trace")==0){trace=1;}
@@ -484,7 +486,7 @@ void *consumerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *te
     if(*cursor==',') cursor++;
     while(*cursor==' ') cursor++;
     }
-  consumer=malloc(sizeof(nbModConsumer));
+  consumer=nbAlloc(sizeof(nbModConsumer));
   memset(consumer,0,sizeof(nbModConsumer));
   strcpy(consumer->cabalName,cabalName);
   strcpy(consumer->nodeName,nodeName);
@@ -553,7 +555,7 @@ int *consumerCommand(nbCELL context,void *skillHandle,nbModConsumer *consumer,nb
 int consumerDestroy(nbCELL context,void *skillHandle,nbModConsumer *consumer){
   nbLogMsg(context,0,'T',"consumerDestroy called");
   consumerDisable(context,skillHandle,consumer);
-  free(consumer);
+  nbFree(consumer,sizeof(nbModConsumer));
   return(0);
   }
 
@@ -700,7 +702,7 @@ void *peerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
     delim=strchr(cursor,' ');
     if(delim==NULL) delim=strchr(cursor,',');
     if(delim==NULL) delim=strchr(cursor,';');
-    if(delim==NULL) delim=strchr(cursor,0);
+    if(delim==NULL) delim=cursor+strlen(cursor);
     saveDelim=*delim;
     *delim=0;
     if(strcmp(cursor,"trace")==0){trace=1;}
@@ -711,7 +713,7 @@ void *peerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
     if(*cursor==',') cursor++;
     while(*cursor==' ') cursor++;
     }
-  peer=malloc(sizeof(nbModPeer));
+  peer=nbAlloc(sizeof(nbModPeer));
   memset(peer,0,sizeof(nbModPeer));
   strcpy(peer->cabalName,cabalName);
   strcpy(peer->nodeName,nodeName);
@@ -992,18 +994,24 @@ int messageCmdRetire(nbCELL context,void *handle,char *verb,char *cursor){
   char cabalName[64],nodeName[64];
   int instance;
   char *delim;
-  int seconds;
+  int number;
+  unsigned int seconds,twentyfour=24,sixty=60;
 
   if(messageCmdParseLogIdentifiers(context,&cursor,cabalName,nodeName,&instance)) return(1);
   while(*cursor==' ') cursor++;
   delim=cursor;
   while(*delim && *delim!=' ' && *delim!=';') delim++;
-  seconds=atoi(cursor); // get number
+  number=atoi(cursor); // get number
+  if(number<1 || number>20000){
+    nbLogMsg(context,0,'E',"Expecting number from 1 to 20,000 at:%s",cursor);
+    return(1);
+    }
+  seconds=number;
   while(*cursor>='0' && *cursor<='9') cursor++; // step over n
   switch(*cursor){
-    case 'd': seconds*=24;
-    case 'h': seconds*=60;
-    case 'm': seconds*=60;
+    case 'd': seconds*=twentyfour;
+    case 'h': seconds*=sixty;
+    case 'm': seconds*=sixty;
     case 's': break;
     default:
       nbLogMsg(context,0,'E',"Expecting time unit of 'd', 'h', 'm', or 's' at:%s",cursor);

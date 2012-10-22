@@ -269,8 +269,11 @@
 * 2012-10-13 eat 0.8.12 Replace malloc/free with nbAlloc/nbFree
 * 2012-10-13 eat 0.8.12 Checker updates
 * 2012-10-16 eat 0.8.12 Replaced random with nbRandom
+* 2012-10-17 eat 0.8.12 Replaced padding loops with RAND_bytes
+* 2012-10-17 eat 0.8.12 Checker updates
 *=============================================================================
 */
+#include <openssl/rand.h>
 #include "nbi.h"
 #include "nbprotocol.h"
 #include "nb_peer.h"
@@ -362,7 +365,7 @@ void nbpSessionAlert(nbCELL context,int socket,void *handle){
   msgbuf=(struct NBP_MESSAGE *)buffer;
   channel=currentSession->channel;
 
-  len=chget(channel,buffer);                /* READY state get */
+  len=chget(channel,buffer,NB_BUFSIZE);                /* READY state get */
   if(len>0){
     contextSave=nbSetContext((nbCELL)ear->context); // switch to client context
     clientIdentitySave=nbIdentitySetActive(context,currentSession->peerIdentity->identity);
@@ -503,10 +506,12 @@ unsigned int comAuthEncode(
    
   unsigned int  k,w,checksum;
   unsigned int  secretkey[8],keydata[4],secretdata[24];
-  unsigned char *bufcur=buffer,*stext,*cursor;
+  //unsigned char *bufcur=buffer,*stext,*cursor;
+  unsigned char *bufcur=buffer,*stext;
   unsigned char randstr[20];
   unsigned int secretblocks,words;
   size_t textlen=strlen((char *)text);
+  size_t sbytes;
 
   if(textlen>56) nbExit("comAuthEncode: text too long for buffer - len=%d",textlen); // 2012-10-13 eat - checker
   skeSeedCipher(cipher);       /* generate random 128-bit CBC key */
@@ -523,16 +528,20 @@ unsigned int comAuthEncode(
   *(timeStamp+16)=*(randstr+4);
   *(timeStamp+19)=*(randstr+0);
   *(timeStamp+20)=0;
-  memcpy(secretdata,timeStamp,20);        /* put time stamp in secret data */
-  memcpy(secretdata+5,text,textlen+1);  // secretdata+5 is +20 bytes
-  words=6+textlen/4;                 /* words of secret data */
-  stext=(unsigned char *)secretdata;      /* pad last data word */ 
-  for(cursor=stext+strlen((char *)stext)+1;cursor<stext+words*4;cursor++)
-    *cursor=nbRandom();
+  memcpy(secretdata,timeStamp,20);        // put time stamp in secret data
+  memcpy(secretdata+5,text,textlen+1);    // secretdata+5 is +20 bytes
+  words=6+textlen/4;                      // words of secret data 
+  stext=(unsigned char *)secretdata;      // pad last data word 
+  sbytes=strlen((char *)stext)+1;
   secretblocks=words/4+1;                 /* number of 16 byte blocks */
-  for(k=words;k<(secretblocks*4-1);k++){  /* pad with random words */
-    secretdata[k]=nbRandom();
-    }
+  if(!RAND_bytes(stext+sbytes,secretblocks*16-sbytes))
+    nbExit("comAuthEncode: OpenSSL random number generator not properly seeded");
+  //for(cursor=stext+strlen((char *)stext)+1;cursor<stext+words*4;cursor++)
+  //  *cursor=nbRandom();
+  //secretblocks=words/4+1;                 /* number of 16 byte blocks */
+  //for(k=words;k<(secretblocks*4-1);k++){  /* pad with random words */
+  //  secretdata[k]=nbRand32();
+  //  }
   skeKey(key,-keylen,keydata);                   /* generate decryption key */
   checksum=0;
   for(w=0;w<secretblocks*4-1;w++){
@@ -573,6 +582,7 @@ unsigned int comAuthDecode(buffer,cipher,key,timeStamp,text,identity,blocklen)
   if(len<20 || (len & 0x03)!=0) return(0);  /* key length < 20 or doesn't divid by 4 */
   if((blocklen & 0x0f)!=0) return(0);       /* secret text must divid by 16 */
   secretblocks=blocklen/16;
+  if(secretblocks<1 || secretblocks>6) return(0); // 2012-10-17 eat - block count out of range
   for(k=0;k<4;k++) cipher[k]=ntohl(secretkey[k]); /* extract CBC cipher key */
   keylen=len/4-4;                           /* number of keydata words */  
   for(k=0;k<keylen;k++) keydata[k]=ntohl(secretkey[k+4]); /* extract Rijndael key data */
@@ -785,7 +795,7 @@ struct NBP_SESSION *nbpOpen(char nbp,NB_Term *peer,char *context){
 
   /* rework this section exiting on errors and handling NBP1 */
   *serverTime=0;  /* use serverTime as a success flag */
-  if((len=chget(channel,buffer))>0){
+  if((len=chget(channel,buffer,NB_BUFSIZE))>0){
     bufcur=buffer;
     if(*bufcur==1 || *bufcur==NBP_TRAN_SESSION){ /* authentication challenge [0]*/
       bufcur++;
@@ -830,7 +840,7 @@ struct NBP_SESSION *nbpOpen(char nbp,NB_Term *peer,char *context){
             nbpClose(session);
             return(NULL);
             }
-          len=chget(channel,buffer);
+          len=chget(channel,buffer,NB_BUFSIZE);
           if(len<=0){
             nbLogMsgI(0,'E',"nbpOpen: chget failed at call 2.");
             nbpClose(session);
@@ -930,7 +940,7 @@ int nbpPut(struct NBP_SESSION *session,char *command){
     nbpClose(session);
     return(-1);
     }
-  while((len=chget(channel,buffer))>0) nbLogStr(NULL,buffer);
+  while((len=chget(channel,buffer,NB_BUFSIZE))>0) nbLogStr(NULL,buffer);
   if(len<0){
     nbLogMsgI(0,'E',"nbpPut: chget failed at call 2.");
     nbLogFlush(NULL);
@@ -938,7 +948,7 @@ int nbpPut(struct NBP_SESSION *session,char *command){
     return(-1);
     }
   if(session->version==1){
-    len=chget(channel,buffer);
+    len=chget(channel,buffer,NB_BUFSIZE);
     if(len<0){
       nbLogMsgI(0,'E',"nbpPut: chget failed at call 3.");
       nbpClose(session);
@@ -1000,7 +1010,7 @@ int nbpBegin(struct NBP_SESSION *session,char trancode,char *text){
   struct NBP_MESSAGE *msgbuf=(struct NBP_MESSAGE *)session->buffer;
 
   nbpMsg(session,trancode,NBP_MSG_BEGIN,text,0);
-  len=chget(session->channel,session->buffer);
+  len=chget(session->channel,session->buffer,NB_BUFSIZE);
   if(len<0){
     nbLogMsgI(0,'E',"nbpBegin: chget error reading transaction reply");
     return(-1);
@@ -1049,7 +1059,7 @@ int nbpEnd(struct NBP_SESSION *session,char trancode){
   if(trace) nbLogMsgI(0,'T',"nbpEnd called");
   nbpStop(session);
   if(trace) nbLogMsgI(0,'T',"nbpStop issued");
-  len=chget(session->channel,session->buffer);
+  len=chget(session->channel,session->buffer,NB_BUFSIZE);
   if(trace) nbLogMsgI(0,'T',"back from chget");
   if(len<0){
     nbLogMsgI(0,'E',"nbpEnd() chget error %d after stop");
@@ -1077,7 +1087,7 @@ int nbpCloseTran(struct NBP_SESSION *session,char trancode){
   if(trace) nbLogMsgI(0,'T',"nbpCloseTran called");
   nbpStop(session); 
   if(trace) nbLogMsgI(0,'T',"nbpStop issued");
-  len=chget(session->channel,session->buffer);
+  len=chget(session->channel,session->buffer,NB_BUFSIZE);
   if(trace) nbLogMsgI(0,'T',"back from chget");
   nbpStop(session);  /* this will work, but we should send SESSION[END] */
   nbpClose(session);
@@ -1134,9 +1144,12 @@ int nbpCopy(int nbp,NB_Term *srcBrainTerm,char *srcFile,NB_Term *dstBrainTerm,ch
 
   *text=mode;
   *(text+1)=':';
-
   if(srcBrainTerm!=NULL){
     if(trace) nbLogMsgI(0,'T',"opening session with source brain");
+    if(strlen(srcFile)+3>sizeof(text)){
+      nbLogMsgI(0,'E',"nbpCopy: source file name too long for buffer '%s'",srcFile);
+      return(-1);
+      }
     strcpy(text+2,srcFile);
     srcSession=nbpOpenTran(nbp,srcBrainTerm,NBP_TRAN_GETFILE,text);
     if(srcSession==NULL) return(-1);
@@ -1151,12 +1164,11 @@ int nbpCopy(int nbp,NB_Term *srcBrainTerm,char *srcFile,NB_Term *dstBrainTerm,ch
     }
   if(dstBrainTerm!=NULL){
     if(trace) nbLogMsgI(0,'T',"opening session with destination brain");
-    len=snprintf(text+2,sizeof(text)-2,"%s",dstFile); //2012-01-31 dtl: replaced strcpy
-    if(len>=sizeof(text)-2){
-      if(srcfile!=NULL) fclose(srcfile);
-      else nbpClose(srcSession);
+    if(strlen(dstFile)+3>sizeof(text)){
+      nbLogMsgI(0,'E',"nbpCopy: destination file name too long for buffer '%s'",srcFile);
       return(-1);
       }
+    strcpy(text+2,dstFile);
     dstSession=nbpOpenTran(nbp,dstBrainTerm,NBP_TRAN_PUTFILE,text);
     if(dstSession==NULL){
       if(srcfile!=NULL) fclose(srcfile);
@@ -1188,7 +1200,7 @@ int nbpCopy(int nbp,NB_Term *srcBrainTerm,char *srcFile,NB_Term *dstBrainTerm,ch
         else len=strlen(buffer);
         }
       }
-    else len=chget(srcSession->channel,buffer);
+    else len=chget(srcSession->channel,buffer,NB_BUFSIZE);
     if(len<0) nbLogMsgI(0,'E',"nbpCopy: chget error %d",len);
     if(len>0){
       if(dstfile!=NULL){
@@ -1340,7 +1352,7 @@ int nbpServeAuth(struct NBP_SESSION *session,struct NBP_MESSAGE *msgbuf,int len)
     return(-1);
     }
   chkey(channel,&clientEnKey,&clientDeKey,enCipher,deCipher);
-  len=chget(channel,buffer);
+  len=chget(channel,buffer,NB_BUFSIZE);
   if(len<0){
     nbLogMsgI(0,'E',"nbpServeAuth: chget failed.");
     return(-1);
@@ -1485,15 +1497,15 @@ void nbpServePutFile(struct NBP_SESSION *session,struct NBP_MESSAGE *msgbuf){
     return;
     } 
   nbpMsg(session,NBP_TRAN_PUTFILE,NBP_MSG_OK,"",0);
-  len=chget(channel,buffer);
+  len=chget(channel,buffer,NB_BUFSIZE);
   if(mode=='b') while(len>0){
     size=len;
     fwrite(buffer,1,size,file);     /* should check for errors */
-    len=chget(channel,buffer);
+    len=chget(channel,buffer,NB_BUFSIZE);
     }
   else while(len>0){
     fputs(buffer,file);
-    len=chget(channel,buffer);
+    len=chget(channel,buffer,NB_BUFSIZE);
     }
   fclose(file);
   if(len<0){
@@ -1589,7 +1601,7 @@ void nbpServeSession(struct LISTENER *ear,struct NBP_SESSION *session,struct NBP
     }
   /* The following code is here to support skulls */
   msgbuf=(struct NBP_MESSAGE *)buffer;
-  len=chget(channel,buffer);                /* READY state get */
+  len=chget(channel,buffer,NB_BUFSIZE);                /* READY state get */
   while(len>0){
     nbClockAlert();            /* advance time */
     switch(msgbuf->trancode){
@@ -1607,7 +1619,7 @@ void nbpServeSession(struct LISTENER *ear,struct NBP_SESSION *session,struct NBP
       alarm(5);  /* make sure the peer isn't hung */
 #endif
       }
-    if((len=chget(channel,buffer))<0){   /* READY state get */
+    if((len=chget(channel,buffer,NB_BUFSIZE))<0){   /* READY state get */
       nbLogMsgI(0,'L',"nbpServe: chget failed at call 5.");
       len=0;
       }
@@ -1641,7 +1653,7 @@ void nbpServe(struct LISTENER *ear,struct NBP_SESSION *session,int nbp,char *oar
   struct CHANNEL *channel=session->channel;
 
   currentSession=session;  // set global variable for clientPrint function
-  if((len=chget(channel,buffer))<0){
+  if((len=chget(channel,buffer,NB_BUFSIZE))<0){
     nbLogMsgI(0,'E',"chget failed at call 3.");
     nbpClose(session);
     return;

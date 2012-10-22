@@ -67,7 +67,7 @@ extern int nbIpGetTcpSocketPair(int *socket1,int *socket2);
 #if defined(WIN32)
 _declspec (dllexport)
 #endif
-extern char *nbIpGetName(unsigned int ipaddr,char *name,int len);
+extern char *nbIpGetName(unsigned int ipaddr,char *name,size_t len);
 
 #if defined(WIN32)
 _declspec (dllexport)

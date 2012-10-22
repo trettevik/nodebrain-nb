@@ -46,7 +46,8 @@
 *  Define the vli word size and data types with various numbers of bits.
 */
 
-typedef unsigned short vliWord;  /* word size is 16 bits */
+//typedef unsigned short vliWord;  /* word size is 16 bits */
+typedef uint16_t vliWord;  /* word size is 16 bits */
 
 typedef vliWord *vli;            /* Pointer to vli */
 

@@ -122,6 +122,7 @@
 * 2012-05-12 eat 0.8.9  Increased width of dump lines from 16 to 32
 * 2012-09-16 eat 0.8.11 Replaced vsprintf with vsnprintf to avoid buffer overflows
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
+* 2012-10-17 eat 0.8.12 Replaced termGetName with nbTermName
 *=============================================================================
 */
 #include "nbi.h"
@@ -656,7 +657,7 @@ int nbLogMsg(nbCELL context,int msgNumber,char msgType,char *format,...){
     outMsg(0,'L',"Skill module called nbLogMsg() with invalid context - ignoring call");
     return(-1);
     }
-  termGetName(termName,(NB_Term *)context,gloss);
+  nbTermName(termName,sizeof(termName),(NB_Term *)context,gloss);
   //termName=((NB_Term *)context)->word->value;
   if(((NB_Node *)(((NB_Term *)context)->def))->cell.object.type!=nb_NodeType){
     outMsg(0,'L',"Skill module called nbLogMsg() with term %s which is not a node - ignoring call",termName);

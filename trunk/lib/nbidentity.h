@@ -83,6 +83,12 @@ extern struct IDENTITY *clientIdentity;    /* client identity */
 
 #define AUTH_OWNER   255  /* unlimited permissions */
 
+// 2012-10-17 eat - Setting a maximum length on identity names until the Peer
+//                  module is converted to OpenSSL.  The native authentication
+//                  code in Peer can not handle the larger maximum length of a
+//                  term. 
+#define NB_IDENTITY_MAXLEN 48  // maximum length of identity
+
 /* functions */
 void initIdentity(NB_Stem *stem);
 struct IDENTITY *nbIdentityNew(char *name,unsigned char authority);

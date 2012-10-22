@@ -108,6 +108,7 @@
 * 2005/05/14 eat 0.6.3  translateBind() updated for moduleHandle
 * 2007/06/26 eat 0.6.8  updated to satisfy original intent 
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
+* 2012-10-17 eat 0.8.12 Checker updates
 *=====================================================================
 */
 #include "config.h"
@@ -204,7 +205,7 @@ void *translatorConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *
     delim=strchr(cursor,' ');
     if(delim==NULL) delim=strchr(cursor,',');
     if(delim==NULL) delim=strchr(cursor,';');
-    if(delim==NULL) delim=strchr(cursor,0);
+    if(delim==NULL) delim=cursor+strlen(cursor);
     saveDelim=*delim;
     *delim=0;
     if(strcmp(cursor,"trace")==0){trace=1;}

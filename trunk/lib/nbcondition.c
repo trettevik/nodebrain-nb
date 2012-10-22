@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -123,6 +123,7 @@
 *                This bug was not detected by our applications because we had no rule
 *                conditions of this type.
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2012-10-17 eat 0.8.12 Replaced termGetName with nbTermName
 *=============================================================================
 */
 #include "nbi.h"
@@ -373,7 +374,7 @@ void alertRule(NB_Cell *rule){
   if(object==nb_Unknown || object==NB_OBJECT_FALSE){
     if(action->status=='S'){
       char name[1024];
-      termGetName(name,action->term,locGloss);
+      nbTermName(name,sizeof(name),action->term,locGloss);
       outMsg(0,'E',"Cycle error - %s condition untrue before firing",name);
       action->status='E';
       }
@@ -381,7 +382,7 @@ void alertRule(NB_Cell *rule){
     }
   else if(action->status!='R'){
     char name[1024];
-    termGetName(name,action->term,locGloss);
+    nbTermName(name,sizeof(name),action->term,locGloss);
     outMsg(0,'E',"Cycle error - %s repetitive firing suppressed - status=%c",name,action->status);
     action->status='E';
     rule->object.value=object;

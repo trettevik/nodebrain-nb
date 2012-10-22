@@ -75,6 +75,7 @@
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2012-02-07 dtl Checker updates
 * 2012-05-20 eat 0.8.9  Merged client skill which had been a separate source file
+* 2012-10-17 eat 0.8.12 Replaced malloc with nbAlloc
 *=============================================================================
 */
 #include "config.h"
@@ -107,7 +108,7 @@ int smtpPut(NB_IpChannel *channel){
   int sent;
   char *buffer=(char *)channel->buffer;
   strcat(buffer,"\n");
-  sent=send(channel->socket,buffer,strlen(buffer),0);
+  sent=send(channel->socket,buffer,strlen(buffer),0);  // application must make sure this is not a sensitive data leak
   while(sent==-1 && errno==EINTR){
     sent=send(channel->socket,buffer,strlen(buffer),0);
     }
@@ -119,7 +120,7 @@ int smtpGet(NB_IpChannel *channel){
   char *cursor,*buffer=(char *)channel->buffer;
 
   if((len=recv(channel->socket,buffer,NB_BUFSIZE,0))<0) return(len); //buffer[NB_BUFSIZE] (not overflow)
-  if(len>=NB_BUFSIZE) return(-1); /* that's too big */
+  if(len<3 || len>=NB_BUFSIZE) return(-1); /* that's too big */
   cursor=buffer+len;
   *cursor=0; cursor--;
   if(*cursor==10){*cursor=0; cursor--; len--;}
@@ -417,7 +418,7 @@ nbServer *smtpServer(nbCELL context,char *cursor,char *qDir,char *msg){
     sprintf(msg,"Queue directory name too long for buffer");
     return(NULL);
     }
-  server=malloc(sizeof(nbServer));
+  server=nbAlloc(sizeof(nbServer));
   strcpy(server->qDir,qDir);
   inCursor=server->idName;
   while(*cursor==' ') cursor++;
@@ -429,14 +430,14 @@ nbServer *smtpServer(nbCELL context,char *cursor,char *qDir,char *msg){
   *inCursor=0;
   if(*cursor!='@'){
     sprintf(msg,"Identity not found in server specification - expecting identity@address:port");
-    free(server);
+    nbFree(server,sizeof(nbServer));
     return(NULL);
     }
   cursor++;
   server->identity=nbIdentityGet(context,server->idName);
   if(server->identity==NULL){
     snprintf(msg,(size_t)MSG_SIZE,"Identity '%s' not defined",server->idName); //2012-01-31 dtl: replaced sprintf 
-    free(server);
+    nbFree(server,sizeof(nbServer));
     return(NULL);
     }
   inCursor=server->address; 
@@ -448,7 +449,7 @@ nbServer *smtpServer(nbCELL context,char *cursor,char *qDir,char *msg){
   *inCursor=0;
   if(*cursor!=':'){
     sprintf(msg,"Address not found in server specification - expecting identity@address:port");
-    free(server);
+    nbFree(server,sizeof(nbServer));
     return(NULL);
     }
   cursor++;
@@ -456,7 +457,7 @@ nbServer *smtpServer(nbCELL context,char *cursor,char *qDir,char *msg){
   while(*cursor>='0' && *cursor<='9') cursor++;
   if(*cursor!=0){
     sprintf(msg,"Port not numeric in server specification - expecting identity@address:port");
-    free(server);
+    nbFree(server,sizeof(nbServer));
     return(NULL);
     }
   server->port=atoi(inCursor);
@@ -465,7 +466,7 @@ nbServer *smtpServer(nbCELL context,char *cursor,char *qDir,char *msg){
     interfaceAddr=nbIpGetAddrByName(server->address);
     if(interfaceAddr==NULL){
       snprintf(msg,(size_t)MSG_SIZE,"Hostname %s not resolved",server->address); //2012-02-07 dtl: replaced sprintf
-      free(server);
+      nbFree(server,sizeof(nbServer));
       return(NULL);
       }
     strcpy(server->address,interfaceAddr);
@@ -483,7 +484,7 @@ void smtpAccept(nbCELL context,int serverSocket,void *handle){
   static time_t now,until=0;
   static long count=0,max=10;  /* accept 10 connections per second */
   nbSession *session;
-  session=malloc(sizeof(nbSession));
+  session=nbAlloc(sizeof(nbSession));
   channel=nbIpAlloc();  /* get a channel for a new thread */
   if(nbIpAccept(channel,(int)server->socket)<0){
     if(errno!=EINTR){
@@ -607,7 +608,7 @@ int *serverCommand(nbCELL context,void *skillHandle,nbServer *server,nbCELL argl
 int serverDestroy(nbCELL context,void *skillHandle,nbServer *server){
   nbLogMsg(context,0,'T',"serverDestroy called");
   if(server->socket!=0) serverDisable(context,skillHandle,server);
-  free(server);
+  nbFree(server,sizeof(nbServer));
   return(0);
   }
 
@@ -726,7 +727,7 @@ void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
     cursor=delim;
     while(*cursor==' ' || *cursor==',') cursor++;
     }
-  client=malloc(sizeof(nbModMailClient));
+  client=nbAlloc(sizeof(nbModMailClient));
   memset(client,0,sizeof(nbModMailClient));
   client->trace=trace;
   client->dump=dump;

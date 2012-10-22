@@ -180,8 +180,9 @@
 * 2012-02-07 dtl Checker updates
 * 2012-06-16 eat 0.8.10 Replaced rand with random
 * 2012-08-31 dtl 0.8.12 handled error
-* 2012-12-13 eat 0.8.12 Replaced exit with nbExit
-* 2012-12-13 eat 0.8.12 Replace printf with fprintf(stderr,...) in case we are a servant
+* 2012-10-13 eat 0.8.12 Replaced exit with nbExit
+* 2012-10-13 eat 0.8.12 Replace printf with fprintf(stderr,...) in case we are a servant
+* 2012-10-17 eat 0.8.12 Repleced random with nbRand16
 *=============================================================================
 */
 #include "nb.h"
@@ -277,10 +278,10 @@ void vlirand(vliWord *x,unsigned int l){
   *x=l/16;
   if(l&15) (*x)++;
   ex=x+*x;  
-  for(x=x+1;x<ex;x++) *x=nbRandom();
+  for(x=x+1;x<ex;x++) *x=nbRand16();
   if((i=l&15)!=0){            /* if 16 does not divide l */
     m=m>>(16-i);              /* mask for extra bits */
-    *x=(nbRandom()&m)|((m>>1)+1); /* random extra bits with last bit forced on */ 
+    *x=(nbRand16()&m)|((m>>1)+1); /* random extra bits with last bit forced on */ 
     }
   else *x=*x|0x8000;    
   }

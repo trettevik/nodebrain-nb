@@ -77,7 +77,8 @@
 *            to localhost and 127.0.0.1 when hostname was not resolved.
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
-* 2012-10-31 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
+* 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
+* 2012-10-17 eat 0.8.12 Checker updates
 *=============================================================================
 */
 #include <nbi.h>
@@ -154,6 +155,7 @@ struct BRAIN * nbBrainNew(int version,char *string){
   char *cursor=string,*cursave=string,*delim;
   char symid,ident[256],*ipaddr,*hostname; 
   struct BRAIN *brain;
+  int number;
 
   //brain=(struct BRAIN *)newObject(nb_BrainType,&nb_BrainFree,sizeof(struct BRAIN));
   brain=(struct BRAIN *)nbAlloc(sizeof(struct BRAIN));
@@ -265,7 +267,14 @@ struct BRAIN * nbBrainNew(int version,char *string){
           destroyBrain(brain);
           return(NULL);
           }
-        brain->port=atoi(ident);
+        cursave=cursor;
+        number=atoi(ident);
+        if(number<0 || number>=65535){
+          nbLogMsgI(0,'E',"Expecting integer port number from 0 to 65535  at: %s",cursave);
+          destroyBrain(brain);
+          return(NULL);
+          }
+        brain->port=number;
         }
       else brain->port=0;
       }
@@ -278,7 +287,13 @@ struct BRAIN * nbBrainNew(int version,char *string){
         destroyBrain(brain);
         return(NULL);
         }
+      cursave=cursor;
       brain->dsec=atoi(ident);
+      if(brain->dsec<0){
+        nbLogMsgI(0,'E',"Expecting non-negative persistent connection seconds at: %s",cursave);
+        destroyBrain(brain);
+        return(NULL);
+        }
       cursave=cursor;
       symid=nbParseSymbol(ident,&cursor);
       if(symid==','){
@@ -290,8 +305,14 @@ struct BRAIN * nbBrainNew(int version,char *string){
           destroyBrain(brain);
           return(NULL);
           }
+        cursave=cursor;
         brain->rsec=atoi(ident);
-          cursave=cursor;
+        if(brain->rsec<0){
+          nbLogMsgI(0,'E',"Expecting non-negative reconnect delay seconds at: %s",cursave);
+          destroyBrain(brain);
+          return(NULL);
+          }
+        cursave=cursor;
         symid=nbParseSymbol(ident,&cursor);
         }
       if(symid!='}'){
@@ -324,7 +345,13 @@ struct BRAIN * nbBrainNew(int version,char *string){
         destroyBrain(brain);
         return(NULL);
         }
+      cursave=cursor;
       brain->qsec=atoi(ident);
+      if(brain->qsec<0){
+        nbLogMsgI(0,'E',"Expecting non-negative interval at \"%s\"",cursave);
+        destroyBrain(brain);
+        return(NULL);
+        }
       if(brain->qsec==0) brain->qsec=86400; /* default to 1 day */
       while(*cursor==' ') cursor++;
       if(*cursor==','){
@@ -336,7 +363,14 @@ struct BRAIN * nbBrainNew(int version,char *string){
           destroyBrain(brain);
           return(NULL);
           }
-        brain->qfsize=atoi(ident);
+        cursave=cursor;
+        number=atoi(ident);
+        if(number<0 || number>65535){
+          nbLogMsgI(0,'E',"File size limit out of bounds 0-65535 at \"%s\"",cursave);
+          destroyBrain(brain);
+          return(NULL);
+          }
+        brain->qfsize=number;
         while(*cursor==' ') cursor++;
         if(*cursor==','){
           cursor++;
@@ -347,7 +381,14 @@ struct BRAIN * nbBrainNew(int version,char *string){
             destroyBrain(brain);
             return(NULL);
             }
-          brain->qsize=atoi(ident);
+          cursave=cursor;
+          number=atoi(ident);
+          if(number<0 || number>65535){
+            nbLogMsgI(0,'E',"Queue size limit out of bounds 0-65535 at \"%s\"",cursave);
+            destroyBrain(brain);
+            return(NULL);
+            }
+          brain->qsize=number;
           }
         }
       if(*cursor!=')'){

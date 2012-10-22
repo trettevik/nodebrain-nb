@@ -63,25 +63,20 @@
 /*
 *  Look up the hostname for an ip address
 */
-char *nbIpGetName(unsigned int ipaddr,char *name,int len){
+char *nbIpGetName(unsigned int ipaddr,char *name,size_t len){
   struct hostent *host;
   char addr[16];
   unsigned char *ipad=(unsigned char *)&ipaddr;
-  char *namend=name+len; //end of name string location
 
+  *name=0;
   sprintf(addr,"%u.%u.%u.%u",*ipad,*(ipad+1),*(ipad+2),*(ipad+3));
-  if((host=gethostbyaddr((char *)&ipaddr,sizeof(ipaddr),AF_INET))==NULL){
-    *name=0;
+  if(len<8) outMsg(0,'L',"nbIpGetName: hostname buffer must be at least 8 bytes - len=",len);
+  else if((host=gethostbyaddr((char *)&ipaddr,sizeof(ipaddr),AF_INET))==NULL)
     outMsg(0,'E',"unable to get host name");
-    }
+  else if(strlen(host->h_name)<len) strcpy(name,host->h_name); // 2012-10-17 eat - checker updates here
   else{
-//2012-01-31 dtl sstrcpy(): strncpy,test before copy, handled smaller "name" string
-    sstrcpy(name,namend,host->h_name); //dtl replaced if block of strcpy & strncpy
-//    if(strlen(host->h_name)<(size_t)len-1) strcpy(name,host->h_name);
-//    else{
-//      strncpy(name,host->h_name,len-1);
-//      *(name+len-1)=0;
-//      }
+    strncpy(name,host->h_name,len-1);
+    *(name+len-1)=0;
     }
   return(name);
   }
@@ -155,12 +150,8 @@ int nbIpGetUdpClientSocket(unsigned short clientPort,char *addr,unsigned short p
   }
 
 int nbIpPutUdpClient(int socket,char *text){
-  char buffer[NB_BUFSIZE],*bufend=buffer+NB_BUFSIZE;
   int rc;
-  *buffer=0;
-// strcpy(buffer+1,text);
-  sstrcpy(buffer+1,bufend,text); //2012-01-31 dtl: replaced strcpy, test before copy
-  rc=send(socket,buffer,strlen(text)+1,0);
+  rc=send(socket,text,strlen(text)+1,0);
   if(rc<0) fprintf(stderr,"nbIpPutUdpClient: send failed - %s\n",strerror(errno));
   return(rc);
   }

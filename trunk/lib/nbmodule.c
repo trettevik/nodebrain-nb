@@ -310,18 +310,27 @@ static struct NB_MODULE *newModule(char *path,char *name,NB_List *args,char *tex
   }
 
 void *nbModuleSearchPath(char *path,char *filename,char *msg){
-  char fullname[512],*cursor=path,*delim,*separator,*namend=fullname+sizeof(fullname);
+  char fullname[512],*cursor=path,*delim,*separator;
   void *handle;
+  size_t len;
 
   if(trace) outMsg(0,'T',"nbModuleSearchPath(\"%s\",\"%s\") called",path,filename);
   delim=strchr(cursor,',');   // platform independent separator
   separator=strchr(cursor,NB_MODULE_PATH_SEPARATOR); //':' or ';'
   if(separator!=NULL && (delim==NULL || separator<delim)) delim=separator;
   while(delim!=NULL){
-    strncpy(fullname,cursor,delim-cursor);
-    *(fullname+(delim-cursor))=0;
-    strcat(fullname,"/");
-    sstrcat(fullname,namend,filename); //2012-02-06 dtl replace strcat
+    len=delim-cursor;
+    if(len>=sizeof(fullname)){
+      outMsg(0,'L',"nbModuleSearchPath: path element longer than max of %d in path %s",sizeof(fullname)-1,path);
+      return(NULL);
+      }
+    strcpy(fullname,cursor);
+    fullname[len]='/';
+    if(len+strlen(filename)+1>=sizeof(fullname)){
+      outMsg(0,'L',"nbModuleSearchPath: full path name of file longer than max of %d in path %s/%s",sizeof(fullname)-1,path,filename);
+      return(NULL);
+      }
+    strcpy(fullname+len+1,filename);
     if(trace) outMsg(0,'T',"calling nbModuleLoad(\"%s\")",fullname);
     handle=nbModuleLoad(fullname,0,msg); 
     if(handle!=NULL) return(handle);
@@ -330,9 +339,18 @@ void *nbModuleSearchPath(char *path,char *filename,char *msg){
     separator=strchr(cursor,NB_MODULE_PATH_SEPARATOR);
     if(separator!=NULL && (delim==NULL || separator<delim)) delim=separator;
     }
+  len=strlen(cursor);
+  if(len>=sizeof(fullname)){
+    outMsg(0,'L',"nbModuleSearchPath: path element longer than max of %d in path %s",sizeof(fullname)-1,path);
+    return(NULL);
+    }
   strcpy(fullname,cursor);
-  strcat(fullname,"/");
-  sstrcat(fullname,namend,filename); //2012-02-06 dtl replace strcat
+  *(fullname+len)='/';
+  if(len+strlen(filename)+2>=sizeof(fullname)){
+    outMsg(0,'L',"nbModuleSearchPath: full path name of file longer than max of %d in path %s/%s",sizeof(fullname)-1,path,filename);
+    return(NULL);
+    }
+  strcpy(fullname+len+1,filename);
   if(trace) outMsg(0,'T',"calling nbModuleLoad(\"%s\")",fullname);
   handle=nbModuleLoad(fullname,0,msg);
   return(handle);
@@ -628,6 +646,7 @@ void nbModuleShowPath(nbCELL context,char *pathcur){
   char modname[512],path[1024],fullpathbuf[1024],dirname[1024];
   DIR *dir;
   int n;
+  size_t len;
 
   while(*pathcur){
     delim=strchr(pathcur,',');
@@ -653,7 +672,8 @@ void nbModuleShowPath(nbCELL context,char *pathcur){
             if(strncmp(delim,LT_MODULE_EXT,strlen(LT_MODULE_EXT))==0){
               cursor=delim+strlen(LT_MODULE_EXT);
               if(*cursor=='.' && strcmp(cursor+1,NB_API_VERSION)==0){
-                sprintf(path,"%s/%s",dirname,ent->d_name);
+                len=snprintf(path,sizeof(path),"%s/%s",dirname,ent->d_name);
+                if(len>=sizeof(path)) *(path+sizeof(path)-1)=0;
                 fullpath=realpath(path,fullpathbuf);
                 if(!fullpath) fullpath=path;
                 outPut("    %s -> %s\n",modname,fullpath);

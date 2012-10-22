@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -90,6 +90,7 @@
 * 2007/07/16 eat 0.6.8  renamed from nbexpert.c to nbnode.c
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010/02/28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2012-10-17 eat 0.8.12 Replaced termGetName with nbTermName
 *=============================================================================
 */
 #include "nbi.h"
@@ -643,8 +644,8 @@ char *nbNodeGetName(nbCELL context){
   return(((NB_Term *)context)->word->value);
   }
 
-char *nbNodeGetNameFull(nbCELL context,char *name){
-  termGetName(name,(NB_Term *)context,NULL);
+char *nbNodeGetNameFull(nbCELL context,char *name,size_t size){
+  nbTermName(name,size,(NB_Term *)context,NULL);
   return(name);
   }
 

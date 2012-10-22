@@ -116,7 +116,7 @@ extern int chaccept(struct CHANNEL *channel,int serverSocket);
 #if defined(WIN32)
 _declspec (dllexport)
 #endif
-extern int chget(struct CHANNEL *channel,char *buffer);
+extern int chget(struct CHANNEL *channel,char *buffer,size_t size);
 
 #if defined(WIN32)
 _declspec (dllexport)

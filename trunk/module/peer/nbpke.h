@@ -37,12 +37,12 @@
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 *=============================================================================
 */
-void pkePrint(unsigned char *ciphertext);
-unsigned int pkeCipher(unsigned char *ciphertext,vli exponent,vli modulus);
+//void pkePrint(unsigned char *ciphertext);
+//unsigned int pkeCipher(unsigned char *ciphertext,vli exponent,vli modulus);
 unsigned int pkeEncrypt(unsigned char *ciphertext,vli exponent,vli modulus,unsigned char *plaintext,unsigned int length);
 unsigned int pkeDecrypt(unsigned char *ciphertext,vli exponent,vli modulus,unsigned char *plaintext,unsigned int length);
 void pkeGenKey(unsigned int l,vli e,vli n,vli d);
 
-void pkegetj(vli j,vli x,vli y);
-void pkegetk(vli k,vli x,vli y);
-void pkeTestKey(int c,vli e,vli n,vli d);
+//static void pkegetj(vli j,vli x,vli y);
+//static void pkegetk(vli k,vli x,vli y);
+//void pkeTestKey(int c,vli e,vli n,vli d);

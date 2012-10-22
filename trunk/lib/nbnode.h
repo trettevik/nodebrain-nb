@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -34,6 +34,7 @@
 * 2005/05/14 eat 0.6.3  Added module handle in NB_SKILL_BIND
 * 2007/07/16 eat 0.6.8  change name from "expert" to "node"
 * 2010/02/28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2012-10-17 eat 0.8.12 Added size parameter to nbNodeGetNameFull
 *=============================================================================
 */
 #ifndef _NB_NODE_H_
@@ -208,7 +209,7 @@ extern char *nbNodeGetName(nbCELL context);
 #if defined(WIN32)
 __declspec(dllexport)
 #endif
-extern char *nbNodeGetNameFull(nbCELL context,char *name);
+extern char *nbNodeGetNameFull(nbCELL context,char *name,size_t size);
 
 #if defined(WIN32)
 __declspec(dllexport)

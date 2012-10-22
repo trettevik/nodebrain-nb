@@ -204,6 +204,8 @@
 * 2011-02-23 eat 0.8.5  Included logger skill
 * 2011-02-26 eat 0.8.5  Included client skill
 * 2011-02-26 eat 0.8.5  Modified server skill to support local domain sockets
+* 2012-10-17 eat 0.8.12 Checker updates
+* 2012-10-18 eat 0.8.12 Checker updates
 *=====================================================================
 */
 #include "config.h"
@@ -390,6 +392,7 @@ void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
     if(type==NB_TYPE_STRING){
       str=nbCellGetString(context,cell);
       uri=strdup(str);
+      if(!uri) nbExit("serverConstruct: Out of memory - terminating");
       if(strncmp(str,"udp://",6)==0) str+=6;  // allow for uri
       delim=strchr(str,':');
       if(delim==NULL) len=strlen(str);
@@ -437,7 +440,7 @@ void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
     delim=strchr(cursor,' ');
     if(delim==NULL) delim=strchr(cursor,',');
     if(delim==NULL) delim=strchr(cursor,';');
-    if(delim==NULL) delim=strchr(cursor,0);
+    if(delim==NULL) delim=cursor+strlen(cursor);
     saveDelim=*delim;
     *delim=0;
     if(strcmp(cursor,"trace")==0){trace=1;}
@@ -448,7 +451,7 @@ void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
     if(*cursor==',') cursor++;
     while(*cursor==' ' || *cursor==',') cursor++;
     }
-  server=malloc(sizeof(NB_MOD_Server));
+  server=nbAlloc(sizeof(NB_MOD_Server));
   server->uri=uri;
   server->socket=0;
   strcpy(server->interfaceAddr,interfaceAddr);
@@ -516,7 +519,7 @@ static int *serverCommand(nbCELL context,void *skillHandle,NB_MOD_Server *server
 static int serverDestroy(nbCELL context,void *skillHandle,NB_MOD_Server *server){
   nbLogMsg(context,0,'T',"serverDestroy called");
   if(server->socket!=0) serverDisable(context,skillHandle,server);
-  free(server);
+  nbFree(server,sizeof(NB_MOD_Server));
   return(0);
   }
 
@@ -613,6 +616,7 @@ void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
       return(NULL);
       }
     ident=strdup(nbCellGetString(context,cell));
+    if(!ident) nbExit("clientConstruct: Out of memory - terminating");
     nbCellDrop(context,cell);
     }
   cell=nbListGetCellValue(context,&argSet);
@@ -622,6 +626,7 @@ void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
       return(NULL);
       }
     uri=strdup(nbCellGetString(context,cell));
+    if(!uri) nbExit("clientConstruct: Out of memory - terminating");
     nbCellDrop(context,cell);
     cell=nbListGetCellValue(context,&argSet);
     if(cell){
@@ -634,7 +639,7 @@ void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
     delim=strchr(cursor,' ');
     if(delim==NULL) delim=strchr(cursor,',');
     if(delim==NULL) delim=strchr(cursor,';');
-    if(delim==NULL) delim=strchr(cursor,0);
+    if(delim==NULL) delim=cursor+strlen(cursor);
     saveDelim=*delim;
     *delim=0;
     if(strcmp(cursor,"trace")==0){trace=1;}
@@ -657,7 +662,7 @@ void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
     nbLogMsg(context,0,'E',"Unable to obtain socket for %s",uri);
     return(NULL);
     }
-  client=malloc(sizeof(NB_MOD_Client));
+  client=nbAlloc(sizeof(NB_MOD_Client));
   client->ident=ident;
   client->uri=uri;
   client->un_addr.sun_family=AF_UNIX;
@@ -717,7 +722,7 @@ static int *clientCommand(nbCELL context,void *skillHandle,NB_MOD_Client *client
 */
 static int clientDestroy(nbCELL context,void *skillHandle,NB_MOD_Client *client){
   nbLogMsg(context,0,'T',"clientDestroy called");
-  free(client);
+  nbFree(client,sizeof(NB_MOD_Client));
   return(0);
   }
 
@@ -791,7 +796,7 @@ void *loggerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
     delim=strchr(cursor,' ');
     if(delim==NULL) delim=strchr(cursor,',');
     if(delim==NULL) delim=strchr(cursor,';');
-    if(delim==NULL) delim=strchr(cursor,0);
+    if(delim==NULL) delim=cursor+strlen(cursor);
     saveDelim=*delim;
     *delim=0;
     if(strcmp(cursor,"trace")==0){trace=1;}
@@ -802,7 +807,7 @@ void *loggerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
     if(*cursor==',') cursor++;
     while(*cursor==' ' || *cursor==',') cursor++;
     }
-  logger=malloc(sizeof(NB_MOD_Logger));
+  logger=nbAlloc(sizeof(NB_MOD_Logger));
   logger->ident=ident;
   logger->trace=trace;
   logger->dump=dump;
@@ -850,7 +855,7 @@ static int *loggerCommand(nbCELL context,void *skillHandle,NB_MOD_Logger *logger
 *    undefine <node>
 */
 static int loggerDestroy(nbCELL context,void *skillHandle,NB_MOD_Logger *logger){
-  free(logger);
+  nbFree(logger,sizeof(NB_MOD_Logger));
   return(0);
   }
 
