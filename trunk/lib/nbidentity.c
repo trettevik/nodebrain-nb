@@ -66,7 +66,7 @@
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
-#include "nbi.h"
+#include <nb/nbi.h>
 
 NB_Term   *identityC;      /* public identity context */
 //struct HASH   *identityH;      /* identity hash */

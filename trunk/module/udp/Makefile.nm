@@ -4,7 +4,7 @@
 
 nblib_LTLIBRARIES = nb_udp.la
 nb_udp_la_SOURCES = nb_udp.c
-nb_udp_la_CFLAGS  = $(NB_INCLUDE)
+nb_udp_la_CFLAGS  = $(NB_MOD_CFLAGS)
 nb_udp_la_LDFLAGS = -module -version-info 0:1
 
 EXTRA_DIST = \

@@ -4,7 +4,7 @@
 
 nblib_LTLIBRARIES = nb_snmptrap.la
 nb_snmptrap_la_SOURCES = nb_snmptrap.c
-nb_snmptrap_la_CFLAGS  = $(NB_INCLUDE)
+nb_snmptrap_la_CFLAGS  = $(NB_MOD_CFLAGS)
 nb_snmptrap_la_LDFLAGS = -module -version-info 0:1
 
 EXTRA_DIST = \

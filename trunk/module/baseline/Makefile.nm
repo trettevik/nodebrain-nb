@@ -4,7 +4,7 @@
      
 nblib_LTLIBRARIES = nb_baseline.la
 nb_baseline_la_SOURCES = nb_baseline.c
-nb_baseline_la_CFLAGS  = $(NB_INCLUDE)
+nb_baseline_la_CFLAGS  = $(NB_MOD_CFLAGS)
 nb_baseline_la_LDFLAGS = -module -version-info 0:4
 
 EXTRA_DIST = \

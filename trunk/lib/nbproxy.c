@@ -143,8 +143,8 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 *==============================================================================
 */
-#include <nb.h>
-#include "nbproxy.h"     // will move to nb.h after it settles down
+#include <nb/nb.h>
+#include <nb/nbproxy.h>  // will move to nb.h after it settles down
 
 int proxyTrace;          // debugging trace flag for proxy routines
 

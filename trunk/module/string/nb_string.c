@@ -59,7 +59,7 @@
 */
 #define _XOPEN_SOURCE
 #include "config.h"
-#include <nb.h>
+#include <nb/nb.h>
 #include <ctype.h>
 
 #if defined(_WINDOWS)

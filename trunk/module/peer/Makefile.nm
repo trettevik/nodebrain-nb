@@ -22,7 +22,7 @@ nb_peer_la_SOURCES = nb_peer.c \
   nbvli.h \
   nb_peer.h
 
-nb_peer_la_CFLAGS  = $(NB_INCLUDE) -I/usr/local/include
+nb_peer_la_CFLAGS  = $(NB_MOD_CFLAGS)
 nb_peer_la_LDFLAGS = -module -version-info 0:1 -lcrypto
 
 EXTRA_DIST = \

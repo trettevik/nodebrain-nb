@@ -40,7 +40,7 @@
 #ifndef _NB_CALL_H_
 #define _NB_CALL_H_
 
-#include <nbstem.h>
+#include <nb/nbstem.h>
 
 /* 
 * NOTE: 

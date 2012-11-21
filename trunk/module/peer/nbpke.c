@@ -97,7 +97,7 @@
 * 2012-10-16 eat 0.8.12 Replaced random with nbRand32
 *=============================================================================
 */
-#include "nbi.h"
+#include <nb/nbi.h>
 #include "nbvli.h"
 #include "nbpke.h"
 #include "nbrand.h"
@@ -119,6 +119,7 @@ static void pkegetk(vli k,vli x,vli y);
 *  we don't need to understand it here.
 */
 
+/*
 static void pkePrint(unsigned char *ciphertext){
   unsigned char *cursor=ciphertext;
   unsigned short len;
@@ -131,6 +132,7 @@ static void pkePrint(unsigned char *ciphertext){
     }
   printf(".\n");    
   } 
+*/
     
 /*
 *  Encipher or decipher a ciphertext buffer

@@ -80,7 +80,7 @@
 * 2012-10-17 eat 0.8.12 Checker updates
 *=============================================================================
 */
-#include "nbi.h"
+#include <nb/nbi.h>
 
 NB_Type  *nb_MacroType;  /* macro type description */
 NB_Macro *nb_MacroFree;  /* free macro structure */

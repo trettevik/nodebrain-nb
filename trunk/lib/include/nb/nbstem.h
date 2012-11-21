@@ -80,7 +80,7 @@
 
 #if defined(NB_INTERNAL)
 
-#include <nbcell.h>
+#include <nb/nbcell.h>
 
 typedef struct NB_STEM{
   void *type;                     // reserved for stem cell type pointer

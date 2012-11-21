@@ -114,8 +114,7 @@
 *=============================================================================
 */
 #include "config.h"
-#include <nb.h>
-#include <nbtree.h>
+#include <nb/nb.h>
 
 #if defined(_WINDOWS)
 BOOL WINAPI DllMain(HINSTANCE hinstDLL,DWORD fdwReason,LPVOID lpvReserved){

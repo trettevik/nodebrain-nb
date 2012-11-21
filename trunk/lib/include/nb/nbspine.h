@@ -46,7 +46,7 @@
 #ifndef _NB_SPINE_H_
 #define	_NB_SPINE_H_	 // only once
 
-#include "nbstd.h"
+#include <nb/nbstd.h>
 
 #if defined(WIN32)
 typedef HANDLE nbFILE;

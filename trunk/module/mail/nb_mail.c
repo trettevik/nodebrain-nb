@@ -79,8 +79,7 @@
 *=============================================================================
 */
 #include "config.h"
-#include <nb.h>
-//#include <nbip.h>
+#include <nb/nb.h>
 
 void nbQueueCommit();
 

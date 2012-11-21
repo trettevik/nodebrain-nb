@@ -93,7 +93,7 @@
 * 2012-10-19 eat 0.8.12 Replaced random with pid plus counter since we needed unique instead of random
 *=============================================================================
 */
-#include "nbi.h"
+#include <nb/nbi.h>
 
 extern char mypath[];      /* path to executing program */
 
@@ -141,7 +141,7 @@ int nbSpawnChild(nbCELL context,int options,char *cursor){
   // We have to decide if we want special controls on the system commands
   
   childwrap=(childwrap+1)%1000; 
-  sprintf(outname,"%sservant.%.10u.%.5.%.3u.out",outDirName(NULL),(unsigned int)time(NULL),getpid(),childwrap);
+  sprintf(outname,"%sservant.%.10u.%.5u.%.3u.out",outDirName(NULL),(unsigned int)time(NULL),getpid(),childwrap);
   process=nbMedullaProcessOpen(options,cursor,outname,(NB_Term *)context,NULL,NULL,nbCmdMsgReader,nbLogMsgReader,msgbuf);
   if(process==NULL){
     outMsg(0,'E',"%s",msgbuf);

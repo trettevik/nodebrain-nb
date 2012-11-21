@@ -40,7 +40,7 @@
 #ifndef _NB_VLI_H_
 #define _NB_VLI_H_
 
-#include "nbstd.h"
+#include <nb/nbstd.h>
 
 /*
 *  Define the vli word size and data types with various numbers of bits.

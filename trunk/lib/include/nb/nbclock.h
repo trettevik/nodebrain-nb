@@ -50,7 +50,7 @@
 
 #if defined(NB_INTERNAL)
 
-#include <nbstem.h>
+#include <nb/nbstem.h>
 
 #if defined(HPUX)      // use short nap time on systems where SIGCHLD doesn't interrupt select()
 #define NB_MAXNAP 10       // maximum nap time - 10 seconds*/

@@ -43,7 +43,7 @@
 
 #if defined(NB_INTERNAL)
 
-#include <nbstem.h>
+#include <nb/nbstem.h>
 
 /* 
 * NOTE: 

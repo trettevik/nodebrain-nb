@@ -45,7 +45,7 @@
 
 #if defined(NB_INTERNAL)
 
-#include <nbstem.h>
+#include <nb/nbstem.h>
 
 struct NB_MODULE{            /* module object */
   struct NB_OBJECT object;   /* object header */

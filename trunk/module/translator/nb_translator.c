@@ -112,7 +112,7 @@
 *=====================================================================
 */
 #include "config.h"
-#include <nb.h>
+#include <nb/nb.h>
 
 /*
 *  The following structure is created once at bind time

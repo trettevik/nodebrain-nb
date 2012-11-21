@@ -54,8 +54,8 @@
 * 2012-06-16 eat 0.8.10 Replaced srand with srandom
 * 2012-10-13 eat 0.8.13 Replaced malloc with nbAlloc
 *============================================================================*/
-#include "nbi.h"
-#include "nbmedulla.h"
+#include <nb/nbi.h>
+#include <nb/nbmedulla.h>
   
 char *nb_cmd_prefix;
 char *nb_cmd_prompt;  

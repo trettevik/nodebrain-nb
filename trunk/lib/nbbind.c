@@ -59,7 +59,7 @@
 * 2008-10-17 eat 0.7.2  Removed servant module
 *=============================================================================
 */
-#include "nb.h"
+#include <nb/nb.h>
 
 void nbBind(nbCELL context){
 //  void *servantBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text);

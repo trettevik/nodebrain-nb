@@ -60,7 +60,7 @@
 * 2012-01-16 dtl  Checker updates.
 *=============================================================================
 */
-#include "nbi.h"
+#include <nb/nbi.h>
 
 struct TYPE *nb_verbType;
 

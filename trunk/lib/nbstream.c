@@ -74,7 +74,7 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 *=============================================================================
 */
-#include "nbi.h"
+#include <nb/nbi.h>
 
 NB_Type   *nb_StreamType;  /* stream type description */
 NB_Stream *nb_StreamFree;  /* free stream structure */

@@ -58,7 +58,7 @@
 * 2012-10-12 eat 0.8.12 Replaced malloc with nbAlloc
 *=============================================================================
 */
-#include <nbi.h>
+#include <nb/nbi.h>
 
 struct TYPE *assertTypeDef=NULL;
 struct TYPE *assertTypeVal=NULL;

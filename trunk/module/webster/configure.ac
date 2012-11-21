@@ -65,7 +65,7 @@ AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
 
-CFLAGS="-Wall -O1 $CFLAGS"
+CFLAGS="-Wall -O1 -I../../lib/include $CFLAGS"
 
 #=====================================
 # LIBTOOL stuff
@@ -101,7 +101,7 @@ AC_SEARCH_LIBS(SSL_CTX_new,ssl,,[AC_MSG_ERROR(Required library -lssl not found. 
 #   we'll the installed one, which may be installed somewhere
 #   else if already in the search path.
 
-AC_CHECK_FILE([../../lib/libnb.la],[AC_SUBST([NB_LIBRARY_PATH],[../../../lib/.libs])],[AC_SUBST([NB_LIBRARY_PATH],[/usr/local/lib/nb])])
+AC_CHECK_FILE([../../lib/libnb.la],[AC_SUBST([NB_LIBRARY_PATH],[../../../lib/.libs])],[AC_SUBST([NB_LIBRARY_PATH],[/usr/lib64/nb])])
 
 # Always provide a path to the module we created in this package
 
@@ -115,7 +115,7 @@ AC_SUBST([NB_MODULE_PATH],[../.libs])
 #   the one we created in the lib directory.  Otherwise
 #   we'll use the installed one.
 
-AC_CHECK_FILE([../../lib/nb.h],[AC_SUBST([NB_INCLUDE],[-I../../lib])],[AC_SUBST([NB_INCLUDE],[-I/usr/local/include/nb])])
+AC_CHECK_FILE([../../lib/nb.h],[AC_SUBST([NB_INCLUDE],[-I../../../lib/include])],[AC_SUBST([NB_INCLUDE],[-I/usr/include])])
 
 #=====================================
 # Checks for typedefs, structures, and compiler characteristics.

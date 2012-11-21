@@ -19,46 +19,58 @@
 *=============================================================================
 * Program:  NodeBrain
 *
-* File:     nbstring.h 
-* 
-* Title:    Object Header (prototype)
+* File:     nbsched.h 
+*
+* Title:    Schedule Routines (prototype)
 *
 * Function:
 *
-*   This header defines routines that manage nodebrain string objects.
+*   This header defines routines that implement time conditions.
 *
-* See nbstring.c for more information.
+* See nbsched.c for more information.
 *=============================================================================
 * Change History:
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2002-08-31 Ed Trettevik (split out in version 0.4.1)
+* 2003-03-15 eat 0.5.1  Split out from nbsched.c for make file.
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *=============================================================================
 */
-#ifndef _NBSTRING_H_
-#define _NBSTRING_H_       /* never again */
+#ifndef _NB_SCHED_H_
+#define _NB_SCHED_H_
 
-#include <nbstem.h>
+#include <nb/nbstem.h>
 
-struct STRING{
-  struct NB_OBJECT object;    /* object header */
-  char value[1];              /* length determined when created */
+extern struct TYPE *schedTypeTime;
+extern struct TYPE *schedTypePulse;
+extern struct TYPE *schedTypeDelay;
+
+struct PERIOD{
+  time_t start;         
+  time_t end;
   };
+  
+extern struct PERIOD eternity;    /* 0 - maximum value */
+extern struct HASH *schedH;      /* hash of schedule entries */
 
-typedef struct STRING NB_String;
-
-extern struct HASH *strH;
-extern NB_Type *strType;
-extern struct STRING *stringFree;  /* this pointer should remain null */
-
-void *hashStr(struct HASH *hash,char *cursor);
-void initString(NB_Stem *stem);
-void printStringRaw(struct STRING *string);
-void printString(struct STRING *string);
-void printStringAll(void);
-void destroyString(struct STRING *str);
-struct STRING *useString(char *value);
+/*
+*  Schedule Cell
+*/    
+struct SCHED{
+  struct NB_CELL cell;     /* schedule cell */
+  struct STRING *symbol;   /* symbolic name */
+  struct PERIOD period;    /* start and end times */
+  time_t interval;         /* Fixed interval - w,d,h,m,s */
+  time_t duration;         /* Fixed duration - w,d,h,m,s */
+  struct tcQueue *queue;   /* Time queue */
+  };
+  
+void schedPrintDump(struct SCHED *sched);
+void schedPrint(struct SCHED *sched);
+void destroySched(struct SCHED *sched);
+void schedInit(NB_Stem *stem,long n);
+struct SCHED *newSched(NB_Cell *context,char symid,char *source,char **delim,char *msg,int reuse);
+time_t schedNext(time_t floor,struct SCHED *sched);
 
 #endif

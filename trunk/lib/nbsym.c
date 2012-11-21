@@ -98,7 +98,7 @@
 * 2012-10-16 eat 0.8.12 Checker updates
 *=============================================================================
 */
-#include "nbi.h"
+#include <nb/nbi.h>
 
 /*
 *  Symbolic cell substitution

@@ -46,7 +46,7 @@
 ##
 ##     nblib_LTLIBRARIES = nb_<module>.la
 ##     nb_<module>_la_SOURCES = nb_<module>.c
-##     nb_<module>_la_CFLAGS  = $(NB_INCLUDE)
+##     nb_<module>_la_CFLAGS  = $(NB_MOD_CFLAGS)
 ##     nb_<module>_la_LDFLAGS = -module --version-info=0:1
 ##
 ##     EXTRA_DIST = \
@@ -62,7 +62,7 @@
 ##   This file is used in combination with a configure.ac file that defines a
 ##   few helpful variables.
 ##
-##     ${NB_INCLUDE}       - CFLAGS for include library where nb.h is found
+##     ${NB_MOD_CFLAGS}    - CFLAGS common to all modules
 ##     ${NB}               - nb program name to use for checking
 ##     ${NB_LIBRARY_PATH}  - path to nb library to use when checking
 ##     ${NB_MODULE_PATH}   - path to module to use when checking

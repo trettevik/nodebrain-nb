@@ -84,16 +84,17 @@
 # 2012/06/02 eat 0.8.10 New version for release
 # 2012/09/17 eat 0.8.11 New release to fix webster buffer overflow conditions
 # 2012/10/12 eat 0.8.12 New version
+# 2012/10/24 eat 0.8.12 Included AC_PROG_CC_C_0 and removed platform checks
 #=============================================================================
 
 AC_PREREQ(2.62)
 AC_INIT([libnb],[0.8.12],[bugs@nodebrain.org])
-AC_CONFIG_SRCDIR([nb.h])
+AC_CONFIG_SRCDIR([nb.c])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(config)
 AM_INIT_AUTOMAKE
 
-CFLAGS="-Wall -O0 $CFLAGS"
+#CFLAGS="-Wall -O0 -Iinclude $CFLAGS"
 # define module directory variables
 
 AC_DEFINE_UNQUOTED(NB_API_VERSION,"0",[NodeBrain API version])
@@ -115,10 +116,11 @@ LT_SYS_MODULE_EXT
 LT_FUNC_DLSYM_USCORE
 
 # define a release date variable
-AC_DEFINE(NB_RELEASE_DATE,"2012/06/02",[Define release date])
+AC_DEFINE(NB_RELEASE_DATE,"2012-10-24",[Define release date])
 
 # Checks for programs.
 AC_PROG_CC
+AM_PROG_CC_C_O
 
 # Checks for libraries.
 LIBS="-lncurses"
@@ -161,50 +163,7 @@ AC_CHECK_FUNCS([alarm gethostbyaddr gethostbyname inet_ntoa memchr memset regcom
 # check for platform requirements
 #AC_CANONICAL_HOST
 
-# define a release date variable
 AC_DEFINE_UNQUOTED(NB_COMPILE_PLATFORM,"$host",[Define compile platform])
-
-case "$host" in
-  *-netbsd*)
-    AC_DEFINE(NETBSD,,[Define if NetBSD])
-    AC_DEFINE(ANYBSD,,[Define if any BSD])
-    ;;
-  *-openbsd*)
-    AC_DEFINE(OPENBSD,,[Define if OpenBSD])
-    AC_DEFINE(ANYBSD,,[Define if any BSD])
-    ;;
-  *-sgi-irix*)
-    AC_DEFINE(IRIX,,[Define if IRIX])
-    ;;
-  *-solaris*)
-    AC_DEFINE(SOLARIS,,[Define if SOLARIS])
-    ;;
-  *-sunos*)
-    AC_DEFINE(SUNOS,,[Define if SUNOS])
-    ;;
-  *-linux*)
-    AC_DEFINE(LINUX,,[Define if LINUX])
-    #LDFLAGS="${LDFLAGS} -ldl"
-    ;;
-  *-hpux*)
-    AC_DEFINE(HPUX,,[Define if HPUX])
-    ;;
-  *-freebsd*)
-    AC_DEFINE(FREEBSD,,[Define if FREEBSD])
-    AC_DEFINE(ANYBSD,,[Define if any BSD])
-    ;;
-  *-bsdi*)
-    AC_DEFINE(BSDI,,[Define if BSDI])
-    AC_DEFINE(ANYBSD,,[Define if any BSD])
-    ;;
-  *-aix*)
-    AC_DEFINE(AIX,,[Define if AIX])
-    ;;
-# <platform>-apple-darwin* or <platform>-apple-rhapsody*    
-  *-apple*)
-    AC_DEFINE(MACOS,,[Define if MACOS])
-    AC_DEFINE(ANYBSD,,[Define if any BSD])
-esac
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

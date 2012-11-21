@@ -108,7 +108,7 @@
 * 2012-10-17 eat 0.8.12 Added size parameter
 *=============================================================================
 */
-#include "nbi.h"
+#include <nb/nbi.h>
 #include <stddef.h>
 
 NB_Term *termFree=NULL;
@@ -190,7 +190,7 @@ static void termAskCommand(char *name,char *value,size_t size,char *command){
   char buffer[NB_BUFSIZE];
   char cmd[NB_BUFSIZE];
   int rc,len;
-  char *cursor;
+  //char *cursor;
 
   strcpy(cmd,command);
   strcat(cmd," \"");

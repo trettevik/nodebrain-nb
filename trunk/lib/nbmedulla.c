@@ -110,8 +110,8 @@
 #else
 #include <config.h>
 #endif
-#include <nbi.h>
-#include <nbmedulla.h>
+#include <nb/nbi.h>
+#include <nb/nbmedulla.h>
 
 nbMEDULLA nb_medulla=NULL;
 nbPROCESS nb_process=NULL;      // list of child processes

@@ -75,7 +75,7 @@
 *=====================================================================
 */
 #include "config.h"
-#include <nb.h>
+#include <nb/nb.h>
 
 #if defined(WIN32)
 
@@ -1156,10 +1156,7 @@ static int websterEnable(nbCELL context,void *skillHandle,nbWebster *webster){
   // get options
   if(webster->rootdir) free(webster->rootdir);
   webster->rootdir=strdup(getOption(context,"DocumentRoot","web"));
-  if(!webster->rootdir){ 
-    nbLogMsg(context,0,'E',"Out of memory - terminating");
-    exit(NB_EXITCODE_FAIL);
-    }
+  if(!webster->rootdir) nbExit("websterEnable: Out of memory - terminating");
   if(*webster->rootdir!='/'){
     sprintf(rootdir,"%s/%s",webster->dir,webster->rootdir);
     free(webster->rootdir);

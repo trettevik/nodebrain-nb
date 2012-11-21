@@ -40,7 +40,7 @@
 #ifndef _NBTIME_H_
 #define _NBTIME_H_       /* never again */
 
-#include <nbstem.h>
+#include <nb/nbstem.h>
 
 extern long maxtime;
 /*

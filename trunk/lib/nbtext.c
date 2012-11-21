@@ -82,7 +82,7 @@
 * 2011-11-05 Ed Trettevik (original prototype version introduced in 0.8.6)
 *=============================================================================
 */
-#include "nbi.h"
+#include <nb/nbi.h>
 
 struct TYPE *textType;
 

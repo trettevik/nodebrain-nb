@@ -165,7 +165,7 @@
 *=============================================================================
 */
 #include <openssl/rand.h>
-#include "nbi.h"
+#include "nb/nbi.h"
 #include "nbske.h"
 #include "nbchannel.h"
 #if !defined(WIN32)

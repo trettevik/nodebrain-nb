@@ -123,7 +123,7 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 *==============================================================================
 */
-#include <nb.h>
+#include <nb/nb.h>
 
 int peerTrace;          // debugging trace flag for peer routines
 /*********************************************************************

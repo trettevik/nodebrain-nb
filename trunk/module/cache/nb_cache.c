@@ -264,7 +264,7 @@
 *=============================================================================
 */
 #include "config.h"
-#include <nb.h>     
+#include <nb/nb.h>     
 
 # define CACHE_THRESHOLD_INDEX_LIMIT  4
 

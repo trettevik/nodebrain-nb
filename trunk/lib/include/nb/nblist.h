@@ -45,11 +45,11 @@
 #ifndef _NB_LIST_H_
 #define _NB_LIST_H_
 
-#include <nbcell.h>
+#include <nb/nbcell.h>
 
 #if defined(NB_INTERNAL)
 
-#include <nbstem.h>
+#include <nb/nbstem.h>
 struct NB_LIST{           /* object list cell */
   struct NB_CELL  cell;
   struct NB_LINK  *link;  /* points to link for first member */

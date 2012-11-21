@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 2011-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -19,44 +19,39 @@
 *=============================================================================
 * Program:  NodeBrain
 *
-* File:     nbreal.h 
+* File:     nbtext.h 
 * 
-* Title:    Real Number Object Header (prototype)
+* Title:    Object Header (prototype)
 *
 * Function:
 *
-*   This header defines routines that manage nodebrain real number objects.
+*   This header defines routines that manage nodebrain text objects.
 *
-* See nbreal.c for more information.
+* See nbtext.c for more information.
 *=============================================================================
 * Change History:
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2002/08/31 Ed Trettevik (original prototype)
+* 2011-11-05 Ed Trettevik - original prototype
 *=============================================================================
 */
-#ifndef _NBREAL_H_
-#define _NBREAL_H_       /* never again */
+#ifndef _NBTEXT_H_
+#define _NBTEXT_H_       /* never again */
 
-#include <nbstem.h>
+#include <nb/nbstem.h>
 
-typedef struct REAL{
-  struct NB_OBJECT object;   /* object header */
-  double value;              /* real number value */
-  } NB_Real;
+typedef struct NB_TEXT{
+  struct NB_OBJECT object;    /* object header */
+  char value[1];              /* length determined when created */
+  } NB_Text;
 
-extern struct HASH *realH;
-extern struct TYPE *realType;
+extern NB_Type *textType;
 
-void *hashReal(struct HASH *hash,double n);
-void initReal(NB_Stem *stem);
-void printReal(struct REAL *real);
-void printRealAll(void);
-void destroyReal(struct REAL *real);
-struct REAL *parseReal(char *source);
-
-extern struct REAL *useReal(double value);
-struct REAL *newReal(double value);
+void initText(NB_Stem *stem);
+void printText(NB_Text *text);
+void destroyText(NB_Text *text);
+NB_Text *nbTextLoad(char *filename);
+NB_Text *nbTextCreate(char *textStr);
 
 #endif

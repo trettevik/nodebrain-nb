@@ -48,7 +48,7 @@
 #ifndef _NB_OUT_H_
 #define _NB_OUT_H_
 
-#include <nbcell.h>
+#include <nb/nbcell.h>
 
 #if defined(NB_INTERNAL)
 

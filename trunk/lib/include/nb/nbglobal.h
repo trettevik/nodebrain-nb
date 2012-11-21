@@ -47,8 +47,8 @@
 
 #if defined(NB_INTERNAL)
 
-#include <nbcell.h>
-#include <nbterm.h>
+#include <nb/nbcell.h>
+#include <nb/nbterm.h>
 
 /*
 *  After the code settles down, we need to clean this up as much as 

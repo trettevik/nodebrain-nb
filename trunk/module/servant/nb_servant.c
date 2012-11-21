@@ -89,7 +89,7 @@
 *=============================================================================
 */
 #include "config.h"
-#include <nb.h>
+#include <nb/nb.h>
 
 typedef struct NB_MOD_SERVANT{
   nbCELL context;

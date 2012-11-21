@@ -42,8 +42,8 @@
 
 #if defined(NB_INTERNAL)
 
-#include <nbstem.h>
-#include <nblist.h>
+#include <nb/nbstem.h>
+#include <nb/nblist.h>
 
 /*
 *  A node cell represents the combination of skill and knowledge.  Basic

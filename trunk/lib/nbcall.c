@@ -58,7 +58,7 @@
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning message. (gcc 4.5.0)
 *=============================================================================
 */
-#include "nbi.h"
+#include <nb/nbi.h>
 
 struct TYPE *callTypeMod=NULL;
 

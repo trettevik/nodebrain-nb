@@ -95,8 +95,8 @@
 *===================================================================================
 */
 #include "config.h"
-#include <nb.h>
-#include <nbtls.h>
+#include <nb/nb.h>
+#include <nb/nbtls.h>
 
 /*==================================================================================
 *  Producer - just uses the Message Log API (not Message Peer API)

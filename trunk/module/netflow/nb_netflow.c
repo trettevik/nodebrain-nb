@@ -78,7 +78,7 @@
 *=====================================================================
 */
 #include <config.h>
-#include <nb.h>
+#include <nb/nb.h>
 
 struct NB_MOD_NETFLOW_METRIC_ARRAY{
   double protocolPkts[256];

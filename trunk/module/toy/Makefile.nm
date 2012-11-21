@@ -4,7 +4,7 @@
 
 nblib_LTLIBRARIES = nb_toy.la
 nb_toy_la_SOURCES = nb_toy.c
-nb_toy_la_CFLAGS  = $(NB_INCLUDE)
+nb_toy_la_CFLAGS  = $(NB_MOD_CFLAGS)
 nb_toy_la_LDFLAGS = -module -version-info 0:1
 
 EXTRA_DIST = \

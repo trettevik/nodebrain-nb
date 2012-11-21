@@ -209,7 +209,7 @@
 *=====================================================================
 */
 #include "config.h"
-#include <nb.h>
+#include <nb/nb.h>
 #include <syslog.h>
 
 /*

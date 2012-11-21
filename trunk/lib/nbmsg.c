@@ -160,7 +160,7 @@
 *==============================================================================
 */
 #include <ctype.h>
-#include <nbi.h>
+#include <nb/nbi.h>
 #if !defined(WIN32)
 #include <sys/un.h>
 #endif

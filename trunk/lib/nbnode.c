@@ -93,7 +93,7 @@
 * 2012-10-17 eat 0.8.12 Replaced termGetName with nbTermName
 *=============================================================================
 */
-#include "nbi.h"
+#include <nb/nbi.h>
 #if !defined(WIN32)
 #include <sys/times.h>
 #endif

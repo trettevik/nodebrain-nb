@@ -42,7 +42,7 @@
 #ifndef _NB_CMD_H_
 #define _NB_CMD_H_
 
-#include <nbidentity.h>
+#include <nb/nbidentity.h>
 
 #if defined(NB_INTERNAL) 
 

@@ -240,9 +240,11 @@
 * 2012-05-20 eat 0.8.9  Included traceMail settin
 * 2012-09-17 eat 0.8.11 Added return code for text object in nbCmdDefine.
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
+* 2012-10-26 eat 0.8.12 Switched from ' to > for setting interactive command prefix
+*                       Providing a warning message for a couple releases.
 *==============================================================================
 */
-#include "nbi.h"
+#include <nb/nbi.h>
 
 #if !defined(WIN32)
 #include <readline/readline.h>
@@ -257,6 +259,15 @@
 // Returns:
 //   1 - have command (may be empty)
 //   0 - eof
+//
+// 2012-10-26 eat 0.8.12 - Experimenting with using > for prompt lines.
+//            This is because "'" was a poor choice.  A term can be a
+//            singled quoted string.  When using such a term for a node
+//            and directing commands to the node, the command will start
+//            with a single quote.  By using a single quote for the prompt
+//            assignment, quoted terms have to start in column two or 
+//            higher.  That's too weird, so we will introduce ">" for
+//            setting the prompt and then drop the single quote later.
 
 int nbGetCmdInteractive(char *cmd){
   static char *lastInput="";
@@ -272,8 +283,8 @@ int nbGetCmdInteractive(char *cmd){
   if(*lastInput) free(lastInput); // free up previous last command
 #endif
   lastInput=userInput;            // get current last command
-  userInput="'";
-  while(userInput && *userInput=='\''){;
+  userInput=">";
+  while(userInput && *userInput=='>'){;
 #if defined(WIN32)
     printf("%s",nb_cmd_prompt);
     userInput=fgets(buffer,sizeof(buffer),stdin);
@@ -287,7 +298,10 @@ int nbGetCmdInteractive(char *cmd){
     userInput=readline(nb_cmd_prompt);  // get a line from the user
     if(!userInput) return(0);
 #endif
-    if(*userInput=='\''){
+    if(*userInput=='\''){      // 2012-10-26 eat - no longer supporting - remove this message after a couple releases
+      outMsg(0,'W',"Use > to set interactive command prefix. Assuming single quoted term.");
+      }
+    else if(*userInput=='>'){  // 2012-10-26 eat - switched to >
       cursor=userInput+1;
       while(*cursor==' ') cursor++;
       if(strlen(cursor)>NB_CMD_PROMPT_LEN-3){
@@ -300,7 +314,7 @@ int nbGetCmdInteractive(char *cmd){
 #if !defined(WIN32)
       free(userInput);
 #endif
-      userInput="'";
+      userInput=">";
       }
     }
   if(*userInput){

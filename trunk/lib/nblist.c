@@ -85,7 +85,7 @@
 * 2010-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 *=============================================================================
 */
-#include <nbi.h>
+#include <nb/nbi.h>
 
 NB_Link *nb_LinkFree=NULL; /* free link list */
 NB_List *nb_ListFree=NULL; /* free list list */

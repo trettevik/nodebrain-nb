@@ -185,7 +185,7 @@
 * 2012-10-17 eat 0.8.12 Repleced random with nbRand16
 *=============================================================================
 */
-#include "nb.h"
+#include <nb/nb.h>
 #include "nbvli.h"
 #include "nbrand.h"
 

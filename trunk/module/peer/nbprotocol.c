@@ -274,7 +274,7 @@
 *=============================================================================
 */
 #include <openssl/rand.h>
-#include "nbi.h"
+#include <nb/nbi.h>
 #include "nbprotocol.h"
 #include "nb_peer.h"
 #include "nbrand.h"

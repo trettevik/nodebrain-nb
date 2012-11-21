@@ -45,7 +45,7 @@
 
 #if defined(NB_INTERNAL)
 
-#include <nbstem.h>
+#include <nb/nbstem.h>
 
 // the ACTION structure may be simplified by converting all rules to the NB_RULE structure 
 // We need to keep parts of it for the nbAction() API function

@@ -55,7 +55,7 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 *=====================================================================
 */
-#include "nbi.h"
+#include <nb/nbi.h>
 #if !defined(WIN32)
 #include <sys/un.h>
 #endif

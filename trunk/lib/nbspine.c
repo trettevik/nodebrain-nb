@@ -53,7 +53,7 @@
 * 2012-10-13 eat 0.8.12 Switched to nb header
 *=============================================================================
 */
-#include <nb.h>
+#include <nb/nb.h>
 
 // nbFileClose - maybe this should be a macro
 

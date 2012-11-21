@@ -64,7 +64,7 @@ AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
 
-CFLAGS="-Wall -O1 $CFLAGS"
+#CFLAGS="-I../../lib/include -Wall -fstack-protector-all -Wno-strict-aliasing $CFLAGS"
 
 #=====================================
 # LIBTOOL stuff
@@ -78,6 +78,7 @@ AC_SUBST([LIBTOOL_DEPS])
 # Checks for programs.
 
 AC_PROG_CC
+AC_PROG_CC_C_O
 
 # Figure out which nb program to use with "make check".
 #   If we are in a Nodebrain distribution, we'll use
@@ -85,6 +86,7 @@ AC_PROG_CC
 #   we look for a compatible installed program.
 
 AC_SUBST([NB],[../../../../lib/.libs/lt-nb])
+AC_SUBST([NB_MOD_CFLAGS],["-I../../lib/include -Wall -fstack-protector-all -Wno-strict-aliasing"])
 #AC_CHECK_PROG([NB],[nbi.h],[../../../../lib/.libs/lt-nb],,[../../lib])
 #if test "x${NB}" = "x"; then
 #  AC_PATH_PROGS([NB],[nb-0.7.5 nb-0.7.4 nb-0.7.3 nb-0.7.2 nb-0.7.1 nb])
@@ -106,31 +108,19 @@ AC_CHECK_FILE([../lib/libnb.la],[AC_SUBST([NB_LIBRARY_PATH],[../../../lib/.libs]
 AC_SUBST([NB_MOD_PATH],[../.libs])
 
 #=====================================
-# Checks for header files.
-
-# Figure out which nb.h to use
-#   If we are in a NodeBrain distribution, we'll use
-#   the one we created in the lib directory.  Otherwise
-#   we'll use the installed one.
-
-AC_CHECK_FILE([../lib/nb.h],[AC_SUBST([NB_INCLUDE],[-I../../lib])],[AC_SUBST([NB_INCLUDE],[-I/usr/local/include/nb])])
-
-#=====================================
-# Checks for typedefs, structures, and compiler characteristics.
-
-#=====================================
 # Checks for library functions.
 
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([strchr])
+AC_CHECK_FUNCS([setenv])
 
 #===================================== 
 # Let the more complicated modules configure themselves
 
-AC_CONFIG_SUBDIRS([webster])
+#AC_CONFIG_SUBDIRS([webster])
 
 #=====================================
 # Create the Makefile
 
-AC_CONFIG_FILES([Makefile audit/Makefile baseline/Makefile cache/Makefile console/Makefile mail/Makefile message/Makefile netflow/Makefile peer/Makefile pipe/Makefile servant/Makefile snmptrap/Makefile string/Makefile syslog/Makefile toy/Makefile translator/Makefile tree/Makefile udp/Makefile])
+AC_CONFIG_FILES([Makefile audit/Makefile baseline/Makefile cache/Makefile console/Makefile mail/Makefile message/Makefile netflow/Makefile peer/Makefile pipe/Makefile servant/Makefile snmptrap/Makefile string/Makefile syslog/Makefile toy/Makefile translator/Makefile tree/Makefile udp/Makefile webster/Makefile])
 AC_OUTPUT

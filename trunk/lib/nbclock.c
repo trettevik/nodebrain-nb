@@ -129,7 +129,7 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 *=============================================================================
 */
-#include "nbi.h" 
+#include <nb/nbi.h> 
 
 time_t nb_ClockTime;     /* current clock time */
 time_t nb_ClockLocalOffset;  // local offset in seconds

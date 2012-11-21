@@ -262,7 +262,7 @@
 * 2012-10-16 eat 0.8.12 Replaced random with nbRand32
 *=============================================================================
 */
-#include "nb.h"
+#include <nb/nb.h>
 #include "nbske.h"
 #include "nbrand.h"
 

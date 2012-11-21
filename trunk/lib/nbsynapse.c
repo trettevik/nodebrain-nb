@@ -77,7 +77,7 @@
 * 2010-06-16 eat 0.8.2  Modified nbSynapseSetTimer to cancel timer when interval is zero
 *=============================================================================
 */
-#include "nbi.h"
+#include <nb/nbi.h>
 
 struct NB_SYNAPSE *nb_SynapsePool;
 struct TYPE *nb_SynapseType;

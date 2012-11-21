@@ -65,7 +65,7 @@
 #ifndef _NB_OBJECT_H_
 #define _NB_OBJECT_H_
 
-//#include <nbstem.h>
+//#include <nb/nbstem.h>
 
 #if defined(NB_INTERNAL)
 
@@ -227,7 +227,7 @@ extern void nbObjectShowTypes(void);
 #if defined(WIN32)
 __declspec(dllexport)
 #endif
-extern void *nbHeap();
+extern void nbHeap();
 
 #if defined(WIN32)
 __declspec(dllexport)

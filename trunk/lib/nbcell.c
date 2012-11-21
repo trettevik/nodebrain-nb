@@ -327,7 +327,7 @@
 * 2012-10-13 eat 0.8.12 Replace remaining malloc with nbAlloc
 *=============================================================================
 */
-#include "nbi.h"
+#include <nb/nbi.h>
 #if !defined(WIN32)
 #include <sys/times.h>
 #endif

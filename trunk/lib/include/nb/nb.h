@@ -55,47 +55,47 @@
 #ifndef _NB_H_
 #define _NB_H_
 
-#include <nbstd.h>         // define some standard system stuff
+#include <nb/nbstd.h>         // define some standard system stuff
 
 // Supporting interface includes
 
-#include <nbspine.h>       // Spinal API
-#include <nbmedulla.h>     // Medulla API
-#include <nbtree.h>        // binary tree functions 
-#include <nbip.h>          // ip related function
+#include <nb/nbspine.h>       // Spinal API
+#include <nb/nbmedulla.h>     // Medulla API
+#include <nb/nbtree.h>        // binary tree functions 
+#include <nb/nbip.h>          // ip related function
 
 // Interpreter related includes
 
-#include <nbstem.h>        /* stem cell */
-#include <nblog.h>         /* log writing functions */
-#include <nbobject.h>      /* object prefix and object types */
-#include <nblist.h>        /* list function */
-#include <nbcell.h>        /* cell object */
-#include <nbterm.h>        /* name, definition, value binding object */
-#include <nbsynapse.h>     /* synapse object */
-#include <nbnode.h>        /* node object */
-#include <nbidentity.h>    /* identity object */
-#include <nbservice.h>     /* service routines */
-#include <nbstream.h>      /* data stream */
-#include <nbassertion.h>   /* assertion objects */
-#include <nbrule.h>        /* rules */
-#include <nbtranslator.h>  /* text translator */
-#include <nblistener.h>    /* listener object */
-#include <nbsource.h>      /* rule file sourcing */
-#include <nbcmd.h>         /* command processor */
+#include <nb/nbstem.h>        /* stem cell */
+#include <nb/nblog.h>         /* log writing functions */
+#include <nb/nbobject.h>      /* object prefix and object types */
+#include <nb/nblist.h>        /* list function */
+#include <nb/nbcell.h>        /* cell object */
+#include <nb/nbterm.h>        /* name, definition, value binding object */
+#include <nb/nbsynapse.h>     /* synapse object */
+#include <nb/nbnode.h>        /* node object */
+#include <nb/nbidentity.h>    /* identity object */
+#include <nb/nbservice.h>     /* service routines */
+#include <nb/nbstream.h>      /* data stream */
+#include <nb/nbassertion.h>   /* assertion objects */
+#include <nb/nbrule.h>        /* rules */
+#include <nb/nbtranslator.h>  /* text translator */
+#include <nb/nblistener.h>    /* listener object */
+#include <nb/nbsource.h>      /* rule file sourcing */
+#include <nb/nbcmd.h>         /* command processor */
 // 2009-02-14 eat 0.7.5 - exposing external API
-#include <nbmodule.h>      // module routines
-#include <nbparse.h>       // parsing routines
-#include <nbclock.h>       // clock routines
-#include <nbrule.h>        // rule routines
-#include <nbnode.h>        // node routines
-#include <nbqueue.h>       // queue routines
-#include <nbtls.h>         // TLS routines
-#include <nbpeer.h>        // peer routines
-#include <nbproxy.h>       // proxy routines
-#include <nbmsg.h>         // message routines
-#include <nbverb.h>        /* verb structure */
-#include <nbwebster.h>     // webster routines
-#include <nbmail.h>        // mail routines
+#include <nb/nbmodule.h>      // module routines
+#include <nb/nbparse.h>       // parsing routines
+#include <nb/nbclock.h>       // clock routines
+#include <nb/nbrule.h>        // rule routines
+#include <nb/nbnode.h>        // node routines
+#include <nb/nbqueue.h>       // queue routines
+#include <nb/nbtls.h>         // TLS routines
+#include <nb/nbpeer.h>        // peer routines
+#include <nb/nbproxy.h>       // proxy routines
+#include <nb/nbmsg.h>         // message routines
+#include <nb/nbverb.h>        /* verb structure */
+#include <nb/nbwebster.h>     // webster routines
+#include <nb/nbmail.h>        // mail routines
 
 #endif // _NB_H_

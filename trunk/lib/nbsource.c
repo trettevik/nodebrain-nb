@@ -40,7 +40,7 @@
 *            Was not acception "% " in a IF or ELSE block being skipped over
 *=============================================================================
 */
-#include <nbi.h>
+#include <nb/nbi.h>
 
 /*
 *  Get a line from a source file

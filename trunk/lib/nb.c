@@ -75,7 +75,7 @@
 * 2006/01/06 eat 0.6.4  Moved signal handling into nbstem.c
 *=============================================================================
 */
-#include <nb.h>
+#include <nb/nb.h>
 
 int main(int argc,char *argv[]){
 #if defined(WIN32)                     /* enable running as Windows service */ 

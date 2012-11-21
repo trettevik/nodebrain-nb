@@ -59,32 +59,32 @@
 #include <config.h>        /* Definitions provided by configure script */
 #endif
 
-#include <nbstd.h>         // define some standard system stuff
-#include <nbhash.h>        /* hash table of objects */
-//#include <nbverb.h>        /* verb structure */
-#include <nbstring.h>      /* string object */
-#include <nbtext.h>        /* text object */
+#include <nb/nbstd.h>      // define some standard system stuff
+#include <nb/nbhash.h>        /* hash table of objects */
+//#include <nb/nbverb.h>        /* verb structure */
+#include <nb/nbstring.h>      /* string object */
+#include <nb/nbtext.h>        /* text object */
 
-#include <nbglobal.h>      /* global variables */
+#include <nb/nbglobal.h>      /* global variables */
 
-#include <nbspawn.h>       /* routines that spawn child processes */
-#include <nbiconv.h>       /* EBCDIC/ASCII conversion */
+#include <nb/nbspawn.h>       /* routines that spawn child processes */
+#include <nb/nbiconv.h>       /* EBCDIC/ASCII conversion */
 
-#include <nbreal.h>        /* real object */
-#include <nbregex.h>      /* regular expression object */
-#include <nbcondition.h>   /* condition object */
-#include <nbclock.h>
-#include <nbbfi.h>         /* binary function of integer */
-#include <nbtime.h>        /* time conditions */
-#include <nbsched.h>       /* schedule and old time conditions */
-#include <nbcall.h>        /* built-in function calls */
-#include <nbmath.h>        /* math functions */
+#include <nb/nbreal.h>        /* real object */
+#include <nb/nbregex.h>      /* regular expression object */
+#include <nb/nbcondition.h>   /* condition object */
+#include <nb/nbclock.h>
+#include <nb/nbbfi.h>         /* binary function of integer */
+#include <nb/nbtime.h>        /* time conditions */
+#include <nb/nbsched.h>       /* schedule and old time conditions */
+#include <nb/nbcall.h>        /* built-in function calls */
+#include <nb/nbmath.h>        /* math functions */
 
-#include <nbparse.h>       /* parsing functions */
+#include <nb/nbparse.h>       /* parsing functions */
 
-#include <nbmodule.h>      /* module object */
-#include <nbmacro.h>       /* string macro object */
+#include <nb/nbmodule.h>      /* module object */
+#include <nb/nbmacro.h>       /* string macro object */
 
-#include <nb.h>
+#include <nb/nb.h>
 
 #endif

@@ -4,7 +4,7 @@
 
 nblib_LTLIBRARIES = nb_message.la
 nb_message_la_SOURCES = nb_message.c
-nb_message_la_CFLAGS  = $(NB_INCLUDE)
+nb_message_la_CFLAGS  = $(NB_MOD_CFLAGS)
 nb_message_la_LDFLAGS = -module -version-info 0:1
 
 EXTRA_DIST = \

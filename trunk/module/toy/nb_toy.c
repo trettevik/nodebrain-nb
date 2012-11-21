@@ -110,7 +110,7 @@
 *=============================================================================
 */
 #include "config.h"
-#include <nb.h>
+#include <nb/nb.h>
 
 #if defined(_WINDOWS)
 BOOL WINAPI DllMain(HINSTANCE hinstDLL,DWORD fdwReason,LPVOID lpvReserved){

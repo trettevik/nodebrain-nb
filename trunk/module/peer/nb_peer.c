@@ -107,8 +107,7 @@
 *=====================================================================
 */
 //#include "config.h"
-#include <nbi.h>    // WARNING: We should use nb.h instead - after removing dependence on internal functions
-//#include <nb.h>
+#include <nb/nbi.h>    // WARNING: We should use nb.h instead - after removing dependence on internal functions
 
 #include "nbbrain.h"
 #include "nbske.h"
@@ -117,7 +116,7 @@
 #include "nbchannel.h"
 #include "nbprotokey.h"
 #include "nbprotocol.h"
-#include "nbqueue.h"
+#include <nb/nbqueue.h>
 
 #include "nb_peer.h"  // 2009-04-19 eat 0.7.5 - used to expose client to nbprotocol for queue transfer
 

@@ -45,7 +45,7 @@
 
 #if defined(NB_INTERNAL)
 
-#include <nbcell.h>
+#include <nb/nbcell.h>
 
 extern struct TYPE *nb_verbType;
 

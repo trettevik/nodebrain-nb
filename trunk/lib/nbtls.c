@@ -176,7 +176,7 @@
 * 2012-05-23 eat 0.8.9  Increased nbTlsCreate max number of URI's to 4
 *==================================================================================
 */
-#include <nb.h>
+#include <nb/nb.h>
 
 #include <openssl/crypto.h>
 #include <openssl/x509.h>
@@ -184,7 +184,7 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
-#include <nbtls.h>
+#include <nb/nbtls.h>
 
 int tlsTrace;          // debugging trace flag for TLS routines
 

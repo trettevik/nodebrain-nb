@@ -51,53 +51,55 @@ libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status --recheck
 
 ACLOCAL_AMFLAGS= -I m4
+#AM_FLAGS = -Wall -g -fstack-protector-all -Wstrict-aliasing=2
 
 # library headers
 
 libnb_adir = @includedir@/nb
 libnb_a_HEADERS = \
-  nb.h \
-  nbassertion.h \
-  nbcell.h \
-  nbclock.h \
-  nbcmd.h \
-  nbidentity.h \
-  nbip.h \
-  nblist.h \
-  nblistener.h \
-  nblog.h \
-  nbmail.h \
-  nbmedulla.h \
-  nbmodule.h \
-  nbmsg.h \
-  nbnode.h \
-  nbobject.h \
-  nbparse.h \
-  nbpeer.h \
-  nbproxy.h \
-  nbqueue.h \
-  nbrule.h \
-  nbservice.h \
-  nbsource.h \
-  nbspine.h \
-  nbstd.h \
-  nbstream.h \
-  nbstem.h \
-  nbsynapse.h \
-  nbterm.h \
-  nbtext.h \
-  nbtls.h \
-  nb-tls.h \
-  nbtranslator.h \
-  nbtree.h \
-  nbverb.h \
-  nbwebster.h
+  include/nb/nb.h \
+  include/nb/nbassertion.h \
+  include/nb/nbcell.h \
+  include/nb/nbclock.h \
+  include/nb/nbcmd.h \
+  include/nb/nbidentity.h \
+  include/nb/nbip.h \
+  include/nb/nblist.h \
+  include/nb/nblistener.h \
+  include/nb/nblog.h \
+  include/nb/nbmail.h \
+  include/nb/nbmedulla.h \
+  include/nb/nbmodule.h \
+  include/nb/nbmsg.h \
+  include/nb/nbnode.h \
+  include/nb/nbobject.h \
+  include/nb/nbparse.h \
+  include/nb/nbpeer.h \
+  include/nb/nbproxy.h \
+  include/nb/nbqueue.h \
+  include/nb/nbrule.h \
+  include/nb/nbservice.h \
+  include/nb/nbsource.h \
+  include/nb/nbspine.h \
+  include/nb/nbstd.h \
+  include/nb/nbstream.h \
+  include/nb/nbstem.h \
+  include/nb/nbsynapse.h \
+  include/nb/nbterm.h \
+  include/nb/nbtext.h \
+  include/nb/nbtls.h \
+  include/nb/nbtranslator.h \
+  include/nb/nbtree.h \
+  include/nb/nbverb.h \
+  include/nb/nbwebster.h
 
 # library gets installed 
 
 lib_LTLIBRARIES = libnb.la
 
-libnb_la_LDFLAGS= -release ${PACKAGE_VERSION}
+#libnb_la_CFLAGS = -Iinclude -Wall -fstack-protector-all -Wstrict-aliasing=2
+libnb_la_CFLAGS = -Iinclude -Wall -fstack-protector-all -fno-strict-aliasing
+libnb_la_LDFLAGS = -release ${PACKAGE_VERSION}
 
 libnb_la_SOURCES = \
   nbassertion.c \
@@ -150,67 +152,69 @@ libnb_la_SOURCES = \
   nbtranslator.c \
   nbverb.c \
   nbwebster.c \
-  nb.h \
-  nbi.h \
-  nbassertion.h \
-  nbbfi.h \
-  nbcall.h \
-  nbcell.h \
-  nbclock.h \
-  nbcmd.h \
-  nbcondition.h \
-  nbglobal.h \
-  nbhash.h \
-  nbiconv.h \
-  nbidentity.h \
-  nbip.h \
-  nblist.h \
-  nblistener.h \
-  nbmacro.h \
-  nbmath.h \
-  nbmedulla.h \
-  nbmodule.h \
-  nbmsg.h \
-  nbnode.h \
-  nbobject.h \
-  nblog.h \
-  nbparse.h \
-  nbpeer.h \
-  nbproxy.h \
-  nbqueue.h \
-  nbreal.h \
-  nbregex.h \
-  nbrule.h \
-  nbsched.h \
-  nbservice.h \
-  nbsource.h \
-  nbspawn.h \
-  nbspine.h \
-  nbstem.h \
-  nbstd.h \
-  nbstream.h \
-  nbstring.h \
-  nbsynapse.h \
-  nbterm.h \
-  nbtext.h \
-  nbtime.h \
-  nbtls.h \
-  nbtree.h \
-  nbtranslator.h \
-  pcre.h \
-  readline/chardefs.h \
-  readline/history.h \
-  readline/keymaps.h \
-  readline/readline.h \
-  readline/rlconf.h \
-  readline/rlstdc.h \
-  readline/rltypedefs.h \
-  readline/tilde.h
+  include/nb/nb.h \
+  include/nb/nbi.h \
+  include/nb/nbassertion.h \
+  include/nb/nbbfi.h \
+  include/nb/nbcall.h \
+  include/nb/nbcell.h \
+  include/nb/nbclock.h \
+  include/nb/nbcmd.h \
+  include/nb/nbcondition.h \
+  include/nb/nbglobal.h \
+  include/nb/nbhash.h \
+  include/nb/nbiconv.h \
+  include/nb/nbidentity.h \
+  include/nb/nbip.h \
+  include/nb/nblist.h \
+  include/nb/nblistener.h \
+  include/nb/nbmacro.h \
+  include/nb/nbmath.h \
+  include/nb/nbmedulla.h \
+  include/nb/nbmodule.h \
+  include/nb/nbmsg.h \
+  include/nb/nbnode.h \
+  include/nb/nbobject.h \
+  include/nb/nblog.h \
+  include/nb/nbparse.h \
+  include/nb/nbpeer.h \
+  include/nb/nbproxy.h \
+  include/nb/nbqueue.h \
+  include/nb/nbreal.h \
+  include/nb/nbregex.h \
+  include/nb/nbrule.h \
+  include/nb/nbsched.h \
+  include/nb/nbservice.h \
+  include/nb/nbsource.h \
+  include/nb/nbspawn.h \
+  include/nb/nbspine.h \
+  include/nb/nbstem.h \
+  include/nb/nbstd.h \
+  include/nb/nbstream.h \
+  include/nb/nbstring.h \
+  include/nb/nbsynapse.h \
+  include/nb/nbterm.h \
+  include/nb/nbtext.h \
+  include/nb/nbtime.h \
+  include/nb/nbtls.h \
+  include/nb/nbtree.h \
+  include/nb/nbtranslator.h 
+
+# pcre.h \
+# readline/chardefs.h \
+# readline/history.h \
+# readline/keymaps.h \
+# readline/readline.h \
+# readline/rlconf.h \
+# readline/rlstdc.h \
+# readline/rltypedefs.h \
+# readline/tilde.h
 
 noinst_PROGRAMS = nb
 
 #bin_PROGRAMS = nb
 
+nb_CFLAGS = -Wall -Iinclude
 nb_SOURCES = nb.c
 
 #nb_LDADD = .libs/libnb.so

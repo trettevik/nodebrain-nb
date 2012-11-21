@@ -42,8 +42,8 @@
 #ifndef _NB_TERM_H_
 #define _NB_TERM_H_
 
-#include <nbcell.h>
-#include <nbstem.h>
+#include <nb/nbcell.h>
+#include <nb/nbstem.h>
 
 #if defined(NB_INTERNAL)
 

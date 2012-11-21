@@ -47,7 +47,7 @@
 #ifndef _NB_IP_H_
 #define _NB_IP_H_
 
-#include <nbcell.h>
+#include <nb/nbcell.h>
 
 typedef struct IP_CHANNEL{
   int socket;                /* socket number or handle */

@@ -40,11 +40,11 @@
 #ifndef _NB_HASH_H_
 #define _NB_HASH_H_
 
-#include <nbobject.h>
+#include <nb/nbobject.h>
  
 #if defined(NB_INTERNAL)
 
-#include <nbstem.h>
+#include <nb/nbstem.h>
 
 extern struct TYPE *typeHash;
 

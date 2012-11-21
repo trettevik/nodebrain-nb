@@ -111,7 +111,7 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 *=============================================================================
 */
-#include <nbi.h>
+#include <nb/nbi.h>
 
 struct NB_MODULE *moduleList=NULL; /* module object used list */
 struct NB_MODULE *moduleFree=NULL; /* module object free list */

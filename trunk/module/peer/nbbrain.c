@@ -81,7 +81,7 @@
 * 2012-10-17 eat 0.8.12 Checker updates
 *=============================================================================
 */
-#include <nbi.h>
+#include <nb/nbi.h>
 #include "nbvli.h"
 #include "nbprotokey.h"
 #include "nbbrain.h"

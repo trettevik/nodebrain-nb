@@ -4,7 +4,7 @@
 
 nblib_LTLIBRARIES = nb_string.la
 nb_string_la_SOURCES = nb_string.c
-nb_string_la_CFLAGS  = $(NB_INCLUDE)
+nb_string_la_CFLAGS  = $(NB_MOD_CFLAGS)
 nb_string_la_LDFLAGS = -module -version-info 0:1
 
 EXTRA_DIST = \

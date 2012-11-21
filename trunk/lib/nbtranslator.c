@@ -317,7 +317,7 @@
 *            expressions.
 *=============================================================================
 */
-#include "nbi.h"
+#include <nb/nbi.h>
 
 #define PROJECTION_STOP   0   // character used to terminate encoded projection 
 #define PROJECTION_PARENS 32  // maximum number of parenthesized expressions

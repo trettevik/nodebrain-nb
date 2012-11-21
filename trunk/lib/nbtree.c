@@ -143,7 +143,7 @@
 * 2007/05/22 eat 0.6.8 - removed from nb_mod_tree.c and made part of the API
 *=============================================================================
 */
-#include "nbi.h"
+#include <nb/nbi.h>
 
 // nbTreeFind()    - Binary tree search function
 //

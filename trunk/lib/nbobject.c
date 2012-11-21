@@ -184,7 +184,7 @@
 * 2012-10-13 eat 0.8.12 Added nbHeap function (was first part of nbObjectInit)
 *=============================================================================
 */
-#include "nbi.h"
+#include <nb/nbi.h>
 
 int showstate=0;         /* show state information in Show command */
 int showvalue=0;         /* show function values */
@@ -221,7 +221,7 @@ struct NB_OBJECT_PAGE{
   char space[NB_OBJECT_PAGE_SIZE-2*sizeof(void *)];
   };
 
-struct NB_OBJECT_PAGE *objectHeap;
+struct NB_OBJECT_PAGE *objectHeap=NULL;
 
 struct NB_OBJECT_POOL{
   struct STRING *vector[NB_OBJECT_MANAGED_SIZE/8];
@@ -249,7 +249,7 @@ void nbTypeShow(NB_Type *type){
   outPut("type %s",type->name);
   }
 
-void *nbHeap(){
+void nbHeap(){
   objectHeap=malloc(NB_OBJECT_PAGE_SIZE);
   if(!objectHeap){
     fprintf(stderr,"NodeBrain out of memory.  Terminating\n");
@@ -307,6 +307,7 @@ void nbObjectInit(NB_Stem *stem){
 */
 void *newObject(struct TYPE *type,void **pool,int size){
   NB_Object *object,**freeItemP;
+  if(!objectHeap) nbHeap();
   if(size>NB_OBJECT_MANAGED_SIZE){
     object=malloc(size);
     if(!object){ 
@@ -342,6 +343,7 @@ void *nbAlloc(int size){
   NB_Object *object,**freeItemP;
 
   //outMsg(0,'T',"nbAlloc: size=%d",size);
+  if(!objectHeap) nbHeap();
   if(size>NB_OBJECT_MANAGED_SIZE){
     object=(NB_Object *)malloc(size);
     if(!object){ 

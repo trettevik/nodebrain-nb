@@ -44,7 +44,7 @@
 ## ---------- -----------------------------------------------------------------
 ## 2008/10/27 Ed Trettevik (version 0.7.3 - split out from nb package)
 ## 2010/02/27 eat 0.7.9  Included DESTDIR
-##=============================================================================
+##===================================o==========================================
 ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = audit baseline cache console mail message netflow peer pipe servant snmptrap string syslog toy translator tree udp webster
@@ -84,4 +84,4 @@ install-exec-hook:
 	  done
 
 uninstall-local:
-	rm -fr $(libdir)/nb/$(VERSION)
+	rm -fr $(libdir)/nb/$(VERSION

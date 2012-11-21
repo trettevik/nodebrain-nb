@@ -69,7 +69,7 @@
 * 2005/04/10 Ed Trettevik (separated from nb.c in 0.6.2)
 *=============================================================================
 */
-#include <nbi.h>
+#include <nb/nbi.h>
 
 /*
 *  Handle "+:" commands

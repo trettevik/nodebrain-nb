@@ -68,7 +68,7 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 *=============================================================================
 */
-#include "nbi.h"
+#include <nb/nbi.h>
 #include "nbprotocol.h"
 
 NB_PeerKey *nb_PeerKeyTree=NULL;  // defined keys

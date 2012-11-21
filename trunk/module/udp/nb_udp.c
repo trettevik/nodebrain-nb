@@ -77,7 +77,7 @@
 *=====================================================================
 */
 #include "config.h"
-#include <nb.h>
+#include <nb/nb.h>
 
 /*
 *  Datagram Format
