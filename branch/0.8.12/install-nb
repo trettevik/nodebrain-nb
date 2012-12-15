@@ -1,0 +1,118 @@
+#!/bin/sh
+#==========================================================================
+# Name:   install-nb
+#
+# Title:  NodeBrain Binary Install Script
+#
+# Function:
+#
+#   This script is used with a binary NodeBrain distribution to perform the
+#   install operation "make install" performs for a source distribution.
+#
+#   See README if you are working with a source only distribution.
+#
+# Synopsis:
+#
+#    ./install-nb
+#
+#    [DIR=<dir>] [BINDIR=<bindir>] [LIBDIR=<libdir>] [MANDIR=<mandir>] ./install-nb
+#
+# Examples:
+#
+#    Install to /usr/local/bin, /usr/local/lib, and /usr/local/man
+#
+#      $ ./install-nb
+#
+#    Install to /tmp/bin, /tmp/lib, and /tmp/man
+#
+#      $ DIR=/tmp ./install-nb
+#
+#    Install to /usr/bin, /usr/local/lib, and /usr/local/man
+#
+#      $ BINDIR=/usr/bin ./install-nb
+#
+#
+# Description:
+#
+#   This script is just a series of mkdir and install commands to install
+#   components.  You will normally need root authority to install to the
+#   standard directories.  If this is a problem for you, have your system
+#   administrator perform the install.  If you are just experimenting and
+#   not trying to make NodeBrain available to other users, there is no
+#   requirement to install in standard libraries.  You may prefer to simply
+#   copy nb to a location of your liking and skip the install step.
+#    
+# 2004/10/11 Ed Trettevik
+# 2005/03/26 eat 0.6.2  Included console, netflow and snmptrap modules
+# 2005/03/26 eat 0.6.2  Included NB_MOD_SUFFIX for non "so" systems
+# 2005/05/06 eat 0.6.2  Included the headers
+# 2008/06/26 eat 0.7.1  Updated to support new version separation scheme
+#===========================================================================
+
+VERSION="0.7.1"
+
+if test -x "/usr/bin/install"; then
+  install="${INSTALL-/usr/bin/install}"
+else
+  install="${INSTALL-config/install-sh}"
+fi
+
+dir="${DIR-/usr/local}"
+bin="${BINDIR-${dir}/bin}"
+lib="${LIBDIR-${dir}/lib}"
+man="${MANDIR-${dir}/man}"
+inc="${INCDIR-${dir}/include}"
+
+NB_MOD_SUFFIX="so"
+if test -f "./nb_mod_tree.sl"; then
+  NB_MOD_SUFFIX="sl"
+elif test -f "./nb_mod_tree.dylib"; then
+  NB_MOD_SUFFIX="dylib"
+fi
+
+set -x
+mkdir -m 0755 -p -- ${bin}
+  ${install} -c ./nb ${bin}/nb-${VERSION}
+mkdir -m 0755 -p -- ${lib}
+  ${install} -c -m 644 ./libnb.a ${lib}/libnb.a
+  ${install} -c -m 644 ./libnb.a ${lib}/libnbp.a
+ ranlib ${lib}/libnb.a
+ ranlib ${lib}/libnbp.a
+mkdir -m 0755 -p -- ${lib}/nb-${VERSION}
+  ${install} -c -m 644 ./nb_mod_audit.${NB_MOD_SUFFIX} ${lib}/nb-${VERSION}/nb_mod_audit.${NB_MOD_SUFFIX}
+  ${install} -c -m 644 ./nb_mod_cache.${NB_MOD_SUFFIX} ${lib}/nb-${VERSION}/nb_mod_cache.${NB_MOD_SUFFIX}
+  ${install} -c -m 644 ./nb_mod_console.${NB_MOD_SUFFIX} ${lib}/nb-${VERSION}/nb_mod_console.${NB_MOD_SUFFIX}
+  ${install} -c -m 644 ./nb_mod_duplicator.${NB_MOD_SUFFIX} ${lib}/nb-${VERSION}/nb_mod_duplicator.${NB_MOD_SUFFIX}
+  ${install} -c -m 644 ./nb_mod_junction.${NB_MOD_SUFFIX} ${lib}/nb-${VERSION}/nb_mod_junction.${NB_MOD_SUFFIX}
+  ${install} -c -m 644 ./nb_mod_mail.${NB_MOD_SUFFIX} ${lib}/nb-${VERSION}/nb_mod_mail.${NB_MOD_SUFFIX}
+  ${install} -c -m 644 ./nb_mod_netflow.${NB_MOD_SUFFIX} ${lib}/nb-${VERSION}/nb_mod_netflow.${NB_MOD_SUFFIX}
+  ${install} -c -m 644 ./nb_mod_peer.${NB_MOD_SUFFIX} ${lib}/nb-${VERSION}/nb_mod_peer.${NB_MOD_SUFFIX}
+  ${install} -c -m 644 ./nb_mod_pipe.${NB_MOD_SUFFIX} ${lib}/nb-${VERSION}/nb_mod_pipe.${NB_MOD_SUFFIX}
+  ${install} -c -m 644 ./nb_mod_servant.${NB_MOD_SUFFIX} ${lib}/nb-${VERSION}/nb_mod_servant.${NB_MOD_SUFFIX}
+  ${install} -c -m 644 ./nb_mod_snmptrap.${NB_MOD_SUFFIX} ${lib}/nb-${VERSION}/nb_mod_snmptrap.${NB_MOD_SUFFIX}
+  ${install} -c -m 644 ./nb_mod_syslog.${NB_MOD_SUFFIX} ${lib}/nb-${VERSION}/nb_mod_syslog.${NB_MOD_SUFFIX}
+  ${install} -c -m 644 ./nb_mod_toy.${NB_MOD_SUFFIX} ${lib}/nb-${VERSION}/nb_mod_toy.${NB_MOD_SUFFIX}
+  ${install} -c -m 644 ./nb_mod_translator.${NB_MOD_SUFFIX} ${lib}/nb-${VERSION}/nb_mod_translator.${NB_MOD_SUFFIX}
+  ${install} -c -m 644 ./nb_mod_tree.${NB_MOD_SUFFIX} ${lib}/nb-${VERSION}/nb_mod_tree.${NB_MOD_SUFFIX}
+  ${install} -c -m 644 ./nb_mod_webster.${NB_MOD_SUFFIX} ${lib}/nb-${VERSION}/nb_mod_webster.${NB_MOD_SUFFIX}
+mkdir -m 0755 -p -- ${inc}/nb
+  ${install} -c -m 644 ./nbapi.h ${inc}/nb/nbapi.h
+  ${install} -c -m 644 ./nbcfg.h ${inc}/nb/nbcfg.h
+  ${install} -c -m 644 ./nbstd.h ${inc}/nb/nbstd.h
+mkdir -m 0755 -p -- ${man}/man1
+  ${install} -c -m 644 ./man/NodeBrain.1 ${man}/man1/NodeBrain.1
+  ${install} -c -m 644 ./man/nb.1 ${man}/man1/nb.1
+  ${install} -c -m 644 ./man/nodebrain.1 ${man}/man1/nodebrain.1
+mkdir -m 0755 -p -- ${man}/man3
+  ${install} -c -m 644 ./man/nb.3 ${man}/man3/nb.3
+  ${install} -c -m 644 ./man/nb.lib.3 ${man}/man3/nb.lib.3
+mkdir -m 0755 -p -- ${man}/man5
+  ${install} -c -m 644 ./man/host.nb.5 ${man}/man5/host.nb.5
+  ${install} -c -m 644 ./man/nb.5 ${man}/man5/nb.5
+  ${install} -c -m 644 ./man/nb.cfg.5 ${man}/man5/nb.cfg.5
+  ${install} -c -m 644 ./man/nb.syn.5 ${man}/man5/nb.syn.5
+  ${install} -c -m 644 ./man/private.nb.5 ${man}/man5/private.nb.5
+mkdir -m 0755 -p -- ${man}/man7
+  ${install} -c -m 644 ./man/nb.7 ${man}/man7/nb.7
+  ${install} -c -m 644 ./man/nb.man.7 ${man}/man7/nb.man.7
+  ${install} -c -m 644 ./man/nb.mod.7 ${man}/man7/nb.mod.7

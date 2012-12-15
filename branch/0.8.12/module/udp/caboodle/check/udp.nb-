@@ -1,0 +1,6 @@
+set -s
+define server node udp.server("127.0.0.1:49832");
+enable server;
+define client node udp.client("127.0.0.1:49832");
+enable client;
+client:stop

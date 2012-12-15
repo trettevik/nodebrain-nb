@@ -1,0 +1,41 @@
+@c Webster tutorial
+@c   A section to the NodeBrain Tutorial and Webster Nodebrain Module docs.
+
+@quotation
+@i{The world is governed more by appearance than realities, so that it is fully as necessary to seem to know something as to know it.}
+---Daniel Webster (1782--1852)
+@end quotation
+
+The Webster module enables NodeBrain to pretend to be a web server---not with the goal of providing a web server for web applications in general but to support little web tools associated with NodeBrain applications.
+
+Although Webster supports x509 certificate authentication, let's skip over all that fun stuff and get it running quickly with no security. If you don't secure it with password or certificate authentication, Webster doesn't let you do anything other than display web pages, so other than exposing a port that could be vulnerable to buffer overflow errors if NodeBrain has bugs, there is no risk in running it without security.
+
+For this tutorial, the files are in the @code{tutorial/Webster} subdirectory of the distribution directory.  The server script @code{webster1} looks like this.
+
+@cartouche
+@smallexample
+#!/usr/local/bin/nb -d
+# File: tutorial/Webster/webster1
+-rm webster.log
+set out=".",log="webster.log";
+@b{define webster node webster("default@@0.0.0.0:62443");}
+@b{webster. define Protocol     cell "HTTP";}# Default is "HTTPS"
+@b{webster. define Authenticate cell "no";}  # Default is "yes"
+@b{webster. define DocumentRoot cell "web";} # Default is "web"
+$
+@end smallexample
+@end cartouche
+
+A Webster server is specified as @code{@i{identity}@@@i{interface}:@i{port}}.
+You are using the @code{default} identity, all interfaces "0.0.0.0", and port 62443.  The "443" reminds you that you'd prefer to use HTTPS in a real application.  Change the port number if 62443 is used on your system.
+
+If there are no errors in the log file, you can leave your server running and connect with your web browser using the following URL.
+@cartouche
+@smallexample
+@b{http://@i{hostname}:62443}
+@end smallexample
+@end cartouche
+
+This tutorial continues on the page displayed by your browser.  
+
+

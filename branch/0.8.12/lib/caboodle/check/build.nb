@@ -1,0 +1,19 @@
+#
+# File:   check/build.nb
+#
+# Title:  NodeBrain Build Test   
+#
+# Description:
+#
+#   This script is run to verify that nb is executable after
+#   building from a source distribution or downloading a
+#   binary distribution.  This test exercises very little
+#   functionality because we just want to see if it executes.
+#    
+#============================================================
+
+define r1 on(a=1 and b=2) c=3;
+assert a=2;
+assert b=2;
+assert a=1;
+show -t

@@ -1,0 +1,5 @@
+# abby.nb
+assert a=1,b=3;
+assert b=2;
+assert a=0;
+assert a=1;

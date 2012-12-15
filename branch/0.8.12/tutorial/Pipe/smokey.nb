@@ -1,0 +1,11 @@
+#!/usr/local/bin/nb -d
+# File: tutorial/Pipe/smokey.nb
+-rm smokey.log
+set log="smokey.log",out=".";
+declare jed identity guest;
+declare chief identity owner;
+define corncob node pipe.server("jed@corncob");
+corncob. define r1 on(a=1 and b=2);
+define peace node pipe.server("chief@peace");
+peace. define r1 on(a=1 and b=2);
+define common node;

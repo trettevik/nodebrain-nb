@@ -1,0 +1,33 @@
+
+N o d e B r a i n   0.6.2 2005/05/03 NBP 0.0.1
+
+Compiled May  3 2005 16:36:20 i686-pc-linux-gnu
+
+Copyright (C) 1998-2005 The Boeing Company
+GNU General Public License
+----------------------------------------------------------------
+
+nb -d ./snmptrap.nb 
+
+Date       Time     Message
+---------- -------- --------------------------------------------
+2005/05/03 20:23:03 NB000I NodeBrain nb root[19840]
+2005/05/03 20:23:03 NB000I Daemon log is snmptrap.log
+2005/05/03 20:23:03 NX000I snmptrap: Listening on port 162 for SNMP Trap Datagrams
+
+>@.snmptrap. alert '1.3.6.1.6.3.18.1.4'="public",'1.3.6.1.6.3.1.1.4.3'="1.3.6.1.4.1.2789.2005",'1.3.6.1.6.3.18.1.3'="127.000.000.001",'1.3.6.1.6.3.1.1.4.1.0'="1.3.6.1.4.1.2789.2005.0.2476317",'1.3.6.1.2.1.1.3.0'=1835432400,'1.3.6.1.4.1.2789.2005.1'="WWW Server Has Been Restarted"
+2005/05/03 20:23:07 NB000I Rule r1 fired 
+>@.snmptrap. -ls -al; echo "WWW Server Has Been Restarted"
+total 40
+drwxr-sr-x    2 root     staff        4096 Apr 21 23:40 .
+drwxr-sr-x   12 root     staff        8192 May  3 20:11 ..
+-rw-r--r--    1 root     staff         553 Apr  5  2004 simpleEvents.nb
+-rwxr-xr-x    1 root     staff        1500 Apr  5  2004 simpleRules.nb
+-rw-r-----    1 root     staff         539 May  3 20:23 snmptrap.log
+-rwxr-xr-x    1 root     staff        3011 May  3 20:22 snmptrap.nb
+-rwxr-xr-x    1 root     staff         459 Apr 21 22:50 snmptrap.sh
+-rwxr-xr-x    1 root     staff         787 Apr  6  2004 treeEvents.nb
+-rwxr-xr-x    1 root     staff         955 Apr  6  2004 treeRules.nb
+WWW Server Has Been Restarted
+2005/05/03 20:23:07 NB000I Exit Code (0)
+>@.snmptrap. alert '1.3.6.1.6.3.18.1.4'="public",'1.3.6.1.6.3.18.1.3'="127.000.000.001",'1.3.6.1.2.1.1.3.0'=1835432417,'1.3.6.1.6.3.1.1.4.1.0'="1.3.6.1.6.3.1.1.5.3",'1.3.6.1.2.1.2.2.1.1'=2,'1.3.6.1.2.1.2.2.1.7'=1,'1.3.6.1.2.1.2.2.1.8'=1

@@ -1,0 +1,84 @@
+#!../nb -d
+# Example of expert skill module nb_mod_snmptrap.
+#
+# This module turns NodeBrain into an SNMP V1/V2 Trap listener.  As traps
+# are received they are translated into NodeBrain ALERT commands. Your
+# monitoring rules are coded as IF rules as is standard for monitoring
+# ALERT commands. 
+#
+#======================================================================
+# Set the log file
+
+set log="snmptrap.log";
+
+#======================================================================
+# Load the SNMP Trap listener module
+#
+#    This is only needed when testing in the sample directory with
+#    a module built in the parent directory.  After NodeBrain is
+#    installed this is not required.
+
+declare snmptrap module {".."}; 
+
+#======================================================================
+# Service Configuration
+#   Uncomment the define statement you want to use and comment others
+
+# Use defaults: bind to all interfaces and listen on port 162
+# (Must run as root when using port numbers below 1024)
+define snmptrap expert snmptrap;
+
+# Bind to a specific interface address
+#define snmptrap expert snmptrap("127.0.0.1");
+
+# Use a different port
+#define snmptrap expert snmptrap(50162);
+
+# Use a different port on a specific interface
+#define snmptrap expert snmptrap("127.0.0.1:50162");
+
+#======================================================================
+# Logging Options
+#
+#   Apply to define statement activated above
+#
+#   define snmptrap expert snmptrap[(<binding>)][:<options>];
+#
+#     trace  - display each trap received
+#     dump   - trace and display hex dump of each trap
+#     silent - don't echo generated NodeBrain commands 
+#
+#   Example:    
+#
+#     define snmptrap expert snmptrap:dump;
+#     define snmptrap expert snmptrap(50162):trace,silent;
+
+#======================================================================
+# Define aliases for OID values
+#
+#   This is not necessary, since you can use the '<oid>' terms
+#   in your rules.  However, the snmptrap module is not MIB aware, so
+#   you need to work with numeric OID's.  By defining aliases for OID's
+#   referenced in rules, the rules will be easier to read.
+
+snmptrap. define snmpTrap     cell '1.3.6.1.6.3.1.1.4.1.0';
+snmptrap. define myMsgText    cell '1.3.6.1.4.1.2789.2005.1';
+
+#======================================================================
+# Define aliases for specific bindings
+#
+#   This is normal NodeBrain stuff.  You can define cells as logical
+#   expressions and use these terms in your rule conditions.
+#
+
+snmptrap. define myRestartTrap cell snmpTrap="1.3.6.1.4.1.2789.2005.0.2476317";
+
+#====================================================================== 
+# Rules to monitor the SNMP Trap events
+#
+#   Here you can use OID terms ('<oid>') and values directly or take
+#   advantage of the terms you defined above as aliases.
+#
+#   The action for rule r1 is not useful, just an illustration.
+#    
+snmptrap. define r1 if(myRestartTrap and myMsgText~~"WWW"):$ -ls -al; echo "$${myMsgText}"
