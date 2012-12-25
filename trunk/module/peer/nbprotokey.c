@@ -203,10 +203,18 @@ void nbpLoadKeys(){
   FILE *file;
   char *name=bufin,*key;
   char filename[1024];
+  char *userDir;
+  char *basename="/nb_peer.keys";
 
   nb_DefaultPeerKey=nbpNewPeerKey("default","7.d3c8f3f8.f8867ca7.0");  /* default */
-  strcpy(filename,nbGetUserDir());
-  strcat(filename,"/nb_peer.keys");
+  userDir=nbGetUserDir();
+  if(strlen(userDir)>=sizeof(filename)+sizeof(basename)){
+    outMsg(0,'E',"User home directory path too long.");
+    return;
+    }
+  sprintf(filename,"%s%s",userDir,basename);
+  //strcpy(filename,nbGetUserDir());
+  //strcat(filename,"/nb_peer.keys");
   if((file=fopen(filename,"r"))==NULL) return;
   while(fgets(bufin,NB_BUFSIZE,file)!=NULL){
     key=bufin;

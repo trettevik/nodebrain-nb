@@ -104,6 +104,7 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 * 2012-10-13 eat 0.8.12 Replaced exit with nbExit
 * 2012-10-17 eat 0.8.12 Added size parameter to nbNodeGetNameFull
+* 2012-12-16 eat 0.8.13 Checker updates.
 *=====================================================================
 */
 //#include "config.h"
@@ -144,6 +145,10 @@ static nbServer *newServer(nbCELL context,char *cursor,char *oar,char *msg){
   char *inCursor;
   char *interfaceAddr;
 
+  if(strlen(oar)>=sizeof(server->oar)){  // 2012-12-16 eat - 751650
+    sprintf(msg,"Oar is too long for buffer - %s",oar);
+    return(NULL);
+    }
   server=nbAlloc(sizeof(nbServer));
   inCursor=server->idName;
   while(*cursor==' ') cursor++;
@@ -181,12 +186,16 @@ static nbServer *newServer(nbCELL context,char *cursor,char *oar,char *msg){
         nbFree(server,sizeof(nbServer));
         return(NULL);
         }
-      strcpy(server->address,interfaceAddr);
+      strncpy(server->address,interfaceAddr,sizeof(server->address)-1);
+      *(server->address+sizeof(server->address)-1)=0;
       } 
     else{
       interfaceAddr=chgetname(server->address);
       if(interfaceAddr==NULL) *server->hostname=0;
-      else strcpy(server->hostname,interfaceAddr);
+      else{
+        strncpy(server->hostname,interfaceAddr,sizeof(server->hostname));
+        *(server->hostname+sizeof(server->hostname)-1)=0;
+        }
       }
     if(*cursor!=':'){
       snprintf(msg,(size_t)NB_MSGSIZE,"Expecting ':port' at: %s",cursor); //2012-01-31 dtl: replaced sprintf
@@ -222,11 +231,8 @@ static void serverAccept(nbCELL context,int serverSocket,void *handle){
     return;
     }
   if(chaccept(session->channel,(int)server->socket)<0){
-    if(errno!=EINTR){
-      nbLogMsg(context,0,'E',"serverAccept: chaccept failed errno=%d",errno);
-      return;
-      }
-    nbpFreeSessionHandle(session);
+    if(errno!=EINTR) nbLogMsg(context,0,'E',"serverAccept: chaccept failed errno=%d",errno);
+    nbpFreeSessionHandle(session);   // 2012-12-18 eat - CID 751613
     }
   else{
     //2008-06-11 eat - the next line is a goofy attept to provide a Unix domain socket name for nbpServe to print
@@ -774,9 +780,10 @@ static int peerCmdIdentify(nbCELL context,void *handle,char *verb,char *text){
   vli2048 e,n,d;
   FILE *file;
 #if !defined(WIN32)
-  char dirname[256];
+  char dirname[512];
 #endif
   char filename[512];
+  char *userdir;
 
   savecursor=cursor;
   symid=nbParseSymbol((char *)identityName,&cursor);
@@ -807,7 +814,8 @@ static int peerCmdIdentify(nbCELL context,void *handle,char *verb,char *text){
   vliputx(d,(char *)sd);
   sprintf((char *)s,"%s %s.%s.%s.0;",identityName,se,sn,sd); /* format declaration */
   nbLogPut(context,"%s\n",s);
-  sprintf(filename,"%s/nb_peer.keys",nbGetUserDir());
+  userdir=nbGetUserDir();
+  sprintf(filename,"%s/nb_peer.keys",userdir);
   if((file=fopen(filename,"a"))==NULL){
 #if defined(WIN32)
     nbLogMsg(context,0,'E',"Unable to open %s to append identity.",filename);
@@ -815,7 +823,11 @@ static int peerCmdIdentify(nbCELL context,void *handle,char *verb,char *text){
     }
 #else
     int rc;
-    strcpy(dirname,nbGetUserDir());
+    if(strlen(userdir)>=sizeof(dirname)){
+      nbLogMsg(context,0,'E',"User directory name too long");
+      return(1);
+      }
+    strcpy(dirname,userdir);
     //strcat(dirname,"/.nb");
     rc=mkdir(dirname,S_IRWXU);
     if(rc<0 || (file=fopen(filename,"a"))==NULL){

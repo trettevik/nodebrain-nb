@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -58,7 +58,7 @@ typedef struct NB_MEDULLA_PROCESS{
   int    gid;                // sg group id (if uid non-zero)
   char   pgm[256];           // child program
   char   cmd[NB_BUFSIZE];    // child command - truncated if necessary
-  char   out[256];           // output file name
+  char   out[512];           // output file name
 
   nbCHILD child;             // child information (may move some process info to it)
   int    pid;                // child process id

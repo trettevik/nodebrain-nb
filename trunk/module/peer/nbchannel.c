@@ -162,6 +162,7 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 * 2012-10-16 eat 0.8.12 Checker updates
 * 2012-10-18 eat 0.8.12 Checker updates
+* 2012-12-16 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <openssl/rand.h>
@@ -215,6 +216,7 @@ extern int chlisten(char *addr,unsigned short port){
 #if !defined(WIN32)
   struct sockaddr_un un_addr;
 
+  memset(&in_addr,0,sizeof(struct sockaddr_in));
   if(*addr!=0 && (*addr<'0' || *addr>'9')){
     domain=AF_UNIX;
     if(strlen(addr)>sizeof(un_addr.sun_path)){
@@ -333,7 +335,8 @@ extern int chaccept(struct CHANNEL *channel,int server_socket){
 #if defined(mpe)
   strcpy(channel->ipaddr,(char *)inet_ntoa(client.sin_addr));
 #else
-  strcpy(channel->ipaddr,inet_ntoa(client.sin_addr));
+  strncpy(channel->ipaddr,inet_ntoa(client.sin_addr),sizeof(channel->ipaddr)-1);
+  *(channel->ipaddr+sizeof(channel->ipaddr)-1)=0;
 #endif
   channel->port=ntohs(client.sin_port);
   return(0);
@@ -380,6 +383,7 @@ extern int chopen(struct CHANNEL *channel,char *addr,unsigned short port){
 #if !defined(WIN32)
   struct sockaddr_un un_addr;
   
+  memset(&in_addr,0,sizeof(struct sockaddr));
   if(*addr!=0 && (*addr<'0' || *addr>'9')){
     domain=AF_UNIX;
     if(strlen(addr)>sizeof(channel->unaddr) || strlen(addr)>sizeof(un_addr.sun_path)){

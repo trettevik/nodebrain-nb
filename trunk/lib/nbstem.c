@@ -371,9 +371,17 @@ nbCELL nbStart(int argc,char *argv[]){
 #else
   pwd=getpwuid(getuid());
   if(pwd==NULL) strcpy(myusername,"???");
+  else if(strlen(pwd->pw_name)>=sizeof(myusername)){
+    fprintf(stderr,"NB000E Username %s too large",pwd->pw_name);
+    exit(NB_EXITCODE_FAIL);
+    }
   else strcpy(myusername,pwd->pw_name); 
 #endif
   if(gethostname(nb_hostname,sizeof(nb_hostname))) strcpy(nb_hostname,"unknown");
+  if(strlen(argv[0])>=sizeof(mypath)){
+    fprintf(stderr,"NB000E First argument larger than path buffer.\n");
+    exit(NB_EXITCODE_FAIL);
+    }
   strcpy(mypath,argv[0]);
   cursor=mypath+strlen(mypath)-1;
   while(cursor>mypath && *cursor!='/' && *cursor!='\\') cursor--;
@@ -470,6 +478,10 @@ nbCELL nbStart(int argc,char *argv[]){
 #else
   if((pwd=getpwuid(getuid()))==NULL){
     outMsg(0,'E',"Unable to get account info for user id=%d",getuid());
+    return(NULL);
+    }
+  if(strlen(pwd->pw_dir)>=sizeof(myuserdir)-4){
+    outMsg(0,'E',"Home directory name must not be greater than %d characters.",sizeof(myuserdir)-4);
     return(NULL);
     }
   strcpy(myuserdir,pwd->pw_dir);

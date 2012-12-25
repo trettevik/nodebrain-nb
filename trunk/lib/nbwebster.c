@@ -141,6 +141,7 @@
 * 2012-08-26 eat 0.8.10 - Stopped echo of URL not found to avoid XSS vulnerability
 * 2012-09-17 eat 0.8.11 - Fixed some buffer overflows
 * 2012-10-13 eat 0.8.12 - Replaced malloc/free with nbAlloc/nbFree
+* 2012-12-15 eat 0.8.13 - Checker updates
 *==============================================================================
 */
 #include <nb/nbi.h>
@@ -324,7 +325,7 @@ static int nbWebsterDecodeRequest(nbCELL context,nbWebSession *session,char *req
   char value[512];
 
   if(nb_websterTrace) nbLogMsg(context,0,'T',"nbWebsterDecodeRequest: called - len=%d",reqlen);
-  if(reqlen>sizeof(session->request)){
+  if(reqlen>=sizeof(session->request)){
     nbLogMsg(context,0,'E',"Request is too large for buffer");
     return(-1);
     }
@@ -699,11 +700,19 @@ static int nbWebsterCgi(nbCELL context,nbWebSession *session,char *file,char *qu
   if(*session->email) setenv("SSL_CLIENT_S_DN_Email",session->email,1);
   setenv("QUERY_STRING",queryString,1);
   setenv("NB_WEBSTER_CONFIG",webster->config,1);
-  strcpy(dir,file);
-  delim=dir+strlen(dir)-1;
-  while(delim>dir && *delim!='/') delim--;
-  if(delim>dir){
-    *delim=0;
+  if(strlen(file)>=sizeof(dir)){
+    nbLogMsg(context,0,'E',"Directory to large",buf);
+    return(-1);
+    }
+  delim=file+strlen(file)-1;
+  while(delim>file && *delim!='/') delim--;
+  if(delim>file){
+    if(delim-file>=sizeof(dir)){
+      nbLogMsg(context,0,'E',"Directory to large",buf);
+      return(-1);
+      }
+    strncpy(dir,file,delim-file);
+    *(dir+(delim-file))=0;
     chdir(dir);
     getcwd(dir,sizeof(dir));
     nbLogMsg(context,0,'T',"During pwd=%s",dir);
@@ -1086,7 +1095,7 @@ static int nbWebGetRoleByCertificate(nbCELL context,nbWebSession *session){
       delim=strchr(cursor,'/');
       if(!delim) len=strlen(cursor);
       else len=delim-cursor;
-      if(len>=sizeof(session->email)) len=sizeof(session->email-1);
+      if(len>=sizeof(session->email)) len=sizeof(session->email)-1;
       strncpy(session->email,cursor,len);
       *(session->email+len)=0;
       }
@@ -1404,7 +1413,7 @@ nbWebServer *nbWebsterOpen(nbCELL context,nbCELL siteContext,void *handle,
   webster->siteContext=siteContext;
   webster->handle=handle;
   webster->handler=handler;
-  if(getcwd(webster->dir,sizeof(webster->dir))<0) *webster->dir=0;
+  if(getcwd(webster->dir,sizeof(webster->dir))==NULL) *webster->dir=0;
   delim=webster->dir;
   while((delim=strchr(delim,'\\'))!=NULL) *delim='/',delim++; // Unix the path
   webster->rootdir=strdup(webster->dir);
@@ -1544,7 +1553,7 @@ int nbWebsterRegisterResource(nbCELL context,nbWebServer *webster,char *name,voi
     delim=strchr(cursor,'/');  
     if(!delim) delim=strchr(cursor,0);
     len=delim-cursor;
-    if(len>sizeof(qualifier)){
+    if(len>=sizeof(qualifier)){
       nbLogMsg(context,0,'E',"Web resource path contains qualifier larger than buffer size at-->%s",cursor);
       return(-1);
       }
@@ -1584,7 +1593,7 @@ nbWebResource *nbWebsterFindResource(nbCELL context,nbWebServer *webster,char *n
     delim=strchr(cursor,'/');
     if(!delim) delim=strchr(cursor,0);
     len=delim-cursor;
-    if(len>sizeof(qualifier)){
+    if(len>=sizeof(qualifier)){
       nbLogMsg(context,0,'E',"Web resource path contains qualifier larger than buffer size at-->%s",cursor);
       return(NULL);
       }

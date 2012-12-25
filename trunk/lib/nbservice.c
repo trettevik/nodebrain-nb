@@ -581,13 +581,25 @@ void daemonize(){
   close(1);
   open("/dev/null",O_RDWR);
   // Try to open log file as stdout first so we can still report a problem on stderr
-  if(*log && open(log,O_CREAT|O_RDWR|O_APPEND,S_IRUSR|S_IWUSR|S_IRGRP)!=1){
-    outMsg(0,'E',"Unable to open log file '%s' - errno=%d %s",log,errno,strerror(errno));
-    outMsg(0,'E',"NodeBrain %s[%d] terminating with severe error - exit code=%d",myname,pid,NB_EXITCODE_FAIL);
-    outFlush();
-    exit(NB_EXITCODE_FAIL);
-    } 
-  else dup(0);
+  if(*log){
+    if((fd=open(log,O_CREAT|O_RDWR|O_APPEND,S_IRUSR|S_IWUSR|S_IRGRP))!=1){
+      outMsg(0,'E',"Unable to open log file '%s' - errno=%d %s",log,errno,strerror(errno));
+      outMsg(0,'E',"NodeBrain %s[%d] terminating with severe error - exit code=%d",myname,pid,NB_EXITCODE_FAIL);
+      outFlush();
+      close(fd);
+      exit(NB_EXITCODE_FAIL);
+      } 
+    }
+  else{
+    fd=dup(0);
+    if(fd!=1){
+      outMsg(0,'E',"Unable to dup fd 0 = new fd=%d",fd);
+      outMsg(0,'E',"NodeBrain %s[%d] terminating with severe error - exit code=%d",myname,pid,NB_EXITCODE_FAIL);
+      outFlush();
+      close(fd);
+      exit(NB_EXITCODE_FAIL);
+      }
+    }
   close(2);
   dup(1);
   // 2010-11-28 eat - now switch stdout to /dev/null if not already

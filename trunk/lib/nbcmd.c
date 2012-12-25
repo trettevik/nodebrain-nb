@@ -242,6 +242,7 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 * 2012-10-26 eat 0.8.12 Switched from ' to > for setting interactive command prefix
 *                       Providing a warning message for a couple releases.
+* 2012-12-15 eat 0.8.13 Checker updates
 *==============================================================================
 */
 #include <nb/nbi.h>
@@ -1284,7 +1285,7 @@ int nbCmdEnable(nbCELL context,void *handle,char *verb,char *cursor){
   }
 
 int nbCmdArchive(nbCELL context,void *handle,char *verb,char *cursor){
-  char prefix[100],target[100];
+  char prefix[256],target[512];
   size_t len;
   time_t systemTime;
   struct tm  *localTime;
@@ -1306,12 +1307,10 @@ int nbCmdArchive(nbCELL context,void *handle,char *verb,char *cursor){
   /* rename log file */
   logname=outLogName(NULL);
   cursor=strstr(logname,".log");
-  if(cursor==NULL) strcpy(prefix,logname);
-  else{
-    len=cursor-logname;
-    strncpy(prefix,logname,len);
-    *(prefix+len)=0;
-    }
+  if(cursor==NULL) len=strlen(logname);  // 2012-12-15 eat - CID 751632
+  else len=cursor-logname;
+  strncpy(prefix,logname,len);
+  *(prefix+len)=0;
   time(&systemTime);
   localTime=localtime(&systemTime);
   sprintf(target,"%s.%.4d%.2d%.2d%.2d%.2d%.2d.log",prefix,
@@ -1549,8 +1548,8 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     outMsg(0,'E',"Type \"%s\" not defined.",type);
     return(1);
     }
-  strcpy(type,((struct STRING *)typeTerm->def)->value);
-  if(type==NULL) outMsg(0,'L',"nbCmdDefine typeTerm->value=NULL.");
+  strncpy(type,((struct STRING *)typeTerm->def)->value,sizeof(type)-1); // 2012-12-15 eat - CID 751633
+  *(type+sizeof(type)-1)=0;
   if(strcmp(type,"on")==0 || strcmp(type,"if")==0 || strcmp(type,"when")==0) {
     while(*cursor==' ') cursor++;
     if(*cursor=='('){
@@ -1733,10 +1732,8 @@ int nbCmdProfile(nbCELL context,void *handle,char *verb,char *cursor){
   //unsigned char symid,ident[256];
   int saveBail=nb_opt_bail;
   FILE *file;
-#if !defined(WIN32)
-  char *home;
-#endif
   char filename[256];
+  int len;
 
   while(*cursor==' ') cursor++;
   if(*cursor==0 || *cursor==';' || *cursor=='\n'){
@@ -1753,9 +1750,11 @@ int nbCmdProfile(nbCELL context,void *handle,char *verb,char *cursor){
     return(1);
     }
 #else
-  home=((struct passwd *)getpwuid(getuid()))->pw_dir;
-  strcpy(filename,home);
-  strcat(filename,"/.nb/profile.nb");
+  len=snprintf(filename,sizeof(filename),"%s/.nb/user.nb",((struct passwd *)getpwuid(getuid()))->pw_dir);
+  if(len>=sizeof(filename)){
+    outMsg(0,'E',"Home directory too long for buffer");
+    return(1);
+    }
   if((file=fopen(filename,"a"))==NULL){
     outMsg(0,'E',"Unable to open %s to append command.",filename);
     return(1);
@@ -1985,11 +1984,16 @@ int nbCmdSource(nbCELL context,void *handle,char *verb,char *cursor){
 *  Generate source from a file
 */
 void nbCmdTranslate(nbCELL context,char *verb,char *cursor){
-  char xtrname[256],filename[256];
+  char xtrname[256],filename[512];
   NB_Term *xtrTerm;
   char *delim;
 
-  strcpy(xtrname,my_strtok_r(cursor," ",&cursor));
+  if(strlen(cursor)>=sizeof(xtrname)){    // 2012-12-15 eat - CID 751635
+    outMsg(0,'E',"Translator name may not be greater than %d characters.",sizeof(xtrname)-1);
+    return;
+    }
+  strncpy(xtrname,my_strtok_r(cursor," ",&cursor),sizeof(xtrname));  // 2012-12-15 eat - CID 751635
+  *(xtrname+sizeof(xtrname)-1)=0;
   if((xtrTerm=nbTermFind((NB_Term *)context,xtrname))==NULL){
     outMsg(0,'E',"Translator \"%s\" not defined.",xtrname);
     return;
@@ -2009,6 +2013,10 @@ void nbCmdTranslate(nbCELL context,char *verb,char *cursor){
     if(*delim!=0 && *delim!=';') nbLet(delim,symContext,0);  
     }
   else *delim=0;
+  if(strlen(cursor)>=sizeof(filename)){   // 2012-12-15 eat - CID 751635
+    outMsg(0,'E',"File name may not be greater than %d characters.",sizeof(filename)-1);
+    return;
+    }
   strcpy(filename,cursor);
   outFlush(); 
   nbTranslatorExecuteFile(context,(nbCELL)(xtrTerm->def),filename);

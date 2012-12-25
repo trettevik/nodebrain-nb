@@ -86,6 +86,7 @@
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2012-10-16 eat 0.8.12 Checker updates
 * 2012-10-17 eat 0.8.12 Checker updates
+* 2012-12-15 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include "config.h"

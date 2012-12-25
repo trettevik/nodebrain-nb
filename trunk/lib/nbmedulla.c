@@ -102,6 +102,7 @@
 * 2012-04-22 eat 0.8.8  Switched from nbcfg.h to standard config.h
 * 2012-05-29 eat 0.8.10 Fixed to recognize buffer size limitation problem in nbMedullaQueueGet
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
+* 2012-12-15 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #define NB_INTERNAL
@@ -1114,14 +1115,15 @@ int nbMedullaFileReaderThreaded(NB_MedullaFile *medfile,void *session,int (*cons
   }
 #else
 int nbMedullaFileReader(NB_MedullaFile *medfile,void *session,int (*consumer)(void *session,char *msg)){
-  int eof=0;
+  //int eof=0;
   fd_set fdset;
   struct timeval tv;
   int readyfd=0,have,len,rc;
 
   tv.tv_usec=0;
   tv.tv_sec=0;
-  while(!eof){  // read as long as we have data
+  //while(!eof){  // read as long as we have data
+  while(1){  // read as long as we have data
     FD_ZERO(&fdset);  // this should be done once to a static variable
     FD_SET(medfile->file,&fdset);
     //fprintf(stderr,"nbMedullaFileReader calling select for fildes=%d\n",medfile->file);
@@ -1149,7 +1151,7 @@ int nbMedullaFileReader(NB_MedullaFile *medfile,void *session,int (*consumer)(vo
       len=nbMedullaQueueGet(medfile->queue,medfile->buffer,sizeof(medfile->buffer));
       }
     }
-  return(eof);
+  //return(eof);  // 2012-12-15 eat - CID 751540
   }
 #endif
 
@@ -1502,7 +1504,7 @@ nbPROCESS nbMedullaProcessOpen(
   //fprintf(stderr,"nbMedullaProcessOpen %s\n",cmd);
   // limit the number of children we can start.
   if(nb_medulla_child_count>=nb_medulla_child_max){
-    snprintf(msgbuf,(size_t)NB_BUFSIZE,"Attempt to start more than %d children - request denied\n",nb_medulla_child_max); //2012-01-09 dtl use snprintf
+    snprintf(msgbuf,(size_t)NB_MSGSIZE,"Attempt to start more than %d children - request denied\n",nb_medulla_child_max); //2012-01-09 dtl use snprintf  // 2012-12-15 eat - CID 751589
     return(NULL);
     }
   // parse cmd into elements
@@ -1662,7 +1664,10 @@ nbPROCESS nbMedullaProcessOpen(
     sprintf(msgbuf,"Command longer than buffer\n");
     return(NULL);
     }  
-
+  if(strlen(logfile)>=sizeof(process->out)){
+    sprintf(msgbuf,"Logfile longer than buffer\n");
+    return(NULL);
+    }  
   process=nbAlloc(sizeof(struct NB_MEDULLA_PROCESS));
   process->status=0;
   if(outspec==3 || errspec==3) process->status|=NB_MEDULLA_PROCESS_STATUS_GENFILE;
@@ -1733,6 +1738,7 @@ nbPROCESS nbMedullaProcessOpen(
     }
   if(clderr==INVALID_HANDLE_VALUE){
     sprintf(msgbuf,"Unable to open child stderr\n");
+    nbFree(process,sizeof(struct NB_MEDULLA_PROCESS));
     return(NULL);
     }
 
@@ -1748,6 +1754,8 @@ nbPROCESS nbMedullaProcessOpen(
     }
   if(cldout<0){
     sprintf(msgbuf,"Unable to open child stdout\n");
+    close(cldin);   // 2012-12-18 eat - CID 751599
+    nbFree(process,sizeof(struct NB_MEDULLA_PROCESS));
     return(NULL);
     }
   switch(errspec){
@@ -1759,6 +1767,9 @@ nbPROCESS nbMedullaProcessOpen(
     }
   if(clderr<0){
     sprintf(msgbuf,"Unable to open child stderr\n");
+    close(cldin);   // 2012-12-18 eat - CID 751600
+    close(cldout);
+    nbFree(process,sizeof(struct NB_MEDULLA_PROCESS));
     return(NULL);
     }
 #endif

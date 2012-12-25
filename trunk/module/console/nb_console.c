@@ -157,8 +157,11 @@ void consoleAccept(nbCELL context,int serverSocket,void *handle){
     if(errno!=EINTR){
       nbLogMsg(context,0,'E',"nb_console:consoleAccept(): chaccept failed");
       nbIpFree(channel);
+      return;
       }
     if(console->trace) nbLogMsg(context,0,'T',"nb_console:consoleAccept(): chaccept interupted by signal.");
+    nbIpFree(channel); // 2012-12-18 eat - CID 751721
+    return;  // 2012-12-15 eat - CID 751692
     }
 
   /* here's where we need to do authentication */

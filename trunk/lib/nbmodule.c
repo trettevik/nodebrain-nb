@@ -109,6 +109,7 @@
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2012-02-06 dtl Checker updates
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
+* 2012-12-15 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -320,13 +321,13 @@ void *nbModuleSearchPath(char *path,char *filename,char *msg){
   if(separator!=NULL && (delim==NULL || separator<delim)) delim=separator;
   while(delim!=NULL){
     len=delim-cursor;
-    if(len>=sizeof(fullname)){
+    if(len+1>=sizeof(fullname)){
       outMsg(0,'L',"nbModuleSearchPath: path element longer than max of %d in path %s",sizeof(fullname)-1,path);
       return(NULL);
       }
-    strcpy(fullname,cursor);
+    strncpy(fullname,cursor,len); // 2012-12-15 eat - CID 751638
     fullname[len]='/';
-    if(len+strlen(filename)+1>=sizeof(fullname)){
+    if(len+strlen(filename)+2>=sizeof(fullname)){
       outMsg(0,'L',"nbModuleSearchPath: full path name of file longer than max of %d in path %s/%s",sizeof(fullname)-1,path,filename);
       return(NULL);
       }
@@ -340,7 +341,7 @@ void *nbModuleSearchPath(char *path,char *filename,char *msg){
     if(separator!=NULL && (delim==NULL || separator<delim)) delim=separator;
     }
   len=strlen(cursor);
-  if(len>=sizeof(fullname)){
+  if(len>=sizeof(fullname)-1){  // 2012-12-15 eat - CID 751576
     outMsg(0,'L',"nbModuleSearchPath: path element longer than max of %d in path %s",sizeof(fullname)-1,path);
     return(NULL);
     }

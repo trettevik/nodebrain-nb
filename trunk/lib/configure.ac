@@ -85,10 +85,11 @@
 # 2012/09/17 eat 0.8.11 New release to fix webster buffer overflow conditions
 # 2012/10/12 eat 0.8.12 New version
 # 2012/10/24 eat 0.8.12 Included AC_PROG_CC_C_0 and removed platform checks
+# 2012/12/15 eat 0.8.13 New Version - new checker
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([libnb],[0.8.12],[bugs@nodebrain.org])
+AC_INIT([libnb],[0.8.13],[bugs@nodebrain.org])
 AC_CONFIG_SRCDIR([nb.c])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(config)

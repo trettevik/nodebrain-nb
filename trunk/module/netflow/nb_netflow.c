@@ -355,7 +355,7 @@ void format5(nbCELL context,unsigned char *buf,int len){
 
   n=hdr->count;
   nbLogPut(context,"Version=%d Count=%d\n",hdr->version,n);
-  for(f=0;f<n;f++){
+  for(f=0;f<n && (unsigned char *)flow<=buf+len-sizeof(struct nfv5flow);f++){
     ipaddress=(unsigned char *)&flow->srcaddr;
     sprintf(srcaddr,"%3.3u.%3.3u.%3.3u.%3.3u",*ipaddress,*(ipaddress+1),*(ipaddress+2),*(ipaddress+3));
     ipaddress=(unsigned char *)&flow->dstaddr;
@@ -381,7 +381,7 @@ void format7(nbCELL context,unsigned char *buf,int len){
 
   n=hdr->count;
   nbLogPut(context,"Version=%d Count=%d\n",hdr->version,n);
-  for(f=0;f<n;f++){
+  for(f=0;f<n && (unsigned char *)flow<=buf+len-sizeof(struct nfv7flow);f++){
     ipaddress=(unsigned char *)&flow->srcaddr;
     sprintf(srcaddr,"%3.3u.%3.3u.%3.3u.%3.3u",*ipaddress,*(ipaddress+1),*(ipaddress+2),*(ipaddress+3));
     ipaddress=(unsigned char *)&flow->dstaddr;
@@ -796,7 +796,7 @@ struct NB_MOD_NETFLOW_ADDR *assertAddr(nbCELL context,NB_MOD_Netflow *netflow,un
 struct NB_MOD_NETFLOW_FLOW *assertFlow(nbCELL context,NB_MOD_Netflow *netflow,unsigned int packets,unsigned int bytes,unsigned int fromAddr,unsigned int toAddr,unsigned char protocol,unsigned short toPort){
   struct NB_MOD_NETFLOW_HASH *hash=netflow->hashFlow;
   struct NB_MOD_NETFLOW_FLOW *flow,**flowP;
-  struct NB_MOD_NETFLOW_ADDR *sAddr,*dAddr;
+  //struct NB_MOD_NETFLOW_ADDR *sAddr,*dAddr;
   unsigned long index;
 /*
   printf("assertFlow called fromAddr=%4.4x toAddr=%4.4x protocol=%u toPort=%u\n",fromAddr,toAddr,protocol,toPort);
@@ -817,8 +817,10 @@ struct NB_MOD_NETFLOW_FLOW *assertFlow(nbCELL context,NB_MOD_Netflow *netflow,un
     flow->toPort=toPort;
     flow->next=*flowP;
     *flowP=flow;
-    sAddr=assertAddr(context,netflow,fromAddr,0,toAddr,protocol,toPort);
-    dAddr=assertAddr(context,netflow,toAddr,1,fromAddr,protocol,toPort); 
+    // sAddr=assertAddr(context,netflow,fromAddr,0,toAddr,protocol,toPort);  // 2012-12-18 eat - CID 751691
+    assertAddr(context,netflow,fromAddr,0,toAddr,protocol,toPort);
+    // dAddr=assertAddr(context,netflow,toAddr,1,fromAddr,protocol,toPort); 
+    assertAddr(context,netflow,toAddr,1,fromAddr,protocol,toPort); 
     netflow->flowCountMon++;
     }
   else flow->packets+=packets;

@@ -177,9 +177,10 @@ void destroyString(struct STRING *str){
     }
   *stringP=(struct STRING *)string->object.next;    // remove from hash list
   size=sizeof(struct STRING)+strlen(str->value)+1;
-  if(size>NB_OBJECT_MANAGED_SIZE) free(str);        // free large unmanaged strings
+  //if(size>NB_OBJECT_MANAGED_SIZE) free(str);       // 2012-12-15 eat - CID 751590
+  if(size>=NB_OBJECT_MANAGED_SIZE) free(str);        // free large unmanaged strings
   else{
-    freeStringP=&nb_StringPool->vector[(size+7)/8];         // keep managed strings in a pool by length
+    freeStringP=&nb_StringPool->vector[size/8];         // keep managed strings in a pool by length
     string->object.next=(void *)*freeStringP; 
     *freeStringP=string;
     }
@@ -198,7 +199,8 @@ void initString(NB_Stem *stem){
 
 struct STRING *useString(char *value){
   struct STRING *string,**stringP,**freeStringP;
-  int size,i,valueSize;
+  //int size,i,valueSize;
+  int size;
   char *cursor;
   int r=1;  /* temp relation <0, 0, >0 */
   unsigned long h=0;
@@ -214,14 +216,16 @@ struct STRING *useString(char *value){
     stringP=(struct STRING **)&(string->object.next);
   if(string!=NULL && r==0) return(string);
 
-  valueSize=strlen(value)+1; //size of string->value which newObject will create
-  size=sizeof(struct STRING)+valueSize; //dtl: used valueSize (included string->value spaces) 
-  if(size>NB_OBJECT_MANAGED_SIZE) freeStringP=NULL;
-  else freeStringP=&nb_StringPool->vector[(size+7)/8]; 
+  //valueSize=strlen(value)+1; //size of string->value which newObject will create
+  //size=sizeof(struct STRING)+valueSize; //dtl: used valueSize (included string->value spaces) 
+  size=sizeof(struct STRING)+strlen(value);
+  if(size>=NB_OBJECT_MANAGED_SIZE) freeStringP=NULL;
+  else freeStringP=&nb_StringPool->vector[size/8]; 
   string=(struct STRING *)newObject(strType,(void **)freeStringP,sizeof(struct STRING)+size);
   string->object.next=(NB_Object *)*stringP;     
   *stringP=string;  
 //2012-02-07 dtl: above newObject() allocated spaces for string->value, safe to copy.
-  for(i=0;i<valueSize;i++) *(string->value+i)=*(value+i); //dtl: replace strcpy
+  //for(i=0;i<valueSize;i++) *(string->value+i)=*(value+i); //dtl: replace strcpy
+  strcpy(string->value,value);  // 2012-12-15 eat - it is what it is
   return(string);
   }

@@ -64,6 +64,7 @@
 *            the close and open switches the pipe to the lower file descriptor.
 *            so we need to switch the listener.
 * 2012-10-13 eat 0.8.12 Replace malloc/free with nbAlloc/nbFree
+* 2012-12-15 eat 0.8.13 Checker updates
 *=====================================================================
 */
 #include "config.h"
@@ -90,13 +91,18 @@ typedef struct NB_MOD_SERVER{
 //
 void serverRead(nbCELL context,int serverSocket,void *handle){
   NB_MOD_Server *server=handle;
-  size_t len;
+  ssize_t len;
+  //size_t size;
   char *bufcur,*bufeol;
 
   if(server->trace) nbLogMsg(context,0,'T',"serverRead: called");
-  len=read(server->fildes,server->cursor,sizeof(server->buffer)-(server->cursor-server->buffer));
+  if(server->cursor<server->buffer || server->cursor>(server->buffer+sizeof(server->buffer))){
+    nbLogMsg(context,0,'L',"serverRead: server->cursor points outside of server->buffer - terminating");
+    exit(NB_EXITCODE_FAIL);
+    }
+  len=read(server->fildes,server->cursor,sizeof(server->buffer)-1-(server->cursor-server->buffer));
   while(len==-1 && errno==EINTR){
-    len=read(server->fildes,server->cursor,sizeof(server->buffer)-(server->cursor-server->buffer));
+    len=read(server->fildes,server->cursor,sizeof(server->buffer)-1-(server->cursor-server->buffer));
     }
   if(len>0){
     len+=(server->cursor-server->buffer);     // adjust length for part we already had maybe
@@ -111,9 +117,10 @@ void serverRead(nbCELL context,int serverSocket,void *handle){
       *bufeol=0;                                                  // drop LF - 10
       if(bufeol>server->buffer && *(bufeol-1)==13) *(bufeol-1)=0;   // drop CR - 13
       nbLogPut(context,"] %s\n",server->buffer);
-      bufcur=bufeol+1;
-      len-=bufeol+1-server->buffer;
       server->ignore2eol=0;
+      //bufcur=bufeol+1;                      // 2012-12-16 eat - no point in this.  we can just return
+      //len-=bufeol+1-server->buffer;
+      return;
       }
     else{
       nbLogMsg(context,0,'I',"FIFO %s@%s",server->idName,server->filename);
@@ -125,7 +132,11 @@ void serverRead(nbCELL context,int serverSocket,void *handle){
       if(server->trace) nbLogPut(context,"] %s\n",bufcur);
       nbCmdSid(context,bufcur,1,server->identity);
       nbLogFlush(context);
-      len-=bufeol+1-bufcur;
+      len-=bufeol+1-bufcur;  
+      if(len<0){
+        nbLogMsg(context,0,'L',"serverRead: len has gone negative - this should never happen - terminating");
+        exit(NB_EXITCODE_FAIL);
+        }
       bufcur=bufeol+1;
       }
     if(len>0){
@@ -198,6 +209,7 @@ void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
   *inCursor=0;
   if(*cursor!='@'){
     nbLogMsg(context,0,'E',"Identity not found in pipe specification - expecting identity@filename");
+    nbFree(server,sizeof(NB_MOD_Server));  // 2012-12-18 eat - CID 751617
     return(NULL);
     }
   cursor++;

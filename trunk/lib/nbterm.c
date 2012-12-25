@@ -106,6 +106,7 @@
 * 2012-01-16 dtl 0.8.7  Checker updates
 * 2012-10-17 eat 0.8.12 Changed name from termGetName to nbTermName
 * 2012-10-17 eat 0.8.12 Added size parameter
+* 2012-12-15 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -159,13 +160,17 @@ static int termAskFile(char *name,char *value,size_t size,char *filename){
     if(strncmp(buffer,name,len)==0 && *(buffer+len)==':'){
       cursor=buffer+len+1;
       len=strlen(cursor);
-      if(len==0) return(0);
+      if(len==0){
+        fclose(file);    // 2012-12-18 eat - CID 751608
+        return(0);
+        }
       if(*(cursor+len-1)=='\n'){
         *(cursor+len-1)=0;
         len--;
         }
       if(len>=size){
         outMsg(0,'E',"termAskFile: Value too long for buffer - file '%s' term '%s' value:%s",filename,name,cursor);
+        fclose(file);
         return(-2);
         }
       strcpy(value,cursor);
@@ -192,6 +197,10 @@ static void termAskCommand(char *name,char *value,size_t size,char *command){
   int rc,len;
   //char *cursor;
 
+  if(strlen(command)+strlen(name)+3>=sizeof(cmd)){
+    outMsg(0,'E',"Command and name too long for buffer.");
+    return;
+    }
   strcpy(cmd,command);
   strcat(cmd," \"");
   strcat(cmd,name);
@@ -217,6 +226,7 @@ static void termAskCommand(char *name,char *value,size_t size,char *command){
       }
     if(len>=size){
       outMsg(0,'L',"termAskCommand: return string too long for buffer - len=%d buffer size=%d",len,size);
+      pclose(file);
       return;
       }
     strcpy(value,buffer);
@@ -648,6 +658,10 @@ NB_Term *nbTermNew(NB_Term *context,char *ident,void *def){
     }
   if(context==NULL){
     if(trace) outMsg(0,'T',"nbTermNew() called for \"%s\" with NULL context.",ident);
+    if(strlen(ident)>=sizeof(qualifier)){
+      outMsg(0,'E',"Terms may not be longer than 255 characters.");
+      return(NULL);
+      }
     strcpy(qualifier,ident);
     word=grabObject(useString(qualifier));
     term=makeTerm(context,word);

@@ -126,7 +126,7 @@ int nbLogMsgReader(nbPROCESS process,int pid,void *session,char *msg){
 //#endif
 
 int nbSpawnChild(nbCELL context,int options,char *cursor){
-  char outname[1024],msgbuf[1024];
+  char outname[1024],msgbuf[NB_MSGSIZE];
   nbPROCESS process;
   static unsigned short childwrap=0;
 

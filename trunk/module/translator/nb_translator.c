@@ -133,7 +133,7 @@ typedef struct NB_MOD_TRANSLATOR_SKILL{
 */
 typedef struct NB_MOD_TRANSLATOR{           /* translator node descriptor */
   nbCELL *translator;              /* translator object */
-  char filename[256];              /* translation rule file name */
+  char filename[512];              /* translation rule file name */
   unsigned char  trace;            /* trace option */
   unsigned char  echo;             /* echo option */
   } NB_MOD_Translator;

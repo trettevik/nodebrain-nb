@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 2011 The Boeing Company
-*                    Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 2011-2012 The Boeing Company
+*                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -80,6 +80,7 @@
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
 * 2011-11-05 Ed Trettevik (original prototype version introduced in 0.8.6)
+* 2012-12-18 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -122,15 +123,18 @@ NB_Text *nbTextLoad(char *fileName){
   outMsg(0,'T', "input file %s opened",fileName);
   if(fseek(fp,0,SEEK_END)!=0){ 
     outMsg(0,'E', "fseek end of %s failed, errno= %d (%s)",fileName,errno,strerror(errno));
+    fclose(fp);
     return(NULL);
     }
   len=ftell(fp);
   if(fseek(fp,0,SEEK_SET)!=0) { 
     outMsg(0,'E', "fseek begin of %s failed, errno= %d (%s)",fileName,errno,strerror(errno));
+    fclose(fp);
     return(NULL);
     }
   if(len>0x8000-sizeof(NB_Text)){
     outMsg(0,'E', "fseek begin of %s failed, errno= %d (%s)",fileName,errno,strerror(errno));
+    fclose(fp);
     return(NULL);
     }
   size=sizeof(NB_Text)+len;
@@ -139,6 +143,7 @@ NB_Text *nbTextLoad(char *fileName){
   if(fread(buf,len,1,fp)<1){
     outMsg(0,'E', "fread of %s failed, errno= %d (%s)",fileName,errno,strerror(errno));
     nbFree(text,size);
+    fclose(fp);       // 2012-12-18 eat - CID 751609
     return(NULL);
     }
   fclose(fp);

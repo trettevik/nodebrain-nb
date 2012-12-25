@@ -106,7 +106,7 @@ int nbPipe(HANDLE *pipe1,HANDLE *pipe2){
   return(0);
   }
 #else
-int nbPipe(int *writePipe,int *readPipe){
+int nbPipe(nbFILE *writePipe,nbFILE *readPipe){
   int fdpair[2];
   if(pipe(fdpair)) return(-1);
   fcntl(fdpair[0],F_SETFD,FD_CLOEXEC); // close on exec

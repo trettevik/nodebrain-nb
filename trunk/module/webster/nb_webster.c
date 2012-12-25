@@ -72,6 +72,7 @@
 * 2012-04-21 eat 0.8.7  removed some obsolete SSL references
 * 2012-08-31 dtl 0.8.12 handled err
 * 2012-10-13 eat 0.8.12 Replace malloc/free with nbAlloc/nbFree
+* 2012-12-15 eat 0.8.13 Checker updates
 *=====================================================================
 */
 #include "config.h"
@@ -299,7 +300,8 @@ static char *webGetLinkedPath(char *html,char *path){
 // Display a note file
 
 static void webNote(nbCELL context,nbWebSession *session,char *name){
-  char text[4097],*end;
+  //char text[4097],*end;
+  char text[4097];
   int fildes,len;
 
   if((fildes=open(name,O_RDONLY))<0){
@@ -308,8 +310,9 @@ static void webNote(nbCELL context,nbWebSession *session,char *name){
     return;
     }
   while((len=read(fildes,text,sizeof(text)-1))>0){
-    end=text+len;
-    *end=0;
+    *(text+len)=0;
+    //end=text+len;  // 2012-12-15 eat - CID 751630
+    //*end=0;
     nbWebsterPutText(context,session,text);
     }
   close(fildes);
@@ -318,7 +321,8 @@ static void webNote(nbCELL context,nbWebSession *session,char *name){
 // Display a regular file
 
 static void webFile(nbCELL context,nbWebSession *session,char *name){
-  char text[NB_BUFSIZE+1],*end,*filename;
+  //char text[NB_BUFSIZE+1],*end,*filename;
+  char text[NB_BUFSIZE+1],*filename;
   char buffer[NB_BUFSIZE],*bufcur,*bufend;
   int fildes,len,maxsub=6;
   unsigned char *cursor;
@@ -334,8 +338,9 @@ static void webFile(nbCELL context,nbWebSession *session,char *name){
     return;
     }
   while((len=read(fildes,text,sizeof(text)-1))>0){
-    end=text+len;
-    *end=0;
+    *(text+len)=0;
+    //end=text+len;  // 2012-12-15 eat - CID 751629
+    //*end=0;
     cursor=(unsigned char *)text;
     bufcur=buffer;
     bufend=buffer+sizeof(buffer)-maxsub;   // stay back enough to make largest substitution
@@ -344,6 +349,7 @@ static void webFile(nbCELL context,nbWebSession *session,char *name){
         *bufcur=0;
         nbWebsterPutText(context,session,buffer);
         nbWebsterPutText(context,session,"</pre><p><b>*** File contains binary data. ***</b>\n");
+        close(fildes); // 2012-12-15 eat - CID 751619
         return;
         }
       switch(*cursor){
@@ -927,21 +933,14 @@ static int webPath(nbCELL context,nbWebSession *session,void *handle){
   struct tm *tm;
   char *name;
 
-  nbLogMsg(context,0,'T',"webPath: called");
+  //nbLogMsg(context,0,'T',"webPath: called");
   webHeading(context,session);
-  nbLogMsg(context,0,'T',"webPath: back from heading");
+  //nbLogMsg(context,0,'T',"webPath: back from heading");
   name=nbWebsterGetParam(context,session,"name");
-  if(name) nbLogMsg(context,0,'T',"webPath: 1 name=%p value=%s",name,name);
-  else nbLogMsg(context,0,'T',"webPath: 1 name=%p",name);
   if(!name) name=nbWebsterGetParam(context,session,"arg");
-  if(name) nbLogMsg(context,0,'T',"webPath: 2 name=%p value=%s",name,name);
-  else nbLogMsg(context,0,'T',"webPath: 2 name=%p",name);
   if(!name) name=nbWebsterGetQuery(context,session);
-  if(name) nbLogMsg(context,0,'T',"webPath: 3 name=%p value=%s",name,name);
-  else nbLogMsg(context,0,'T',"webPath: 3 name=%p",name);
-  if(!*name) name=webster->dir;
-  if(name) nbLogMsg(context,0,'T',"webPath: 4 name=%p value=%s",name,name);
-  else nbLogMsg(context,0,'T',"webPath: 4 name=%p",name);
+  //if(!*name) name=webster->dir; // 2012-12-15 eat - CID 751555
+  if(!name) name=webster->dir;
   snprintf(text,sizeof(text),
     "<p><h1>Directory <a href=':help?directory'><img src='webster/help.gif' border=0></a></h1>\n"
     "<p><form name='file' action=':file' method='get'>\n"
@@ -1115,7 +1114,8 @@ static void *websterConstruct(nbCELL context,void *skillHandle,nbCELL arglist,ch
     nbFree(webster,sizeof(nbWebster));
     return(NULL);
     }
-  if(getcwd(webster->dir,sizeof(webster->dir))<0) *webster->dir=0;
+  //if(getcwd(webster->dir,sizeof(webster->dir))<0) *webster->dir=0;  // 2012-12-15 eat - CID 751514
+  if(getcwd(webster->dir,sizeof(webster->dir))==NULL) *webster->dir=0;
   delim=webster->dir;
   while((delim=strchr(delim,'\\'))!=NULL) *delim='/',delim++; // Unix the path
   webster->rootdir=strdup(webster->dir);

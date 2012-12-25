@@ -185,6 +185,10 @@ int nbMsgConsumerAdd(nbMsgLog *msglog,char *name){
   int  rc;
   nbMsgConsumer *consumer,**consumerP;
 
+  if(strlen(name)>=sizeof(consumer->name)){  // 2012-12-16 eat - CID 751639
+    outMsg(0,'E',"nbMsgConsumerAdd: name too long - %s",name);
+    return(-1);
+    }
   //outMsg(0,'T',"Cabal %s node %s adding consumer %s",msglog->cabal,msglog->nodeName,name);
   for(consumerP=&msglog->consumer;*consumerP!=NULL && (rc=strcmp(name,(*consumerP)->name))>0;consumerP=&(*consumerP)->next);
   if(*consumerP==NULL || rc<0){ // insert if new
@@ -287,7 +291,8 @@ void nbMsgStateFree(nbCELL context,nbMsgState *msgState){
 *  Set a state for an individual node
 */
 int nbMsgStateSet(nbMsgState *state,int node,uint32_t time,uint32_t count){
-  if(node<0 || node>NB_MSG_NODE_MAX){
+  // if(node<0 || node>NB_MSG_NODE_MAX){ // 2012-12-16 eat - CID 751587
+  if(node<0 || node>=NB_MSG_NODE_MAX){
     fprintf(stderr,"nbMsgStateSet: Node %d out of range\n",node);
     return(-1);
     }
@@ -914,12 +919,16 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
     msglog->msgrec=(nbMsgRec *)cursor;
     if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogRead: After step msglog->fileCount=%u msglog->fileOffset=%u msglog->filesize=%u",msglog->fileCount,msglog->fileOffset,msglog->filesize);
     if(msglog->fileOffset>msglog->filesize){
-      nbLogMsg(context,0,'T',"nbMsgLogRead: Logic error - fileOffset>filesize - terminating");
+      nbLogMsg(context,0,'L',"nbMsgLogRead: Logic error - fileOffset>filesize - terminating");
       exit(1);
       }
     }
   bufend=msglog->msgbuf+msglog->msgbuflen;
   cursor=(unsigned char *)msglog->msgrec;
+  if(cursor>bufend){ // 2012-12-16 eat - CID 751556
+    nbLogMsg(context,0,'L',"nbMsgLogRead: Logic error - cursor beyond bufend - terminating");
+    exit(1);
+    }
   if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogRead: At next record %p bufend=%p msgbuf=%p msgbuflen=%d",msglog->msgrec,bufend,msglog->msgbuf,msglog->msgbuflen);
   if(cursor+sizeof(nbMsgRec)>bufend || (msglen=(*cursor<<8)|*(cursor+1))>bufend-cursor){  // see if we need
     if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogRead: Reading cabal \"%s\" node %d file %s into buffer",msglog->cabal,msglog->node,msglog->filename);
@@ -1093,7 +1102,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
         outMsg(0,'E',"nbMsgLogOpen: Unable to read link %s - %s",linkname,strerror(errno));
         return(NULL);
         }
-      if(linklen==sizeof(linkname)){
+      if(linklen==sizeof(linkedname)){
         outMsg(0,'E',"nbMsgLogOpen: Symbolic link %s point to file name too long for buffer",linkname);
         return(NULL);
         }
@@ -1381,6 +1390,7 @@ int nbMsgLogSubscribe(nbCELL context,nbMsgLog *msglog,char *name){
   if(msgTrace) outMsg(0,'T',"Cabal %s node %s sending subscription '%s' to producer",msglog->cabal,msglog->nodeName,name);
   if(sendto(sd,name,strlen(name)+1,MSG_DONTWAIT,(struct sockaddr *)&un_addr,sizeof(struct sockaddr_un))<0){
     nbLogMsg(context,0,'W',"Cabal %s node %s consumer %s subscription: %s",msglog->cabal,msglog->nodeName,name,strerror(errno));
+    close(sd);
     return(-1);
     }
   close(sd);
@@ -1684,6 +1694,7 @@ int nbMsgFileCreateLinked(nbCELL context, char *cabal,char *nodeName,int node){
     }
   if(symlink(filebase,linkname)<0){
     outMsg(0,'E',"nbMsgFileCreateLinked: Unable to create symbolic link %s to %s - %s\n",linkname,filename,strerror(errno));
+    close(file);  // 2012-12-18 eat - CID 751601
     return(-1);
     }
   msgstate=nbMsgStateCreate(context);
@@ -1838,8 +1849,8 @@ int nbMsgLogPrune(nbCELL context,char *cabal,char *nodeName,int node,int seconds
   // Get prune time
   time(&utime);
   pruneTime=utime-seconds; 
-  strcpy(strTime,ctime(&pruneTime));
-  *(strTime+strlen(strTime)-1)=0;
+  strncpy(strTime,ctime(&pruneTime),sizeof(strTime)-1);  // 2012-12-16 eat - CID 751640
+  *(strTime+sizeof(strTime)-1)=0;
   outMsg(0,'I',"Pruning cabal %s node %s intstance %d files to %s.",cabal,nodeName,node,strTime);
 
   // Get the file name
@@ -1856,7 +1867,8 @@ int nbMsgLogPrune(nbCELL context,char *cabal,char *nodeName,int node,int seconds
       outMsg(0,'E',"Unable to read link %s - %s",linkname,strerror(errno));
       return(-1);
       }
-    if(linklen==sizeof(linkname)){
+    // if(linklen==sizeof(linkname)){  // 2012-12-16 eat - CID 751582
+    if(linklen==sizeof(linkedname)){
       outMsg(0,'E',"Symbolic link %s point to file name too long for buffer",linkname);
       return(-1);
       }
@@ -1879,22 +1891,25 @@ int nbMsgLogPrune(nbCELL context,char *cabal,char *nodeName,int node,int seconds
     return(-1);
     }
   if((len=read(file,buffer,sizeof(buffer)))<0){
+    close(file); // 2012-12-18 eat - CID 751602
     outMsg(0,'E',"Unable to read file %s - %s\n",filename,strerror(errno));
     return(-1);
     }
   msglen=(buffer[0]<<8)|buffer[1];
   if(msglen>len){
+    close(file);
     outMsg(0,'E',"Header record of length %d in file %s is larger than allocated buffer length %d.\n",msglen,filename,len);
     return(-1);
     }
   errStr=nbMsgHeaderExtract((nbMsgRec *)buffer,node,&tranTime,&tranCount,&recordTime,&recordCount,&fileTime,&fileCount,&fileState);
   if(errStr){
+    close(file);
     outMsg(0,'E',"Corrupted file %s - %s\n",filename,errStr);
     return(-1);
     }
+  close(file);
   // Step up through the files until we find one to prune
   while(!(fileState&NB_MSG_FILE_STATE_FIRST) || pruning){
-    close(file);
     outMsg(0,'T',"File %s time %d with %d remaining.",filename,fileTime,fileTime-pruneTime);
     if(fileTime<pruneTime){
       if(pruning){
@@ -1914,11 +1929,13 @@ int nbMsgLogPrune(nbCELL context,char *cabal,char *nodeName,int node,int seconds
             }
           if(lseek(file,fileStateOffset,SEEK_SET)<0){
             outMsg(0,'E',"Unable to seek to file state in file %s - %s\n",filename,strerror(errno));
+            close(file);  // 2012-12-18 eat - CID 751602
             return(-1);
             }
           fileState|=NB_MSG_FILE_STATE_FIRST;
           if((len=write(file,&fileState,1))<0){
             outMsg(0,'E',"Unable to open file %s - %s\n",filename,strerror(errno));
+            close(file);
             return(-1);
             }
           close(file);
@@ -1933,8 +1950,10 @@ int nbMsgLogPrune(nbCELL context,char *cabal,char *nodeName,int node,int seconds
       }
     if((len=read(file,buffer,sizeof(buffer)))<0){
       outMsg(0,'E',"Unable to read file %s - %s\n",filename,strerror(errno));
+      close(file);
       return(-1);
       }
+    close(file);
     msglen=(buffer[0]<<8)|buffer[1];
     if(msglen>len){
       outMsg(0,'E',"Header record of length %d in file %s is larger than allocated buffer length %d.\n",msglen,filename,len);
@@ -1980,6 +1999,7 @@ int nbMsgLogFileCreate(nbCELL context,nbMsgLog *msglog){
   linklen=readlink(linkname,linkedname,sizeof(linkedname));
   if(linklen<0){
     nbLogMsg(context,0,'E',"nbMsgLogFileCreate: Unable to read link %s - %s\n",filename,strerror(errno));
+    return(-1);  // 2012-12-18 eat - CID 751564
     }
   if(linklen==sizeof(linkedname)){
     nbLogMsg(context,0,'E',"nbMsgLogFileCreate: Link %s too long for buffer\n",filename);

@@ -667,11 +667,13 @@ int nbTlsConnectWithinUriCount(nbTLS *tls,int uriCount){
       rc=setsockopt(sd,SOL_SOCKET,SO_RCVTIMEO,(void *)&tv,sizeof(tv));
       if(rc==-1){
         fprintf(stderr,"nbTlsConnect: setsockopt SO_RCVTIMEO failed: %s\n",strerror(errno));
+        close(sd);   // 2012-12-18 eat - CID 751610
         return(-1);
         } 
       rc=setsockopt(sd,SOL_SOCKET,SO_SNDTIMEO,(void *)&tv,sizeof(tv));
       if(rc==-1){
         fprintf(stderr,"nbTlsConnect: setsockopt SO_SNDTIMEO failed: %s\n",strerror(errno));
+        close(sd);
         return(-1);
         } 
 #endif
@@ -785,6 +787,7 @@ int nbTlsListen(nbTLS *tls){
   char *name=tls->uriMap[tls->uriIndex].name;
   unsigned short port=tls->uriMap[tls->uriIndex].port;
 
+  memset(&in_addr,0,sizeof(in_addr));
   if(tls->uriMap[tls->uriIndex].scheme==NB_TLS_SCHEME_UNIX){
     domain=AF_UNIX;
     if(strlen(name)>sizeof(un_addr.sun_path)){
@@ -1001,7 +1004,8 @@ nbTLS *nbTlsAccept(nbTLS *tlsListener){
 #if defined(mpe)
     strcpy(tls->uriMap[0].addr,(char *)inet_ntoa(client.sin_addr));
 #else
-    strcpy(tls->uriMap[0].addr,inet_ntoa(client.sin_addr));
+    strncpy(tls->uriMap[0].addr,inet_ntoa(client.sin_addr),sizeof(tls->uriMap[0].addr));
+    *(tls->uriMap[0].addr+sizeof(tls->uriMap[0].addr)-1)=0;
 #endif
     tls->uriMap[0].port=ntohs(client.sin_port);
     }

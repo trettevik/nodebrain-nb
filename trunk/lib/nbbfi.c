@@ -1053,7 +1053,8 @@ bfi bfiIndexedSelect(bfi g,bfi h,struct bfiindex *index){
     for(t=F->next;t!=F;t=t->next){
       bfiInsertUnique(f,t->start,t->end);
       }
-    F=bfiDispose(F);
+    // F=bfiDispose(F);  // 2012-12-18 eat - CID 751690
+    bfiDispose(F);
     }
   g->start=start;
   g->end=end;

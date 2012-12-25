@@ -58,7 +58,7 @@
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([nb_module],[0.8.10],[bugs@nodebrain.org])
+AC_INIT([nb_module],[0.8.13],[bugs@nodebrain.org])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2011 The Boeing Company
+* Copyright (C) 1998-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -315,6 +315,7 @@
 *            cell expression enclosed in parentheses, "$(<expression)", which
 *            is consistent with the "value of" syntax in NodeBrain cell
 *            expressions.
+* 2012-12-15 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -841,6 +842,7 @@ nbCELL nbTranslatorExecute(NB_Cell *context,NB_Cell *translator,char *source){
   struct NB_XI_STACK_ENTRY xiStack[NB_TRANSLATOR_STACKSIZE];   // instruction stack
   struct NB_XI_STACK_ENTRY *xiStackP=xiStack;
   char *text=source,textarea[32*1024],*textbuf=textarea; // text working area
+  char *textend=textarea+sizeof(textarea);
   char *textcur;
   nbCELL stringCell;
   NB_TreePath treePath;
@@ -927,8 +929,12 @@ nbCELL nbTranslatorExecute(NB_Cell *context,NB_Cell *translator,char *source){
         // fall thru to share projection logic with commands
       case NB_XI_OPER_COMMAND:
         if(xi->item.projection->object.type!=nb_ProjectionType){
-          strcpy(textbuf,((NB_String *)xi->item.projection)->value);
-          textcur=strchr(textbuf,0);
+          textcur=textbuf; 
+          if(strlen(((NB_String *)xi->item.projection)->value)<textend-textbuf){
+            strcpy(textbuf,((NB_String *)xi->item.projection)->value);
+            textcur+=strlen(textbuf);
+            } 
+          else outMsg(0,'L',"Translator text area is full");
           }
         else{
           cursor=xi->item.projection->code;
@@ -1603,7 +1609,7 @@ static int nbTranslatorInclude(nbCELL context,char *filename,struct REGEXP_STACK
     return(0);
     }
   outBar();
-  while(fgets(source,NB_BUFSIZE-1,file)){
+  while(fgets(source,NB_BUFSIZE,file)){
     outPut("%s",source);
     delim=strchr(source,0);
     delim--;

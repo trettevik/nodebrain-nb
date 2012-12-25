@@ -139,6 +139,7 @@
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2012-01-26 dtl 0.8.11 Checker updates
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
+* 2012-12-15 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -220,11 +221,9 @@ int nbQueueOpenFileName(char *filename,int option,int type){
   int rc;
   int file;
 #if defined(mpe) || defined(ANYBSD)
-//2012-01-26 dtl: replaced open() with centralised routine openCreate()
-//  if((file=open(filename,O_RDWR|O_CREAT,S_IRUSR|S_IWUSR))<=0){
-  if((file=openCreate(filename,O_RDWR|O_CREAT,S_IRUSR|S_IWUSR))<=0){ //dtl: updated
+  if((file=open(filename,O_RDWR|O_CREAT,S_IRUSR|S_IWUSR))<0){ //dtl: updated
 #else
-  if((file=openCreate(filename,O_RDWR|O_CREAT|O_SYNC,S_IRUSR|S_IWUSR))<=0){ //dtl:updated
+  if((file=open(filename,O_RDWR|O_CREAT|O_SYNC,S_IRUSR|S_IWUSR))<0){ // 2012-12-18 eat - CID 751604
 #endif
     outMsg(0,'E',"Unable to open %s",filename);
     return(NBQFILE_ERROR);
@@ -548,10 +547,9 @@ int nbQueueOpenFileP(filename) char *filename;{
   int rc;
   int file;
 #if defined(mpe) || defined(ANYBSD)
-//2012-01-26 dtl: replaced open() with centralised routine openCreate()
-  if((file=openCreate(filename,O_RDWR|O_CREAT,S_IRUSR|S_IWUSR))<=0){ //dtl replaced open
+  if((file=open(filename,O_RDWR|O_CREAT,S_IRUSR|S_IWUSR))<0){ 
 #else
-  if((file=openCreate(filename,O_RDWR|O_CREAT|O_SYNC,S_IRUSR|S_IWUSR))<=0){ //dtl replaced open
+  if((file=open(filename,O_RDWR|O_CREAT|O_SYNC,S_IRUSR|S_IWUSR))<0){ // 2012-12-18 eat - CID 751605
 #endif
     outMsg(0,'E',"Unable to open %s",filename);
     return(-1);
@@ -563,6 +561,7 @@ int nbQueueOpenFileP(filename) char *filename;{
   if((rc=fcntl(file,F_SETLK,&lock))<0){  /* get a lock only if someone else doesn't hold one */
     if(errno==EACCES || errno==EAGAIN){
       outMsg(0,'T',"Queue file %s busy.",filename);
+      close(file);
       return(0);
       }
     outMsg(0,'E',"Unable to lock %s rc=%d errno=%d",filename,rc,errno);
@@ -771,6 +770,10 @@ struct NBQ_HANDLE *nbQueueOpenDir(char *dirname,char *siName,int mode){
 #endif
   char   iSearchName[512];
   if(trace) outMsg(0,'T',"nbQueueOpenDir() called");
+  if(strlen(dirname)>=sizeof(qHandle->qname)){ // 2012-12-15 eat - CID 751641
+    outMsg(0,'E',"Directory name may not exceed %d characters.",sizeof(qHandle->qname)-1);
+    return(NULL);
+    }
   qHandle=nbAlloc(sizeof(struct NBQ_HANDLE));
   qHandle->pollSynapse=NULL;
   qHandle->yieldSynapse=NULL;

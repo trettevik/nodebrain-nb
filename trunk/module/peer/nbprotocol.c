@@ -271,6 +271,7 @@
 * 2012-10-16 eat 0.8.12 Replaced random with nbRandom
 * 2012-10-17 eat 0.8.12 Replaced padding loops with RAND_bytes
 * 2012-10-17 eat 0.8.12 Checker updates
+* 2012-12-16 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <openssl/rand.h>
@@ -931,9 +932,15 @@ int nbpPut(struct NBP_SESSION *session,char *command){
     msgbuf->msgcode=NBP_MSG_BEGIN;
     bufcur=msgbuf->text;
     }
-  strcpy(bufcur,session->context);
-  strcat(bufcur," ");
-  strcat(bufcur,command);
+  //strcpy(bufcur,session->context);
+  //strcat(bufcur," ");
+  //strcat(bufcur,command);
+  if(strlen(session->context)+1+strlen(command)>=sizeof(session->buffer)){  // 2012-12-16 eat - CID 751653
+    nbLogMsgI(0,'E',"Command plus session prefix exceed buffer size");
+    nbpClose(session);
+    return(-1);
+    }
+  sprintf(bufcur,"%s %s",session->context,command);
   len=bufcur+strlen(bufcur)+1-buffer;
   if((len=chput(channel,buffer,len))<0){
     nbLogMsgI(0,'E',"Error in command call to chput");
@@ -1166,12 +1173,13 @@ int nbpCopy(int nbp,NB_Term *srcBrainTerm,char *srcFile,NB_Term *dstBrainTerm,ch
     if(trace) nbLogMsgI(0,'T',"opening session with destination brain");
     if(strlen(dstFile)+3>sizeof(text)){
       nbLogMsgI(0,'E',"nbpCopy: destination file name too long for buffer '%s'",srcFile);
+      if(srcfile) fclose(srcfile); // 2012-12-18 eat - CID 751614
       return(-1);
       }
     strcpy(text+2,dstFile);
     dstSession=nbpOpenTran(nbp,dstBrainTerm,NBP_TRAN_PUTFILE,text);
     if(dstSession==NULL){
-      if(srcfile!=NULL) fclose(srcfile);
+      if(srcfile) fclose(srcfile);
       else nbpClose(srcSession);
       return(-1);
       }
@@ -1181,6 +1189,7 @@ int nbpCopy(int nbp,NB_Term *srcBrainTerm,char *srcFile,NB_Term *dstBrainTerm,ch
     else openmode="w";
     if((dstfile=fopen(dstFile,openmode))==NULL){
       nbLogMsgI(0,'E',"nbpCopy: Unable to open destination file '%s'",dstFile);
+      if(srcfile) fclose(srcfile); // 2012-12-18 eat - CID 751614
       return(-1);
       }
     }
@@ -1458,7 +1467,7 @@ void nbpServePutFile(struct NBP_SESSION *session,struct NBP_MESSAGE *msgbuf){
   size_t size;
   struct CHANNEL *channel=session->channel;
   char *buffer=session->buffer;
-  char mode,*openmode,filename[256];
+  char mode,*openmode,filename[512];
   NB_Term *clientTerm=NULL,*brainTerm=NULL;
   NB_Node *node;
   nbClient *client;
@@ -1488,6 +1497,10 @@ void nbpServePutFile(struct NBP_SESSION *session,struct NBP_MESSAGE *msgbuf){
     nbQueueGetFile(filename,dirname,nbIdentityGetActive(NULL)->name->value,brain->qsec,NBQ_UNIQUE,mode);
     /* horse with the file name to use nbQueueCommit() instead of file locking */
     *(filename+strlen(filename)-2)='%'; 
+    }
+  else if(strlen(msgbuf->text+2)>=sizeof(filename)){  // 2012-12-16 eat - CID 751655
+    nbpMsg(session,NBP_TRAN_PUTFILE,NBP_MSG_HALT,"NBP000E PUTFILE: file name too long",0);
+    return;
     }
   else strcpy(filename,msgbuf->text+2);
   if(mode=='b') openmode="wb";
@@ -1542,11 +1555,14 @@ void nbpServeGetFile(struct NBP_SESSION *session,struct NBP_MESSAGE *msgbuf){
   int len=1;
   struct CHANNEL *channel=session->channel;
   char *buffer=session->buffer;
-  char mode,*openmode,filename[256];
+  char mode,*openmode,filename[512];
 
   mode=*(msgbuf->text);
+  if(strlen(msgbuf->text+2)>=sizeof(filename)){  // 2012-12-16 eat - CID 751654
+    nbpMsg(session,NBP_TRAN_GETFILE,NBP_MSG_HALT,"NBP000E GETFILE: file name too long",0);
+    return;
+    }
   strcpy(filename,msgbuf->text+2);
-
   if(mode=='b') openmode="rb";
   else openmode="r";
   if((file=fopen(filename,openmode))==NULL){

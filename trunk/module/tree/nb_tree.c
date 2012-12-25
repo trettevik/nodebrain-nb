@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2003-2010 The Boeing Company
+* Copyright (C) 2003-2012 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 * 
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -111,6 +111,7 @@
 * 2006/08/21 eat 0.6.6  Introduced partitioned tree option - max value<=key matches
 * 2006/09/02 eat 0.6.6  Converted to balanced search tree (AVL tree)
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2012-12-18 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include "config.h"
@@ -668,6 +669,7 @@ static void treeStore(nbCELL context,BTreeSkill *skillHandle,BTree *tree,nbCELL 
         len=treeStoreValue(context,node->bnode.key,cursor,bufend-cursor);
         if(len<0){
           nbLogMsg(context,0,'L',"Row is too large for buffer or cell type unrecognized: %s\n",buffer);
+          fclose(file);  // 2012-12-18 eat - CID 751618
           return;
           }
         cursor+=len;
@@ -680,6 +682,7 @@ static void treeStore(nbCELL context,BTreeSkill *skillHandle,BTree *tree,nbCELL 
         }
       if(argCell!=NULL){
         nbLogMsg(context,0,'E',"Entry not found.");
+        fclose(file);  // 2012-12-18 eat - CID 751618
         return;
         }
       if(node->root!=NULL) treeStoreNode(context,skillHandle,node->root,file,buffer,cursor,buffer+sizeof(buffer));

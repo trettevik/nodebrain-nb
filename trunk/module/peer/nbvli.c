@@ -765,9 +765,15 @@ void vlipow(vliWord *x,vliWord *m,vliWord *e){
   vlicopy(X,x);   /* make a copy of x for use by vlipower */    
   if(*e==0){      /* x^0=1 */
     vligeti(x,1);
+    if(X!=X2048) free(X);  // 2012-12-18 eat - CID 751616 
+    if(P!=P2048) free(P);
     return;
     }
-  else if(*e==1 && *(e+1)==1) return;     /* x^1=x */
+  else if(*e==1 && *(e+1)==1){     /* x^1=x */
+    if(X!=X2048) free(X);  // 2012-12-18 eat - CID 751616 
+    if(P!=P2048) free(P);
+    return;
+    }
   for(b=0x8000;b>0 && !(b&*ce);b=b>>1);   /* mask for highest used bit */ 
   if(b==0) nbExit("vlipow exponent is not normalized - terminating.");
   b=b>>1;

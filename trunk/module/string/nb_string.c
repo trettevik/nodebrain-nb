@@ -99,11 +99,11 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL,DWORD fdwReason,LPVOID lpvReserved){
 /* Evaluation Method */
 
 nbCELL chrsubEvaluate(nbCELL context,void *skillHandle,void *knowledgeHandle,nbCELL arglist){
-  nbCELL argCell1,argCell2;
+  nbCELL cell,argCell1,argCell2;
   nbSET argSet;
-  int i,type,len;
-  char *strIn,*strSub,*strChr;
-  char strBuf[NB_BUFSIZE];
+  int i,type,len,sublen;
+  char *strIn,*strSub,*strChr,*strBuf;
+  //char strBuf[NB_BUFSIZE];
 
   argSet=nbListOpen(context,arglist);
   if(argSet==NULL) return(NB_CELL_UNKNOWN);
@@ -125,9 +125,11 @@ nbCELL chrsubEvaluate(nbCELL context,void *skillHandle,void *knowledgeHandle,nbC
     return(argCell1);
     }
   strSub=nbCellGetString(context,argCell2);
-  len=strlen(strSub);
-  strcpy(strBuf,strIn);
-  for(i=0;i<len-1;i+=2){
+  len=strlen(strIn)+1;
+  strBuf=(char *)nbAlloc(len);
+  strncpy(strBuf,strIn,len);
+  sublen=strlen(strSub);
+  for(i=0;i<sublen-1;i+=2){
     strIn=strBuf;
     while((strChr=strchr(strIn,strSub[i]))!=NULL){
       *strChr=strSub[i+1];
@@ -136,7 +138,9 @@ nbCELL chrsubEvaluate(nbCELL context,void *skillHandle,void *knowledgeHandle,nbC
     }
   nbCellDrop(context,argCell1);
   nbCellDrop(context,argCell2);
-  return(nbCellCreateString(context,strBuf));
+  cell=nbCellCreateString(context,strBuf);
+  nbFree(strBuf,len);
+  return(cell);
   }
 
 /* Skill Initialization Method */

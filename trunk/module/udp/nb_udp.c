@@ -74,6 +74,7 @@
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010/02/26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
+* 2012-12-15 eat 0.8.13 Checker updates
 *=====================================================================
 */
 #include "config.h"
@@ -138,9 +139,13 @@ static void serverRead(nbCELL context,int serverSocket,void *handle){
   fd_set rfds;
   struct timeval tv;
 
+  if(strlen(server->prefix)>256){
+    nbLogMsg(context,0,'L',"serverRead: server prefix larger than 256 characters - %s",server->prefix);
+    exit(NB_EXITCODE_FAIL);
+    }
   while(havedata){
     strcpy(buffer,server->prefix);
-    cursor=strchr(buffer,0);
+    cursor=buffer+strlen(buffer);
     len=nbIpGetDatagram(context,serverSocket,&server->sourceAddr,&rport,(unsigned char *)cursor,buflen-strlen(buffer));
     if(server->trace){
       nbIpGetSocketAddrString(serverSocket,daddr);
@@ -228,10 +233,16 @@ static void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
       return(NULL);
       }
     prefix=nbCellGetString(context,cell);
+    if(strlen(prefix)>256){
+      nbLogMsg(context,0,'E',"Prefix may not be creater than 256 - %s.",prefix);
+      nbCellDrop(context,cell);
+      return(NULL);
+      }
     // we don't drop cell here because we want to preserve the prefix string for reference
     cell=nbListGetCellValue(context,&argSet);
     if(cell!=NULL){
       nbLogMsg(context,0,'E',"The server skill only accepts two argument.");
+      nbCellDrop(context,cell);
       return(NULL);
       }
     }
@@ -383,7 +394,8 @@ static void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
     return(NULL);
     }
   len=delim-str;
-  if(len>=sizeof(serverAddr)){
+  // if(len>=sizeof(serverAddr)){ // 2012-12-16 eat - CID 751659
+  if(len>=sizeof(client->address)){
     nbLogMsg(context,0,'E',"Inteface IP address may not be greater than %d characters",sizeof(serverAddr)-1);
     nbCellDrop(context,cell);
     return(NULL);
@@ -427,7 +439,8 @@ static void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
   client=nbAlloc(sizeof(NB_MOD_Client));
   client->prefix=prefix;
   client->socket=0;
-  strcpy(client->address,serverAddr);
+  strncpy(client->address,serverAddr,sizeof(client->address)-1);
+  *(client->address+sizeof(client->address)-1)=0;
   client->port=port;
   client->trace=trace;
   client->dump=dump;

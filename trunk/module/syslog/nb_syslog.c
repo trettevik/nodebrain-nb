@@ -327,6 +327,8 @@ void serverRead(nbCELL context,int serverSocket,void *handle){
 
   nbIpGetSocketAddrString(serverSocket,daddr);
   len=nbIpGetDatagram(context,serverSocket,&server->sourceAddr,&rport,(unsigned char *)buffer,buflen);
+  while(len<0 && errno==EINTR) len=nbIpGetDatagram(context,serverSocket,&server->sourceAddr,&rport,(unsigned char *)buffer,buflen);
+  if(len<0) return;  // 2012-12-18 eat - CID 751566
   if(server->trace) nbLogMsg(context,0,'I',"Datagram %s:%5.5u -> %s len=%d",nbIpGetAddrString(raddr,server->sourceAddr),rport,daddr,len);
   if(server->dump) nbLogDump(context,buffer,len);
   *(buffer+len)=0;  // make sure we have a null terminator

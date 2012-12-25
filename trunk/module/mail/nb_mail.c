@@ -76,6 +76,7 @@
 * 2012-02-07 dtl Checker updates
 * 2012-05-20 eat 0.8.9  Merged client skill which had been a separate source file
 * 2012-10-17 eat 0.8.12 Replaced malloc with nbAlloc
+* 2012-12-15 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include "config.h"
@@ -153,7 +154,10 @@ int smtpData(NB_IpChannel *channel,char *clienthost,char *directory,char *user){
   fprintf(file,"- - - - - - - - - - - - - - - -\n");
 
   snprintf(buffer,(size_t)NB_BUFSIZE,"%s","354 Enter Mail, end with \".\" on a line by itself"); // 2012-01-31 dtl: replased strcpy 
-  if((len=smtpPut(channel))<0) return(len);
+  if((len=smtpPut(channel))<0){
+    fclose(file);
+    return(len);
+    }
 
   while((len=recv(channel->socket,buffer,NB_BUFSIZE-1,0))>0){
     *(buffer+len)=0;
@@ -224,7 +228,8 @@ void smtpServe(nbSession *session){
     else if(strncmp(buffer,"HELO",4)==0 || strncmp(buffer,"EHLO",4)==0){
       cursor=buffer+4;
       while(*cursor==' ') cursor++;
-      strcpy(clienthost,cursor);
+      strncpy(clienthost,cursor,sizeof(clienthost));
+      *(clienthost+sizeof(clienthost)-1)=0;
       sprintf(buffer,"250 %s",hostname);
       }
     else if(strncmp(buffer,"QUIT",4)==0 || strncmp(buffer,"quit",4)==0){
@@ -468,7 +473,8 @@ nbServer *smtpServer(nbCELL context,char *cursor,char *qDir,char *msg){
       nbFree(server,sizeof(nbServer));
       return(NULL);
       }
-    strcpy(server->address,interfaceAddr);
+    strncpy(server->address,interfaceAddr,sizeof(server->address));
+    *(server->address+sizeof(server->address)-1)=0;
     }
   return(server); 
   }
@@ -486,12 +492,10 @@ void smtpAccept(nbCELL context,int serverSocket,void *handle){
   session=nbAlloc(sizeof(nbSession));
   channel=nbIpAlloc();  /* get a channel for a new thread */
   if(nbIpAccept(channel,(int)server->socket)<0){
-    if(errno!=EINTR){
-      nbLogMsg(context,0,'E',"smtpAccept: chaccept failed");
-      return;
-      }
-    nbLogMsg(context,0,'E',"smtpAccept: chaccept interupted by signal.");
+    if(errno!=EINTR) nbLogMsg(context,0,'E',"smtpAccept: chaccept failed");
+    else nbLogMsg(context,0,'E',"smtpAccept: chaccept interupted by signal.");
     nbIpFree(channel);
+    return;
     }
   else{
     time(&now);
@@ -501,7 +505,10 @@ void smtpAccept(nbCELL context,int serverSocket,void *handle){
       until=now+1;
       }
     count++;
-    if(count>max) smtpReject(channel); /* reject after the limit */
+    if(count>max){
+      smtpReject(channel); /* reject after the limit */
+      return;
+      }
     else{
       nbLogMsg(context,0,'I',"Request on port %s:%d from %s",server->address,server->port,channel->ipaddr);
       session->server=server;

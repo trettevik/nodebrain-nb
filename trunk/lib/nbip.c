@@ -53,6 +53,7 @@
 * 2012-01-31 dtl 0.8.6  Checker updates
 * 2012-05-30 eat 0.8.10 Fixed nbIpGetDatagram - wasn't portable
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
+* 2012-12-15 eat 0.8.13 Checker updates
 *=====================================================================
 */
 #include <nb/nbi.h>
@@ -91,6 +92,8 @@ int nbIpGetUdpClientSocket(unsigned short clientPort,char *addr,unsigned short p
 #if !defined(WIN32)
   struct sockaddr_un un_addr;
 
+  memset(&clientAddr,0,sizeof(clientAddr));  // 2012-12-15 eat - CID 751680
+  memset(&serverAddr,0,sizeof(serverAddr));
   if(*addr!=0 && (*addr<'0' || *addr>'9')){
     domain=AF_UNIX;
     if(strlen(addr)>sizeof(un_addr.sun_path)){
@@ -160,7 +163,7 @@ int nbIpPutUdpClient(int socket,char *text){
 *  Get a server_socket to listen on
 */
 unsigned int nbIpGetUdpServerSocket(NB_Cell *context,char *addr,unsigned short port){
-  unsigned int server_socket,sockopt_enable=1;
+  int server_socket,sockopt_enable=1;
   struct sockaddr_in in_addr;
   int domain=AF_INET;
   char ipaddr[512];
@@ -169,6 +172,7 @@ unsigned int nbIpGetUdpServerSocket(NB_Cell *context,char *addr,unsigned short p
 #if !defined(WIN32)
   struct sockaddr_un un_addr;
 
+  memset(&in_addr,0,sizeof(in_addr));  // 2012-12-16 eat - CID 751682
   if(*addr!=0 && (*addr<'0' || *addr>'9')){
     domain=AF_UNIX;
     if(strlen(addr)>sizeof(un_addr.sun_path)){
@@ -416,12 +420,13 @@ int nbIpGetTcpSocketPair(int *connectSocket,int *acceptSocket){
 
 // Get a UDP socket bound to a system generated port number
 int nbIpGetUdpSocket(int *sock,struct sockaddr_in *socketaddr){
-  memset(socketaddr,0,sizeof(socketaddr));
+  memset(socketaddr,0,sizeof(struct sockaddr_in));
   if((*sock=socket(AF_INET,SOCK_DGRAM,0))<0) return(-1);
   socketaddr->sin_family = AF_INET;
   socketaddr->sin_addr.s_addr=htonl(INADDR_LOOPBACK);
   socketaddr->sin_port=0;
-  if(bind(*sock,(struct sockaddr *)socketaddr,sizeof(socketaddr))<0) return(-1);
+  //if(bind(*sock,(struct sockaddr *)socketaddr,sizeof(socketaddr))<0) return(-1);  // 2012-12-16 eat - CID 751515
+  if(bind(*sock,(struct sockaddr *)socketaddr,sizeof(struct sockaddr_in))<0) return(-1);
   return 0;
   }
 
@@ -495,6 +500,7 @@ int nbIpListen(char *addr,unsigned short port){
 #if !defined(WIN32)
   struct sockaddr_un un_addr;
 
+  memset(&in_addr,0,sizeof(in_addr));  // 2012-12-16 eat - CID 751683
   if(*addr!=0 && (*addr<'0' || *addr>'9')){
     domain=AF_UNIX;
     if(strlen(addr)>sizeof(un_addr.sun_path)){
@@ -608,7 +614,8 @@ int nbIpAccept(NB_IpChannel *channel,int server_socket){
 #if defined(mpe)
   strcpy(channel->ipaddr,(char *)inet_ntoa(client.sin_addr));
 #else
-  strcpy(channel->ipaddr,inet_ntoa(client.sin_addr));
+  strncpy(channel->ipaddr,inet_ntoa(client.sin_addr),sizeof(channel->ipaddr)-1); // 2012-12-16 eat - CID 751636
+  *(channel->ipaddr+sizeof(channel->ipaddr)-1)=0;
 #endif
   channel->port=ntohs(client.sin_port);
   return(0);
@@ -761,6 +768,7 @@ int nbIpTcpConnect(char *addr,unsigned short port){
 #if !defined(WIN32)
   struct sockaddr_un un_addr;
 
+  memset(&in_addr,0,sizeof(in_addr));  // 2012-12-16 eat - CID 751684
   if(*addr!=0 && (*addr<'0' || *addr>'9')){
     domain=AF_UNIX;
     if(strlen(addr)>sizeof(un_addr.sun_path)){
