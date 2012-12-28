@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2003-2010 The Boeing Company
+* Copyright (C) 2003-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 * 
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -129,6 +129,7 @@
 * 2010-09-24 eat - Changed "limit" variable to "level" 
 * 2010-09-24 eat - Changed level to mean powers of 2
 * 2010-09-26 eat - included threshold in node to avoid recomputing on every assertion
+* 2012-12-27 eat 0.8.13 AST 46 - removed commented out function
 *=============================================================================
 */
 #include "config.h"
@@ -234,54 +235,6 @@ static int treeCompare(nbCELL context,nbCELL c1,nbCELL c2){
     else return(0);
     }
   }
-
-
-// 
-// Find a node pointer for a given argument list
-//   For now we return null if not found
-//   In the future we need modify it so we can use it with assertions as well
-//
-// Updated Argument:
-//   *nodeP is address of pointer to node when found or pointer to where it could
-//   be inserted if not found.
-//
-// Returns:
-//   0 not found 
-//   1 found
-//
-// Note: To use this for inserts we'll need to pass &argSet instead of arglist
-//       so we know which arguments need to be inserted.
-//
-//static BTreeNode *treeFind(nbCELL context,BTree *tree,nbCELL arglist,void **ptr){
-//  BTreeNode *node=NULL,**rootP=&tree->root;
-//  nbSET argSet;
-//  nbCELL argCell;
-//  int rc;
-//
-//  *ptr=*rootP;
-//  argSet=nbListOpen(context,arglist);
-//  argCell=nbListGetCellValue(context,&argSet);
-//  while(argCell!=NULL){
-//    node=*rootP;
-//    rc=1;
-//    while(node!=NULL && rc!=0){
-//      if(tree->options&BTREE_OPTION_ORDER)
-//        rc=treeCompare(context,node->bnode.key,argCell);
-//      else if((nbCELL)node->bnode.key<argCell) rc=-1;
-//      else if((nbCELL)node->bnode.key>argCell) rc=1;
-//      else rc=0;
-//      if(rc<0) rootP=(BTreeNode **)&node->bnode.right;
-//      else if(rc>0) rootP=(BTreeNode **)&node->bnode.left;
-//      node=*rootP;
-//      }
-//    *ptr=*rootP;
-//    if(node==NULL) return(node);
-//    nbCellDrop(context,argCell);
-//    argCell=nbListGetCellValue(context,&argSet);
-//    rootP=&node->root;
-//    }
-//  return(node);
-//  }
 
 // Find the next argument
 //

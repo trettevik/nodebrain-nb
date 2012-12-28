@@ -598,24 +598,14 @@ unsigned int vlidiv(vliWord *x,vliWord *m,vliWord *q){
   unsigned int nx,nm,rx,rm,f=0;
   double dx,dm;
   unsigned int loop=0;
-  vliWord *debug;
    
   if(q!=NULL) *q=0;
   if(*x==0) return(loop);  /* special case when x is zero */
   if(*m==0) nbExit("vlidiv: zero modulus is invalid - terminating.");
   if(*x>256){
-    /* Note: the +12 in the malloc below is crutching a bug that I have not
-       been able to locate.  This should be removed and debugged when time
-       is available.  Without the +12, for a particular 33 word value with
-       a modulus of 10 (as in vliputd), a memory error causes a core dump
-       when the area is freed via free(G).  One would assume that a logic
-       error is causing an update beyond the end of g.  But dumping this
-       area has not revealed the problem.
-    */
-    G=(vliWord *)malloc(2*(*x+1)*sizeof(vliWord)+300);
+    G=(vliWord *)malloc(2*(*x+1)*sizeof(vliWord));
     if(!G) nbExit("vlidiv: out of memory - terminating.");
-    P=G+((*x+1)*sizeof(vliWord));
-    debug=P+((*x+1)*sizeof(vliWord));
+    P=G+(*x+1);  // 2012-12-27 eat 0.8.13 - CID 751628, 751627
     }
   nm=*m;
   while(1){ 
@@ -637,12 +627,7 @@ unsigned int vlidiv(vliWord *x,vliWord *m,vliWord *q){
             *x=0;                    /* x is equal to m */  
             if(q!=NULL) vliinc(q);   /* inc quotient */
             }
-          if(G!=G2048){
-            //fprintf(stderr,"vlidiv debug=");
-            //for(cx=debug;cx<debug+8;cx++) fprintf(stderr,"%4.4x",*debug);
-            //fprintf(stderr,"\n");
-            free(G);
-            }
+          if(G!=G2048) free(G);
           return(loop);
           }
         else f=rx/rm;
@@ -722,7 +707,7 @@ unsigned int vlidiv(vliWord *x,vliWord *m,vliWord *q){
     *G=cG-G;
     if(*G==0) nbExit("vlidiv: len(x)=%d,len(m)=%d,*G=%d,rx=%d,rm=%d,f=rx/rm=%d - terminating\n",nx,nm,*G,rx,rm,f);
     if(q!=NULL) vliadd(q,G);    /* build quotient */
-    if(*G==1 && *(G+1)==1){     /* avoid multipliplying by 1 */
+    if(*G==1 && *(G+1)==1){     /* avoid multiplying by 1 */
       vlisub(x,m);
       }
     else{
@@ -1000,6 +985,7 @@ void vlipprime(vli x){
       if(*a!=1 || *(a+1)!=1) break;
       }    
     if(i==7) return;
+    count++; // 2012-12-27 eat 0.8.13 - CID 751544
     }
   nbExit("vlipprime exceeded iteration limit - terminating.");
   }

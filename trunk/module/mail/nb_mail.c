@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -77,6 +77,7 @@
 * 2012-05-20 eat 0.8.9  Merged client skill which had been a separate source file
 * 2012-10-17 eat 0.8.12 Replaced malloc with nbAlloc
 * 2012-12-15 eat 0.8.13 Checker updates
+* 2012-12-27 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include "config.h"
@@ -418,7 +419,7 @@ nbServer *smtpServer(nbCELL context,char *cursor,char *qDir,char *msg){
   char *inCursor;
   char *interfaceAddr;
 
-  if(strlen(qDir)>512){
+  if(strlen(qDir)>=512){   // 2012-12-25 eat - AST 38 - replaced > with >=
     sprintf(msg,"Queue directory name too long for buffer");
     return(NULL);
     }
@@ -670,7 +671,7 @@ extern void *serverBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL ar
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
 * 2012/03/16 Ed Trettevik - initial version 0.8.7
-*            [This is heavily based on Cliff Bynum's Bingo Mailer]
+*            [This is heavily based on Cliff Bynum's Mailer]
 *=============================================================================
 */
 
@@ -706,7 +707,7 @@ typedef struct NB_MOD_MAIL_CLIENT{      // mailer node descriptor
 /*
 *  construct() method
 *
-*    define <term> node message.peer("<cabal>",<node>,<port>);
+*    define <term> node mail.client("<cabal>",<node>,<port>);
 *    <term>. define filelines cell <filelines>; # number of lines per file
 */
 void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
@@ -723,9 +724,9 @@ void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
   while(*cursor==' ') cursor++;
   while(*cursor!=';' && *cursor!=0){
     delim=strchr(cursor,' ');
-    if(delim==NULL) delim=strchr(cursor,',');
-    if(delim==NULL) delim=strchr(cursor,';');
-    if(delim!=NULL) delim=cursor+strlen(cursor);
+    if(!delim) delim=strchr(cursor,',');
+    if(!delim) delim=strchr(cursor,';');
+    if(!delim) delim=cursor+strlen(cursor);  // 2012-12-27 eat 0.8.13 - CID 751553 - was checking for delim instead of !delim
     len=delim-cursor;
     if(strncmp(cursor,"trace",len)==0){trace=1;}
     else if(strncmp(cursor,"dump",len)==0){trace=1;dump=1;}

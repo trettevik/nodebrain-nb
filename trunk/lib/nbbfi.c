@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -189,6 +189,7 @@
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2012-01-26 dtl 0.8.6  Checker updates
 * 2012-08-31 dtl 0.8.12 Checker updates: handled malloc error
+* 2012-12-27 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -856,34 +857,23 @@ bfi bfiXore_(bfi g){
 *    Result n=-1  ================================= 
 *                                              |--------- 
 */
+// 2012-12-27 eat 0.8.13 - CID 751538 - fixed defect that resulted in dead code
 bfi bfiIndexOne(bfi g,int i){
-  //int count=0,n=1;
-  int count=0;
   bfi f,s;
 
   f=bfiNew(g->start,g->end); 
   if(i>0){  
-    for(s=g->next;s!=g && s->start<g->start;s=s->next){
-      if(s->end>g->end){
-        count++;
-        if(count==i){
-          bfiInsert(f,s->start,s->end);
-          return(f);
-          }
-        }
-      }
+    for(s=g->next;s!=g && s->end<=g->end;s=s->next);  // ignore below range - ending before start (g->end)
+    for(;s!=g && s->start<g->start && i>0;s=s->next,i--); // count down while within range
     }
   else if(i<0){ 
-    for(s=g->prior;s!=g && s->start>=g->start;s=s->prior); 
-    for(;s!=g;s=s->prior){
-      if(s->end>g->end){
-        count++;
-        if(count==i){
-          bfiInsert(f,s->start,s->end);
-          return(f);
-          }
-        }
-      }
+    for(s=g->prior;s!=g && s->start>=g->start;s=s->prior); // ignore above range - start after end (>g->start) 
+    for(;s!=g && s->start>=g->end && i<0;s=s->prior,i++);  // count up while within range
+    }
+  else return(f);
+  if(i==0 && s->start<g->start && s->end>g->end){  // insert if intersecting
+    bfiInsert(f,s->start,s->end);
+    return(f);
     }
   return(f);
   }

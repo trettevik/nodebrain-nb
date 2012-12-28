@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -42,6 +42,7 @@
 * 2005-04-08 eat 0.6.2  Moved API functions definitions to nbapi.h
 * 2008-03-24 eat 0.7.0  Started IP_CHANNEL structure as alternative to NBP CHANNEL
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2012-12-25 eat 0.8.13 Corrected buffer data type
 *=============================================================================
 */
 #ifndef _NB_IP_H_
@@ -55,7 +56,8 @@ typedef struct IP_CHANNEL{
   char unaddr[256];          // local (unix) domain socket path
   unsigned short port;       /* port to communicate with */
   unsigned short len;        /* Buffer length in bytes */
-  unsigned int buffer[NB_BUFSIZE]; /* 4k buffer - must follow len */
+  //unsigned int buffer[NB_BUFSIZE]; /* buffer - must follow len */ // 2012-12-25 eat - AST 57
+  unsigned char buffer[NB_BUFSIZE]; /* buffer - must follow len */
   } NB_IpChannel;
 
 

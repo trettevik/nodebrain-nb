@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2009-2012 The Boeing Company
+* Copyright (C) 2009-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *=============================================================================
 *
@@ -25,7 +25,7 @@
 * Credits:
 *
 *   This API evolved from a NodeBrain module "mailer" skill developed by
-*   Cliff Bynum in April of 2010 for application called Bingo.
+*   Cliff Bynum in April of 2010.
 *
 *============================================================================
 * History:

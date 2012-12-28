@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -108,6 +108,7 @@
 * 2004-10-06 eat 0.6.1  Conditionals for FreeBSD, OpenBSD, and NetBSD
 * 2008-11-11 eat 0.7.3  Change failure exit code to NB_EXITCODE_FAIL
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2012-12-27 eat 0.7.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -578,30 +579,40 @@ void daemonize(){
     }
   /* redirect stdin and stdout to /dev/null and stderr to /dev/null or daemon log */
   close(0);
-  close(1);
-  open("/dev/null",O_RDWR);
-  // Try to open log file as stdout first so we can still report a problem on stderr
-  if(*log){
-    if((fd=open(log,O_CREAT|O_RDWR|O_APPEND,S_IRUSR|S_IWUSR|S_IRGRP))!=1){
-      outMsg(0,'E',"Unable to open log file '%s' - errno=%d %s",log,errno,strerror(errno));
-      outMsg(0,'E',"NodeBrain %s[%d] terminating with severe error - exit code=%d",myname,pid,NB_EXITCODE_FAIL);
-      outFlush();
+  fd=open("/dev/null",O_RDWR);
+  if(fd!=0){  // 2012-12-27 eat 0.8.13 - CID 751526
+    if(fd<0) outMsg(0,'E',"Unable to open stdin as /dev/null - %s",strerror(errno));
+    else{
+      outMsg(0,'E',"Unexpected fd when attempting open of stdin - fd=%d",fd);
       close(fd);
-      exit(NB_EXITCODE_FAIL);
-      } 
-    }
-  else{
-    fd=dup(0);
-    if(fd!=1){
-      outMsg(0,'E',"Unable to dup fd 0 = new fd=%d",fd);
-      outMsg(0,'E',"NodeBrain %s[%d] terminating with severe error - exit code=%d",myname,pid,NB_EXITCODE_FAIL);
-      outFlush();
-      close(fd);
-      exit(NB_EXITCODE_FAIL);
       }
+    outMsg(0,'E',"NodeBrain %s[%d] terminating with severe error - exit code=%d",myname,pid,NB_EXITCODE_FAIL);
+    exit(NB_EXITCODE_FAIL);
+    }
+  close(1);
+  // Try to open log file as stdout first so we can still report a problem on stderr
+  if(*log) fd=open(log,O_CREAT|O_RDWR|O_APPEND,S_IRUSR|S_IWUSR|S_IRGRP);
+  else fd=dup(0);
+  if(fd!=1){
+    if(fd<0) outMsg(0,'E',"Unable to open stdout - %s",strerror(errno));
+    else{
+      outMsg(0,'E',"Unexpected fd when attempting open of stdout - fd=%d",fd);
+      close(fd);
+      }
+    outMsg(0,'E',"NodeBrain %s[%d] terminating with severe error - exit code=%d",myname,pid,NB_EXITCODE_FAIL);
+    exit(NB_EXITCODE_FAIL); 
     }
   close(2);
-  dup(1);
+  fd=dup(1);
+  if(fd!=2){
+    if(fd<0) printf("Unable to dup stderr - %s\n",strerror(errno));
+    else{
+      printf("Unexpected fd when attempting open of stderr - fd=%d\n",fd);
+      close(fd);
+      }
+    printf("NodeBrain %s[%d] terminating with severe error - exit code=%d\n",myname,pid,NB_EXITCODE_FAIL);
+    exit(NB_EXITCODE_FAIL); 
+    }
   // 2010-11-28 eat - now switch stdout to /dev/null if not already
   if(*log){
     close(1);

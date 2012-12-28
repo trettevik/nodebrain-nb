@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2007-2012 The Boeing Company
+* Copyright (C) 2007-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -142,6 +142,10 @@
 * 2012-09-17 eat 0.8.11 - Fixed some buffer overflows
 * 2012-10-13 eat 0.8.12 - Replaced malloc/free with nbAlloc/nbFree
 * 2012-12-15 eat 0.8.13 - Checker updates
+* 2012-12-25 eat 0.8.13 - Appliation Security Tickets (AST)
+* 2012-12-25 eat 0.8.13 - AST 49,50,51 - removed Webster versions from Server header
+* 2012-12-25 eat 0.8.13 - AST 8 - switch charset to local character set (e.g. UTC-8)
+* 2012-12-27 eat 0.8.13 - Checker updates
 *==============================================================================
 */
 #include <nb/nbi.h>
@@ -262,8 +266,8 @@ char *nbWebsterParameterDecode(nbCELL context,nbWebSession *session,char *encode
     cursor++;
     dcur++;
     }
+  *dcur=0;   // 2012-12-25 eat - AST 5 - reversed order of this an next statement
   if(*cursor) return(NULL); // didn't have enough room in plain buffer
-  *dcur=0;
   nbLogMsg(context,0,'T',"nbWebsterParameterDecode: plain:%s",plain);
   return(plain);
   }
@@ -402,12 +406,14 @@ static int nbWebsterDecodeRequest(nbCELL context,nbWebSession *session,char *req
     if(strncasecmp(cursor,"Host: ",6)==0){
       cursor+=6;
       len=delim-cursor;
+      if(len>=sizeof(session->reqhost)) len=sizeof(session->reqhost)-1;  // 2012-12-25 eat - AST 63 // 2012-12-27 eat - CID 761995
       strncpy(session->reqhost,cursor,len);
       *(session->reqhost+len)=0;
       }
     else if(strncasecmp(cursor,"Authorization: Basic ",21)==0){
       cursor+=21;
       len=delim-cursor;
+      if(len>=sizeof(session->reqauth)) len=sizeof(session->reqauth)-1; // 2012-12-25 eat - AST 63 // 2012-12-27 eat - CID 761996
       strncpy(session->reqauth,cursor,len);
       *(session->reqauth+len)=0;
       }
@@ -466,33 +472,39 @@ static void nbWebsterError(nbCELL context,nbWebSession *session,char *text){
   nbProxyPage *page;
   void *data;
   int   size;
-
-  page=nbProxyPageOpen(context,&data,&size);
-  nbLogMsg(context,0,'T',"Internal server error");
-  sprintf(content,
+  int len;
+  char *html=    // 2012-12-25 eat - AST 7 - removed client supplied resource from reply html
     "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n"
     "<html>\n<head>\n"
     "<title>500 Internal Server Error</title>\n"
     "</head>\n<body>\n"
     "<b><big>500 Internal Server Error</big></b>\n"
     "<p>The server encountered an internal error and was unable to complete your request.</p>\n"
-    "<p>If you think the resource name <i><b>%s</b></i> is valid, please contact the webmaster\n"
-    "<hr>\n%s"
-    "<hr>\n"
-    "<i>NodeBrain Webster 0.8.11 OpenSSL Server at %s</i>\n"
-    "</body>\n</html>\n",
-    session->resource,text,session->reqhost);
-  contentLength=strlen(content);
-  sprintf((char *)data,
+    "<p>If you think the request is valid, please contact the webmaster\n"
+    "<hr>\n%s\n"
+    "<i>NodeBrain Webster Server</i>\n"
+    "</body>\n</html>\n";
+  char *response=   // 2012-12-25 eat - AST 27 - removed client supplied resource from reply html
     "HTTP/1.1 500 Internal Server Error\r\n"
-    "Date: Thu, 16 Aug 2007 04:04:33 GMT\r\n"
-    "Server: NodeBrain Webster 0.8.11\r\n"
+    "Date: %s\r\n"
+    "Server: NodeBrain Webster\r\n"
     "Location: https://%s/%s\r\n"
     "Connection: close\r\n"
     "Content-Length: %d\r\n"
-    "Content-Type: text/html; charset=iso-8859-1\r\n\r\n"
-    "%s",
-    session->reqhost,session->resource,contentLength,content);
+    "Content-Type: text/html; charset=%s\r\n\r\n"
+    "%s";
+  time_t currentTime;
+  char ctimeCurrent[32];
+  time(&currentTime);
+  strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent));
+  *(ctimeCurrent+strlen(ctimeCurrent)-1)=0;
+  page=nbProxyPageOpen(context,&data,&size);
+  nbLogMsg(context,0,'T',"Internal server error");
+  len=snprintf(content,sizeof(content),html,text);
+  if(len>=sizeof(content)) sprintf(content,html,session->resource,""); // 2012-12-25 eat - AST 6
+  contentLength=strlen(content);
+  len=snprintf((char *)data,size,response,ctimeCurrent,session->reqhost,session->resource,contentLength,nb_charset,content);
+  if(len>=size) sprintf((char *)data,response,"","",contentLength,content); // 2012-12-25 eat - AST 26
   nbLogMsg(context,0,'T',"Returning:\n%s\n",data);
   nbProxyPageProduced(context,page,strlen((char *)data));
   nbProxyPutPage(context,session->client,page);
@@ -500,37 +512,38 @@ static void nbWebsterError(nbCELL context,nbWebSession *session,char *text){
 
 // try it using the nbProxy routines
 static void nbWebsterBadRequest(nbCELL context,nbWebSession *session,char *text){
-  char content[1024];
-  int contentLength;
   nbProxyPage *page;
   void *data;
   int   size;
-
-  page=nbProxyPageOpen(context,&data,&size);
-  nbLogMsg(context,0,'T',"Internal server error");
-  sprintf(content,
+  int   len;
+  char *html=    // 2012-12-25 eat - AST 28 - removed client supplied request from the reply html
     "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n"
     "<html>\n<head>\n"
     "<title>400 Bad Request</title>\n"
     "</head>\n<body>\n"
     "<b><big>400 Bad Request</big></b>\n"
     "<p>The server encountered an unsupported request.</p>\n"
-    "<hr>\n%s\n"
     "<hr>\n"
-    "<i>NodeBrain Webster 0.8.11 OpenSSL Server at %s</i>\n"
-    "</body>\n</html>\n",
-    text,session->reqhost);
-  contentLength=strlen(content);
-  sprintf((char *)data,
+    "<i>NodeBrain Webster Server</i>\n"
+    "</body>\n</html>\n";
+  char *response=  // 2012-12-25 eat - AST 31 - removed client supplied request from the reply html
     "HTTP/1.1 400 Bad Request\r\n"
-    "Date: Thu, 16 Aug 2007 04:04:33 GMT\r\n"
-    "Server: NodeBrain Webster 0.8.11\r\n"
+    "Date: %s\r\n"
+    "Server: NodeBrain Webster\r\n"
     "Location: https://%s/%s\r\n"
     "Connection: close\r\n"
     "Content-Length: %d\r\n"
-    "Content-Type: text/html; charset=iso-8859-1\r\n\r\n"
-    "%s",
-    session->reqhost,session->resource,contentLength,content);
+    "Content-Type: text/html; charset=%s\r\n\r\n"
+    "%s";
+  time_t currentTime;
+  char ctimeCurrent[32];
+  time(&currentTime);
+  strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent));
+  *(ctimeCurrent+strlen(ctimeCurrent)-1)=0;
+  page=nbProxyPageOpen(context,&data,&size);
+  nbLogMsg(context,0,'T',"Internal server error");
+  len=snprintf((char *)data,size,response,ctimeCurrent,session->reqhost,session->resource,strlen(html),nb_charset,html); // 2012-12-27 eat CID 761997
+  if(len>=size) sprintf((char *)data,response,ctimeCurrent,"","",strlen(html),nb_charset,html);  // 2012-12-25 eat - AST 29,30 // 2012-12-27 eat CID 761998
   nbLogMsg(context,0,'T',"Returning:\n%s\n",data);
   nbProxyPageProduced(context,page,strlen((char *)data));
   nbProxyPutPage(context,session->client,page);
@@ -544,6 +557,7 @@ static void webContentHeading(nbCELL context,nbWebSession *session,char *code,ch
   void *data;
   int   size;
   char *connection="keep-alive";
+  int len;
 
   if(session->close) connection="close";
   time(&currentTime);
@@ -554,10 +568,10 @@ static void webContentHeading(nbCELL context,nbWebSession *session,char *code,ch
   *(ctimeExpires+strlen(ctimeExpires)-1)=0;
 
   page=nbProxyPageOpen(context,&data,&size);
-  snprintf(data,size,
+  len=snprintf(data,size,
     "HTTP/1.1 %s\r\n"
     "Date: %s\r\n"
-    "Server: NodeBrain Webster 0.8.11\r\n"
+    "Server: NodeBrain Webster\r\n"
     "Last-Modified: %s\r\n"
     "Expires: %s\r\n"
     "Connection: %s\r\n"
@@ -565,6 +579,7 @@ static void webContentHeading(nbCELL context,nbWebSession *session,char *code,ch
     "Content-Length: %d\r\n"
     "Content-Type: %s/%s\r\n\r\n",
     code,ctimeCurrent,ctimeCurrent,ctimeExpires,connection,length,type,subtype);
+  if(len>=size) *((char *)data+size-1)=0; // 2012-12-25 eat - AST 9 
   nbLogMsg(context,0,'T',"webContentHeading:");
   nbLogPut(context,data);
   nbProxyPageProduced(context,page,strlen((char *)data));
@@ -607,7 +622,7 @@ static int nbWebsterCgiCloser(nbPROCESS process,int pid,void *processSession){
   snprintf(data,size,
     "HTTP/1.1 %s\r\n"
     "Date: %s\r\n"
-    "Server: NodeBrain Webster 0.8.11\r\n"
+    "Server: NodeBrain Webster\r\n"
     "Last-Modified: %s\r\n"
     "Connection: %s\r\n"
     "Accept-Ranges: none\r\n"
@@ -689,11 +704,12 @@ static int nbWebsterCgiWriter(nbPROCESS process,int pid,void *processSession){
 static int nbWebsterCgi(nbCELL context,nbWebSession *session,char *file,char *queryString){
   nbWebServer *webster=session->webster;
   char buf[NB_BUFSIZE],dir[2048],*delim,value[512];
+  int len;
 
   nbProxyProducer(context,session->client,session,NULL); // remove producer
   nbProxyBookClose(context,&session->book);  // make sure we have a closed book
   // set environment variables for the cgi program
-  setenv("SERVER_SOFTWARE","NodeBrain Webster/0.8.11",1);
+  setenv("SERVER_SOFTWARE","NodeBrain Webster/0.8.13",1);
   setenv("GATEWAY_INTERFACE","CGI/1.1",1);
   setenv("SERVER_PROTOCOL","HTTP/1.1",1);
   setenv("SSL_CLIENT_S_DN_CN",session->userid,1);
@@ -701,14 +717,14 @@ static int nbWebsterCgi(nbCELL context,nbWebSession *session,char *file,char *qu
   setenv("QUERY_STRING",queryString,1);
   setenv("NB_WEBSTER_CONFIG",webster->config,1);
   if(strlen(file)>=sizeof(dir)){
-    nbLogMsg(context,0,'E',"Directory to large",buf);
+    nbLogMsg(context,0,'E',"Directory too large",buf);
     return(-1);
     }
   delim=file+strlen(file)-1;
   while(delim>file && *delim!='/') delim--;
   if(delim>file){
     if(delim-file>=sizeof(dir)){
-      nbLogMsg(context,0,'E',"Directory to large",buf);
+      nbLogMsg(context,0,'E',"Directory too large",buf);
       return(-1);
       }
     strncpy(dir,file,delim-file);
@@ -719,7 +735,11 @@ static int nbWebsterCgi(nbCELL context,nbWebSession *session,char *file,char *qu
     }
   if(session->method==NB_WEBSTER_METHOD_GET){
     setenv("REQUEST_METHOD","GET",1);
-    sprintf(session->command,"=|:$ %s/%s",webster->rootdir,file); // convert to medula command with full path
+    len=snprintf(session->command,sizeof(session->command),"=|:$ %s/%s",webster->rootdir,file); // convert to medula command with full path
+    if(len>=sizeof(session->command)){  // 2012-12-25 eat - AST 34
+      nbLogMsg(context,0,'E',"Command too large for buffer",buf);
+      return(-1);
+      }
     nbLogMsg(context,0,'T',"CGI GET request: %s",session->command);
     session->process=nbMedullaProcessOpen(NB_CHILD_TERM|NB_CHILD_SESSION,session->command,"",session,nbWebsterCgiCloser,NULL,nbWebsterCgiReader,nbWebsterCgiErrReader,buf);
     if(session->process==NULL){
@@ -736,7 +756,11 @@ static int nbWebsterCgi(nbCELL context,nbWebSession *session,char *file,char *qu
       sprintf(value,"%d",session->contentLength);
       setenv("CONTENT_LENGTH",value,1); 
       }
-    sprintf(session->command,"|=|:$ %s/%s",webster->rootdir,file); // convert to medula command with full path
+    len=snprintf(session->command,sizeof(session->command),"|=|:$ %s/%s",webster->rootdir,file); // convert to medula command with full path
+    if(len>=sizeof(session->command)){  // 2012-12-25 eat - AST 35
+      nbLogMsg(context,0,'E',"Command too large for buffer",buf);
+      return(-1);
+      }
     nbLogMsg(context,0,'T',"Post request: %s",session->command);
     session->process=nbMedullaProcessOpen(NB_CHILD_TERM|NB_CHILD_SESSION,session->command,"",session,nbWebsterCgiCloser,nbWebsterCgiWriter,nbWebsterCgiReader,nbWebsterCgiErrReader,buf);
     if(session->process==NULL){
@@ -781,37 +805,36 @@ static int nbWebsterFileProducer(nbCELL context,nbProxy *proxy,void *handle){
 
 static void nbWebsterResourceNotFound(nbCELL context,nbWebServer *webster,nbWebSession *session){
   nbProxyPage *page;
-  int   contentLength;
   void *data;
   int   size;
-  char  content[NB_BUFSIZE];
-
-  page=nbProxyPageOpen(context,&data,&size);
-  sprintf(content,
+  int   len;
+  char *html=   // 2012-12-25 eat - AST 36 - removed client supplied resource from html reply
     "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n"
     "<html>\n<head>\n"
     "<title>404 Not Found</title>\n"
     "</head>\n<body>\n"
     "<h1>Not Found</h1>\n"
     "<p>The requested resource was not found on this server. "
-    //"<p>The requested resource /%s was not found on this server. "
-    //"If you are submitting a form, go back to make sure you enter proper values in each field and submit again.</p>\n"
     "<hr>\n"
-    "<address>NodeBrain Webster 0.8.11 OpenSSL Server at %s</address>\n"
-    "</body></html>\n",
-    //session->resource,session->reqhost);
-    session->reqhost);
-  contentLength=strlen(content);
-  snprintf((char *)data,size,
+    "<address>NodeBrain Webster Server</address>\n"
+    "</body></html>\n";
+  char *response=  // 2012-12-25 eat - AST 50 - removed Webster version
     "HTTP/1.1 404 Not Found\r\n"
-    "Date: Thu, 16 Aug 2007 04:04:33 GMT\r\n"
-    "Server: NodeBrain Webster 0.8.11\r\n"
-    "Location: https://%s/%s/index.html\r\n"
+    "Date: %s\r\n"
+    "Server: NodeBrain Webster\r\n"
+    "Location: https://%s/%s\r\n"
     "Connection: close\r\n"
     "Content-Length: %d\r\n"
-    "Content-Type: text/html; charset=iso-8859-1\r\n\r\n"
-    "%s",
-    session->reqhost,session->resource,contentLength,content);
+    "Content-Type: text/html; charset=%s\r\n\r\n"
+    "%s";
+  time_t currentTime;
+  char ctimeCurrent[32];
+  time(&currentTime);
+  strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent));
+  *(ctimeCurrent+strlen(ctimeCurrent)-1)=0;
+  page=nbProxyPageOpen(context,&data,&size);
+  len=snprintf((char *)data,size,response,ctimeCurrent,session->reqhost,session->resource,strlen(html),nb_charset,html); // 2012-12-27 eat CID 761999
+  if(len>=size) sprintf((char *)data,response,ctimeCurrent,"","",strlen(html),nb_charset,html);  // 2012-12-25 eat - AST 33  // 2012-12-27 eat CID 762000
   nbLogMsg(context,0,'T',"Reply:\n%s\n",(char *)data);
   nbProxyPageProduced(context,page,strlen((char *)data));
   nbProxyPutPage(context,session->client,page);
@@ -884,31 +907,35 @@ static void nbWebsterServe(nbCELL context,nbWebServer *webster,nbWebSession *ses
   if(session->queryString){
     //nbLogMsg(context,0,'T',"webServer: queryString=%s",session->queryString);
     if(0>nbWebsterCgi(context,session,filename,session->queryString)){
-      nbLogMsg(context,0,'T',"Error returned by webCgi");
-      page=nbProxyPageOpen(context,&data,&size);
-      sprintf(content,
+      char *html=
         "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n"
         "<html>\n<head>\n"
         "<title>500 Internal Server Error</title>\n"
         "</head>\n<body>\n"
         "<b><big>500 Internal Server Error</big></b>\n"
         "<p>The server encountered an internal error and was unable to complete your request.</p>\n"
-        "<p>If you think the resource name <i><b>%s</b></i> is valid, please contact the webmaster\n"
+        "<p>If you think the resource is valid, please contact the webmaster\n"
         "<hr>\n"
-        "<i>NodeBrain Webster 0.8.11 OpenSSL Server at %s</i>\n"
-        "</body>\n</html>\n",
-        filename,session->reqhost);
-      contentLength=strlen(content);
-      sprintf((char *)data,
+        "<i>NodeBrain Webster Server</i>\n"
+        "</body>\n</html>\n";
+      char *response=
         "HTTP/1.1 500 Internal Server Error\r\n"
-        "Date: Thu, 16 Aug 2007 04:04:33 GMT\r\n"
-        "Server: NodeBrain Webster 0.8.11\r\n"
+        "Date: %s\r\n"
+        "Server: NodeBrain Webster\r\n"
         "Location: https://%s/%s\r\n"
         "Connection: close\r\n"
         "Content-Length: %d\r\n"
-        "Content-Type: text/html; charset=iso-8859-1\r\n\r\n"
-        "%s",
-        session->reqhost,filename,contentLength,content);
+        "Content-Type: text/html; charset=%s\r\n\r\n"
+        "%s";
+      time_t currentTime;
+      char ctimeCurrent[32];
+      time(&currentTime);
+      strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent));
+      *(ctimeCurrent+strlen(ctimeCurrent)-1)=0;
+      nbLogMsg(context,0,'T',"Error returned by webCgi");
+      page=nbProxyPageOpen(context,&data,&size);
+      len=snprintf((char *)data,size,ctimeCurrent,session->reqhost,filename,strlen(html),nb_charset,html); // 2012-12-27 eat - CID 762002
+      if(len>=size) sprintf((char *)data,response,ctimeCurrent,"","",strlen(html),nb_charset,html);
       nbLogMsg(context,0,'T',"Reply:\n%s\n",(char *)data);
       nbProxyPageProduced(context,page,strlen((char *)data));
       nbProxyPutPage(context,session->client,page);
@@ -920,8 +947,7 @@ static void nbWebsterServe(nbCELL context,nbWebServer *webster,nbWebSession *ses
 #else
   else if(stat(filename,&filestat)==0 && S_ISDIR(filestat.st_mode)){
 #endif
-    page=nbProxyPageOpen(context,&data,&size);
-    sprintf(content,
+    char *html=
       "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n"
       "<html><head>\n"
       "<title>301 Moved Permanently</title>\n"
@@ -929,20 +955,28 @@ static void nbWebsterServe(nbCELL context,nbWebServer *webster,nbWebSession *ses
       "<h1>Moved Permanently</h1>\n"
       "<p>The document has moved <a href='https://%s/%s/index.html'>here</a>.</p>\n"
       "<hr/>\n"
-      "<address>NodeBrain Webster 0.8.11 OpenSSL Server at %s</address>\n"
-      "</body>\n</html>\n",
-      session->reqhost,filename,session->reqhost);
-    contentLength=strlen(content);
-    sprintf((char *)data,
+      "<address>NodeBrain Webster Server</address>\n"
+      "</body>\n</html>\n";
+    char *response=
       "HTTP/1.1 301 Moved Permanently\r\n"
-      "Date: Thu, 16 Aug 2007 04:04:33 GMT\r\n"
-      "Server: NodeBrain Webster 0.8.11\r\n"
+      "Date: %s\r\n"
+      "Server: NodeBrain Webster\r\n"
       "Location: https://%s/%s/index.html\r\n"
       "Connection: close\r\n"
       "Content-Length: %d\r\n"
-      "Content-Type: text/html; charset=iso-8859-1\r\n\r\n"
-      "%s",
-      session->reqhost,filename,contentLength,content);
+      "Content-Type: text/html; charset=%s\r\n\r\n"
+      "%s";
+    time_t currentTime;
+    char ctimeCurrent[32];
+    time(&currentTime);
+    strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent));
+    *(ctimeCurrent+strlen(ctimeCurrent)-1)=0;
+    page=nbProxyPageOpen(context,&data,&size);
+    len=snprintf(content,sizeof(content),html,session->reqhost,filename);
+    if(len>=sizeof(content)) sprintf(content,html,"","");
+    contentLength=strlen(content);
+    len=snprintf((char *)data,size,response,ctimeCurrent,session->reqhost,filename,contentLength,nb_charset,content);
+    if(len>=size) sprintf((char *)data,response,"","",contentLength,content);
     nbLogMsg(context,0,'T',"Reply:\n%s\n",(char *)data);
     nbProxyPageProduced(context,page,strlen((char *)data));
     nbProxyPutPage(context,session->client,page);
@@ -952,31 +986,33 @@ static void nbWebsterServe(nbCELL context,nbWebServer *webster,nbWebSession *ses
 #else
   else if((fildes=open(filename,O_RDONLY))<0){
 #endif
-    page=nbProxyPageOpen(context,&data,&size);
-    sprintf(content,
+    char *html=
       "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n"
       "<html>\n<head>\n"
       "<title>404 Not Found</title>\n"
       "</head>\n<body>\n"
       "<h1>Not Found</h1>\n"
-      //"<p>The requested URL /%s was not found on this server.</p>\n"
       "<p>The requested resource was not found on this server.</p>\n"
       "<hr>\n"
-      "<address>NodeBrain Webster 0.8.11 OpenSSL Server at %s</address>\n"
-      "</body></html>\n",
-      //filename,session->reqhost);
-      session->reqhost);
-    contentLength=strlen(content);
-    snprintf((char *)data,size,
+      "<address>NodeBrain Webster</address>\n"
+      "</body></html>\n";
+    char *response=
       "HTTP/1.1 404 Not Found\r\n"
-      "Date: Thu, 16 Aug 2007 04:04:33 GMT\r\n"
-      "Server: NodeBrain Webster 0.8.11\r\n"
+      "Date: %s\r\n"
+      "Server: NodeBrain Webster\r\n"
       "Location: https://%s/%s/index.html\r\n"
       "Connection: close\r\n"
       "Content-Length: %d\r\n"
-      "Content-Type: text/html; charset=iso-8859-1\r\n\r\n"
-      "%s",
-      session->reqhost,filename,contentLength,content);
+      "Content-Type: text/html; charset=%s\r\n\r\n"
+      "%s";
+    time_t currentTime;
+    char ctimeCurrent[32];
+    time(&currentTime);
+    strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent));
+    *(ctimeCurrent+strlen(ctimeCurrent)-1)=0;
+    page=nbProxyPageOpen(context,&data,&size);
+    len=snprintf((char *)data,size,response,ctimeCurrent,session->reqhost,filename,strlen(html),nb_charset,html); // 2012-12-27 eat - CID 762001
+    if(len>=size) sprintf((char *)data,response,ctimeCurrent,"","",strlen(html),nb_charset,html); // 2012-12-27 eat - fixed 
     nbLogMsg(context,0,'T',"Reply:\n%s\n",(char *)data);
     nbProxyPageProduced(context,page,strlen((char *)data));
     nbProxyPutPage(context,session->client,page);
@@ -1013,13 +1049,11 @@ static void nbWebsterServe(nbCELL context,nbWebServer *webster,nbWebSession *ses
 // Provide a response telling the client we need a user and password
 
 static void webRequirePassword(nbCELL context,nbWebSession *session){
-  char html[NB_BUFSIZE];
   nbProxyPage *page;
   void *data;
   int   size;
-
-  page=nbProxyPageOpen(context,&data,&size);
-  sprintf(html,
+  int   len;
+  char *html=
     "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n"
     "<HTML><HEAD>\n"
     "<TITLE>401 Authorization Required</TITLE>\n"
@@ -1032,19 +1066,25 @@ static void webRequirePassword(nbCELL context,nbWebSession *session){
     "browser doesn't understand how to supply\n"
     "the credentials required.<P>\n"
     "<HR>\n"
-    "<ADDRESS>NodeBrain Webster 0.8.11 OpenSSL Server at %s</ADDRESS>\n"
-    "</BODY></HTML>\n\n",
-    session->reqhost);
-  sprintf((char *)data,
+    "<ADDRESS>NodeBrain Webster</ADDRESS>\n"
+    "</BODY></HTML>\n\n";
+  char *response=
     "HTTP/1.1 401 Authorization Required\r\n"
-    "Date: Fri, 17 Aug 2007 17:49:03 GMT\r\n"
-    "Server: NodeBrain Webster 0.8.11 OpenSSL\r\n"
+    "Date: %s\r\n"
+    "Server: NodeBrain Webster\r\n"
     "WWW-Authenticate: Basic realm=\"Webster\"\r\n"
     "Connection: close\r\n"
     "Content-Length: %d\r\n"
-    "Content-Type: text/html; charset=iso-8859-1\r\n\r\n"
-    "%s",
-    (int)strlen(html),html);
+    "Content-Type: text/html; charset=%s\r\n\r\n"
+    "%s";
+  time_t currentTime;
+  char ctimeCurrent[32];
+  time(&currentTime);
+  strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent));
+  *(ctimeCurrent+strlen(ctimeCurrent)-1)=0;
+  page=nbProxyPageOpen(context,&data,&size);
+  len=snprintf((char *)data,size,response,ctimeCurrent,strlen(html),nb_charset,html);
+  if(len>=size) nbExit("Logic error in webRequirePassword - static content exceeds page size");
   nbLogMsg(context,0,'T',"nbWebRequirePassword: sending response");
   nbLogPut(context,"%s",(char *)data);
   nbProxyPageProduced(context,page,strlen((char *)data));
@@ -1118,7 +1158,7 @@ static int nbWebGetRoleByCertificate(nbCELL context,nbWebSession *session){
 // Check to see if X509 certificate authentication was successful
 //   We always make it successful by returning 1, but will request a password via HTTP if necessary
 
-/*
+/*   // 2012-12-25 eat - AST 52
 static int websterVerify(int preverify_ok,X509_STORE_CTX *ctx){
   SSL *ssl;
   //X509 *clientCertificate;
@@ -1159,7 +1199,7 @@ static int websterVerify(int preverify_ok,X509_STORE_CTX *ctx){
 *  name:  Option name
 *  value: Default value returned if term not found
 */
-/*
+/*    // 2012-12-25 eat - AST 53
 static char *getOption(nbCELL context,char *name,char *defaultValue){
   char *value=defaultValue;
   nbCELL cell;
@@ -1738,8 +1778,11 @@ int *nbWebsterReply(nbCELL context,nbWebSession *session){
   //char *subtype="html"; // need to get this from the cgi returned header
   char *cookies="";
   char *connection="keep-alive";
+  char *charsetlabel="; charset=";
+  char *charset=nb_charset;
 
   nbLogMsg(context,0,'T',"nbWebsterReply: called");
+  if(strcmp(session->type,"text")) charsetlabel="",charset="";
   if(session->close) connection="close";
   time(&currentTime);
   strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent));
@@ -1759,15 +1802,15 @@ int *nbWebsterReply(nbCELL context,nbWebSession *session){
   snprintf(data,size,
     "HTTP/1.1 %s\r\n"
     "Date: %s\r\n"
-    "Server: NodeBrain Webster 0.8.11\r\n"
+    "Server: NodeBrain Webster\r\n"
     "Last-Modified: %s\r\n"
     "Expires: %s\r\n" 
     "Connection: %s\r\n"
     "Accept-Ranges: none\r\n"
     "%s"  // cookies
     "Content-Length: %d\r\n"
-    "Content-Type: %s/%s\r\n\r\n",
-    code,ctimeCurrent,ctimeModified,expires,connection,cookies,length,session->type,session->subtype);
+    "Content-Type: %s/%s%s%s\r\n\r\n",
+    code,ctimeCurrent,ctimeModified,expires,connection,cookies,length,session->type,session->subtype,charsetlabel,charset);
   nbLogMsg(context,0,'T',"webContentHeading:");
   nbLogPut(context,data);
   nbProxyPageProduced(context,page,strlen((char *)data));

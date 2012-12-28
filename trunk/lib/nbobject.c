@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -182,6 +182,7 @@
 * 2012-01-25 eat - included check for malloc failures in nbAlloc
 * 2012-10-13 eat 0.8.12 Replaced other uses malloc with nbAlloc
 * 2012-10-13 eat 0.8.12 Added nbHeap function (was first part of nbObjectInit)
+* 2012-12-27 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -480,10 +481,10 @@ void printObjectReport(NB_Object *object){
   if(object->type->showReport!=object->type->showItem) object->type->showReport(object);
   }
 
-void printObjectItem(NB_Object *object){
+void printObjectItem(NB_Object *object){ // 2012-12-27 eat 0.8.13 - CID 761549
   if(object->type==NULL) outMsg(0,'T',"object type is null");
-  if(object->type->showItem==NULL) outMsg(0,'T',"object type showItem is null");
-  object->type->showItem(object);
+  else if(object->type->showItem==NULL) outMsg(0,'T',"object type showItem is null");
+  else object->type->showItem(object);
   }
 
 void printObjectType(object) void *object;{

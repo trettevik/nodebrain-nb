@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -157,6 +157,7 @@
 * 2010/02/28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2012-01-26 dtl Checker updates
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
+* 2012-12-27 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #define _USE_32BIT_TIME_T
@@ -287,7 +288,7 @@ long tcAlignQuarter(long timer){
 long tcAlignYearMonth(long timer,int month){
   struct tm *timeTm;
   
-  fprintf(stderr,"tcAlignYearMonth called: %ld %d\n",timer,month);
+  //fprintf(stderr,"tcAlignYearMonth called: %ld %d\n",timer,month);
   timeTm=localtime((const time_t *)&timer);
   if(timeTm==NULL) return(never);
   if(timeTm->tm_mon>month) timeTm->tm_year++;
@@ -431,7 +432,7 @@ long tcStepDecade(long timer,int n){
 long tcStepYear(long timer,int n){
   struct tm *timeTm;
   
-  fprintf(stderr,"tcStepYear called: timer=%ld n=%d\n",timer,n); 
+  //fprintf(stderr,"tcStepYear called: timer=%ld n=%d\n",timer,n); 
   timeTm=localtime((const time_t *)&timer);
   if(timeTm==NULL) return(never);
   if(n==0) n=1;
@@ -639,13 +640,13 @@ long tcAlignParentPattern(long timer,int pat[]){
         if(n>4){
           timeTm->tm_mday=1;
           if(n>5){
-			timeTm->tm_mon=0;
+            timeTm->tm_mon=0;
             if(n>6){
               y=timeTm->tm_year+1900;
               switch(n){
-                case 7: y=(int)(y/10)*10;
-                case 8: y=(int)(y/100)*100;
-                case 9: y=(int)(y/1000)*1000;
+                case 7: y=(int)(y/10)*10;     break; // decade   // 2012-12-27 eat 0.8.13 - CID 751558
+                case 8: y=(int)(y/100)*100;   break; // century  // 2012-12-27 eat 0.8.13 - CID 751559
+                case 9: y=(int)(y/1000)*1000; // millennium
                 }
               timeTm->tm_year=y-1900;    
               }

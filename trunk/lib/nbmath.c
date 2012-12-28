@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -78,6 +78,7 @@
 *            management of "grabs" on non-imbedded reals and the recognition
 *            of value changes via address changes.
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2012-12-27 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -124,14 +125,14 @@ void printMath(math) struct MATH *math;{
     printObject(math->right);
     outPut(")");
     }
-  else{
 */
+  else{  // 2012-12-27 eat 0.8.13 - CID 751548
     outPut("(");
     if(math->left!=NULL) printObject(math->left);
     outPut("%s",math->cell.object.type->name);
     printObject(math->right);
     outPut(")");
-//    }
+    }
   }
 
 void printMathX(struct MATH *math){

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -141,6 +141,7 @@
 *            frequency callers.
 * 2012-05-19 eat 0.8.9  Included connection failover
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
+* 2012-12-27 eat 0.8.13 Checker updates
 *==============================================================================
 */
 #include <nb/nb.h>
@@ -733,13 +734,13 @@ int nbProxyListen(nbCELL context,nbProxy *proxy){
   //if(proxyTrace) nbLogMsg(context,0,'T',"nbProxyListen: called uri=%s",proxy->tls->uriMap[0].uri);
   if(proxyTrace) nbLogMsg(context,0,'T',"nbProxyListen: called uri=%s",nbTlsGetUri(proxy->tls));
   if(nbTlsListen(proxy->tls)<0){
-    //nbLogMsg(context,0,'E',"Unable to listener - %s",proxy->tls->uriMap[0].uri);
-    nbLogMsg(context,0,'E',"Unable to listener - %s",nbTlsGetUri(proxy->tls));
+    nbLogMsg(context,0,'E',"Unable to listen - %s",nbTlsGetUri(proxy->tls));
     return(-1);
     }
-  // 2010-06-06 eat - seeing if blocking IO will work
-  // 2011-01-23 eat - trying non-blocking IO again
-  fcntl(proxy->tls->socket,F_SETFL,fcntl(proxy->tls->socket,F_GETFL)|O_NONBLOCK);
+  if(fcntl(proxy->tls->socket,F_SETFL,fcntl(proxy->tls->socket,F_GETFL)|O_NONBLOCK)){ // 2012-12-27 eat 0.8.13 - CID 751524
+    nbLogMsg(context,0,'E',"Unable to listen - %s - unable to set non-blocking - %s",nbTlsGetUri(proxy->tls),strerror(errno));
+    return(-1);
+    }
   nbListenerAdd(context,proxy->tls->socket,proxy,nbProxyAccepter);
   proxy->flags|=NB_PROXY_FLAG_READ_WAIT;
   if(proxyTrace) nbLogMsg(context,0,'T',"nbProxyListen: returning - handing off to nbProxyAccepter");
@@ -781,11 +782,10 @@ int nbProxyConnectNext(nbCELL context,nbProxy *proxy){
       proxy->flags|=NB_PROXY_FLAG_READ_WAIT;
       if(proxyTrace) nbLogMsg(context,0,'T',"nbProxyConnectNext: waiting on %s",nbTlsGetUri(proxy->tls));
       return(0);
-    default:
-      nbLogMsg(context,0,'W',"nbProxyConnectNext: Unable to connect %s - %s",nbTlsGetUri(proxy->tls),strerror(errno));
-      return(-1);
     }
-  nbLogMsg(context,0,'L',"nbProxyConnect: unexpected return code %d from nbTlsConnectNonBlocking");
+  // 2012-12-27 eat 0.8.13 - CID 751688
+  if(rc<0) nbLogMsg(context,0,'W',"nbProxyConnectNext: Unable to connect %s - %s",nbTlsGetUri(proxy->tls),strerror(errno));
+  else nbLogMsg(context,0,'L',"nbProxyConnect: unexpected return code %d from nbTlsConnectNonBlocking");
   return(-1);
   }
 
@@ -968,7 +968,6 @@ nbProxyPage *nbProxyGetPage(nbCELL context,nbProxy *proxy){
   nbProxyPage *page;
   if(proxyTrace){
     if(proxy->tls) nbLogMsg(context,0,'I',"nbProxyGetPage: called for %s",nbTlsGetUri(proxy->tls));
-    else nbLogMsg(context,0,'I',"nbproxyGetPage: called for proxy with closed socket");
     }
   page=nbProxyBookGetPage(context,&proxy->ibook);
   proxy->flags&=0xff-NB_PROXY_FLAG_CONSUMER_STOP;
@@ -977,7 +976,8 @@ nbProxyPage *nbProxyGetPage(nbCELL context,nbProxy *proxy){
     nbListenerAdd(context,proxy->tls->socket,proxy,nbProxyReader);
     proxy->flags|=NB_PROXY_FLAG_READ_WAIT;
     }
-  if(proxyTrace && page) nbLogMsg(context,0,'T',"nbProxyGetPage: called with proxy=%p SD=%d size=%d flags=%x",proxy,proxy->tls->socket,page->size,proxy->flags);
+  // 2012-12-27 eat 0.8.13 - CID 751550 - included proxy->tls condition
+  if(proxyTrace && page && proxy->tls) nbLogMsg(context,0,'T',"nbProxyGetPage: called with proxy=%p SD=%d size=%d flags=%x",proxy,proxy->tls->socket,page->size,proxy->flags);
   return(page);
   }
 

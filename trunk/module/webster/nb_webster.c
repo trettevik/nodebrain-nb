@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2007-2012 The Boeing Company
+* Copyright (C) 2007-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -218,7 +218,7 @@ static void webHeading(nbCELL context,nbWebSession *session){
 
 static void webFooting(nbCELL context,nbWebSession *session){
   static char *html=
-   "\n</td></tr></table>\n<hr>\n<span class='foot'>&nbsp;NodeBrain Webster 0.8.11 OpenSSL Server</span>\n</body>\n</html>\n";
+   "\n</td></tr></table>\n<hr>\n<span class='foot'>&nbsp;NodeBrain Webster Server</span>\n</body>\n</html>\n";
   nbWebsterPutText(context,session,html);
   }
 
@@ -730,9 +730,6 @@ static void webLinkDir(nbCELL context,nbWebSession *session,char *path){
   struct FILE_ENTRY *curent;
   struct FILE_ENTRY *nextent;
 
-  rootent=nbAlloc(sizeof(struct FILE_ENTRY));
-  *rootent->name=0;
-  rootent->next=NULL;
   sprintf(text,"%s/webster/%s",webster->rootdir,path);
   dir=opendir(text);
   if(dir==NULL){
@@ -740,6 +737,9 @@ static void webLinkDir(nbCELL context,nbWebSession *session,char *path){
     nbWebsterPutText(context,session,text);
     return;
     }
+  rootent=nbAlloc(sizeof(struct FILE_ENTRY));
+  *rootent->name=0;
+  rootent->next=NULL;
   while((ent=readdir(dir))!=NULL){
     if(*ent->d_name!='.'){
       nextent=nbAlloc(sizeof(struct FILE_ENTRY));
@@ -784,35 +784,42 @@ static void webLinkDir(nbCELL context,nbWebSession *session,char *path){
       }
     else if(S_ISREG(filestat.st_mode)){
       int fildes;
+      sprintf(text,"<tr class='%s'><td>%d</td>",class,i);
+      nbWebsterPutText(context,session,text);
       sprintf(text,"%s/webster/%s/%s",webster->rootdir,path,curent->name);
       if((fildes=open(text,O_RDONLY))<0){
-        sprintf(text,"<b>Open failed: %s</b>\n",strerror(errno));
+        sprintf(text,"<td colspan=2>Unable to open: \"%s\" - %s</td></tr>\n",curent->name,strerror(errno));
         nbWebsterPutText(context,session,text);
-        return;
-        }
-      sprintf(text,"<tr class='%s'><td>%d</td><td><table cellspacing=0 cellpadding=0><tr><td><img src='webster/link.gif'></td><td>&nbsp;<a href='",class,i);
-      nbWebsterPutText(context,session,text);
-      len=read(fildes,text,sizeof(text)-1);
-      if(len>0) *(text+len)=0;
-      if(len>0 && (cursor=strchr(text,'\n'))!=NULL){
-        *cursor=0;
-        nbWebsterPutText(context,session,text);
-        nbWebsterPutText(context,session,"'>");
-        nbWebsterPutText(context,session,curent->name);
-        nbWebsterPutText(context,session,"</a></td></tr></table></td><td>\n");
-        cursor++;
-        nbLogMsg(context,0,'T',"cursor:%s\n",cursor);
-        if(*cursor!=0) nbWebsterPutText(context,session,cursor);
-        while((len=read(fildes,text,sizeof(text)-1))>0){
-          *(text+len)=0;
-          nbWebsterPutText(context,session,text);
-          }
         }
       else{
-        sprintf(text,"<tr class='%s'><td>%d</td><td colspan=2>Unable to read: \"%s\"\n",class,i,curent->name);
+        len=read(fildes,text,sizeof(text)-1);
+        if(len<0){
+          sprintf(text,"<td colspan=2>Unable to read: \"%s\" - %s</td></tr>\n",curent->name,strerror(errno));
+          nbWebsterPutText(context,session,text);
+          }
+        else if(len>0) *(text+len)=0;
+        if(len>0 && (cursor=strchr(text,'\n'))!=NULL){
+          *cursor=0;
+          nbWebsterPutText(context,session,"<td><table cellspacing=0 cellpadding=0><tr><td><img src='webster/link.gif'></td><td>&nbsp;<a href='");
+          nbWebsterPutText(context,session,text);
+          nbWebsterPutText(context,session,"'>");
+          nbWebsterPutText(context,session,curent->name);
+          nbWebsterPutText(context,session,"</a></td></tr></table></td><td>\n");
+          cursor++;
+          nbLogMsg(context,0,'T',"cursor:%s\n",cursor);
+          if(*cursor!=0) nbWebsterPutText(context,session,cursor);
+          while((len=read(fildes,text,sizeof(text)-1))>0){
+            *(text+len)=0;
+            nbWebsterPutText(context,session,text);
+            }
+          nbWebsterPutText(context,session,"</td></tr>\n");
+          }
+        else{
+          sprintf(text,"<td colspan=2>Unable to parse: \"%s\"</td></tr>\n",curent->name);
+          nbWebsterPutText(context,session,text);
+          }
+        close(fildes);
         }
-      close(fildes);
-      nbWebsterPutText(context,session,"</td></tr>\n");
       }
     }
   nbWebsterPutText(context,session,"<tr><th colspan=3><span style='font-size: 3px;'>&nbsp;</span></th></tr></table>\n");
@@ -821,6 +828,7 @@ static void webLinkDir(nbCELL context,nbWebSession *session,char *path){
     nextent=curent->next;
     nbFree(curent,sizeof(struct FILE_ENTRY));
     }
+  nbFree(rootent,sizeof(struct FILE_ENTRY));  // 2012-12-25 eat - AST 43
   }
 #endif
 
@@ -939,8 +947,8 @@ static int webPath(nbCELL context,nbWebSession *session,void *handle){
   name=nbWebsterGetParam(context,session,"name");
   if(!name) name=nbWebsterGetParam(context,session,"arg");
   if(!name) name=nbWebsterGetQuery(context,session);
-  //if(!*name) name=webster->dir; // 2012-12-15 eat - CID 751555
   if(!name) name=webster->dir;
+  else if(!*name) name=webster->dir; // 2012-12-15 eat - CID 751555
   snprintf(text,sizeof(text),
     "<p><h1>Directory <a href=':help?directory'><img src='webster/help.gif' border=0></a></h1>\n"
     "<p><form name='file' action=':file' method='get'>\n"

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2009-2012 The Boeing Company
+* Copyright (C) 2009-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -45,8 +45,8 @@
 *   The API enables any NodeBrain module to function as a message
 *   producer.  The "producer" skill provided by this module is a
 *   special case that executes and logs nodebrain commands.  Other
-*   modules (e.g. bingo) may use messages to represent transactions
-*   that are foreign to NodeBrain.
+*   modules may use messages to represent transactions that are foreign
+*   NodeBrain.
 *
 *   A producer (in terms of this module) is defined as follows.
 *
@@ -92,6 +92,8 @@
 * 2012-04-22 eat 0.8.8  Included message.prune command
 * 2012-10-17 eat 0.8.12 Checker updates
 * 2012-10-18 eat 0.8.12 Checker updates
+* 2012-12-25 eat 0.8.13 AST 39
+* 2012-12-27 eat 0.8.13 Checker updates
 *===================================================================================
 */
 #include "config.h"
@@ -1009,9 +1011,9 @@ int messageCmdRetire(nbCELL context,void *handle,char *verb,char *cursor){
   seconds=number;
   while(*cursor>='0' && *cursor<='9') cursor++; // step over n
   switch(*cursor){
-    case 'd': seconds*=twentyfour;
-    case 'h': seconds*=sixty;
-    case 'm': seconds*=sixty;
+    case 'd': seconds*=twentyfour*sixty*sixty; break;  // 2012-12-27 eat - CID 751560 - included compile time multiplication and break
+    case 'h': seconds*=sixty*sixty; break;             // 2012-12-27 eat - CID 751561 - included compile time multiplication and break
+    case 'm': seconds*=sixty; break;
     case 's': break;
     default:
       nbLogMsg(context,0,'E',"Expecting time unit of 'd', 'h', 'm', or 's' at:%s",cursor);

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2005-2012 The Boeing Company
+* Copyright (C) 2005-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -54,6 +54,7 @@
 * 2012-05-30 eat 0.8.10 Fixed nbIpGetDatagram - wasn't portable
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 * 2012-12-15 eat 0.8.13 Checker updates
+* 2012-12-27 eat 0.8.13 Checker updates
 *=====================================================================
 */
 #include <nb/nbi.h>
@@ -491,7 +492,7 @@ struct IP_CHANNEL *nbIpAlloc(void){
 
 /*
 *  Get a server_socket to listen on
-*     NOTE: replace all calls to chlisten with this
+*     NOTE: replace all calls to nbIpListen with this
 */
 int nbIpListen(char *addr,unsigned short port){
   int server_socket,sockopt_enable=1;
@@ -504,7 +505,7 @@ int nbIpListen(char *addr,unsigned short port){
   if(*addr!=0 && (*addr<'0' || *addr>'9')){
     domain=AF_UNIX;
     if(strlen(addr)>sizeof(un_addr.sun_path)){
-      outMsg(0,'E',"chlisten: Local domain socket path too long - %s",addr);
+      outMsg(0,'E',"nbIpListen: Local domain socket path too long - %s",addr);
       return(-1);
       }
     }
@@ -512,12 +513,12 @@ int nbIpListen(char *addr,unsigned short port){
 #if defined(WIN32)
 //  HANDLE dup,hProcess = GetCurrentProcess();
   if((server_socket=socket(AF_INET,SOCK_STREAM,0))==INVALID_SOCKET) {
-    outMsg(0,'E',"chlisten() Unable to create socket. errno=%d",WSAGetLastError());
+    outMsg(0,'E',"nbIpListen() Unable to create socket. errno=%d",WSAGetLastError());
     return(server_socket);
     }
   // Prevent inheritance by child processes
   if(!SetHandleInformation((HANDLE)server_socket,HANDLE_FLAG_INHERIT,0)){
-    outMsg(0,'E',"chlisten() Unable to turn off socket inherit flag");
+    outMsg(0,'E',"nbIpListen() Unable to turn off socket inherit flag");
           closesocket(server_socket);
           return(INVALID_SOCKET);
           }
@@ -526,18 +527,22 @@ int nbIpListen(char *addr,unsigned short port){
 //    closesocket(server_socket);
 //    server_socket=(SOCKET)dup;
 //    }
-//  else{ outMsg(0,'E',"chlisten() unable to duplicate server socket"); }
+//  else{ outMsg(0,'E',"nbIpListen() unable to duplicate server socket"); }
 #else
   if ((server_socket=socket(domain,SOCK_STREAM,0)) < 0) {
-    outMsg(0,'E',"chlisten: Unable to create socket. errno=%d",errno);
+    outMsg(0,'E',"nbIpListen: Unable to create socket - %s",strerror(errno));
     return(server_socket);
     }
-  fcntl(server_socket,F_SETFD,FD_CLOEXEC);
+  if(fcntl(server_socket,F_SETFD,FD_CLOEXEC)){
+    outMsg(0,'E',"nbIpListen: Unable to fcntl close on exec - %s",strerror(errno));
+    nbIpCloseSocket(server_socket);
+    return(-1);
+    }
 #endif
   /* make sure we can reuse sockets when we restart */
   /* we say the option value is char for windows */
   if(setsockopt(server_socket,SOL_SOCKET,SO_REUSEADDR,(char *)&sockopt_enable,sizeof(sockopt_enable))<0){
-    outMsg(0,'E',"chlisten: Unable to set socket option errno=%d",errno);
+    outMsg(0,'E',"nbIpListen: Unable to set socket option errno=%d",errno);
     nbIpCloseSocket(server_socket);
     return(-1);
     }
@@ -547,7 +552,7 @@ int nbIpListen(char *addr,unsigned short port){
     if(*addr==0) in_addr.sin_addr.s_addr=INADDR_ANY;
     else in_addr.sin_addr.s_addr=inet_addr(addr);
     if (bind(server_socket,(struct sockaddr *)&in_addr,sizeof(in_addr)) < 0) {
-      outMsg(0,'E',"chlisten: Unable to bind to inet domain socket %d. errno=%d",port,errno);
+      outMsg(0,'E',"nbIpListen: Unable to bind to inet domain socket %d. errno=%d",port,errno);
       nbIpCloseSocket(server_socket);
       return(-1);
       }
@@ -558,14 +563,14 @@ int nbIpListen(char *addr,unsigned short port){
     strcpy(un_addr.sun_path,addr);
     unlink(addr);
     if(bind(server_socket,(struct sockaddr *)&un_addr,sizeof(un_addr))<0){
-      outMsg(0,'E',"chlisten: Unable to bind to local domain socket %s. errno=%d",addr,errno);
+      outMsg(0,'E',"nbIpListen: Unable to bind to local domain socket %s. errno=%d",addr,errno);
       nbIpCloseSocket(server_socket);
       return(-1);
       }
     }
 #endif
   if (listen(server_socket,5) != 0) {
-    outMsg(0,'E',"chlisten: Unable to listen. errno=%d",errno);
+    outMsg(0,'E',"nbIpListen: Unable to listen. errno=%d",errno);
     nbIpCloseSocket(server_socket);
     return(-2);
     }
@@ -605,11 +610,15 @@ int nbIpAccept(NB_IpChannel *channel,int server_socket){
   channel->socket=accept(server_socket,(struct sockaddr *)&client,&sockaddrlen);
 #endif
   if(channel->socket<0){
-    if(errno!=EINTR) outMsg(0,'E',"chaccept: accept failed.");
+    if(errno!=EINTR) outMsg(0,'E',"nbIpAccept: accept failed - ",strerror(errno));
     return(channel->socket);
     }
 #if !defined(WIN32)
-  fcntl(channel->socket,F_SETFD,FD_CLOEXEC);
+  if(fcntl(channel->socket,F_SETFD,FD_CLOEXEC)!=0){ // 2012-12-27 eat 0.8.13 - CID 751518
+    outMsg(0,'E',"nbIpAccept: fcntl failed - %s",strerror(errno));
+    close(channel->socket);
+    return(-1); 
+    }
 #endif
 #if defined(mpe)
   strcpy(channel->ipaddr,(char *)inet_ntoa(client.sin_addr));

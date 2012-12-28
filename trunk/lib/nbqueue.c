@@ -432,15 +432,23 @@ int nbQueueGetNewFileName(char *qname,char *directory,int option,char type){
 */
 void nbQueueCommit(char *filename){
   char *cursor,newname[512];
+  int len;
 
-  snprintf(newname,sizeof(newname),"%s",filename); //2012-01-16 dtl: replaced strcpy
+  len=snprintf(newname,sizeof(newname),"%s",filename); //2012-01-16 dtl: replaced strcpy
+  if(len>=sizeof(newname)){
+    outMsg(0,'E',"nbQueueCommit: File name too large - \"%s\"",filename);
+    return;
+    }
   cursor=newname+strlen(newname)-2;
   if(cursor<newname || *cursor!='%'){
-    outMsg(0,'L',"nbQueueCommit() unrecognized file name \"%s\"",newname);
+    outMsg(0,'L',"nbQueueCommit: Unrecognized file name \"%s\"",newname);
     return;
     }
   *cursor='.';
-  rename(filename,newname); 
+  if(rename(filename,newname)){ // 2012-12-27 eat 0.8.13 - CID 751525
+    outMsg(0,'E',"nbQueueCommit: Unable to rename file \"%s\"",newname);
+    return;
+    }
   }
 
 /* The close functions above should not free the qHandle */

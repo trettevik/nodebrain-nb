@@ -336,7 +336,7 @@ int nbGetCmdInteractive(char *cmd){
 void printVersion(void){
   printf("nb %s\n\n",PACKAGE_VERSION);
   printf("N o d e B r a i n\n");
-  printf("Copyright (C) 1998-2012 The Boeing Company\n");
+  printf("Copyright (C) 1998-2013 The Boeing Company\n");
   printf("GNU General Public License\n\n");
   }
 
@@ -398,7 +398,7 @@ void showVersion(void){
 
 void showCopyright(void){
   showVersion();
-  outPut("Copyright (C) 1998-2012 The Boeing Company\n");
+  outPut("Copyright (C) 1998-2013 The Boeing Company\n");
   outPut("GNU General Public License\n");
   outPut("----------------------------------------------------------------\n\n");
   }
@@ -459,7 +459,7 @@ void showProcessList(){
 *  Interpret Statements
 *  
 */
-int nbCmdShow(nbCELL context,void *handle,char *verb,char * cursor){
+int nbCmdShow(nbCELL context,void *handle,char *verb,char *cursor){
   char symid,optid,ident[1024],*cursave;
   NB_Term *term=NULL;
   NB_Cell *ref=NULL,*def=NULL,*val=NULL;
@@ -542,8 +542,11 @@ int nbCmdShow(nbCELL context,void *handle,char *verb,char * cursor){
   symid=*cursor;
   cursor++;
   cursave=cursor;
-  nbParseSymbol(ident,&cursor);
-  /* don't worry about symid - if not 't' we'll get error message anyway */
+  optid=nbParseSymbol(ident,&cursor);  
+  if(optid!='t' && optid!='?' && optid!=';'){  // 2012-12-27 eat 0.8.13 - CID 751517
+    outMsg(0,'E',"Unrecognized show command.  Use show command without parameters for help.");
+    return(0);
+    }
   len=strlen(ident);
   if(len==0){
     strcpy(ident,"?");
@@ -1817,7 +1820,7 @@ int nbCmdForecast(nbCELL context,void *handle,char *verb,char *cursor){
   schedPrintDump(sched);
   time(&floor);
   for(i=1;i<30;i++){
-    printf("calling schedNext i=%d\n",i);
+    //printf("calling schedNext i=%d\n",i);
     start=schedNext(floor,sched); /* start */
     //if(start<=0 || start==eternity.end){
     if(start<=0 || start>=eternity.end){

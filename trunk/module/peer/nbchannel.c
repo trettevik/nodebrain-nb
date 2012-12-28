@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -163,6 +163,7 @@
 * 2012-10-16 eat 0.8.12 Checker updates
 * 2012-10-18 eat 0.8.12 Checker updates
 * 2012-12-16 eat 0.8.13 Checker updates
+* 2012-12-27 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <openssl/rand.h>
@@ -248,12 +249,16 @@ extern int chlisten(char *addr,unsigned short port){
     nbLogMsgI(0,'E',"chlisten: Unable to create socket. errno=%d",errno);
     return(server_socket);
     }
-  fcntl(server_socket,F_SETFD,FD_CLOEXEC);
+  if(fcntl(server_socket,F_SETFD,FD_CLOEXEC)){   // 2012-12-27 eat 0.8.13 - CID 751534
+    nbLogMsgI(0,'E',"chlisten: Unable to set close-on-exec flag fd=%d - %s",server_socket,strerror(errno));
+    chclosesocket(server_socket);
+    return(-1);
+    }
 #endif
   /* make sure we can reuse sockets when we restart */
   /* we say the option value is char for windows */
   if(setsockopt(server_socket,SOL_SOCKET,SO_REUSEADDR,(char *)&sockopt_enable,sizeof(sockopt_enable))<0){
-    nbLogMsgI(0,'E',"chlisten: Unable to set socket option errno=%d",errno);
+    nbLogMsgI(0,'E',"chlisten: Unable to set socket option fd=%d - %s",server_socket,strerror(errno));
     chclosesocket(server_socket);
     return(-1);
     }    
@@ -263,7 +268,7 @@ extern int chlisten(char *addr,unsigned short port){
     if(*addr==0) in_addr.sin_addr.s_addr=INADDR_ANY;
     else in_addr.sin_addr.s_addr=inet_addr(addr);
     if (bind(server_socket,(struct sockaddr *)&in_addr,sizeof(in_addr)) < 0) {
-      nbLogMsgI(0,'E',"chlisten: Unable to bind to inet domain socket %d. errno=%d",port,errno);
+      nbLogMsgI(0,'E',"chlisten: Unable to bind to inet domain port %d - %s",port,strerror(errno));
       chclosesocket(server_socket);
       return(-1);
       }
@@ -326,11 +331,15 @@ extern int chaccept(struct CHANNEL *channel,int server_socket){
   channel->socket=accept(server_socket,(struct sockaddr *)&client,&sockaddrlen);
 #endif
   if(channel->socket<0){
-    if(errno!=EINTR) nbLogMsgI(0,'E',"chaccept: accept failed.");
+    if(errno!=EINTR) nbLogMsgI(0,'E',"chaccept: accept failed - %s",strerror(errno));
     return(channel->socket);
     }
 #if !defined(WIN32)
-  fcntl(channel->socket,F_SETFD,FD_CLOEXEC);
+  if(fcntl(channel->socket,F_SETFD,FD_CLOEXEC)){  // 2012-12-27 eat 0.8.13 - CID 751533
+    nbLogMsgI(0,'E',"chaccept: Unable to set close-on-exec flag on fd=%d - %s",channel->socket,strerror(errno));
+    close(channel->socket);
+    return(-1);
+    }
 #endif
 #if defined(mpe)
   strcpy(channel->ipaddr,(char *)inet_ntoa(client.sin_addr));
@@ -467,7 +476,9 @@ extern int chput(struct CHANNEL *channel,char *buffer,size_t len){  // 2012-10-1
     else i=5+16-i; // set i to padded trailer size
     //i=((len+5+15)&0xfffffff0)-len;   /* pad up to 16 byte boundary */ // 2012-10-13 eat - Note: 5 <= i <= 20 
     //if(i>5) memset(((unsigned char *)channel->buffer)+len,random()&0xff,i-5);
-    if(i>5) RAND_bytes(((unsigned char *)channel->buffer)+len,i-5); // 2012-10-16 eat - pad with random bytes
+    if(i>5 && !RAND_bytes(((unsigned char *)channel->buffer)+len,i-5)){ // 2012-10-16 eat - pad with random bytes
+      nbExit("chput: Unable to generate random bytes");
+      }
     len+=i; // 2012-1013 eat - len>5 now because i>=5 and len was >0
     *((unsigned char *)channel->buffer+len-5)=i%256;  // 2012-10-13 eat - don't worry, len>5 and i<=20 - %256 to make it clear to checker
     checksum=0;                                 /* initialize checksum */

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -95,6 +95,8 @@
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2012-06-10 eat 0.8.10 Replaced rand with random
 * 2012-10-16 eat 0.8.12 Replaced random with nbRand32
+* 2012-12-27 eat 0.8.13 AST 40,44
+* 2012-12-27 eat 0.8.13 Replace printf(... with fprintf(stderr,...
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -125,12 +127,12 @@ static void pkePrint(unsigned char *ciphertext){
   unsigned short len;
   
   len=*cursor;
-  printf("ct[%u]=",len);
+  fprintf(stderr,"ct[%u]=",len);
   for(;len>0;len--){
-    printf("%2.2x",*cursor);
+    fprintf(stderr,"%2.2x",*cursor);
     cursor++;
     }
-  printf(".\n");    
+  fprintf(stderr,".\n");    
   } 
 */
     
@@ -140,7 +142,7 @@ static void pkePrint(unsigned char *ciphertext){
 *    [len][[data1][data2]...][...]...
 *
 *    The len field is an unsigned char (1-255) providing the length of the
-*    ciphertext buffer (including len itself).  A 5 byte field is shown hear.
+*    ciphertext buffer (including len itself).  A 5 byte field is shown here.
 *
 *        0x05,0x47,0xaf,0x2d,0x3e
 *
@@ -243,6 +245,7 @@ unsigned int pkeDecrypt(unsigned char *ciphertext,vli exponent,vli modulus,unsig
   return(pt-plaintext);  
   }
 
+#if defined(DEBUG)
 /*
 *  Test the encryption and decryption routines for a given key.
 */    
@@ -253,32 +256,32 @@ void pkeTestCipher(vli e,vli n,vli d){
     
   strcpy((char *)s,"abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ~!@#$%^&*()_+{}[]`,./<>?;':|\\\"");
   slen=strlen((char *)s);
-  //slen=random()%slen; // 2012-10-16 eat - enhancing entropy
   slen=nbRand32()%slen;
   *(s+slen)=0;
   strcpy((char *)t,(char *)s); 
   len=pkeEncrypt(ciphertext,e,n,s,slen);
   len=pkeDecrypt(ciphertext,d,n,s,slen);
   if(len!=slen){
-    printf("NB000E String encryption error - pkeDecrypt returned wrong length=%u.\n",len);
-    printf("in : %s\n",t);
+    fprintf(stderr,"NB000E String encryption error - pkeDecrypt returned wrong length=%u.\n",len);
+    fprintf(stderr,"in : %s\n",t);
     exit(NB_EXITCODE_FAIL);
     }
   *(s+slen)=0;  
-  if(strcmp((char *)t,(char *)s)>0){
-    printf("NB000E String encryption error on first try.\n");
-    printf("in : %s\n",t);
+  if(strcmp((char *)t,(char *)s)){  // 2012-12-27 eat - AST 40
+    fprintf(stderr,"NB000E String encryption error on first try.\n");
+    fprintf(stderr,"in : %s\n",t);
     exit(NB_EXITCODE_FAIL);
     }
   pkeEncrypt(ciphertext,d,n,s,slen);
   pkeDecrypt(ciphertext,e,n,s,slen);
   *(s+slen)=0;
-  if(strcmp((char *)t,(char *)s)>0){
-    printf("NB000E String encryption error on second try.\n");
-    printf("in : %s\n",t);
+  if(strcmp((char *)t,(char *)s)){  // 2012-12-27 eat - AST 40
+    fprintf(stderr,"NB000E String encryption error on second try.\n");
+    fprintf(stderr,"in : %s\n",t);
     exit(NB_EXITCODE_FAIL);
     }
   }
+#endif
 
 /*********************************************************************
 *  Routines to calculate encryption and decryption exponents using
@@ -302,7 +305,7 @@ static void pkegetj(vli j,vli x,vli y){
   vlicopy(r,y);
   vlidiv(r,x,f);  /* f=floor(y/x); r=y-f*x; */
   if(*r==0){
-    printf("pkegetj Remainder is zero.  Something is wrong.\n");
+    fprintf(stderr,"pkegetj Remainder is zero.  Something is wrong.\n");
     exit(NB_EXITCODE_FAIL);
     }
   if(*r==1 && *(r+1)==1) {
@@ -329,7 +332,7 @@ static void pkegetk(vli k,vli x,vli y){
   vlicopy(r,y);
   vlidiv(r,x,f);  /* f=floor(y/x); r=y-f*x; */
   if(*r==0){
-    printf("pkegetk Remainder is zero.  Something is wrong.\n");
+    fprintf(stderr,"pkegetk Remainder is zero.  Something is wrong.\n");
     exit(NB_EXITCODE_FAIL);
     }
   if(*r==1 && *(r+1)==1){
@@ -363,7 +366,7 @@ static void pkeTestKey(int c,vli e,vli n,vli d){
     cX=X;
     for(cx=x;cx<ex;cx++){
       if(*cx!=*cX){
-        printf("NB000E Integer encryption error\n");
+        fprintf(stderr,"NB000E Integer encryption error\n");
         vliprint(x,"x");
         vliprint(X,"X"); 
         exit(NB_EXITCODE_FAIL);
@@ -382,7 +385,7 @@ void pkeGenKey(unsigned int l,vli e,vli n,vli d){
   //static long seed=0; // 2012-10-16 eat - no longer required
 
   if(l<9 || l>1024){
-    printf("NB000L pkeGenKey: parameter l=%u is out of range.\n",l);
+    fprintf(stderr,"NB000L pkeGenKey: parameter l=%u is out of range.\n",l);
     exit(NB_EXITCODE_FAIL);
     }
   //if(seed==0) srandom(seed=time(NULL)); /* seed the random number generator */  // 2012-10-16 eat - no longer required

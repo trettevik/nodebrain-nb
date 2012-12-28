@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2004-2012 The Boeing Company
+* Copyright (C) 2004-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -75,6 +75,7 @@
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2012-08-31 dtl 0.8.12 handled err
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree for fixed blocks
+* 2012-12-27 eat 0.8.13 Checker updates
 *=====================================================================
 */
 #include <config.h>
@@ -1139,10 +1140,12 @@ void *netflowConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *tex
 *    enable <node>
 */
 int netflowEnable(nbCELL context,void *skillHandle,NB_MOD_Netflow *netflow){
-  if((netflow->socket=nbIpGetUdpServerSocket(context,"",netflow->port))<0){
+  int fd;
+  if((fd=nbIpGetUdpServerSocket(context,"",netflow->port))<0){  // 2012-12-27 eat 0.8.13 - CID 751570
     nbLogMsg(context,0,'E',"Unable to listen on port %s\n",netflow->port);
     return(1);
     }
+  netflow->socket=fd; 
   nbListenerAdd(context,netflow->socket,netflow,netflowRead);
   nbLogMsg(context,0,'I',"Listening on port %u for Netflow Export Datagrams",netflow->port);
   return(0);

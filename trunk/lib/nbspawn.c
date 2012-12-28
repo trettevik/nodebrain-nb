@@ -91,6 +91,7 @@
 * 2012/01/16 dtl 0.8.5  Checker updates.
 * 2012-10-18 eat 0.8.12 Replaced rand with random
 * 2012-10-19 eat 0.8.12 Replaced random with pid plus counter since we needed unique instead of random
+* 2012-12-25 eat 0.8.13 Noting that prior change also fixed AST 42
 *=============================================================================
 */
 #include <nb/nbi.h>

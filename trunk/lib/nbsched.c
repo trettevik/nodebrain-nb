@@ -334,7 +334,7 @@ time_t schedNext(time_t floor,struct SCHED *sched){
     sched->period.start=tcQueueTrue(sched->queue,floor,ceiling);
     sched->period.end=tcQueueFalse(sched->queue);
     // 2012-10-12 eat - troubleshoot
-    tcPrintSeg(sched->period.start,sched->period.end,"Test"); 
+    //tcPrintSeg(sched->period.start,sched->period.end,"Test"); 
     return(sched->period.start);
     }
   outMsg(0,'L',"schedNext() schedule type not recognized.");

@@ -308,9 +308,10 @@ struct LISTENER *listenerFree=NULL; /* free listener list */
 
 //  nbLogHandlerAdd(context,session,nbpClientOut);
 
-//static void nbpClientOut(nbCELL context,struct NBP_SESSION session,char *buffer){
 static void nbpClientOut(nbCELL context,void *session,char *buffer){
-  chput(currentSession->channel,buffer,strlen(buffer));
+  if(chput(currentSession->channel,buffer,strlen(buffer))<0){  // 2012-12-27 eat 0.8.13 - CID 751536
+    nbLogMsgI(0,'E',"nbpClientOut: chput failed - %s",strerror(errno));
+    }
   }
 
 /*============================================================================
@@ -671,8 +672,7 @@ int nbpMsg(struct NBP_SESSION *session,char trancode,char msgcode,char *text,siz
     }
   memcpy(msgbuf->text,text,len);
   len+=msgbuf->text-buffer;
-  len=chput(channel,buffer,len);
-  if(len<0){
+  if(chput(channel,buffer,len)<0){  // 2012-12-27 eat 0.8.13 - CID 751571
     nbLogMsgI(0,'E',"nbpMsg: chput call failed.");
     return(-1);
     }
@@ -1686,7 +1686,11 @@ void nbpServe(struct LISTENER *ear,struct NBP_SESSION *session,int nbp,char *oar
 #if defined(WIN32)
     SetHandleInformation((HANDLE)channel->socket,HANDLE_FLAG_INHERIT,0);
 #else
-    fcntl(channel->socket,F_SETFD,0);  // don't close on exec
+    if(fcntl(channel->socket,F_SETFD,0)){  // don't close on exec  // 2012-12-27 eat 0.8.13 - CID 761537
+      nbLogMsgI(0,'E',"nbpServer: Unable to set socket flags fd=%d - %s",channel->socket,strerror(errno));
+      nbpClose(session);
+      return;
+      }
 #endif
     nbSpawnSkull((nbCELL)ear->context,oar,buffer);
     nbpClose(session);
@@ -1745,7 +1749,8 @@ int nbqStoreCmd(NB_Term *brainTerm,char *cursor){
   char buf[NB_BUFSIZE];
   char filename[256];
   //char *dir=((struct BRAIN *)brainTerm->def)->dir->value;
-  size_t wpos,size;
+  size_t size;
+  long wpos;
   NBQFILE file;
 
   if((file=nbqOpen(brainTerm,NBQ_INTERVAL,'q',filename))<0) return(-1);
@@ -1769,11 +1774,11 @@ int nbqStoreCmd(NB_Term *brainTerm,char *cursor){
     SetEndOfFile(file); /* is this necessary? */
 #endif
     nbQueueCloseFile(file);
-    if(trace) nbLogMsgI(0,'I',"Command queued to %s at offset %d",filename,wpos);
+    if(trace) nbLogMsgI(0,'I',"Command queued to %s at offset %ld",filename,wpos);
     return(0);
     }
   nbQueueCloseFile(file);
-  nbLogMsgI(0,'I',"Command refused - queue file size limit reached at %d",wpos);
+  nbLogMsgI(0,'I',"Command refused - queue file size limit reached at %ld",wpos);
   return(-1);
   }
 

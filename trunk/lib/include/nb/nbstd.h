@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -41,6 +41,7 @@
 * 2006/01/16 eat 0.6.4  juggled around a bit
 * 2008/11/06 eat 0.7.3  Converfted to PCRE's native API
 * 2008/11/11 eat 0.7.3  Added NB_EXITCODE_* definitions
+* 2012-12-25 eat 0.8.13 Included langinfo.h and locale.h
 *============================================================================
 */
 #ifndef _NB_STD_H_
@@ -99,6 +100,9 @@
 #if defined(TIME_WITH_SYS_TIME) || !defined(HAVE_SYS_TIME_H)
 #include <time.h>
 #endif
+
+#include <locale.h>       // 2012-12-25 eat - 0.8.13
+#include <langinfo.h>     // 2012-12-25 eat - 0.8.13 
 
 //#include <regex.h>      /* version 0.2.8 */
 //#include <pcreposix.h>  /* version 0.6.7 */

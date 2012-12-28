@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -174,6 +174,7 @@
 * 2012-04-21 eat 0.8.7  Included NB_TLS_ERROR_HANDSHAKE in nbTlsAccept
 * 2012-04-21 eat 0.8.7  Included NB_TLS_OPTION_SSL2 option for compatibility with old appplications
 * 2012-05-23 eat 0.8.9  Increased nbTlsCreate max number of URI's to 4
+* 2012-12-27 eat 0.8.13 Checker updates
 *==================================================================================
 */
 #include <nb/nb.h>
@@ -589,9 +590,11 @@ int nbTlsConnectNonBlocking(nbTLS *tls){
     return(-1);
     }
 #endif
-  // 2010-06-06 eat - seeing if blocking IO will work
-  // 2011-01-30 eat - trying non-blocking again to troubleshoot
-  fcntl(sd,F_SETFL,fcntl(sd,F_GETFL)|O_NONBLOCK);
+  if(fcntl(sd,F_SETFL,fcntl(sd,F_GETFL)|O_NONBLOCK)){
+    fprintf(stderr,"nbTlsConnectNonBlocking: connect failed: %s\n",strerror(errno));
+    close(sd);
+    return(-1);
+    }
   if(domain==AF_INET) rc=connect(sd,(struct sockaddr*)&in_addr,sizeof(in_addr));
   else rc=connect(sd,(struct sockaddr*)&un_addr,sizeof(un_addr));
   if(rc<0){
@@ -813,7 +816,11 @@ int nbTlsListen(nbTLS *tls){
     fprintf(stderr,"nbTlsListen: Unable to create socket - %s\n",strerror(errno));
     return(sd);
     }
-  fcntl(sd,F_SETFD,FD_CLOEXEC);
+  if(fcntl(sd,F_SETFD,FD_CLOEXEC)){
+    fprintf(stderr,"nbTlsListen: Unable set close on exec flag - %s\n",strerror(errno));
+    close(sd);
+    return(-1);
+    }
 #endif
   if(domain==AF_INET){
     /* make sure we can reuse sockets when we restart */
@@ -958,9 +965,19 @@ nbTLS *nbTlsAccept(nbTLS *tlsListener){
     return(NULL);
     }
 #if !defined(WIN32)
-  fcntl(sd,F_SETFD,FD_CLOEXEC);
+  if(fcntl(sd,F_SETFD,FD_CLOEXEC)){
+    fprintf(stderr,"nbTlsAccept: set flag close-on-exec failed: %s\n",strerror(errno));
+    close(sd);
+    return(NULL);
+    }
   // 2011-02-05 eat - if listener is non-blocking, make new socket non-blocking
-  if(fcntl(socket,F_GETFL)&O_NONBLOCK) fcntl(sd,F_SETFL,fcntl(sd,F_GETFL)|O_NONBLOCK);
+  if(fcntl(socket,F_GETFL)&O_NONBLOCK){
+    if(fcntl(sd,F_SETFL,fcntl(sd,F_GETFL)|O_NONBLOCK)){
+      fprintf(stderr,"nbTlsAccept: set flag non-blocking failed: %s\n",strerror(errno));
+      close(sd);
+      return(NULL);
+      }
+    }
   if(setsockopt(sd,SOL_SOCKET,SO_KEEPALIVE,&keepalive,(socklen_t)sizeof(keepalive))<0) {
     fprintf(stderr,"nbTlsAccept: setsockopt SO_KEEPALIVE failed: %s\n",strerror(errno));
     close(sd);

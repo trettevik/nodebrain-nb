@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -48,9 +48,12 @@
 * 2009-12-28 eat 0.7.7  Included msgTrace.
 * 2010-10-14 eat 0.8.4  Included servepid.
 * 2010-10-16 eat 0.8.4  Included servegroup.
+* 2012-12-25 eat 0.8.13 Included nb_charset.
 *============================================================================
 */
 #include <stdio.h> 
+
+char *nb_charset="";     // character set/encoding
 
 char nb_flag_stop=0;     /* set to 1 by stop command */
 char nb_flag_input=0;    /* set when input argument provided */

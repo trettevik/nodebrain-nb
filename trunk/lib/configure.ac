@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 #=============================================================================
 #
-# Copyright (C) 1998-2012 The Boeing Company
+# Copyright (C) 1998-2013 The Boeing Company
 #                         Ed Trettevik <eat@nodebrain.org>
 #
 # NodeBrain is free software; you can redistribute it and/or modify
@@ -117,7 +117,7 @@ LT_SYS_MODULE_EXT
 LT_FUNC_DLSYM_USCORE
 
 # define a release date variable
-AC_DEFINE(NB_RELEASE_DATE,"2012-10-24",[Define release date])
+AC_DEFINE(NB_RELEASE_DATE,"2012-12-25",[Define release date])
 
 # Checks for programs.
 AC_PROG_CC

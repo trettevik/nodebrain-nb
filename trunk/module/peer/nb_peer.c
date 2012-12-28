@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -105,6 +105,7 @@
 * 2012-10-13 eat 0.8.12 Replaced exit with nbExit
 * 2012-10-17 eat 0.8.12 Added size parameter to nbNodeGetNameFull
 * 2012-12-16 eat 0.8.13 Checker updates.
+* 2012-12-27 eat 0.8.13 Checker updates.
 *=====================================================================
 */
 //#include "config.h"
@@ -495,8 +496,10 @@ static void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
       }
     if(nbListGetCellValue(context,&argSet)!=NULL){
       nbLogMsg(context,0,'E',"The peer skill only accepts two argument.");
-      nbCellDrop(context,(nbCELL)client->ear->brainTerm);
-      nbCellDrop(context,(nbCELL)client->ear);
+      if(client->ear){  // 2012-12-27 eat 0.8.13 - CID 751554
+        if(client->ear->brainTerm) nbCellDrop(context,(nbCELL)client->ear->brainTerm);
+        nbCellDrop(context,(nbCELL)client->ear);
+        }
       nbFree(client,sizeof(nbClient));
       return(NULL);
       }
@@ -531,10 +534,10 @@ static int clientCommand(nbCELL context,void *skillHandle,nbClient *client,nbCEL
   int option=client->option;
   nbIDENTITY clientIdentityStore=nbIdentityGetActive(context);
   
-  if(arglist!=NULL){
+  if(arglist){
     argSet=nbListOpen(context,arglist);
     cell=nbListGetCellValue(context,&argSet);
-    if(nbCellGetType(context,cell)!=NB_TYPE_REAL){
+    if(!cell || nbCellGetType(context,cell)!=NB_TYPE_REAL){
       nbLogMsg(context,0,'E',"Expecting 0, 1, 2, or 3 as first argument");
       return(1);
       }
@@ -839,7 +842,9 @@ static int peerCmdIdentify(nbCELL context,void *handle,char *verb,char *text){
   fprintf(file,"%s\n",s);
   fclose(file);
 #if !defined(WIN32)
-  chmod(filename,S_IRUSR|S_IWUSR);  // always correct the file permissions
+  if(chmod(filename,S_IRUSR|S_IWUSR)){  // always correct the file permissions  // 2012-12-27 eat 0.8.13 - CID 751532
+    nbLogMsg(context,0,'E',"Unable to set %s file permissions. Should be readable by owner only.",filename);
+    }
 #endif
   return(0);
   }

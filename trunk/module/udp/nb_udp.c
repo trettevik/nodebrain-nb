@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2009-2012 The Boeing Company
+* Copyright (C) 2009-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -75,6 +75,7 @@
 * 2010/02/26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 * 2012-12-15 eat 0.8.13 Checker updates
+* 2012-12-27 eat 0.8.13 Checker updates
 *=====================================================================
 */
 #include "config.h"
@@ -281,10 +282,12 @@ static void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
 *    enable <node>
 */
 static int serverEnable(nbCELL context,void *skillHandle,NB_MOD_Server *server){
-  if((server->socket=nbIpGetUdpServerSocket(context,server->interfaceAddr,server->port))<0){
+  int fd;
+  if((fd=nbIpGetUdpServerSocket(context,server->interfaceAddr,server->port))<0){  // 2012-12-27 eat 0.8.13 - CID 751574
     nbLogMsg(context,0,'E',"Unable to listen on port %s\n",server->port);
     return(1);
     }
+  server->socket=fd;
   nbListenerAdd(context,server->socket,server,serverRead);
   nbLogMsg(context,0,'I',"Listening on UDP port %u for commands using prefix '%s'",server->port,server->prefix);
   return(0);
@@ -454,11 +457,13 @@ static void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
 *    enable <node>
 */
 static int clientEnable(nbCELL context,void *skillHandle,NB_MOD_Client *client){
+  int fd;
   if(client->socket!=0) return(0);
-  if((client->socket=nbIpGetUdpClientSocket(0,client->address,client->port))<0){
-    nbLogMsg(context,0,'E',"Unable to obtain client UDP socket %s:%d\n",client->address,client->port);
+  if((fd=nbIpGetUdpClientSocket(0,client->address,client->port))<0){ // 2012-12-27 eat 0.8.13 - CID 751573
+    nbLogMsg(context,0,'E',"Unable to obtain client UDP socket %s:%d - %s",client->address,client->port,strerror(errno));
     return(1);
     }
+  client->socket=fd;
   return(0);
   }
 

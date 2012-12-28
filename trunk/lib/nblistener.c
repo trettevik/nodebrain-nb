@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -87,6 +87,7 @@
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2012-01-31 dtl 0.8.6  Checker updates
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
+* 2012-12-27 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -322,7 +323,7 @@ extern int nbListenerStart(nbCELL context){
       }
     // get group id if group parameter specified
     if(*servegroup && (grp=getgrnam(servegroup))==NULL){
-      outMsg(0,'E',"User %s has undefined group id %d",serveuser,pwd->pw_gid);
+      outMsg(0,'E',"Group %s not defined",servegroup);    // 2012-12-27 eat 0.8.13 - CID 751547
       exit(NB_EXITCODE_FAIL);
       }
     // change root directory (jail) if requested

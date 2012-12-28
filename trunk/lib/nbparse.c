@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -125,6 +125,7 @@
 *                       define z cell c and $(a);
 * 2010-09-17 eat 0.8.3  fixed crash on unbalanced parens or braces in nbParseTimeSymbol
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
+* 2012-12-27 eat 0.8.13 Checker updates
 *==============================================================================
 */
 #include <nb/nbi.h>
@@ -244,7 +245,7 @@ int nbParseTerm(char **termP,char **cursorP){
   len=term-*termP;
   *termP=term;
   *cursorP=cursor;
-  return((int)(len));  
+  return(len);  
   } 
 
 /*
@@ -263,7 +264,7 @@ char *getQualifier(char *qCursor,char *sCursor){
     // Give special attention to @. or $. or %.
     // In these cases just return the single symbol
     if(*sCursor=='.') *qCursor=0;
-    else nbParseTerm(&qCursor,&sCursor);
+    else nbParseTerm(&qCursor,&sCursor);  // 2012-12-27 eat - CID 751522 - intentional
     }
   else if(nbParseTerm(&qCursor,&sCursor)==0) return(NULL);
   if(*sCursor=='.') sCursor++; /* step over one trailing period */  

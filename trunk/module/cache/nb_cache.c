@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -261,6 +261,7 @@
 *
 * 2008/10/23 eat 0.7.3  Now using standard API header nb.h
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
+* 2012-12-27 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include "config.h"
@@ -1162,10 +1163,9 @@ int cacheAlert(nbCELL context,void *skillHandle,NB_Cache *cache,nbCELL arglist,n
 nbCELL cacheEvaluate(nbCELL context,void *skillHandle,NB_Cache *cache,nbCELL arglist){
   nbSET argSet=nbListOpen(context,arglist);
 
-  if(argSet==NULL) return(NB_CELL_UNKNOWN); /* cache itself has no value */
-
-  if(cache->trace) nbLogMsg(context,0,'T',"cacheEvaluate: called");
-  if(cache==NULL) return(NB_CELL_UNKNOWN);
+  if(!argSet) return(NB_CELL_UNKNOWN); /* cache itself has no value */
+  if(!cache) return(NB_CELL_UNKNOWN);
+  if(cache->trace) nbLogMsg(context,0,'T',"cacheEvaluate: called"); // 2012-12-27 eat 0.8.13 - CID 76122 - must follow check for NULL cache
   if(arglist==NB_CELL_UNKNOWN) return(NB_CELL_UNKNOWN);
   if(cacheGetCount(context,cache,argSet,(int)0)) return(NB_CELL_TRUE);
   if(cache->trace) nbLogMsg(context,0,'T',"evalCache: returning false");

@@ -294,6 +294,9 @@ nbCELL nbStart(int argc,char *argv[]){
   char mypid[20];
   NB_Stem *stem;
  
+  setlocale(LC_CTYPE,"");          // 2012-12-25 eat - let's figure out our codeset
+  nb_charset=nl_langinfo(CODESET);
+
   nbHeap();  // allocate the object heap so we can call nbAlloc
   bufin=(char *)nbAlloc(NB_BUFSIZE);
 /*

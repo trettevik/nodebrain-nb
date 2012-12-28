@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -103,6 +103,7 @@
 * 2012-05-29 eat 0.8.10 Fixed to recognize buffer size limitation problem in nbMedullaQueueGet
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 * 2012-12-15 eat 0.8.13 Checker updates
+* 2012-12-27 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #define NB_INTERNAL
@@ -893,10 +894,10 @@ int nbMedullaProcessWriter(void *session){
   int eof;
 
   // if we have no data in the queue, give the producer a chance to generate some
-  if((buf=process->putQueue->getbuf)==NULL){
+  if(process->putQueue==NULL || (buf=process->putQueue->getbuf)==NULL){ // 2012-12-27 eat 0.8.13 - CID 751821
     eof=(process->producer)(process,process->pid,process->session); 
     // if still no data then disable the medulla listener
-    if((buf=process->putQueue->getbuf)==NULL){
+    if(process->putQueue==NULL || (buf=process->putQueue->getbuf)==NULL){
       //printf("disabling the write listener\n");
       process->writerEnabled=0;
       if(eof){    // close up the putfile if the producer returned eof
@@ -1664,7 +1665,7 @@ nbPROCESS nbMedullaProcessOpen(
     sprintf(msgbuf,"Command longer than buffer\n");
     return(NULL);
     }  
-  if(strlen(logfile)>=sizeof(process->out)){
+  if(logfile && strlen(logfile)>=sizeof(process->out)){  // 2012-12-27 eat 0.8.13 - CID 751719
     sprintf(msgbuf,"Logfile longer than buffer\n");
     return(NULL);
     }  
@@ -1682,12 +1683,12 @@ nbPROCESS nbMedullaProcessOpen(
   process->writerEnabled=0;
   process->uid=uid;
   process->gid=gid;
-  if(pgm!=NULL) strcpy(process->pgm,pgm);
+  if(pgm) strcpy(process->pgm,pgm);
   else *process->pgm=0;
   strncpy(process->prefix,cmd,cursor-cmd);
   *(process->prefix+(cursor-cmd))=0;
   strcpy(process->cmd,cursor);
-  if(logfile!=NULL) strcpy(process->out,logfile);
+  if(logfile) strcpy(process->out,logfile);
   else *process->out=0;
   process->putpipe=NULL;
   process->getpipe=NULL;
@@ -1745,6 +1746,11 @@ nbPROCESS nbMedullaProcessOpen(
 #else
   if(producer!=NULL) nbPipe(&process->putfile,&cldin);
   else cldin=open("/dev/null",O_RDONLY);
+  if(cldin<0){
+    sprintf(msgbuf,"Unable to open child stdin\n");  // 2012-12-27 eat 0.8.13 - CID 751563
+    nbFree(process,sizeof(struct NB_MEDULLA_PROCESS));
+    return(NULL);
+    }
   switch(outspec){
     case 0: nbPipe(&cldout,&process->getfile); break;
     case 1: cldout=open("/dev/null",O_WRONLY); break;

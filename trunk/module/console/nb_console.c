@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2004-2012 The Boeing Company
+* Copyright (C) 2004-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -59,6 +59,7 @@
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2012-01-31 dtl 0.8.10 Checker updates
 * 2012-10-31 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
+* 2012-12-25 eat 0.8.13 AST
 *=====================================================================
 */
 #include "config.h"
@@ -92,24 +93,20 @@ void consoleStreamHandler(nbCELL context,void *session,char *buffer){
 *  Handle console commands
 */
 void consoleCmdHandler(nbCELL context,NB_MOD_ConsoleSession *session,char *cursor){
-  char verb[256],*curverb=verb;
+  char *verb=cursor;
 
-  while(*cursor==' ') cursor++;
-  while(*cursor!=' ' && *cursor!=0){
-    *curverb=*cursor;
-    curverb++;
-    cursor++;
-    }
-  *curverb=0;
-  while(*cursor==' ') cursor++; 
-  if(strcmp(verb,"open")==0){
+  while(*verb==' ') verb++;      // find verb
+  cursor=verb;
+  while(*cursor!=' ' && *cursor!=0) cursor++;  // step over verb
+  while(*cursor==' ') cursor++;    // find stream name
+  if(strncmp(verb,"open ",5)==0){  // 2012-12-25 eat - AST 37
     if(!nbStreamOpen(context,cursor,session,consoleStreamHandler))
       nbLogMsg(context,0,'T',"stream \"%s\" not found",cursor);
     else{
       nbLogMsg(context,0,'T',"subscription to stream \"%s\" opened",cursor);
       }
     }
-  else if(strcmp(verb,"close")==0){
+  else if(strncmp(verb,"close ",6)==0){
     if(!nbStreamClose(context,cursor,session,consoleStreamHandler))
       nbLogMsg(context,0,'T',"stream \"%s\" not found",cursor);
     else{

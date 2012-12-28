@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -124,6 +124,7 @@
 *                conditions of this type.
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2012-10-17 eat 0.8.12 Replaced termGetName with nbTermName
+* 2012-12-27 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -217,13 +218,17 @@ void condPrintRule(struct COND *cond){
   printObject(cond->left);
   if(paren) outPut(")");
   action=cond->right;
+  if(action==NULL){  // 2012-12-27 eat 0.8.13 - CID 751620
+    outPut(";");
+    return;
+    }
   if(action->priority!=0) outPut("[%d]",action->priority);
   /* print the assertion list  */
-  if(action!=NULL && action->assert!=NULL){
+  if(action->assert!=NULL){
     outPut(" ");
     printAssertions(action->assert);
     }
-  if(action==NULL || action->command==NULL || action->command->value==NULL) outPut(";");
+  if(action->command==NULL || !*action->command->value) outPut(";"); // 2012-12-27 eat 0.8.13 - CID 751568
   else{
     outPut(":");
     if(addrContext!=action->context){

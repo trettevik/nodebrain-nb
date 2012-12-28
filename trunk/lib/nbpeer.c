@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -121,6 +121,7 @@
 * 2010/06/06 eat 0.8.2  Added client parameter to nbTlsLoadContext parameter
 * 2011-02-08 eat 0.8.5  Refined non-blocking SSL handshake
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
+* 2012-12-27 eat 0.8.13 Checker updates
 *==============================================================================
 */
 #include <nb/nb.h>
@@ -466,12 +467,13 @@ nbPeer *nbPeerConstruct(nbCELL context,int client,char *uriName,char *uri,nbCELL
 int nbPeerListen(nbCELL context,nbPeer *peer){
   if(peerTrace) nbLogMsg(context,0,'T',"nbPeerListen: called uri=%s",peer->tls->uriMap[0].uri);
   if(nbTlsListen(peer->tls)<0){
-    nbLogMsg(context,0,'E',"Unable to listener - %s",peer->tls->uriMap[0].uri);
+    nbLogMsg(context,0,'E',"Unable to listen - %s",peer->tls->uriMap[0].uri);
     return(-1);
     }
-  // 2010-06-06 eat - seeing if blocking IO will work
-  // 2011-01-23 eat - trying non-blocking IO again
-  fcntl(peer->tls->socket,F_SETFL,fcntl(peer->tls->socket,F_GETFL)|O_NONBLOCK);
+  if(fcntl(peer->tls->socket,F_SETFL,fcntl(peer->tls->socket,F_GETFL)|O_NONBLOCK)){ // 2012-12-27 eat 0.8.13 - CID 751523
+    nbLogMsg(context,0,'E',"Unable to listen - %s - unable to set non-blocking - %s",peer->tls->uriMap[0].uri,strerror(errno));
+    return(-1);
+    }
   nbListenerAdd(context,peer->tls->socket,peer,nbPeerAccepter);
   peer->flags|=NB_PEER_FLAG_READ_WAIT;
   if(peerTrace) nbLogMsg(context,0,'T',"nbPeerListen: returning - handing off to nbPeerAccepter");

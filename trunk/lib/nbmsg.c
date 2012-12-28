@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -157,6 +157,7 @@
 *            set on the new first file when older files are deleted by the
 *            nbMsgLogPrune function.
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
+* 2012-12-27 eat 0.8.13 Checker updates
 *==============================================================================
 */
 #include <ctype.h>
@@ -1560,7 +1561,10 @@ int nbMsgLogConsume(nbCELL context,nbMsgLog *msglog,void *handle,int (*handler)(
   msglog->handle=handle;
   msglog->handler=handler;
   if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogConsumer: set fd=%d to non-blocking",msglog->socket);
-  fcntl(msglog->socket,F_SETFL,fcntl(msglog->socket,F_GETFL)|O_NONBLOCK); // make it non-blocking
+  if(fcntl(msglog->socket,F_SETFL,fcntl(msglog->socket,F_GETFL)|O_NONBLOCK)){ // make it non-blocking // 2012-12-27 eat 0.8.13 - CID 761520
+    nbLogMsg(context,0,'E',"nbMsgLogConsume: Unable to make udp server socket %s non-blocking - %s",filename,strerror(errno));
+    return(-1);
+    }
   if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogConsumer: F_GETFL return=%d",fcntl(msglog->socket,F_GETFL));
   nbListenerAdd(context,msglog->socket,msglog,nbMsgUdpRead);
   // maintain a status - if producer is not listening, we can try again when the timer pops
@@ -2131,7 +2135,10 @@ int nbMsgLogProduce(nbCELL context,nbMsgLog *msglog,unsigned int maxfilesize){
       return(-1);
       }
     //outMsg(0,'T',"nbMsgLogProduce: set fd=%d to non-blocking",msglog->socket);
-    fcntl(msglog->socket,F_SETFL,fcntl(msglog->socket,F_GETFL)|O_NONBLOCK); // make it non-blocking
+    if(fcntl(msglog->socket,F_SETFL,fcntl(msglog->socket,F_GETFL)|O_NONBLOCK)){ // make it non-blocking // 2012-12-27 eat 0.8.13 - CID 761521
+      outMsg(0,'E',"nbMsgLogProduce: Unable to make udp server socket %s non-blocking - %s",filename,strerror(errno));
+      return(-1);
+      }
     //outMsg(0,'T',"nbMsgLogProduce: F_GETFL return=%d",fcntl(msglog->socket,F_GETFL));
     nbListenerAdd(context,msglog->socket,msglog,nbMsgProducerUdpRead);
     // 2011-01-19 eat - finishing up support for multiple consumers

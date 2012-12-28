@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -123,6 +123,7 @@
 * 2012-09-16 eat 0.8.11 Replaced vsprintf with vsnprintf to avoid buffer overflows
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 * 2012-10-17 eat 0.8.12 Replaced termGetName with nbTermName
+* 2012-12-25 eat 0.8.13 AST 3
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -434,9 +435,6 @@ void outPut(char * format,...){
   if(len>=NB_BUFSIZE) strcpy(nb_OutLine+NB_BUFSIZE-4,"...");
   va_end(args);
   len=strlen(nb_OutLine);
-  /* remove next two lines after all calls starting with NB have been changed to outMsg */
-  if((nb_OutCursor+len)>=(nb_OutBuffer+NB_BUFSIZE-20)) outFlush();
-  if(*nb_OutLine=='N' && *(nb_OutLine+1)=='B' && *(nb_OutLine+1)=='0') outStamp();
   if((nb_OutCursor+len)>=(nb_OutBuffer+NB_BUFSIZE)) outFlush();
   strcpy(nb_OutCursor,nb_OutLine);
   nb_OutCursor+=len;
@@ -456,9 +454,6 @@ void nbLogPutI(char * format,...){
   if(len>=NB_BUFSIZE) strcpy(nb_OutLine+NB_BUFSIZE-4,"...");
   va_end(args);
   len=strlen(nb_OutLine);
-  /* remove next two lines after all calls starting with NB have been changed to outMsg */
-  if((nb_OutCursor+len)>=(nb_OutBuffer+NB_BUFSIZE-20)) outFlush();
-  if(*nb_OutLine=='N' && *(nb_OutLine+1)=='B' && *(nb_OutLine+1)=='0') outStamp();
   if((nb_OutCursor+len)>=(nb_OutBuffer+NB_BUFSIZE)) outFlush();
   strcpy(nb_OutCursor,nb_OutLine);
   nb_OutCursor+=len;

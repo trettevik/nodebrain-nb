@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -51,6 +51,7 @@
 * 2012-04-22 eat 0.8.8  Switched from nbcfg.h with standard config.h
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 * 2012-10-13 eat 0.8.12 Switched to nb header
+* 2012-12-27 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nb.h>
@@ -109,8 +110,11 @@ int nbPipe(HANDLE *pipe1,HANDLE *pipe2){
 int nbPipe(nbFILE *writePipe,nbFILE *readPipe){
   int fdpair[2];
   if(pipe(fdpair)) return(-1);
-  fcntl(fdpair[0],F_SETFD,FD_CLOEXEC); // close on exec
-  fcntl(fdpair[1],F_SETFD,FD_CLOEXEC);
+  // 2012-12-27 eat 0.8.13 - CID 751528
+  if(fcntl(fdpair[0],F_SETFD,FD_CLOEXEC)) // close on exec
+    fprintf(stderr,"nbPipe: fcntl failed on readPipe\n");
+  if(fcntl(fdpair[1],F_SETFD,FD_CLOEXEC))
+    fprintf(stderr,"nbPipe: fcntl failed on writePipe\n");
   *readPipe=fdpair[0];
   *writePipe=fdpair[1];
   return(0);
@@ -279,18 +283,19 @@ nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cld
     return(child);
     }
   else{
+    // 2012-12-27 eat 0.8.13 - CID 751527 - testing return from fcntl
     close(0);
     if(dup2(cldin,0)!=0) fprintf(stderr,"cldin dup to stdin failed\n"); 
     close(cldin);
-    fcntl(0,F_SETFD,0);  // don't close on exec
+    if(fcntl(0,F_SETFD,0)) fprintf(stderr,"fcntl failed on stdin\n");  // don't close on exec
     close(1);
     if(dup2(cldout,1)!=1) fprintf(stderr,"cldout dup to stdout failed\n");  
     close(cldout);
-    fcntl(1,F_SETFD,0);
+    if(fcntl(1,F_SETFD,0)) fprintf(stderr,"fcntl failed on stdout\n");
     close(2);
-    dup2(clderr,2);
+    if(dup2(clderr,2)!=2) fprintf(stdout,"clderr dup to stderr failed\n");
     close(clderr);
-    fcntl(2,F_SETFD,0);
+    if(fcntl(2,F_SETFD,0)) fprintf(stderr,"fcntl failed on stderr\n");
 
     // The calling program should make sure the close on exec flag is set
     // using fcntl(fd,F_SETFD) for files above 2. But we will clean them 

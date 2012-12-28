@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -316,6 +316,7 @@
 *            is consistent with the "value of" syntax in NodeBrain cell
 *            expressions.
 * 2012-12-15 eat 0.8.13 Checker updates
+* 2012-12-27 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -670,7 +671,6 @@ void nbTranslatorShowInstruction(struct NB_XI *xi,int level,struct REGEXP_STACK 
   switch(xi->oper&NB_XI_OPER_STATIC){
     case NB_XI_OPER_FILE:
       outPut("~%s\n",xi->item.label->value);
-      //if(xi->nest) nbTranslatorShowList(xi->nest,level+1,reStackP);
       break;
     case NB_XI_OPER_LABEL:
       outPut("%s",xi->item.label->value);
@@ -718,9 +718,10 @@ void nbTranslatorShowInstruction(struct NB_XI *xi,int level,struct REGEXP_STACK 
       if(xi->nest) nbTranslatorShowList(xi->nest,level+1,reStackP);
       else outPut("\n");
       break;
-    default:
-      outPut("?OPER?");
-      if(xi->nest) nbTranslatorShowList(xi->nest,level+1,reStackP);
+    // 2012-12-27 eat - CIDE 751542 - dead code commented out - was intended a protection against changes
+    //default: 
+    //  outPut("?OPER?");
+    //  if(xi->nest) nbTranslatorShowList(xi->nest,level+1,reStackP);
     }
   }
 
@@ -785,7 +786,7 @@ void nbTranslatorDestroy(NB_Translator *translator){
 
   if(translator->filename!=NULL){
     for(translatorP=&nb_Translators;*translatorP!=NULL && translator->filename<(*translatorP)->filename;translatorP=(NB_Translator **)&((*translatorP)->object.next));
-    if(translator->filename==(*translatorP)->filename){
+    if(*translatorP && translator->filename==(*translatorP)->filename){ // 2012-12-27 eat 0.8.13 - CID 751551
       *translatorP=(NB_Translator *)(*translatorP)->object.next;
       }
     translator->filename=dropObject(translator->filename);
@@ -1346,6 +1347,10 @@ static int nbTranslatorParseStmt(nbCELL context,char *cursor,char *source,FILE *
       return(1);
 
     case '{':
+      if(!file){  // 2012-12-27 eat 0.8.13 - CID 751552
+        outMsg(0,'E',"Symbol { only recognized within context of a file");
+        return(0);
+        }
       cursor++;
       while(*cursor==' ') cursor++;
       if(*cursor && *cursor!='#'){
@@ -1584,12 +1589,9 @@ static int nbTranslatorParseStmt(nbCELL context,char *cursor,char *source,FILE *
         if(xi->nest==NULL) outMsg(0,'W',"Label branch has no content");
         return(1);
         }
-      else{
-        outMsg(0,'E',"Expecting one of #!@[(:.{}^><=-+ or alpha as first non-space character at: %s",cursave);
-        return(0);
-        }
     }
-  outMsg(0,'L',"Logic error in nbTranslatorParseStmt().");
+  // 2012-12-27 eat 0.8.13 - CID 751689 - moved out of default to replace previously dead code here
+  outMsg(0,'E',"Expecting one of #!@[(:.{}^><=-+ or alpha as first non-space character at: %s",cursave);
   return(0);
   }
 

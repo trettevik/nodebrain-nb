@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -40,6 +40,7 @@
 * 2009-12-28 eat 0.7.7  included msgTrace
 * 2010-10-14 eat 0.8.4  Included servepid.
 * 2010-10-16 eat 0.8.4  Included servegroup.
+* 2012-12-25 eat 0.8.13 Included nb_charset.
 *============================================================================
 */
 #ifndef _NB_GLOBAL_H_
@@ -50,6 +51,7 @@
 #include <nb/nbcell.h>
 #include <nb/nbterm.h>
 
+extern char *nb_charset;      // character set/encoding
 /*
 *  After the code settles down, we need to clean this up as much as 
 *  possible and then work the remaining stuff into an environment

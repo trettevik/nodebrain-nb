@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2011-2012 The Boeing Company
+* Copyright (C) 2011-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -70,9 +70,9 @@
 * History:
 *
 *   This object type was inspired by work Cliff Bynum did on an application
-*   called Bingo.  The application needed to send form letters and the forms
-*   were managed as files, but loaded into memory for quick reference.  Those
-*   forms are now NodeBrain text objects.
+*   that needed to send form letters and the forms were managed as files,
+*   but loaded into memory for quick reference.  Those forms are now NodeBrain
+*   text objects.
 *
 *=============================================================================
 * Change History:

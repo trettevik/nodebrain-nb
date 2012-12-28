@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -91,21 +91,26 @@ typedef struct NB_MOD_SERVER{
 //
 void serverRead(nbCELL context,int serverSocket,void *handle){
   NB_MOD_Server *server=handle;
-  ssize_t len;
+  long len,used;
   //size_t size;
   char *bufcur,*bufeol;
 
   if(server->trace) nbLogMsg(context,0,'T',"serverRead: called");
-  if(server->cursor<server->buffer || server->cursor>(server->buffer+sizeof(server->buffer))){
+  if(server->cursor<server->buffer){
     nbLogMsg(context,0,'L',"serverRead: server->cursor points outside of server->buffer - terminating");
     exit(NB_EXITCODE_FAIL);
     }
-  len=read(server->fildes,server->cursor,sizeof(server->buffer)-1-(server->cursor-server->buffer));
+  used=(server->cursor-server->buffer);
+  if(used>=sizeof(server->buffer)){
+    nbLogMsg(context,0,'L',"serverRead: server->cursor points outside of server->buffer - terminating");
+    exit(NB_EXITCODE_FAIL);
+    }
+  len=read(server->fildes,server->cursor,sizeof(server->buffer)-used);
   while(len==-1 && errno==EINTR){
-    len=read(server->fildes,server->cursor,sizeof(server->buffer)-1-(server->cursor-server->buffer));
+    len=read(server->fildes,server->cursor,sizeof(server->buffer)-used);
     }
   if(len>0){
-    len+=(server->cursor-server->buffer);     // adjust length for part we already had maybe
+    len+=used;                                // adjust length for part we already had maybe
     server->cursor=server->buffer;            // assume next read will be fresh until we learn otherwise
     if(server->ignore2eol){
       nbLogMsg(context,0,'W',"Ignoring to end of line");
@@ -372,9 +377,13 @@ void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
 *
 *    <node>[(<args>)][:<text>]
 */
-int *clientCommand(nbCELL context,void *skillHandle,NB_MOD_Client *client,nbCELL arglist,char *text){
+int clientCommand(nbCELL context,void *skillHandle,NB_MOD_Client *client,nbCELL arglist,char *text){
   sprintf(client->buffer,"%s\n",text);
   client->fildes=open(client->filename,O_WRONLY|O_APPEND);
+  if(client->fildes<0){ // 2012-12-27 eat 0.8.13 - CID 751565
+    nbLogMsg(context,0,'E',"Unable to open %s for append - %s",client->filename,strerror(errno));
+    return(-1);
+    }
   write(client->fildes,client->buffer,strlen(client->buffer));
   close(client->fildes);
   return(0);

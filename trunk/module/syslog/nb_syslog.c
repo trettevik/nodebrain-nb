@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2005-2012 The Boeing Company
+* Copyright (C) 2005-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -206,6 +206,7 @@
 * 2011-02-26 eat 0.8.5  Modified server skill to support local domain sockets
 * 2012-10-17 eat 0.8.12 Checker updates
 * 2012-10-18 eat 0.8.12 Checker updates
+* 2012-12-27 eat 0.8.13 Checker updates
 *=====================================================================
 */
 #include "config.h"
@@ -473,10 +474,12 @@ void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
 *    enable <node>
 */
 static int serverEnable(nbCELL context,void *skillHandle,NB_MOD_Server *server){
-  if((server->socket=nbIpGetUdpServerSocket(context,server->interfaceAddr,server->port))<0){
+  int fd;
+  if((fd=nbIpGetUdpServerSocket(context,server->interfaceAddr,server->port))<0){  // 2012-12-27 eat 0.8.13 - CID 761574
     nbLogMsg(context,0,'E',"Unable to listen on port %s\n",server->port);
     return(1);
     }
+  server->socket=fd;
   nbListenerAdd(context,server->socket,server,serverRead);
   if(strncmp(server->uri,"udp://",6)==0) nbLogMsg(context,0,'I',"Listening on %s for syslog",server->uri);
   else nbLogMsg(context,0,'I',"Listening on UDP port %u for syslog",server->port);

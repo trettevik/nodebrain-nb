@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -53,6 +53,7 @@
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2012-01-26 dtl - Checker updates
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
+* 2012-12-27 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -383,8 +384,10 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
         case 'm': step=&tcStepMinute; break;
         case 's': step=&tcStepSecond; break;
         default:
-          if(count==0) snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Expecting '{', '(' or unit code at \"%s\"",cursor); //dtl: used snprintf
-          else snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Expecting /\\?*{( or integer at \"%s\".",cursor); //dtl: used snprintf
+          // 2012-12-27 eat 0.8.13 - CID 751541 - next two lines replaced with 3rd - count==0 is not possible (dead code)
+          //if(count==0) snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Expecting '{', '(' or unit code at \"%s\"",cursor); //dtl: used snprintf
+          //else snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Expecting /\\?*{( or integer at \"%s\".",cursor); //dtl: used snprintf
+          snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Expecting /\\?*{( or integer at \"%s\".",cursor); //dtl: used snprintf
           return(NULL);
         }
       cursor++;

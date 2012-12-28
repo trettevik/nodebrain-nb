@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2005-2012 The Boeing Company
+* Copyright (C) 2005-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -246,6 +246,7 @@
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
+* 2012-12-27 eat 0.8.13 Checker updates
 *=====================================================================
 */
 #include "config.h"
@@ -965,13 +966,15 @@ static void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
 *    enable <node>
 */
 static int serverEnable(nbCELL context,void *skillHandle,NB_MOD_Snmptrap *snmptrap){
+  int fd;
   snmptrap->handlerContext=nbTermLocateHere(context,"handler");
   snmptrap->syntaxContext=nbTermLocateHere(context,"syntax");
   snmptrap->attributeContext=nbTermLocateHere(context,"attribute");
-  if((snmptrap->socket=nbIpGetUdpServerSocket(context,snmptrap->interfaceAddr,snmptrap->port))<0){
+  if((fd=nbIpGetUdpServerSocket(context,snmptrap->interfaceAddr,snmptrap->port))<0){ // 2012-12-27 eat 0.8.13 - CID 751574
     nbLogMsg(context,0,'E',"Unable to listen on port %d\n",snmptrap->port);
     return(1);
     }
+  snmptrap->socket=fd;
   nbListenerAdd(context,snmptrap->socket,snmptrap,serverRead);
   nbLogMsg(context,0,'I',"Listening on port %u for SNMP Trap Datagrams",snmptrap->port);
   return(0);
@@ -1088,8 +1091,8 @@ int translateText2Varbinding(nbCELL context,char **packetCursorP,char **textP){
   *packetCursor=0x81; packetCursor++; 
   *packetCursor=0x0d; packetCursor++; 
   delim=strchr(cursor,'\'');
-  if(!cursor){
-    nbLogMsg(context,0,'E',"Unbalanced single quote at:%s",cursor);
+  if(!*cursor){ // 2012-12-27 eat 0.8.13 - CID 751623
+    nbLogMsg(context,0,'E',"Unbalanced single quote at:%s",*textP); // 2012-12-27 eat 0.8.13 - CID 7516
     return(-1);
     }
   cursor=delim+1;
@@ -1255,11 +1258,13 @@ static void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
 *    enable <node>
 */
 static int clientEnable(nbCELL context,void *skillHandle,NB_MOD_Client *client){
+  int fd;
   if(client->socket!=0) return(0);
-  if((client->socket=nbIpGetUdpClientSocket(0,client->address,client->port))<0){
+  if((fd=nbIpGetUdpClientSocket(0,client->address,client->port))<0){  // 2012-12-27 eat 0.8.13 - CID 751573
     nbLogMsg(context,0,'E',"Unable to obtain client UDP socket %s:%d\n",client->address,client->port);
     return(1);
     }
+  client->socket=fd;
   return(0);
   }
 
