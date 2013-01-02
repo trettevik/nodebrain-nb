@@ -1,0 +1,6 @@
+makeinfo --html --no-split --number-sections --css-include=../style.css nbLanguage.texi
+makeinfo --plaintext --no-split --number-sections --output=nbLanguage.txt nbLanguage.texi
+makeinfo --docbook --no-split --number-sections --output=nbLanguage_DocBook.xml nbLanguage.texi
+makeinfo --xml --no-split --number-sections nbLanguage.texi
+makeinfo --no-split --number-sections nbLanguage.texi
+texi2pdf -o nbLanguage.pdf nbLanguage.texi

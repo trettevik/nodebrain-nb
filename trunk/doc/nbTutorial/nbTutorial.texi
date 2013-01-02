@@ -11,15 +11,15 @@
 
 @copying
 NodeBrain Tutorial@*
-June 2012@*
+@value{UPDATED-MONTH}@*
 The Boeing Company,  P.O. Box 3707, Seattle, WA 98124, USA
 
 @sp 2
-@b{Release 0.8}
+@b{Release @value{VERSION}}
 
 Author: Ed Trettevik <eat@@nodebrain.org>
 
-Copyright @copyright{} 2006, 2007, 2008, 2009, 2010, 2011, 2012 The Boeing Company
+Copyright @copyright{} 2006-2013 The Boeing Company
 
 @sp 1
 Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
@@ -119,9 +119,15 @@ Release 0.8.3
 @end itemize
 
 @item 2012-06-03 @tab
-Release 0.8.10
+Version 0.8.10 (Not released)
 @itemize @bullet
 @item Corrections by Cheryl Hauser
+@end itemize
+
+@item 2012-12-30 @tab
+Release 0.8.13
+@itemize @bullet
+@item Included additional examples of rule actions and shell commands.
 @end itemize
 
 @end multitable
@@ -143,14 +149,9 @@ See www.nodebrain.org for more information and the latest update to this documen
 @b{Documents}
 @sp 1
 @quotation
-@i{NodeBrain Tutorial}
-
-@i{NodeBrain User Guide}
-
-@i{NodeBrain Language Reference}
-
-@i{NodeBrain Module Reference}
-
+@i{NodeBrain Tutorial}@*
+@i{NodeBrain Language Reference}@*
+@i{NodeBrain User Guide}@*
 @i{NodeBrain API Reference}
 @end quotation
 
@@ -197,7 +198,7 @@ $
 This tutorial is for NodeBrain (version @value{VERSION}, @value{UPDATED-MONTH}), an open source agent
 for state and event monitoring.
 @*@*
-Copyright @copyright{} 2006, 2007, 2008, 2009, 2010, 2011, 2012 The Boeing Company
+Copyright @copyright{} 2006-2013 The Boeing Company
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
@@ -479,7 +480,53 @@ $
 @end smallexample
 @end cartouche
 
-When you direct NodeBrain to execute another command to perform a task, it's referred to the child process as @i{servant}.
+You can run a shell command in blocking mode using the @code{-} symbol, or non-blocking mode using the @code{=} symbol.
+The following example illustrates the different using @code{=echo} and @code{-cat} commands.
+The interpreter waits for a blocking shell command to finish before prompting for the next interactive command.
+It does not wait for a non-blocking shell command to finish.
+
+@cartouche
+@smallexample
+> =echo `date` ": it happened" >> happening.log
+2012/12/30 13:30:42 NB000I [18589] Started: =echo `date` ": it happened" >> happening.log
+> -cat happening.log
+2012/12/30 13:30:49 NB000I [18589] Exit(0)
+[18592] Started: -cat happening.log
+[18592| Sun Dec 30 13:30:42 PST 2012 : it happened
+[18592] Exit(0)
+> =echo `date` ": it happened" >> happening.log
+2012/12/30 13:30:55 NB000I [18594] Started: =echo `date` ": it happened" >> happening.log
+>
+2012/12/30 13:30:56 NB000I [18594] Exit(0)
+> -cat happening.log
+[18597] Started: -cat happening.log
+[18597| Sun Dec 30 13:30:42 PST 2012 : it happened
+[18597| Sun Dec 30 13:30:55 PST 2012 : it happened
+[18597] Exit(0)
+@end smallexample
+@end cartouche
+
+Try the example above for yourself.  After the second @code{=echo} command, press enter without a command.
+In interactive mode, the command prompt blocks the interpreter.
+This explains why the interpreter didn't report the completion of the first @code{=echo} command until
+after the subsequent @code{-cat} command.
+
+By default the output of a non-blocking shell command is not displayed by the interpreter.
+You can direct the interpreter to display the output of a non-blocking shell command using @code{=|}.
+Try the following example, pressing the enter key once without a command after the @code{=|echo} command.
+
+@cartouche
+@smallexample
+> =|echo abc;echo def;echo xyz
+2012/12/30 13:53:54 NB000I [19490] Started: =|echo abc;echo def;echo xyz
+>
+2012/12/30 13:53:54 NB000I [19490| abc
+2012/12/30 13:53:54 NB000I [19490| def
+2012/12/30 13:53:54 NB000I [19490| xyz
+@end smallexample
+@end cartouche
+
+When you direct NodeBrain to execute a shell command to perform a task, the child process is called a @i{servant}.
 
 @node Consulting Servant Scripts
 @subsection Consulting Servant Scripts
@@ -523,6 +570,33 @@ $
 @end smallexample
 @end cartouche
 
+To consult a servant using non-blocking mode, use @code{=:}.
+This is illustrated by the following example.
+Since we are in interactive mode, the interpreter blocks waiting for
+command input, and you must enter empty commands twice to watch the
+shell command finish.
+
+@cartouche
+@smallexample
+$ nb
+> assert !x;
+> show x
+x = 0
+> =:echo "assert x=1";echo "show x";echo "assert x=2"
+2012/12/30 13:14:31 NB000I [18218] Started: =:echo "assert x=1";echo "show x";echo "assert x=2"
+>
+2012/12/30 13:14:31 NB000I [18218: assert x=1
+2012/12/30 13:14:31 NB000I [18218: show x
+x = 1
+2012/12/30 13:14:31 NB000I [18218: assert x=2
+>
+2012/12/30 13:14:32 NB000I [18218] Exit(0)
+> show x
+x = 2
+@end smallexample
+@end cartouche
+
+
 @node Rule Actions
 @subsection Rule Actions
 
@@ -546,6 +620,37 @@ x = 3
 $
 @end smallexample
 @end cartouche
+
+An assertion may be included as part of a rule action following the condition and preceeding the action command.
+
+@cartouche
+@smallexample
+$ nb
+> define cmdRule on(a and b) x=3:show x;
+> assert a,b;
+2012/12/30 14:07:43 NB000I Rule cmdRule fired (x=3)
+: show x;
+x = 3
+> quit
+$
+@end smallexample
+@end cartouche
+
+A rule action may also have an assertion without a command, as illustrated below.
+
+@cartouche
+@smallexample
+$ nb
+> define cmdRule on(a and b) x=3;
+> assert a,b;
+2012/12/30 14:11:19 NB000I Rule cmdRule fired (x=3)
+> show x
+x = 3
+> quit
+$
+@end smallexample
+@end cartouche
+
 
 @node Action Servant Scripts
 @subsection Action Servant Scripts
@@ -1755,7 +1860,7 @@ In this tutorial you'll see how much fun it is to make up rules and watch NodeBr
 
 @section When and If a Rule Fires on What
 
-NodeBrain @code{on}, @code{when}, and @code{if} rules have almost identical syntax. Their conditional cell expressions are resolved by the same cell evaluation algorithm.  Yet they respond differently to new information.  You can study these differences using rules that have no action.  Start by creating the following script called @code{rules.nb}.
+NodeBrain @code{on}, @code{when}, and @code{if} rules have almost identical syntax. Their conditional cell expressions are resolved by the same cell evaluation algorithm, yet they respond differently to new information.  You can study these differences using rules that have no action.  Start by creating the following script called @code{rules.nb}.
 
 @cartouche
 @smallexample
@@ -1828,7 +1933,7 @@ The @code{assert} command and @code{on} rule are designed for state monitoring.
 The @code{alert} command and @code{if} rule are designed for event monitoring.  But it isn't that simple.
 The @code{on} rule responds to both @code{assert} and @code{alert} commands.  To an @code{on} rule, @code{alert} is just an alias for @code{assert}.  In fact, everything about the way an @code{alert} command is processed is identical to the way an @code{assert} command is processed, except @code{alert} brings @code{if} rules into play.  In other words, @code{alert} makes an assertion, and then says, "Oh, and by the way, this is an event to be considered by the @code{if} rules."
 
-What makes the notion of state and event monitoring hard to untangle is that an event is describted in the same way as a state, an event is interpreted as a new state, state recognizes changes as events, and state translates changes into events.
+What makes the notion of state and event monitoring hard to untangle is that an event is described in the same way as a state, an event is interpreted as a new state, a state change is recognized as an event, and a state change can trigger an event.
 Let's look at these confusing statements individually.
 
 @cartouche
@@ -1853,6 +1958,123 @@ define r1 on(a=1 and b=2): alert x="abc",y="def";
 assert a=1,b=2;       # r1 translated state change into event(alert)
 @end smallexample
 @end cartouche
+
+@section Actions as Reactions
+@cindex actions
+@cindex reactions
+
+Rules are defined to react to state or event conditions with actions.
+An action can be an assertion, a command, or a combination of both,
+The following @code{on} rules have actions that use different approaches to
+accomplish the same result.  These same actions could be used with @code{if} or @code{when} rules,
+since their actions are specified in the same way.
+
+@cartouche
+@smallexample
+define r1 on(a) x=5,y=2;         # action is assertion
+define r2 on(b):assert x=5,y=2;  # action is assert command
+define r3 on(c) x=5:assert y=2;  # action is assertion and assert command
+assert a;
+show x
+show y
+assert ?x,?y;
+show x
+show y
+assert b;
+show x
+show y
+assert ?x,?y;
+show x
+show y
+assert c;
+show x
+show y
+@end smallexample
+@end cartouche
+
+Copy the script above into a file named @code{xwise.nb} and execute it as illustrated below.
+
+@cartouche
+@smallexample
+$ nb xwise.nb
+> define r1 on(a) x=5,y=2;         # action is assertion
+> define r2 on(b):assert x=5,y=2;  # action is assert command
+> define r3 on(c) x=5:assert y=2;  # action is assertion and assert command
+> assert a;
+@b{2012/12/30 12:17:22 NB000I Rule r1 fired (x=5,y=2)}
+> show x
+x = 5
+> show y
+y = 2
+> assert ?x,?y;
+> show x
+x = ?
+> show y
+y = ?
+> assert b;
+@b{2012/12/30 12:17:22 NB000I Rule r2 fired}
+: @b{assert x=5,y=2;  # action is assert command}
+> show x
+x = 5
+> show y
+y = 2
+> assert ?x,?y;
+> show x
+x = ?
+> show y
+y = ?
+> assert c;
+@b{2012/12/30 12:17:22 NB000I Rule r3 fired (x=5)}
+: @b{assert y=2;  # action is assertion and assert command}
+> show x
+x = 5
+> show y
+y = 2
+@end smallexample
+@end cartouche
+
+When making a simple assertion, a rule like @code{r1} above is the recommended approach because
+the assertion is parsed when the rule is defined.  When using a command, as in @code{r2},
+the command is not parsed until the rule fires. In @code{r3}, the @code{x=5} assertion
+is parsed when the rule is defined, and the @code{assert y=2} command is parsed when the
+rule fires.
+
+A command action is required for a response other than a simple assertion, and even for an assertion when
+symbolic substitution requires waiting until the rule fires to parse the assertion.
+
+@cartouche
+@smallexample
+define r1 if(a):$ assert x="$@{n@} cases of $@{e@}";
+assert n=5,e="something";
+alert a;
+@end smallexample
+@end cartouche
+
+Issue an @code{nb} command at a shell prompt and paste the example above at the NodeBrain prompt.
+You should see the following.
+@cartouche
+@smallexample
+$ nb
+> define r1 if(a):$ assert x="$@{n@} cases of $x@{e@}";
+> assert n=5,e="something";
+> alert a;
+2012/12/30 16:52:54 NB000I Rule r1 fired
+: assert x="5 cases of something";
+@end smallexample
+@end cartouche
+
+Use shell commands when the action can not be performed by NodeBrain directly.
+Try this.
+
+@cartouche
+@smallexample
+define r1 on(a):-|echo `date` ":it happened" >> happening.log;cat happening.log
+assert a;
+@end smallexample
+@end cartouche
+
+More complicated actions can be coded in your favorite scripting language or developed
+as a compiled executable.
 
 @node Syntax Surprises
 @chapter Syntax Surprises

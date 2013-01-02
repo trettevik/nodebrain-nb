@@ -1,4 +1,5 @@
-@set UPDATED 30 December 2012
+@set UPDATED December 2012
 @set UPDATED-MONTH December 2012
+@set UPDATED-YEAR 2012
 @set EDITION 0.8.13
 @set VERSION 0.8.13
