@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -243,6 +243,8 @@
 * 2012-10-26 eat 0.8.12 Switched from ' to > for setting interactive command prefix
 *                       Providing a warning message for a couple releases.
 * 2012-12-15 eat 0.8.13 Checker updates
+* 2012-12-31 eat 0.8.13 Checker updates
+# 2013-01-01 eat 0.8.13 Checker updates
 *==============================================================================
 */
 #include <nb/nbi.h>
@@ -270,10 +272,11 @@
 //            higher.  That's too weird, so we will introduce ">" for
 //            setting the prompt and then drop the single quote later.
 
-int nbGetCmdInteractive(char *cmd){
+static int nbGetCmdInteractive(char *cmd,size_t cmdlen){  // 2012-12-31 eat - VID 614 - included cmdlen
   static char *lastInput="";
   static char *userInput="";
   char *cursor;
+  int len;
 #if defined(WIN32)
   char buffer[NB_BUFSIZE];
 #endif
@@ -322,8 +325,12 @@ int nbGetCmdInteractive(char *cmd){
 #if !defined(WIN32)
     if(strcmp(lastInput,userInput)) add_history(userInput);  // add to history
 #endif
-    if(!*nb_cmd_prefix) strcpy(cmd,userInput);
-    else sprintf(cmd,"%s %s",nb_cmd_prefix,userInput);
+    if(!*nb_cmd_prefix) len=snprintf(cmd,cmdlen,"%s",userInput);   // 2012-12-31 eat - VID 614
+    else len=snprintf(cmd,cmdlen,"%s %s",nb_cmd_prefix,userInput);
+    if(len<0 || len>=cmdlen){
+      outMsg(0,'E',"Command too large for buffer - ignoring");
+      *cmd=0;
+      }
     return(1);
     }
   *cmd=0;
@@ -846,8 +853,7 @@ void nbSetOptStr(char *option,char *buf,char *value,size_t bufsize){
     outFlush();
     exit(NB_EXITCODE_FAIL);
     }
-  strncpy(buf,value,bufsize);
-  *(buf+bufsize-1)=0;
+  strcpy(buf,value);
   }
 
 /*
@@ -1929,7 +1935,7 @@ int nbIsInteractive(nbCELL context){
 
 char *nbGetReply(char *prompt,char *buffer,size_t len){
   if(!nb_opt_prompt) return(NULL);
-  outPut(prompt);
+  outPut("%s",prompt); // 2012-12-31 eat - VID 5328-0.8.13-1
 #if defined(WIN32)
   return(nbGets(fileno(stdin),buffer,len));
 #else
@@ -1949,7 +1955,7 @@ void nbParseStdin(int prompt){
   outBar();
   nb_opt_prompt=1;
   while(nb_opt_prompt==1){
-    if(prompt) nb_opt_prompt=nbGetCmdInteractive(bufin);
+    if(prompt) nb_opt_prompt=nbGetCmdInteractive(bufin,NB_BUFSIZE); // 2013-01-01 eat - CID 762052
     else if(nbGets(0,bufin,NB_BUFSIZE)==NULL) nb_opt_prompt=0;
     if(nb_opt_prompt){
       outFlush();

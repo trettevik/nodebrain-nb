@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -121,6 +121,7 @@
 *                   into nbtime.h.
 * 2003/03/15 eat 0.5.1  Split out nbsched.h and nbsched.c for make file
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2012-12-31 eat 0.8.13 schedInit n from int to size_t
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -130,7 +131,7 @@ struct TYPE *schedTypePulse;
 struct TYPE *schedTypeDelay;
 
 void *hashStr();
-struct HASH *newHash();
+//struct HASH *newHash();
 struct STRING *useString();
 
 struct PERIOD eternity;    /* 0 - maximum value */
@@ -171,7 +172,7 @@ void destroySched(struct SCHED *sched){
 *  Initialize the schedule hash
 *    Must be called before newSched
 */
-void schedInit(NB_Stem *stem,long n){
+void schedInit(NB_Stem *stem,size_t n){  // 2012-12-31 eat - n from int to size_t
   schedH=newHash(n);
   time(&eternity.start);
   eternity.end=0x7fffffff;  /* up to implementation limit */

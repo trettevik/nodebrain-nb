@@ -129,7 +129,7 @@ extern int nbIpPut(NB_IpChannel *channel,char *buffer,int len);
 #if defined(WIN32)
 _declspec (dllexport)
 #endif
-extern int nbIpPutMsg(NB_IpChannel *channel,char *buffer,int len);
+extern int nbIpPutMsg(NB_IpChannel *channel,char *buffer,size_t len);
 
 #if defined(WIN32)
 _declspec (dllexport)

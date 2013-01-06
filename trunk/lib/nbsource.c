@@ -49,26 +49,33 @@
 *  It calls fgets multiple times when lines end with a continuation
 *  symbol "\".
 */
-char *nbSourceGet(char *buffer,size_t size,FILE *file){
+static char *nbSourceGet(char *buffer,int buflen,FILE *file){
   char *buf=buffer;
   size_t len;
   char *last,*next;
 
-  if(fgets(buf,size,file)==NULL) return(NULL);
+  *buffer=0;
+  if(buflen<1024 || buflen>NB_BUFSIZE){
+    outMsg(0,'L',"nbSourceGet: Buffer length outside expected range of %d to %d",buflen,NB_BUFSIZE);
+    nbExit("Logic error");
+    }
+  if(fgets(buf,buflen,file)==NULL) return(NULL);  // 2013-01-01 eat - VID 613,824-0.8.13-1 
   len=strlen(buf);
+  if(len<1) return(buffer);
   last=buf+len-1;
-  while(strchr(" \n\r",*last) && last>buf) last--;
+  while(last>buf && strchr(" \n\r",*last)) last--;
   while(*last=='\\'){
     len=last-buf;
-    size-=len;
+    buflen-=len;
     buf+=len;
     *buf=0;
-    if(fgets(buf,size,file)==NULL) return(buffer);
+    if(fgets(buf,buflen,file)==NULL) return(buffer); // 2013-01-01 eat - VID 761-0.8.13-1
     for(next=buf;*next==' ';next++);
     if(next>buf) strcpy(buf,next);
     len=strlen(buf);
+    if(len<1) return(buffer);
     last=buf+len-1;
-    while(strchr(" \n\r",*last) && last>buf) last--;
+    while(last>buf && strchr(" \n\r",*last)) last--;
     }
   return(buffer);
   }

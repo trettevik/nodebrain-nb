@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -92,6 +92,7 @@
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2012-02-07 dtl Checker updates
 * 2012-10-12 eat 0.8.12 Replaced malloc with nbAlloc
+* 2013-01-01 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -176,11 +177,12 @@ void destroyString(struct STRING *str){
     return;
     }
   *stringP=(struct STRING *)string->object.next;    // remove from hash list
-  size=sizeof(struct STRING)+strlen(str->value)+1;
+  size=sizeof(struct STRING)+strlen(str->value);
+  size=(size+7)&-8;  // 2013-01-04
   //if(size>NB_OBJECT_MANAGED_SIZE) free(str);       // 2012-12-15 eat - CID 751590
   if(size>=NB_OBJECT_MANAGED_SIZE) free(str);        // free large unmanaged strings
   else{
-    freeStringP=&nb_StringPool->vector[size/8];         // keep managed strings in a pool by length
+    freeStringP=&nb_StringPool->vector[(size-1)>>3]; // keep managed strings in a pool by length  // 2013-01-04 eat - changed index calc
     string->object.next=(void *)*freeStringP; 
     *freeStringP=string;
     }
@@ -199,7 +201,6 @@ void initString(NB_Stem *stem){
 
 struct STRING *useString(char *value){
   struct STRING *string,**stringP,**freeStringP;
-  //int size,i,valueSize;
   int size;
   char *cursor;
   int r=1;  /* temp relation <0, 0, >0 */
@@ -216,16 +217,14 @@ struct STRING *useString(char *value){
     stringP=(struct STRING **)&(string->object.next);
   if(string!=NULL && r==0) return(string);
 
-  //valueSize=strlen(value)+1; //size of string->value which newObject will create
-  //size=sizeof(struct STRING)+valueSize; //dtl: used valueSize (included string->value spaces) 
   size=sizeof(struct STRING)+strlen(value);
+  size=(size+7)&-8;   // 2013-01-04 eat 
   if(size>=NB_OBJECT_MANAGED_SIZE) freeStringP=NULL;
-  else freeStringP=&nb_StringPool->vector[size/8]; 
-  string=(struct STRING *)newObject(strType,(void **)freeStringP,sizeof(struct STRING)+size);
+  else freeStringP=&nb_StringPool->vector[(size-1)>>3]; // 2013-01-04 eat - changed index calc
+  //string=(struct STRING *)newObject(strType,(void **)freeStringP,sizeof(struct STRING)+size); // 2013-01-01 struct already included in size
+  string=(struct STRING *)newObject(strType,(void **)freeStringP,size);
   string->object.next=(NB_Object *)*stringP;     
   *stringP=string;  
-//2012-02-07 dtl: above newObject() allocated spaces for string->value, safe to copy.
-  //for(i=0;i<valueSize;i++) *(string->value+i)=*(value+i); //dtl: replace strcpy
-  strcpy(string->value,value);  // 2012-12-15 eat - it is what it is
+  strcpy(string->value,value);  // 2013-01-01 eat - VID 5538-0.8.13-01 FP
   return(string);
   }

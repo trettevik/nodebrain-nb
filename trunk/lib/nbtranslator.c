@@ -317,6 +317,7 @@
 *            expressions.
 * 2012-12-15 eat 0.8.13 Checker updates
 * 2012-12-27 eat 0.8.13 Checker updates
+* 2013-01-01 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -412,7 +413,7 @@ void nbProjectionShowWithNames(NB_Projection *projection,struct REGEXP_STACK *re
               }
             }
           if(!foundname) sprintf(textcur,"%d",index);
-          textcur=strchr(textcur,0);
+          textcur=textcur+strlen(textcur); // 2013-01-01 eat - VID 690-0.8.13-1 FP but changed from textcur=strchr(textcur,0);
         }
       if((charF!='"' || charT!='\'') && charF!=charT){
         *textcur=',',textcur++;
@@ -467,7 +468,7 @@ void nbProjectionShow(NB_Projection *projection){
         default:
           index-=PROJECTION_INDEX;
           sprintf(textcur,"%d",index);
-          textcur=strchr(textcur,0);
+          textcur+=strlen(textcur); // 2013-01-01 eat - VID 780-0.8.13-1 FP but changed from textcur=strchr(textcur,0);
         }
       if((charF!='"' || charT!='\'') && charF!=charT){
         *textcur=',',textcur++;
@@ -512,18 +513,18 @@ void nbProjectionDestroy(NB_Projection *projection){
   nbFree(projection,sizeof(NB_Projection)+projection->length);
   }  
 
-char *nbProjectionEncodeLiteral(char *bufcur,char *cursor,int len){
+static char *nbProjectionEncodeLiteral(char *bufcur,char *cursor,uint32_t len){  // 2013-01-01 eat - VID 787-0.8.13-1 changed len to unsigned
   while(len>PROJECTION_SEGMENT){
     *bufcur=PROJECTION_SEGMENT;
     bufcur++;
-    strncpy(bufcur,cursor,PROJECTION_SEGMENT);
+    memcpy(bufcur,cursor,PROJECTION_SEGMENT);  // 2013-01-01 eat - VID 5134-0.8.13-1 FP changed from strncpy to memcpy to help checker
     bufcur+=PROJECTION_SEGMENT;
     cursor+=PROJECTION_SEGMENT;
     len-=PROJECTION_SEGMENT;
     }
-  *bufcur=len;
+  *bufcur=len;  // 2013-01-01 eat - VID 663-0.8.13-1 FP len<=219 (PROJECTION_SEGMENT) - This is not numeric truncation
   bufcur++;
-  strncpy(bufcur,cursor,len);
+  strncpy(bufcur,cursor,len);  // 2013-01-01 - VID 5482-0.8.13-1 caller verifies bufcur is large enough
   bufcur+=len;
   return(bufcur);
   }
@@ -540,7 +541,8 @@ char *nbProjectionEncodeLiteral(char *bufcur,char *cursor,int len){
 int nbProjectionEncode(char *buffer,int buflen,struct REGEXP_STACK *reStackP,int nsub[],int level,char *source){
   char *subcur,*bufcur=buffer,*cursor=source,*cursave;
   char exp,find,replace;
-  int len,i,reIndex=reStackP->count-1,initialReIndex=reIndex;
+  uint32_t len;
+  int i,reIndex=reStackP->count-1,initialReIndex=reIndex;
   char symid,ident[512];
 
   //outMsg(0,'T',"Encoding projection: %s",source);
@@ -548,6 +550,7 @@ int nbProjectionEncode(char *buffer,int buflen,struct REGEXP_STACK *reStackP,int
   while(subcur!=NULL){
     reIndex=reStackP->count-1;
     len=subcur-cursor;
+    //if(bufcur-buffer+len+((len/PROJECTION_SEGMENT)*3)>=buflen){
     if(bufcur-buffer+len>=buflen){
       outMsg(0,'E',"Line too large for encoded buffer size.");
       return(-1);
@@ -622,6 +625,7 @@ int nbProjectionEncode(char *buffer,int buflen,struct REGEXP_STACK *reStackP,int
     }
   len=strlen(cursor);
   if(len>0){
+    //if(bufcur-buffer+len+((len/PROJECTION_SEGMENT)*3)>=buflen){
     if(bufcur-buffer+len>=buflen){
       outMsg(0,'E',"Line too large for encoded buffer size.");
       return(-1);
@@ -954,7 +958,7 @@ nbCELL nbTranslatorExecute(NB_Cell *context,NB_Cell *translator,char *source){
               switch((unsigned char)*cursor){
                 case PROJECTION_HEAD:
                   len=xcStackRefP->ovector[0];
-                  strncpy(textcur,xcStackRefP->text,len);
+                  strncpy(textcur,xcStackRefP->text,len);  
                   break;
                 case PROJECTION_TAIL:
                   len=strlen(xcStackRefP->text+xcStackRefP->ovector[1]);
@@ -962,11 +966,11 @@ nbCELL nbTranslatorExecute(NB_Cell *context,NB_Cell *translator,char *source){
                   break;
                 case PROJECTION_TEXT:
                   len=strlen(text);
-                  strncpy(textcur,text,len);
+                  memcpy(textcur,text,len); // 2013-01-01 eat - VID 5459-0.8.13-1 FP changed from strncpy to memcpy to help checker
                   break;
                 case PROJECTION_FULL:
                   len=strlen(xcStackRefP->text);
-                  strncpy(textcur,xcStackRefP->text,len);
+                  memcpy(textcur,xcStackRefP->text,len); // 2013-01-01 eat - VID 4730 FP changed from strncpy to memcpy to help checker
                   break;
                 default:
                   i=(unsigned char)*cursor;
@@ -1024,7 +1028,7 @@ void nbTranslatorExecuteFile(nbCELL context,nbCELL translator,char *filename){
   char source[NB_BUFSIZE];
 
   //outMsg(0,'I',"Translating file \"%s\"",filename);
-  if((file=fopen(filename,"r"))==NULL){
+  if((file=fopen(filename,"r"))==NULL){                   // 2013-01-01 eat - VID 636-0.8.13-1 Intentional
     outMsg(0,'E',"Unable to open \"%s\"",filename);
     return;
     }
@@ -1212,6 +1216,8 @@ static int nbTranslatorInclude(nbCELL context,char *filename,struct REGEXP_STACK
 *
 *     0 - syntax error
 *     1 - valid statement
+*
+*  Note: source must be NB_BUFSIZE bytes
 */
 static int nbTranslatorParseStmt(nbCELL context,char *cursor,char *source,FILE *file,struct REGEXP_STACK *reStackP,int nsub[],int level,int *depthP,struct NB_XI *xiParent,unsigned char flag,int reFlags){
   //char symid;
@@ -1363,7 +1369,7 @@ static int nbTranslatorParseStmt(nbCELL context,char *cursor,char *source,FILE *
         xiNode->oper=NB_XI_OPER_LABEL;
         }
       else xiNode=xiParent;        // AFTER is default operation
-      while(fgets(source,NB_BUFSIZE-1,file)){
+      while(fgets(source,NB_BUFSIZE,file)){  // 2013-01-01 eat - VID 5481-0.8.13-1 FP we know the size of source is NB_BUFSIZE
         outPut("%s",source);
         cursor=source;
         while(*cursor==' ') cursor++;
@@ -1375,7 +1381,7 @@ static int nbTranslatorParseStmt(nbCELL context,char *cursor,char *source,FILE *
             }
           return(1);
           }
-        delim=strchr(cursor,0);
+        delim=cursor+strlen(cursor); // 2013-01-01 eat - VID 4734-0.8.13-1 FP but changed from delim=strchr(cursor,0); to help checker
         delim--;
         if(*delim=='\n'){
           *delim=0;

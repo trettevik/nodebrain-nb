@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -81,7 +81,7 @@ void enableList(NB_List *list);
 void printList(NB_List *list);
 void nbListShowAll(void);
 void printMembers(NB_Link *member);
-void listInit(NB_Stem *stem,long n);
+void listInit(NB_Stem *stem,size_t n); // 2012-12-31 eat - n from int to size_t
 
 void nbListFree(struct NB_LINK *member);
 

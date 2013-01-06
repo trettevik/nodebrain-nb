@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -140,6 +140,7 @@
 * 2012-01-26 dtl 0.8.11 Checker updates
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 * 2012-12-15 eat 0.8.13 Checker updates
+* 2013-01-01 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -223,7 +224,7 @@ int nbQueueOpenFileName(char *filename,int option,int type){
 #if defined(mpe) || defined(ANYBSD)
   if((file=open(filename,O_RDWR|O_CREAT,S_IRUSR|S_IWUSR))<0){ //dtl: updated
 #else
-  if((file=open(filename,O_RDWR|O_CREAT|O_SYNC,S_IRUSR|S_IWUSR))<0){ // 2012-12-18 eat - CID 751604
+  if((file=open(filename,O_RDWR|O_CREAT|O_SYNC,S_IRUSR|S_IWUSR))<0){ // 2012-12-18 eat - CID 751604  // 2013-01-01 eat VID 662 Intentional
 #endif
     outMsg(0,'E',"Unable to open %s",filename);
     return(NBQFILE_ERROR);
@@ -249,17 +250,14 @@ long nbQueueSeekFile(int file,int offset){
 #endif
 
 #if defined(WIN32)
-long nbQueueReadFile(file,buffer,size)
-  HANDLE *file;
-  char *buffer;
-  size_t size; {
+long nbQueueReadFile(HANDLE file,char *buffer,size_t size){
   DWORD bytesRead;
   ReadFile(file,buffer,size,&bytesRead,NULL);
   return(bytesRead);
   }
 #else
 long nbQueueReadFile(int file,char *buffer,size_t size){
-  return(read(file,buffer,size)); //size = sizeof(buffer) 
+  return(read(file,buffer,size)); //size = sizeof(buffer) // 2013-01-01 eat VID 5209 FP
   }
 #endif
 
@@ -413,6 +411,7 @@ int nbQueueGetFile(char *filename,char *dirname,char *identityName,int qsec,int 
 *     type={q|c|t|p}
 */
 int nbQueueGetNewFileName(char *qname,char *directory,int option,char type){
+  static uint32_t count=0;
   char filename[256];
   int x,qi=120;  /* queue interval should come from brain definition */
   if(option<0) sprintf(filename,"00000000000.000000.%5.5d.",-option);
@@ -420,7 +419,12 @@ int nbQueueGetNewFileName(char *qname,char *directory,int option,char type){
     x=time(NULL)/qi; 
     sprintf(filename,"%11.11d.000000.00000.",x*qi);
     }
-  else sprintf(filename,"%11.11u.%6.6d.%5.5d%c",(unsigned int)time(NULL),getpid(),rand()&0xffff,'%');
+  else{
+    count++;
+    count=count%10000;
+    sprintf(filename,"%11.11u.%6.6d.%5.5d%c",(unsigned int)time(NULL),getpid(),count,'%'); // 2013-01-01 eat VID 733-0.8.13-1 FP but replaced rand with count
+    }
+    
   sprintf(qname,"%s/%s%c",directory,filename,type);
   return(0);
   }
@@ -445,7 +449,7 @@ void nbQueueCommit(char *filename){
     return;
     }
   *cursor='.';
-  if(rename(filename,newname)){ // 2012-12-27 eat 0.8.13 - CID 751525
+  if(rename(filename,newname)){ // 2012-12-27 eat 0.8.13 - CID 751525    // 2013-01-01 eat VID 637-0.8.13-1 Intentional
     outMsg(0,'E',"nbQueueCommit: Unable to rename file \"%s\"",newname);
     return;
     }
@@ -550,14 +554,14 @@ HANDLE *nbQueueOpenFileP(filename) char *filename;{
 
 #else
 
-int nbQueueOpenFileP(filename) char *filename;{
+int nbQueueOpenFileP(char *filename){
   struct flock lock;
   int rc;
   int file;
 #if defined(mpe) || defined(ANYBSD)
   if((file=open(filename,O_RDWR|O_CREAT,S_IRUSR|S_IWUSR))<0){ 
 #else
-  if((file=open(filename,O_RDWR|O_CREAT|O_SYNC,S_IRUSR|S_IWUSR))<0){ // 2012-12-18 eat - CID 751605
+  if((file=open(filename,O_RDWR|O_CREAT|O_SYNC,S_IRUSR|S_IWUSR))<0){ // 2012-12-18 eat - CID 751605  // 2013-01-01 eat - VID 646 Intentional
 #endif
     outMsg(0,'E',"Unable to open %s",filename);
     return(-1);

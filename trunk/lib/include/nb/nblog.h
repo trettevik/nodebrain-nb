@@ -73,7 +73,7 @@ void outFlush(void);
 void outStream(int stream,void (*handler)(char *buffer));
 void outStamp(void);
 void outData(char *data,int len);
-void outPut(char *format,...);
+void outPut(const char *format,...);
 void outHex(unsigned int l,void *buf);
 //#if defined(WIN32)
 //_declspec (dllexport)

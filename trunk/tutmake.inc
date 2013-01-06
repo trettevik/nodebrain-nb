@@ -86,14 +86,6 @@ EXTRA_DIST+=  \
  tutorial/Tree/watch.nb \
  tutorial/Webster/config/caboodle.conf \
  tutorial/Webster/security/AccessList.conf \
- tutorial/Webster/security/Browser.crt \
- tutorial/Webster/security/Browser.csr \
- tutorial/Webster/security/Browser.p12 \
- tutorial/Webster/security/BrowserKey.pem \
- tutorial/Webster/security/CertificateRequest.csr \
- tutorial/Webster/security/ServerCertificate.pem \
- tutorial/Webster/security/ServerKey.pem \
- tutorial/Webster/security/TrustedCertificates.pem \
  tutorial/Webster/web/.index.html.webster \
  tutorial/Webster/web/browsing.html \
  tutorial/Webster/web/certificates.html \
@@ -129,5 +121,4 @@ EXTRA_DIST+=  \
  tutorial/Webster/webster2 \
  tutorial/Webster/webster3 \
  tutorial/Webster/webster4 \
- tutorial/Webster/webster5 \
  tutorial/Webster/webster6

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -92,6 +92,7 @@
 * 2012-10-18 eat 0.8.12 Replaced rand with random
 * 2012-10-19 eat 0.8.12 Replaced random with pid plus counter since we needed unique instead of random
 * 2012-12-25 eat 0.8.13 Noting that prior change also fixed AST 42
+* 2013-01-01 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -128,6 +129,7 @@ int nbLogMsgReader(nbPROCESS process,int pid,void *session,char *msg){
 
 int nbSpawnChild(nbCELL context,int options,char *cursor){
   char outname[1024],msgbuf[NB_MSGSIZE];
+  char *outdir=outDirName(NULL);
   nbPROCESS process;
   static unsigned short childwrap=0;
 
@@ -135,14 +137,17 @@ int nbSpawnChild(nbCELL context,int options,char *cursor){
     outMsg(0,'E',"Identity \"%s\" does not have system authority.",clientIdentity->name->value);
     return(0);
     }
-
+  if(strlen(outdir)>=512){  // 2013-01-01 eat - VID 5539-0.8.13-1
+    outMsg(0,'L',"Output directory name is too large - %s.",outdir);
+    nbExit("Fatal error");
+    }
   // add code to check command against the grant and deny commands specified for the user 
   // perhaps that should actually be done within the medulla after parsing the command
   // or perhaps it should be done at the command intepreter to cover all commands
   // We have to decide if we want special controls on the system commands
   
   childwrap=(childwrap+1)%1000; 
-  sprintf(outname,"%sservant.%.10u.%.5u.%.3u.out",outDirName(NULL),(unsigned int)time(NULL),getpid(),childwrap);
+  sprintf(outname,"%sservant.%.10u.%.5u.%.3u.out",outdir,(unsigned int)time(NULL),getpid(),childwrap);
   process=nbMedullaProcessOpen(options,cursor,outname,(NB_Term *)context,NULL,NULL,nbCmdMsgReader,nbLogMsgReader,msgbuf);
   if(process==NULL){
     outMsg(0,'E',"%s",msgbuf);
@@ -163,39 +168,52 @@ int nbSpawnChild(nbCELL context,int options,char *cursor){
   return(process->pid);
   }
 
+/*
+* Spawn a process executing a copy of the current program
+*   cursor points to a single parameter string which we will
+*   quote after escaping any internal quotes
+*
+* Returns:
+*   0   - error
+*   PID - Process number of spawned child
+*/
 
-// Spawn a process executing a copy of the current program
-//   cursor points to a single parameter string which we will
-//   quote after escaping any internal quotes
 int nbSpawnSkull(nbCELL context,char *oar,char *cursor){
-  char command[NB_BUFSIZE],*curcmd;
-  char filename[514];
+  char command[NB_BUFSIZE],*curcmd,*curend=command+NB_BUFSIZE;
+  char filename[1024];
+  char *outdir=outDirName(NULL);
   time_t systemTime;
   static int count=0;
-  int n;
 
+  if(strlen(outdir)>=512){  // 2013-01-01 eat - VID 5539-0.8.13-1
+    outMsg(0,'L',"Output directory name is too large - %s.",outdir);
+    nbExit("Fatal error");
+    }
   time(&systemTime);
   count++;
-  sprintf(filename,"%sskull.%.10u.%.3u.txt",outDirName(NULL),(unsigned int)systemTime,count%1000);
-  if(oar!=NULL && *oar) sprintf(command,"=>\"%s\" @\"%s\" \"%s\" ",filename,mypath,oar);
+  sprintf(filename,"%sskull.%.10u.%.3u.txt",outdir,(unsigned int)systemTime,count%1000);
+  if(oar && *oar) sprintf(command,"=>\"%s\" @\"%s\" \"%s\" ",filename,mypath,oar);
   else sprintf(command,"=>\"%s\" @\"%s\" ",filename,mypath);
-  if(*cursor!=0){
-    strcat(command,"\"");
-    if(strchr(cursor,'"')==NULL){if(((n=strlen(cursor))+strlen(command))<NB_BUFSIZE) strncat(command,cursor,n);} //2012-01-16 dtl used strncat
-    else{
-      curcmd=command+strlen(command);
-      while(*cursor!=0){
-        if(*cursor=='"'){
-          *curcmd='\\';
-          curcmd++;
-          }
-        *curcmd=*cursor;
+  if(*cursor){
+    curcmd=command+strlen(command);
+    *curcmd='"';
+    curcmd++;
+    while(*cursor!=0 && curcmd<curend-2){  // 2013-01-01 eat - VID 4948-0.8.13-1 removed strncat and checking for end of buffer
+      if(*cursor=='"'){
+        *curcmd='\\';
         curcmd++;
-        cursor++;
         }
-      *curcmd=0;
+      *curcmd=*cursor;
+      curcmd++;
+      cursor++;
       }
-    strcat(command,"\"");
+    if(curcmd>=curend-2){
+      outMsg(0,'E',"nbSpawnSkull: Command length exceeds limit - child not spawned");
+      return(0);  // Zero is error code - otherwise a pid is returned by nbSpawnChild
+      }
+    *curcmd='"';
+    curcmd++;
+    *curcmd=0;
     }
   return(nbSpawnChild(context,NB_CHILD_NOCLOSE,command));
   }

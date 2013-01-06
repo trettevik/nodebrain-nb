@@ -158,6 +158,7 @@
 * 2012-01-26 dtl Checker updates
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 * 2012-12-27 eat 0.8.13 Checker updates
+* 2013-01-01 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #define _USE_32BIT_TIME_T
@@ -291,10 +292,14 @@ long tcAlignYearMonth(long timer,int month){
   //fprintf(stderr,"tcAlignYearMonth called: %ld %d\n",timer,month);
   timeTm=localtime((const time_t *)&timer);
   if(timeTm==NULL) return(never);
+  if(month<1 || month>12){  // 2013-01-01 eat - VID 726-0.8.13-1 making sure we don't wrap
+    outMsg(0,'L',"tcAlignYearMonth: called with bad month value %d",month);
+    return(never);
+    }
   if(timeTm->tm_mon>month) timeTm->tm_year++;
   // 2012-10-12 eat - can't be smaller than the minimum value
   //if((month-1)>=INT_MIN) timeTm->tm_mon=month-1; //dtl: added check
-  timeTm->tm_mon=month-1; //eat
+  timeTm->tm_mon=month-1; 
   timeTm->tm_mday=1;
   timeTm->tm_hour=0;
   timeTm->tm_min=0;
@@ -334,6 +339,10 @@ long tcAlignWeekDay(long timer,int wday){
   
   timeTm=localtime((const time_t *)&timer);
   if(timeTm==NULL) return(never);
+  if(wday<0 || wday>6){    // 2013-01-01 eat - VID 728-0.8.13-01 Making sure we are in range
+    outMsg(0,'L',"tcAlignWeekDay: Week day %d out of range 0-6",wday);
+    return(never);
+    }
   // 2012-10-12 eat - can't be greater than the maximum value
   //if(timeTm->tm_wday>wday && (wday+7)<=INT_MAX) wday=wday+7; //dtl: added check
   if(timeTm->tm_wday>wday) wday+=7; //eat
@@ -1480,7 +1489,7 @@ tc tcParse(nbCELL context,char **source,char *msg){
     *          right=bfiIndexParse(&index,msg);
     */
     if((right=bfiIndexParse(index,indexMsg,sizeof(indexMsg)))==NULL){
-      sprintf(msg,"NB000E Invalid index \"%s\". %s",index,indexMsg);
+      snprintf(msg,NB_MSGSIZE,"NB000E Invalid index \"%s\". %s",index,indexMsg); // 2013-01-01 eat - VID 708-0.8.13-1
       *source=cursor;
       *cursor=']';
       return(NULL);

@@ -36,6 +36,7 @@
 * ---------- -----------------------------------------------------------------
 * 2003/03/15 eat 0.5.1  Created to conform to new make file
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2012-12-31 eat 0.8.13 Checker updates
 *=============================================================================
 */
 /**************************************************************************
@@ -55,7 +56,7 @@ struct bfiindex{
 #define Range     2
 #define Span      3
 
-struct bfiindex *bfiIndexParse(char *s,char *msg,int msglen);
+struct bfiindex *bfiIndexParse(char *s,char *msg,size_t msglen); // 2012-12-31 eat - VID 5210,5457,5136, - msglen from int to size_t
 void   bfiIndexPrint(struct bfiindex *index);
 
 /*************************************************************************

@@ -158,6 +158,7 @@
 *            nbMsgLogPrune function.
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 * 2012-12-27 eat 0.8.13 Checker updates
+* 2012-12-31 eat 0.8.13 Checker updates
 *==============================================================================
 */
 #include <ctype.h>
@@ -266,8 +267,8 @@ void nbMsgStatePrint(FILE *file,nbMsgState *msgstate,char *title){
   nbMsgNum *msgnum;
 
   fprintf(file,"%s\n",title);
-  for(node=0;node<256;node++){
-    msgnum=&msgstate->msgnum[node];
+  for(node=0;node<=NB_MSG_NODE_MAX;node++){
+    msgnum=&msgstate->msgnum[node];  // 2013-01-01 eat - CID 762051 - NB_MSG_NODE_MAX+1 elements
     if(msgnum->time || msgnum->count){
       fprintf(file,"Node %3.3u time=%10.10u count=%10.10u\n",node,msgnum->time,msgnum->count);
       }
@@ -291,9 +292,9 @@ void nbMsgStateFree(nbCELL context,nbMsgState *msgState){
 /*
 *  Set a state for an individual node
 */
-int nbMsgStateSet(nbMsgState *state,int node,uint32_t time,uint32_t count){
+int nbMsgStateSet(nbMsgState *state,unsigned char node,uint32_t time,uint32_t count){
   // if(node<0 || node>NB_MSG_NODE_MAX){ // 2012-12-16 eat - CID 751587
-  if(node<0 || node>=NB_MSG_NODE_MAX){
+  if(node>=NB_MSG_NODE_MAX){
     fprintf(stderr,"nbMsgStateSet: Node %d out of range\n",node);
     return(-1);
     }
@@ -618,16 +619,16 @@ int nbMsgIncludesState(nbMsgLog *msglog){
 /*
 *  Store a message id in network byte order
 */
-void nbMsgIdStuff(nbMsgId *msgid,int node,uint32_t mTime,uint32_t mCount){
-  msgid->node=node;
-  msgid->time[3]=mTime&0xff; mTime=mTime>>8;
-  msgid->time[2]=mTime&0xff; mTime=mTime>>8;
-  msgid->time[1]=mTime&0xff; mTime=mTime>>8;
-  msgid->time[0]=mTime&0xff;
-  msgid->count[3]=mCount&0xff; mCount=mCount>>8;
-  msgid->count[2]=mCount&0xff; mCount=mCount>>8;
-  msgid->count[1]=mCount&0xff; mCount=mCount>>8;
-  msgid->count[0]=mCount&0xff;
+void nbMsgIdStuff(nbMsgId *msgid,unsigned char node,uint32_t mTime,uint32_t mCount){  
+  msgid->node=node;                               // 2012-12-31 eat - VID 5374,4611-0.8.13-1  node from int to unsigned char
+  msgid->time[3]=mTime%256; mTime=mTime>>8;	  // 2012-12-31 eat - VID 4726-0.8.13-1  &0xff to %256
+  msgid->time[2]=mTime%256; mTime=mTime>>8;       // 2012-12-31 eat - VID 4610-0.8.13-1
+  msgid->time[1]=mTime%256; mTime=mTime>>8;       // 2012-12-31 eat - VID 5480-0.8.13-1
+  msgid->time[0]=mTime%256;                  
+  msgid->count[3]=mCount%256; mCount=mCount>>8;   // 2012-12-31 eat - VID 5129-0.8.13-1
+  msgid->count[2]=mCount%256; mCount=mCount>>8;   // 2012-12-31 eat - VID 5448-0.8.13-1
+  msgid->count[1]=mCount%256; mCount=mCount>>8;   // 2012-12-31 eat - VID 4848-0.8.13-1
+  msgid->count[0]=mCount%256;
   }
 
 /*
@@ -852,6 +853,10 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
       nbLogMsg(context,0,'L',"nbMsgLogRead: Logic error - cabal \"%s\" node %u file %s offset %d is not equal filesize=%u after LOGEND",msglog->cabal,msglog->node,filename,msglog->fileOffset,msglog->filesize);
       exit(1);
       }
+    if((msglog->file=open(filename,O_RDONLY))<0){ // 2013-01-01 eat - CID 762053 - moved ahead of lstat - time of check time of use (TOCTOU)
+      nbLogMsg(context,0,'E',"nbMsgLogRead: Unable to open file %s - %s",filename,strerror(errno));
+      return(-1);
+      }
     if(lstat(filename,&filestat)){
       nbLogMsg(context,0,'E',"nbMsgLogRead: Unable to stat file %s - %s",filename,strerror(errno));
       return(-1);
@@ -859,10 +864,6 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
     if(filestat.st_size<msglog->filesize){
       nbLogMsg(context,0,'L',"nbMsgLogRead: Logic error - cabal \"%s\" node %u file %s size %d is less than msglog->filesize=%u",msglog->cabal,msglog->node,filename,filestat.st_size,msglog->filesize);
       exit(1);
-      }
-    if((msglog->file=openRead(filename,O_RDONLY))<0){ //2012-01-26 dtl: used centralized open routine
-      nbLogMsg(context,0,'E',"nbMsgLogRead: Unable to open file %s - %s",filename,strerror(errno));
-      return(-1);
       }
     if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogRead: msglog->fileOffset=%u msglog->filesize=%u",msglog->fileOffset,msglog->filesize);
     if((pos=lseek(msglog->file,msglog->filesize,SEEK_SET))<0){
@@ -894,7 +895,7 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
     msglog->fileCount++;
     sprintf(msglog->filename,"%10.10d.msg",msglog->fileCount);  
     sprintf(filename,"message/%s/%s/%s",msglog->cabal,msglog->nodeName,msglog->filename);
-    if((msglog->file=openRead(filename,O_RDONLY))<0){ //2012-01-26 dtl: used centralized open routine
+    if((msglog->file=open(filename,O_RDONLY))<0){ 
       nbLogMsg(context,0,'E',"nbMsgLogRead: Unable to open file %s - %s\n",filename,strerror(errno));
       return(-1);
       }
@@ -1037,7 +1038,7 @@ int nbMsgLogRead(nbCELL context,nbMsgLog *msglog){
 *    mode it is the basename of the cursor file.
 *
 */
-nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *basename,int mode,nbMsgState *pgmState){
+nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,unsigned char node,char *basename,int mode,nbMsgState *pgmState){
   nbMsgLog *msglog;
   char filename[128];
   char cursorFilename[128];
@@ -1067,10 +1068,11 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
     nbLogFlush(context);
     exit(1);
     }
-  if(node>NB_MSG_NODE_MAX){
-    outMsg(0,'E',"nbMsgLogOpen: Node number %d exceeds limit of %d",node,NB_MSG_NODE_MAX);
-    return(NULL);
-    }
+  // 2012-12-31 eat - dropping test because always false now that node is unsigned char
+  //if(node>NB_MSG_NODE_MAX){
+  //  outMsg(0,'E',"nbMsgLogOpen: Node number %d exceeds limit of %d",node,NB_MSG_NODE_MAX);
+  //  return(NULL);
+  //  }
   if(strlen(cabal)>sizeof(msglog->cabal)-1){
     outMsg(0,'E',"nbMsgLogOpen: Message cabal name length exceeds %d bytes",(int)sizeof(msglog->cabal)-1);
     return(NULL);
@@ -1125,12 +1127,15 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
   // create a msglog structure
   msglog=(nbMsgLog *)nbAlloc(sizeof(nbMsgLog));
   memset(msglog,0,sizeof(nbMsgLog));
-  strcpy(msglog->cabal,cabal);
-  strcpy(msglog->nodeName,nodeName);
+  strncpy(msglog->cabal,cabal,sizeof(msglog->cabal));             // 2012-12-31 eat - VID 4733-0.8.13-1 FP checked above, but changed anyway
+  *(msglog->cabal+sizeof(msglog->cabal)-1)=0;
+  strncpy(msglog->nodeName,nodeName,sizeof(msglog->nodeName));    // 2012-12-31 eat - VID 5324-0.8.13-1 FP checked above, but changed anyway
+  *(msglog->nodeName+sizeof(msglog->nodeName)-1)=0;
   msglog->node=node;
   strcpy(msglog->filename,linkedname);
-  if(basename && *basename) strcpy(msglog->consumerName,basename);
-  else strcpy(msglog->consumerName,nodeName);
+  if(basename && *basename) strncpy(msglog->consumerName,basename,sizeof(msglog->consumerName));  
+  else strncpy(msglog->consumerName,nodeName,sizeof(msglog->consumerName));   // 2012-12-31 eat - VID 5273-0.8.13-1 FP but changed
+  *(msglog->consumerName+sizeof(msglog->consumerName)-1)=0;
   msglog->option=option;
   msglog->mode=mode;
   msglog->state=NB_MSG_STATE_INITIAL;
@@ -1152,7 +1157,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
   // If in CURSOR mode, we position by cursor if cursor file exists.
   if(mode==NB_MSG_MODE_CURSOR){
     sprintf(cursorFilename,"message/%s/%s/%s.cursor",cabal,nodeName,basename);
-    if((msglog->cursorFile=openRead(cursorFilename,O_RDWR))<0){ // have a cursor file //dtl used openRead
+    if((msglog->cursorFile=open(cursorFilename,O_RDWR))<0){ // have a cursor file 
       nbLogMsg(context,0,'I',"Cursor file '%s' not found. Assuming offset of zero.",cursorFilename);
       }
     else{
@@ -1180,7 +1185,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
     }
 
   sprintf(filename,"message/%s/%s/%s",cabal,nodeName,msglog->filename);
-  if((msglog->file=openRead(filename,O_RDONLY))<0){ //2012-01-26 dtl: used centralized open routine
+  if((msglog->file=open(filename,O_RDONLY))<0){ 
     fprintf(stderr,"nbMsgLogOpen: Unable to open file %s - %s\n",filename,strerror(errno));
     nbFree(msglog->msgbuf,NB_MSG_BUF_LEN);
     nbFree(msglog,sizeof(nbMsgLog));
@@ -1221,7 +1226,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
     close(msglog->file);
     msglog->filesize=0;
     sprintf(filename,"message/%s/%s/%10.10u.msg",cabal,nodeName,fileCount-1);
-    if((msglog->file=openRead(filename,O_RDONLY))<0){ //2012-01-26 dtl: used centralized open routine
+    if((msglog->file=open(filename,O_RDONLY))<0){ 
       fprintf(stderr,"nbMsgLogOpen: Unable to open file %s - %s\n",filename,strerror(errno));
       nbFree(msglog->msgbuf,NB_MSG_BUF_LEN);
       nbFree(msglog,sizeof(nbMsgLog));
@@ -1258,7 +1263,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *
     msgcursor.recordTime=msglog->recordTime;   
     msgcursor.recordCount=msglog->recordCount;   
     if(msgTrace) outMsg(0,'T',"nbMsgLogOpen: 3 msglog->fileOffset=%u",msglog->fileOffset);
-    if((msglog->cursorFile=openCreate(cursorFilename,O_RDWR|O_CREAT,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP))<0){ // have a cursor file //dtl: use openCreate()
+    if((msglog->cursorFile=open(cursorFilename,O_RDWR|O_CREAT,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP))<0){ // have a cursor file 
       nbLogMsg(context,0,'E',"nbMsgLogOpen: Unable to create file '%s'",cursorFilename);
       nbFree(msglog->msgbuf,NB_MSG_BUF_LEN);
       nbFree(msglog,sizeof(nbMsgLog));
@@ -1536,8 +1541,10 @@ void nbMsgUdpRead(nbCELL context,int serverSocket,void *handle){
 *  Start consuming messages
 */
 int nbMsgLogConsume(nbCELL context,nbMsgLog *msglog,void *handle,int (*handler)(nbCELL context,void *handle,nbMsgRec *msgrec)){
-  char filename[128];
+  char filename[512];
   int state;
+  int len;
+  int fd;
 
   // may be able to remove this and just let nbMsgUdpRead() handle it
   while(!((state=nbMsgLogRead(context,msglog))&NB_MSG_STATE_LOGEND)){
@@ -1552,12 +1559,18 @@ int nbMsgLogConsume(nbCELL context,nbMsgLog *msglog,void *handle,int (*handler)(
     else if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogConsume: not processing record - state=%d",state);
     }
   // Set up and register listener for UDP socket connections
-  sprintf(filename,"message/%s/%s/%s.socket",msglog->cabal,msglog->nodeName,msglog->consumerName);
-  msglog->socket=nbIpGetUdpServerSocket(context,filename,0);
-  if(msglog->socket<0){
+  len=snprintf(filename,sizeof(filename),"message/%s/%s/%s.socket",msglog->cabal,msglog->nodeName,msglog->consumerName);
+  if(len<0 || len>=sizeof(filename)){     // 2012-12-31 eat - VID 5270-0.8.13-1
+    *(filename+sizeof(filename)-1)=0;
+    nbLogMsg(context,0,'E',"nbMsgLogConsume: Unable to open udp server socket %s - file name too larg for buffer",filename);
+    return(-1);
+    }
+  fd=nbIpGetUdpServerSocket(context,filename,0);    // 2012-12-31 eat - VID 5270-0.8.13-1
+  if(fd<0){
     nbLogMsg(context,0,'E',"nbMsgLogConsume: Unable to open udp server socket %s",filename);
     return(-1);
     }
+  msglog->socket=fd;
   msglog->handle=handle;
   msglog->handler=handler;
   if(msgTrace) nbLogMsg(context,0,'T',"nbMsgLogConsumer: set fd=%d to non-blocking",msglog->socket);
@@ -1611,11 +1624,11 @@ int nbMsgLogEmpty(nbCELL context,char *cabal,char *nodeName){
 /*
 *  Write a state header record to an open file 
 */
-int nbMsgFileWriteState(nbCELL context,int file,nbMsgState *msgstate,int node,uint32_t recordTime,uint32_t recordCount,uint32_t fileCount,int fileState){
+int nbMsgFileWriteState(nbCELL context,int file,nbMsgState *msgstate,unsigned char node,uint32_t recordTime,uint32_t recordCount,uint32_t fileCount,unsigned char fileState){                      // 2012-12-31 eat - VID 4943-0.8.13-1 node to unsigned char,  VID 4846-0.8.13-1 fileState to unsigned char
   nbMsgRec *msgrec;
   nbMsgId *msgid;
-  int msgids;
-  int msglen;
+  unsigned char msgids;
+  size_t msglen;    // 2012-12-31 eat - VID
   int nodeIndex;
   time_t utime;
   uint32_t fileTime;
@@ -1626,7 +1639,7 @@ int nbMsgFileWriteState(nbCELL context,int file,nbMsgState *msgstate,int node,ui
   msgrec->type=NB_MSG_REC_TYPE_HEADER;
   msgrec->datatype=NB_MSG_REC_DATA_ID;
   msgid=&msgrec->si;
-  nbMsgIdStuff(msgid,node,msgstate->msgnum[node].time,msgstate->msgnum[node].count);
+  nbMsgIdStuff(msgid,node,msgstate->msgnum[node].time,msgstate->msgnum[node].count);  // 2012-12-31 eat - VID 4943-0.8.13-1
   msgid++;
   nbMsgIdStuff(msgid,node,recordTime,recordCount);
   msgid++;
@@ -1643,11 +1656,11 @@ int nbMsgFileWriteState(nbCELL context,int file,nbMsgState *msgstate,int node,ui
   fileTime=utime;
   nbMsgIdStuff(msgid,node,fileTime,fileCount);
   msgid++;
-  *(char *)msgid=fileState;  // 2012-04-22 eat - include file state - modified by message log file management
+  *(unsigned char *)msgid=fileState;  // 2012-04-22 eat - include file state - modified by message log file management  // 2012-12-31 eat - VID 4846,5046-0.8.13-1
   msgrec->msgids=msgids;
-  msglen=(char *)msgid-(char *)msgrec+1;  // +1 is for fileState
-  msgrec->len[0]=msglen>>8;
-  msgrec->len[1]=msglen&0xff;
+  msglen=(char *)msgid-(char *)msgrec+1;  // +1 is for fileState   // 2012-12-31 eat - VID 5039,5206-0.8.13-1 msglen from int to size_t
+  msgrec->len[0]=msglen>>8;               
+  msgrec->len[1]=msglen%256;              // 2012-12-31 eat - VID 5043-0.8.13-1  &0xff to %256
   rc=write(file,msgrec,msglen);
   nbFree(msgrec,sizeof(nbMsgRec)+256*sizeof(nbMsgId));
   return(rc);
@@ -1662,7 +1675,7 @@ int nbMsgFileCreateRegular(nbCELL context, char *cabal,char *nodeName,int node){
   nbMsgState *msgstate;
 
   sprintf(filename,"message/%s/%s/%s.msg",cabal,nodeName,nodeName);
-  if((file=openCreate(filename,O_WRONLY|O_CREAT,S_IRWXU|S_IRGRP))<0){ //2012-01-26 dtl: used centralized open routine
+  if((file=open(filename,O_WRONLY|O_CREAT,S_IRWXU|S_IRGRP))<0){  
     outMsg(0,'E',"nbMsgFileCreateRegular: Unable to create file %s\n",filename);
     return(-1);
     }
@@ -1692,7 +1705,7 @@ int nbMsgFileCreateLinked(nbCELL context, char *cabal,char *nodeName,int node){
   // start a new file
   sprintf(linkname,"message/%s/%s/%s.msg",cabal,nodeName,nodeName);
   sprintf(filename,"message/%s/%s/%s",cabal,nodeName,filebase);
-  if((file=openCreate(filename,O_WRONLY|O_CREAT,S_IRWXU|S_IRGRP))<0){ //2012-01-16 dtl: use openCreate()
+  if((file=open(filename,O_WRONLY|O_CREAT,S_IRWXU|S_IRGRP))<0){ 
     outMsg(0,'E',"nbMsgFileCreateLinked: Unable to create file %s\n",filename);
     return(-1);
     }
@@ -1743,16 +1756,22 @@ int nbMsgLogConvert2Linked(nbCELL context, char *cabal,char *nodeName,int node){
 *
 *    See NB_MSG_INIT_OPTION_*
 */
-int nbMsgLogInitialize(nbCELL context,char *cabal,char *nodeName,int node,int option){
+int nbMsgLogInitialize(nbCELL context,char *cabal,char *nodeName,unsigned char node,int option){
   char filename[128];
   struct stat filestat;
+  int len;
   
   if(msgTrace) outMsg(0,'T',"nbMsgLogInitialize: called with cabal=%s nodename=%s nodenum=%d option=%d",cabal,nodeName,node,option);
   if(option<0 || option>5){
     outMsg(0,'L',"nbMsgLogInitialize: Invalid option %d - Must be 0 to 5\n",option);
     return(-1);
     }
-  sprintf(filename,"message/%s",cabal);
+  len=snprintf(filename,sizeof(filename),"message/%s",cabal);   // 2012-12-31 eat - VID 605-0.8.13-1 Intentional
+  if(len<0 || len>=sizeof(filename)){
+    *(filename+sizeof(filename)-1)=0;
+    outMsg(0,'E',"nbMsgLogInitialize: File name exceeds buffer limit - %s",filename);
+    return(-1);
+    }
   if(lstat(filename,&filestat)<0){  // if cabal directory not found, create it or find out what's wrong
     if(errno!=ENOENT){
       outMsg(0,'E',"nbMsgLogInitialize: Unable to stat cabal directory %s - %s\n",filename,strerror(errno));
@@ -1763,7 +1782,7 @@ int nbMsgLogInitialize(nbCELL context,char *cabal,char *nodeName,int node,int op
       return(-1);
       }
     if(msgTrace) outMsg(0,'T',"nbMsgLogInitialize: creating cabal directory %s",filename); 
-    if(mkdir(filename,S_IRWXU|S_IRWXG)<0){
+    if(mkdir(filename,S_IRWXU|S_IRWXG)<0){   // 2012-12-31 eat - VID 605-0.8.13-1 Intentional
       outMsg(0,'E',"nbMsgLogInitialize: Unable to create cabal director %s - %s\n",filename,strerror(errno));
       return(-1);
       }
@@ -1772,7 +1791,12 @@ int nbMsgLogInitialize(nbCELL context,char *cabal,char *nodeName,int node,int op
     outMsg(0,'E',"nbMsgLogInitialize: File %s exists, but is not a directory\n",filename);
     return(-1);
     }
-  sprintf(filename,"message/%s/%s",cabal,nodeName);
+  len=snprintf(filename,sizeof(filename),"message/%s/%s",cabal,nodeName);
+  if(len<0 || len>=sizeof(filename)){
+    *(filename+sizeof(filename)-1)=0;
+    outMsg(0,'E',"nbMsgLogInitialize: File name exceeds buffer size limit - %s",filename);
+    return(-1);
+    }
   if(lstat(filename,&filestat)<0){  // if cabal node directory not found, create it or find out what's wrong
     if(errno!=ENOENT){
       outMsg(0,'E',"nbMsgLogInitialize: Unable to stat cabal node directory %s - %s\n",filename,strerror(errno));
@@ -1783,7 +1807,7 @@ int nbMsgLogInitialize(nbCELL context,char *cabal,char *nodeName,int node,int op
       return(-1);
       }
     if(msgTrace) outMsg(0,'T',"nbMsgLogInitialize: creating cabal directory %s",filename);
-    if(mkdir(filename,S_IRWXU|S_IRWXG)<0){
+    if(mkdir(filename,S_IRWXU|S_IRWXG)<0){   // 2012-12-31 eat - VID 771-0.8.13-1 Intentional
       outMsg(0,'E',"nbMsgLogInitialize: Unable to create cabal node director %s - %s\n",filename,strerror(errno));
       return(-1);
       }
@@ -1792,7 +1816,12 @@ int nbMsgLogInitialize(nbCELL context,char *cabal,char *nodeName,int node,int op
     outMsg(0,'E',"nbMsgLogInitialize: File %s exists, but is not a directory\n",filename);
     return(-1);
     }
-  sprintf(filename,"message/%s/%s/%s.msg",cabal,nodeName,nodeName);
+  len=snprintf(filename,sizeof(filename),"message/%s/%s/%s.msg",cabal,nodeName,nodeName);
+  if(len<0 || len>=sizeof(filename)){
+    *(filename+sizeof(filename)-1)=0;
+    outMsg(0,'E',"nbMsgLogInitialize: File name exceeds buffer size limit - %s",filename);
+    return(-1);
+    }
   if(lstat(filename,&filestat)<0){  // look for state file
     if(errno!=ENOENT){
       outMsg(0,'E',"nbMsgLogInitialize: Unable to stat state file %s - %s\n",filename,strerror(errno));
@@ -1831,7 +1860,7 @@ int nbMsgLogInitialize(nbCELL context,char *cabal,char *nodeName,int node,int op
 *  Prune message log by removing files that only contains messages older than a specified age.
 *
 */
-int nbMsgLogPrune(nbCELL context,char *cabal,char *nodeName,int node,int seconds){
+int nbMsgLogPrune(nbCELL context,char *cabal,char *nodeName,unsigned char node,int seconds){
   char filename[128];
   struct stat filestat;
   uint32_t tranTime,tranCount,recordTime,recordCount,fileTime,fileCount;
@@ -1890,7 +1919,7 @@ int nbMsgLogPrune(nbCELL context,char *cabal,char *nodeName,int node,int seconds
 
   // Open and read the bottom file
   sprintf(filename,"message/%s/%s/%s",cabal,nodeName,linkedname);
-  if((file=openRead(filename,O_RDONLY))<0){ 
+  if((file=open(filename,O_RDONLY))<0){ 
     outMsg(0,'E',"Unable to open file %s - %s\n",filename,strerror(errno));
     return(-1);
     }
@@ -1927,7 +1956,7 @@ int nbMsgLogPrune(nbCELL context,char *cabal,char *nodeName,int node,int seconds
           return(-1);
           }
         else{ // record contains fileState
-          if((file=openRead(filename,O_RDWR))<0){ 
+          if((file=open(filename,O_RDWR))<0){ 
             outMsg(0,'E',"Unable to open file %s - %s\n",filename,strerror(errno));
             return(-1);
             }
@@ -1948,7 +1977,7 @@ int nbMsgLogPrune(nbCELL context,char *cabal,char *nodeName,int node,int seconds
         }
       }
     sprintf(filename,"message/%s/%s/%10.10u.msg",cabal,nodeName,fileCount-1);
-    if((file=openRead(filename,O_RDONLY))<0){ 
+    if((file=open(filename,O_RDONLY))<0){ 
       outMsg(0,'E',"Unable to open file %s - %s\n",filename,strerror(errno));
       return(-1);
       }
@@ -1990,6 +2019,7 @@ int nbMsgLogFileCreate(nbCELL context,nbMsgLog *msglog){
   int msglen;
   int linklen;
   time_t utime;
+  int len;
 
   time(&utime);
   msglog->fileTime=utime;
@@ -2017,13 +2047,17 @@ int nbMsgLogFileCreate(nbCELL context,nbMsgLog *msglog){
     }
   // start a new file
   sprintf(filebase,"%10.10d.msg",msglog->fileCount);
-  sprintf(filename,"message/%s/%s/%s",msglog->cabal,msglog->nodeName,filebase);
-  if((msglog->file=openCreate(filename,O_WRONLY|O_CREAT,S_IRWXU|S_IRGRP))<0){ //2012-01-16 dtl: use openCreate()
+  len=snprintf(filename,sizeof(filename),"message/%s/%s/%s",msglog->cabal,msglog->nodeName,filebase); // 2012-12-31 eat - VID 4608-0.8.13-1
+  if(len<0 || len>=sizeof(filename)){
+    fprintf(stderr,"nbMsgLogFileCreate: File exceeds buffer limit - %s\n",filename);
+    return(-1);
+    }
+  if((msglog->file=open(filename,O_WRONLY|O_CREAT,S_IRWXU|S_IRGRP))<0){ 
     fprintf(stderr,"nbMsgLogFileCreate: Unable to creat file %s\n",filename);
     return(-1);
     }
   //fprintf(stderr,"nbMsgLogFileCreate: fildes=%d %s\n",msglog->file,filename);
-  if(remove(linkname)<0){
+  if(remove(linkname)<0){    // 2012-12-31 eat - VID 762-0.8.13-1 Intentional
     fprintf(stderr,"nbMsgLogFileCreate: Unable to remove symbolic link %s - %s\n",linkname,strerror(errno));
     return(-1);
     }
@@ -2073,21 +2107,26 @@ int nbMsgLogFileCreate(nbCELL context,nbMsgLog *msglog){
 */
 void nbMsgProducerUdpRead(nbCELL context,int serverSocket,void *handle){
   nbMsgLog *msglog=(nbMsgLog *)handle;
-  char name[33];       // we can use the msglog buffer while the message log file is closed
-  int  len;
-
+  char name[32];       // 2012-12-31 eat - VID 4732-0.8.13-1  changed from 33 to 32
+  ssize_t  len;
+  
   len=recvfrom(msglog->socket,name,sizeof(name),0,NULL,0);
   while(len==-1 && errno==EINTR) len=recvfrom(msglog->socket,name,sizeof(name),0,NULL,0);
   if(len<0){
-    outMsg(0,'E',"nbMsgProducerUdpRead: Cabal %s node %s ignoring recvfrom len=%d - %s",msglog->cabal,msglog->nodeName,len,errno,strerror(errno));
-    return;
-    }
-  if(len<1 || name[len-1]!=0){
-    outMsg(0,'E',"nbMsgProducerUdpRead: Cabal %s node %s ignoring request with out null terminator",msglog->cabal,msglog->nodeName);
+    outMsg(0,'E',"nbMsgProducerUdpRead: Cabal %s node %s ignoring recvfrom len=%d - %s",msglog->cabal,msglog->nodeName,len,strerror(errno));
     return;
     }
   if(len<2){
     outMsg(0,'E',"nbMsgProducerUdpRead: Cabal %s node %s ignoring request with null name",msglog->cabal,msglog->nodeName);
+    return;
+    }
+  if(name[len-1]!=0){
+    outMsg(0,'E',"nbMsgProducerUdpRead: Cabal %s node %s ignoring request with out null terminator",msglog->cabal,msglog->nodeName);
+    return;
+    }
+  *(name+sizeof(name)-1)=0;  // 2013-01-04 eat - CID 751628 FP see if this convinces the checker - seems to miss that we checked above
+  if(*(name+sizeof(name)-1)!=0){ // 2013-01-04 eat - hey let's get really crazy until the checker agrees with me
+    outMsg(0,'E',"nbMsgProducerUdpRead: Cabal %s node %s ignoring request with out null terminator",msglog->cabal,msglog->nodeName);
     return;
     }
   nbMsgConsumerAdd(msglog,name);
@@ -2098,11 +2137,13 @@ void nbMsgProducerUdpRead(nbCELL context,int serverSocket,void *handle){
 *
 *  Returns: -1 - error, 0 - success
 */
-int nbMsgLogProduce(nbCELL context,nbMsgLog *msglog,unsigned int maxfilesize){
+int nbMsgLogProduce(nbCELL context,nbMsgLog *msglog,uint32_t maxfilesize){
   char filename[256];
-  int  node;
+  unsigned char  node;
   DIR *dir;
   struct dirent *ent;
+  int fd;
+  int len;
 
   //fprintf(stderr,"nbMsgLogProduce: called with maxfilesize=%u\n",maxfilesize);
   node=msglog->node;
@@ -2110,7 +2151,12 @@ int nbMsgLogProduce(nbCELL context,nbMsgLog *msglog,unsigned int maxfilesize){
     outMsg(0,'E',"nbMsgLogProduce: Message log not in end-of-log state - cabal \"%s\" node %d",msglog->cabal,msglog->node);
     return(-1);
     }
-  sprintf(filename,"message/%s/%s/%s.msg",msglog->cabal,msglog->nodeName,msglog->nodeName);
+  len=snprintf(filename,sizeof(filename),"message/%s/%s/%s.msg",msglog->cabal,msglog->nodeName,msglog->nodeName);
+  if(len<0 || len>=sizeof(filename)){
+    *(filename+sizeof(filename)-1)=0;
+    outMsg(0,'E',"nbMsgLogProduce: Filename exceeds buffer limit - %s",filename);
+    return(-1);
+    }
   if(msglog->file){
     outMsg(0,'E',"nbMsgLogProduce: File open - expecting closed file");
     return(-1);
@@ -2118,22 +2164,28 @@ int nbMsgLogProduce(nbCELL context,nbMsgLog *msglog,unsigned int maxfilesize){
   msglog->maxfilesize=maxfilesize;
   msglog->msgrec=(nbMsgRec *)msglog->msgbuf;
   if(msglog->option&NB_MSG_OPTION_STATE){
-    if((msglog->file=openRead(filename,O_WRONLY))<0){ //2012-01-16 dtl: use openRead()
+    if((msglog->file=open(filename,O_WRONLY))<0){
       outMsg(0,'E',"nbMsgLogProduce: Unable to append to file %s",filename);
       return(-1);
       }
     }
   else{    // Prepare to communicate with consumers if we aren't just maintaining state---actually logging messages
-    if((msglog->file=openCreate(filename,O_WRONLY|O_APPEND,S_IRWXU|S_IRGRP))<0){ //2012-01-16 dtl: use openCreate()
+    if((msglog->file=open(filename,O_WRONLY|O_APPEND,S_IRWXU|S_IRGRP))<0){ 
       outMsg(0,'E',"nbMsgLogProduce: Unable to append to file %s",filename);
       return(-1);
       }
-    sprintf(filename,"message/%s/%s/~.socket",msglog->cabal,msglog->nodeName);
-    msglog->socket=nbIpGetUdpServerSocket(context,filename,0);
-    if(msglog->socket<0){
+    len=snprintf(filename,sizeof(filename),"message/%s/%s/~.socket",msglog->cabal,msglog->nodeName);
+    if(len<0 || len>=sizeof(filename)){
+      *(filename+sizeof(filename)-1)=0;
+      outMsg(0,'E',"nbMsgLogProduce: Filename exceeds buffer limit - %s",filename);
+      return(-1);
+      }
+    fd=nbIpGetUdpServerSocket(context,filename,0);
+    if(fd<0){
       outMsg(0,'E',"nbMsgLogProduce: Unable to open udp server socket %s",filename);
       return(-1);
       }
+    msglog->socket=fd;
     //outMsg(0,'T',"nbMsgLogProduce: set fd=%d to non-blocking",msglog->socket);
     if(fcntl(msglog->socket,F_SETFL,fcntl(msglog->socket,F_GETFL)|O_NONBLOCK)){ // make it non-blocking // 2012-12-27 eat 0.8.13 - CID 761521
       outMsg(0,'E',"nbMsgLogProduce: Unable to make udp server socket %s non-blocking - %s",filename,strerror(errno));
@@ -2144,7 +2196,12 @@ int nbMsgLogProduce(nbCELL context,nbMsgLog *msglog,unsigned int maxfilesize){
     // 2011-01-19 eat - finishing up support for multiple consumers
     // Read the directory and call nbMsgConsumerAdd for every *.socket other than ~.socket
     // Entries will automatically get deleted if the consumers are not listening
-    sprintf(filename,"message/%s/%s",msglog->cabal,msglog->nodeName);
+    len=snprintf(filename,sizeof(filename),"message/%s/%s",msglog->cabal,msglog->nodeName);
+    if(len<0 || len>=sizeof(filename)){
+      *(filename+sizeof(filename)-1)=0;
+      outMsg(0,'E',"nbMsgLogProduce: Filename exceeds buffer limit - %s",filename);
+      return(-1);
+      }
     dir=opendir(filename);
     if(!dir){
       outMsg(0,'E',"nbMsgLogProduce: Unable to open directory %s",filename);
@@ -2152,17 +2209,19 @@ int nbMsgLogProduce(nbCELL context,nbMsgLog *msglog,unsigned int maxfilesize){
       }
     while((ent=readdir(dir))){  // for each entry
       int len=strlen(ent->d_name);
-      char name[32],*delim;
+      //char name[32],*delim;
+      char name[32];
       //outMsg(0,'T',"nbMsgLogProduce: file=%s/%s",filename,ent->d_name);
       if(len>7 && strcmp(ent->d_name+len-7,".socket")==0 && strcmp(ent->d_name,"~.socket")!=0){
-        delim=strchr(ent->d_name,'.');
-        len=delim-ent->d_name;
-        if(len<32){
+        len-=7; // 2012-12-31 eat - VID 643-0.8.13-1 
+        //delim=strchr(ent->d_name,'.');
+        //len=delim-ent->d_name;
+        if(len<sizeof(name)){
           strncpy(name,ent->d_name,len);
           *(name+len)=0; 
           nbMsgConsumerAdd(msglog,name);
           }
-        else outMsg(0,'E',"nbMsgLogProduce: consumer filename %s greater than 38 characters - ignored",ent->d_name);
+        else outMsg(0,'E',"nbMsgLogProduce: consumer filename %s greater than %d characters - ignored",ent->d_name,sizeof(name)-1);
         }
       }
     closedir(dir);
@@ -2178,7 +2237,7 @@ int nbMsgLogProduce(nbCELL context,nbMsgLog *msglog,unsigned int maxfilesize){
 *    
 *  Returns: -1 error, 0 - success, 1 - unable to write to UDP socket
 */
-int nbMsgLogWrite(nbCELL context,nbMsgLog *msglog,int msglen){
+int nbMsgLogWrite(nbCELL context,nbMsgLog *msglog,uint16_t msglen){   // 2012-12-31 eat - VID 4842,5479-0.8.13-1 from int to uint16_t
   time_t utime;
   int node=msglog->node;
   nbMsgCursor *msgudp=(nbMsgCursor *)msglog->msgbuf;
@@ -2191,8 +2250,8 @@ int nbMsgLogWrite(nbCELL context,nbMsgLog *msglog,int msglen){
   struct timeval tv;
 
   msgrec->len[0]=msglen>>8;    // save lenth in network byte order
-  msgrec->len[1]=msglen&0xff; 
-  msglog->filesize+=msglen;
+  msgrec->len[1]=msglen%256;   // 2012-12-31 eat - VID 4842,5479-0.8.13-1
+  msglog->filesize+=msglen;    // 2012-12-31 eat - VID 5045,5418-0.8.13-1
   msgudp->fileCount=msglog->fileCount;
   msgudp->fileOffset=msglog->filesize;
   // *** need to include sizeof(nbMsgId)*nodes in state vector
@@ -2724,7 +2783,7 @@ void nbMsgCacheFree(nbCELL context,nbMsgCache *msgcache){
 /*
 *  Open a message cache and listen for UDP packets
 */ 
-nbMsgCache *nbMsgCacheAlloc(nbCELL context,char *cabal,char *nodeName,int node,int size){
+nbMsgCache *nbMsgCacheAlloc(nbCELL context,char *cabal,char *nodeName,unsigned char node,size_t size){
   nbMsgCache *msgcache;
   nbMsgLog *msglog;
   unsigned char *msgqrec;

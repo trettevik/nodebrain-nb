@@ -190,6 +190,7 @@
 * 2012-01-26 dtl 0.8.6  Checker updates
 * 2012-08-31 dtl 0.8.12 Checker updates: handled malloc error
 * 2012-12-27 eat 0.8.13 Checker updates
+* 2012-12-31 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -245,17 +246,17 @@ void bfiIndexFree(struct bfiindex *top){
 */
 #define NB_BFI_INDEX_SIZE 64   // index element buffer size
 
-struct bfiindex *bfiIndexParse(char *s,char *msg,int msglen){
+struct bfiindex *bfiIndexParse(char *s,char *msg,size_t msglen){ // 2012-12-31 eat - VID 5210,5457,5136 - changed msglen from int to size_t
   int type=0,min=32000,max=-32000;
   struct bfiindex *top=NULL,*entry;  
-  char *cursor=s,*comma,element[NB_BFI_INDEX_SIZE],sfrom[NB_BFI_INDEX_SIZE],sto[NB_BFI_INDEX_SIZE];
+  //char *cursor=s,*comma,element[NB_BFI_INDEX_SIZE],sfrom[NB_BFI_INDEX_SIZE],sto[NB_BFI_INDEX_SIZE];
+  char *cursor=s,*comma,element[NB_BFI_INDEX_SIZE],sfrom[sizeof(element)],sto[sizeof(element)];
     
   while(*cursor!=0){
-    if((comma=strchr(cursor,','))==NULL) comma=strchr(cursor,0);
+    if((comma=strchr(cursor,','))==NULL) comma=cursor+strlen(cursor);
     if((comma-cursor)<sizeof(element)) strcpy(element,cursor);
     else{
       snprintf(msg,msglen,"Index element exceeds maximum size of %d characters at: %s",NB_BFI_INDEX_SIZE-1,cursor);
-      *(msg+msglen-1)=0; // make sure we have a null terminator
       bfiIndexFree(top);
       return(NULL);
       }
@@ -263,12 +264,22 @@ struct bfiindex *bfiIndexParse(char *s,char *msg,int msglen){
       type=Span;
       *cursor=0;
       strcpy(sfrom,element); // safe - ignore Checker
+      if(strlen(cursor+1)>=sizeof(sto)){
+        snprintf(msg,msglen,"bfiIndexParse: Logic error - element should not be larger than sto");
+        bfiIndexFree(top);
+        return(NULL);
+        }
       strcpy(sto,cursor+1);  // safe - ignore Checker
       }
     else if((cursor=strstr(element,".."))!=NULL){ //if ".." found
       type=Range;
       *cursor=0;
       strcpy(sfrom,element); // safe - ignore Checker
+      if(strlen(cursor+2)>=sizeof(sto)){
+        snprintf(msg,msglen,"bfiIndexParse: Logic error - element should not be larger than sto");
+        bfiIndexFree(top);
+        return(NULL);
+       }
       strcpy(sto,cursor+2);  // safe - ignore Checker
       }
     else{
@@ -278,7 +289,6 @@ struct bfiindex *bfiIndexParse(char *s,char *msg,int msglen){
       }      
     if(!bfiIsInteger(sfrom) || !bfiIsInteger(sto)){
       snprintf(msg,msglen,"Index element \"%s\" has non-integer component",element);
-      *(msg+msglen-1)=0; // make sure we have a null terminator
       bfiIndexFree(top);
       return(NULL);
       }
@@ -901,10 +911,7 @@ bfi bfiIndex(bfi g,struct bfiindex *index){
   if(index->from>0){     /* we can bound the indexing by the maximum index */
     int stop=index->to;
     array=(bfi *)malloc(sizeof(bfi)*stop);
-    if(!array){  //2012-08-31 dtl - handle malloc() err
-      fprintf(stderr,"Out of memory\n");
-      exit(NB_EXITCODE_FAIL);
-      }
+    if(!array) nbExit("bfiIndex: out of memory");
     for(s=g->next;s!=g && n<stop && s->start<g->start;s=s->next) if(s->end>g->end){
       *(array+n)=s;
       n++;
@@ -913,16 +920,14 @@ bfi bfiIndex(bfi g,struct bfiindex *index){
   else{                  /* we need to index the complete list */ 
     int entries=500;
     array=(bfi *)malloc(sizeof(bfi)*entries);
-    if(!array){  //2012-08-31 dtl - handle malloc() err
-      fprintf(stderr,"Out of memory\n");
-      exit(NB_EXITCODE_FAIL);
-      }
+    if(!array) nbExit("bfiIndex: out of memory");
     for(s=g->next;s!=g && s->start<g->start;s=s->next) if(s->end>g->end){
       *(array+n)=s;
       n++;
       if(n>=entries){    /* this is a big set */
         entries*=2;      /* double the number of entries */ 
         array=(bfi *)realloc(array,sizeof(bfi)*entries);
+        if(!array) nbExit("bfiIndex: out of memory");  // 2012-12-31 eat - VID 5135 - error check
         }
       }
     }

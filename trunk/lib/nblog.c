@@ -427,7 +427,7 @@ void outData(char *data,int len){
 *
 *    outPut(format,arg1,arg2,...)
 */
-void outPut(char * format,...){
+void outPut(const char * format,...){
   va_list args;
   int len;
   va_start(args,format);
@@ -645,7 +645,7 @@ char *outUserDir(char *name){
 int nbLogMsg(nbCELL context,int msgNumber,char msgType,char *format,...){
   va_list args;
   int len;
-  char termName[512];
+  char termName[1024];
   //char *termName;
   char *skillName;
   if(context->object.type!=termType){

@@ -108,7 +108,7 @@ int setenv(char *name,char *value,int option){
 //==================================================================================
 
 /*
-*  Get option specified as string term in context
+*  Get option specified as string or text cell in context
 *
 *  name:  Option name
 *  value: Default value returned if term not found
@@ -116,11 +116,32 @@ int setenv(char *name,char *value,int option){
 static char *getOption(nbCELL context,char *name,char *defaultValue){
   char *value=defaultValue;
   nbCELL cell;
-  if((cell=nbTermLocate(context,name))!=NULL
-    && (cell=nbTermGetDefinition(context,cell))!=NULL
-    && nbCellGetType(context,cell)==NB_TYPE_STRING) value=nbCellGetString(context,cell);
+  if((cell=nbTermLocate(context,name))!=NULL &&
+    (cell=nbTermGetDefinition(context,cell))!=NULL &&
+    ((nbCellGetType(context,cell)==NB_TYPE_STRING && (value=nbCellGetString(context,cell))) ||
+    (nbCellGetType(context,cell)==NB_TYPE_TEXT && (value=nbCellGetText(context,cell)))));
   nbLogMsg(context,0,'T',"%s=%s",name,value);
+  value=strdup(value);
+  if(!value) nbExit("getOption: out of memory");
   return(value);
+  }
+
+/*
+*  Get configuration file option.
+*
+*    The caller is responsible to have option pointing
+*    to a default string that can be released with a call
+*    to free.
+*/
+static void getConfigOption(char **option,char *cursor){
+  char *delim;
+  delim=strchr(cursor,'"');        //find 2nd "
+  if(delim){
+    *(delim)=0;
+    free(*option);
+    *option=strdup(cursor);
+    if(!*option) nbExit("getConfigOption: out of memory");
+    }
   }
 
 //======================================================================================
@@ -138,10 +159,10 @@ typedef struct NB_MOD_WEBSTER{    // Webster Node Structure
   char            *rootdir;       // web site root directory
   char            *authenticate;  // "yes" | "certificate" | "password" | "no"
   char             dir[1024];     // working directory path - NodeBrain caboodle
-  char             cabTitle[64];  // Caboodle Title (Application)
-  char             cabVersion[64];// Caboodle Version
-  char             cabLink[256];  // Caboodle Link
-  char             cabMenu[1024]; // Caboodle Menu
+  char            *cabTitle;      // Caboodle Title (Application)
+  char            *cabVersion;    // Caboodle Version
+  char            *cabLink;       // Caboodle Link
+  char            *cabMenu;       // Caboodle Menu
   nbWebServer     *webserver;     // web server
   } nbWebster;
 
@@ -192,7 +213,7 @@ static void webHeading(nbCELL context,nbWebSession *session){
     "</td>\n"
     "<td align='center' valign='middle'>\n"
     "<span style='font-size: 10px; color: white'>\n"
-    "N o d e B r a i n &nbsp; C a b o o d l e &nbsp; K i t &nbsp; 0.8.5\n"
+    "N o d e B r a i n &nbsp; C a b o o d l e &nbsp; K i t &nbsp; 0.8.13\n"
     "</span>\n"
     "<span style='font-size: 3px; color: white'><br><br></span>\n"
     "<span style='font-size: 10px; color: white'>\n"
@@ -1095,20 +1116,22 @@ static void *websterConstruct(nbCELL context,void *skillHandle,nbCELL arglist,ch
   nbCELL cell=NULL;
   nbSET argSet;
   char *delim;
-  char *str;
+  char *id="default";  // use default identity by default
 
   nbLogMsg(context,0,'T',"websterConstruct: called");
   argSet=nbListOpen(context,arglist);
   cell=nbListGetCellValue(context,&argSet);
-  if(cell==NULL || nbCellGetType(context,cell)!=NB_TYPE_STRING){
-    nbLogMsg(context,0,'E',"Expecting identity name as first parameter");
-    return(NULL);
+  if(cell){
+    if(nbCellGetType(context,cell)!=NB_TYPE_STRING){
+      nbLogMsg(context,0,'E',"Expecting identity name as first parameter");
+      return(NULL);
+      }
+    id=nbCellGetString(context,cell);
     }
-  str=nbCellGetString(context,cell);
   webster=nbAlloc(sizeof(nbWebster));
   memset(webster,0,sizeof(nbWebster));
   webster->context=context;
-  strncpy(webster->idName,str,sizeof(webster->idName));
+  strncpy(webster->idName,id,sizeof(webster->idName));
   *(webster->idName+sizeof(webster->idName)-1)=0;
   webster->identity=nbIdentityGet(context,webster->idName);
   if(webster->identity==NULL){
@@ -1131,10 +1154,11 @@ static void *websterConstruct(nbCELL context,void *skillHandle,nbCELL arglist,ch
     nbLogMsg(context,0,'E',"Out of memory - terminating");
     exit(NB_EXITCODE_FAIL);
     } 
-  strcpy(webster->cabTitle,"MyCaboodle");
-  *webster->cabVersion=0;
-  strcpy(webster->cabLink,"http://nodebrain.org");
-  strcpy(webster->cabMenu,"<a href=':page'>Webster</a>");
+  // 2012-12-30 eat 0.8.13 - changed to pointers obtained using getOption in websterEnable
+  //strcpy(webster->cabTitle,"MyCaboodle");
+  //*webster->cabVersion=0;
+  //strcpy(webster->cabLink,"http://nodebrain.org");
+  //strcpy(webster->cabMenu,"<a href=':page'>Webster</a>");
   nbCellDrop(context,cell);
   nbListenerEnableOnDaemon(context);  // sign up to enable when we daemonize
   nbLogMsg(context,0,'T',"websterConstruct: returning");
@@ -1142,12 +1166,11 @@ static void *websterConstruct(nbCELL context,void *skillHandle,nbCELL arglist,ch
   }
 
 static int websterEnable(nbCELL context,void *skillHandle,nbWebster *webster){
-  char rootdir[2048];
+  //char rootdir[2048];
   FILE *configFile;
   char *configName;
   char buffer[1024];
-  char *delim;
-  int rc,n;
+  int rc;
 
   webster->webserver=nbWebsterOpen(context,context,webster,NULL);
   if(!webster->webserver){
@@ -1162,44 +1185,41 @@ static int websterEnable(nbCELL context,void *skillHandle,nbWebster *webster){
   nbWebsterRegisterResource(context,webster->webserver,":nb",webster,webCommand);
   nbWebsterRegisterResource(context,webster->webserver,":help",webster,webHelp);
   // get options
-  if(webster->rootdir) free(webster->rootdir);
-  webster->rootdir=strdup(getOption(context,"DocumentRoot","web"));
-  if(!webster->rootdir) nbExit("websterEnable: Out of memory - terminating");
-  if(*webster->rootdir!='/'){
-    sprintf(rootdir,"%s/%s",webster->dir,webster->rootdir);
-    free(webster->rootdir);
-    webster->rootdir=strdup(rootdir);
-    if(!webster->rootdir) nbExit("websterEnable: Out of memory - terminating");
-    }
-  nbLogMsg(context,0,'T',"DocumentRoot=%s",webster->rootdir);
+  //webster->rootdir=strdup(getOption(context,"DocumentRoot","web"));
+  //if(!webster->rootdir) nbExit("websterEnable: Out of memory - terminating");
+  //if(*webster->rootdir!='/'){
+  //  sprintf(rootdir,"%s/%s",webster->dir,webster->rootdir);
+  //  free(webster->rootdir);
+  //  webster->rootdir=strdup(rootdir);
+  //  if(!webster->rootdir) nbExit("websterEnable: Out of memory - terminating");
+  //  }
+  //nbLogMsg(context,0,'T',"DocumentRoot=%s",webster->rootdir);
   rc=nbWebsterEnable(context,webster->webserver);
+  if(rc){
+    nbLogMsg(context,0,'E',"Unable to enable web server");
+    return(-1);
+    }
+  if(webster->rootdir) free(webster->rootdir); // Get new DocumentRoot
+  webster->rootdir=nbWebsterGetRootDir(context,webster->webserver);
+  if(!webster->rootdir){
+    nbLogMsg(context,0,'E',"Unable to get DocumentRoot");
+    return(-1);
+    }
   // Load configuration
+  webster->cabTitle=getOption(context,"Title","MyCaboodle");
+  webster->cabVersion=getOption(context,"Version","");
+  webster->cabLink=getOption(context,"Link","https://nodebrain.org");
+  webster->cabMenu=getOption(context,"Menu","<a href=':page'>Webster</a>");
   configName=nbWebsterGetConfig(context,webster->webserver);
   nbLogMsg(context,0,'T',"websterEnable: configName=%s",configName);
   if(!configName || !*configName) configName="config/caboodle.conf";
   nbLogMsg(context,0,'T',"websterEnable: configName=%s",configName);
   if((configFile=fopen(configName,"r"))!=NULL){
     while(fgets(buffer,sizeof(buffer),configFile)){
-      if(strncmp(buffer,"Title=\"",7)==0){ //found Title="
-        delim=strchr(buffer+7,'"');        //find 2nd "
-        if(delim && (n=delim-buffer-7)<sizeof(webster->cabTitle)) //found ", n is length of bytes within ".."
-          strncpy(webster->cabTitle,buffer+7,n),*(webster->cabTitle+n)=0; //2012-02-07 dtl: replace strcpy
-        }
-      else if(strncmp(buffer,"Version=\"",9)==0){
-        delim=strchr(buffer+9,'"'); 
-        if(delim && (n=delim-buffer-9)<sizeof(webster->cabVersion)) 
-          strncpy(webster->cabVersion,buffer+9,n),*(webster->cabVersion+n)=0; //dtl: replace strcpy
-        }
-      else if(strncmp(buffer,"Link=\"",6)==0){
-        delim=strchr(buffer+6,'"'); 
-        if(delim && (n=delim-buffer-6)<sizeof(webster->cabLink)) 
-          strncpy(webster->cabLink,buffer+6,n),*(webster->cabLink+n)=0; //dtl: replace strcpy
-        }
-      else if(strncmp(buffer,"Menu=\"",6)==0){
-        delim=strchr(buffer+6,'"');
-        if(delim && (n=delim-buffer-6)<sizeof(webster->cabMenu)) 
-          strncpy(webster->cabMenu,buffer+6,n),*(webster->cabMenu+n)=0; //dtl: replace strcpy
-        }
+      if(strncmp(buffer,"Title=\"",7)==0) getConfigOption(&webster->cabTitle,buffer+7);
+      else if(strncmp(buffer,"Version=\"",9)==0) getConfigOption(&webster->cabVersion,buffer+9);
+      else if(strncmp(buffer,"Link=\"",6)==0) getConfigOption(&webster->cabLink,buffer+6);
+      else if(strncmp(buffer,"Menu=\"",6)==0) getConfigOption(&webster->cabMenu,buffer+6);
       }
     fclose(configFile);
     }
@@ -1213,7 +1233,11 @@ static int websterEnable(nbCELL context,void *skillHandle,nbWebster *webster){
 */
 static int websterDisable(nbCELL context,void *skillHandle,nbWebster *webster){
   if(webster->webserver) nbWebsterDisable(context,webster->webserver);
-  free(webster->rootdir);
+  if(webster->rootdir) free(webster->rootdir);
+  if(webster->cabTitle) free(webster->cabTitle);
+  if(webster->cabVersion) free(webster->cabVersion);
+  if(webster->cabLink) free(webster->cabLink);
+  if(webster->cabMenu) free(webster->cabMenu);
   return(0);
   }
 

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2011 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -103,7 +103,7 @@ extern int nbProxyBookConsumed(nbCELL context,nbProxyBook *book,int len);
 extern void *nbProxyBookClose(nbCELL context,nbProxyBook *book);
 //extern int nbProxySendBook(nbCELL context,nbProxy *proxy,nbProxyBook *book);
 
-extern nbProxyPage *nbProxyPageOpen(nbCELL context,void **data,int *size);
+extern nbProxyPage *nbProxyPageOpen(nbCELL context,void **data,size_t *size);
 extern int nbProxyPageProduced(nbCELL context,nbProxyPage *page,int len);
 extern void *nbProxyPageClose(nbCELL context,nbProxyPage *page);
 

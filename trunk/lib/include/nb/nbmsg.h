@@ -50,7 +50,7 @@
 
 #define NB_MSG_NAMESIZE 32
 
-#define NB_MSG_NODE_MAX 256     // maximum number of nodes
+#define NB_MSG_NODE_MAX 255     // maximum number of nodes    // 2012-12-31 eat - changed from 256 to 255
 #define NB_MSG_REC_MAX 64*1024  // maximum msg record length
 #define NB_MSG_BUF_LEN 64*1024  // maximum msg record length
 
@@ -91,7 +91,7 @@ typedef struct NB_MSG_NUMBER{
   } nbMsgNum;
 
 typedef struct NB_MSG_STATE{
-  nbMsgNum msgnum[NB_MSG_NODE_MAX];
+  nbMsgNum msgnum[NB_MSG_NODE_MAX+1]; // 2013-01-01 eat - CID 762051
   } nbMsgState;
 
 /*
@@ -178,13 +178,13 @@ typedef struct NB_MSG_LOG{
 #define NB_MSG_INIT_OPTION_EMPTY    4 // Empty to state or content file
 
 int nbMsgLogSetState(nbCELL context,nbMsgLog *msglog,nbMsgRec *msgrec);
-int nbMsgLogWrite(nbCELL context,nbMsgLog *msglog,int msglen);
+int nbMsgLogWrite(nbCELL context,nbMsgLog *msglog,uint16_t msglen);
 int nbMsgLogFileCreate(nbCELL context,nbMsgLog *msglog);
 
 // Message Log API
 
-extern int nbMsgLogInitialize(nbCELL context,char *cabal,char *nodeName,int node,int option);
-extern int nbMsgLogPrune(nbCELL context,char *cabal,char *nodeName,int node,int seconds);
+extern int nbMsgLogInitialize(nbCELL context,char *cabal,char *nodeName,unsigned char node,int option);
+extern int nbMsgLogPrune(nbCELL context,char *cabal,char *nodeName,unsigned char node,int seconds);
 extern int nbMsgLogStateToRecord(nbCELL context,nbMsgLog *msglog,unsigned char *buffer,int buflen);
 extern nbMsgState *nbMsgLogStateFromRecord(nbCELL context,nbMsgRec *msgrec);
 
@@ -192,16 +192,16 @@ extern void *nbMsgData(nbCELL context,nbMsgRec *msgrec,int *datalen);
 extern int nbMsgPrint(FILE *file,nbMsgRec *msgrec);
 
 extern nbMsgState *nbMsgStateCreate(nbCELL context);
-extern int nbMsgStateSet(nbMsgState *state,int node,uint32_t time,uint32_t count);
+extern int nbMsgStateSet(nbMsgState *state,unsigned char node,uint32_t time,uint32_t count);
 
-extern nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,int node,char *filename,int mode,nbMsgState *pgmState);
+extern nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,unsigned char node,char *filename,int mode,nbMsgState *pgmState);
 extern int nbMsgLogClose(nbCELL context,nbMsgLog *msglog);
 extern int nbMsgLogRead(nbCELL context,nbMsgLog *msglog);
 extern int nbMsgLogCursorWrite(nbCELL context,nbMsgLog *msglog);
 extern int nbMsgLogConsume(nbCELL context,nbMsgLog *msglog,void *handle,int (*handler)(nbCELL context,void *handle,nbMsgRec *msgrec));
 void nbMsgLogPoll(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL cell);
 
-extern int nbMsgLogProduce(nbCELL context,nbMsgLog *msglog,unsigned int maxfileSize);
+extern int nbMsgLogProduce(nbCELL context,nbMsgLog *msglog,uint32_t maxfileSize);
 extern int nbMsgLogWriteString(nbCELL context,nbMsgLog *msglog,unsigned char *text);
 extern int nbMsgLogWriteData(nbCELL context,nbMsgLog *msglog,void *data,unsigned short datalen);
 extern int nbMsgLogWriteReplica(nbCELL context,nbMsgLog *msglog,nbMsgRec *msgrec);
@@ -246,7 +246,7 @@ typedef struct NB_MSG_CACHE_SUBSCRIBER{
 
 typedef struct NB_MSG_CACHE{      // message cache structure
   nbMsgCacheSubscriber *msgsub;   // list of subscribers
-  int            bufferSize;
+  size_t         bufferSize;
   unsigned char *bufferStart;
   unsigned char *bufferEnd;
   unsigned char *start;
@@ -261,7 +261,7 @@ typedef struct NB_MSG_CACHE{      // message cache structure
 
 // Message Cache API
 
-extern nbMsgCache *nbMsgCacheAlloc(nbCELL context,char *cabal,char *nodeName,int node,int size);
+extern nbMsgCache *nbMsgCacheAlloc(nbCELL context,char *cabal,char *nodeName,unsigned char node,size_t size);
 //extern nbMsgCacheSubscriber *nbMsgCacheSubscribe(nbCELL context,nbMsgCache *msgcache,unsigned char *buffer,int buflen,nbMsgState *msgstate,void *handle,int (*handler)(nbCELL context,void *handle,nbMsgRec *msgrec));
 extern nbMsgCacheSubscriber *nbMsgCacheSubscribe(nbCELL context,nbMsgCache *msgcache,nbMsgState *msgstate,void *handle,int (*handler)(nbCELL context,void *handle,nbMsgRec *msgrec));
 extern int nbMsgCacheCancel(nbCELL context,nbMsgCacheSubscriber *msgsub);

@@ -144,7 +144,6 @@ void nbVerbDestroy(struct NB_VERB *verb){
 * Public Methods
 **********************************************************************/
 void nbVerbInit(NB_Stem *stem){
-  //verbH=newHash(7919);
   nb_verbType=newType(stem,"verb",NULL,0,nbVerbPrint,nbVerbDestroy);
   nb_verbType->apicelltype=NB_TYPE_VERB;
   stem->verbs=nbTermNew(NULL,"verb",useString("verb"));

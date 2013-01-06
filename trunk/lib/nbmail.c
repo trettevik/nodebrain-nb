@@ -38,6 +38,7 @@
 *            prepares for the support of SMTPS.
 * 2012-05-20 eat - include mailTrace (traceMail) for debugging
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
+* 2012-12-31 eat 0.8.13 Checker updates
 *============================================================================
 */
 #include <nb/nbi.h>
@@ -117,10 +118,10 @@ int nbMailSend(nbCELL context,nbMailClient *client,char *from,char *to,char *top
     return(-1);
     }
   if(nbMailRead(context,client,buffer,sizeof(buffer))) return(-1);
-  sprintf(buffer,"EHLO %s\n",client->host);
+  snprintf(buffer,sizeof(buffer),"EHLO %s\n",client->host);           // 2012-12-31 eat - VIE 5422-0.8.13-1 size check
   if(nbMailWrite(context,client,buffer,strlen(buffer))) return(-1);
   if(nbMailRead(context,client,buffer,sizeof(buffer))) return(-1);
-  sprintf(buffer,"MAIL From: <%s>\n",from);
+  snprintf(buffer,sizeof(buffer),"MAIL From: <%s>\n",from);
   if(nbMailWrite(context,client,buffer,strlen(buffer))) return(-1);
   if(nbMailRead(context,client,buffer,sizeof(buffer))) return(-1);
   snprintf(buffer,sizeof(buffer),"RCPT To: <%s>\n",to);

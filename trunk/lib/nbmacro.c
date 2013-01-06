@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -78,6 +78,7 @@
 * 2012-01-26 dtl Added sstrcpy for Checker updates
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 * 2012-10-17 eat 0.8.12 Checker updates
+* 2012-12-31 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -310,6 +311,7 @@ NB_String *nbMacroString(nbCELL context,char **cursorP){
 
 // Open file with O_CREAT flags, validate data before open, handle open error
 // centralized data validation routines
+/* 2012-12-31 eat - VID 4729-0.8.13-1  While this reduced the number of checker errors, it didn't change the issue
 int openCreate(char *filename, int flags, mode_t mode){
   int file;
   if (filename!=NULL && *filename!=0)
@@ -317,8 +319,10 @@ int openCreate(char *filename, int flags, mode_t mode){
 // handle error here if nee
   return(-1);
   }
+*/
 
 // Open file for read, validate data before open, handle open error
+/* 2012-12-31 eat - VID 4738-0.8.13-1  While this reduced the number of check errors, it didn't change the issue
 int openRead(char *filename, int flags){
   int file;
   if (filename!=NULL && *filename!=0)
@@ -326,4 +330,5 @@ int openRead(char *filename, int flags){
   // handle error here if nee
   return(-1);
   }
+*/
 

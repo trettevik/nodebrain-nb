@@ -142,6 +142,7 @@
 * 2012-05-19 eat 0.8.9  Included connection failover
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 * 2012-12-27 eat 0.8.13 Checker updates
+* 2012-12-30 eat 0.8.13 Modified nbProxyConstuct to only load context for secure protocols
 *==============================================================================
 */
 #include <nb/nb.h>
@@ -154,7 +155,7 @@ int proxyTrace;          // debugging trace flag for proxy routines
 *********************************************************************/
 static nbProxyPage *nb_proxy_page=NULL;  // list of pages
 
-nbProxyPage *nbProxyPageOpen(nbCELL context,void **data,int *size){
+nbProxyPage *nbProxyPageOpen(nbCELL context,void **data,size_t *size){
   nbProxyPage *page;
 
   if((page=nb_proxy_page)==NULL){
@@ -237,7 +238,7 @@ nbProxyPage *nbProxyBookGetPage(nbCELL context,nbProxyBook *book){
 
 int nbProxyBookWriteWhere(nbCELL context,nbProxyBook *book,void **data){
   nbProxyPage *page;
-  int len;
+  size_t len;
 
   //nbLogMsg(context,0,'T',"nbProxyBookWriteWhere: called data=%p avail=%d",*data,len);
   if(book->readPage==NULL){
@@ -690,7 +691,7 @@ nbProxy *nbProxyConstruct(nbCELL context,int client,nbCELL tlsContext,void *hand
   void (*shutdown)(nbCELL context,nbProxy *proxy,void *handle,int code)){
 
   nbProxy *proxy;
-  nbTLSX  *tlsx;
+  nbTLSX  *tlsx=NULL;
   char *uri;
 
   if(proxyTrace) nbLogMsg(context,0,'T',"nbProxyConstruct: called");
@@ -709,7 +710,7 @@ nbProxy *nbProxyConstruct(nbCELL context,int client,nbCELL tlsContext,void *hand
       return(NULL);
       }
     nbLogMsg(context,0,'T',"nbProxyConstruct: uri=%s",uri);
-    tlsx=nbTlsLoadContext(context,tlsContext,proxy,client);
+    if(strncmp(uri,"tls:",4)==0 || strncmp(uri,"https:",6)==0) tlsx=nbTlsLoadContext(context,tlsContext,proxy,client);
     proxy->tls=nbTlsCreate(tlsx,uri);
     if(!proxy->tls){
       nbLogMsg(context,0,'E',"nbProxyConstruct: unable to create tls for uri=%s",uri);

@@ -54,6 +54,7 @@
 * 2012-01-26 dtl - Checker updates
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 * 2012-12-27 eat 0.8.13 Checker updates
+* 2013-01-01 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -283,7 +284,7 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
   struct NB_PLAN_WAIT        *tmWait;
   NB_Object *value;
   NB_Link *member;
-  int count;
+  int count=0;
   char symid,sign,ident[256];
   long (*step)(long start,int count);
   tc tcdef;
@@ -313,22 +314,25 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
       count=1;
       cursor=cursave;
       }
-    else count=0;
-    if(symid=='i') count=atoi(ident);
+    else if(symid=='i') count=atoi(ident);
     else if(symid=='-' || symid=='+'){
       sign=symid;
       symid=nbParseSymbol(ident,&cursor);
       if(symid!='i'){
-        snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Expecting integer at \"%s\".",cursave); //dtl: used snprintf
+        snprintf(msg,(size_t)NB_MSGSIZE,"Expecting integer at -->%s",cursave); //dtl: used snprintf
         return(NULL);
         }
-      count-=atoi(ident);
-      if(sign=='+') count=-count;
+      count=atoi(ident);           // 2013-01-01 eat - VID 4954-0.8.13-1
+      if(count<0 || count>=1024){
+        snprintf(msg,(size_t)NB_MSGSIZE,"Expecting integer n, where 0<n<1024, at -->%s",cursave); //dtl: used snprintf
+        return(NULL);
+        }
+      if(sign=='-') count=-count;  // 2013-01-01 eat - VID 4954-0.8.13-1
       }
     if(*cursor=='{'){
       cursor++;   /* step over '{' */
       if(count<0){
-        snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Negative repeat count on procedure at \"%s\".",cursor); //dtl: used snprintf
+        snprintf(msg,(size_t)NB_MSGSIZE,"Negative repeat count on procedure at -->%s",cursor); //dtl: used snprintf
         return(NULL);
         }
       if(count>1){
@@ -698,7 +702,7 @@ void scheduleAction(struct ACTION *action){
   if(trace) outMsg(0,'T',"scheduleAction insert action %u in list",action);
   }
 
-struct ACTION *newAction(NB_Cell *context,NB_Term *term,struct COND *cond,char prty,void *assertion,NB_String *cmd,int option){
+struct ACTION *newAction(NB_Cell *context,NB_Term *term,struct COND *cond,char prty,void *assertion,NB_String *cmd,char option){
   struct ACTION *action;
   action=nbAlloc(sizeof(struct ACTION));
   // for some reason we are not using the action cell yet
@@ -739,7 +743,7 @@ void nbActionAssert(nbCELL context,nbSET assertion){
   scheduleAction(action);
   }
 
-void nbActionCmd(nbCELL context,char *cmd,int option){
+void nbActionCmd(nbCELL context,char *cmd,char option){
   struct ACTION *action;
   char *cursor=cmd;
   while(*cursor==' ') cursor++;
@@ -749,7 +753,7 @@ void nbActionCmd(nbCELL context,char *cmd,int option){
   scheduleAction(action);
   }
 
-void nbAction(nbCELL context,nbSET assertion,char *cmd,int option){
+void nbAction(nbCELL context,nbSET assertion,char *cmd,char option){
   struct ACTION *action;
   char *cursor=cmd;
   while(*cursor==' ') cursor++;

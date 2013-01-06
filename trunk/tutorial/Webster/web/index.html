@@ -36,14 +36,13 @@ step of the Webster section of the <i>NodeBrain Tutorial</i>.
 
 <ul>
 <pre>
-#!/usr/local/bin/nb -d            
+#!/usr/bin/nb -d            
 # File: tutorial/Webster/webster1
 -rm log/webster.log
 set log="log/webster.log";
-define webster node webster("default@0.0.0.0:62443");
-webster. define Protocol     cell "HTTP";
+define webster node webster;
+webster. define uri cell "http://0.0.0.0:62443";
 webster. define Authenticate cell "no";
-webster. define DocumentRoot cell "web";
 </pre>
 </ul>
 <p><big><b>User Authentication</b></big>
@@ -76,7 +75,7 @@ The point here is that Webster is not intended to be a complete interface for No
 If you find yourself repeating Webster requests frequently, you can set bookmarks in your browser, or use Webster bookmarks.  Use the "Bookmarks" menu item in Webster to display your bookmarks.
 <hr>
 <span class='foot'>NodeBrain(TM) is a trademark of The Boeing Company.<br>
-Copyright &copy; 2009  The Boeing Company<br>
+Copyright &copy; 2009-2013  The Boeing Company<br>
 </span>
 
 </td></tr></table>

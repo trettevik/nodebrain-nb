@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -83,6 +83,7 @@
 *            
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2010-10-13 eat 0.8.12 Replaced malloc with nbAlloc
+* 2012-12-31 eat 0.8.13 Change hash size from int to size_t
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -406,7 +407,7 @@ void disableList(NB_List *list){
 *  Initialize the list hash
 *    Must be called before parseList
 */
-void listInit(NB_Stem *stem,long n){
+void listInit(NB_Stem *stem,size_t n){    // 2012-12-31 eat - int to size_t
   if(trace) outMsg(0,'T',"listInit: called");
   listH=newHash(n);
   nb_ListType=newType(stem,"list",listH,0,printList,destroyList);

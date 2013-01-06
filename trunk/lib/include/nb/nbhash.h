@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -35,6 +35,7 @@
 * ---------- -----------------------------------------------------------------
 * 2002/08/31 Ed Trettevik (split out from nbobject.h in version 0.4.1)
 * 2010-02-28 eat 0.4.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2012-12-31 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #ifndef _NB_HASH_H_
@@ -50,14 +51,14 @@ extern struct TYPE *typeHash;
 
 struct HASH{               /* Hashing table */
   struct NB_OBJECT object; /* Special class to distinquish HASH from TERM */
-  long modulo;             /* Size of hashing table */
+  long   modulo;             /* Size of hashing table */  
   void *vect[1];           /* Colision pointers - ptr to first object in list */
   };
 
 typedef struct HASH NB_Hash;
 
 void initHash(NB_Stem *stem);
-struct HASH *newHash(long modulo);
+struct HASH *newHash(size_t modulo);  // 2012-12-31 eat - VID 4947
 void destroyHash(NB_Object object);
 void printHash(struct HASH *hash,char *label,NB_Type *type);
 

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -81,7 +81,7 @@ extern int nbPeerConnect(nbCELL context,nbPeer *peer,void *handle,
   int (*consumer)(nbCELL context,nbPeer *peer,void *handle,void *data,int len),
   void (*shutdown)(nbCELL context,nbPeer *peer,void *handle,int code));
 
-extern int nbPeerSend(nbCELL context,nbPeer *peer,void *data,int len);
+extern int nbPeerSend(nbCELL context,nbPeer *peer,void *data,uint16_t len);
 
 extern int nbPeerShutdown(nbCELL context,nbPeer *peer,int code);
 

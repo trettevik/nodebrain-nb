@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -53,6 +53,7 @@
 * 2012-01-16 dtl 0.8.5  Checker updates
 * 2012-06-16 eat 0.8.10 Replaced srand with srandom
 * 2012-10-13 eat 0.8.13 Replaced malloc with nbAlloc
+* 2013-01-01 eat 0.8.13 Checher updates
 *============================================================================*/
 #include <nb/nbi.h>
 #include <nb/nbmedulla.h>
@@ -190,12 +191,11 @@ void nbLoadUserProfile(nbCELL context){
   FILE *file;
 
   snprintf(filename,sizeof(filename),"%s/%s",myuserdir,"user.nb"); //2012-01-16 dtl: used snprintf
-  
   //outMsg(0,'T',"filename:%s\n",filename);
-  if((file=fopen(filename,"r"))==NULL){
-    sprintf(filename,"%s/%s",myuserdir,"profile.nb");
+  if((file=fopen(filename,"r"))==NULL){     // 2013-01-01 eat - VID 1650-0.8.13-1 FP
+    snprintf(filename,sizeof(filename),"%s/%s",myuserdir,"profile.nb");  // 2013-01-01 eat VID 5379-0.8.13-1
     if((file=fopen(filename,"r"))==NULL){
-      sprintf(filename,"%s/%s",myuserdir,"private.nb");
+      snprintf(filename,sizeof(filename),"%s/%s",myuserdir,"private.nb");
       if((file=fopen(filename,"r"))==NULL) return;
       outMsg(0,'W',"Using 'private.nb' as profile because 'user.nb' was not found."); 
       }
@@ -414,8 +414,6 @@ nbCELL nbStart(int argc,char *argv[]){
   nbTimeInit(stem);
   nbRuleInit(stem);
     
-  //localH=newHash(2031); /* initialize local term hash */
-
   listInit(stem,100003);        /* initialize list hash */
   schedInit(stem,579);       /* initialize schedule hash */
   nbTranslatorInit(stem);

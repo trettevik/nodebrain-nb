@@ -175,6 +175,8 @@
 * 2012-04-21 eat 0.8.7  Included NB_TLS_OPTION_SSL2 option for compatibility with old appplications
 * 2012-05-23 eat 0.8.9  Increased nbTlsCreate max number of URI's to 4
 * 2012-12-27 eat 0.8.13 Checker updates
+* 2012-12-30 eat 0.8.13 Modified nbLoadListener to only load context for secure protocols
+* 2013-01-01 eat 0.8.13 Checker updates
 *==================================================================================
 */
 #include <nb/nb.h>
@@ -244,6 +246,7 @@ char *nbTlsGetUri(nbTLS *tls){
 int nbTlsUriParse(nbTlsUriMap *uriMap,int n,char *uriList){
   char *delim,*uricur,*cursor;   
   int i;
+  size_t size;
 
   uricur=uriList;
   while(*uricur==' ') uricur++;
@@ -254,10 +257,11 @@ int nbTlsUriParse(nbTlsUriMap *uriMap,int n,char *uriList){
     uriMap->port=0;
     delim=strchr(uricur,' ');
     if(!delim) delim=strchr(uricur,',');
-    if(!delim) delim=strchr(uricur,0);
-    if(delim-uricur>=sizeof(uriMap->uri)-1) return(-2);
-    strncpy(uriMap->uri,uricur,delim-uricur);
-    *(uriMap->uri+(delim-uricur))=0;
+    if(!delim) delim=uricur+strlen(uricur);  
+    size=delim-uricur;
+    if(size>=sizeof(uriMap->uri)-1) return(-2);  // 2013-01-01 eat - VID 5138-0.8.13-1 FP size checked
+    if(size>=sizeof(uriMap->name)-1) return(-2);  // 2013-01-01 eat - uri and name are the same size, but help the checker by checking both
+    strncpy(uriMap->uri,uricur,size);
     if(*delim==',') delim++;
     uricur=delim;
     while(*uricur==' ') uricur++;
@@ -265,27 +269,28 @@ int nbTlsUriParse(nbTlsUriMap *uriMap,int n,char *uriList){
     if(strncmp(cursor,"file://",7)==0) uriMap->scheme=NB_TLS_SCHEME_FILE,cursor+=7;
     else if(strncmp(cursor,"unix://",7)==0) uriMap->scheme=NB_TLS_SCHEME_UNIX,cursor+=7;
     else if(strncmp(cursor,"tcp://",6)==0) uriMap->scheme=NB_TLS_SCHEME_TCP,cursor+=6;
+    else if(strncmp(cursor,"http://",7)==0) uriMap->scheme=NB_TLS_SCHEME_TCP,cursor+=7;
     else if(strncmp(cursor,"tls://",6)==0) uriMap->scheme=NB_TLS_SCHEME_TLS,cursor+=6;
     else if(strncmp(cursor,"https://",8)==0) uriMap->scheme=NB_TLS_SCHEME_HTTPS,cursor+=8;
     else return(-1);
-    if(uriMap->scheme==NB_TLS_SCHEME_FILE || uriMap->scheme==NB_TLS_SCHEME_UNIX) strcpy(uriMap->name,cursor); // size checked
+    if(uriMap->scheme==NB_TLS_SCHEME_FILE || uriMap->scheme==NB_TLS_SCHEME_UNIX) strcpy(uriMap->name,cursor); // size checked // 2013-01-01 eat - VID 5378-0.8.13-1 FP
     else{
       delim=strchr(cursor,':'); // port?
       if(delim){
         uriMap->port=atoi(delim+1);
-        strncpy(uriMap->name,cursor,delim-cursor); // size checked
+        strncpy(uriMap->name,cursor,size); // size checked // 2013-01-01 eat - VID 5447-0.8.13-1 FP
         *(uriMap->name+(delim-cursor))=0;
         }
-      else strcpy(uriMap->name,cursor); // size checked
+      else strcpy(uriMap->name,cursor); // size checked // 2013-01-01 eat - VID 5326-0.8.13-1 FP
       cursor=uriMap->name;
       if(*cursor>='0' && *cursor<='9'){
         if(strlen(cursor)>sizeof(uriMap->addr)-1) return(-2);
-        strcpy(uriMap->addr,cursor); // size checked
+        strcpy(uriMap->addr,cursor); // size checked  // 2013-01-01 eat - VID 5128-0.8.13-1 FP
         }
       else{
         delim=nbTlsGetAddrByName(cursor); 
         if(!delim || strlen(delim)>sizeof(uriMap->addr)-1) return(-2);
-        strcpy(uriMap->addr,delim); // size checked
+        strcpy(uriMap->addr,delim); // size checked   // 2013-01-01 eat - VID 4944-0.8.13-1 FP
         }
       }
     uriMap++; // step to next array entry
@@ -399,7 +404,7 @@ nbTLSX *nbTlsCreateContext(int option,void *handle,int timeout,char *keyFile,cha
         }
       // set DH parameters if server
       if(option&NB_TLS_OPTION_SERVER && keyFile && keyFile){
-        FILE *dhfile=fopen(keyFile,"r");
+        FILE *dhfile=fopen(keyFile,"r"); // 2013-01-01 eat - VID 5450-0.8.13-1 Intentional use of name from control file 
         DH *dh;
         if(dhfile){
           dh=PEM_read_DHparams(dhfile, NULL, NULL, NULL);
@@ -463,7 +468,7 @@ nbTLS *nbTlsCreate(nbTLSX *tlsx,char *uri){
     nbFree(tls,sizeof(nbTLS));
     return(NULL);
     }
-  tls->uriCount=uriCount;
+  tls->uriCount=uriCount;  // 2013-01-01 eat - VID 4607-0.8.13-1 FP Can't be greater than 4 passed into nbTlsUriParse
   // NOTE: The tls->option of NB_TLS_OPTION_TLS should not be referenced in the future
   // Instead we need to look at tls->uriMap[tls->uriIndex].scheme
   if(tls->uriMap[0].scheme==NB_TLS_SCHEME_TLS || tls->uriMap[0].scheme==NB_TLS_SCHEME_HTTPS) tls->option|=NB_TLS_OPTION_TLS;
@@ -635,12 +640,16 @@ int nbTlsConnectWithinUriCount(nbTLS *tls,int uriCount){
   int uriIndex;
   struct sockaddr_un un_addr;
 
+  if(uriCount<0 || uriCount>NB_TLS_URIMAP_BOUND){   // 2013-01-01 eat - VID 4949-0.8.13-1 checking index range
+    fprintf(stderr,"nbTlsConnect: Unable to obtain socket\n");
+    return(-1);
+    }
   // 2010-10-25 eat 0.8.4 - was looping too far
   //for(uriIndex=0;uriIndex<tls->uriCount;uriIndex++){
   for(uriIndex=0;uriIndex<uriCount;uriIndex++){
-    if(tls->uriMap[uriIndex].scheme==NB_TLS_SCHEME_UNIX){
-      if(strlen(tls->uriMap[uriIndex].name)>sizeof(un_addr.sun_path)){
-        fprintf(stderr,"nbTlsListen: Local domain socket path too long - %s\n",tls->uriMap[uriIndex].name);
+    if(tls->uriMap[uriIndex].scheme==NB_TLS_SCHEME_UNIX){   // 2013-01-01 eat  - VID 4949-0.8.13-1 checking above
+      if(strlen(tls->uriMap[uriIndex].name)>=sizeof(un_addr.sun_path)){  // 2013-01-01 eat - VID 4615-0.8.13-1
+        fprintf(stderr,"nbTlsListen: Local domain socket path too long - %s\n",tls->uriMap[uriIndex].name); // 2013-01-01 eat - VID 4612-0.8.13-1
         continue;
         }
       sd=socket(AF_UNIX,SOCK_STREAM,0);
@@ -649,7 +658,7 @@ int nbTlsConnectWithinUriCount(nbTLS *tls,int uriCount){
         return(-1);
         }
       un_addr.sun_family = AF_UNIX;
-      strcpy(un_addr.sun_path,tls->uriMap[uriIndex].name);
+      strcpy(un_addr.sun_path,tls->uriMap[uriIndex].name); // 2013-01-01 eat - VID 5041-0.8.13-1 checking above
       rc=connect(sd,(struct sockaddr *)&un_addr,sizeof(un_addr));
       }
     else{ // internet domain
@@ -660,8 +669,8 @@ int nbTlsConnectWithinUriCount(nbTLS *tls,int uriCount){
         }
       memset(&sa,0,sizeof(sa));
       sa.sin_family=AF_INET;
-      sa.sin_addr.s_addr=inet_addr(tls->uriMap[uriIndex].addr);   // host IP 
-      sa.sin_port=htons(tls->uriMap[uriIndex].port);              // port number
+      sa.sin_addr.s_addr=inet_addr(tls->uriMap[uriIndex].addr);   // host IP      // 2013-01-01 eat - VID 4843-0.8.13-1 checking above
+      sa.sin_port=htons(tls->uriMap[uriIndex].port);              // port number  // 2013-01-01 eat - VID 4952-0.8.13-1 checking above
     
 #if !defined(HPUX) && !defined(SOLARIS)
       if(tls->tlsx) tv.tv_sec=tls->tlsx->timeout;
@@ -853,7 +862,9 @@ int nbTlsListen(nbTLS *tls){
     mode_t mask;
     un_addr.sun_family=AF_UNIX;
     strcpy(un_addr.sun_path,name);
-    unlink(name);
+    if(unlink(name)){  // 2013-01-01 eat - CID 762050 - this is not a problem  // 2013-01-01 eat - VID 5417-0.8.13-1
+      fprintf(stderr,"nbTlsListen: Warning - Unable to unlink %s before bind - %s",name,strerror(errno));
+      }
     mask=umask(0); // save umask
     fchmod(sd,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);  // set file permissions to 660
     if(bind(sd,(struct sockaddr *)&un_addr,sizeof(un_addr))<0){
@@ -1072,14 +1083,15 @@ nbTLS *nbTlsAccept(nbTLS *tlsListener){
 *    NB_TLS_ERROR_UNKNOWN 
 */
 int nbTlsRead(nbTLS *tls,char *buffer,size_t size){
-  int len,error;
+  ssize_t len;
+  int error;
   if(tlsTrace) fprintf(stderr,"nbTlsRead: size=%d\n",(int)size);
   tls->error=NB_TLS_ERROR_UNKNOWN;
   if(!tls->ssl){
     if(tlsTrace) fprintf(stderr,"nbTlsRead: calling clear recv\n");
-    len=recv(tls->socket,buffer,size,0);
-    while(len==-1 && errno==EINTR) len=recv(tls->socket,buffer,size,0);
-    if(tlsTrace) fprintf(stderr,"nbTlsRead: read len=%d\n",len);
+    len=recv(tls->socket,buffer,size,0); // 2013-01-01 eat - VID 5048-0.8.13-1 Intentional - user provide buffer and size
+    while(len==-1 && errno==EINTR) len=recv(tls->socket,buffer,size,0); // 2013-01-01 eat - VID 5131-0.8.13-1 Intentional 
+    if(tlsTrace) fprintf(stderr,"nbTlsRead: read len=%ld\n",len);
     if(len==-1 && errno==EAGAIN) tls->error=NB_TLS_ERROR_WANT_READ;
     return(len);
     }
@@ -1087,12 +1099,12 @@ int nbTlsRead(nbTLS *tls,char *buffer,size_t size){
   len=SSL_read(tls->ssl,buffer,size);
   if(len<0){
     error=SSL_get_error(tls->ssl,len);
-    fprintf(stderr,"nbTlsRead: SSL_read rc=%d code=%d sd=%d\n",len,error,tls->socket);
+    fprintf(stderr,"nbTlsRead: SSL_read rc=%ld code=%d sd=%d\n",len,error,tls->socket);
     ERR_print_errors_fp(stderr);
     if(error==SSL_ERROR_WANT_READ) tls->error=NB_TLS_ERROR_WANT_READ;
     else if(error==SSL_ERROR_WANT_WRITE) tls->error=NB_TLS_ERROR_WANT_WRITE;
     }
-  if(tlsTrace) fprintf(stderr,"nbTlsRead: SSL_read len=%d\n",len);
+  if(tlsTrace) fprintf(stderr,"nbTlsRead: SSL_read len=%ld\n",len);
   return(len);
   }
 
@@ -1107,14 +1119,15 @@ int nbTlsRead(nbTLS *tls,char *buffer,size_t size){
 *    NB_TLS_ERROR_UNKNOWN 
 */
 int nbTlsWrite(nbTLS *tls,char *buffer,size_t size){
-  int len,error;
+  ssize_t len;
+  int error;
   if(tlsTrace) fprintf(stderr,"nbTlsWrite: size=%d\n",(int)size);
   tls->error=NB_TLS_ERROR_UNKNOWN;
   if(!tls->ssl){
     if(tlsTrace) fprintf(stderr,"nbTlsWrite: calling clear send - socket=%d\n",tls->socket);
-    len=send(tls->socket,buffer,size,0);
-    while(len==-1 && errno==EINTR) len=send(tls->socket,buffer,size,0);
-    if(tlsTrace) fprintf(stderr,"nbTlsWrite: wrote len=%d\n",len);
+    len=send(tls->socket,buffer,size,0);   // 2013-01-01 eat - VID 4945-0.8.13-1 FP
+    while(len==-1 && errno==EINTR) len=send(tls->socket,buffer,size,0); // 2013-01-01 eat - VID 5269-0.8.13 FP
+    if(tlsTrace) fprintf(stderr,"nbTlsWrite: wrote len=%ld\n",len);
     if(len==-1 && errno==EAGAIN) tls->error=NB_TLS_ERROR_WANT_WRITE;
     return(len);
     }
@@ -1122,12 +1135,12 @@ int nbTlsWrite(nbTLS *tls,char *buffer,size_t size){
   len=SSL_write(tls->ssl,buffer,size);
   if(len<0){
     error=SSL_get_error(tls->ssl,len);
-    fprintf(stderr,"nbTlsWrite: SSL_write rc=%d code=%d sd=%d\n",len,error,tls->socket);
+    fprintf(stderr,"nbTlsWrite: SSL_write rc=%ld code=%d sd=%d\n",len,error,tls->socket);
     ERR_print_errors_fp(stderr);
     if(error==SSL_ERROR_WANT_READ) tls->error=NB_TLS_ERROR_WANT_READ;
     else if(error==SSL_ERROR_WANT_WRITE) tls->error=NB_TLS_ERROR_WANT_WRITE;
     }
-  if(tlsTrace) fprintf(stderr,"nbTlsWrite: SSL_write len=%d\n",len);
+  if(tlsTrace) fprintf(stderr,"nbTlsWrite: SSL_write len=%ld\n",len);
   return(len);
   }
 
@@ -1221,12 +1234,12 @@ nbTLSX *nbTlsLoadContext(nbCELL context,nbCELL tlsContext,void *handle,int clien
 
 nbTLS *nbTlsLoadListener(nbCELL context,nbCELL tlsContext,char *defaultUri,void *handle){
   nbTLS *tls;
-  nbTLSX *tlsx;
+  nbTLSX *tlsx=NULL;
   char *uri;
 
   if(tlsTrace) nbLogMsg(context,0,'T',"nbTlsLoadListener: called");
-  tlsx=nbTlsLoadContext(context,tlsContext,handle,0);
   uri=nbTermOptionString(tlsContext,"uri",defaultUri);
+  if(strncmp(uri,"tls:",4)==0 || strncmp(uri,"https:",6)==0) tlsx=nbTlsLoadContext(context,tlsContext,handle,0);
   tls=nbTlsCreate(tlsx,uri);
   if(!tls){
     nbLogMsg(context,0,'E',"nbTlsListener: Syntax error in uri=\"%s\"",uri);

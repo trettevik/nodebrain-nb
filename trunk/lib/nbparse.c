@@ -126,6 +126,7 @@
 * 2010-09-17 eat 0.8.3  fixed crash on unbalanced parens or braces in nbParseTimeSymbol
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 * 2012-12-27 eat 0.8.13 Checker updates
+* 2013-01-01 eat 0.8.13 Checker updates
 *==============================================================================
 */
 #include <nb/nbi.h>
@@ -180,7 +181,8 @@ char *my_strtok_r(char *cursor,char *delim,char **newcur){
     mycursor++;
     *newcur=mycursor;
     }
-  else *newcur=strchr(cursor,0);
+  //else *newcur=strchr(cursor,0);       // 2013-01-01 eat VIC 821-0.8.13-1 FP but change
+  else *newcur=cursor+strlen(cursor);  
   return(cursor);
   }
 

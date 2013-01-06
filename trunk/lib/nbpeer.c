@@ -122,6 +122,7 @@
 * 2011-02-08 eat 0.8.5  Refined non-blocking SSL handshake
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 * 2012-12-27 eat 0.8.13 Checker updates
+* 2013-01-01 eat 0.8.13 Checker updates
 *==============================================================================
 */
 #include <nb/nb.h>
@@ -550,8 +551,8 @@ int nbPeerConnect(nbCELL context,nbPeer *peer,void *handle,
 *     0 - success
 *     1 - buffer is full - will call producer when ready for retry
 */
-int nbPeerSend(nbCELL context,nbPeer *peer,void *data,int size){
-  int mysize=size+2;
+int nbPeerSend(nbCELL context,nbPeer *peer,void *data,uint16_t size){
+  uint16_t mysize;
 
   if(peerTrace) nbLogMsg(context,0,'I',"Sending %d bytes to %s",size,nbTlsGetUri(peer->tls));
   if(peerTrace) nbLogMsg(context,0,'T',"nbPeerSend: called with peer=%p SD=%d size=%d flags=%x",peer,peer->tls->socket,size,peer->flags);
@@ -570,9 +571,10 @@ int nbPeerSend(nbCELL context,nbPeer *peer,void *data,int size){
   if(peerTrace) nbLogMsg(context,0,'T',"nbPeerSend: made it past bail out conditions");
   // put message in buffer
   memcpy(peer->wloc+2,data,size);
-  *peer->wloc=mysize>>8;
+  mysize=size+2;               // 2013-01-01 eat - VID 5268-0.8.13-1 FP but changed data type and moved here from init
+  *peer->wloc=mysize>>8;       // 2013-01-01 eat - VID 5376-0.8.13-1 FP but changed data type of mysize from int to uint16_t
   peer->wloc++;
-  *peer->wloc=mysize&0xff;
+  *peer->wloc=mysize%256;      // 2013-01-01 eat - VID 4614,4849-0.8.13-1 FP but changed from &0xff to %256 and data type
   peer->wloc++;
   peer->wloc+=size;
   if(!(peer->flags&NB_PEER_FLAG_WRITE_WAIT)){

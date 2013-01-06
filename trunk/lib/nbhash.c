@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -38,7 +38,7 @@
 *   #include "nbhash.h"
 *
 *   void *initHash();
-*   struct HASH *newHash(long modulo);
+*   struct HASH *newHash(int modulo);
 *   void destroyHash(struct HASH *hash);
 *
 * Description
@@ -74,6 +74,7 @@
 * 2002-08-31 Ed Trettevik (split out in 0.4.1)
 * 2010-02-28 eat 0.4.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
+* 2012-12-31 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -82,12 +83,14 @@ struct TYPE *typeHash;
 /* 
 *  Hash constructor 
 */
-struct HASH *newHash(long modulo){
+struct HASH *newHash(size_t modulo){  // 2012-12-31 eat - VID 4547 - long to size_t, vectsize int to long
   /*
   *  Create a new hashing vector
   */
   struct HASH *hash;
-  int vectsize=modulo*sizeof(void *);
+  long vectsize;
+  if(modulo>LONG_MAX/sizeof(void *)) nbExit("newHash: Logic error - modulo exceeds limit of %ld - terminating",LONG_MAX/sizeof(void *));
+  vectsize=modulo*sizeof(void *);
   hash=nbAlloc(sizeof(struct HASH)+vectsize);
   hash->object.next=NULL;
   hash->object.type=typeHash;

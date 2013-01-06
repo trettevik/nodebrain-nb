@@ -69,13 +69,15 @@ typedef struct NB_TLS_CONTEXT{  // TLS Context
   void *handle;                 // user data handle
   } nbTLSX;
 
+#define NB_TLS_URIMAP_BOUND  4
+
 typedef struct NB_TLS_HANDLE{   // TLS Handle
   int option;                   // see NB_TLS_OPTION_*
   int socket;                   // socket
   int error;                    // last error code
   unsigned char uriIndex;       // uri we are using
   unsigned char uriCount;       // number of uri values
-  nbTlsUriMap uriMap[4];        // uri mapping 
+  nbTlsUriMap uriMap[NB_TLS_URIMAP_BOUND];  // uri mapping 
   nbTLSX *tlsx;
   SSL *ssl;
   void *handle;                 // user data handle

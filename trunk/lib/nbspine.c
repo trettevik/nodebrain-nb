@@ -52,6 +52,7 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 * 2012-10-13 eat 0.8.12 Switched to nb header
 * 2012-12-27 eat 0.8.13 Checker updates
+* 2013-01-01 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nb.h>
@@ -261,19 +262,23 @@ nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cld
   char parmbuf[NB_BUFSIZE];
   int  argc=0,i;
   char *argv[20];
-  char *curStart,*curEnd,*curBuf;
+  char *cursor,*delim;
   nbCHILD child;
 
+  if(!(options&NB_CHILD_SHELL) && strlen(parms)>sizeof(parmbuf)){   // 2013-01-01 eat - VID 4613,5380,5423-0.8.13-1
+    sprintf(msg,"Parm string is exceeds limit of %d - not spawning child",NB_BUFSIZE-1);
+    return(NULL);
+    }
   //outMsg(0,'T',"nbChildOpen() options=%x",options);
 #if !defined(mpe) && !defined(ANYBSD)
   if((pid=vfork())<0){
 #else
   if((pid=fork())<0){
 #endif
-    sprintf(msg,"Unable to create child process. errno=%d",errno);
+    sprintf(msg,"Unable to create child process - %s",strerror(errno));
     return(NULL);
     }
-  if(pid>0){
+  if(pid>0){   // parent process
     sprintf(msg,"child pid %d",pid);
     close(cldin);  // close the files in the parent process
     close(cldout);
@@ -282,7 +287,7 @@ nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cld
     child->pid=pid;
     return(child);
     }
-  else{
+  else{  // child process
     // 2012-12-27 eat 0.8.13 - CID 751527 - testing return from fcntl
     close(0);
     if(dup2(cldin,0)!=0) fprintf(stderr,"cldin dup to stdin failed\n"); 
@@ -337,7 +342,7 @@ nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cld
       }
     if(options&NB_CHILD_SHELL){
       if(pgm==NULL || *pgm==0) pgm="/bin/sh";
-      execl(pgm,pgm,"-c",parms,NULL);
+      execl(pgm,pgm,"-c",parms,NULL);  // 2013-01-01 eat - VID 784-0.8.13-1 Intentional user specified command
       }
     else{  // parse the program and parameters and build argv[]
       if(pgm==NULL || *pgm==0) pgm="/usr/local/bin/nb";
@@ -345,47 +350,39 @@ nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cld
       //   If a parameter starts with '"', it is delimited by an unescaped '"'
       //   otherwise it is delimited by a space and may contain quotes
       //   An unbalanced quote is delimited by end of string
-      curBuf=parmbuf;
       argv[argc]=pgm;
       argc++;
-      curStart=parms; 
-      while(*curStart==' ') curStart++;
-      while(*curStart!=0){
-        argv[argc]=curBuf;
-        if(*curStart=='"'){
-          curStart++;
-          if((curEnd=strchr(curStart,'"'))==NULL)
-            curEnd=strchr(curStart,0); // this is actually a syntax error
-          while(curEnd!=curStart && *(curEnd-1)=='\\'){ // handle escaped quotes
-            curEnd--;
-            // We need to check for a stack buffer overflow here
-            // if(curBuf+(curEnd-curStart)>(parmbuf+sizeof(parmbuf))) - error
-            strncpy(curBuf,curStart,curEnd-curStart);
-            curBuf+=curEnd-curStart;
-            *curBuf='"';
-            curBuf++;
-            curStart=curEnd+2;
-            curEnd=strchr(curStart,'"');
+      strcpy(parmbuf,parms);  // Take a copy so we can chop it up with null terminators for each parm - length checked above
+      cursor=parmbuf;          // 2013-01-01 eat - VID 4613,5380,5423-0.8.13-1 Changed this code to just work within parmbuf
+      while(*cursor==' ') cursor++;
+      while(*cursor){
+        if(*cursor=='"'){
+          cursor++;
+          argv[argc]=cursor;
+          delim=strchr(cursor,'"');
+          if(!delim) delim=cursor+strlen(cursor); // this is actually a syntax error
+          else while(delim>cursor && *(delim-1)=='\\'){ // handle escaped quotes
+            strcpy(delim-1,delim);     // consume the escape - always have room
+            delim=strchr(cursor,'"');
+            if(!delim) delim=cursor+strlen(cursor);
             }
-          strncpy(curBuf,curStart,curEnd-curStart);
           }
         else{
-          if((curEnd=strchr(curStart,' '))==NULL)
-            curEnd=strchr(curStart,0);
-          strncpy(curBuf,curStart,curEnd-curStart);
+          argv[argc]=cursor;
+          delim=strchr(cursor,' ');
+          if(!delim) delim=cursor+strlen(cursor);
+          
           }
-        curBuf+=curEnd-curStart;
-        *curBuf=0;
-        curBuf++;
-        if(*curEnd){
-          curStart=curEnd+1;
-          while(*curStart==' ') curStart++;
+        cursor=delim;
+        if(*cursor){
+          *cursor=0;
+          cursor++;
+          while(*cursor==' ') cursor++;
           }
-        else curStart=curEnd;
         argc++;
         }
       argv[argc]=NULL;
-      execvp(pgm,argv);
+      execvp(pgm,argv);  // 2013-01-01 eat - VID 684-0.8.13-1 Intentional
       }
     _exit(0);
     }  

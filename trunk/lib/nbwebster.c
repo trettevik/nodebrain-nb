@@ -146,6 +146,7 @@
 * 2012-12-25 eat 0.8.13 - AST 49,50,51 - removed Webster versions from Server header
 * 2012-12-25 eat 0.8.13 - AST 8 - switch charset to local character set (e.g. UTC-8)
 * 2012-12-27 eat 0.8.13 - Checker updates
+* 2013-01-01 eat 0.8.13 - Checker updates
 *==============================================================================
 */
 #include <nb/nbi.h>
@@ -471,7 +472,7 @@ static void nbWebsterError(nbCELL context,nbWebSession *session,char *text){
   int contentLength;
   nbProxyPage *page;
   void *data;
-  int   size;
+  size_t size;
   int len;
   char *html=    // 2012-12-25 eat - AST 7 - removed client supplied resource from reply html
     "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n"
@@ -514,7 +515,7 @@ static void nbWebsterError(nbCELL context,nbWebSession *session,char *text){
 static void nbWebsterBadRequest(nbCELL context,nbWebSession *session,char *text){
   nbProxyPage *page;
   void *data;
-  int   size;
+  size_t size;
   int   len;
   char *html=    // 2012-12-25 eat - AST 28 - removed client supplied request from the reply html
     "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n"
@@ -555,7 +556,7 @@ static void webContentHeading(nbCELL context,nbWebSession *session,char *code,ch
   time_t currentTime;
   nbProxyPage *page;
   void *data;
-  int   size;
+  size_t size;
   char *connection="keep-alive";
   int len;
 
@@ -593,7 +594,7 @@ static int nbWebsterCgiCloser(nbPROCESS process,int pid,void *processSession){
   time_t currentTime;
   nbProxyPage *page;
   void *data;
-  int size;
+  size_t size;
   int length=0;
   char *code="200 OK";
   char *type="text"; // need to get his from the cgi returned header
@@ -783,7 +784,7 @@ static int nbWebsterFileProducer(nbCELL context,nbProxy *proxy,void *handle){
   int len;
   nbProxyPage *page;
   void *data;
-  int   size;
+  size_t size;
 
   if(!session->fd){
     nbLogMsg(context,0,'L',"nbWebsterFileProducer: called without session->fd set");
@@ -806,7 +807,7 @@ static int nbWebsterFileProducer(nbCELL context,nbProxy *proxy,void *handle){
 static void nbWebsterResourceNotFound(nbCELL context,nbWebServer *webster,nbWebSession *session){
   nbProxyPage *page;
   void *data;
-  int   size;
+  size_t size;
   int   len;
   char *html=   // 2012-12-25 eat - AST 36 - removed client supplied resource from html reply
     "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n"
@@ -865,7 +866,7 @@ static void nbWebsterServe(nbCELL context,nbWebServer *webster,nbWebSession *ses
   int contentLength;
   nbProxyPage *page;
   void *data;
-  int   size;
+  size_t size;
   int rc;
   int len;
 
@@ -1051,7 +1052,7 @@ static void nbWebsterServe(nbCELL context,nbWebServer *webster,nbWebSession *ses
 static void webRequirePassword(nbCELL context,nbWebSession *session){
   nbProxyPage *page;
   void *data;
-  int   size;
+  size_t size;
   int   len;
   char *html=
     "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n"
@@ -1066,7 +1067,7 @@ static void webRequirePassword(nbCELL context,nbWebSession *session){
     "browser doesn't understand how to supply\n"
     "the credentials required.<P>\n"
     "<HR>\n"
-    "<ADDRESS>NodeBrain Webster</ADDRESS>\n"
+    "<ADDRESS>NodeBrain Webster Server</ADDRESS>\n"
     "</BODY></HTML>\n\n";
   char *response=
     "HTTP/1.1 401 Authorization Required\r\n"
@@ -1457,6 +1458,7 @@ nbWebServer *nbWebsterOpen(nbCELL context,nbCELL siteContext,void *handle,
   delim=webster->dir;
   while((delim=strchr(delim,'\\'))!=NULL) *delim='/',delim++; // Unix the path
   webster->rootdir=strdup(webster->dir);
+  if(!webster->rootdir) nbExit("nbWebsterOpen: out of memory"); // 2013-01-01 eat - VID 5327-0.8.13-1
   webster->userTree=NULL;
   webster->resource=(nbWebResource *)nbAlloc(sizeof(nbWebResource));
   memset(webster->resource,0,sizeof(nbWebResource));
@@ -1465,6 +1467,10 @@ nbWebServer *nbWebsterOpen(nbCELL context,nbCELL siteContext,void *handle,
 
 char *nbWebsterGetConfig(nbCELL context,nbWebServer *webster){
   return(webster->config);
+  }
+
+char *nbWebsterGetRootDir(nbCELL context,nbWebServer *webster){
+  return(webster->rootdir);
   }
 
 void *nbWebsterGetHandle(nbCELL context,nbWebSession *session){
@@ -1492,6 +1498,7 @@ char *nbWebsterGetCookies(nbCELL context,nbWebSession *session){
 void nbWebsterSetCookies(nbCELL context,nbWebSession *session,char *cookies){
   if(session->cookiesOut) free(session->cookiesOut);
   session->cookiesOut=strdup(cookies);
+  if(!session->cookiesOut) nbExit("out of memory"); // 2013-01-01 eat - VID 5453-0.8.13-1
   }
 
 void nbWebsterSetType(nbCELL context,nbWebSession *session,char *type,char *subtype){
@@ -1507,34 +1514,37 @@ void nbWebsterSetExpires(nbCELL context,nbWebSession *session,int seconds){
 *  Enable Web Server
 */
 int nbWebsterEnable(nbCELL context,nbWebServer *webster){
-  char *transport;
-  char *protocol="HTTPS";
+  //char *transport;
+  //char *protocol="HTTPS";
   char rootdir[2048];
   char *accessListFile;
   char *filterFilename;
-  //char uri[512];
+  int len;
 
   // get options
   webster->rootdir=strdup(nbTermOptionString(context,"DocumentRoot","web"));
   if(*webster->rootdir!='/'){
-    sprintf(rootdir,"%s/%s",webster->dir,webster->rootdir);
+    len=snprintf(rootdir,sizeof(rootdir),"%s/%s",webster->dir,webster->rootdir);
+    if(len>=sizeof(rootdir)){
+      nbLogMsg(context,0,'E',"nbWebsterEnable: DocumentRoot path is too long for buffer - max=%d",sizeof(rootdir)-1);
+      return(1);
+      }
     free(webster->rootdir);
     webster->rootdir=strdup(rootdir);
     }
-  nbLogMsg(context,0,'T',"DocumentRoot=%s",webster->rootdir);
+  //nbLogMsg(context,0,'T',"DocumentRoot=%s",webster->rootdir);
 
   webster->config=strdup(nbTermOptionString(context,"Config",""));
   webster->indexPage=nbTermOptionString(context,"IndexPage","index.html");
   webster->indexQuery=nbTermOptionString(context,"IndexQuery",NULL);
-  transport=strdup(nbTermOptionString(context,"Protocol","HTTPS"));
-  if(strcmp(transport,"HTTP")==0){
-    protocol="HTTP";
-    webster->authenticate=strdup(nbTermOptionString(context,"Authenticate","no"));
-    }
-  else{  // change to function call ctx=getSSLContext(context);
+  //transport=strdup(nbTermOptionString(context,"Protocol","HTTPS"));
+  //if(strcmp(transport,"HTTP")==0){
+  //  protocol="HTTP";
+  //  webster->authenticate=strdup(nbTermOptionString(context,"Authenticate","no"));
+  //  }
+  //else{  // change to function call ctx=getSSLContext(context);
 
-    webster->authenticate=strdup(nbTermOptionString(context,"Authenticate","yes"));
-    }
+  webster->authenticate=strdup(nbTermOptionString(context,"Authenticate","yes"));
 
 //  webster->ctx=ctx;
 
@@ -1545,7 +1555,7 @@ int nbWebsterEnable(nbCELL context,nbWebServer *webster){
   // Set up forwarding if specified
   webster->forwardContext=nbTermLocateHere(webster->siteContext,"forward"); // see if we need to forward
   if(webster->forwardContext){
-    webster->forwardUri=nbTermOptionString(webster->forwardContext,"uri","");
+    webster->forwardUri=nbTermOptionString(webster->forwardContext,"uri","https://0.0.0.0:49443");
     if(!*webster->forwardUri){
       nbLogMsg(context,0,'E',"nbWebsterEnable: uri not defined in forward context");
       return(1);
@@ -1630,8 +1640,8 @@ nbWebResource *nbWebsterFindResource(nbCELL context,nbWebServer *webster,char *n
 
   cursor=name;
   while(*cursor!=0){
-    delim=strchr(cursor,'/');
-    if(!delim) delim=strchr(cursor,0);
+    delim=strchr(cursor,'/'); 
+    if(!delim) delim=cursor+strlen(cursor); // 2013-01-01 eat - VID 5451-0.8.13-1 FP but changed from delim=strchr(cursor,'/'); to help checker
     len=delim-cursor;
     if(len>=sizeof(qualifier)){
       nbLogMsg(context,0,'E',"Web resource path contains qualifier larger than buffer size at-->%s",cursor);
@@ -1723,7 +1733,7 @@ char *nbWebsterGetParamNext(nbCELL context,nbWebSession *session,char *param,cha
 
 int *nbWebsterPut(nbCELL context,nbWebSession *session,void *buffer,int len){
   void *data;
-  int   size;
+  int size;
 
   size=nbProxyBookWriteWhere(context,&session->book,&data);
   while(len>size){
@@ -1740,8 +1750,8 @@ int *nbWebsterPut(nbCELL context,nbWebSession *session,void *buffer,int len){
 
 int *nbWebsterPutText(nbCELL context,nbWebSession *session,char *text){
   void *data;
-  int   size;
-  int   len=strlen(text);
+  size_t size;
+  size_t len=strlen(text);
 
   size=nbProxyBookWriteWhere(context,&session->book,&data);
   while(len>size){
@@ -1771,7 +1781,7 @@ int *nbWebsterReply(nbCELL context,nbWebSession *session){
   time_t currentTime,expiresTime;
   nbProxyPage *page;
   void *data;
-  int size;
+  size_t size;
   int length=0;
   char *code="200 OK";
   //char *type="text"; // need to get his from the cgi returned header

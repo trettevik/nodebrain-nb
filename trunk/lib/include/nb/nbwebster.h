@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2007-2012 The Boeing Company
+* Copyright (C) 2007-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -40,6 +40,7 @@
 * 2012-02-16 eat 0.8.7 - included nb_websterTrace
 * 2012-05-11 eat 0.8.9 - replace keepAlive flag with close flag
 * 2012-05-16 eat 0.8.9 - include forwardTlsx and forwardUri for reuse
+* 2012-12-30 eat 0.8.13 Included nbWebsterGetRootDir function
 *==============================================================================
 */
 
@@ -129,7 +130,7 @@ typedef struct NB_WEB_SESSION{    // Web Session
   char             reqcn[128];    // X509 certificate common name for valid certificate
   char             reqhost[512];  // request host
   char             reqauth[512];  // request authentication (basic - base64 encoded "user:password"
-  char             userid[32];    // user id
+  char             userid[64];    // user id
   char            *resource;      // requested resource - points into request
   char            *queryString;   // query string - points into request
   char            *headerfields;  // http message header fields - points into request
@@ -152,6 +153,7 @@ extern int nbWebsterRegisterResource(nbCELL context,nbWebServer *webster,char *n
   int (*handler)(nbCELL context,struct NB_WEB_SESSION *session,void *handle));
 extern nbWebResource *nbWebsterFindResource(nbCELL context,nbWebServer *webster,char *name);
 extern char *nbWebsterGetConfig(nbCELL context,nbWebServer *webster);
+extern char *nbWebsterGetRootDir(nbCELL context,nbWebServer *webster);
 
 extern void *nbWebsterGetHandle(nbCELL context,nbWebSession *session);
 extern void *nbWebsterGetSessionHandle(nbCELL context,nbWebSession *session);
@@ -171,3 +173,4 @@ extern void nbWebsterSetType(nbCELL context,nbWebSession *session,char *type,cha
 extern void nbWebsterSetExpires(nbCELL context,nbWebSession *session,int seconds);
 extern char *nbWebsterParameterEncode(nbCELL context,nbWebSession *session,char *plain,char *encoded,int len);
 extern char *nbWebsterParameterDecode(nbCELL context,nbWebSession *session,char *encoded,char *plain,int len);
+

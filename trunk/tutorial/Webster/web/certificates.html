@@ -88,15 +88,14 @@ Now kill your webster2 process and execute webster3.
 The webster3 script looks like this.
 <ul>
 <pre>
-#!/usr/local/bin/nb -d
+#!/usr/bin/nb -d
 # File: tutorial/Webster/webster3
 -rm log/webster.log
 set log="log/webster.log";
-define webster node webster("default@0.0.0.0:62443");
-webster. define Protocol     cell "<b>HTTPS</b>"; # Default is "HTTPS"
+define webster node webster;
+webster. define uri cell "http://0.0.0.0:62443";
+webster. define option cell "cert";
 webster. define Authenticate cell "password";   # Default is "yes"
-webster. define AccessList   cell "security/AccessList.conf";
-webster. define DocumentRoot cell "web";    # Default is "web"
 </pre>
 </ul>
 
@@ -109,20 +108,6 @@ When using a self signed certificate,
 your browser will not recognize your server certificate as having been signed by a trusted certificate authority,
 so you will need to respond to your browser's complaints and tell it to trust your certificate.
 You should view the certificate displayed by your browser before accepting it.
-<p>
-Now let's clean up our script by removing default parameters.
-Kill your webster3 process and start webster4, which looks like this.
-
-<ul>
-<pre>
-#!/usr/local/bin/nb -d
-# File: tutorial/Webster/webster4
--rm log/webster.log
-set log="log/webster.log";
-define webster node webster("default@0.0.0.0:62443");
-webster. define Authenticate cell "password";   # Default is "yes"
-</pre>
-</ul>
 
 Now you have a secure configuration. Still using passwords for user authentication, but at least
 now the passwords are encrypted when sent to the server.
@@ -160,15 +145,16 @@ openssl pkcs12 -export -in browser.crt -out browser.p12 -inkey ServerKey.pem -na
 Import browser.p12 into your browser following the instructions for your browser.
 
 <p>
-Now you can kill your webster4 process and run webster5.  It looks like this.
+Now you can kill your webster3 process and run webster4.  It looks like this.
 
 <ul>
 <pre>
-#!/usr/local/bin/nb -d
-# File: tutorial/Webster/webster5
+#!/usr/bin/nb -d
+# File: tutorial/Webster/webster4
 -rm log/webster.log
 set log="log/webster.log";
 <b>define webster node webster("default@0.0.0.0:62443");</b>
+<b>webster. define uri cell "https://0.0.0.0:62443";</b>
 </pre>
 </ul>
 
@@ -194,7 +180,7 @@ a,<i>common-name</i>;
 
 <hr>
 <span class='foot'>NodeBrain(TM) is a trademark of The Boeing Company.<br>
-Copyright &copy; 2009  The Boeing Company<br>
+Copyright &copy; 2009-2013  The Boeing Company<br>
 </span>
 
 </td></tr></table>

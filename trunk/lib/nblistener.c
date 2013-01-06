@@ -88,6 +88,7 @@
 * 2012-01-31 dtl 0.8.6  Checker updates
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 * 2012-12-27 eat 0.8.13 Checker updates
+* 2012-12-31 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -328,12 +329,11 @@ extern int nbListenerStart(nbCELL context){
       }
     // change root directory (jail) if requested
     if(*servejail!=0){
-//    if(chroot(servejail)<0){
-      if(chroot(servejail)>=0) chdir(servejail); //2012-01-31 dtl: added chdir for safe 
-      else{
-        outMsg(0,'E',"Unable to change root directory to %s - errno=%d",servejail,errno);
+      if(chroot(servejail)<0){
+        outMsg(0,'E',"Unable to change root directory to %s - %s",servejail,strerror(errno));
         exit(NB_EXITCODE_FAIL);
         }
+      chdir("/");  // 2012-12-31 eat - VID 530-0.8.13-01  
       outMsg(0,'I',"Root directory changed to %s",servejail);
       }
     // switch group if requested

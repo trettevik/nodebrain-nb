@@ -203,7 +203,7 @@ void nbwServiceStopped(void){
 */
 
 VOID WINAPI nbwServiceStart(DWORD argc,LPTSTR *argv){
-	DWORD   status = 0;
+  DWORD   status = 0;
   DWORD   specificError = 0xfffffff;
 	char startupLog[strSize];
   char outdir[512],logname[512];

@@ -200,33 +200,83 @@ A Webster module provides administrators with an HTTPS interface to NodeBrain ag
 @cartouche
 @b{Syntax}
 @multitable {-----------------------------} {----------------------------------------------------------------}	   
-@item @i{websterDefinition} @tab ::= @b{define} @ringaccent{s} @i{term} @ringaccent{s} @b{node} [@ringaccent{s} @i{websterSpec} ] @bullet{} 	   
-@item @i{websterSpec}       @tab ::= @b{webster (}@i{websterOptions} @b{)} 	   
+@item @i{websterDefinition} @tab ::= @b{define} @ringaccent{s} @i{term} @ringaccent{s} @b{node} [@ringaccent{s} @b{"} @i{identity} @b{"} ] [;] @bullet{} 	   
+@item @i{identity}          @tab ::= Identity for commands issued by the webster node.
+@item @i{cellOption}        @tab ::= @i{term}. define @i{option} @b{cell} @i{value} [;] @bullet{}
+@item @i{textOption}        @tab ::= @i{term}. define @i{websterModuleOption} @b{text:} @i{value} @bullet{}
+@item @i{option}            @tab ::= @i{tlsApiOption} | @i{websterApiOption} | @i{websterModuleOption}
+@item @i{tlsApiOption}      @tab ::= See list below
+@item @i{websterApiOption}  @tab ::= See list below
+@item @i{websterModuleOption} @tab ::= See list below
 @end multitable			 
 @end cartouche
 
-The following options may be specified.
+The following NodeBrain TLS API options are specified as cells within the context of a Webster node.
 @multitable {------------------------} {------------------------------------------------------------------------}
 @item @b{Option}           @tab @b{Description}	   
-@item Interface            @tab Server socket interface binding
-@item                      @tab Default: 0.0.0.0	   
-@item Port                 @tab Server socket port binding
-@item                      @tab Default: 443	   
-@item DocumentRoot         @tab Root directory for web pages
-@item                      @tab Default: webster	   
-@item Protocol             @tab Transport layer security – If "no," use HTTP, else HTTPS.
-"HTTPS" | "TLS" | "SSLv3" | "SSLv2" | "HTTP"
-@item                      @tab Default: "HTTPS" [TLS, SSLv3, and SSLv2]	   
-@item Authenticate         @tab Authentication option "yes" | "certificate" | "password" | "no"
-@item                      @tab Default: yes [HTTPS] (either certificate or password)
-@item                      @tab Default: no [HTTP]	   
-@item TrustedCertificates  @tab Default: security/TrustedCertificates.pem	   
-@item ServerCertificate	   @tab Default: security/ServerCertificate.pem	   
-@item ServerKey	           @tab Default: security/ServerKey.pem	   
-@item Password("@i{user}") @tab Password lookup table used when password authentication is requested or used as a secondary method.	   
-@item Role("@i{user}")     @tab Role of authenticated user. Here "user" is either a common name (CN) from the x.509 certificate, or the name entered with a password.	   
-@item Identity("@i{user}") @tab Identity used when issuing NodeBrain commands. 	   
+@item uri                  @tab Protocol, interface, and port
+@item                      @tab Default: "https://0.0.0.0:49443"
+@item option               @tab Authentication option
+@item                      @tab Default: "CERTS"
+@item timeout              @tab Read timeout seconds
+@item                      @tab Default: 5
+@item keyfile              @tab File containing the server key
+@item                      @tab Default: "security/ServerKey.pem"
+@item certfile             @tab File containing the server certificate
+@item                      @tab Default: "security/ServerCert.pem"
+@item trustfile            @tab File containing the server key
+@item                      @tab Default: "security/TrustedCertificates.pem"
 @end multitable
+
+The following NodeBrain Webster API options are specified as cells within the context of a Webster node.
+@multitable {------------------------} {------------------------------------------------------------------------}
+@item @b{Option}           @tab @b{Description}
+@item Filter               @tab NodeBrain translator used as web application filter
+@item                      @tab Define: -none-
+@item DocumentRoot         @tab Root directory for web pages
+@item                      @tab Default: "web"	   
+@item IndexPage            @tab Page selected by default when resource is a directory
+@item                      @tab Default: "index.html"
+@item IndexQuery           @tab Parameters if the IndexPage accepts them (e.g. cgi script)
+@item                      @tab Default: -none-
+@item Authenticate         @tab Authentication option "yes" | "certificate" | "password" | "no"
+@item                      @tab Default: "yes"
+@item AccessList           @tab Access control list file [deprecated - see Authorize]
+@item                      @tab Default: "security/AccessList.conf"
+@item Config               @tab Configuration file name - see next block of options below
+@item                      @tab Default: ""
+@end multitable
+
+The following Webster module options are specified as string or text cells within the context of a Webster node.
+
+@multitable {------------------------} {------------------------------------------------------------------------}
+@item @b{Option}           @tab @b{Description}
+@item Title                @tab Title displayed in the center of a Webster page heading
+@item                      @tab Default: "MyCaboodle"
+@item Link                 @tab Link associated with the title in Webster page heading
+@item                      @tab Default: "http://nodebrain.org"
+@item Menu                 @tab Menu displayed in top right area of Webster page heading
+@item                      @tab Default: "<a href=':page'>Webster</a>"
+@item Version              @tab Application version number to display in Webster page heading
+@item                      @tab Default: ""
+@end multitable
+
+When Webster module options are specified in a configuration file identified by the @code{Config} option and
+illustrated below, the values
+specified in the configuration file override values specified as cells. 
+
+@cartouche
+@smallexample
+# Comment lines start with "#".
+# Blank lines are allowed
+Title="MyCaboodle";
+Version="";
+Link="http://nodebrain.org";
+Menu="<a href=':page">Webster</a>";
+@end smallexample
+@end cartouche
+
+One reason you want to use a configuration file is to share these options with cgi scripts.
 
 @node Triggers
 @chapter Triggers

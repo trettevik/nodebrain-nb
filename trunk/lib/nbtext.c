@@ -115,7 +115,7 @@ NB_Text *nbTextLoad(char *fileName){
   long len;
   short size;
   char *buf;
-  fp=fopen(fileName,"r");
+  fp=fopen(fileName,"r");   // 2013-01-01 eat - VID 5420-0.8.13-1 Intentional
   if(fp==NULL){
     outMsg(0,'E', "Can't open text file %s",fileName);
     return(NULL);
@@ -157,6 +157,6 @@ NB_Text *nbTextCreate(char *textStr){
 
   size=sizeof(NB_Text)+strlen(textStr);
   text=(NB_Text *)newObject(textType,NULL,size);
-  strncpy(text->value,textStr,strlen(textStr)+1); 
+  strcpy(text->value,textStr); // 2013-01-01 eat - VID 5421-0.8.13-01 FP - simplified by replacing strncpy with strcpy 
   return(text);
   }

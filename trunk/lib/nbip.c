@@ -55,6 +55,7 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 * 2012-12-15 eat 0.8.13 Checker updates
 * 2012-12-27 eat 0.8.13 Checker updates
+* 2012-12-31 eat 0.8.13 Checker updates
 *=====================================================================
 */
 #include <nb/nbi.h>
@@ -75,7 +76,7 @@ char *nbIpGetName(unsigned int ipaddr,char *name,size_t len){
   if(len<8) outMsg(0,'L',"nbIpGetName: hostname buffer must be at least 8 bytes - len=",len);
   else if((host=gethostbyaddr((char *)&ipaddr,sizeof(ipaddr),AF_INET))==NULL)
     outMsg(0,'E',"unable to get host name");
-  else if(strlen(host->h_name)<len) strcpy(name,host->h_name); // 2012-10-17 eat - checker updates here
+  else if(strlen(host->h_name)<len) strcpy(name,host->h_name); // 2012-10-17 eat - checker updates here  // 2012-12-31 eat - VID 5455-0.8.13-1 FP
   else{
     strncpy(name,host->h_name,len-1);
     *(name+len-1)=0;
@@ -249,8 +250,11 @@ unsigned int nbIpGetUdpServerSocket(NB_Cell *context,char *addr,unsigned short p
 #if !defined(WIN32)
   else{  // handle local (unix) domain sockets
     un_addr.sun_family=AF_UNIX;
-    strcpy(un_addr.sun_path,addr);
-    unlink(addr);
+    //strcpy(un_addr.sun_path,addr);
+    snprintf(un_addr.sun_path,sizeof(un_addr.sun_path),addr); // 2012-12-31 eat - VID 4953-0.8.13-1 - truncating if necessary
+    if(unlink(addr)){ // 2012-12-31 eat - VID 5130-0.8.13-1
+      outMsg(0,'W',"nbIpGetUdpServerSocket: Unable to unlink before bind - %s",strerror(errno));
+      }
     if(bind(server_socket,(struct sockaddr *)&un_addr,sizeof(un_addr))<0){
       outMsg(0,'E',"nbIpGetUdpServerSocket: Unable to bind to local domain socket %s. errno=%d",addr,errno);
       nbIpCloseSocket(server_socket);
@@ -270,7 +274,7 @@ int nbIpGetDatagram(NB_Cell *context,int socket,unsigned int *raddr,unsigned sho
   int len;
 
   sockaddrlen=sizeof(client);
-  len=recvfrom(socket,buffer,length,0,(struct sockaddr *)&client,&sockaddrlen);
+  len=recvfrom(socket,buffer,length,0,(struct sockaddr *)&client,&sockaddrlen); // 2012-12-31 eat - VID 640-0.8.13-1 FP
   if(len<0){
     if(errno!=EINTR){
       outMsg(0,'E',"nbIpGetDatagram: recvfrom failed. errno=%d",errno);
@@ -552,7 +556,7 @@ int nbIpListen(char *addr,unsigned short port){
     if(*addr==0) in_addr.sin_addr.s_addr=INADDR_ANY;
     else in_addr.sin_addr.s_addr=inet_addr(addr);
     if (bind(server_socket,(struct sockaddr *)&in_addr,sizeof(in_addr)) < 0) {
-      outMsg(0,'E',"nbIpListen: Unable to bind to inet domain socket %d. errno=%d",port,errno);
+      outMsg(0,'E',"nbIpListen: Unable to bind to inet domain socket on port %d - %s",port,strerror(errno));
       nbIpCloseSocket(server_socket);
       return(-1);
       }
@@ -561,9 +565,11 @@ int nbIpListen(char *addr,unsigned short port){
   else{  // handle local (unix) domain sockets
     un_addr.sun_family=AF_UNIX;
     strcpy(un_addr.sun_path,addr);
-    unlink(addr);
+    if(unlink(addr)){ // 2012-12-31 eat - VID 738-0.8.13-1
+      outMsg(0,'W',"nbIpListen: Unable to unlink before bind - %s",strerror(errno));
+      }
     if(bind(server_socket,(struct sockaddr *)&un_addr,sizeof(un_addr))<0){
-      outMsg(0,'E',"nbIpListen: Unable to bind to local domain socket %s. errno=%d",addr,errno);
+      outMsg(0,'E',"nbIpListen: Unable to bind to local domain socket %s - %s",addr,strerror(errno));
       nbIpCloseSocket(server_socket);
       return(-1);
       }
@@ -666,19 +672,18 @@ int nbIpPut(NB_IpChannel *channel,char *buffer,int len){
 *     x8000 Off - Conversation
 *           On  - Message
 */
-int nbIpPutMsg(NB_IpChannel *channel,char *buffer,int len){
+int nbIpPutMsg(NB_IpChannel *channel,char *buffer,size_t len){ // 2012-12-31 eat - VID 4735,5047,5132-0.8.13-1 - len from int to size_t
   int sent;
   unsigned char packet[NB_BUFSIZE];
 
-  if(len>4094){
-    outMsg(0,'E',"chput: Length %u too large.",len);
+  if(len>4094 || len>sizeof(packet)-2){
+    outMsg(0,'L',"nbIpPutMsg: Length %u too large.",len);
     return(-1);
     }
   *(packet)=(len>>8)|0x80;
   *(packet+1)=len&255;
-  if (len>0 && len<(NB_BUFSIZE-2)) memcpy(packet+2,buffer,len);  //2012-01-09 dtl: validated len
-  else {outMsg(0,'E',"chput: Length %u out of bound.",len);return(-1);} //dtl: skip invalid len
-  outMsg(0,'T',"chputmsg() len=%u ",len);
+  memcpy(packet+2,buffer,len);  // 2012-12-31 eat - VID 763-0.8.13-1 FP - unless it goes away from type change above
+  outMsg(0,'T',"nbIpPutMsg: len=%u ",len);
   len+=2;
   sent=send(channel->socket,packet,len,0);
   while(sent==-1 && errno==EINTR){

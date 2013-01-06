@@ -342,9 +342,7 @@ void nbNodeInit(NB_Stem *stem){
   nb_NodeType->showReport=&nbNodeShowReport;
   nb_NodeType->alarm=&alarmNode;
 
-  //nb_SkillHash=newHash(13); /* initialize skill hash */
   nb_SkillGloss=nbTermNew(NULL,"skill",nbNodeNew());
-  //nb_SkillGloss->terms=(NB_Term *)nb_SkillHash;
   skillType=newType(stem,"skill",NULL,0,printSkill,destroySkill);
   facetType=newType(stem,"facet",NULL,0,NULL,NULL);
   }

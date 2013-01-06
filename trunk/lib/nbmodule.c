@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -110,6 +110,7 @@
 * 2012-02-06 dtl Checker updates
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 * 2012-12-15 eat 0.8.13 Checker updates
+* 2012-12-31 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -377,11 +378,8 @@ void *nbModuleSearch(char *path,char *filename,char *msg){
 **********************************************************************/
 void nbModuleInit(NB_Stem *stem){
   nb_ModuleFree=NULL;
-  //moduleH=newHash(13);  /* initialize module hash */
-  //moduleType=newType(stem,"module",moduleH,0,printModule,destroyModule);
   moduleType=newType(stem,"module",NULL,0,printModule,destroyModule);
   moduleC=nbTermNew(NULL,"module",nbNodeNew());
-  //moduleC->terms=(NB_Term *)moduleH;
   }
 
 NB_Term *nbModuleLocate(char *ident){
@@ -550,28 +548,21 @@ void nbModuleBind(nbCELL context,char *name,char *msg){
 void *nbModuleSymbol(NB_Term *context,char *ident,char *suffix,void **moduleHandleP,char *msg){
   NB_Term *term;
   struct NB_MODULE *module;
-  char *cursor=ident,modName[256],symName[256];
+  char *delim,modName[256],symName[256],*sym=ident;
   void *(*symbol)();
-  int n;
+  size_t size;
 
-//2012-01-26 dtl updated this if block: strcpy, strncpy, added test:
-  while(*cursor!='.' && *cursor!=0) cursor++; //search for '.'
-  if(*cursor=='.'){   //if '.' found, cursor position is valid
-//  strncpy(modName,ident,cursor-ident);
-//  *(modName+(cursor-ident))=0;
-    if((n=cursor-ident)<sizeof(modName)){strncpy(modName,ident,n);*(modName+n)=0;} //dtl: added check
-    else {strncpy(modName,ident,255);*(modName+255)=0;} //dtl: added to handle truncation copy
-    snprintf(symName,sizeof(symName),"%s",cursor+1); //dtl: replaced strcpy
-    }
-  else{
-    if((n=strlen(ident))<sizeof(modName)) strncpy(modName,ident,n+1); //idtl:use strncpy include 0 byte
-    if((n=strlen(ident))<sizeof(symName)) strncpy(symName,ident,n+1);
-    }
+  delim=strchr(ident,'.');
+  if(delim) sym=delim+1;
+  else delim=ident+strlen(ident);
+  size=delim-ident;
+  if(size>=sizeof(modName)) size=sizeof(modName)-1;    // 2012-12-31 eat - VID 5449-0.8.13-1 
+  strncpy(modName,ident,size);
+  *(modName+size)=0;
+  snprintf(symName,sizeof(symName),"%s%s",sym,suffix); // 2012-12-31 eat - VID 5049,4951,5426-0.8.13-1
   if(trace) outMsg(0,'T',"module=\"%s\",symbol=\"%s\"",modName,symName);
-  if((n=strlen(suffix))<sizeof(symName)) strncat(symName,suffix,n); //dtl used strncat
   if((term=nbTermFind(moduleC,modName))==NULL){
-    // implicitly declare the module if necessary
-    term=nbModuleDeclare(context,modName,modName);
+    term=nbModuleDeclare(context,modName,modName);  // implicitly declare the module if necessary
     if(term==NULL){
       sprintf(msg,"Module \"%s\" not declared and not found",ident);
       return(NULL);
@@ -715,12 +706,17 @@ _declspec (dllexport)
 extern int nbSkillDeclare(nbCELL context,void *(*bindFunction)(),void *moduleHandle,char *moduleName,char *skillName,nbCELL arglist,char *text){
   NB_Skill *skill;
   char ident[256];
-  int n;
+  int len;
 
-  if(*moduleName==0) {if((n=strlen(skillName))<sizeof(ident)) strncpy(ident,skillName,n+1);} //dtl cp include 0 byyte
-  else sprintf(ident,"%s.%s",moduleName,skillName);
+
+  if(*moduleName==0) len=snprintf(ident,sizeof(ident),"%s",skillName);  // 2012-12-31 eat - VID 5044-0.8.13-1 
+  else len=snprintf(ident,sizeof(ident),"%s.%s",moduleName,skillName);
+  if(len<0 || len>=sizeof(ident)){
+    outMsg(0,'L',"nbSkillDeclare;  Module and/or Skill name exceed limit of %d.",sizeof(ident)-1);
+    return(-1);
+    }
   if(NULL==(skill=nbSkillNew(ident,(NB_List *)arglist,text))){
-    outMsg(0,'L',"API nbSkillDeclare() - unable to create skill \"%s.%s\".",moduleName,skillName);
+    outMsg(0,'L',"nbSkillDeclare:  Unable to create skill \"%s.%s\".",moduleName,skillName);
     return(-1);
     }
   skill->term=nbTermNew(nb_SkillGloss,ident,skill);

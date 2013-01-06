@@ -64,7 +64,7 @@ struct ACTION{               /* rule function object */
   char           type;       /* 'R' - rule, 'A' - API */
   };
 
-struct ACTION *newAction(NB_Cell *context,NB_Term *term,struct COND *cond,char prty,void *assertion,NB_String *cmd,int option);
+struct ACTION *newAction(NB_Cell *context,NB_Term *term,struct COND *cond,char prty,void *assertion,NB_String *cmd,char option);
 void destroyAction(struct ACTION *action);
 void scheduleAction(struct ACTION *action);
 
@@ -249,12 +249,12 @@ extern void nbActionAssert(nbCELL context,nbSET assertion);
 #if defined(WIN32)
 _declspec (dllexport)
 #endif
-extern void nbActionCmd(nbCELL context,char *cmd,int option);
+extern void nbActionCmd(nbCELL context,char *cmd,char option);
 
 #if defined(WIN32)
 _declspec (dllexport)
 #endif
-extern void nbAction(nbCELL context,nbSET assertion,char *cmd,int option);
+extern void nbAction(nbCELL context,nbSET assertion,char *cmd,char option);
 
 #if defined(WIN32)
 _declspec (dllexport)

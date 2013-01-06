@@ -487,8 +487,8 @@ void printObjectItem(NB_Object *object){ // 2012-12-27 eat 0.8.13 - CID 761549
   else object->type->showItem(object);
   }
 
-void printObjectType(object) void *object;{
-  outPut(((NB_Object *)object)->type->name);
+void printObjectType(void *object){   // 2012-12-31 eat - VID 5328-0.8.13-1 added format string
+  outPut("%s",((NB_Object *)object)->type->name);
   }
 /*
 *=============================================================================

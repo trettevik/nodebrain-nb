@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -107,6 +107,7 @@
 * 2012-10-17 eat 0.8.12 Changed name from termGetName to nbTermName
 * 2012-10-17 eat 0.8.12 Added size parameter
 * 2012-12-15 eat 0.8.13 Checker updates
+* 2013-01-01 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -202,9 +203,9 @@ static void termAskCommand(char *name,char *value,size_t size,char *command){
     return;
     }
   strcpy(cmd,command);
-  strcat(cmd," \"");
-  strcat(cmd,name);
-  strcat(cmd,"\"");
+  strcat(cmd," \"");   // 2013-01-01 eat - VID 5454-0.8.13-1 FP
+  strcat(cmd,name);    // 2013-01-01 eat - VID 5454-0.8.13-1 FP
+  strcat(cmd,"\"");    // 2013-01-01 eat - VID 5425-0.8.13-1 FP
   outMsg(0,'T',"Resolving \"%s\" via command : %s",name,cmd);
   if(size<2){
     outMsg(0,'L',"termAskCommand: return buffer too small - size=%d",size);
@@ -773,11 +774,13 @@ void nbTermName(char *name,size_t size,NB_Term *term,NB_Term *refContext){
   char *qual[50];  
   NB_Term *context;
   int n,level=0;
-  char *cursor=name;
+  char *cursor=name,*curlast=name+size-1;
   
   *name=0;
   if(term==gloss) return; //dtl: moved *name=0 to here for Checker // 2012-10-17 eat - changed back just to see what happens
-  if(size<2){
+  if(size<1024){
+    outMsg(0,'L',"nbTermName: name buffer must be at least 1024 characters");
+    exit(NB_EXITCODE_FAIL);
     }
   if(term==locGloss){  /* special case to avoid next special case */
     strcpy(name,"@");
@@ -799,22 +802,20 @@ void nbTermName(char *name,size_t size,NB_Term *term,NB_Term *refContext){
     //outMsg(0,'T',"nbTermName qualifier=%s",qual[level]);
     context=context->context;
     }
-  level=level-1;
-  n=strlen(qual[level]);
-  if(n>=size){
-    }
-  strcpy(name,qual[level]); 
-  size-=n;
-  cursor+=n;
-  for(level=level-1;level>=0;level--){
+  for(level=level-1;level>=0;level--){ // 2012-12-28 eat - fixed defect dropping last char of each qualifier
     n=strlen(qual[level]);
-    if(n+1>=size){
-      } 
-    strcpy(cursor,".");
-    strcpy(cursor+1,qual[level]);
-    size-=n;
+    if(n+level>=curlast-cursor){       // truncate full name at qualifier if necessary
+      strcpy(cursor,"?");
+      return;
+      }
+    strncpy(cursor,qual[level],n);
     cursor+=n;
+    if(level>0){
+      *cursor='.';
+      cursor++;
+     }
     }
+  *cursor=0;
   }
   
 void termPrintName(NB_Term *term){

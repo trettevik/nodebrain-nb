@@ -245,13 +245,13 @@ void condPrintRule(struct COND *cond){
 void condPrintInfix(cond) struct COND *cond; {
   outPut("(");
   printObject(cond->left);
-  outPut(cond->cell.object.type->name);
+  outPut("%s",cond->cell.object.type->name);   // 2012-12-31 eat - VID 5328-0.8.13-1 added format string
   printObject(cond->right); 
   outPut(")");
   }
   
 void condPrintTime(cond) struct COND *cond; {
-  outPut(cond->cell.object.type->name);
+  outPut("%s",cond->cell.object.type->name);   // 2012-12-31 eat - VID 5328-0.8.13-1 added format string
   outPut("(");
   schedPrint(cond->right);
   outPut(")");
@@ -259,7 +259,7 @@ void condPrintTime(cond) struct COND *cond; {
 
 void condPrintPrefix(cond) struct COND *cond; {
   outPut("(");
-  outPut(cond->cell.object.type->name);
+  outPut("%s",cond->cell.object.type->name);  // 2012-12-31 eat - VID 5328-0.8.13-1 added format string
   printObject(cond->left);
   outPut(")");
   }
@@ -267,14 +267,14 @@ void condPrintPrefix(cond) struct COND *cond; {
 void condPrintMatch(struct COND *cond){
   outPut("(");
   printObject(cond->left);
-  outPut(cond->cell.object.type->name);
+  outPut("%s",cond->cell.object.type->name); // 2012-12-31 eat - VID 5328-0.8.13-1 added format string
   outPut("\"%s\"",((struct REGEXP *)cond->right)->string->value);
   outPut(")");
   }
   
 void condPrintChange(cond) struct COND *cond; {
   outPut("(");
-  outPut(cond->cell.object.type->name);
+  outPut("%s",cond->cell.object.type->name); // 2012-12-31 eat - VID 5328-0.8.13-1 added format string
   printObject(cond->left);
   outPut(")");
   }
@@ -857,7 +857,6 @@ void destroyRule(struct COND *cond){
 * Public Methods
 **********************************************************************/
 void initCondition(NB_Stem *stem){
-  //condH=newHash(2031);  /* initialize condition hash */
   condH=newHash(100003);  /* initialize condition hash */
   condTypeNerve=newType(stem,"nerve",condH,TYPE_RULE,condPrintNerve,destroyNerve);
   nbCellType(condTypeNerve,solvePrefix,evalNerve,enableRule,disableRule);
