@@ -71,7 +71,7 @@ void schedPrintDump(struct SCHED *sched);
 void schedPrint(struct SCHED *sched);
 void destroySched(struct SCHED *sched);
 void schedInit(NB_Stem *stem,size_t n);  // 2012-12-31 eat - n from int to size_t
-struct SCHED *newSched(NB_Cell *context,char symid,char *source,char **delim,char *msg,int reuse);
+struct SCHED *newSched(NB_Cell *context,char symid,char *source,char **delim,char *msg,size_t msglen,int reuse);
 time_t schedNext(time_t floor,struct SCHED *sched);
 
 #endif

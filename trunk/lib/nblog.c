@@ -124,6 +124,7 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 * 2012-10-17 eat 0.8.12 Replaced termGetName with nbTermName
 * 2012-12-25 eat 0.8.13 AST 3
+* 2013-01-11 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -410,7 +411,7 @@ void nbLogStr(nbCELL context,char *string){
   if(len>0) strcpy(nb_OutCursor,string),nb_OutCursor+=len;
   }
 
-void outData(char *data,int len){
+void outData(char *data,size_t len){   // 2013-01-11 eat VID 6288,6696-0.8.13-2  - int to size_t
   if((nb_OutCursor+len)>=(nb_OutBuffer+NB_BUFSIZE)) outFlush();
   while(len>=NB_BUFSIZE){
     memcpy(nb_OutCursor,data,NB_BUFSIZE);

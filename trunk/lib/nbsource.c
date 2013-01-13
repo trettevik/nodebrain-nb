@@ -49,7 +49,7 @@
 *  It calls fgets multiple times when lines end with a continuation
 *  symbol "\".
 */
-static char *nbSourceGet(char *buffer,int buflen,FILE *file){
+static char *nbSourceGet(char *buffer,size_t buflen,FILE *file){
   char *buf=buffer;
   size_t len;
   char *last,*next;

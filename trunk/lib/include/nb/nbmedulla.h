@@ -211,19 +211,6 @@ int nbMedullaWaitDisable(int type,nbFILE fildes);
 
 // Process functions
 
-#if defined(WIN32)
-_declspec (dllexport)
-#endif               
-extern nbPROCESS nbMedullaProcessOpen(int options,char *cmd,char *logfile,void *session,
-  int (*closer)(nbPROCESS process,int pid,void *session),
-  int (*producer)(nbPROCESS process,int pid,void *session),
-  int (*consumer)(nbPROCESS process,int pid,void *session,char *msg),
-  int (*logger)(nbPROCESS process,int pid,void *session,char *msg),
-  char *msgbuf);
-
-//2009-02-13 eat - dup
-//nbPROCESS nbMedullaProcessAdd(int pid,char *cmd);
-//nbPROCESS nbMedullaProcessFind(int pid);
 int nbMedullaProcessEnable(
   nbPROCESS process,
   void *session,
@@ -299,7 +286,8 @@ extern nbPROCESS nbMedullaProcessOpen(int options,char *cmd,char *log,void *sess
   int (*producer)(nbPROCESS process,int pid,void *session),
   int (*consumer)(nbPROCESS process,int pid,void *session,char *msg),
   int (*logger)(nbPROCESS process,int pid,void *session,char *msg),
-  char *msgbuf);
+  char *msg,
+  size_t msglen);
 
 #if defined(WIN32)
 _declspec (dllexport)

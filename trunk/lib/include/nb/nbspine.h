@@ -83,7 +83,7 @@ int nbPipeWin(nbFILE *writePipe,nbFILE *readPipe);
 int nbPipe(nbFILE *writePipe,nbFILE *readPipe);
 
 
-nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cldin,nbFILE cldout,nbFILE clderr,char *msg);
+nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cldin,nbFILE cldout,nbFILE clderr,char *msg,size_t msglen);
 
 nbCHILD nbChildClose(nbCHILD child);
 

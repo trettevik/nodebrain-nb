@@ -202,10 +202,11 @@ static void termAskCommand(char *name,char *value,size_t size,char *command){
     outMsg(0,'E',"Command and name too long for buffer.");
     return;
     }
-  strcpy(cmd,command);
-  strcat(cmd," \"");   // 2013-01-01 eat - VID 5454-0.8.13-1 FP
-  strcat(cmd,name);    // 2013-01-01 eat - VID 5454-0.8.13-1 FP
-  strcat(cmd,"\"");    // 2013-01-01 eat - VID 5425-0.8.13-1 FP
+  snprintf(cmd,sizeof(cmd),"%s \"%s\"",command,name); // 2013-01-12 eat VID 6465-0.8.13-2 FP but changing code to help checker
+  //strcpy(cmd,command);
+  //strcat(cmd," \"");   // 2013-01-01 eat - VID 5454-0.8.13-1 FP
+  //strcat(cmd,name);    // 2013-01-01 eat - VID 5454-0.8.13-1 FP
+  //strcat(cmd,"\"");    // 2013-01-01 eat - VID 5425-0.8.13-1 FP
   outMsg(0,'T',"Resolving \"%s\" via command : %s",name,cmd);
   if(size<2){
     outMsg(0,'L',"termAskCommand: return buffer too small - size=%d",size);

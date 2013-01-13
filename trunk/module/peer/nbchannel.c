@@ -220,7 +220,7 @@ extern int chlisten(char *addr,unsigned short port){
   memset(&in_addr,0,sizeof(struct sockaddr_in));
   if(*addr!=0 && (*addr<'0' || *addr>'9')){
     domain=AF_UNIX;
-    if(strlen(addr)>sizeof(un_addr.sun_path)){
+    if(strlen(addr)>=sizeof(un_addr.sun_path)){
       nbLogMsgI(0,'E',"chlisten: Local domain socket path too long - %s",addr);
       return(-1);
       }

@@ -60,6 +60,8 @@
 #include <nb/nbi.h>
 #include <stddef.h>
 
+static char *nbRuleParseBody(NB_Cell *context,int opt,NB_Plan *plan,char *ip,int counter,char *source,char **cursorP,char *msg,size_t msglen);
+
 NB_Plan *nb_PlanFree=NULL;
 NB_Type *nb_PlanType;
 
@@ -268,7 +270,7 @@ NB_PlanInstrP nbPlanExit(NB_Rule *rule,struct NB_PLAN_VALUE *ip){
 *    opt: 0 - normal rule, 1 - time rule   
 */
 
-char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int counter,char *source,char **cursorP,char *msg){
+char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int counter,char *source,char **cursorP,char *msg,size_t msglen){
   char *cursor=*cursorP;
   char *ipsave,*cursave,*curstmt=*cursorP;
   struct NB_PLAN_LOOP_BEGIN  *tmLoopBegin;
@@ -319,12 +321,12 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
       sign=symid;
       symid=nbParseSymbol(ident,&cursor);
       if(symid!='i'){
-        snprintf(msg,(size_t)NB_MSGSIZE,"Expecting integer at -->%s",cursave); //dtl: used snprintf
+        snprintf(msg,msglen,"Expecting integer at -->%s",cursave);
         return(NULL);
         }
       count=atoi(ident);           // 2013-01-01 eat - VID 4954-0.8.13-1
       if(count<0 || count>=1024){
-        snprintf(msg,(size_t)NB_MSGSIZE,"Expecting integer n, where 0<n<1024, at -->%s",cursave); //dtl: used snprintf
+        snprintf(msg,msglen,"Expecting integer n, where 0<n<1024, at -->%s",cursave);
         return(NULL);
         }
       if(sign=='-') count=-count;  // 2013-01-01 eat - VID 4954-0.8.13-1
@@ -332,7 +334,7 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
     if(*cursor=='{'){
       cursor++;   /* step over '{' */
       if(count<0){
-        snprintf(msg,(size_t)NB_MSGSIZE,"Negative repeat count on procedure at -->%s",cursor); //dtl: used snprintf
+        snprintf(msg,msglen,"Negative repeat count on procedure at -->%s",cursor);
         return(NULL);
         }
       if(count>1){
@@ -344,7 +346,7 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
         ip+=sizeof(struct NB_PLAN_LOOP_BEGIN);
         }
       ipsave=ip;
-      if(NULL==(ip=nbRuleParseBody(context,opt,plan,ip,counter,source,&cursor,msg))) return(NULL);
+      if(NULL==(ip=nbRuleParseBody(context,opt,plan,ip,counter,source,&cursor,msg,msglen))) return(NULL);
       cursor++;    /* step over '}' - trust nbRuleParseBody to be there */
       if(count>1){
         counter--;
@@ -362,15 +364,15 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
         }
       }
     else if(count==0){
-      snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Expecting '{' at \"%s\".",cursor); //dtl: used snprintf
+      snprintf(msg,msglen,"NB000E Expecting '{' at \"%s\".",cursor);
       return(NULL);
       }
     else if(*cursor=='('){
       if(count<0){
-        snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Negative step not currently supported on time condition at \"%s\".",cursor); //dtl: used snprintf
+        snprintf(msg,msglen,"NB000E Negative step not currently supported on time condition at \"%s\".",cursor);
         return(NULL);
         }
-      if(NULL==(tcdef=tcParse(context,&cursor,msg))) return(NULL);
+      if(NULL==(tcdef=tcParse(context,&cursor,msg,msglen))) return(NULL);
       tmAlign=(struct NB_PLAN_ALIGN *)ip;
       tmAlign->op=(NB_PlanOp)&nbPlanAlign;
       tmAlign->count=count;
@@ -388,10 +390,8 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
         case 'm': step=&tcStepMinute; break;
         case 's': step=&tcStepSecond; break;
         default:
-          // 2012-12-27 eat 0.8.13 - CID 751541 - next two lines replaced with 3rd - count==0 is not possible (dead code)
-          //if(count==0) snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Expecting '{', '(' or unit code at \"%s\"",cursor); //dtl: used snprintf
-          //else snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Expecting /\\?*{( or integer at \"%s\".",cursor); //dtl: used snprintf
-          snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Expecting /\\?*{( or integer at \"%s\".",cursor); //dtl: used snprintf
+          // 2012-12-27 eat 0.8.13 - CID 751541 - count==0 is not possible - removed dead code
+          snprintf(msg,msglen,"NB000E Expecting /\\?*{( or integer at \"%s\".",cursor);
           return(NULL);
         }
       cursor++;
@@ -413,7 +413,7 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
       if(strcmp(ident,"=")==0) tmValue->op=(NB_PlanOp)&nbPlanValue; 
       else if(strcmp(ident,"==")==0) tmValue->op=(NB_PlanOp)&nbPlanDefine;
       else{
-        snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Unexpected relational operator - \"%s\".",ident); //dtl: used snprintf
+        snprintf(msg,msglen,"NB000E Unexpected relational operator - \"%s\".",ident);
 
         return(NULL);
         }
@@ -437,7 +437,7 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
         return(NULL);
         }
       if(*cursor!=')'){
-        snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Expecting ')' at \"%s\".",cursor); //dtl: used snprintf
+        snprintf(msg,msglen,"NB000E Expecting ')' at \"%s\".",cursor);
         return(NULL);
         }
       cursor++;
@@ -452,7 +452,7 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
     else if(strcmp(ident,"if")==0){ /* if(..) <them> else <else> */
       while(*cursor==' ') cursor++;
       if(*cursor!='('){
-        snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Expecting '(' at \"%s\".",cursor); //dtl: used snprintf
+        snprintf(msg,msglen,"NB000E Expecting '(' at \"%s\".",cursor);
         return(NULL);
         }
       cursor++;
@@ -463,13 +463,13 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
         return(NULL);
         }
       if(*cursor!=')'){
-        snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Expecting ')' at \"%s\".",cursor); //dtl: used snprintf
+        snprintf(msg,msglen,"NB000E Expecting ')' at \"%s\".",cursor);
         return(NULL);
         }
       cursor++;
       while(*cursor==' ') cursor++;
       ip+=sizeof(struct NB_PLAN_IF);
-      if(NULL==(ip=nbRuleParseStatement(context,opt,plan,ip,counter,source,&cursor,msg))) return(NULL);
+      if(NULL==(ip=nbRuleParseStatement(context,opt,plan,ip,counter,source,&cursor,msg,msglen))) return(NULL);
       if(*cursor==';') cursor++; /* be flexible for the moment */
       tmIf->jump=ip-(char *)tmIf;  /* jump over {then} if false */
       symid=nbParseSymbol(ident,&cursor);
@@ -479,7 +479,7 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
         ip+=sizeof(struct NB_PLAN_BRANCH);
         tmIf->jump=ip-(char *)tmIf;        /* jump over {then} plus jump if false */
         while(*cursor==' ') cursor++;
-        if(NULL==(ip=nbRuleParseStatement(context,opt,plan,ip,counter,source,&cursor,msg))) return(NULL);
+        if(NULL==(ip=nbRuleParseStatement(context,opt,plan,ip,counter,source,&cursor,msg,msglen))) return(NULL);
         if(*cursor==';') cursor++;  /* be flexible for the moment */
         tmBranch->jump=ip-(char *)tmBranch;
         }
@@ -497,7 +497,7 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
         return(NULL);
         }
       if(*cursor!=';'){
-        snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Expecting ';' at \"%s\".",cursor); //dtl: used snprintf
+        snprintf(msg,msglen,"NB000E Expecting ';' at \"%s\".",cursor);
         return(NULL);
         }
       cursor++;
@@ -516,7 +516,7 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
       cursave=cursor;
       while(*cursor!=';' && *cursor!=0) cursor++;
       if(*cursor!=';'){
-        snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Command not terminated with ; at \"%s\"",cursave); //dtl: used snprintf
+        snprintf(msg,msglen,"NB000E Command not terminated with ; at \"%s\"",cursave);
         return(NULL);
         }
       *cursor=0;
@@ -538,12 +538,12 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
   return(ip);
   }
 
-char *nbRuleParseBody(nbCELL context,int opt,NB_Plan *plan,char *ip,int counter,char *source,char **cursorP,char *msg){
+static char *nbRuleParseBody(nbCELL context,int opt,NB_Plan *plan,char *ip,int counter,char *source,char **cursorP,char *msg,size_t msglen){
   char *cursor=*cursorP;
   while(*cursor!='}' && *cursor!=0){
     if(*cursor==',') cursor++;
     /* consider adding a parameter to enable a restricted syntax for unaligned schedules */
-    ip=nbRuleParseStatement(context,opt,plan,ip,counter,source,&cursor,msg);
+    ip=nbRuleParseStatement(context,opt,plan,ip,counter,source,&cursor,msg,msglen);
     if(ip==NULL){
       plan->object.next=(NB_Object *)nb_PlanFree;
       nb_PlanFree=plan;
@@ -561,7 +561,7 @@ char *nbRuleParseBody(nbCELL context,int opt,NB_Plan *plan,char *ip,int counter,
 /*
 *  Parse a plan starting after the opening "{"
 */
-NB_Plan *nbRuleParsePlan(nbCELL context,int opt,char **source,char *msg){
+static NB_Plan *nbRuleParsePlan(nbCELL context,int opt,char **source,char *msg,size_t msglen){
   char *cursor=*source;
   struct NB_PLAN_WAIT *tmWait;
   struct NB_PLAN_EXIT   *tmExit;
@@ -579,7 +579,7 @@ NB_Plan *nbRuleParsePlan(nbCELL context,int opt,char **source,char *msg){
   plan->objects=NULL;
   plan->workspace=0;
   /* consider adding a parameter to enable a restricted syntax for unaligned schedules */
-  ip=nbRuleParseBody(context,opt,plan,ip,counter,*source,&cursor,msg);
+  ip=nbRuleParseBody(context,opt,plan,ip,counter,*source,&cursor,msg,msglen);
   if(ip==NULL){
     plan->object.next=(NB_Object *)nb_PlanFree;
     nb_PlanFree=plan;
@@ -596,10 +596,7 @@ NB_Plan *nbRuleParsePlan(nbCELL context,int opt,char **source,char *msg){
   tmExit->op=(NB_PlanOp)&nbPlanExit;
   ip+=sizeof(struct NB_PLAN_EXIT);
   size=ip-codebuf;
-  //if((plan->codeBegin=malloc(size))==NULL) //2012-01-26 dtl: handled out of memory
-  //  {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
-  // 2012-10-13 eat - replaced malloc()
-  plan->codeBegin=nbAlloc(size);
+  plan->codeBegin=nbAlloc(size); // 2012-10-13 eat - replace malloc()
   plan->codeEnd=plan->codeBegin+size;
   memcpy(plan->codeBegin,codebuf,size);
   savechar=*cursor;
@@ -611,7 +608,7 @@ NB_Plan *nbRuleParsePlan(nbCELL context,int opt,char **source,char *msg){
   return(plan);
   }
 
-NB_Rule *nbRuleParse(nbCELL context,int opt,char **source,char *msg){
+NB_Rule *nbRuleParse(nbCELL context,int opt,char **source,char *msg,size_t msglen){
   NB_Rule *rule,**ruleP;
   NB_Term   *symContextSave=symContext;
 
@@ -629,7 +626,7 @@ NB_Rule *nbRuleParse(nbCELL context,int opt,char **source,char *msg){
     }
   rule->localContext=grabObject(nbTermNew(NULL,"rule",nbNodeNew()));
   symContext=rule->localContext;
-  if(NULL==(rule->plan=nbRuleParsePlan(context,opt,source,msg))){
+  if(NULL==(rule->plan=nbRuleParsePlan(context,opt,source,msg,msglen))){
     dropObject(rule->localContext);
     rule->cell.object.next=(NB_Object *)nb_RuleFree;
     nb_RuleFree=rule;
@@ -656,9 +653,9 @@ NB_Rule *nbRuleParse(nbCELL context,int opt,char **source,char *msg){
 
 NB_Rule *nbRuleExec(nbCELL context,char *source){
   NB_Rule *rule;
-  char msg[256];
+  char msg[1024];
 
-  if(NULL==(rule=nbRuleParse(context,0,&source,msg))){
+  if(NULL==(rule=nbRuleParse(context,0,&source,msg,sizeof(msg)))){
     outPut("%s\n",msg);
     return(NULL);
     }
@@ -940,17 +937,17 @@ NB_Rule **nbRuleFind(NB_Rule *rule){
 void nbRuleShowAll(void){
   NB_Rule *rule,**ruleP;
   long v;
-  int i;
+  long i;
   ruleP=(NB_Rule **)&(nb_RuleHash->vect);
   for(v=0;v<nb_RuleHash->modulo;v++){
     i=0;
     for(rule=*ruleP;rule!=NULL;rule=(NB_Rule *)rule->cell.object.next){
-      outPut("H[%u,%d]",v,i);
+      outPut("H[%u,%ld]",v,i);
       outPut("R[%u]",rule->cell.object.refcnt); 
       outPut("L(%d) ",rule->cell.level);
       printObjectItem((NB_Object *)rule);
       outPut("\n");
-      i++;
+      if(i<LONG_MAX) i++;
       }
     ruleP++; 
     }  

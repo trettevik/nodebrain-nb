@@ -218,7 +218,8 @@ HANDLE *nbQueueOpenFileName(char *filename,int option,int type){
   return(file);
   }
 #else
-int nbQueueOpenFileName(char *filename,int option,int type){
+//int nbQueueOpenFileName(char *filename,int option,int type){
+NBQFILE nbQueueOpenFileName(char *filename,int option,int type){
   int rc;
   int file;
 #if defined(mpe) || defined(ANYBSD)
@@ -310,7 +311,7 @@ void nbQueueCloseFile(int file){
 *   p - package
 *   
 */
-int nbQueueGetFile(char *filename,char *dirname,char *identityName,int qsec,int option,unsigned char type){
+int nbQueueGetFile(char *filename,size_t size,const char *dirname,const char *identityName,int qsec,int option,unsigned char type){
   //char dirname[256];   
   //int qsec;  
   NBQFILE hFile;
@@ -323,7 +324,7 @@ int nbQueueGetFile(char *filename,char *dirname,char *identityName,int qsec,int 
   if(trace) outMsg(0,'T',"nbQueueGetFile() called");
 
   //if(nbqGetDir(dirname,brainTerm)<0) return(-1);
-  sprintf(filename,"%s/%s/00000000000.000000.Q",dirname,identityName);
+  snprintf(filename,size,"%s/%s/00000000000.000000.Q",dirname,identityName); // 2013-01-11 eat - VID 6278
   if(type=='Q') return(0);
   hFile=nbQueueOpenFileName(filename,NBQ_WAIT,NBQ_PRODUCER);
   if(hFile==NBQFILE_ERROR) return(-1);
@@ -398,8 +399,8 @@ int nbQueueGetFile(char *filename,char *dirname,char *identityName,int qsec,int 
     }
   //outMsg(0,'T',"Closing control file");
   nbQueueCloseFile(hFile);
-  if(type==' ') snprintf(filename,256,"%s.%s",newtime,newcount); //2012-01-16 dtl: used snprintf
-  else snprintf(filename,256,"%s/%s/%s.%s.%c",dirname,identityName,newtime,newcount,type); //dtl used snprint
+  if(type==' ') snprintf(filename,size,"%s.%s",newtime,newcount);
+  else snprintf(filename,size,"%s/%s/%s.%s.%c",dirname,identityName,newtime,newcount,type);
   return(0);
   }
 
@@ -603,7 +604,7 @@ int nbQueueOpenFile(struct NBQ_HANDLE *qHandle){
     outMsg(0,'L',"nbQueueOpenFile() called with empty handle");
     return(-1);
     }
-  sprintf(qHandle->filename,"%s/%s/%s",qHandle->qname,qEntry->identity->name->value,qEntry->filename);
+  snprintf(qHandle->filename,sizeof(qHandle->filename),"%s/%s/%s",qHandle->qname,qEntry->identity->name->value,qEntry->filename); // 2013-01-12 eat - VID 6575
 #if defined(WIN32) 
   if((qHandle->file=CreateFile(qHandle->filename,GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL))==NULL){
 #else
@@ -766,8 +767,7 @@ static void nbqAddEntry(qHandle,identity,filename)
 struct NBQ_HANDLE *nbQueueOpenDir(char *dirname,char *siName,int mode){
   struct NBQ_HANDLE *qHandle;
   struct IDENTITY *identity;
-//  char   iName[256];
-  char   fence[256];
+  char   fence[512];
   NBQFILE qfile=NBQFILE_ERROR;
 #if defined(WIN32)
   HANDLE lFile=NULL;
@@ -776,7 +776,6 @@ struct NBQ_HANDLE *nbQueueOpenDir(char *dirname,char *siName,int mode){
   WIN32_FIND_DATA ent;
   char   fSearchName[512];
 #else
-//  int    lFile=0;
   DIR    *iDir,*fDir;
   struct dirent *iEnt,*fEnt;
 #endif
@@ -801,8 +800,9 @@ struct NBQ_HANDLE *nbQueueOpenDir(char *dirname,char *siName,int mode){
   qHandle->qfile=qfile;
 
 #if defined(WIN32)
-  strcpy(iSearchName,qHandle->qname);
-  strcat(iSearchName,"/*.*");
+  snprintf(iSearchName,"%s/*.*",qHandle->qname); // 2013-01-12 eat
+  //strcpy(iSearchName,qHandle->qname);
+  //strcat(iSearchName,"/*.*");
   iDir=FindFirstFile(iSearchName,&ent);
   if(iDir==INVALID_HANDLE_VALUE){
     if(GetLastError()==ERROR_NO_MORE_FILES) return(qHandle);
@@ -815,15 +815,15 @@ struct NBQ_HANDLE *nbQueueOpenDir(char *dirname,char *siName,int mode){
     if(*ent.cFileName!='.'){ /* ignore names starting with '.' */
       strcpy(iName,ent.cFileName);
       if(identity=getIdentity(iName)){
-        //if(nbQueueGetFile(fence,brainTerm,iName,NBQ_NEXT,' ')!=0){
-        if(nbQueueGetFile(fence,dirname,iName,0,NBQ_NEXT,' ')!=0){
+        if(nbQueueGetFile(fence,sizeof(fence),dirname,iName,0,NBQ_NEXT,' ')!=0){
           outMsg(0,'E',"nbQueueOpenDir() not able to process header for %s/%s",qHandle->qname,iName);
           }
         else{
-          strcpy(fSearchName,qHandle->qname);
-          strcat(fSearchName,"/");
-          strcat(fSearchName,iName);
-          strcat(fSearchName,"/*.*");
+          snprintf(fSearchName,sizeof(fSearchName),"%s/%s/*.*",qHandle->qname,iName);  // 2013-01-12 eat
+          //strcpy(fSearchName,qHandle->qname);
+          //strcat(fSearchName,"/");
+          //strcat(fSearchName,iName);
+          //strcat(fSearchName,"/*.*");
           fDir=FindFirstFile(fSearchName,&ent);
           if(fDir!=INVALID_HANDLE_VALUE){
             if(strcmp(ent.cFileName,fence)<0) nbqAddEntry(qHandle,identity,ent.cFileName);
@@ -854,9 +854,8 @@ struct NBQ_HANDLE *nbQueueOpenDir(char *dirname,char *siName,int mode){
     }
   while((iEnt=readdir(iDir))!=NULL){
     if(*(iEnt->d_name)!='.' && (siName==NULL || strcmp(siName,iEnt->d_name)==0) && (identity=getIdentity(iEnt->d_name))!=NULL){
-      sprintf(iSearchName,"%s/%s",qHandle->qname,iEnt->d_name);
-      //if(nbQueueGetFile(fence,brainTerm,iEnt->d_name,NBQ_NEXT,' ')!=0){
-      if(nbQueueGetFile(fence,dirname,iEnt->d_name,0,NBQ_NEXT,' ')!=0){
+      snprintf(iSearchName,sizeof(iSearchName),"%s/%s",qHandle->qname,iEnt->d_name);
+      if(nbQueueGetFile(fence,sizeof(fence),dirname,iEnt->d_name,0,NBQ_NEXT,' ')!=0){
         outMsg(0,'E',"nbQueueOpenDir() not able to process header for %s",iSearchName);
         }
       else if((fDir=opendir(iSearchName))!=NULL){

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -38,6 +38,7 @@
 * 2005-04-24 eat 0.6.2  Included path option and NB_MODULE_PATH environment variable
 * 2005-05-14 eat 0.6.3  module handle renamed address and added new handle
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2013-01-11 eat 0.8.13 Checker updates
 *============================================================================
 */
 #ifndef _NB_MODULE_H_
@@ -61,14 +62,14 @@ extern struct TYPE *moduleType;
 extern struct NB_TERM *moduleC;
 
 void nbModuleInit(NB_Stem *stem);
-void nbModuleBind(nbCELL context,char *name,char *msg);
+void nbModuleBind(nbCELL context,char *name,char *msg,size_t msglen);
 NB_Term *nbModuleDeclare(NB_Term *context,char *name,char *cursor);
-void *nbModuleSymbol(NB_Term *context,char *ident,char *suffix,void **moduleHandleP,char *msg);
+void *nbModuleSymbol(NB_Term *context,char *ident,char *suffix,void **moduleHandleP,char *msg,size_t msglen);
 
 #if defined(WIN32)
-HINSTANCE nbModuleLoad(char *name,int export,char *msg);
+HINSTANCE nbModuleLoad(char *name,int export,char *msg,size_t msglen);
 #else
-void *nbModuleLoad(char *name,int export,char *msg);
+void *nbModuleLoad(char *name,int export,char *msg,size_t msglen);
 #endif
 void nbModuleShowInstalled(nbCELL context);
 

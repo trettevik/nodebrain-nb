@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -325,6 +325,7 @@
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2011-11-05 eat 0.8.6  Included nbCellGetText
 * 2012-10-13 eat 0.8.12 Replace remaining malloc with nbAlloc
+* 2013-01-11 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -381,6 +382,7 @@ void nbCellInit(NB_Stem *stem){
   NB_CELL_FALSE=(NB_Cell *)NB_OBJECT_FALSE;
   NB_CELL_TRUE=(NB_Cell *)NB_OBJECT_TRUE;
   evalVector=calloc(maxLevel,sizeof(void *));
+  if(!evalVector) nbExit("nbCellInit: out of memory"); // 2013-01-11 eat - VID 6469 
   evalVectorTop=evalVector;
   }
 

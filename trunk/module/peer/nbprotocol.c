@@ -1494,7 +1494,7 @@ void nbpServePutFile(struct NBP_SESSION *session,struct NBP_MESSAGE *msgbuf){
       nbpMsg(session,NBP_TRAN_PUTFILE,NBP_MSG_HALT,"NBP000E PUTFILE: target queue not defined",0);
       return;
       }
-    nbQueueGetFile(filename,dirname,nbIdentityGetActive(NULL)->name->value,brain->qsec,NBQ_UNIQUE,mode);
+    nbQueueGetFile(filename,sizeof(filename),dirname,nbIdentityGetActive(NULL)->name->value,brain->qsec,NBQ_UNIQUE,mode);
     /* horse with the file name to use nbQueueCommit() instead of file locking */
     *(filename+strlen(filename)-2)='%'; 
     }
@@ -1730,13 +1730,13 @@ void nbpServe(struct LISTENER *ear,struct NBP_SESSION *session,int nbp,char *oar
 *   p - package
 *
 */
-NBQFILE nbqOpen(NB_Term *brainTerm,int option,int type,char *filename){
+NBQFILE nbqOpen(NB_Term *brainTerm,int option,int type,char *filename,size_t filenamelen){
   char dirname[512];
   NBQFILE file;
   struct BRAIN *brain=(struct BRAIN *)brainTerm->def;
 
   if(nbqGetDir(dirname,brainTerm)<0) return(NBQFILE_ERROR);
-  nbQueueGetFile(filename,dirname,brain->myId,brain->qsec,option,type);
+  nbQueueGetFile(filename,filenamelen,dirname,brain->myId,brain->qsec,option,type);
   file=nbQueueOpenFileName(filename,NBQ_WAIT,NBQ_PRODUCER);
   return(file);
   }
@@ -1753,7 +1753,7 @@ int nbqStoreCmd(NB_Term *brainTerm,char *cursor){
   long wpos;
   NBQFILE file;
 
-  if((file=nbqOpen(brainTerm,NBQ_INTERVAL,'q',filename))<0) return(-1);
+  if((file=nbqOpen(brainTerm,NBQ_INTERVAL,'q',filename,sizeof(filename)))<0) return(-1);
   /*
   *  Append command to queue file
   */

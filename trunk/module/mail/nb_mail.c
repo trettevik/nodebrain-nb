@@ -78,6 +78,7 @@
 * 2012-10-17 eat 0.8.12 Replaced malloc with nbAlloc
 * 2012-12-15 eat 0.8.13 Checker updates
 * 2012-12-27 eat 0.8.13 Checker updates
+* 2013-01-12 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include "config.h"
@@ -270,7 +271,7 @@ void smtpServe(nbSession *session){
       char directory[1024];
       if(!identity) strcpy(buffer,"503 Need RCPT before DATA");
       else{
-        sprintf(directory,"%s/%s",server->qDir,nbIdentityGetName(context,identity));
+        snprintf(directory,sizeof(directory),"%s/%s",server->qDir,nbIdentityGetName(context,identity));
         if(smtpData(channel,clienthost,directory,nbIdentityGetName(context,identity))<0) state=0;
         }
       }

@@ -1370,7 +1370,7 @@ int nbMedullaProcessEnable(
 //   4 - write to specified file
 //   5 - append to specified file
 //
-int nbMedullaParseFileSpec(char filename[512],char **cursorP,char *msgbuf){
+int nbMedullaParseFileSpec(char filename[512],char **cursorP,char *msg,size_t msglen){
   char *cursor=*cursorP,*delim;
   int n,code=4;
   *filename=0;
@@ -1403,7 +1403,7 @@ int nbMedullaParseFileSpec(char filename[512],char **cursorP,char *msgbuf){
       cursor++;        // next byte
       delim=strchr(cursor,'"'); //search for right "
       if(delim==NULL){          //right " not found
-        sprintf(msgbuf,"Unbalanced quotes '\"' on output file name\n");
+        snprintf(msg,msglen,"Unbalanced quotes '\"' on output file name\n");
         return(-1); //return error
         }
       }
@@ -1412,7 +1412,7 @@ int nbMedullaParseFileSpec(char filename[512],char **cursorP,char *msgbuf){
       if(delim==NULL) delim=strchr(cursor,0); //if blank not found, mark filename to end of string
       } 
     if((n=delim-cursor)<=0 || n>=512){ //dtl: added negative len check
-      sprintf(msgbuf,"Output file name too large for buffer\n");
+      snprintf(msg,msglen,"Output file name too large for buffer\n");
       return(-1);
       } 
 //  strncpy(filename,cursor,delim-cursor);
@@ -1488,7 +1488,8 @@ nbPROCESS nbMedullaProcessOpen(
   int (*producer)(nbPROCESS process,int pid,void *session),
   int (*consumer)(nbPROCESS process,int pid,void *session,char *msg),
   int (*logger)(nbPROCESS process,int pid,void *session,char *msg),
-  char *msgbuf){
+  char *msg,
+  size_t msglen){
 
   nbPROCESS process;
 //  int pid,cldpid,waitpid;
@@ -1505,7 +1506,7 @@ nbPROCESS nbMedullaProcessOpen(
   //fprintf(stderr,"nbMedullaProcessOpen %s\n",cmd);
   // limit the number of children we can start.
   if(nb_medulla_child_count>=nb_medulla_child_max){
-    snprintf(msgbuf,(size_t)NB_MSGSIZE,"Attempt to start more than %d children - request denied\n",nb_medulla_child_max); //2012-01-09 dtl use snprintf  // 2012-12-15 eat - CID 751589
+    snprintf(msg,msglen,"Attempt to start more than %d children - request denied\n",nb_medulla_child_max); //2012-01-09 dtl use snprintf  // 2012-12-15 eat - CID 751589
     return(NULL);
     }
   // parse cmd into elements
@@ -1520,7 +1521,7 @@ nbPROCESS nbMedullaProcessOpen(
     }
   // mode
   if((mode=*cursor)!='-' && mode!='='){
-    sprintf(msgbuf,"Expecting '-' or '='\n");
+    snprintf(msg,msglen,"Expecting '-' or '='\n");
     return(NULL);
     } 
   cursor++;
@@ -1531,18 +1532,18 @@ nbPROCESS nbMedullaProcessOpen(
     delim=cursor;
     while(*delim && *delim!=']' && *delim!='.') delim++;
     if(!*delim){
-      sprintf(msgbuf,"Expecting ']' as user delimiter\n");
+      snprintf(msg,msglen,"Expecting ']' as user delimiter\n");
       return(NULL);
       }
     if(delim-cursor>=sizeof(user)){
-      sprintf(msgbuf,"User is too long for buffer\n");
+      snprintf(msg,msglen,"User is too long for buffer\n");
       return(NULL);
       }
     strncpy(user,cursor,delim-cursor);
     *(user+(delim-cursor))=0;
     cursor=delim+1;
     if((pwd=getpwnam(user))==NULL){
-      sprintf(msgbuf,"User %s not defined\n",user);
+      snprintf(msg,msglen,"User %s not defined\n",user);
       return(NULL);
       }
     uid=pwd->pw_uid;
@@ -1551,18 +1552,18 @@ nbPROCESS nbMedullaProcessOpen(
       delim=cursor;
       while(*delim && *delim!=']') delim++;
       if(!*delim){
-        sprintf(msgbuf,"Expecting ']' as group delimiter\n");
+        snprintf(msg,msglen,"Expecting ']' as group delimiter\n");
         return(NULL);
         }
       if(delim-cursor>=sizeof(group)){
-        sprintf(msgbuf,"Group is too long for buffer\n");
+        snprintf(msg,msglen,"Group is too long for buffer\n");
         return(NULL);
         }
       strncpy(group,cursor,delim-cursor);
       *(group+(delim-cursor))=0;
       cursor=delim+1;
       if((grp=getgrnam(group))==NULL){
-        sprintf(msgbuf,"Group %s is not defined\n",group);
+        snprintf(msg,msglen,"Group %s is not defined\n",group);
         return(NULL);
         }
       gid=grp->gr_gid;
@@ -1572,8 +1573,8 @@ nbPROCESS nbMedullaProcessOpen(
   else *user=0,*group=0;
 
   // output
-  if((outspec=nbMedullaParseFileSpec(outfilename,&cursor,msgbuf))<0) return(NULL);
-  if((errspec=nbMedullaParseFileSpec(errfilename,&cursor,msgbuf))<0) return(NULL);
+  if((outspec=nbMedullaParseFileSpec(outfilename,&cursor,msg,msglen))<0) return(NULL);
+  if((errspec=nbMedullaParseFileSpec(errfilename,&cursor,msg,msglen))<0) return(NULL);
   if(outspec==0){
     if(mode=='=') outspec=1;  // = defaults to /dev/null
     else outspec=2;           // - defaults to log file
@@ -1586,7 +1587,7 @@ nbPROCESS nbMedullaProcessOpen(
     if(strcmp(logfile,errfilename)==0){ // duplicate file names
       if(outspec==errspec) errspec=0;   // ignore duplicate specification
       else if(errspec>3){
-        sprintf(msgbuf,"Conflicting output specifications");
+        snprintf(msg,msglen,"Conflicting output specifications");
         return(NULL);
         }
       }
@@ -1637,7 +1638,7 @@ nbPROCESS nbMedullaProcessOpen(
         cursor++;
         delim=strchr(cursor,'"');
         if(delim==NULL){
-          sprintf(msgbuf,"Unbalanced quotes on program file name\n");
+          snprintf(msg,msglen,"Unbalanced quotes on program file name\n");
           return(NULL);
           }
         }
@@ -1646,7 +1647,7 @@ nbPROCESS nbMedullaProcessOpen(
         if(delim==NULL) delim=strchr(cursor,0);
         }
       if(delim-cursor>=sizeof(pgmname)){
-        sprintf(msgbuf,"Program file name longer than buffer\n");
+        snprintf(msg,msglen,"Program file name longer than buffer\n");
         return(NULL);
         }
       strncpy(pgmname,cursor,delim-cursor);
@@ -1658,15 +1659,15 @@ nbPROCESS nbMedullaProcessOpen(
     }
   while(*cursor==' ') cursor++;
   if(cursor-cmd>=sizeof(process->prefix)){
-    sprintf(msgbuf,"Program file name longer than buffer\n");
+    snprintf(msg,msglen,"Program file name longer than buffer\n");
     return(NULL);
     }
   if(strlen(cursor)>=sizeof(process->cmd)){
-    sprintf(msgbuf,"Command longer than buffer\n");
+    snprintf(msg,msglen,"Command longer than buffer\n");
     return(NULL);
     }  
   if(logfile && strlen(logfile)>=sizeof(process->out)){  // 2012-12-27 eat 0.8.13 - CID 751719
-    sprintf(msgbuf,"Logfile longer than buffer\n");
+    snprintf(msg,msglen,"Logfile longer than buffer\n");
     return(NULL);
     }  
   process=nbAlloc(sizeof(struct NB_MEDULLA_PROCESS));
@@ -1727,7 +1728,7 @@ nbPROCESS nbMedullaProcessOpen(
     default: cldout=CreateFile(outfile,GENERIC_WRITE,FILE_SHARE_WRITE,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
     }
   if(cldout==INVALID_HANDLE_VALUE){
-    sprintf(msgbuf,"Unable to open child stdout\n");
+    snprintf(msg,msglen,"Unable to open child stdout\n");
     return(NULL);
     }
   switch(errspec){
@@ -1738,7 +1739,7 @@ nbPROCESS nbMedullaProcessOpen(
     default: clderr=CreateFile(outfile,GENERIC_WRITE,FILE_SHARE_WRITE,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
     }
   if(clderr==INVALID_HANDLE_VALUE){
-    sprintf(msgbuf,"Unable to open child stderr\n");
+    snprintf(msg,msglen,"Unable to open child stderr\n");
     nbFree(process,sizeof(struct NB_MEDULLA_PROCESS));
     return(NULL);
     }
@@ -1747,7 +1748,7 @@ nbPROCESS nbMedullaProcessOpen(
   if(producer!=NULL) nbPipe(&process->putfile,&cldin);
   else cldin=open("/dev/null",O_RDONLY);
   if(cldin<0){
-    sprintf(msgbuf,"Unable to open child stdin\n");  // 2012-12-27 eat 0.8.13 - CID 751563
+    snprintf(msg,msglen,"Unable to open child stdin\n");  // 2012-12-27 eat 0.8.13 - CID 751563
     nbFree(process,sizeof(struct NB_MEDULLA_PROCESS));
     return(NULL);
     }
@@ -1759,7 +1760,7 @@ nbPROCESS nbMedullaProcessOpen(
     default: cldout=open(outfile,O_WRONLY|O_CREAT|O_TRUNC,S_IRUSR|S_IWUSR);
     }
   if(cldout<0){
-    sprintf(msgbuf,"Unable to open child stdout\n");
+    snprintf(msg,msglen,"Unable to open child stdout\n");
     close(cldin);   // 2012-12-18 eat - CID 751599
     nbFree(process,sizeof(struct NB_MEDULLA_PROCESS));
     return(NULL);
@@ -1772,7 +1773,7 @@ nbPROCESS nbMedullaProcessOpen(
     default: clderr=open(errfile,O_WRONLY|O_CREAT|O_TRUNC,S_IRUSR|S_IWUSR);
     }
   if(clderr<0){
-    sprintf(msgbuf,"Unable to open child stderr\n");
+    snprintf(msg,msglen,"Unable to open child stderr\n");
     close(cldin);   // 2012-12-18 eat - CID 751600
     close(cldout);
     nbFree(process,sizeof(struct NB_MEDULLA_PROCESS));
@@ -1780,7 +1781,7 @@ nbPROCESS nbMedullaProcessOpen(
     }
 #endif
 
-  process->child=nbChildOpen(process->options,process->uid,process->gid,process->pgm,process->cmd,cldin,cldout,clderr,msgbuf);
+  process->child=nbChildOpen(process->options,process->uid,process->gid,process->pgm,process->cmd,cldin,cldout,clderr,msg,msglen);
   if(process->child==NULL){
     nbFree(process,sizeof(struct NB_MEDULLA_PROCESS));
     return(NULL);

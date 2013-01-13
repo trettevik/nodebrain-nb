@@ -35,6 +35,7 @@
 * 2007/07/16 eat 0.6.8  change name from "expert" to "node"
 * 2010/02/28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2012-10-17 eat 0.8.12 Added size parameter to nbNodeGetNameFull
+* 2013-01-11 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #ifndef _NB_NODE_H_
@@ -57,7 +58,7 @@ struct NB_NODE{
   struct IDENTITY  *owner;      /* identity that owns the context */
   struct STRING    *source;     /* command to request unknown values */
   struct ACTION    *ifrule;     /* if rules - check on alert */
-  char             cmdopt;      /* command option - see NB_CMDOPT_* in nbapi.h */
+  unsigned char    cmdopt;      /* command option - see NB_CMDOPT_* in nbcmd.h */ // 2013-01-11 eat - VID 6552
   char             reserved;    /* reserved */
   unsigned short   alertCount;  /* wrap-around counter for alerts */
   struct NB_SKILL  *skill;      /* skill managing this node */

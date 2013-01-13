@@ -141,7 +141,7 @@ typedef struct NB_MOD_NBP_SERVER{
 //
 //    identity@address:port
 
-static nbServer *newServer(nbCELL context,char *cursor,char *oar,char *msg){
+static nbServer *newServer(nbCELL context,char *cursor,char *oar,char *msg,size_t msglen){
   nbServer *server;
   char *inCursor;
   char *interfaceAddr;
@@ -160,13 +160,13 @@ static nbServer *newServer(nbCELL context,char *cursor,char *oar,char *msg){
     }
   *inCursor=0;
   if(*cursor!='@'){
-    sprintf(msg,"Identity not found in server specification - expecting identity@address:port or identity@file");
+    snprintf(msg,msglen,"Identity not found in server specification - expecting identity@address:port or identity@file");
     return(NULL);
     }
   cursor++;
   server->identity=nbpGetPeerKey(server->idName);
   if(server->identity==NULL){
-    snprintf(msg,(size_t)NB_MSGSIZE,"Identity '%s' not defined",server->idName); //2012-01-31 dtl: replaced sprintf
+    snprintf(msg,msglen,"Identity '%s' not defined",server->idName);
     nbFree(server,sizeof(nbServer));
     return(NULL);
     }
@@ -183,7 +183,7 @@ static nbServer *newServer(nbCELL context,char *cursor,char *oar,char *msg){
       strcpy(server->hostname,server->address);
       interfaceAddr=chgetaddr(server->address);
       if(interfaceAddr==NULL){
-        snprintf(msg,(size_t)NB_MSGSIZE,"Hostname %s not resolved",server->hostname); //2012-01-31 dtl: replaced sprintf
+        snprintf(msg,msglen,"Hostname %s not resolved",server->hostname);
         nbFree(server,sizeof(nbServer));
         return(NULL);
         }
@@ -199,7 +199,7 @@ static nbServer *newServer(nbCELL context,char *cursor,char *oar,char *msg){
         }
       }
     if(*cursor!=':'){
-      snprintf(msg,(size_t)NB_MSGSIZE,"Expecting ':port' at: %s",cursor); //2012-01-31 dtl: replaced sprintf
+      snprintf(msg,msglen,"Expecting ':port' at: %s",cursor);
       nbFree(server,sizeof(nbServer));
       return(NULL);
       }
@@ -254,7 +254,7 @@ static void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
   nbCELL cell=NULL,specCell=NULL;
   nbSET argSet;
   char *serverSpec,*oar="";
-  char msg[1024];
+  char msg[NB_MSGSIZE];
 
   argSet=nbListOpen(context,arglist);
   cell=nbListGetCellValue(context,&argSet);
@@ -276,7 +276,7 @@ static void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
       return(NULL);
       }
     }
-  server=newServer(context,serverSpec,oar,msg);
+  server=newServer(context,serverSpec,oar,msg,sizeof(msg));
   if(server==NULL){
     nbLogMsg(context,0,'E',msg);
     return(NULL);

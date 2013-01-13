@@ -93,6 +93,7 @@
 * 2012-10-19 eat 0.8.12 Replaced random with pid plus counter since we needed unique instead of random
 * 2012-12-25 eat 0.8.13 Noting that prior change also fixed AST 42
 * 2013-01-01 eat 0.8.13 Checker updates
+* 2013-01-12 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -128,7 +129,7 @@ int nbLogMsgReader(nbPROCESS process,int pid,void *session,char *msg){
 //#endif
 
 int nbSpawnChild(nbCELL context,int options,char *cursor){
-  char outname[1024],msgbuf[NB_MSGSIZE];
+  char outname[1024],msg[NB_MSGSIZE];
   char *outdir=outDirName(NULL);
   nbPROCESS process;
   static unsigned short childwrap=0;
@@ -147,10 +148,10 @@ int nbSpawnChild(nbCELL context,int options,char *cursor){
   // We have to decide if we want special controls on the system commands
   
   childwrap=(childwrap+1)%1000; 
-  sprintf(outname,"%sservant.%.10u.%.5u.%.3u.out",outdir,(unsigned int)time(NULL),getpid(),childwrap);
-  process=nbMedullaProcessOpen(options,cursor,outname,(NB_Term *)context,NULL,NULL,nbCmdMsgReader,nbLogMsgReader,msgbuf);
+  snprintf(outname,sizeof(outname),"%sservant.%.10u.%.5u.%.3u.out",outdir,(unsigned int)time(NULL),getpid(),childwrap); // 2013-01-12 eat - VID 6544-0.8.13-2
+  process=nbMedullaProcessOpen(options,cursor,outname,(NB_Term *)context,NULL,NULL,nbCmdMsgReader,nbLogMsgReader,msg,sizeof(msg));
   if(process==NULL){
-    outMsg(0,'E',"%s",msgbuf);
+    outMsg(0,'E',"%s",msg);
     return(0);
     }
   else if(process->status&NB_MEDULLA_PROCESS_STATUS_BLOCKING){

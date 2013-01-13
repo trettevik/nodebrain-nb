@@ -99,7 +99,7 @@ extern void nbParseSource(nbCELL context,char *cursor);
 #if defined(WIN32)
 __declspec(dllexport)
 #endif
-extern void nbCmd(nbCELL context,char *cursor,int option);
+extern void nbCmd(nbCELL context,char *cursor,unsigned char option);
 
 #if defined(WIN32)
 _declspec (dllexport)

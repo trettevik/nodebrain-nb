@@ -34,7 +34,7 @@
 *
 *   #include "nbspine.h"
 *
-*   nbCHILD nbChildOpen(int options,int uid,char *pgm,char *parms,cldin,cldout,clderr,char *msg)
+*   nbCHILD nbChildOpen(int options,int uid,char *pgm,char *parms,cldin,cldout,clderr,char *msg,size_t msglen)
 *
 * Description
 *
@@ -125,7 +125,7 @@ int nbPipe(nbFILE *writePipe,nbFILE *readPipe){
 /*
 *  Spawn a child process
 *
-*   int nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,cldin,cldout,clderr,char *msg)
+*   int nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,cldin,cldout,clderr,char *msg,size_t msglen)
 *
 *   options - flag bits for controlling the type of child to create
 *
@@ -165,12 +165,14 @@ int nbPipe(nbFILE *writePipe,nbFILE *readPipe){
 *
 *   msg     - message returned
 *
+*   msglen  - length of message return buffer
+*
 *
 * Returns:
 *   int pid
 */
 #if defined(WIN32)
-nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cldin,nbFILE cldout,nbFILE clderr,char *msg){
+nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cldin,nbFILE cldout,nbFILE clderr,char *msg,size_t msglen){
   PROCESS_INFORMATION piProcInfo; 
   STARTUPINFO siStartInfo;
   char buffer[NB_BUFSIZE];
@@ -207,11 +209,11 @@ nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cld
     if(options&NB_CHILD_CLONE){
       pgmnamesize=GetModuleFileName(NULL,pgmname,sizeof(pgmname));
       if(pgmnamesize==sizeof(pgmname)){
-        sprintf(msg,"Executing module name is too large for buffer.");
+        snprintf(msg,msglen,"Executing module name is too large for buffer.");
         return(NULL);
         }
       if(pgmnamesize==0){
-        sprintf(msg,"GetModuleFileName errno=%d",GetLastError());
+        snprintf(msg,msglen,"GetModuleFileName errno=%d",GetLastError());
         return(NULL);
         }
       pgm=pgmname;
@@ -239,8 +241,8 @@ nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cld
       &piProcInfo)){  // receives PROCESS_INFORMATION 
     lasterror=GetLastError();
     switch(lasterror){
-      case 2: sprintf(msg,"Executable file \"%s\" not found.",pgm); break;
-      default: sprintf(msg,"CreateProcess() unable to create child process - system error code=%d",GetLastError());
+      case 2: snprintf(msg,msglen,"Executable file \"%s\" not found.",pgm); break;
+      default: snprintf(msg,msglen,"CreateProcess() unable to create child process - system error code=%d",GetLastError());
       }
     return(NULL);
     }
@@ -252,12 +254,12 @@ nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cld
   child->pid=piProcInfo.dwProcessId;
   //CloseHandle(piProcInfo.hProcess);
   CloseHandle(piProcInfo.hThread);
-  sprintf(msg,"child pid[%d] out[%s]",piProcInfo.dwProcessId,suffix);
+  snprintf(msg,msglen,"child pid[%d] out[%s]",piProcInfo.dwProcessId,suffix);
   //return(piProcInfo.dwProcessId);
   return(child);
   }
 #else  
-nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cldin,nbFILE cldout,nbFILE clderr,char *msg){
+nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cldin,nbFILE cldout,nbFILE clderr,char *msg,size_t msglen){
   int pid,fd,closebit;
   char parmbuf[NB_BUFSIZE];
   int  argc=0,i;
@@ -266,7 +268,7 @@ nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cld
   nbCHILD child;
 
   if(!(options&NB_CHILD_SHELL) && strlen(parms)>sizeof(parmbuf)){   // 2013-01-01 eat - VID 4613,5380,5423-0.8.13-1
-    sprintf(msg,"Parm string is exceeds limit of %d - not spawning child",NB_BUFSIZE-1);
+    snprintf(msg,msglen,"Parm string is exceeds limit of %d - not spawning child",NB_BUFSIZE-1);
     return(NULL);
     }
   //outMsg(0,'T',"nbChildOpen() options=%x",options);
@@ -275,11 +277,11 @@ nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cld
 #else
   if((pid=fork())<0){
 #endif
-    sprintf(msg,"Unable to create child process - %s",strerror(errno));
+    snprintf(msg,msglen,"Unable to create child process - %s",strerror(errno));
     return(NULL);
     }
   if(pid>0){   // parent process
-    sprintf(msg,"child pid %d",pid);
+    snprintf(msg,msglen,"child pid %d",pid);
     close(cldin);  // close the files in the parent process
     close(cldout);
     close(clderr);
@@ -363,7 +365,7 @@ nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cld
           if(!delim) delim=cursor+strlen(cursor); // this is actually a syntax error
           else while(delim>cursor && *(delim-1)=='\\'){ // handle escaped quotes
             strcpy(delim-1,delim);     // consume the escape - always have room
-            delim=strchr(cursor,'"');
+            delim=strchr(delim,'"');   // 2013-01-12 eat - looking beyond the previously found quote which moved left one byte
             if(!delim) delim=cursor+strlen(cursor);
             }
           }
@@ -371,7 +373,6 @@ nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cld
           argv[argc]=cursor;
           delim=strchr(cursor,' ');
           if(!delim) delim=cursor+strlen(cursor);
-          
           }
         cursor=delim;
         if(*cursor){

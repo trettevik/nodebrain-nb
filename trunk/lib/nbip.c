@@ -56,6 +56,7 @@
 * 2012-12-15 eat 0.8.13 Checker updates
 * 2012-12-27 eat 0.8.13 Checker updates
 * 2012-12-31 eat 0.8.13 Checker updates
+* 2013-01-11 eat 0.8.13 Checker updates
 *=====================================================================
 */
 #include <nb/nbi.h>
@@ -90,7 +91,7 @@ int nbIpGetUdpClientSocket(unsigned short clientPort,char *addr,unsigned short p
   int domain=AF_INET;
   char ipaddr[512];
   char *delim;
-  int len;
+  size_t len; // 2013-01-11 eat - VID 6875,6409,6405-0.8.13-2  - changed from int to size_t
 #if !defined(WIN32)
   struct sockaddr_un un_addr;
 
@@ -170,7 +171,7 @@ unsigned int nbIpGetUdpServerSocket(NB_Cell *context,char *addr,unsigned short p
   int domain=AF_INET;
   char ipaddr[512];
   char *delim;
-  int len;
+  size_t len;  // 2013-01-11 eat VID 6244,6876,6890-0.8.13-2
 #if !defined(WIN32)
   struct sockaddr_un un_addr;
 
@@ -680,8 +681,8 @@ int nbIpPutMsg(NB_IpChannel *channel,char *buffer,size_t len){ // 2012-12-31 eat
     outMsg(0,'L',"nbIpPutMsg: Length %u too large.",len);
     return(-1);
     }
-  *(packet)=(len>>8)|0x80;
-  *(packet+1)=len&255;
+  *(packet)=(unsigned char)((len>>8)|0x80);  // 2013-01-11 eat VID 7048-0.8.13-2
+  *(packet+1)=(unsigned char)(len%256);      // 2013-01-11 eat VID 6245-0.8.13-2
   memcpy(packet+2,buffer,len);  // 2012-12-31 eat - VID 763-0.8.13-1 FP - unless it goes away from type change above
   outMsg(0,'T',"nbIpPutMsg: len=%u ",len);
   len+=2;

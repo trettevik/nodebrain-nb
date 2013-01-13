@@ -1091,17 +1091,18 @@ int translateText2Varbinding(nbCELL context,char **packetCursorP,char **textP){
   *packetCursor=0x81; packetCursor++; 
   *packetCursor=0x0d; packetCursor++; 
   delim=strchr(cursor,'\'');
-  if(!*cursor){ // 2012-12-27 eat 0.8.13 - CID 751623
+  if(!delim){ // 2012-12-27 eat 0.8.13 - CID 751623   // 2013-01-13 eat - VID 1093-0.8.13-2
     nbLogMsg(context,0,'E',"Unbalanced single quote at:%s",*textP); // 2012-12-27 eat 0.8.13 - CID 7516
     return(-1);
     }
   cursor=delim+1;
-  cursor=strchr(cursor,'=');
+  while(*cursor==' ') cursor++;
   if(*cursor!='='){
     nbLogMsg(context,0,'E',"Expecting '=' at:%s",cursor);
     return(-1);
     }
   cursor++;
+  while(*cursor==' ') cursor++;
   if(*cursor!='"'){
     nbLogMsg(context,0,'E',"Expecting double quote at:%s",cursor);
     return(-1);

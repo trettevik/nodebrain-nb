@@ -35,11 +35,11 @@
 *
 *   void nbModuleInit();
 *
-*   NB_Term *nbModuleDeclare(NB_Term *context,char *ident,char *cursor,char *msg);
+*   NB_Term *nbModuleDeclare(NB_Term *context,char *ident,char *cursor,char *msg,size_t msglen);
 *   NB_Term *nbModuleLocate(char *ident);
 *   NB_Term *nbModuleUndeclare(char *ident);
 *
-*   void *nbModuleSymbol(NB_Term *context,char *ident,char *suffix,void **moduleHandleP,char *msg);
+*   void *nbModuleSymbol(NB_Term *context,char *ident,char *suffix,void **moduleHandleP,char *msg,size_t msglen);
 *
 * Description
 *
@@ -62,7 +62,7 @@
 *   Modules are not actually loaded until referenced by a call to 
 *   nbModuleSymbol().
 *   
-*       address=nbModuleSymbol(context,"module.symbol","Bind",&moduleHandle,msg).
+*       address=nbModuleSymbol(context,"module.symbol","Bind",&moduleHandle,msg,msglen).
 *
 *   The "module" component of the identifier is used to search the declared
 *   module namespace.  If the associated module has not been loaded, it is
@@ -111,6 +111,7 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 * 2012-12-15 eat 0.8.13 Checker updates
 * 2012-12-31 eat 0.8.13 Checker updates
+* 2013-01-11 eat 0.8.13 Checker updates 
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -128,7 +129,7 @@ struct NB_MODULE *nb_ModuleFree;
 #if defined(WIN32)
 
 // shared library option not implemented
-HINSTANCE nbModuleLoad(char *name,int export,char *msg){
+HINSTANCE nbModuleLoad(char *name,int export,char *msg,size_t msglen){
   HINSTANCE hinstLib;
 
   if(trace) outMsg(0,'T',"Module %s requested",name);
@@ -136,7 +137,7 @@ HINSTANCE nbModuleLoad(char *name,int export,char *msg){
   *msg=0;
   // Get a handle to the DLL module
   hinstLib = LoadLibrary(name);
-  if(hinstLib==NULL) sprintf(msg,"Unable to load %s - errcode=%d",name,GetLastError());
+  if(hinstLib==NULL) snprintf(msg,msglen,"Unable to load %s - errcode=%d",name,GetLastError());
   else if(trace) outMsg(0,'T',"Module %s loaded",name);
   return(hinstLib);
   }
@@ -146,7 +147,7 @@ HINSTANCE nbModuleLoad(char *name,int export,char *msg){
 #include <mach-o/dyld.h>
 
 // shared library option not implemented
-void *nbModuleLoad(char *name,int export,char *msg){
+void *nbModuleLoad(char *name,int export,char *msg,size_t msglen){
   NSModule module;
   NSObjectFileImage objectFileImage;
   NSObjectFileImageReturnCode returnCode;
@@ -154,13 +155,13 @@ void *nbModuleLoad(char *name,int export,char *msg){
   returnCode=NSCreateObjectFileImageFromFile(name,&objectFileImage);
   if(returnCode!=NSObjectFileImageSuccess){
     //outMsg(0,'E',"Unable to load %s",name);
-    sprintf(msg,"Unable to load %s\n",name); 
+    snprintf(msg,msglen,"Unable to load %s\n",name); 
     return(NULL);
     }
   module=NSLinkModule(objectFileImage,"",NSLINKMODULE_OPTION_PRIVATE|NSLINKMODULE_OPTION_BINDNOW);
   NSDestroyObjectFileImage(objectFileImage) ;
   //if(module==NULL) outMsg(0,'E',"Unable to link %s",name);
-  if(module==NULL) sprintf(msg,"Unable to link %s",name);
+  if(module==NULL) snprintf(msg,msglen,"Unable to link %s",name);
   return((void *)module);
   }
 
@@ -169,12 +170,12 @@ void *nbModuleLoad(char *name,int export,char *msg){
 #include <dl.h>
 
 // shared library option not implemented
-void *nbModuleLoad(char *name,int export,char *msg){
+void *nbModuleLoad(char *name,int export,char *msg,size_t msglen){
   void *handle;
 
   *msg=0;
   handle=shl_load(name,BIND_DEFERRED,0L);
-  if(handle==NULL) sprintf(msg,"Unable to load %s - errno=%d\n",name,errno);
+  if(handle==NULL) snprintf(msg,msglen,"Unable to load %s - errno=%d\n",name,errno);
   return(handle);
   }
 
@@ -182,7 +183,7 @@ void *nbModuleLoad(char *name,int export,char *msg){
 
 #include <dlfcn.h>  /* linux, solaris, FreeBSD, NetBSD, OpenBSD */
 
-void *nbModuleLoad(char *name,int export,char *msg){
+void *nbModuleLoad(char *name,int export,char *msg,size_t msglen){
   void *handle;
   const char *error;
   int flag=RTLD_LAZY;
@@ -191,8 +192,8 @@ void *nbModuleLoad(char *name,int export,char *msg){
   handle=dlopen(name,flag);
   if(!handle){
     error=dlerror();
-    if(error!=NULL) snprintf(msg,(size_t)NB_MSGSIZE,"Unable to load %s - %s",name,error); //2012-01-26 dtl use snprintf
-    else snprintf(msg,(size_t)NB_MSGSIZE,"Unable to load %s - error unknown",name); //dtl use snprintf
+    if(error!=NULL) snprintf(msg,msglen,"Unable to load %s - %s",name,error);
+    else snprintf(msg,msglen,"Unable to load %s - error unknown",name);
     return(NULL);
     }
   if(trace) outMsg(0,'T',"Module %s loaded",name);
@@ -204,13 +205,13 @@ void *nbModuleLoad(char *name,int export,char *msg){
 
 #if defined(WIN32)
 
-void *nbModuleSym(HINSTANCE handle,char *symbol,char *msg){
+void *nbModuleSym(HINSTANCE handle,char *symbol,char *msg,size_t msglen){
   void *addr;
 
   *msg=0;
   addr=(void *)GetProcAddress(handle,symbol);
   if(addr==NULL){
-    sprintf(msg,"Unable to locate \"%s\"",symbol);
+    snprintf(msg,msglen,"Unable to locate \"%s\"",symbol);
     return(NULL);
     }
   if(trace) outMsg(0,'T',"Symbol %s located",symbol);
@@ -219,7 +220,7 @@ void *nbModuleSym(HINSTANCE handle,char *symbol,char *msg){
 
 #elif defined(MACOS)
 
-void *nbModuleSym(void *handle,char *symbol,char *msg){
+void *nbModuleSym(void *handle,char *symbol,char *msg,size_t msglen){
   void *addr;
   char ubsymbol[128];
   NSSymbol nsSymbol;
@@ -230,22 +231,22 @@ void *nbModuleSym(void *handle,char *symbol,char *msg){
   *(ubsymbol+127)=0;
   nsSymbol=NSLookupSymbolInModule((NSModule)handle,ubsymbol);  
   if(nsSymbol==NULL){
-    sprintf(msg,"Unable to lookup %s",symbol);
+    snprintf(msg,msglen,"Unable to lookup %s",symbol);
     return(NULL);
     }
   addr=NSAddressOfSymbol(nsSymbol);
-  if(addr==NULL) sprintf(msg,"Unable to locate \"%s\"",symbol);
+  if(addr==NULL) snprintf(msg,msglen,"Unable to locate \"%s\"",symbol);
   return(addr); 
   }
 
 #elif defined(HPUX)
 
-void *nbModuleSym(void *handle,char *symbol,char *msg){
+void *nbModuleSym(void *handle,char *symbol,char *msg,size_t msglen){
   void *addr;
 
   *msg=0;
   if(shl_findsym((shl_t *)&handle,symbol,(short)TYPE_PROCEDURE,&addr)<0){
-    sprintf(msg,"Unable to locate %s - errno=%d\n",symbol,errno);
+    snprintf(msg,msglen,"Unable to locate %s - errno=%d\n",symbol,errno);
     return(NULL);
     }
   return(addr);
@@ -253,14 +254,14 @@ void *nbModuleSym(void *handle,char *symbol,char *msg){
 
 #else
 
-void *nbModuleSym(void *handle,char *symbol,char *msg){
+void *nbModuleSym(void *handle,char *symbol,char *msg,size_t msglen){
   void *addr;
 
+  *msg=0;
   if((addr=dlsym(handle,symbol))==NULL){
-    snprintf(msg,(size_t)NB_MSGSIZE,"Unable to locate \"%s\" - %s",symbol,dlerror()); //2012-01-26 dtl use snprintf
+    snprintf(msg,msglen,"Unable to locate \"%s\" - %s",symbol,dlerror());
     return(NULL);
     }
-  *msg=0; //dtl: moved here Checker (it complained msg has sizeof 1)
   return(addr);
   }
 
@@ -311,7 +312,7 @@ static struct NB_MODULE *newModule(char *path,char *name,NB_List *args,char *tex
   return(module);
   }
 
-void *nbModuleSearchPath(char *path,char *filename,char *msg){
+void *nbModuleSearchPath(char *path,char *filename,char *msg,size_t msglen){
   char fullname[512],*cursor=path,*delim,*separator;
   void *handle;
   size_t len;
@@ -334,7 +335,7 @@ void *nbModuleSearchPath(char *path,char *filename,char *msg){
       }
     strcpy(fullname+len+1,filename);
     if(trace) outMsg(0,'T',"calling nbModuleLoad(\"%s\")",fullname);
-    handle=nbModuleLoad(fullname,0,msg); 
+    handle=nbModuleLoad(fullname,0,msg,msglen); 
     if(handle!=NULL) return(handle);
     cursor=delim+1;
     delim=strchr(cursor,',');
@@ -354,23 +355,23 @@ void *nbModuleSearchPath(char *path,char *filename,char *msg){
     }
   strcpy(fullname+len+1,filename);
   if(trace) outMsg(0,'T',"calling nbModuleLoad(\"%s\")",fullname);
-  handle=nbModuleLoad(fullname,0,msg);
+  handle=nbModuleLoad(fullname,0,msg,msglen);
   return(handle);
   }
   
-void *nbModuleSearch(char *path,char *filename,char *msg){
+void *nbModuleSearch(char *path,char *filename,char *msg,size_t msglen){
   void *handle;
   
-  if(strchr(filename,'/')!=NULL) return(nbModuleLoad(filename,0,msg));
-  if(*path!=0) return(nbModuleSearchPath(path,filename,msg));
+  if(strchr(filename,'/')!=NULL) return(nbModuleLoad(filename,0,msg,msglen));
+  if(*path!=0) return(nbModuleSearchPath(path,filename,msg,msglen));
   path=getenv("NB_MODULE_PATH");
   if(path!=NULL){
-    handle=nbModuleSearchPath(path,filename,msg);
+    handle=nbModuleSearchPath(path,filename,msg,msglen);
     if(handle!=NULL) return(handle);
     }
-  handle=nbModuleSearchPath(NB_MODULE_PATH,filename,msg);
+  handle=nbModuleSearchPath(NB_MODULE_PATH,filename,msg,msglen);
   if(handle!=NULL) return(handle);  
-  return(nbModuleLoad(filename,0,msg));  // try native pathing
+  return(nbModuleLoad(filename,0,msg,msglen));  // try native pathing
   }
 
 /**********************************************************************
@@ -510,7 +511,7 @@ NB_Term *nbModuleDeclare(NB_Term *context,char *ident,char *cursor){
   return(term);
   }
 
-void nbModuleBind(nbCELL context,char *name,char *msg){
+void nbModuleBind(nbCELL context,char *name,char *msg,size_t msglen){
   struct NB_MODULE *module;
   struct NB_TERM *term;
   void *(*symbol)();
@@ -519,15 +520,15 @@ void nbModuleBind(nbCELL context,char *name,char *msg){
     // implicitly declare the module if necessary
     term=nbModuleDeclare((struct NB_TERM *)context,name,name);
     if(term==NULL){
-      snprintf(msg,(size_t)NB_MSGSIZE,"Module \"%s\" not declared and not found",name); //2012-01-26 dtl use snprintf
+      snprintf(msg,msglen,"Module \"%s\" not declared and not found",name); //2012-01-26 dtl use snprintf
       return;
       }
     }
   module=(struct NB_MODULE *)(term->def);
   if(module->address!=NULL) return; // commands are already declared
-  module->address=nbModuleSearch(module->path->value,module->name->value,msg);
+  module->address=nbModuleSearch(module->path->value,module->name->value,msg,msglen);
   if(!module->address) return;
-  symbol=nbModuleSym(module->address,"nbBind",msg);
+  symbol=nbModuleSym(module->address,"nbBind",msg,msglen);
   if(!symbol) return;
   module->handle=(*symbol)(nb_SkillGloss,name,module->args,module->text->value);
   }
@@ -545,7 +546,7 @@ void nbModuleBind(nbCELL context,char *name,char *msg){
 *  The symbol address is returned, and the module handle is returned
 *  via the moduleHandle argument.
 */
-void *nbModuleSymbol(NB_Term *context,char *ident,char *suffix,void **moduleHandleP,char *msg){
+void *nbModuleSymbol(NB_Term *context,char *ident,char *suffix,void **moduleHandleP,char *msg,size_t msglen){
   NB_Term *term;
   struct NB_MODULE *module;
   char *delim,modName[256],symName[256],*sym=ident;
@@ -564,19 +565,19 @@ void *nbModuleSymbol(NB_Term *context,char *ident,char *suffix,void **moduleHand
   if((term=nbTermFind(moduleC,modName))==NULL){
     term=nbModuleDeclare(context,modName,modName);  // implicitly declare the module if necessary
     if(term==NULL){
-      sprintf(msg,"Module \"%s\" not declared and not found",ident);
+      snprintf(msg,msglen,"Module \"%s\" not declared and not found",ident);
       return(NULL);
       }
     }
   module=(struct NB_MODULE *)(term->def);
   if(module->address==NULL){
-    module->address=nbModuleSearch(module->path->value,module->name->value,msg);
+    module->address=nbModuleSearch(module->path->value,module->name->value,msg,msglen);
     if(module->address==NULL) return(NULL);
-    if(NULL!=(symbol=nbModuleSym(module->address,"nbBind",msg)))
+    if(NULL!=(symbol=nbModuleSym(module->address,"nbBind",msg,msglen)))
       module->handle=(*symbol)(nb_SkillGloss,modName,module->args,module->text->value);
     }
   *moduleHandleP=module->handle;
-  symbol=nbModuleSym(module->address,symName,msg);
+  symbol=nbModuleSym(module->address,symName,msg,msglen);
   return(symbol); 
   }
 

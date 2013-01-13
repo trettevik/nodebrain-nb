@@ -748,7 +748,7 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
   void *right;
   NB_Object *object,*objhold;
   NB_Term *term;
-  char *delim,msg[256],*savecursor=*cursor;
+  char *delim,msg[1024],*savecursor=*cursor;
   struct TYPE *type;
   //int not=0;
   char symid;
@@ -835,11 +835,11 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
       if(object->refcnt==0) object->type->destroy(object);
       return(objhold); 
     case '{':
-      if(NULL==(object=(NB_Object *)nbRuleParse((nbCELL)context,0,cursor,msg))) outPut("%s\n",msg);
+      if(NULL==(object=(NB_Object *)nbRuleParse((nbCELL)context,0,cursor,msg,sizeof(msg)))) outPut("%s\n",msg);
       return(object);
     case '~': // time condition 
       if(parseTrace) outMsg(0,'T',"Calling newSched A [%s].",ident);
-      if(NULL==(object=(NB_Object *)newSched((nbCELL)context,symid,ident,&delim,msg,1))){
+      if(NULL==(object=(NB_Object *)newSched((nbCELL)context,symid,ident,&delim,msg,sizeof(msg),1))){
         outPut("%s\n",msg);
         *cursor=savecursor;
         return(NULL);
@@ -1004,7 +1004,7 @@ NB_Object *nbParseRel(NB_Term *context,char **cursor){
 NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
   char operator[256];
   NB_Object *lobject,*robject,*sobject;
-  char *delim,msg[256];
+  char *delim,msg[1024];
   struct TYPE *type;
   char symid,*cursave;
 
@@ -1076,7 +1076,7 @@ NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
         else if(symid=='F') type=condTypeDelayFalse;
         else if(symid=='U') type=condTypeDelayUnknown;
         else{*cursor=cursave; return(lobject);}
-        robject=(NB_Object *)newSched((nbCELL)context,symid,operator,&delim,msg,1);
+        robject=(NB_Object *)newSched((nbCELL)context,symid,operator,&delim,msg,sizeof(msg),1);
         if(robject==NULL){
           outPut("%s\n",msg);
           return(NULL);

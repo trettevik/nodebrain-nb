@@ -222,9 +222,9 @@ void       nbRuleShowExpr(struct NB_RULE *thread);
 void       nbRuleShowItem(struct NB_RULE *thread);
 void       nbRuleShowAll(void);
 NB_Rule   **nbRuleFind(NB_Rule *thread);
-NB_Rule   *nbRuleParse(NB_Cell *context,int opt,char **source,char *msg);
-NB_Plan   *nbRuleParsePlan(NB_Cell *context,int opt,char **source,char *msg);
-char *nbRuleParseBody(NB_Cell *context,int opt,NB_Plan *plan,char *ip,int counter,char *source,char **cursorP,char *msg);
+NB_Rule   *nbRuleParse(NB_Cell *context,int opt,char **source,char *msg,size_t msglen);
+//static NB_Plan   *nbRuleParsePlan(NB_Cell *context,int opt,char **source,char *msg,size_t msglen);
+//static char *nbRuleParseBody(NB_Cell *context,int opt,NB_Plan *plan,char *ip,int counter,char *source,char **cursorP,char *msg,size_t msglen);
 NB_Object *nbRuleEval(NB_Rule *thread);
 
 NB_Object *nbRuleStep(NB_Rule *thread);

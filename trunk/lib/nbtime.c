@@ -39,16 +39,16 @@
 *
 *   Primary Functions:
 *   -----------------------------------------------------------------------------
-*   tc  tcParse(nbCELL context,char **source,char *msg);
+*   tc  tcParse(nbCELL context,char **source,char *msg,size_t msglen);
 *   bfi tcCast(long begin,long end,tc condition);
-*   int tcDefine(char *name,tc condition,char *msg);
+*   int tcDefine(char *name,tc condition,char *msg,size_t msglen);
 *
 *   Parsing Functions: (Used by tcParse)
 *   -----------------------------------------------------------------------------
-*   int tcParsePattern(int array[7],struct tcFunction *function, char **source, char *msg);
-*   struct tcParm *tcParseParm(struct tcFunction *function, char **source, char *msg);
-*   tc tcParseFunction(char **source,char *msg);
-*   tc tcParseLeft(nbCELL conext,char **source,char *msg);
+*   int tcParsePattern(int array[7],struct tcFunction *function, char **source, char *msg,size_t msglen);
+*   struct tcParm *tcParseParm(struct tcFunction *function, char **source, char *msg,size_t msglen);
+*   tc tcParseFunction(char **source,char *msg,size_t msglen);
+*   tc tcParseLeft(nbCELL conext,char **source,char *msg,size_t msglen);
 *
 *   Time Function "Casting" Functions:
 *   -----------------------------------------------------------------------------
@@ -159,6 +159,7 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 * 2012-12-27 eat 0.8.13 Checker updates
 * 2013-01-01 eat 0.8.13 Checker updates
+* 2013-01-12 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #define _USE_32BIT_TIME_T
@@ -253,7 +254,7 @@ long tcTime(void){
 *          from the Epoch.
 *
 */
-long tcAlignYear(long timer,int unit){
+static long tcAlignYear(long timer,int unit){
   struct tm *timeTm;
 
   /* unit: 1-year, 10-decade, 100-century, 1000-millennium */
@@ -269,7 +270,7 @@ long tcAlignYear(long timer,int unit){
   return(mktime(timeTm));
   }
   
-long tcAlignQuarter(long timer){
+static long tcAlignQuarter(long timer){
   struct tm *timeTm;
   
   timeTm=localtime((const time_t *)&timer);
@@ -286,7 +287,7 @@ long tcAlignQuarter(long timer){
   return(mktime(timeTm));
   }
   
-long tcAlignYearMonth(long timer,int month){
+static long tcAlignYearMonth(long timer,int month){
   struct tm *timeTm;
   
   //fprintf(stderr,"tcAlignYearMonth called: %ld %d\n",timer,month);
@@ -308,7 +309,7 @@ long tcAlignYearMonth(long timer,int month){
   return(mktime(timeTm));
   }
   
-long tcAlignMonth(long timer){
+static long tcAlignMonth(long timer){
   struct tm *timeTm;
   
   timeTm=localtime((const time_t *)&timer);
@@ -321,7 +322,7 @@ long tcAlignMonth(long timer){
   return(mktime(timeTm));
   }
   
-long tcAlignWeek(long timer){
+static long tcAlignWeek(long timer){
   struct tm *timeTm;
   
   timeTm=localtime((const time_t *)&timer);
@@ -334,7 +335,7 @@ long tcAlignWeek(long timer){
   return(mktime(timeTm));
   }
   
-long tcAlignWeekDay(long timer,int wday){
+static long tcAlignWeekDay(long timer,int wday){
   struct tm *timeTm;
   
   timeTm=localtime((const time_t *)&timer);
@@ -354,7 +355,7 @@ long tcAlignWeekDay(long timer,int wday){
   return(mktime(timeTm));
   }
   
-long tcAlignDay(long timer){
+static long tcAlignDay(long timer){
   struct tm *timeTm;
   
   timeTm=localtime((const time_t *)&timer);
@@ -365,7 +366,7 @@ long tcAlignDay(long timer){
   return(mktime(timeTm));
   }
   
-long tcAlignHour(long timer){
+static long tcAlignHour(long timer){
   struct tm *timeTm;
   
   timeTm=localtime((const time_t *)&timer);
@@ -375,7 +376,7 @@ long tcAlignHour(long timer){
   return(mktime(timeTm));
   }
 
-long tcAlignMinute(long timer){
+static long tcAlignMinute(long timer){
   struct tm *timeTm;
   
   timeTm=localtime((const time_t *)&timer);
@@ -384,7 +385,7 @@ long tcAlignMinute(long timer){
   return(mktime(timeTm));
   }
 
-long tcAlignSecond(long timer){
+static long tcAlignSecond(long timer){
   return(timer);
   }
 
@@ -632,7 +633,7 @@ bfi tcTrivial(long begin,long end){
 /*
 *  Align to Parent Pattern - (see also tcAlignPattern)
 */  
-long tcAlignParentPattern(long timer,int pat[]){
+static long tcAlignParentPattern(long timer,int pat[]){
   struct tm *timeTm;
   int n,y;
   
@@ -671,7 +672,7 @@ long tcAlignParentPattern(long timer,int pat[]){
 /*
 *  Align to pattern - (see also tcCheckPattern)
 */  
-long tcAlignPattern(long timer,int pat[],struct tcFunction *function){
+static long tcAlignPattern(long timer,int pat[],struct tcFunction *function){
   struct tm *timeTm;
   int n,y;
   long begin,end,start;
@@ -723,7 +724,7 @@ long tcAlignPattern(long timer,int pat[],struct tcFunction *function){
 /*
 *  Align stop pattern
 */  
-long tcAlignStopPattern(long start,int pat[],struct tcFunction *function){
+static long tcAlignStopPattern(long start,int pat[],struct tcFunction *function){
   struct tm *timeTm;
   int n,y;
   long stop;
@@ -1055,14 +1056,14 @@ bfi tcXor(begin,end,left,right) long begin,end; tc left,right; {
 * Schedule Expression Parsing Routines
 **************************************************************************/  
 
-int tcParseTime(start,stop,source,msg) long *start,*stop; char **source,*msg; {
+int tcParseTime(long *start,long *stop,char **source,char *msg,size_t msglen){
   char *cursor=*source,*number,delim;
   struct tm timer;
 
   number=cursor;
   while(*cursor>='0' && *cursor<='9') cursor++;
   if(cursor==number){
-    sprintf(msg,"NB000E Expecting integer value at \"%s\".",cursor);
+    snprintf(msg,msglen,"Expecting integer value at \"%s\".",cursor);
     return(0);
     }
   if(*cursor=='#'){   /* Expressed as integer value */ 
@@ -1159,17 +1160,17 @@ int tcParseTime(start,stop,source,msg) long *start,*stop; char **source,*msg; {
   return(1);
   }
 
-int tcParseSegment(start,stop,source,msg) long *start,*stop; char **source,*msg; {
+int tcParseSegment(long *start,long *stop,char **source,char *msg,size_t msglen){
   long whatever;
 
-  if(!tcParseTime(start,stop,source,msg)) return(0);
+  if(!tcParseTime(start,stop,source,msg,msglen)) return(0);
   if(**source=='-'){
     (*source)++;
-    if(!tcParseTime(stop,&whatever,source,msg)) return(0);
+    if(!tcParseTime(stop,&whatever,source,msg,msglen)) return(0);
     }
   else if(**source=='_'){
     (*source)++;
-    if(!tcParseTime(&whatever,stop,source,msg)) return(0);
+    if(!tcParseTime(&whatever,stop,source,msg,msglen)) return(0);
     }
   return(1);
   }
@@ -1190,7 +1191,7 @@ int tcParseSegment(start,stop,source,msg) long *start,*stop; char **source,*msg;
 *    5/25@8:25  - valid within the context of "minute"
 *     
 */
-int tcParsePattern(int *array,struct tcFunction *function,char **source,char *msg){
+int tcParsePattern(int *array,struct tcFunction *function,char **source,char *msg,size_t msglen){
   char *cursor=*source,pattern[60],*delimiter;
   char *patcur=pattern;
   int i,n=function->unit,special=0;
@@ -1213,14 +1214,14 @@ int tcParsePattern(int *array,struct tcFunction *function,char **source,char *ms
   delimiter=" ::@//";  
   while(patcur>pattern){
     if(n>6){
-      sprintf(msg,"NB000E Too many parent parameters in calendar function parameter. \"%s\"",pattern);
+      snprintf(msg,msglen,"Too many parent parameters in calendar function parameter. \"%s\"",pattern);
       return(0);
       }
     patcur--;
     while(patcur>=pattern && *patcur>='0' && *patcur<='9') patcur--;
     if(patcur>=pattern){    
       if(*(delimiter+n)!=*patcur && '.'!=*patcur){
-        sprintf(msg,"NB000E Unexpected separator in calendar function parameter. \"%s\"",pattern);
+        snprintf(msg,msglen,"Unexpected separator in calendar function parameter. \"%s\"",pattern);
         return(0);
         }
       *patcur=0;
@@ -1258,13 +1259,13 @@ int tcParsePattern(int *array,struct tcFunction *function,char **source,char *ms
 *    <parmbody> := argument [ , <parmbody> ]
 *    <argument> := <pattern> | <pattern>_<pattern> | <pattern>..<pattern>
 */
-struct tcParm *tcParseParm(struct tcFunction *function,char **source,char *msg){
+struct tcParm *tcParseParm(struct tcFunction *function,char **source,char *msg,size_t msglen){
   struct tcParm *tcParm,*tcParmnext=NULL;
   char *cursor;
   int i;
 
   if(**source!='('){
-    sprintf(msg,"NB000L Expecting left parenthesis at \"%s\"",*source);
+    snprintf(msg,msglen,"Logic error - Expecting left parenthesis at \"%s\"",*source);
     return(NULL);
     }
   (*source)++;
@@ -1273,14 +1274,14 @@ struct tcParm *tcParseParm(struct tcFunction *function,char **source,char *msg){
     //  {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
     tcParm=(struct tcParm *)nbAlloc(sizeof(struct tcParm));
     tcParm->next=tcParmnext;        
-    if(!tcParsePattern(tcParm->start,function,source,msg)){
+    if(!tcParsePattern(tcParm->start,function,source,msg,msglen)){
       tcParmFree(tcParm);
       return(NULL);
       }
     cursor=*source;
     if(*cursor=='.' && *(cursor+1)=='.'){  /* handle range */
       (*source)+=2;
-      if(!tcParsePattern(tcParm->stop,function,source,msg)){
+      if(!tcParsePattern(tcParm->stop,function,source,msg,msglen)){
         tcParmFree(tcParm);
         return(NULL);
         }
@@ -1289,7 +1290,7 @@ struct tcParm *tcParseParm(struct tcFunction *function,char **source,char *msg){
     else{
       if(*cursor=='_'){                  /* handle span */
         (*source)++;
-        if(!tcParsePattern(tcParm->stop,function,source,msg)){
+        if(!tcParsePattern(tcParm->stop,function,source,msg,msglen)){
           tcParmFree(tcParm);
 	      return(NULL);
           }
@@ -1318,7 +1319,7 @@ struct tcParm *tcParseParm(struct tcFunction *function,char **source,char *msg){
     }
   if(**source!=')' && **source!=0){
     tcParmFree(tcParm);
-    sprintf(msg,"NB000E Expecting comma ',' or right parenthesis ')' at \"%s\"",*source);
+    snprintf(msg,msglen,"NB000E Expecting comma ',' or right parenthesis ')' at \"%s\"",*source);
     return(NULL);
     }
   (*source)++;
@@ -1330,7 +1331,7 @@ struct tcParm *tcParseParm(struct tcFunction *function,char **source,char *msg){
 *
 *  o Quarter,Week,Su-Sa are not currently supported by the parameter notation.
 */   
-tc tcParseFunction(char **source,char *msg){
+tc tcParseFunction(char **source,char *msg,size_t msglen){
   tc tcdef;
   char *cursor,*name=*source,mark;
   bfi (*operation)()=tcSimple;
@@ -1345,7 +1346,7 @@ tc tcParseFunction(char **source,char *msg){
   if(*name>='A' && *name<='Z'){  /* user declared time expression */
     if((term=nbTimeLocateCalendar(name))==NULL){
       *cursor=mark;   /* repare the source */
-      snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Time function \"%s\" not declared.",name); //dtl used snprintf
+      snprintf(msg,msglen,"NB000E Time function \"%s\" not declared.",name);
       return(NULL);  /* return without updating the source pointer */
       }
     *cursor=mark;   /* repare the source */
@@ -1363,13 +1364,13 @@ tc tcParseFunction(char **source,char *msg){
     *cursor=mark;     /* repair the source */
     if(function==NULL){
       *cursor=mark;   /* repare the source */
-      sprintf(msg,"NB000E Time function \"%s\" not recognized.",name);
+      snprintf(msg,msglen,"NB000E Time function \"%s\" not recognized.",name);
       return(NULL);   /* return without updating the source pointer */
       }
     *source=cursor;   /* update the source pointer */
     if(mark=='('){    /* get parameters */
       operation=tcComplex;
-      if((right=tcParseParm(function,source,msg))==NULL) return(NULL);
+      if((right=tcParseParm(function,source,msg,msglen))==NULL) return(NULL);
       }
     }
   /* build a tcDef structure */
@@ -1382,18 +1383,18 @@ tc tcParseFunction(char **source,char *msg){
   return(tcdef);    
   }
   
-tc tcParseLeft(nbCELL context,char **source,char *msg){
+tc tcParseLeft(nbCELL context,char **source,char *msg,size_t msglen){
   tc tcdef,left=NULL,right;
   char *cursor=*source;
   bfi (*operation)();
 
   if((*cursor>='a' && *cursor<='z') || (*cursor>='A' && *cursor<='Z'))
-    return(tcParseFunction(source,msg));
+    return(tcParseFunction(source,msg,msglen));
   if(*cursor=='('){
     cursor++;
-    if((left=tcParse(context,&cursor,msg))==NULL) return(NULL);
+    if((left=tcParse(context,&cursor,msg,msglen))==NULL) return(NULL);
     if(*cursor!=')'){
-      sprintf(msg,"NB000E Expecting right parenthesis.");
+      snprintf(msg,msglen,"NB000E Expecting right parenthesis.");
       *source=cursor; /* return the cursor */
       /* free left ? */
       return(NULL);
@@ -1404,7 +1405,7 @@ tc tcParseLeft(nbCELL context,char **source,char *msg){
     }
   if(*cursor=='{'){  /* plan? */
     cursor++;
-    if((right=(void *)nbRuleParse(context,1,&cursor,msg))==NULL) return(NULL);
+    if((right=(void *)nbRuleParse(context,1,&cursor,msg,msglen))==NULL) return(NULL);
     //if((tcdef=(tc)malloc(sizeof(struct tcDef)))==NULL) //2012-01-26 dtl: handled out of memory
     //  {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
     tcdef=(tc)nbAlloc(sizeof(struct tcDef)); 
@@ -1426,7 +1427,7 @@ tc tcParseLeft(nbCELL context,char **source,char *msg){
   else if(*cursor=='#') operation=tcPartition;   /* until */
   else if(*cursor=='_') operation=tcPartition;   /* until */
   else{
-    sprintf(msg,"NB000E Time condition prefix operator \"%c\" not recognized.",*cursor);
+    snprintf(msg,msglen,"Time condition prefix operator \"%c\" not recognized.",*cursor);
     *source=cursor; /* return the cursor */
     return(NULL);
     }
@@ -1434,7 +1435,7 @@ tc tcParseLeft(nbCELL context,char **source,char *msg){
   *  We found a prefix operator
   */
   cursor++;
-  if((right=tcParseLeft(context,&cursor,msg))==NULL){
+  if((right=tcParseLeft(context,&cursor,msg,msglen))==NULL){
     /* free left ? */
     *source=cursor;
     return(NULL);
@@ -1450,14 +1451,14 @@ tc tcParseLeft(nbCELL context,char **source,char *msg){
   return(tcdef);    
   }
     
-tc tcParse(nbCELL context,char **source,char *msg){
+tc tcParse(nbCELL context,char **source,char *msg,size_t msglen){
   tc tcdef,left=NULL;
   char *cursor=*source,*index;
   bfi (*operation)();
   void *right;
   char indexMsg[512];
 
-  if((left=tcParseLeft(context,&cursor,msg))==NULL){
+  if((left=tcParseLeft(context,&cursor,msg,msglen))==NULL){
     *source=cursor;
     return(NULL);
     }
@@ -1479,7 +1480,7 @@ tc tcParse(nbCELL context,char **source,char *msg){
     operation=tcSelect;
     index=cursor+1;
     if((cursor=strchr(index,']'))==NULL){
-      sprintf(msg,"NB000E Expecting ']' terminating index.");
+      snprintf(msg,msglen,"NB000E Expecting ']' terminating index.");
       *source=index;
       return(NULL);
       }
@@ -1489,7 +1490,7 @@ tc tcParse(nbCELL context,char **source,char *msg){
     *          right=bfiIndexParse(&index,msg);
     */
     if((right=bfiIndexParse(index,indexMsg,sizeof(indexMsg)))==NULL){
-      snprintf(msg,NB_MSGSIZE,"NB000E Invalid index \"%s\". %s",index,indexMsg); // 2013-01-01 eat - VID 708-0.8.13-1
+      snprintf(msg,msglen,"NB000E Invalid index \"%s\". %s",index,indexMsg); // 2013-01-01 eat - VID 708-0.8.13-1
       *source=cursor;
       *cursor=']';
       return(NULL);
@@ -1512,7 +1513,7 @@ tc tcParse(nbCELL context,char **source,char *msg){
   *  We found an infix operator
   */
   cursor++;
-  if((right=tcParse(context,&cursor,msg))==NULL){
+  if((right=tcParse(context,&cursor,msg,msglen))==NULL){
     /* free left ? */
     *source=cursor;  /* return the cursor */
     return(NULL);
@@ -1522,12 +1523,12 @@ tc tcParse(nbCELL context,char **source,char *msg){
   */
   if(operation==tcStretchStart && ((tc)left)->operation!=tcSimple){
     /* free left and right ? */
-    sprintf(msg,"NB000E The start stretch operator '<' requires a simple function on the left.");
+    snprintf(msg,msglen,"NB000E The start stretch operator '<' requires a simple function on the left.");
     return(NULL);
     }  
   if(operation==tcStretchStop && ((tc)right)->operation!=tcSimple){
     /* free left and right ? */
-    sprintf(msg,"NB000E The stop stretch operator '>' requires a simple function on the right.");
+    snprintf(msg,msglen,"NB000E The stop stretch operator '>' requires a simple function on the right.");
     return(NULL);
     }  
   /* build a tcDef structure */
@@ -1635,14 +1636,14 @@ NB_Term *nbTimeLocateCalendar(char *ident){
 /*
 *  Declare time expression
 */
-NB_Term *nbTimeDeclareCalendar(nbCELL context,char *ident,char **source,char *msg){
+NB_Term *nbTimeDeclareCalendar(nbCELL context,char *ident,char **source,char *msg,size_t msglen){
   tc tcDef;
   NB_Term *term;
   NB_Calendar *calendar;
   struct STRING *text;
   char *cursor=*source,*string,delim;
   if(nbTermFind(nb_TimeCalendarContext,ident)!=NULL){
-    snprintf(msg,(size_t)NB_MSGSIZE,"NB000E Calendar \"%s\" already declared.",ident); //dtl used snprintf
+    snprintf(msg,msglen,"NB000E Calendar \"%s\" already declared.",ident); //dtl used snprintf
     return(NULL);
     }
   while(*cursor==' ') cursor++;
@@ -1651,7 +1652,7 @@ NB_Term *nbTimeDeclareCalendar(nbCELL context,char *ident,char **source,char *ms
   delim=*cursor;
   *cursor=0;
   text=grabObject(useString(string));
-  tcDef=tcParse(context,&string,msg);
+  tcDef=tcParse(context,&string,msg,msglen);
   *cursor=delim;
   if(tcDef==NULL){
     dropObject(text);

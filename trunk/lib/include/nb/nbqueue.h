@@ -138,7 +138,7 @@ extern int nbQueueLock(int file,int option,int type);
 #if defined(WIN32)
 _declspec (dllexport)
 #endif
-extern int nbQueueGetFile(char *filename,char *dirname,char *identityName,int qsec,int option,unsigned char type);
+extern int nbQueueGetFile(char *filename,size_t size,const char *dirname,const char *identityName,int qsec,int option,unsigned char type);
 
 
 

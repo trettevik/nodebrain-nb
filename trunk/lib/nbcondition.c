@@ -125,6 +125,7 @@
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2012-10-17 eat 0.8.12 Replaced termGetName with nbTermName
 * 2012-12-27 eat 0.8.13 Checker updates
+* 2013-01-11 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -289,7 +290,7 @@ void condPrintAll(int sel){
   */
   struct COND *cond,**condP;
   long v;
-  int i;
+  long i;
   condP=(struct COND **)&(condH->vect);
   for(v=0;v<condH->modulo;v++){
     i=0;
@@ -298,7 +299,7 @@ void condPrintAll(int sel){
         (sel==1 && cond->cell.object.type->attributes&TYPE_IS_REL) ||
         (sel==2 && cond->cell.object.type->attributes&TYPE_IS_BOOL) ||
         (sel==3 && cond->cell.object.type->attributes&TYPE_IS_TIME)) {
-        outPut("H[%u,%d]",v,i);
+        outPut("H[%u,%ld]",v,i);
         outPut("R[%u]",cond->cell.object.refcnt); 
         outPut("L(%d)",cond->cell.level);
         outPut(" = ");
@@ -307,7 +308,7 @@ void condPrintAll(int sel){
         printObject((NB_Object *)cond);
         outPut("\n");
         }
-      i++;
+      if(i<LONG_MAX) i++;  // 2013-01-13 eat - VID 7045
       }
     condP++; 
     }  
@@ -776,17 +777,17 @@ void enableInfix(cond) struct COND *cond; {
   if(cond->right!=cond->left) nbCellEnable((NB_Cell *)cond->right,(NB_Cell *)cond);
   }
 
-void disableInfix(cond) struct COND *cond; {
+void disableInfix(struct COND *cond){
   nbCellDisable((NB_Cell *)cond->left,(NB_Cell *)cond);
   if(cond->right!=cond->left) nbCellDisable((NB_Cell *)cond->right,(NB_Cell *)cond);
   }
 
-void enableCapture(cond) struct COND *cond;{
+void enableCapture(struct COND *cond){
   /* initialize capture to Unknown because evalAndCapture or evalOrCapture may return current value */
   cond->cell.object.value=nb_Unknown; 
   enablePrefix(cond);
   }
-void enableFlipFlop(cond) struct COND *cond;{
+void enableFlipFlop(struct COND *cond){
   /* initialize flip-flop to Unknown because evalFlipFlop may return current value */
   cond->cell.object.value=nb_Unknown; 
   enableInfix(cond);
@@ -797,11 +798,11 @@ void enableFlipFlop(cond) struct COND *cond;{
 *    By setting the value to true, we cause evalTime() to return False
 *    and schedule the first True.
 */
-void enableTime(cond) struct COND *cond; {
+void enableTime(struct COND *cond){
   cond->cell.object.value=NB_OBJECT_TRUE;
   }
 
-void disableTime(cond) struct COND *cond; {
+void disableTime(struct COND *cond){
   /* cond->cell.object.value=NB_OBJECT_TRUE; */
   condUnschedule(cond);
   }
@@ -811,7 +812,7 @@ void disableTime(cond) struct COND *cond; {
 *    Rules are special cases for now.  Eventually the rule condition
 *    will be merged with the ACTION object.     
 */
-void freeCondition(cond) struct COND *cond; {
+void freeCondition(struct COND *cond){
   struct COND *lcond,**condP;
   
   condP=hashCond(condH,cond->cell.object.type,cond->left,cond->right);

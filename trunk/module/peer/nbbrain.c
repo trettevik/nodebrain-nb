@@ -112,8 +112,8 @@ void printBrain(struct BRAIN *brain){
   if(brain->dir!=NULL){
     nbLogPutI("(%s",brain->dir->value);
     if(brain->qsec!=0 || brain->qfsize!=0 || brain->qsize!=0){
-      char qparms[40];
-      sprintf(qparms,"(%d,%d,%d)",brain->qsec,(int)brain->qfsize,(int)brain->qsize);
+      char qparms[64];
+      snprintf(qparms,sizeof(qparms),"(%d,%d,%d)",brain->qsec,(int)brain->qfsize,(int)brain->qsize); // 2013-01-13 eat - VID 5867
       nbLogPutI(qparms);
       }
     if(brain->skullTarget!=NULL) nbLogPutI(",%s",brain->skullTarget->value);
@@ -147,17 +147,12 @@ void destroyBrain(struct BRAIN *brain){
 //   <qTime>  ::= queue time interval in seconds to write to same file
 
 struct BRAIN * nbBrainNew(int version,char *string){
-  // Create a brain structure
-  //   identity@socket[{persistence}][(queue_path[(time)])]  
-  //      socket ::=  host:port | filename 
-  //   smirky_sysmon@smirky.ns.cs.boeing.com:34002 */
-  int len;
+  size_t len;
   char *cursor=string,*cursave=string,*delim;
   char symid,ident[256],*ipaddr,*hostname; 
   struct BRAIN *brain;
   int number;
 
-  //brain=(struct BRAIN *)newObject(nb_BrainType,&nb_BrainFree,sizeof(struct BRAIN));
   brain=(struct BRAIN *)nbAlloc(sizeof(struct BRAIN));
   brain->version=version;
   brain->context=NULL;
@@ -233,26 +228,24 @@ struct BRAIN * nbBrainNew(int version,char *string){
       else{
         for(delim=cursor;*delim!=0 && *delim!=':' && *delim!='{' && *delim!='(' && *delim!=' ';delim++);
         len=delim-cursor;
-        if(len>0){
-          if(len>255){
-            nbLogMsgI(0,'E',"Hostname longer than 255 limit before ':' encountered.");
+        if(len>255){
+          nbLogMsgI(0,'E',"Hostname longer than 255 limit before ':' encountered.");
+          destroyBrain(brain);
+          return(NULL);
+          }
+        strncpy(ident,cursor,len);
+        ident[len]=0;
+        cursor=delim;
+        brain->hostname=((struct STRING *)nbCellCreateString(NULL,ident))->value;
+        if(*cursor==':'){
+          if((ipaddr=chgetaddr(ident))==NULL){
+            nbLogMsgI(0,'E',"Unknown host name \"%s\".",ident);
             destroyBrain(brain);
             return(NULL);
             }
-          strncpy(ident,cursor,len);
-          ident[len]=0;
-          cursor=delim;
-          brain->hostname=((struct STRING *)nbCellCreateString(NULL,ident))->value;
-          if(*cursor==':'){
-            if((ipaddr=chgetaddr(ident))==NULL){
-              nbLogMsgI(0,'E',"Unknown host name \"%s\".",ident);
-              destroyBrain(brain);
-              return(NULL);
-              }
-            brain->ipaddr=((struct STRING *)nbCellCreateString(NULL,ipaddr))->value;
-            }
-          else brain->ipaddr="";
+          brain->ipaddr=((struct STRING *)nbCellCreateString(NULL,ipaddr))->value;
           }
+        else brain->ipaddr="";
         }
       if(*cursor==':'){
         if(brain->hostname==NULL){

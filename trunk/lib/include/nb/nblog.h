@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -43,6 +43,7 @@
 * 2005/04/08 eat 0.6.2  API function definitions moved to nbapi.h
 * 2009-02-22 eat 0.7.5  Renamed from nbout.h to nblog.h
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2013-01-11 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #ifndef _NB_OUT_H_
@@ -72,7 +73,7 @@ int  outInit(void);
 void outFlush(void);
 void outStream(int stream,void (*handler)(char *buffer));
 void outStamp(void);
-void outData(char *data,int len);
+void outData(char *data,size_t len);
 void outPut(const char *format,...);
 void outHex(unsigned int l,void *buf);
 //#if defined(WIN32)

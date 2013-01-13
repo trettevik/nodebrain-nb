@@ -126,7 +126,7 @@ struct tcParm{
                       /* special value is for su(1.4) or week(7.50) */
   };
 
-tc tcParse(NB_Cell *context,char **source,char *msg);
+tc tcParse(NB_Cell *context,char **source,char *msg,size_t msglen);
 tcq tcQueueNew(tc tcdef,long begin,long end);
 long tcQueueTrue(tcq queue,long begin,long end);
 long tcQueueFalse(tcq queue);
@@ -135,7 +135,7 @@ void tcPrintSeg(long start,long stop,char *label);
 long tcTime(void);
 
 void nbTimeInit(NB_Stem *stem);
-NB_Term *nbTimeDeclareCalendar(NB_Cell *context,char *ident,char **source,char *msg);
+NB_Term *nbTimeDeclareCalendar(NB_Cell *context,char *ident,char **source,char *msg,size_t msglen);
 NB_Term *nbTimeLocateCalendar(char *ident);
 
 bfi tcCast(long begin,long end,tc tcdef);

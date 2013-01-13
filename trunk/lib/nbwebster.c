@@ -705,6 +705,7 @@ static int nbWebsterCgiWriter(nbPROCESS process,int pid,void *processSession){
 static int nbWebsterCgi(nbCELL context,nbWebSession *session,char *file,char *queryString){
   nbWebServer *webster=session->webster;
   char buf[NB_BUFSIZE],dir[2048],*delim,value[512];
+  char msg[NB_MSGSIZE];
   int len;
 
   nbProxyProducer(context,session->client,session,NULL); // remove producer
@@ -742,9 +743,9 @@ static int nbWebsterCgi(nbCELL context,nbWebSession *session,char *file,char *qu
       return(-1);
       }
     nbLogMsg(context,0,'T',"CGI GET request: %s",session->command);
-    session->process=nbMedullaProcessOpen(NB_CHILD_TERM|NB_CHILD_SESSION,session->command,"",session,nbWebsterCgiCloser,NULL,nbWebsterCgiReader,nbWebsterCgiErrReader,buf);
+    session->process=nbMedullaProcessOpen(NB_CHILD_TERM|NB_CHILD_SESSION,session->command,"",session,nbWebsterCgiCloser,NULL,nbWebsterCgiReader,nbWebsterCgiErrReader,msg,sizeof(msg));
     if(session->process==NULL){
-      nbLogMsg(context,0,'E',"%s",buf);
+      nbLogMsg(context,0,'E',"%s",msg);
       return(-1);
       }
     }
@@ -763,9 +764,9 @@ static int nbWebsterCgi(nbCELL context,nbWebSession *session,char *file,char *qu
       return(-1);
       }
     nbLogMsg(context,0,'T',"Post request: %s",session->command);
-    session->process=nbMedullaProcessOpen(NB_CHILD_TERM|NB_CHILD_SESSION,session->command,"",session,nbWebsterCgiCloser,nbWebsterCgiWriter,nbWebsterCgiReader,nbWebsterCgiErrReader,buf);
+    session->process=nbMedullaProcessOpen(NB_CHILD_TERM|NB_CHILD_SESSION,session->command,"",session,nbWebsterCgiCloser,nbWebsterCgiWriter,nbWebsterCgiReader,nbWebsterCgiErrReader,msg,sizeof(msg));
     if(session->process==NULL){
-      nbLogMsg(context,0,'E',"%s",buf);
+      nbLogMsg(context,0,'E',"%s",msg);
       return(-1);
       }
     if(session->content){
@@ -1755,14 +1756,12 @@ int *nbWebsterPutText(nbCELL context,nbWebSession *session,char *text){
 
   size=nbProxyBookWriteWhere(context,&session->book,&data);
   while(len>size){
-    //fprintf(stderr,"nbWebsterPutText: step data=%p size=%d text=%p len=%d\n",data,size,text,len);
     memcpy(data,text,size);
     text+=size;
     len-=size;
     nbProxyBookProduced(context,&session->book,size);
     size=nbProxyBookWriteWhere(context,&session->book,&data);
     }
-  //fprintf(stderr,"nbWebsterPutText: last data=%p size=%d text=%p len=%d\n",data,size,text,len);
   memcpy(data,text,len);
   nbProxyBookProduced(context,&session->book,len);
   return(0);

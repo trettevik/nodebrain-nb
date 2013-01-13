@@ -558,7 +558,7 @@ NB_Term *nbNodeParse(NB_Term *context,char *ident,char *cursor){
     }
   skill=node->skill;
   if(skill->status==0){  // bind skills on first reference
-    if((skillBind=(NB_SKILL_BIND)nbModuleSymbol(context,skill->ident->value,"Bind",&moduleHandle,msg))==NULL){
+    if((skillBind=(NB_SKILL_BIND)nbModuleSymbol(context,skill->ident->value,"Bind",&moduleHandle,msg,sizeof(msg)))==NULL){
       //outPut("%s\n",msg);
       outMsg(0,'E',"%s",msg);
       dropObject(args);

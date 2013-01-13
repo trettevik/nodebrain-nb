@@ -531,7 +531,8 @@ unsigned int getSeq(nbCELL context,NB_MOD_Netflow *netflow){
   nbLogMsg(context,0,'T',"Netflow Engine Table:");
   for(device=netflow->device;device!=NULL;device=device->next){
     engines++;
-    sprintf(streamMsg,"Router=%s Engine=%2.2u V5Pkts=%5.5u V7Pkts=%5.5u TotPkts=%8.8u,FirstSeq=%10.10u LastSeq=%10.10u Name=%s\n",nbIpGetAddrString(caddr,device->address),device->engineid,device->v5pkts,device->v7pkts,device->pkts,device->flowSeqRef,device->flowSeqLast,device->name);
+    // 2012-01-12 eat - VID 5761-0.8.13-2
+    snprintf(streamMsg,sizeof(streamMsg),"Router=%s Engine=%2.2u V5Pkts=%5.5u V7Pkts=%5.5u TotPkts=%8.8u,FirstSeq=%10.10u LastSeq=%10.10u Name=%s\n",nbIpGetAddrString(caddr,device->address),device->engineid,device->v5pkts,device->v7pkts,device->pkts,device->flowSeqRef,device->flowSeqLast,device->name);
     nbStreamPublish(netflow->streamEngineStats,streamMsg);
     nbLogPut(context,"Router=%s Engine=%2.2u V5Pkts=%5.5u V7Pkts=%5.5u TotPkts=%8.8u,FirstSeq=%10.10u LastSeq=%10.10u Name=%s\n",nbIpGetAddrString(caddr,device->address),device->engineid,device->v5pkts,device->v7pkts,device->pkts,device->flowSeqRef,device->flowSeqLast,device->name);
     v5pkts+=device->v5pkts;
@@ -668,7 +669,8 @@ void analyzeFlows(nbCELL context,NB_MOD_Netflow *netflow,unsigned int address){
       case 17: sprintf(ctype,"SweepUdp%u",port); break;
       default: sprintf(ctype,"Sweep%uP%u",proto,port);
       }
-    sprintf(cmd,"alert time=%d,severity=3,type=\"%s\",fromIp=\"%s\",toIp=\"\",toProto=%u,toPort=%u,router=\"%s\";",(int)atime,ctype,nbIpGetAddrString(caddr,address),proto,port,nbIpGetAddrString(rcaddr,netflow->routerAddr));
+    // 2013-01-12 eat - VID 5717-0.8.13-2
+    snprintf(cmd,sizeof(cmd),"alert time=%d,severity=3,type=\"%s\",fromIp=\"%s\",toIp=\"\",toProto=%u,toPort=%u,router=\"%s\";",(int)atime,ctype,nbIpGetAddrString(caddr,address),proto,port,nbIpGetAddrString(rcaddr,netflow->routerAddr));
     nbCmd(context,cmd,1);
     nbStreamPublish(netflow->streamAlerts,cmd);
     }
@@ -739,7 +741,7 @@ void displayDist(nbCELL context,struct NB_MOD_NETFLOW_HASH *hash){
     entryP++;
     }
   for(i=0;i<VARBYTESIZE*8;i++){
-    nbLogPut(context,"%3.3u %10.10u\n",i,dist[i]);
+    nbLogPut(context,"%3.3d %10.10d\n",i,dist[i]);
     }
   }
 

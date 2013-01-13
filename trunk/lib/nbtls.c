@@ -468,7 +468,7 @@ nbTLS *nbTlsCreate(nbTLSX *tlsx,char *uri){
     nbFree(tls,sizeof(nbTLS));
     return(NULL);
     }
-  tls->uriCount=uriCount;  // 2013-01-01 eat - VID 4607-0.8.13-1 FP Can't be greater than 4 passed into nbTlsUriParse
+  tls->uriCount=(unsigned char)(uriCount%256);  // 2013-01-01 eat - VID 4607-0.8.13-1 FP Can't be greater than 4 passed into nbTlsUriParse
   // NOTE: The tls->option of NB_TLS_OPTION_TLS should not be referenced in the future
   // Instead we need to look at tls->uriMap[tls->uriIndex].scheme
   if(tls->uriMap[0].scheme==NB_TLS_SCHEME_TLS || tls->uriMap[0].scheme==NB_TLS_SCHEME_HTTPS) tls->option|=NB_TLS_OPTION_TLS;
@@ -1064,8 +1064,8 @@ nbTLS *nbTlsAccept(nbTLS *tlsListener){
     tls->ssl=NULL;
     }
   if(tls->uriMap[0].scheme==NB_TLS_SCHEME_UNIX)
-    sprintf(tls->uriMap[0].uri,"unix://%s",tls->uriMap[0].name);
-  else sprintf(tls->uriMap[0].uri,"%s://%s:%d",protocol,tls->uriMap[0].addr,tls->uriMap[0].port);
+    snprintf(tls->uriMap[0].uri,sizeof(tls->uriMap[0].uri),"unix://%s",tls->uriMap[0].name);  // 2013-01-12 eat VID 6426-0.8.13-2
+  else snprintf(tls->uriMap[0].uri,sizeof(tls->uriMap[0].uri),"%s://%s:%d",protocol,tls->uriMap[0].addr,tls->uriMap[0].port); // 2013-01-12 eat - VID 6404-0.8.13-2
   // 2012-05-22 eat - ending the experimenting - had code depending on it
   // 2012-05-15 eat - experimenting without handle on tlsx
   if(tls->tlsx) tls->handle=tls->tlsx->handle;
@@ -1121,7 +1121,7 @@ int nbTlsRead(nbTLS *tls,char *buffer,size_t size){
 int nbTlsWrite(nbTLS *tls,char *buffer,size_t size){
   ssize_t len;
   int error;
-  if(tlsTrace) fprintf(stderr,"nbTlsWrite: size=%d\n",(int)size);
+  if(tlsTrace) fprintf(stderr,"nbTlsWrite: size=%zu\n",size);
   tls->error=NB_TLS_ERROR_UNKNOWN;
   if(!tls->ssl){
     if(tlsTrace) fprintf(stderr,"nbTlsWrite: calling clear send - socket=%d\n",tls->socket);

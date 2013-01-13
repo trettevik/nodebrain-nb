@@ -185,7 +185,7 @@ void schedInit(NB_Stem *stem,size_t n){  // 2012-12-31 eat - n from int to size_
 *  Translate a schedule specification string into internal form.
 *     The source string must be null terminated.
 */
-struct SCHED *newSched(nbCELL context,char symid,char *source,char **delim,char *msg,int reuse){
+struct SCHED *newSched(nbCELL context,char symid,char *source,char **delim,char *msg,size_t msglen,int reuse){
   char *cursor,*curnum;
   char numstr[16];
   int  n;
@@ -198,7 +198,7 @@ struct SCHED *newSched(nbCELL context,char symid,char *source,char **delim,char 
   struct tcQueue *queue=NULL;   /* Time queue */
   long domainBegin;
 
-  if(trace) printf("NB000T newSched \"%s\".\n",source);
+  if(trace) fprintf(stderr,"NB000T newSched \"%s\".\n",source);
   cursor=source;
   if(symid=='~'){
     if(*cursor>='0' && *cursor<='9') schedType=schedTypePulse;
@@ -206,7 +206,7 @@ struct SCHED *newSched(nbCELL context,char symid,char *source,char **delim,char 
     }
   else if(symid=='T' || symid=='F' || symid=='U') schedType=schedTypeDelay;   /* delay */
   else{
-    sprintf(msg,"NB000L newSched called with invalid symbol type code.");
+    snprintf(msg,msglen,"Logic error - newSched called with invalid symbol type code.");
     *delim=cursor;
     return(NULL);
     }
@@ -223,7 +223,7 @@ struct SCHED *newSched(nbCELL context,char symid,char *source,char **delim,char 
   interval=0;
   duration=0;
   if(schedType==schedTypeTime){  /* new syntax time conditions */
-    if((tcdef=tcParse(context,&cursor,msg))==NULL){
+    if((tcdef=tcParse(context,&cursor,msg,msglen))==NULL){
       *delim=cursor;
       return(NULL);
       }
@@ -231,7 +231,7 @@ struct SCHED *newSched(nbCELL context,char symid,char *source,char **delim,char 
     queue=tcQueueNew(tcdef,domainBegin,domainBegin+60);
     }
   else{  /* Pulse or Delay schedule */
-    if(trace) printf("NB000T Assuming pulse schedule.\n");
+    if(trace) fprintf(stderr,"NB000T Assuming pulse schedule.\n");
     while(*cursor!=0 && strchr("0123456789",*cursor)!=NULL){
       curnum=numstr;
       while(*cursor!=0 && strchr("0123456789",*cursor)!=NULL){
@@ -241,27 +241,27 @@ struct SCHED *newSched(nbCELL context,char symid,char *source,char **delim,char 
         }
       *curnum=0;  
       n=atoi(numstr);
-      if(trace) printf("NB000T n=%d c=%c\n",n,*cursor);
+      if(trace) fprintf(stderr,"NB000T n=%d c=%c\n",n,*cursor);
       if(*cursor=='s') interval+=n;
       else if(*cursor=='m') interval+=60*n;
       else if(*cursor=='h') interval+=3600*n;
       else if(*cursor=='d') interval+=86400*n;
       else if(*cursor=='w') interval+=704800*n;
       else{ 
-        sprintf(msg,"NB000E expecting calendar code.");
+        snprintf(msg,msglen,"Expecting calendar code.");
         *delim=cursor;
         return(NULL);
         }
       cursor++;  
       }
     *delim=cursor;
-    if(trace) printf("NB000T interval=%u\n",(unsigned int)interval);  
+    if(trace) fprintf(stderr,"NB000T interval=%u\n",(unsigned int)interval);  
     if(cursor==source+1){
-      sprintf(msg,"NB000E Expecting number or time function name.");
+      snprintf(msg,msglen,"Expecting number or time function name.");
       return(NULL);
       }
     if(interval<2){
-      sprintf(msg,"NB000E Intervals must be at least 2 second.");
+      snprintf(msg,msglen,"Intervals must be at least 2 second.");
       return(NULL);
       }  
     duration=interval; /* change to allow specification of duration */ 
@@ -274,7 +274,7 @@ struct SCHED *newSched(nbCELL context,char symid,char *source,char **delim,char 
   sched->symbol=useString(source);
   sched->interval=interval;
   sched->duration=duration;
-  if(trace) printf("NB000T nb_ClockTime=%u\n",(unsigned int)nb_ClockTime);
+  if(trace) fprintf(stderr,"NB000T nb_ClockTime=%u\n",(unsigned int)nb_ClockTime);
   if(schedType==schedTypePulse){
     sched->period.start=nb_ClockTime; /* Start right away */ 
     sched->period.end=sched->period.start+duration;

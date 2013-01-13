@@ -541,7 +541,7 @@ static char *nbProjectionEncodeLiteral(char *bufcur,char *cursor,uint32_t len){ 
 int nbProjectionEncode(char *buffer,int buflen,struct REGEXP_STACK *reStackP,int nsub[],int level,char *source){
   char *subcur,*bufcur=buffer,*cursor=source,*cursave;
   char exp,find,replace;
-  uint32_t len;
+  size_t len;
   int i,reIndex=reStackP->count-1,initialReIndex=reIndex;
   char symid,ident[512];
 
@@ -1054,7 +1054,7 @@ void nbTranslatorExecuteFile(nbCELL context,nbCELL translator,char *filename){
 
 nbCELL nbTranslatorParse(nbCELL context,char *filename,int nsub);
 
-int nbTranslatorParseNumber(char **cursorP){
+static int nbTranslatorParseNumber(char **cursorP){
   char number[10],*curnum=number,*cursor=*cursorP;
   
   while(*cursor>='0' && *cursor<='9' && curnum<number+9){
@@ -1074,7 +1074,7 @@ int nbTranslatorParseNumber(char **cursorP){
 /*
 *  Insert positional command list (COMMAND, FILE, or LIST)
 */
-int nbTranslatorInsertList(struct NB_XI *xi,struct NB_XI *xiParent,unsigned char flag,int position){
+static int nbTranslatorInsertList(struct NB_XI *xi,struct NB_XI *xiParent,unsigned char flag,int position){
   struct NB_XI **xiP,*xiLast,*xiTarget;
 
   if(xi==NULL){
@@ -1119,7 +1119,7 @@ int nbTranslatorInsertList(struct NB_XI *xi,struct NB_XI *xiParent,unsigned char
   return(1);
   }
 
-int nbTranslatorDeleteLeaf(struct NB_XI *xiParent,int position){
+static int nbTranslatorDeleteLeaf(struct NB_XI *xiParent,int position){
   struct NB_XI *xi,**xiP;
   int n=0,oper;
 
@@ -1140,7 +1140,7 @@ int nbTranslatorDeleteLeaf(struct NB_XI *xiParent,int position){
   return(0);
   }
 
-int nbTranslatorDeleteBranch(struct NB_XI *xiParent,NB_Object *object){
+static int nbTranslatorDeleteBranch(struct NB_XI *xiParent,NB_Object *object){
   NB_TreePath treePath;
   struct NB_XI *xi,**xiP;
 
@@ -1166,7 +1166,7 @@ int nbTranslatorDeleteBranch(struct NB_XI *xiParent,NB_Object *object){
   return(1);
   }
 
-struct NB_XI *nbTranslatorInsertBranch(struct NB_XI *xiParent,nbCELL object,unsigned char oper,unsigned char flag,int position,char *cursor){
+static struct NB_XI *nbTranslatorInsertBranch(struct NB_XI *xiParent,nbCELL object,unsigned char oper,unsigned char flag,int position,char *cursor){
   NB_TreePath treePath;
   struct NB_XI *xi,**xiP;
 

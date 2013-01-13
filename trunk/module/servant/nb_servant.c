@@ -151,11 +151,11 @@ int servantAssert(nbCELL context,void *skillHandle,nbServant *servant,nbCELL arg
   }
 
 int servantEnable(nbCELL context,void *skillHandle,nbServant *servant,nbCELL arglist,nbCELL value){
-  char msgbuf[1024];
+  char msg[NB_MSGSIZE];
   nbLogMsg(context,0,'I',"Enabling %s",servant->cmd);
-  servant->process=nbMedullaProcessOpen(NB_CHILD_TERM|NB_CHILD_SESSION,servant->cmd,servant->log,servant,NULL,cmdMsgWriter,cmdMsgReader,logMsgReader,msgbuf);
+  servant->process=nbMedullaProcessOpen(NB_CHILD_TERM|NB_CHILD_SESSION,servant->cmd,servant->log,servant,NULL,cmdMsgWriter,cmdMsgReader,logMsgReader,msg,sizeof(msg));
   if(servant->process==NULL){
-    nbLogMsg(context,0,'E',"%s",msgbuf);
+    nbLogMsg(context,0,'E',"%s",msg);
     return(1);
     }
   nbLogMsg(context,0,'I',"Enabled [%d] %s",nbMedullaProcessPid(servant->process),servant->cmd);

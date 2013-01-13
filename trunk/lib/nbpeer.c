@@ -123,6 +123,7 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 * 2012-12-27 eat 0.8.13 Checker updates
 * 2013-01-01 eat 0.8.13 Checker updates
+* 2013-01-11 eat 0.8.13 Checker updates
 *==============================================================================
 */
 #include <nb/nb.h>
@@ -572,7 +573,8 @@ int nbPeerSend(nbCELL context,nbPeer *peer,void *data,uint16_t size){
   // put message in buffer
   memcpy(peer->wloc+2,data,size);
   mysize=size+2;               // 2013-01-01 eat - VID 5268-0.8.13-1 FP but changed data type and moved here from init
-  *peer->wloc=mysize>>8;       // 2013-01-01 eat - VID 5376-0.8.13-1 FP but changed data type of mysize from int to uint16_t
+  *peer->wloc=(mysize>>8)%256; // 2013-01-01 eat - VID 5376-0.8.13-1 FP but changed data type of mysize from int to uint16_t
+                               // 2013-01-11 eat - VID 6583-0.8.13-2 FP but still trying to help checker by adding the %256
   peer->wloc++;
   *peer->wloc=mysize%256;      // 2013-01-01 eat - VID 4614,4849-0.8.13-1 FP but changed from &0xff to %256 and data type
   peer->wloc++;

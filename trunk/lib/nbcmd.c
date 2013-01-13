@@ -1484,7 +1484,7 @@ int nbCmdDeclare(nbCELL context,void *handle,char *verb,char *cursor){
       skill->term=nbTermNew(nb_SkillGloss,ident,skill);
     }
   else if(strcmp(type,"calendar")==0){
-    if(nbTimeDeclareCalendar(context,ident,&cursor,msg)==NULL) outPut("%s\n",msg);
+    if(nbTimeDeclareCalendar(context,ident,&cursor,msg,sizeof(msg))==NULL) outPut("%s\n",msg);
     }
   else{
     outMsg(0,'E',"Expecting {identity|module|calendar} at [%s].",cursave);
@@ -1778,7 +1778,7 @@ int nbCmdProfile(nbCELL context,void *handle,char *verb,char *cursor){
 *  Forecast schedules
 */
 int nbCmdForecast(nbCELL context,void *handle,char *verb,char *cursor){
-  char *delim,msg[256];
+  char *delim,msg[1024];
   char symid,ident[256],*cursave;
   time_t floor,start,end;
   int i;
@@ -1806,7 +1806,7 @@ int nbCmdForecast(nbCELL context,void *handle,char *verb,char *cursor){
       }
     }  
   else if(symid=='~'){
-    sched=newSched(context,symid,ident,&delim,msg,0);
+    sched=newSched(context,symid,ident,&delim,msg,sizeof(msg),0);
     if(sched==NULL){
       outPut("%s\n",msg);
       outMsg(0,'E',"Schedule \"%s\" not understood.",ident);
@@ -2085,7 +2085,7 @@ int nbCmdLoad(nbCELL context,void *handle,char *verb,char *cursor){
     outMsg(0,'E',"Null library name not expected - ignored.");
     return(1);
     }
-  if(nbModuleLoad(name,1,msg)==NULL){
+  if(nbModuleLoad(name,1,msg,sizeof(msg))==NULL){
     outMsg(0,'E',"Unable to load %s - %s",name,msg);
     return(1);
     }
@@ -2132,7 +2132,7 @@ char *iWord(cursor,word)
 #if defined(WIN32)
 __declspec(dllexport) 
 #endif    
-void nbCmd(nbCELL context,char *cursor,int cmdopt){ 
+void nbCmd(nbCELL context,char *cursor,unsigned char cmdopt){ 
   NB_Stem *stem=context->object.type->stem;
   char symid,verb[256],*cmdbuf=cursor,*cursave;
   //NB_Term *term;

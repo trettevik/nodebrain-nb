@@ -721,7 +721,7 @@ void webLinkDirRow(nbCELL context,nbWebSession *session,char *class,int row,char
   char *name=path+strlen(path)-1;
   while(name>=path && *name!='/') name--;
   name++;
-  sprintf(text,"<tr class='%s'><td>%d</td><td><table cellspacing=0 cellpadding=0><tr><td><img src='webster/folder.gif'></td><td>&nbsp;<a href=':menu?%s'>%s</a></td></tr></table></td><td>\n",class,row,path,name);
+  snprintf(text,sizeof(text),"<tr class='%s'><td>%d</td><td><table cellspacing=0 cellpadding=0><tr><td><img src='webster/folder.gif'></td><td>&nbsp;<a href=':menu?%s'>%s</a></td></tr></table></td><td>\n",class,row,path,name);
   nbWebsterPutText(context,session,text);
   snprintf(text,sizeof(text),"%s/webster/%s/.note",session->webster->rootdir,path);
   webNote(context,session,text);
