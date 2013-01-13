@@ -184,7 +184,7 @@
 *  Add a message consumer - UDP socket
 */
 int nbMsgConsumerAdd(nbMsgLog *msglog,char *name){
-  int  rc;
+  int  rc=-1;
   nbMsgConsumer *consumer,**consumerP;
 
   if(strlen(name)>=sizeof(consumer->name)){  // 2012-12-16 eat - CID 751639
@@ -218,7 +218,7 @@ int nbMsgConsumerAdd(nbMsgLog *msglog,char *name){
 */
 
 int nbMsgConsumerRemove(nbMsgLog *msglog,char *name){
-  int  rc;
+  int  rc=-1;
   nbMsgConsumer *consumer,**consumerP;
 
   outMsg(0,'T',"Cabal %s node %s removing consumer %s",msglog->cabal,msglog->nodeName,name);
