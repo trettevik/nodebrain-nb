@@ -1,0 +1,289 @@
+\input texinfo   @c -*-texinfo-*-
+@c %**start of header
+@setfilename nb_string.info
+@include version.texi
+@settitle String NodeBrain Module
+@c %**end of header
+
+@finalout
+@paragraphindent none
+@setchapternewpage odd
+
+@copying
+String NodeBrain Module@*
+June 2012@*
+The Boeing Company, P.O. Box 3707, Seattle, WA 98124, USA
+
+@sp 2
+@b{Version @value{VERSION}}
+
+Author: Ed Trettevik <eat@@nodebrain.org>
+
+Copyright @copyright{} 2012 The Boeing Company
+
+@sp 1
+Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
+
+@sp 1
+NodeBrain(TM) is a trademark of The Boeing Company.   All other trademarks and registered trademarks referenced in this document are the trademarks of their respective owners.
+
+@sp 2
+@b{Software License}
+
+@multitable {------------------------------} {----------------------------------------------------}
+@item Copyright @copyright{} 1998-2012 @tab The Boeing Company
+@item @tab Ed Trettevik <eat@@nodebrain.org>
+@end multitable
+
+The String NodeBrain Module is free software; you can redistribute it and/or  modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option)any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License formore details.
+
+You should have received a copy of the GNU General PublicLicense along with this program; if not, write to Free Software Foundation,Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+@end copying
+
+@iftex
+@titlepage
+@c @image{./image001,32pt,32pt,,gif}
+
+@titlefont{String NodeBrain Module}
+@sp 1
+@tex
+\vskip4pt \hrule height 3pt width \hsize
+@end tex
+@sp 3
+@b{Version @value{VERSION}}
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+
+@c History Preface and Document Conventions 
+@page
+@b{History}
+
+@multitable {-------------} {--------------------------------------------------------------------------------------------------------}
+@item 2012-06-04 @tab
+Title: @i{String NodeBrain Module}@*  
+Author: Ed  Trettevik <eat@@nodebrain.org>@*
+Publisher: The Boeing Company
+
+@item 2012-06-04 @tab
+Release 0.8.10
+@itemize @bullet
+@item This is a first edition.
+@end itemize
+
+@end multitable
+
+@page
+@b{Preface}
+
+@sp 1
+This manual is intended for users of the String NodeBrain Module, a plug-in for string manipulation.
+The reader is expected to be familiar with the basic concepts of NodeBrain.  See www.nodebrain.org for general information
+on NodeBrain.
+
+@include conventions.texi
+
+@end titlepage
+
+@end iftex
+
+@c ----------------------------------------------------------
+@c Not printed document
+
+@ifnottex
+@node Top
+@top String NodeBrain Module
+
+This manual is for the String NodeBrain Module (version @value{VERSION}, @value{UPDATED-MONTH}) used for string manipulation.
+@*@*
+Copyright @copyright{} 2012 The Boeing Company
+@quotation
+Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
+@end quotation
+@ifnotplaintext
+@b{Short Table Of Contents}
+@menu
+* Concepts:: Foundation
+* Tutorial:: Introduction by Example
+* Commands:: Syntax and Semantics
+* Triggers:: Conditions and Response
+@end menu
+@menu
+* GNU Free Documentation License::
+* Index::
+@end menu
+@end ifnotplaintext
+@end ifnottex
+
+@c Set page footings
+@oddfooting @thistitle @| @| @thispage
+@evenfooting @thispage @| @| @thistitle
+
+@c Contents
+@oddheading @| @| 
+@evenheading @| @|
+@contents
+
+@c Set page headings for document
+@oddheading @thischapter @| @| @value{UPDATED-MONTH}
+@evenheading @value{UPDATED-MONTH} @| @| @thischapter
+
+@node Concepts
+@chapter Concepts
+@cindex Concepts
+
+The String module implements nodes that manipulate strings in some way.
+This is initially a very minimal set of evaluation methods.
+NodeBrain is not intended to perform string manipulation with the goal of
+producing output for human consumption.  However, it is helpful to have
+some string manipulation capability to consume text representations of events.
+Regular expressions provide the functionality needed to extract information
+from text.  Once extracted, we sometimes need to transform the extracted
+strings.  In general, it is best to delegate this function to servants
+using your favorate string manipulation language. But where we see a repeating
+need for a simple string manipulation, additional skills will be added to
+this module.
+@*@*
+Regular expression based substitution supported by the PCRE library will
+most likely be included in the language in a future release.  The operations
+provided by this module are expected to be less complex and more special
+purpose.
+
+@node Tutorial
+@chapter Tutorial
+@cindex tutorial
+@c @include nb_string_tutorial.texi
+
+@quotation
+@i{Generosity with strings is not generosity; It is a deal.}
+---Marya Mannes
+@end quotation
+
+Here's the deal with NodeBrain strings.
+Translators and regular expressions are used to recognize and take strings apart and symbolic substitution is used to
+construct new strings.  Tree nodes can be used to translate strings by looking up one string
+and substituting another.  But that's about the limit of NodeBrain's generosity with strings.
+The string module exists to enable additional string manipulation capability as needed to digest
+input event attributes for processing with rules.  So far, little has been needed, and this is a trivial module.
+@*@*
+The following example illustrates how a @code{string.utc} node can be used to transform a time stamp in a broken down
+format into a UTC time string.  This transformation is based on the strptime C function.
+@cartouche
+@smallexample
+> @b{define utc node string.utc;}
+> define whenUtc cell @b{utc(when,"%Y-%m-%d %H:%M:%S")};
+> assert when="2012-06-19 10:20:35";
+> assert x=whenUtc; # force evaluation of whenUtc since there is no rule depending on it
+> show x;
+@b{x = "1340101235"}
+> assert when="2012-05-12 12:15:50";
+> assert x=whenUtc;
+> show x;
+@b{x = "1336824950"}
+@end smallexample
+@end cartouche
+@sp 1
+The next example might apply in a case where a string value is to be used in an output alarm
+passed to an application where ";" has a special meaning.  A @code{string.chrsub} node is used
+to substitute a "," for any ";" in the string.
+@cartouche
+@smallexample
+> @b{define chrsub node string.chrsub;}
+> define clean cell @b{chrsub(dirty,";,")};
+> assert dirty="There is always hope; at least for now.";
+> assert x=clean; # force evaluation of clean since there is no rule depending on it
+> show x;
+@b{x = "There is always hope, at least for now."}
+@end smallexample
+@end cartouche
+
+
+@node Commands
+@chapter Commands
+@cindex commands
+
+This section describes commands used with a String node.
+ 
+@section Define
+@cindex define command
+
+The @command{define} command is used to create String manipulation nodes.
+Although any term can be defined for a String node, using the skill name for the term is generally a good idea.
+ 
+@cartouche
+@b{Syntax}
+@multitable {---------------------} {---------------------------------------------------------------}
+@item @i{chrsubDefineCmd} @tab ::= @b{define} @ringaccent{s} @b{chrsub} @ringaccent{s} @b{node} @ringaccent{s} @b{string.chrsub} [ @b{;} ]  @bullet{} 	   
+@item @i{utcDefineCmd} @tab ::= @b{define} @ringaccent{s} @b{utc} @ringaccent{s} @b{node} @ringaccent{s} @b{string.utc} [ @b{;} ]  @bullet{} 	   
+@end multitable		 
+@end cartouche
+
+@section Cell Evaluation
+@cindex cell evaluation
+
+String manipulation cells use String nodes to perform operations on string operands and/or produce strings.
+
+@cartouche
+@b{Syntax}
+@multitable {---------------------} {---------------------------------------------------------------}
+@item @i{chrsubCell} @tab ::= @b{chrsub(} @i{string} @b{,} @i{pairString} @b{)}
+@item @i{utcCell} @tab ::= @b{utc(} @i{timestring} @b{,} @i{formatstring} @b{)} 	   
+@end multitable		 
+@end cartouche
+
+@subsection chrsub
+@cindex chrsub
+
+The @code{chrsub} node substitutes one character for another in a string.
+
+@cartouche
+@smallexample
+strsub(text,"xy")    # character x replaces y
+strsub(text,"xyab")  # character x replaces y and a replaced b
+@end smallexample
+@end cartouche
+
+@subsection utc
+@cindex utc
+
+The @code{utc} node converts a time string into UTC time.  See the man page for strptime for a description of the format string.
+
+@cartouche
+@smallexample
+utc("2001-11-12 18:31:01","%Y-%m-%d %H:%M:%S")
+utc(mytimestamp,"%Y-%m-%d %H:%M:%S")
+@end smallexample
+@end cartouche
+
+@section Assert
+@cindex assert command
+
+Assertions are not supported by this module.
+
+@section Node Commands
+@cindex node commands
+
+This module does not implement node commands.
+
+@section Module Commands
+@cindex module command
+
+This module does not implement module commands.
+
+@node Triggers
+@chapter Triggers
+@cindex triggers
+
+This module does not implement triggers.
+
+@node GNU Free Documentation License
+@unnumbered GNU Free Documentation License
+@include fdl.texi
+
+@node Index
+@unnumbered Index 
+@printindex cp 
+@bye 
+

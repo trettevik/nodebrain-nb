@@ -1,0 +1,294 @@
+\input texinfo   @c -*-texinfo-*-
+@c %**start of header
+@setfilename nb_webster.info
+@include version.texi
+@settitle Webster NodeBrain Module
+@c %**end of header
+
+@finalout
+@paragraphindent none
+@setchapternewpage odd
+
+@copying
+Webster NodeBrain Module@*
+June 2012@*
+The Boeing Company, P.O. Box 3707, Seattle, WA 98124, USA
+
+@sp 2
+@b{Release @value{RELEASE}}
+
+Author: Ed Trettevik <eat@@nodebrain.org>
+
+Copyright @copyright{} 2012 The Boeing Company
+
+@sp 1
+Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts. A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
+
+@sp 1
+NodeBrain(TM) is a trademark of The Boeing Company. All other trademarks and registered trademarks referenced in this document are the trademarks of their respective owners.
+
+@sp 2
+@b{Software License}
+
+@multitable {------------------------------} {----------------------------------------------------}
+@item Copyright @copyright{} 1998--2010 @tab The Boeing Company
+@item @tab Ed Trettevik <eat@@nodebrain.org>
+@end multitable
+
+NodeBrain is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option)any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License formore details.
+
+You should have received a copy of the GNU General PublicLicense along with this program; if not, write to Free Software Foundation,Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+@end copying
+
+@iftex
+@titlepage
+@c @image{./image001,32pt,32pt,,gif}
+
+@titlefont{Webster NodeBrain Module}
+@sp 1
+@tex
+\vskip4pt \hrule height 3pt width \hsize
+@end tex
+@sp 3
+@b{Version @value{VERSION}}
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+
+@c History Preface and Document Conventions 
+@page
+@b{History}
+
+@multitable {-------------} {--------------------------------------------------------------------------------------------------------}
+@item 2005-10-12 @tab
+Title: @i{NodeBrain Tutorial}@*
+Author: Ed Trettevik <eat@@nodebrain.org>@*
+Publisher: The Boeing Company
+
+@item 2010-12-31 @tab
+Release 0.8.3
+@itemize @bullet
+@item Updates - still needed
+@end itemize
+
+@end multitable
+
+@page
+@b{Preface}
+
+@sp 1
+This module is intended for readers seeking an introduction to NodeBrain through a series of simple examples. Other documents are available for readers looking for a more complete reference to the rule language, modules, or API (application programmatic interface).
+
+The intent of the examples in this module is to illustrate individual concepts, not to provide complete working applications or show all related options.
+We avoid formal syntax descriptions, thinking you are here because you want to figure it out from examples.  
+
+Files referenced in this tutorial are included in the tutorial directory of the NodeBrain distribution.  
+
+See www.nodebrain.org for more information and the latest update to this document.
+
+@sp 2
+@b{Documents}
+@sp 1
+@quotation
+@i{NodeBrain Tutorial}
+
+@i{NodeBrain User Guide}
+
+@i{NodeBrain Language Reference}
+
+@i{NodeBrain Module Reference}
+
+@i{NodeBrain API Reference}
+@end quotation
+
+@sp 2
+@b{Document Conventions}
+@sp 1
+Sample code and input/output examples are displayed in a monospace font, indented in HTML and Info, and enclosed in a box in PDF or printed copies.
+Bold text is used to bring the reader's attention to specific portions of an example.
+In the following example, the first and last line are associated with the host shell and the lines in between are input or output unique to NodeBrain.
+The @code{define} command is highlighted, indicating it is the focus of the example.
+Lines starting with "@dots{}" are a continuation of the previous line ending with "@dots{}".
+This is not part of the language, just one way of breaking up single lines to fit on a printed page.
+If you copy an example, you must remove the dots and combine the lines into a single line.
+
+@cartouche
+@smallexample
+$ nb
+> @b{define myFirstRule on(a=1 and b=2) mood="happy";}
+> assert mood="sad";
+> show mood
+mood = "sad"
+> assert a=1,b=2,c=3,d="This is an example of a long single line that", @dots{}
+@dots{} e="we depict on multiple lines to fit on the documnet page";
+2008/06/05 12:09:08 NB000I Rule myFirstRule fired(mood="happy")
+> show mood
+mood = "happy"
+> quit
+$
+@end smallexample
+@end cartouche
+
+@end titlepage
+
+@end iftex
+
+@c ----------------------------------------------------------
+@c Not printed document
+
+@ifnottex
+@node Top
+@top Webster NodeBrain Module
+
+This manual is for the Webster NodeBrain Module (version @value{VERSION}, @value{UPDATED-MONTH}) used as minimal web server for a NodeBrain application.
+@*
+Copyright @copyright{} 2012 The Boeing Company
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts. A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
+@end quotation
+
+@ifnotplaintext
+@b{Short Table of Contents}
+@end ifnotplaintext
+@menu
+* Concepts:: Foundation
+* Tutorial:: Introduction by Example
+* Commands:: Syntax and Semantics
+* Triggers:: Conditions and Response
+@end menu
+@menu
+* GNU Free Documentation License::
+* Index::
+@end menu
+@end ifnottex
+
+@c Set page footings
+@oddfooting @thistitle @| @| @thispage
+@evenfooting @thispage @| @| @thistitle
+
+@c Contents
+@oddheading @| @| 
+@evenheading @| @|
+@contents
+
+@c Set page headings for document
+@oddheading @thischapter @| @| @value{UPDATED-MONTH}
+@evenheading @value{UPDATED-MONTH} @| @| @thischapter
+
+
+@node Concepts
+@chapter Concepts
+@cindex concepts
+
+A Webster module provides administrators with an HTTPS interface to NodeBrain agents, enabling the use of a web browser as a client. It is not intended as a general purpose web server and should not be used as alternative to web servers like Apache that are designed for general purpose use. However, it can be used to provide access to custom content packaged with a NodeBrain kit or application where a low rate of access is expected.  
+
+@node Tutorial
+@chapter Tutorial
+@cindex tutorial
+@include nb_webster_tutorial.texi
+
+@node Commands
+@chapter Commands
+@cindex commands
+
+@section Define
+@cindex define command
+ 
+@cartouche
+@b{Syntax}
+@multitable {-----------------------------} {----------------------------------------------------------------}	   
+@item @i{websterDefinition} @tab ::= @b{define} @ringaccent{s} @i{term} @ringaccent{s} @b{node} [@ringaccent{s} @b{"} @i{identity} @b{"} ] [;] @bullet{} 	   
+@item @i{identity}          @tab ::= Identity for commands issued by the webster node.
+@item @i{cellOption}        @tab ::= @i{term}. define @i{option} @b{cell} @i{value} [;] @bullet{}
+@item @i{textOption}        @tab ::= @i{term}. define @i{websterModuleOption} @b{text:} @i{value} @bullet{}
+@item @i{option}            @tab ::= @i{tlsApiOption} | @i{websterApiOption} | @i{websterModuleOption}
+@item @i{tlsApiOption}      @tab ::= See list below
+@item @i{websterApiOption}  @tab ::= See list below
+@item @i{websterModuleOption} @tab ::= See list below
+@end multitable			 
+@end cartouche
+
+The following NodeBrain TLS API options are specified as cells within the context of a Webster node.
+@multitable {------------------------} {------------------------------------------------------------------------}
+@item @b{Option}           @tab @b{Description}	   
+@item uri                  @tab Protocol, interface, and port
+@item                      @tab Default: "https://0.0.0.0:49443"
+@item option               @tab Authentication option
+@item                      @tab Default: "CERTS"
+@item timeout              @tab Read timeout seconds
+@item                      @tab Default: 5
+@item keyfile              @tab File containing the server key
+@item                      @tab Default: "security/ServerKey.pem"
+@item certfile             @tab File containing the server certificate
+@item                      @tab Default: "security/ServerCert.pem"
+@item trustfile            @tab File containing the server key
+@item                      @tab Default: "security/TrustedCertificates.pem"
+@end multitable
+
+The following NodeBrain Webster API options are specified as cells within the context of a Webster node.
+@multitable {------------------------} {------------------------------------------------------------------------}
+@item @b{Option}           @tab @b{Description}
+@item Filter               @tab NodeBrain translator used as web application filter
+@item                      @tab Define: -none-
+@item DocumentRoot         @tab Root directory for web pages
+@item                      @tab Default: "web"	   
+@item IndexPage            @tab Page selected by default when resource is a directory
+@item                      @tab Default: "index.html"
+@item IndexQuery           @tab Parameters if the IndexPage accepts them (e.g. cgi script)
+@item                      @tab Default: -none-
+@item Authenticate         @tab Authentication option "yes" | "certificate" | "password" | "no"
+@item                      @tab Default: "yes"
+@item AccessList           @tab Access control list file [deprecated - see Authorize]
+@item                      @tab Default: "security/AccessList.conf"
+@item Config               @tab Configuration file name - see next block of options below
+@item                      @tab Default: ""
+@end multitable
+
+The following Webster module options are specified as string or text cells within the context of a Webster node.
+
+@multitable {------------------------} {------------------------------------------------------------------------}
+@item @b{Option}           @tab @b{Description}
+@item Title                @tab Title displayed in the center of a Webster page heading
+@item                      @tab Default: "MyCaboodle"
+@item Link                 @tab Link associated with the title in Webster page heading
+@item                      @tab Default: "http://nodebrain.org"
+@item Menu                 @tab Menu displayed in top right area of Webster page heading
+@item                      @tab Default: "<a href=':page'>Webster</a>"
+@item Version              @tab Application version number to display in Webster page heading
+@item                      @tab Default: ""
+@end multitable
+
+When Webster module options are specified in a configuration file identified by the @code{Config} option and
+illustrated below, the values
+specified in the configuration file override values specified as cells. 
+
+@cartouche
+@smallexample
+# Comment lines start with "#".
+# Blank lines are allowed
+Title="MyCaboodle";
+Version="";
+Link="http://nodebrain.org";
+Menu="<a href=':page">Webster</a>";
+@end smallexample
+@end cartouche
+
+One reason you want to use a configuration file is to share these options with cgi scripts.
+
+@node Triggers
+@chapter Triggers
+@cindex triggers 
+
+The Webster module does not implement any triggers
+
+@node GNU Free Documentation License 
+@unnumbered GNU Free Documentation License
+@include fdl.texi
+
+@node Index 
+@unnumbered Index 
+@printindex cp 
+@bye 

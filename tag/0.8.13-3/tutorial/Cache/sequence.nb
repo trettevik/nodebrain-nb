@@ -1,0 +1,14 @@
+#!/usr/local/bin/nb
+# File: tutorial/cache/sequence.nb
+define OnJust node cache:(~(5s):switch);
+define TurnedOn if(on) OnJust(switch);
+define TurnedOff if(!on and OnJust(switch)): $ # The ${switch} turned off within ${OnJust._interval} of turning on
+
+# Sample events
+alert on,switch="kitchen light";
+alert on,switch="porch light";
+alert !on,switch="kitchen light";
+-sleep 6
+alert !on,switch="porch light";
+alert on,switch="porch light";
+alert !on,switch="porch light";

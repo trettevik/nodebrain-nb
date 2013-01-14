@@ -1,0 +1,12 @@
+$ Content-Type: text/html; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit;
+<html>
+<body>
+<big>Important Notice!</big>
+<span style='font-size: 12pt;font-family: calibri;'>
+<p>Your system is about to crash.</p>
+<p>Reason: ${type}
+</span>
+</body>
+</html>

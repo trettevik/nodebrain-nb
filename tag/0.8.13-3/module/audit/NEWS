@@ -1,0 +1,4 @@
+2009-02-09 Release 0.7.4
+
+o  Module directory created to manage module
+   as individual sub-packages

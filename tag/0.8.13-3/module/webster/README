@@ -1,0 +1,12 @@
+This program is a NodeBrain node module.  It uses the
+NodeBrain's C API to provide HTTPS access to a NodeBrain
+agent.  See NodeBrain Module Reference for more info.
+
+Prerequisites: openssl
+
+Build and install:
+
+./configure
+make
+make check
+make install

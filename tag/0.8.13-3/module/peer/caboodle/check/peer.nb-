@@ -1,0 +1,16 @@
+# Peer module check script
+
+declare peer module {"../.libs"}; # for checking only
+define peer node peer("default@socket/peer");
+
+# Start a server to send commands to
+
+=|:agent/server.nb
+
+-sleep 1
+
+peer:show server
+peer:assert a=1;
+peer:show -t
+peer:stop
+-rm log/server.log

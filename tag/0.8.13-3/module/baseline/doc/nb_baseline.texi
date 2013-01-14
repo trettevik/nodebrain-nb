@@ -1,0 +1,542 @@
+\input texinfo   @c -*-texinfo-*-
+@c %**start of header
+@setfilename nb_baseline.info
+@include version.texi
+@settitle Baseline NodeBrain Module
+@c %**end of header
+
+@finalout
+@paragraphindent none
+@setchapternewpage odd
+
+@copying
+Baseline NodeBrain Module@*
+June 2012@*
+The Boeing Company,  P.O. Box 3707, Seattle, WA 98124, USA
+
+@sp 2
+@b{Version @value{VERSION}} 
+
+Author: Ed Trettevik <ed.a.trettevik@@boeing.com>
+
+Copyright @copyright{} 2010, 2011, 2012 The Boeing Company
+
+@sp 1
+Permission is granted to copy, distribute, and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
+
+@sp 1
+NodeBrain(TM) is a trademark of The Boeing Company.   All other trademarks and registered trademarks referenced in this document are the trademarks of their respective owners.
+
+@sp 2
+@b{Software License}
+
+@multitable {------------------------------} {----------------------------------------------------}
+@item Copyright @copyright{} 2010--2012 @tab The Boeing Company
+@item @tab Ed Trettevik <eat@@nodebrain.org>
+@end multitable
+
+The Baseline NodeBrain Module is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by theFree Software Foundation; either version 2 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program; if not, write to Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+@end copying
+
+@iftex
+@titlepage
+@c @image{./image001,32pt,32pt,,gif}
+
+@titlefont{Baseline NodeBrain Module}
+@sp 1
+@tex
+\vskip4pt \hrule height 3pt width \hsize
+@end tex
+@sp 3
+@b{Version @value{VERSION}}
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+
+@c History Preface and Document Conventions 
+@page
+@b{History}
+
+@multitable {-------------} {--------------------------------------------------------------------------------------------------------}
+@item 2010-09-13 @tab
+Title: @i{Baseline NodeBrain Module}@*  
+Author: Ed  Trettevik <ed.a.trettevik@@boeing.com>@*
+Publisher: The Boeing Company
+
+@item @tab
+Version 0.1
+@itemize @bullet
+@item Initial prototype.
+This document describes the Baseline module as first introduced with NodeBrain 0.8.3, with
+very little experimentation on real world problems having been performed to validate the design.
+We anticipate changes to this document as the module evolves, hopefully quickly, to a version 1.0.
+@end itemize
+
+@c @item 2010-02-06 @tab   
+@c Version 0.2
+@c @itemize @bullet
+@c @item This update follows installation of Bingo 0.2 in a test environment.  It is not an entirely
+@c accurate description of Bingo 0.2 software.  We are continuing to use this document as a specification
+@c document, with version 1.0 being the target. Bingo 0.2 has some deficiencies relative to this document,
+@c and may also include functionality not yet documented here.
+@c @end itemize
+
+@end multitable
+
+@page
+@b{Preface}
+
+@sp 1
+This manual is intended for users of the Baseline NodeBrain Module, a plug-in for statistical anomaly detection.
+The Baseline module was first introduced in NodeBrain 0.8.3 in September 2010.  
+This module should be treated as a prototype.  It has not yet been exercised enough to fully validate the design.
+We expect it to evolve as we gain experience.
+
+A statistical anomaly detection capability has been on the NodeBrain to-do list since 2003. 
+Although theoretically interesting, and potentially useful, we did not consider it a high priority.
+Around 2008, it moved into the "management requested" category, but continued at a lower priority than other projects consuming development resources.
+In August 2010, disruption on another project requiring a temporary halt for redesign and rescheduling provided a
+nice opportunity to work on this task until the dust settled on the higher priority project.
+A several year old draft design was reviewed and then mostly discarded and replaced by a very simple approach based on the existing Tree module.  This made it possible to create the initial prototype in a couple days.
+
+@include conventions.texi
+
+@end titlepage
+@end iftex
+
+@c ----------------------------------------------------------
+@c Not printed document
+
+@ifnottex
+@node Top
+@top Baseline NodeBrain Module
+
+This manual is for the Baseline NodeBrain Module (version @value{VERSION}, @value{UPDATED-MONTH}), a statistical anomaly detection module.
+
+Copyright @copyright{} 2010, 2011, 2012 The Boeing Company.
+@quotation
+Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts. A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
+@end quotation
+
+@ifnotplaintext
+@b{Short Table of Contents}
+@end ifnotplaintext
+@menu
+* Concepts:: Foundation
+* Tutorial:: Introduction by Example
+* Commands:: Syntax and Semantics
+* Triggers:: Conditions and Response
+@end menu
+@menu
+* GNU Free Documentation License::
+* Index::
+@end menu
+@end ifnottex
+
+@c Set page footings
+@oddfooting @thistitle @| @| @thispage
+@evenfooting @thispage @| @| @thistitle
+
+@c Table of Contents
+@oddheading @| @| 
+@evenheading @| @|
+@contents
+
+@c Set page headings for document
+@oddheading @thischapter @| @| @value{UPDATED-MONTH}
+@evenheading @value{UPDATED-MONTH} @| @| @thischapter
+
+@node Concepts
+@chapter Concepts
+@cindex Concepts
+
+The Baseline module is a NodeBrain plug-in for statistical anomaly detection.  It enables the use of nodes that
+maintain a simple statistical profile for a set of measures.  A Baseline node monitors the current value of each
+measure and alerts when a measure is considered an anomaly relative to the statistical profile.
+
+@section Average Value
+@cindex average
+
+An exponentially weighted moving average (EWMA) is maintained for each measure.  This is a common technique for calculating an average with a different weight given to the more recent values.  It also has the advantage of not requiring the storage of past values.
+
+@cartouche
+@smallexample
+a[i] = w v[i] + (1-w) a[i-1]    where a is EWMA, w is a weight 0<=w<=1, and v is a value 
+@end smallexample
+@end cartouche
+
+The contribution of a new value to the average is determined by the weight @code{w}.  The weight also determines the rate at which this contribution decays as new values are included.  Larger values of @code{w} give more input to a new value, but also cause this contribution to decay more quickly as new values are included.
+
+@section Deviation
+@cindex deviation
+
+The difference between a new value and the current average is called the deviation.
+
+@cartouche
+@smallexample
+d[i] = v[i] - a[i-1]
+@end smallexample
+@end cartouche
+
+You can restate the formula for the exponentially weighted moving average as an adjustment using the product of weight and deviation.
+
+@cartouche
+@smallexample
+a[i] = a[i-1] + w d[i]
+@end smallexample
+@end cartouche
+
+@section Average Deviation
+@cindex average deviation
+
+The average deviation of actual values from the expected values is also computed as an EWMA.  
+This is an approach for measuring the amount of variation in a measure.  It is calculated like the average except the value is replaced by the absolute difference between the new value and prior average value.
+
+@cartouche
+@smallexample
+D[i] = w abs(d[i]) + (1-w) D[i-1]     where D is the average deviation
+@end smallexample
+@end cartouche
+
+Restating this as an adjustment, it looks like this.
+
+@cartouche
+@smallexample
+D[i] = D[i-1] + w abs(d[i]-D[i-1])
+@end smallexample
+@end cartouche
+
+@section Standard Deviation
+@cindex standard deviation
+
+The average deviation is expected to be 0.8 of the standard deviation for a normal distribution.  Use this to approximate a standard deviation by multiplying the average deviation by 1.25.  Specify the threshold as a factor times the approximate standard deviation.  It is common to consider a value more than three standard deviations (3-sigma) an anomaly.  For a normal distribution, 3-sigma will include 97 percent of the values in the normal range.  
+
+@cartouche
+@smallexample
+s = 1.25 D     where D is the average deviation and s is an approximate standard deviation
+@end smallexample
+@end cartouche
+
+@section Weight
+@cindex Weight
+
+A Baseline node is assigned a weight factor from 0 to 1 used in the calculation of the average value and average deviation.  Think of this as a level of skepticism about the latest value or deviation being the new "normal."  The lower the value, the slower the Baseline node will adapt the expectation for any given measure based on new information.  A value of 0 can be used to avoid "learning" from new information.  This is appropriate in cases where a "normal" range of values is known and there is no reason to allow actual values to alter the definition of "normal."  
+
+On the other extreme, a value of 1 will cause the Baseline node to use the last value as the definition of "normal" when assessing a new value.  Values from 0.2 to 0.3 are often used when "learning" is desired, but there is a reasonable level of skepticism about the latest value representing a new "normal."
+
+@section Tolerance
+@cindex tolerance
+
+A Baseline node is assigned a tolerance factor that specifies how "abnormal" a value must be to consider it an "anomaly" worthy of an alert.  This factor, a single value for all measures, is expressed in units of standard deviation, a value specific to each measure.  For example, a value of 3 is used to establish a threshold of 3 standard deviations (3-sigma), which establishes control limits in steps of 3 standard deviations above and below the average.
+
+@section Thresholds
+@cindex thresholds
+
+A threshold is an amount of deviation from the average, beyond which a new value is considered an anomaly.  You can define a threshold unit for any given measure as the tolerance times the standard deviation.
+
+@cartouche
+@smallexample
+u[i] = t s[i-1]       where u is the threshold unit, t is the tolerance, and s is the approximate standard deviation
+u[i] = 1.25 t D[i-1]  substituting 1.25 D for s  
+u[i] = T D[i-1]       where T is an internal tolerance factor 1.25 t
+@end smallexample
+@end cartouche
+
+A threshold is established at every positive integer multiple of the threshold unit.  The first threshold is at 1u, the second at 2u, and so on.
+
+@section Anomaly Level
+@cindex anomaly level
+
+For each measure, a Baseline node maintains a current anomaly level, which is the last deviation divided by the threshold unit rounded down to the nearest integer.
+
+@cartouche
+@smallexample
+L[i] = int( d[i-1] / u[i-1] )
+@end smallexample
+@end cartouche
+
+Alerts are triggered when the anomaly level of a measure increases.
+
+@section Limits
+@cindex limits
+
+A control process has upper and lower limits that define the range of normal values.  Values outside these limits are considered anomalies.  Define the upper and lower limits in threshold units above and below the average.  These limits identify the values where alerts are triggered, although this is simply a restatement of deviation thresholds.
+
+To avoid triggering alerts for each new data point during an anomalous episode (period of abnormal values), the upper and lower limits open when the anomaly level increases (this is when an alert triggers) and close down when the anomaly level decreases.  In the formulas below, @code{a} is the average value, @code{n} = 1 + @code{L}, where @code{L} is the anomaly level, and @code{u} is the threshold unit.
+
+@cartouche
+@smallexample
+UL = a + n u     upper limit
+LL = a - n u     lower limit
+@end smallexample
+@end cartouche
+
+@section Cycle Duration
+@cindex cycle
+
+It is common for measures to have patterns of periodic variation.  For example, it is normal for the temperature to be lower at night than during the day.  It is normal for user access to a computer to increase during user working hours. 
+To take this normal variation into account, a Baseline node is told the cycle time of the repeating pattern, expressed in minutes.  If it is a daily cycle, then the duration is 24*60 minutes.  If it is a weekly cycle, then the duration is 7*24*60 minutes.
+
+@section Period Duration
+@cindex period
+
+The cycle time is divided into shorter periods of equal duration.  The statistical profile maintained by a Baseline node includes an average value and average deviation for each measure for each period.  If a one-hour period is specified (60 minutes) with a daily cycle, there will be 24 periods for which separate statistics are maintained.  If the cycle is weekly, then a 60-minute period duration will generate 168 periods with separate statistics.
+
+@section Statistical Profiles
+@cindex profiles
+
+A Baseline statistical profile is maintained as a set of files in a directory.  Each file contains a profile for a single period, providing the average value and average deviation for each measure.  A period profile is just a set of Baseline node commands.
+
+@cartouche
+@smallexample
+.(@i{arg1},@i{arg2},...):set @i{averageValue},@i{averageDeviation};
+...
+@end smallexample
+@end cartouche
+
+Here's an example with two measures.
+
+@cartouche
+@smallexample
+.("cpu utilization"):set 60.456,10.45;
+.("disk utilization"):set 50.48,20.984;
+@end smallexample
+@end cartouche
+
+The filename of a period profile is based on the number of seconds from the start of a cycle.
+
+@cartouche
+@smallexample
+nnnnnnnn.nb
+@end smallexample
+@end cartouche
+
+If a one-hour period is used, the filenames will increment by 60*60 or 3600.  At any given UTC time, you can compute which profile to use as follows.
+
+@cartouche
+@smallexample
+t =: UTC time
+c =: cycle duration
+p =: period duration
+T = t % c               time within the cycle
+F = int ( T / p ) * p   file time
+@end smallexample
+@end cartouche
+
+@node Tutorial
+@chapter Tutorial
+@cindex tutorial
+@include nb_baseline_tutorial.texi
+
+@node Commands
+@chapter Commands
+@cindex commands
+
+This section describes the syntax and semantics of commands used with the Baseline module.
+
+@section Define
+@cindex define
+
+This section describes define commands the Baseline module supports.
+
+@subsection Define Baseline
+@cindex define
+
+The @code{define} command is used to create a Baseline node.  
+
+@cartouche
+@smallexample
+define @i{node} node baseline("@i{directory}",@i{weight},@i{tolerance},@i{cycle},@i{period})[:@i{options}];
+@end smallexample
+@end cartouche
+
+
+@multitable {--------------------} {--------------------------------------------------------------------------------------}
+@item @b{Parameters}@w{        }@tab @b{Description}
+@item @i{directory}
+@tab Path of directory for storing baseline files called period profiles.  This should normally be a relative path within a caboodle, and the "cache" directory (e.g., "cache/baseline/@i{baseline}") is recommended.  You should avoid having more than one node, in one or more agents, referencing the same Baseline profile directory.
+@item @i{weight} @tab A real number from 0 to 1 that determines how much weight should be given to a new value relative to past values.
+@item @i{tolerance} @tab The number of standard deviations from the average for which a given deviation is considered to be within a normal range.
+@item @i{cycle} @tab Number of minutes in each cycle for which a pattern of periodic variation is expected.  Examples are daily (24*60) and weekly (7*24*60).
+@item @i{period} @tab Number of minutes in each period within a cycle for which an average value and average deviation is maintained for each measure.
+@sp 1
+@item @b{Option}@tab @b{Description}
+@item found @tab The @code{found} option is assigned a cell expression to be used as a default value when an element is found by an evaluation but has no value.  This happens when an evaluation has fewer arguments than the assertion
+that created the element.  For example, if you assert @code{foobar("abc","def")=5} and evaluate @code{foobar("abc")}, the "abc" element is found, but has no value, assuming it was not explicitly asserted also.  By default, ? (unknown) is returned. 
+@cartouche
+@smallexample
+found=@i{cellExpression}
+@end smallexample
+@end cartouche
+@item notfound @tab The @code{notfound} option provides a default value when an element is not found during an evaluation.  The default value for @code{notfound} is ? (unknown).  A value of 0 can be used to implement the "closed world assumption," where anything not known to be true is assumed to be false.
+@cartouche
+@smallexample
+notfound=@i{cellExpression}
+@end smallexample
+@end cartouche
+@item order @tab The @code{order} option specifies the use of argument values for comparison when searching and maintaining binary trees within a Baseline node.  By default, comparisons are performed on the address of argument value objects for added efficiency.   This is possible because NodeBrain maintains only one object for any given value.
+@item partition @tab
+The @code{partition} option implies the @code{order} option and changes the evaluation operation to match an argument to the element with the maximum value less than or equal to the argument value.  This enables a domain of values to be partitioned into ranges of values.  For example, a partitioned Baseline node might be used to monitor the number of traffic accidents by driver age ranges in 10-year increments.
+@item static @tab Use @code{static} to avoid updating the profile at the end of each period.
+This is appropriate when the profile defines the acceptable range of values for each measure, and "learning" is not desired.  Although the weight can be set to 0 to avoid adjusting average value and average deviation statistics in a profile for known elements, this does not prevent the Baseline node from updating the profile with new elements.
+Use of the @code{static} option prevents the addition of new elements, and (if weight is not zero) enables learning for elements not included in the profile.  However, learning for an element that is not in the profile develops statistics over all periods, instead of per period.
+@item sum @tab When @code{sum} is used, asserted values are summed up over each period.  The period value is then the sum of all values asserted during the period.  
+When the sum reaches an upper limit and the assertion and average are both positive, or a lower limit and the assertion and average are both negative, an alert can be triggered right away.  However, a lower limit for positive average and upper limit for negative average must be checked at the end of a period when the full sum is known.
+@item trace @tab  The @code{trace} option is used to generate log messages for troubleshooting.
+@end multitable
+
+@section Assertions
+@cindex assertions
+@cindex assert
+@cindex alert
+
+The Baseline module supports assertions within @code{assert} or @code{alert} commands.  
+@cartouche
+@smallexample
+assert @i{node}(@i{arg1}[,@i{arg2},...])[=@i{value}];  # value must be number or ? (Unknown)
+@end smallexample
+@end cartouche
+The semantics are similar to the Tree module, except the value assigned to an element within a Baseline node must be a number.  Strings are not allowed.  When the @code{sum} option is used by a Baseline node, an assertion to a Baseline node will add to the current value, otherwise it replaces the current value.  If no value is specified, 1 is assumed.  If an unknown value ("?") is assigned, the element is removed.
+
+@section Cell Expressions
+@cindex cell
+@cindex cell expression
+@cindex evaluation
+
+When a Baseline node is referenced in a cell expression, it presents the value of the specified element.
+The example shows a reference within a cell expression of a simple @code{define} statement.
+
+@cartouche
+@smallexample
+define @i{term} cell @i{node}(@i{arg1}[,@i{arg2},...]);  # term has value of specified element
+@end smallexample
+@end cartouche
+
+@section Node Commands
+@cindex node commands
+
+This section describes commands implemented by the Baseline module for use with defined nodes.
+
+@cartouche
+@smallexample
+@i{node}[(@i{arg1}[,@i{arg2},...])]:@i{verb} [@i{arguments}]
+@end smallexample
+@end cartouche
+
+@subsection Balance
+@cindex balance
+
+The @code{balance} command is used to rebalance the trees within a Baseline node after @code{flatten} or @code{prune} commands have made the trees unbalanced.
+
+@cartouche
+@smallexample
+@i{node}:balance
+@end smallexample
+@end cartouche
+
+@subsection Flatten
+@cindex flatten
+
+The @code{balance} command is used to completely unbalance the trees within a Baseline node so they effectively become lists.
+
+@cartouche
+@smallexample
+@i{node}:flatten
+@end smallexample
+@end cartouche
+
+@subsection Prune
+@cindex prune
+
+The @code{prune} command is used to remove elements from a Baseline node.
+
+@cartouche
+@smallexample
+@i{node}[(@i{arg1}[,@i{arg2},...])]:prune
+@end smallexample
+@end cartouche
+
+Unlike an assertion that an element is unknown, which removes the identified element and the subordinate tree, the @code{prune} command only removes the subordinate tree.  Using a table model, it deletes the subordinate table, emptying the cells to the right of the identified cell and deleting all rows represented by the subordinate table.
+
+@subsection Set
+@cindex set
+
+The @code{set} command is used to assign the average value and average deviation for an element in a Baseline node.
+
+@cartouche
+@smallexample
+@i{node}(@i{arg1}[,@i{arg2},...]):set @i{averageValue},@i{averageDeviation};
+@end smallexample
+@end cartouche
+
+Although @code{set} commands can be issued at any time, they are primarily used in period profiles.  A period profile is just a file containing @code{set} commands.  These files are processed ("sourced") at the start of a period and optionally updated at the end of a period.  
+
+@subsection Store
+@cindex store
+
+The @code{store} command is used to write the current measures within a Baseline node to a file in the form of assertions.
+
+@cartouche
+@smallexample
+assert (@i{arg1}[,@i{arg2},...])=@i{value};
+...
+@end smallexample
+@end cartouche
+
+The node name is not included in the assertions.  This enables the assertions to be easily applied to a different node---perhaps not even a Baseline node.
+
+@subsection Trace
+@cindex trace
+
+The @code{trace} command is used to toggle the @code{trace} option for troubleshooting.
+@cartouche
+@smallexample
+@i{node}:trace [on|off]
+@end smallexample
+@end cartouche
+
+@section Module Commands
+@cindex module commands
+
+The Baseline module currently implements no module level commands.
+
+
+@node Triggers
+@chapter Triggers
+@cindex triggers
+@cindex alert
+
+When measures reach thresholds, a Baseline node issues an alert to @code{if} rules defined for the node.
+These alerts have the following form.
+@cartouche
+@smallexample
+alert _measure="@i{name}",_value=@i{n},_average=@i{n},_deviation=@i{n},_threshold=@i{n},_limit=@i{n}, \
+      _sigma=@i{n},_level=@i{n};
+@end smallexample
+@end cartouche
+
+@multitable {--------------------} {--------------------------------------------------------------------------------------}
+@item @b{Attribute}@w{        }@tab @b{Description}
+@item _measure @tab Name of the measure for which the value is outside the specified limit.
+@item _value @tab Value of the measure outside the limit.
+@item _average @tab Learned average value for the period.
+@item _deviation @tab Absolute value of the different between actual (_value) and expected (_average).
+@item _threshold @tab Deviation threshold surpassed.
+@item _limit @tab Control limit surpassed.  This is the average plus or minus the threshold.
+@item _sigma @tab Approximate standard deviation for the period.
+@item _level @tab Magnitude of anomaly.  threshold=(2**level)*tolerance*sigma
+@end multitable
+
+@node GNU Free Documentation License
+@unnumbered GNU Free Documentation License
+@include fdl.texi
+
+@node Index
+@unnumbered Index
+@printindex cp
+
+@bye

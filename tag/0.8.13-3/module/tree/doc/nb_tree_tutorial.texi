@@ -1,0 +1,204 @@
+@c Tree tutorial
+@c   A section to the NodeBrain Tutorial and Tree Nodebrain Module docs.
+
+@quotation
+@i{A memory is what is left when something happens and does not completely unhappen.}
+---Edward de Bono (1933--- )
+@end quotation
+
+A tree node provides NodeBrain with a place to remember things that happen until they unhappen.
+Actually that is true of simple cells as well.
+The difference is that simple cells store one value while trees store multiple associated values.
+So a tree can remember a more complex happening.
+You can think of a tree node as a table of values.  Like a relational table, the values in a given row form a relation.
+But the table is represented using a tree-of-trees structure and a value is associated with each relation, including each left-to-right partial relation.
+This enable you to test for the existence of a relation or use a relation as a key for looking up a stored value.
+
+@section Conditions
+
+An expression of the form @code{@i{tree(cell1,cell2,...)}} can be used like a term in cell expressions.
+You can assert values for these expressions and use then as conditions.
+The @code{stuff.nb} file below illustrates these concepts.
+
+@cartouche
+@smallexample
+#!/usr/local/bin/nb
+# File: tutorial/tree/stuff.nb
+@b{define stuff node tree;}
+define r1 on(stuff(x,y)>17 and stuff(x,y,z)="Sally");
+stuff. assert ("Kathy","apple")=2,(1,2,3)="Sally",(1,2)=27;
+assert x=1,y=2;
+assert z=3;
+show stuff
+assert ?stuff(1,2);
+show stuff
+assert ?stuff(1,2,3);
+show stuff
+assert a=stuff("Kathy","apple");
+show a
+@end smallexample
+@end cartouche
+
+Study the execution below.
+Do you know why rule @code{r1} fires when it does?
+Try rewriting the rule by replacing x, y, and z with their values at the time the rule fires.
+Then replace the @code{stuff(...)} expressions in the rule with their values at the time the rule fires.
+
+@cartouche
+@smallexample
+$ ./stuff.nb
+2009/01/31 12:36:15 NB000I Argument [1] ./stuff.nb
+> #!/usr/local/bin/nb
+> # File: tutorial/tree/stuff.nb
+> define stuff node tree;
+> define r1 on(stuff(x,y)>17 and stuff(x,y,z)="Sally");
+> stuff. assert ("Kathy","apple")=2,(1,2,3)="Sally",(1,2)=27;
+> assert x=1,y=2;
+> assert z=3;
+@b{2009/01/31 12:36:15 NB000I Rule r1 fired}
+> show stuff
+stuff = ? == node tree
+  "Kathy"
+    "apple"=2
+  1
+    2=27
+      3="Sally"
+> assert ?stuff(1,2);
+> show stuff
+stuff = ? == node tree
+  "Kathy"
+    "apple"=2
+  1
+    2
+      3="Sally"
+> assert ?stuff(1,2,3);
+> show stuff
+stuff = ? == node tree
+  "Kathy"
+    "apple"=2
+> assert a=stuff("Kathy","apple");
+> show a
+a = 2
+2009/01/31 12:36:15 NB000I Source file "./stuff.nb" included. size=301
+2009/01/31 12:36:15 NB000I NodeBrain nb[24913] terminating - exit code=0
+$
+@end smallexample
+@end cartouche
+
+@section Watch Tables
+
+Sometimes NodeBrain uses a tree node to specify a set of values to watch.
+You can use a simple tree to represent a list or a table with a single column.
+A multi-column table may be used if you want to watch for specific combinations
+of event attributes.
+
+@cartouche
+@smallexample
+#!/usr/local/bin/nb
+# File: tutorial/tree/watch.nb
+@b{define watchtype node tree;}
+@b{watchtype. assert ("tree fell"),("log rolled"),("frog croaked");}
+@b{define r1 if(watchtype(type));}
+
+# Sample events
+alert type="tide out";
+alert type="log rolled";
+alert type="tide in";
+alert type="frog croaked";
+@end smallexample
+@end cartouche
+
+Notice how the following execution picks out the events of interest.
+
+@cartouche
+@smallexample
+./watch.nb
+2009/01/31 12:56:27 NB000I Argument [1] ./watch.nb
+> #!/usr/local/bin/nb
+> # File: tutorial/tree/watch.nb
+> define watchtype node tree;
+> watchtype. assert ("tree fell"),("log rolled"),("frog croaked");
+> define r1 if(watchtype(type));
+> # Sample events
+> alert type="tide out";
+@b{> alert type="log rolled";}
+2009/01/31 12:56:27 NB000I Rule r1 fired
+> alert type="tide in";
+@b{> alert type="frog croaked";}
+2009/01/31 12:56:27 NB000I Rule r1 fired
+2009/01/31 12:56:27 NB000I Source file "./watch.nb" included. size=289
+2009/01/31 12:56:27 NB000I NodeBrain nb[26148] terminating - exit code=0
+$
+@end smallexample
+@end cartouche
+
+@section Event Sequence
+
+I said earlier that a tree can be used to remember an event between the time it happens and unhappens.
+Let's look at an example that provides a better illustration of this.
+
+@cartouche
+@smallexample
+#!/usr/local/bin/nb
+# File: tutorial/tree/sequence.nb
+@b{define jumped node tree;
+define r1 if(event="jump" and ?jumped(name)) jumped(name);
+define r2 if(event="land" and jumped(name)) ?jumped(name);
+define r3 if(event="jump" and jumped(name)): @dots{}
+@dots{} $ # $@{name@} jumped twice without intervening landing
+define r4 if(event="land" and ?jumped(name)): @dots{}
+@dots{} $ # $@{name@} landed twice without intervening jump}
+
+# Sample events
+alert event="jump",name="sally";
+alert event="jump",name="joe";
+alert event="land",name="sally";
+alert event="land",name="joe";
+alert event="jump",name="sally";
+alert event="land",name="joe";
+alert event="jump",name="sally";
+@end smallexample
+@end cartouche
+
+In the execution below, NodeBrain was able to detect a couple things that happened and then happened again without first unhappening.
+
+@cartouche
+@smallexample
+2009/01/31 13:22:07 NB000I Argument [1] ./sequence.nb
+> #!/usr/local/bin/nb
+> # File: tutorial/tree/sequence.nb
+> define jumped node tree;
+> define r1 if(event="jump" and ?jumped(name)) jumped(name);
+> define r2 if(event="land" and jumped(name)) ?jumped(name);
+> define r3 if(event="jump" and jumped(name)): @dots{}
+@dots{} $ # $@{namer@} jumped twice without an intervening landing
+> define r4 if(event="land" and ?jumped(name)): @dots{}
+@dots{} $ # $@{name@} landed twice without an intervening jump
+> # Sample events
+> alert event="jump",name="sally";
+2009/01/31 13:22:07 NB000I Rule r1 fired (jumped(name)=1)
+> alert event="jump",name="joe";
+2009/01/31 13:22:07 NB000I Rule r1 fired (jumped(name)=1)
+> alert event="land",name="sally";
+2009/01/31 13:22:07 NB000I Rule r2 fired (jumped(name)=?)
+> alert event="land",name="joe";
+2009/01/31 13:22:07 NB000I Rule r2 fired (jumped(name)=?)
+> alert event="jump",name="sally";
+2009/01/31 13:22:07 NB000I Rule r1 fired (jumped(name)=1)
+> alert event="land",name="joe";
+2009/01/31 13:22:07 NB000I Rule r4 fired
+@b{: # joe landed twice without an intervening jump}
+> alert event="jump",name="sally";
+2009/01/31 13:22:07 NB000I Rule r3 fired
+@b{: # sally jumped twice without an intervening landing}
+2009/01/31 13:22:07 NB000I Source file "./sequence.nb" included. size=631
+2009/01/31 13:22:07 NB000I NodeBrain nb[26552] terminating - exit code=0
+$
+@end smallexample
+@end cartouche
+
+A tree node can support large trees if you have enough memory on your system. 
+From a performance perspective, tree nodes scale well because they are organized as binary trees that are kept reasonably balanced.
+A lookup on a tuple (@code{x,y,z}) is performed as a binary search for @code{x}, followed by a binary search for @code{y} in a tree owned by (@code{x}), followed by a binary search for @code{z} in a tree owned by (@code{x,y}).
+
+

@@ -1,0 +1,58 @@
+#
+~ > #
+# File: ruleFireSeq.nb
+~ > # File: ruleFireSeq.nb
+#
+~ > #
+# Test sequence of rule actions with and without pre-parsed assertions.
+~ > # Test sequence of rule actions with and without pre-parsed assertions.
+#
+~ > #
+define s0 on(step=0):assert step=1,last=0;
+~ > define s0 on(step=0):assert step=1,last=0;
+define s1 on(step=1) step=2:assert a=1;
+~ > define s1 on(step=1) step=2:assert a=1;
+define s2 on(step=2) step=3:assert a=2;
+~ > define s2 on(step=2) step=3:assert a=2;
+define s3 on(step=3) step=4:assert a=3;
+~ > define s3 on(step=3) step=4:assert a=3;
+define s4 on(step=4):assert step=5,last=4;
+~ > define s4 on(step=4):assert step=5,last=4;
+define s5 on(step=5):assert step=6,last=5;
+~ > define s5 on(step=5):assert step=6,last=5;
+show -t
+~ > show -t
+~ @ = ! == node 
+~ s5 = ! == on(step=5):assert step=6,last=5;
+~ s4 = ! == on(step=4):assert step=5,last=4;
+~ s3 = ! == on(step=3) step=4:assert a=3;
+~ s2 = ! == on(step=2) step=3:assert a=2;
+~ s1 = ! == on(step=1) step=2:assert a=1;
+~ s0 = ! == on(step=0):assert step=1,last=0;
+~ step = ?
+assert !step;
+~ > assert !step;
+~ 1970/01/01 00:00:01 NB000I Rule s0 fired 
+~ : assert step=1,last=0;
+~ 1970/01/01 00:00:02 NB000I Rule s1 fired (step=2)
+~ : assert a=1;
+~ 1970/01/01 00:00:03 NB000I Rule s2 fired (step=3)
+~ : assert a=2;
+~ 1970/01/01 00:00:04 NB000I Rule s3 fired (step=4)
+~ : assert a=3;
+~ 1970/01/01 00:00:05 NB000I Rule s4 fired 
+~ : assert step=5,last=4;
+~ 1970/01/01 00:00:06 NB000I Rule s5 fired 
+~ : assert step=6,last=5;
+show -t
+~ > show -t
+~ @ = ! == node 
+~ a = 3
+~ last = 5
+~ s5 = ! == on(step=5):assert step=6,last=5;
+~ s4 = ! == on(step=4):assert step=5,last=4;
+~ s3 = ! == on(step=3) step=4:assert a=3;
+~ s2 = ! == on(step=2) step=3:assert a=2;
+~ s1 = ! == on(step=1) step=2:assert a=1;
+~ s0 = ! == on(step=0):assert step=1,last=0;
+~ step = 6
