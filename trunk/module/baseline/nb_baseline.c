@@ -130,6 +130,7 @@
 * 2010-09-24 eat - Changed level to mean powers of 2
 * 2010-09-26 eat - included threshold in node to avoid recomputing on every assertion
 * 2012-12-27 eat 0.8.13 AST 46 - removed commented out function
+* 2013-01-14 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include "config.h"
@@ -399,32 +400,26 @@ static void *baselineConstruct(nbCELL context,BTreeSkill *skillHandle,nbCELL arg
 *  Convert cell value to cell expression
 *    NOTE: This should be a part of the NodeBrain API
 */
-static int treeStoreValue(nbCELL context,nbCELL cell,char *cursor,int len){
+static int treeStoreValue(nbCELL context,nbCELL cell,char *cursor,size_t len){
   int cellType,n=-1;
   double real;
-  char *string,number[256];
+  char *string;
 
   if(cell==NB_CELL_UNKNOWN){
-    n=1;
-    if(n>len) return(-1);
-    strcpy(cursor,"?");
+    n=snprintf(cursor,len,"%s","?");
     }
   else{
     cellType=nbCellGetType(context,cell);
     if(cellType==NB_TYPE_STRING){
       string=nbCellGetString(context,cell);
-      n=strlen(string)+2;
-      if(n>len) return(-1);
-      sprintf(cursor,"\"%s\"",string);
+      n=snprintf(cursor,len,"\"%s\"",string);  // 2013-01-14 eat - VID 4200-0.8.13-3
       }
     else if(cellType==NB_TYPE_REAL){
       real=nbCellGetReal(context,cell);
-      sprintf(number,"%.10g",real);
-      n=strlen(number);
-      if(n>len) return(-1);
-      strcpy(cursor,number);
+      n=snprintf(cursor,len,"%.10g",real);
       }
     }
+  if(n>=len) return(-1);
   return(n);
   }
 
@@ -436,7 +431,7 @@ static void baselineAlert(nbCELL context,BTreeSkill *skillHandle,BTree *tree,BTr
 
   //nbLogMsg(context,0,'T',"baselineAlert called with qualifiers=%d threshold=%g",qualifiers,deviation);
   strcpy(cmd,"alert _measure=\"");
-  cmdcur=strchr(cmd,0);
+  cmdcur=cmd+strlen(cmd);   // 2012-01-14 eat - VI 850-0.8.13-3 FP replaced strchr(cmdcur,0) with cmd+strlen(cmd)
   for(i=0;i<qualifiers;i++){
     switch(nbCellGetType(context,element[i])){
       case NB_TYPE_STRING:
@@ -448,7 +443,7 @@ static void baselineAlert(nbCELL context,BTreeSkill *skillHandle,BTree *tree,BTr
       default:
         strcpy(cmdcur,"?.");
       }
-    cmdcur=strchr(cmdcur,0);
+    cmdcur+=strlen(cmdcur);  // 2012-01-14 eat - VID 857-0.8.13-3 FP replaced strchr(cmdcur,0) with +=strlen(cmdcur)
     }
   if(*(cmdcur-1)=='.') cmdcur--;
   if(node->value<node->average) limit=node->average-node->threshold;

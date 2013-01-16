@@ -226,7 +226,7 @@ void *consoleConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *tex
     delim=strchr(cursor,' ');
     if(delim==NULL) delim=strchr(cursor,',');
     if(delim==NULL) delim=strchr(cursor,';');
-    if(delim==NULL) delim=strchr(cursor,0);
+    if(delim==NULL) delim=cursor+strlen(cursor);  // 2012-01-14 eat - VID 12-0.8.13-3 FP but changed from strchr(cursor,0)
     saveDelim=*delim;
     *delim=0;
     if(strcmp(cursor,"trace")==0) trace=1; 

@@ -76,6 +76,7 @@
 * 2012-08-31 dtl 0.8.12 handled err
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree for fixed blocks
 * 2012-12-27 eat 0.8.13 Checker updates
+* 2013-01-14 eat 0.8.13 Checker updates
 *=====================================================================
 */
 #include <config.h>
@@ -309,7 +310,7 @@ int openHistory(char *filename,int periods,size_t len){
 #endif
       return(file);
       }
-    buffer=nbAlloc(len);
+    buffer=(char *)nbAlloc(len);
     memset(buffer,0,len);
     while(periods>0){
       write(file,buffer,len);
@@ -1082,7 +1083,7 @@ void *netflowConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *tex
     delim=strchr(cursor,' ');
     if(delim==NULL) delim=strchr(cursor,',');
     if(delim==NULL) delim=strchr(cursor,';');
-    if(delim==NULL) delim=strchr(cursor,0);
+    if(delim==NULL) delim=cursor+strlen(cursor);  // 2013-01-14 eat - VID 97-0.8.13-3
     saveDelim=*delim;
     *delim=0;
     if(strcmp(cursor,"dump")==0){trace=1;dump=1;}

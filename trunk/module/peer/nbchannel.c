@@ -164,6 +164,7 @@
 * 2012-10-18 eat 0.8.12 Checker updates
 * 2012-12-16 eat 0.8.13 Checker updates
 * 2012-12-27 eat 0.8.13 Checker updates
+* 2013-01-13 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <openssl/rand.h>
@@ -462,11 +463,11 @@ extern int chput(struct CHANNEL *channel,char *buffer,size_t len){  // 2012-10-1
   int sent;
 
   if(len>NB_BUFSIZE-20){
-    nbLogMsgI(0,'E',"chput: Length %u too large.",len);
+    nbLogMsgI(0,'E',"chput: Length %zu too large.",len);
     return(-1);
     }  
   else if(len==0){
-    nbLogMsgI(0,'L',"chput: Length %u too short - use chstop",len);
+    nbLogMsgI(0,'L',"chput: Length %zu too short - use chstop",len);
     return(-1);
     }
   memcpy(channel->buffer,buffer,len);
@@ -474,20 +475,17 @@ extern int chput(struct CHANNEL *channel,char *buffer,size_t len){  // 2012-10-1
     i=(len+5)%16;  // pad len+5 to 16 byte boundary - set i to padding length
     if(i==0) i=5;  // fits exactly, no need to pad up, set i to unpadded trailer size
     else i=5+16-i; // set i to padded trailer size
-    //i=((len+5+15)&0xfffffff0)-len;   /* pad up to 16 byte boundary */ // 2012-10-13 eat - Note: 5 <= i <= 20 
-    //if(i>5) memset(((unsigned char *)channel->buffer)+len,random()&0xff,i-5);
     if(i>5 && !RAND_bytes(((unsigned char *)channel->buffer)+len,i-5)){ // 2012-10-16 eat - pad with random bytes
       nbExit("chput: Unable to generate random bytes");
       }
     len+=i; // 2012-1013 eat - len>5 now because i>=5 and len was >0
-    *((unsigned char *)channel->buffer+len-5)=i%256;  // 2012-10-13 eat - don't worry, len>5 and i<=20 - %256 to make it clear to checker
+    *(((unsigned char *)channel->buffer)+len-5)=i%256;  // 2012-10-13 eat - don't worry, len>5 and i<=20 - %256 to make it clear to checker
     checksum=0;                                 /* initialize checksum */
     for(i=0;i<(unsigned short)(len/4-1);i++){
       channel->buffer[i]=ntohl(channel->buffer[i]);
       checksum+=channel->buffer[i]; /* compute checksum */
       }
     channel->buffer[i]=checksum;                         /* include checksum */
-    /* skeCipher(channel->enCipher,1,channel->enCipher,channel->enKey);*/  /* encrypt cipher */
     skeRandCipher(channel->enCipher);
     skeCipher(channel->buffer,len/16,channel->enCipher,&(channel->enKey));
     for(i=0;i<(unsigned short)(len/4);i++) channel->buffer[i]=htonl(channel->buffer[i]);
@@ -579,16 +577,16 @@ extern int chget(struct CHANNEL *channel,char *buffer,size_t size){
     }
   cursor=(char *)(channel->buffer);
   expect=len;
-  i=recv(channel->socket,(void *)cursor,expect,0);
+  i=recv(channel->socket,(void *)cursor,expect,0);  // 2013-01-14 eat - VID 4465-0.8.13-3 FP length checked
   while(i==-1 && errno==EINTR){
-    i=recv(channel->socket,(void *)cursor,expect,0);
+    i=recv(channel->socket,(void *)cursor,expect,0);  // 2013-01-14 eat - VID 4457-0.8.13-3 FP length checked
     }
   while(i>0 && i<expect){
     cursor+=i;
     expect-=i;
-    i=recv(channel->socket,(void *)cursor,expect,0);
+    i=recv(channel->socket,(void *)cursor,expect,0);  // 2013-01-14 eat - VID 4460-0.8.13-3 FP length checked
     while(i==-1 && errno==EINTR){
-      i=recv(channel->socket,(void *)cursor,expect,0);
+      i=recv(channel->socket,(void *)cursor,expect,0);  // 2013-01-14 eat - VID 4453-0.8.13-3 FP length checked
       }
     }
   if(i!=expect){
@@ -611,15 +609,12 @@ extern int chget(struct CHANNEL *channel,char *buffer,size_t size){
       }
     len-=*((unsigned char *)channel->buffer+len-5);
     }
-  //2012-01-31 dtl: replaced memcpy, buffer has sizeof NB_BUFSIZE, safe to copy after test
-  //if (len>0 && len<NB_BUFSIZE) for(i=0;i<len;i++) *(buffer+i)=*((char*)channel->buffer+i);  //dtl // 2012-10-13 eat memcpy should be good
-  //if(len<=0 || len>=NB_BUFSIZE){  // 2012-10-18 eat - help checker
-  if(len<=0 || len>=size){
+  if(len>=size){
     nbLogMsgI(0,'E',"Invalid record encountered. Length = %d",len);
     return(-2);
     } 
-  memcpy(buffer,channel->buffer,len); // 2012-01-31 dtl - length check 
-  buffer[len]=0; /* null terminate */
+  memcpy(buffer,channel->buffer,len); // 2012-01-31 dtl - length check   // 2013-01-14 eat - VID 4448-0.8.13-3 FP
+  buffer[len]=0; // null terminate - although we don't assume text data
   return(len);    
   }
 

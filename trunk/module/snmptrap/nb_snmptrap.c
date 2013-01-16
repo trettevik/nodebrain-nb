@@ -247,6 +247,7 @@
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 * 2012-12-27 eat 0.8.13 Checker updates
+* 2013-01-13 eat 0.8.13 Checker updates
 *=====================================================================
 */
 #include "config.h"
@@ -377,7 +378,7 @@ static char *translateOid(unsigned char **cursorP,unsigned char *bufend,char **c
   if(objlen<0) return("variable binding OID value length error");
   // first byte of OID has two numbers     
   sprintf(cmdcur,"%u.%u.",*cursor/40,*cursor%40);    
-  cmdcur=strchr(cmdcur,0);    
+  cmdcur+=strlen(cmdcur);   // 2013-01-14 eat - VID 968-0.8.13-3 FP but replaced strchr(cmdcur,0)   
   objlen--;    
   cursor++;    
   // then we get 7 bits per byte    
@@ -391,7 +392,7 @@ static char *translateOid(unsigned char **cursorP,unsigned char *bufend,char **c
       }    
     cursor++;    
     sprintf(cmdcur,"%u.",n);    
-    cmdcur=strchr(cmdcur,0);    
+    cmdcur+=strlen(cmdcur); // 2013-01-14 eat - VID 962-0.8.13-3 FP but replaced strchr(cmdcur,0)   
     }    
   if(*(cmdcur-1)=='.') cmdcur--;    
   *cursorP=cursor;
@@ -470,7 +471,7 @@ static char *translateValue(unsigned char **cursorP,unsigned char *bufend,char *
         cursor++;
         } 
       sprintf(cmdcur,"%d",n);
-      cmdcur=strchr(cmdcur,0);
+      cmdcur+=strlen(cmdcur);  // 2013-01-14 eat - VID 4164-0.8.13-3 FP but replaced strchr(cmdcur,0)
       break;
     case 0x04: /* string */
       if(objlen<0) return("variable binding string value length error");
@@ -567,7 +568,7 @@ static char *translateValue(unsigned char **cursorP,unsigned char *bufend,char *
         cursor++;
         } 
       sprintf(cmdcur,"%d",n);
-      cmdcur=strchr(cmdcur,0);
+      cmdcur+=strlen(cmdcur); // 2013-01-14 eat - VID 4154-0.8.13-3 FP but replaced strchr(cmdcur,0)
       break;
     case 0x42: /* unsigned */
       if(objlen<1 || objlen>4) return("variable binding integer value length error");
@@ -576,7 +577,7 @@ static char *translateValue(unsigned char **cursorP,unsigned char *bufend,char *
         cursor++;
         } 
       sprintf(cmdcur,"%d",n);
-      cmdcur=strchr(cmdcur,0);
+      cmdcur+=strlen(cmdcur); // 2013-01-14 eat - VID 4158-0.8.13-3 FP but replaced strchr(cmdcur,0)
       break;
     case 0x43: /* timeticks */
       if(objlen<0) return("variable binding OID value length error");
@@ -585,7 +586,7 @@ static char *translateValue(unsigned char **cursorP,unsigned char *bufend,char *
         cursor++;
         }
       sprintf(cmdcur,"%d",n);
-      cmdcur=strchr(cmdcur,0);
+      cmdcur+=strlen(cmdcur); // 2013-01-14 eat - VID 4153-0.8.13-3 FP but replaced strchr(cmdcur,0)
       break;
     case 0x46: // 64 bit number
       if(objlen<1 || objlen>8) return("variable binding Counter64 value length error");
@@ -594,7 +595,7 @@ static char *translateValue(unsigned char **cursorP,unsigned char *bufend,char *
         cursor++;
         } 
       sprintf(cmdcur,"%.10g",d);
-      cmdcur=strchr(cmdcur,0);
+      cmdcur+=strlen(cmdcur);  // 2013-01-14 eat - VID 4159-0.8.13-3 FP but replaced strchr(cmdcur,0)
       break;
     default:
       sprintf(mymsg,"unrecognized value type %x len=%d",type,objlen);
@@ -640,7 +641,7 @@ static char *translate(NB_MOD_Snmptrap *snmptrap,unsigned char *buf,int len,char
   version=*cursor;
   cursor++;
   sprintf(cmdcur,"alert '1.3.6.1.6.3.18.1.4'=");  // snmpTrapCommunity OID
-  cmdcur=strchr(cmdcur,0);
+  cmdcur+=strlen(cmdcur);  // 2013-01-14 eat - VID 976-0.8.13-3 FP but replaced strchr(cmdcur,0)
   if(*cursor!=0x04) return("expecting type 04 (string) for community string");
   if(NULL!=(msg=translateValue(&cursor,bufend,&cmdcur,cmdend,""))) return(msg);
 
@@ -656,13 +657,13 @@ static char *translate(NB_MOD_Snmptrap *snmptrap,unsigned char *buf,int len,char
 
       if(*cursor!=0x06) return("expecting 0x06 for enterprise OID");
       strcpy(cmdcur,",'1.3.6.1.6.3.1.1.4.3'=");
-      cmdcur=strchr(cmdcur,0);
+      cmdcur+=strlen(cmdcur);  // 2013-01-14 eat - VID 4157-0.8.13-3 FP but replaced strchr(cmdcur,0)
       enterpriseOid=cursor;
       if(NULL!=(msg=translateValue(&cursor,bufend,&cmdcur,cmdend,""))) return(msg);
 
       if(*cursor!=0x40) return("expecting 0x40 for address");
       strcpy(cmdcur,",'1.3.6.1.6.3.18.1.3'=");
-      cmdcur=strchr(cmdcur,0);
+      cmdcur+=strlen(cmdcur);  // 2013-01-14 eat - VID 4165-0.8.13-3 FP but replaced strchr(cmdcur,0)
       if(NULL!=(msg=translateValue(&cursor,bufend,&cmdcur,cmdend,""))) return(msg);
 
       if(*cursor!=0x02) return("expecting integer for trap generic type");
@@ -673,10 +674,10 @@ static char *translate(NB_MOD_Snmptrap *snmptrap,unsigned char *buf,int len,char
       cursor++;
       if(*cursor!=0x02) return("expecting integer for trap specific type");             
       strcpy(cmdcur,",'1.3.6.1.6.3.1.1.4.1.0'=");  // snmpTrapOID.0
-      cmdcur=strchr(cmdcur,0);
+      cmdcur+=strlen(cmdcur);   // 2013-01-14 eat - VID 4162-0.8.13-3 FP but replaced strchr(cmdcur,0)
       if(generic!=6){
         sprintf(cmdcur,"\"1.3.6.1.6.3.1.1.5.%d\"",(*cursor)+1); // see RFC 3584
-        cmdcur=strchr(cmdcur,0);
+        cmdcur+=strlen(cmdcur);   // 2013-01-14 eat - VID 4156-0.8.13-3 FP but replaced strchr(cmdcur,0)
         cursor++;
         objlen=getObjectLength(&cursor,bufend);  // step over trap specific type
         if(objlen<0) return("buffer length confusion");
@@ -698,7 +699,7 @@ static char *translate(NB_MOD_Snmptrap *snmptrap,unsigned char *buf,int len,char
         }
       if(*cursor!=0x43) return("expecting 0x43 for uptime");
       strcpy(cmdcur,",'1.3.6.1.2.1.1.3.0'=");
-      cmdcur=strchr(cmdcur,0);
+      cmdcur+=strlen(cmdcur);   // 2013-01-14 eat - VID 966-0.8.13-3 FP but replaced strchr(cmdcur,0)
       if(NULL!=(msg=translateValue(&cursor,bufend,&cmdcur,cmdend,""))) return(msg);
       break;
 
@@ -720,7 +721,7 @@ static char *translate(NB_MOD_Snmptrap *snmptrap,unsigned char *buf,int len,char
 
       // Insert the sender's address - don't worry, this will be overridden if sender supplies in variable bindings  
       sprintf(cmdcur,",'1.3.6.1.6.3.18.1.3'=\"%s\"",nbIpGetAddrString(senderAddr,snmptrap->sourceAddr));
-      cmdcur=strchr(cmdcur,0);
+      cmdcur+=strlen(cmdcur);   // 2013-01-14 eat - VID 980-0.8.13-3 FP but replaced strchr(cmdcur,0)
       break;
     default: return("unrecognized trap version");
     }
@@ -934,7 +935,7 @@ static void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
       delim=strchr(cursor,' ');
       if(delim==NULL) delim=strchr(cursor,',');
       if(delim==NULL) delim=strchr(cursor,';');
-      if(delim==NULL) delim=strchr(cursor,0);
+      if(delim==NULL) delim=cursor+strlen(cursor);  // 2013-01-14 eat - VID 969-0.8.13-3 FP but replaced strchr(cursor,0)
       saveDelim=*delim;
       *delim=0;
       if(strcmp(cursor,"trace")==0){trace=1;}
@@ -1067,7 +1068,7 @@ typedef struct NB_MOD_CLIENT{      /* SNMP Trap client descriptor */
 */
 int translateText2Varbinding(nbCELL context,char **packetCursorP,char **textP){
   char *packetCursor=*packetCursorP,*cursor=*textP,*delim;
-  int len,lbyte;
+  size_t len,lbyte;
   char *varLenP;
 
   if(*cursor!='\''){
@@ -1119,9 +1120,9 @@ int translateText2Varbinding(nbCELL context,char **packetCursorP,char **textP){
   if(len>0x7f){
     if(len>0xffff){
       *packetCursor=0x83; packetCursor++;
-      *packetCursor=len>>16; packetCursor++;
+      *packetCursor=(char )((len>>16)%256); packetCursor++;  // 2013-01-16 eat - VID 4152-0.8.13-4
       lbyte&=0xffff;
-      *packetCursor=len>>8; packetCursor++;
+      *packetCursor=(char)((len>>8)%256); packetCursor++;
       }
     else if(len>0xff){
       *packetCursor=0x82; packetCursor++;
@@ -1135,7 +1136,7 @@ int translateText2Varbinding(nbCELL context,char **packetCursorP,char **textP){
   packetCursor+=len;
   len=packetCursor-varLenP-2;
   *varLenP=len>>8;
-  *(varLenP+1)=len&0xff;
+  *(varLenP+1)=len%256;   // 2013-01-16 eat
   *packetCursorP=packetCursor;
   cursor=delim+1;
   *textP=cursor;
@@ -1204,7 +1205,7 @@ static void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
     }
   str=nbCellGetString(context,cell);
   delim=strchr(str,':');
-  if(delim==NULL) delim=strchr(str,0);
+  if(delim==NULL) delim=str+strlen(str);  // 2013-01-13 eat - VID 973-0.8.13-3 FP but replaced strchr(str,0)
   len=delim-str;
   if(len>15){
     nbLogMsg(context,0,'E',"Inteface IP address may not be greater than 15 characters");
@@ -1229,7 +1230,7 @@ static void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
     delim=strchr(cursor,' ');
     if(delim==NULL) delim=strchr(cursor,',');
     if(delim==NULL) delim=strchr(cursor,';');
-    if(delim==NULL) delim=strchr(cursor,0);
+    if(delim==NULL) delim=cursor+strlen(cursor); // 2013-01-13 eat - VID 982-0.8.13-3 FP but replaced strchr(cursor,0)
     saveDelim=*delim;
     *delim=0;
     if(strcmp(cursor,"trace")==0){trace=1;}
@@ -1311,7 +1312,7 @@ static int clientCommand(nbCELL context,void *skillHandle,NB_MOD_Client *client,
   *packetCursor=0x04; packetCursor++; // String
   *packetCursor=0x06; packetCursor++; // len=6
   strcpy(packetCursor,"public");      // community string
-  packetCursor=strchr(packetCursor,0);
+  packetCursor+=strlen(packetCursor);         // 2013-01-14 eat - VID 964-0.8.13-3 FP but replaced strchr(packetCursor,0)
   *packetCursor=0xA4; packetCursor++; // 0xA4 for V1 trap
   *packetCursor=0x82; packetCursor++; // 2 byte packet length follows
   trapLenP=packetCursor;

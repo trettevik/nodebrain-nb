@@ -188,7 +188,8 @@ static unsigned int pkeCipher(unsigned char *ciphertext,vli exponent,vli modulus
 */
 unsigned int pkeEncrypt(unsigned char *ciphertext,vli exponent,vli modulus,unsigned char *plaintext,unsigned int length){
   unsigned char *in,*out,*end;
-  unsigned int blocksize,len,inblocksize;
+  unsigned int blocksize,inblocksize;
+  size_t len;
 
   blocksize=vlibytes(modulus);
   if(blocksize<3) nbExit("pkeEncrypt encounter invalid vli blocksize of %d - terminating",blocksize);
@@ -206,13 +207,13 @@ unsigned int pkeEncrypt(unsigned char *ciphertext,vli exponent,vli modulus,unsig
   if(len>0) memcpy(out,in,len);
   out+=inblocksize-1;
   if(len>255) nbExit("pkeEncrypt encountered invalid ciphertext length of %d - terminating",len);
-  *out=len;
+  *out=len%256;          // 2013-01-14 eat - VID 4469-0.8.13-3 FP added %256 to help the checker
   out++;
   *out=0;
   out++;
-  len=out-ciphertext;
+  len=out-ciphertext;    // 2013-01-14 eat - VID 4455-0.8.13-3 changed len to size_t
   if(len>255) nbExit("pkeEncrypt encountered invalid ciphertext length of %d - terminating",len);
-  *ciphertext=len;
+  *ciphertext=len%256;   // 2013-01-14 eat - VID 4459-0.8.13-3 FP added %256 to help the checker
   pkeCipher(ciphertext,exponent,modulus);
   return(len);
   }  
@@ -233,8 +234,8 @@ unsigned int pkeDecrypt(unsigned char *ciphertext,vli exponent,vli modulus,unsig
   clastblock=ciphertext+*ciphertext-cblocksize;
   for(;ct<clastblock;ct+=cblocksize){      /* for each block */
     if(pt>pend) return(0);                 /* avoid plaintext buffer overflow */
-    memcpy(pt,ct,pblocksize);
-    pt+=pblocksize;
+    memcpy(pt,ct,pblocksize);  // 2013-01-14 eat - VID 3112-0.8.13-3 FP up to pend we can copy pblocksize bytes
+    pt+=pblocksize;            // 2013-01-14 eat - VID 4468-0.8.13-3 FP we can't overflow buffer until pt>pend
     }  
   clastblock=ct+cblocksize-2;
   part=*clastblock;  

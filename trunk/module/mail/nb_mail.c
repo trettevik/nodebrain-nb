@@ -79,6 +79,7 @@
 * 2012-12-15 eat 0.8.13 Checker updates
 * 2012-12-27 eat 0.8.13 Checker updates
 * 2013-01-12 eat 0.8.13 Checker updates
+* 2013-01-14 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include "config.h"
@@ -106,10 +107,11 @@ typedef struct NB_MOD_MAIL_SESSION{
 
 //extern struct sigaction sigact;
 
-int smtpPut(NB_IpChannel *channel){
+static int smtpPut(NB_IpChannel *channel){
   int sent;
   char *buffer=(char *)channel->buffer;
-  strcat(buffer,"\n");
+
+  //strcat(buffer,"\n");  // 2013-01-14 eat - VID 4300-0.8.13-3 - newline now included before call to this function
   sent=send(channel->socket,buffer,strlen(buffer),0);  // application must make sure this is not a sensitive data leak
   while(sent==-1 && errno==EINTR){
     sent=send(channel->socket,buffer,strlen(buffer),0);
@@ -117,7 +119,7 @@ int smtpPut(NB_IpChannel *channel){
   return(sent);
   }
 
-int smtpGet(NB_IpChannel *channel){
+static int smtpGet(NB_IpChannel *channel){
   int len;
   char *cursor,*buffer=(char *)channel->buffer;
 
@@ -155,7 +157,7 @@ int smtpData(NB_IpChannel *channel,char *clienthost,char *directory,char *user){
   fprintf(file,"To: %s\n",user);
   fprintf(file,"- - - - - - - - - - - - - - - -\n");
 
-  snprintf(buffer,(size_t)NB_BUFSIZE,"%s","354 Enter Mail, end with \".\" on a line by itself"); // 2012-01-31 dtl: replased strcpy 
+  snprintf(buffer,(size_t)NB_BUFSIZE,"%s","354 Enter Mail, end with \".\" on a line by itself\n"); // 2012-01-31 dtl: replased strcpy 
   if((len=smtpPut(channel))<0){
     fclose(file);
     return(len);
@@ -192,7 +194,7 @@ int smtpData(NB_IpChannel *channel,char *clienthost,char *directory,char *user){
 void smtpReject(NB_IpChannel *channel){
   char *buffer=(char *)channel->buffer;
 
-  sprintf(buffer,"421 anonymous NodeBrain SMTP Alert Server unavailable - too busy");
+  sprintf(buffer,"421 anonymous NodeBrain SMTP Alert Server unavailable - too busy\n");
   smtpPut(channel);
   nbIpClose(channel);
   nbIpFree(channel);
@@ -217,7 +219,7 @@ void smtpServe(nbSession *session){
 
   if(gethostname(hostname,sizeof(hostname))) strcpy(hostname,"anonymous");
 
-  sprintf(buffer,"220 %s NodeBrain SMTP Alert Server Ready",hostname);
+  sprintf(buffer,"220 %s NodeBrain SMTP Alert Server Ready\n",hostname);
   while(state){
     /* send reply to client */
     if((len=smtpPut(channel))<0) state=0;
@@ -235,7 +237,7 @@ void smtpServe(nbSession *session){
       sprintf(buffer,"250 %s",hostname);
       }
     else if(strncmp(buffer,"QUIT",4)==0 || strncmp(buffer,"quit",4)==0){
-      sprintf(buffer,"221 %s NodeBrain SMTP Alert Server closing connection",hostname);
+      sprintf(buffer,"221 %s NodeBrain SMTP Alert Server closing connection\n",hostname);
       smtpPut(channel);
       state=0;
       }

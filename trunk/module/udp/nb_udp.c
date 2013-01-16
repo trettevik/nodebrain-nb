@@ -76,6 +76,8 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 * 2012-12-15 eat 0.8.13 Checker updates
 * 2012-12-27 eat 0.8.13 Checker updates
+* 2013-01-13 eat 0.8.13 Checker updates
+* 2013-01-16 eat 0.8.13 Checker updates
 *=====================================================================
 */
 #include "config.h"
@@ -145,7 +147,7 @@ static void serverRead(nbCELL context,int serverSocket,void *handle){
     exit(NB_EXITCODE_FAIL);
     }
   while(havedata){
-    strcpy(buffer,server->prefix);
+    snprintf(buffer,sizeof(buffer),"%s",server->prefix);
     cursor=buffer+strlen(buffer);
     len=nbIpGetDatagram(context,serverSocket,&server->sourceAddr,&rport,(unsigned char *)cursor,buflen-strlen(buffer));
     if(server->trace){
@@ -252,7 +254,7 @@ static void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
     delim=strchr(cursor,' ');
     if(delim==NULL) delim=strchr(cursor,',');
     if(delim==NULL) delim=strchr(cursor,';');
-    if(delim==NULL) delim=strchr(cursor,0);
+    if(delim==NULL) delim=cursor+strlen(cursor); // 2013-01-14 eat - VID 955-0.8.13-3 FP but replaced strchr(cursor,0)
     saveDelim=*delim;
     *delim=0;
     if(strcmp(cursor,"trace")==0){trace=1;}
@@ -428,7 +430,7 @@ static void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
     delim=strchr(cursor,' ');
     if(delim==NULL) delim=strchr(cursor,',');
     if(delim==NULL) delim=strchr(cursor,';');
-    if(delim==NULL) delim=strchr(cursor,0);
+    if(delim==NULL) delim=cursor+strlen(cursor);  // 2013-01-14 eat - VID 583-0.8.13-3 FP but replaced strchr(cursor,0)
     saveDelim=*delim;
     *delim=0;
     if(strcmp(cursor,"trace")==0){trace=1;}
@@ -499,10 +501,10 @@ static int *clientCommand(nbCELL context,void *skillHandle,NB_MOD_Client *client
   cursor++;
   if(client->prefix && *client->prefix){
     strcpy(cursor,client->prefix);
-    cursor=strchr(cursor,0);
+    cursor+=strlen(cursor);  // 2013-01-14 eat - VID 4102-0.8.13-3 FP but replace strchr(cursor,0) 
     }
   strcpy(cursor,text);
-  cursor=strchr(cursor,0);
+  cursor+=strlen(cursor);
   len=cursor-buffer;
   sent=send(client->socket,buffer,len,0);
   return(0);
