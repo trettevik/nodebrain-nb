@@ -252,22 +252,22 @@ The following rules describe the syntax of NodeBrain's modified BNF.
 
 @cartouche
 @b{Syntax}
-@multitable {-------------------------} {------------------------------------------------------------------------------------------------------}
+@multitable {------------------------} {---} {-------------------------------------------------------------------------}
 
-@item @i{rule}  @tab ::= @i{identifier}@b{ ::=} @i{expression}
-@item @i{expression}  @tab ::= @i{term} @{ š @b{|} š @i{term} @}
-@item @i{term} @tab ::= @i{factor} [ š @i{term} ]
-@item @i{factor}  @tab ::= @i{identifier} | @i{spaceIdentifier} | @i{eolIdentifier} | @i{terminal} | @i{subExpression} | @i{optionalExpression} | @i{repeatExpression}
-@item @i{identifier}  @tab ::=  @i{alpha} @{ @i{alpha} @}
-@item @i{alpha}  @tab ::=  @b{a-z} | @b{A-Z}
-@item @i{spaceIdentifier}  @tab ::=  @i{š} Represents one or more space characters
-@item @i{eolIdentifier}  @tab ::=  @b{@bullet{} } Represents end-of-line character
-@item @i{terminal}  @tab ::=  @i{string} | " string " | @i{boldString}
-@item @i{string}  @tab ::=  @i{character} @{ @i{character} @}
-@item @i{boldString}  @tab String in bold font
-@item @i{subExpression} @tab ::= @b{ (}@i{expression} @b{)}
-@item @i{optionalExpression}  @tab ::=  @b{ [}@i{expression} @b{]}
-@item @i{repeatExpression}  @tab ::= @b{@{} @i{expression} @b{@}}
+@item @i{rule}  @tab ::= @tab @i{identifier}@b{ ::=} @i{expression}
+@item @i{expression}  @tab ::= @tab  @i{term} @{ š @b{|} š @i{term} @}
+@item @i{term} @tab ::= @tab @i{factor} [ š @i{term} ]
+@item @i{factor}  @tab ::= @tab @i{identifier} | @i{spaceIdentifier} | @i{eolIdentifier} | @i{terminal} | @i{subExpression} | @i{optionalExpression} | @i{repeatExpression}
+@item @i{identifier}  @tab ::=  @tab @i{alpha} @{ @i{alpha} @}
+@item @i{alpha}  @tab ::=  @tab @b{a-z} | @b{A-Z}
+@item @i{spaceIdentifier}  @tab ::=  @tab @i{š} Represents one or more space characters
+@item @i{eolIdentifier}  @tab ::=  @tab @b{@bullet{} } Represents end-of-line character
+@item @i{terminal}  @tab ::=  @tab @i{string} | " string " | @i{boldString}
+@item @i{string}  @tab ::=  @tab @i{character} @{ @i{character} @}
+@item @i{boldString}  @tab ::= @tab String in bold font
+@item @i{subExpression} @tab ::= @tab @b{ (}@i{expression} @b{)}
+@item @i{optionalExpression}  @tab ::= @tab  @b{ [}@i{expression} @b{]}
+@item @i{repeatExpression}  @tab ::= @tab @b{@{} @i{expression} @b{@}}
 @end multitable
 @end cartouche
 
@@ -441,7 +441,7 @@ A cell definition is a unique identifier of a cell. In other words, only one cel
 @item 5*2+5 @tab 15
 @end multitable
 
-@c @image{langref1-4,,,,png}
+@image{langref1-4,,,,png}
 
 @section Terms
 @cindex Terms
@@ -565,7 +565,7 @@ The @code{WHEN} rule shows no preference toward either of the concepts of "state
 
 A set of rules may be written to implement a state transition table.
 
-@c @image{langref1-7,,,,png}
+@image{langref1-7,,,,png}
 
 @example
 define r1r on(state=1 and red) state=2: @i{actionA}
@@ -606,7 +606,7 @@ You can think of sequence rules (like all NodeBrain rules) as running concurrent
 
 The previous section showed how simple @code{ON} rules can be used to implement a state table using a state variable. With sequence rules, a statement pointer provides a built-in state variable. The rule below responds to a sequence of green, blue, and red conditions.
 
-@c @image{langref1-8,,,,png}
+@image{langref1-8,,,,png}
 
 @example 
 @{on(green);on(blue);on(red); @i{action}; @}
@@ -661,7 +661,7 @@ The R[2] on the first line tells you there are two references to the cell (A=1).
 
 The L(1) on the first line tells you (A=1) is a level 1 cell. Notice the second line shows a level 2 cell ((A=1)&(B=3)). This is an @code{AND} cell referencing two level 1 cells: (A=1) and (B=3). Let's look at it graphically. Now the levels and references make sense.
 
-@c @image{langref1-10a,,,,png}
+@image{langref1-10a,,,,png}
 
 Within the internals of the NodeBrain interpreter you say that cell (A=1) has "subscribed" to changes in the value A, and that the cell ((A=1)&(B=2)) has subscribed to changes in the value of (A=1) and to the value of (B=2). Let's look at what happens when you make an assertion about A and B.
 
@@ -669,7 +669,7 @@ Within the internals of the NodeBrain interpreter you say that cell (A=1) has "s
 assert A=2,B=3;
 @end example
 
-@c @image{langref1-10b,,,,png}
+@image{langref1-10b,,,,png}
 
 The impact of the changes to A and B are realized level by level. When A is assigned 2, this is a change, so A publishes a change to the (A=1) cell. This simply means (A=1) is scheduled for evaluation. When B is assigned 3, this is also a change, so B publishes a change to (B=2) and (B=3) because both have subscribed to changes in B.
 
@@ -683,7 +683,7 @@ Now suppose you make the following assertion.
 @example
 assert a=1;
 @end example     
-@c @image{langref1-10c,,,,png}
+@image{langref1-10c,,,,png}
        
 When A is assigned the value of 1, the interpreter schedules (A=1) for evaluation. If you were to trace the evaluation process, it might look like this.
 
@@ -767,16 +767,16 @@ See the @i{NodeBrain Module Reference} for a description of node modules distrib
 
 @cartouche
 @b{Syntax}
-@multitable {--------------------------} {---------------------------------------------------------------------------------}
+@multitable {--------------------------} {---} {---------------------------------------------------------------------------------}
 
-@item @i{identifier}  @tab ::= @i{completeIdentifier} | @i{contextualIdentifier}
-@item @i{completeIdentifier}  @tab ::= (@b{%} | @b{@@} ) [@i{term} ] [@b{.} @i{contextualIdentifier} ]
-@item @i{contextualIdentifier}  @tab ::= @i{term} @{@b{ .} @i{term} @}
-@item @i{term}  @tab ::= @i{simpleTerm} | @i{quotedTerm}
-@item @i{simpleTerm}  @tab ::= @i{alphaChar} @{ @i{alphaChar} | @i{digitChar} @} 
-@item @i{alphaChar}  @tab ::= @b{a-z} | @b{A-Z} | _
-@item @i{digitChar}  @tab ::= @b{0-9}
-@item @i{quotedTerm}  @tab ::= @b{'} @{ character @} @b{'}
+@item @i{identifier}  @tab ::= @tab @i{completeIdentifier} | @i{contextualIdentifier}
+@item @i{completeIdentifier}  @tab ::= @tab (@b{%} | @b{@@} ) [@i{term} ] [@b{.} @i{contextualIdentifier} ]
+@item @i{contextualIdentifier}  @tab ::= @tab @i{term} @{@b{ .} @i{term} @}
+@item @i{term}  @tab ::= @tab @i{simpleTerm} | @i{quotedTerm}
+@item @i{simpleTerm}  @tab ::= @tab @i{alphaChar} @{ @i{alphaChar} | @i{digitChar} @} 
+@item @i{alphaChar}  @tab ::= @tab @b{a-z} | @b{A-Z} | _
+@item @i{digitChar}  @tab ::= @tab @b{0-9}
+@item @i{quotedTerm}  @tab ::= @tab  @b{'} @{ character @} @b{'}
 @end multitable
 @end cartouche
 
@@ -932,13 +932,13 @@ NodeBrain has two basic data types, string and number. NodeBrain uses a self-def
 
 @cartouche
 @b{Syntax}
-@multitable {--------------------------} {-------------------------------------------------------------------------------------------}
+@multitable {--------------------------} {---} {-------------------------------------------------------------------------------------------}
 
-@item @i{literalIdentifier} @tab ::= @i{stringLiteral} | @i{numberLiteral}
-@item @i{stringLiteral} @tab ::= @b{"} @{ @i{character} @} @b{"}
-@item @i{numberLiteral} @tab ::= [@b{+} | @b{-} ] @i{integer} [@b{.} @i{integer} ] [@b{e} [@b{+} | @b{- }] integer ]
-@item @i{integer} @tab ::= @i{digit}@{ @i{digit} @}
-@item @i{digit} @tab ::= @b{0-9}
+@item @i{literalIdentifier} @tab ::= @tab @i{stringLiteral} | @i{numberLiteral}
+@item @i{stringLiteral} @tab ::= @tab @b{"} @{ @i{character} @} @b{"}
+@item @i{numberLiteral} @tab ::= @tab [@b{+} | @b{-} ] @i{integer} [@b{.} @i{integer} ] [@b{e} [@b{+} | @b{- }] integer ]
+@item @i{integer} @tab ::= @tab @i{digit}@{ @i{digit} @}
+@item @i{digit} @tab ::= @tab @b{0-9}
 @end multitable
 @end cartouche
 
@@ -980,19 +980,19 @@ This chapter describes the basic syntax and semantics of logical expressions use
 
 @cartouche
 @b{Syntax}
-@multitable {-------------------------} {----------------------------------------------------------------------------------------------}
-@item @i{condition} @tab ::= @i{relationalCondition} | @i{infixBoolCondition} | @i{atomicCondition} | @i{delayedCondition}
-@item @i{relationalCondition}  @tab ::= @i{cell} [š] (@b{=} | @b{<>} | @b{<} | @b{>} | @b{<=} | @b{>= }) [š] @i{cell} 
-@item @i{cell}  @tab ::= @i{identifier} | @i{stringLiteral} | @i{numberLiteral} | @b{?} | @b{ (} [š] @i{cellExpression} [š]  @b{) }|   @i{nodeCondition}
-@item @i{infixBoolCondition}  @tab ::= @i{condition} [š] (@i{infixBoolOperator} ) [š] @i{simpleCondition}
-@item @i{infixBoolOperator}  @tab ::= @b{and} | @b{&} | @b{nand} | @b{!&} | @b{or} | @b{|} | @b{nor} | @b{!|} | xor | @b{|!&} | @b{^} | @b{&^&} | @b{|^|} | @b{&~&} | @b{|~|}
-@item @i{simpleCondition} @tab ::= @i{relationalCondition} |@i{atomicCondition}
-@item @i{atomicCondition} @tab ::= @i{cell} | @i{prefixBoolCondition} | @i{timeCondition}
-@item @i{prefixBoolCondition} @tab ::= (@b{not} | @b{! } | @b{!!} | @b{?} | @b{!?} | @b{[]} ) @i{automicCondition}
-@item @i{nodeCondition} @tab ::= @i{identifier} "@b{(} " @i{cellList} "@b{)}"
-@item @i{cellList} @tab ::= [@i{cellExpression} @{ @b{,} @i{cellExpression} @} ]
-@item @i{timeCondition} @tab ::= @b{~} "@b{(} " @i{timeExpression} "@b{)}"
-@item @i{delayedCondition} @tab ::= @i{condition} @b{~^} (@b{1} | @b{0} | @b{?} ) "@b{(} " @i{timeExpression} "@b{)}"
+@multitable {-------------------------} {---} {----------------------------------------------------------------------------------------------}
+@item @i{condition} @tab ::= @tab @i{relationalCondition} | @i{infixBoolCondition} | @i{atomicCondition} | @i{delayedCondition}
+@item @i{relationalCondition}  @tab ::= @tab @i{cell} [š] (@b{=} | @b{<>} | @b{<} | @b{>} | @b{<=} | @b{>= }) [š] @i{cell} 
+@item @i{cell}  @tab ::= @tab @i{identifier} | @i{stringLiteral} | @i{numberLiteral} | @b{?} | @b{ (} [š] @i{cellExpression} [š]  @b{) }|   @i{nodeCondition}
+@item @i{infixBoolCondition}  @tab ::= @tab @i{condition} [š] (@i{infixBoolOperator} ) [š] @i{simpleCondition}
+@item @i{infixBoolOperator}  @tab ::= @tab @b{and} | @b{&} | @b{nand} | @b{!&} | @b{or} | @b{|} | @b{nor} | @b{!|} | xor | @b{|!&} | @b{^} | @b{&^&} | @b{|^|} | @b{&~&} | @b{|~|}
+@item @i{simpleCondition} @tab ::= @tab @i{relationalCondition} |@i{atomicCondition}
+@item @i{atomicCondition} @tab ::= @tab @i{cell} | @i{prefixBoolCondition} | @i{timeCondition}
+@item @i{prefixBoolCondition} @tab ::= @tab (@b{not} | @b{! } | @b{!!} | @b{?} | @b{!?} | @b{[]} ) @i{automicCondition}
+@item @i{nodeCondition} @tab ::= @tab @i{identifier} "@b{(} " @i{cellList} "@b{)}"
+@item @i{cellList} @tab ::= @tab [@i{cellExpression} @{ @b{,} @i{cellExpression} @} ]
+@item @i{timeCondition} @tab ::= @tab @b{~} "@b{(} " @i{timeExpression} "@b{)}"
+@item @i{delayedCondition} @tab ::= @tab @i{condition} @b{~^} (@b{1} | @b{0} | @b{?} ) "@b{(} " @i{timeExpression} "@b{)}"
 @end multitable
 @end cartouche
 
@@ -1473,19 +1473,19 @@ NodeBrain rules schedule actions. The scheduling of an action may be event based
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{timeExpression} @tab ::= @i{timePrefixExpr | timeInfixExpr | timeIndexExpr | timeFunctionExpr}
-@item @i{timePrefixExpr} @tab ::= (@b{=} | "@b{|}" | @b{#} | @b{!} | @b{&} | @b{~} | @b{%} ) @i{timeSet}
-@item @i{timeInfixExpr} @tab ::= @i{timeSet}  (@b{,} | @b{.} | @b{!} | @b{#} | @b{&} | "@b{|}" | @b{%} ) @i{timeSet}
-@item @i{timeIndexExpr}@tab ::= @i{timeSet} "@b{[} " @i{timeParmList} "@b{]}" @i{timeSet}
-@item @i{timeSet} @tab ::= "@b{(} " @i{timeExpression} "@b{)}" | @i{timeFunctionExpr}
-@item @i{timeFunctionExpr} @tab ::= @i{timeFunction} [ "@b{(} "  @i{timeParmList} "@b{)}" ]
-@item @i{timeFunction} @tab ::= (@b{y} | @b{year} | @b{q} | @b{quarter} | @b{n} | @b{month} | @b{w} | @b{week} | @b{d} | @b{day} | @b{jan} | @b{january} | @b{feb} | @b{february} | @b{mar} | @b{march} | @b{apr} | @b{april} | @b{may} | @b{jun} | @b{june} | @b{jul} | @b{july} | @b{aug} | @b{august} | @b{sep} | @b{september} | @b{oct} | @b{october} | @b{nov} | @b{november} | @b{dec} | @b{december} | @b{su} | @b{sunday} | @b{mo} | @b{monday} | @b{tu} | @b{tuesday} | @b{we} | @b{wednesday} | @b{th} | @b{thursday} | @b{fr} | @b{friday} | @b{sa} | @b{saturday} | @b{h} | @b{hour} | @b{m} | @b{minute} | @b{s} | @b{second} )
-@item @i{timeParmList} @tab ::= @i{timeParm} @{ @b{,}  @i{timeParm} @} 
-@item @i{timeParm} @tab ::= (@i{integer | integerRange | integerSpan} )
-@item @i{integer} @tab ::= @i{digit}@{ @i{digit} @}
-@item @i{integerRange} @tab ::= @i{integer} @b{..}  @i{integer}
-@item @i{integerSpan} @tab ::= @i{integer} @b{_}  @i{integer}
+@multitable {-----------------------} {---} {------------------------------------------------------}
+@item @i{timeExpression} @tab ::= @tab @i{timePrefixExpr | timeInfixExpr | timeIndexExpr | timeFunctionExpr}
+@item @i{timePrefixExpr} @tab ::= @tab (@b{=} | "@b{|}" | @b{#} | @b{!} | @b{&} | @b{~} | @b{%} ) @i{timeSet}
+@item @i{timeInfixExpr} @tab ::= @tab @i{timeSet}  (@b{,} | @b{.} | @b{!} | @b{#} | @b{&} | "@b{|}" | @b{%} ) @i{timeSet}
+@item @i{timeIndexExpr}@tab ::= @tab @i{timeSet} "@b{[} " @i{timeParmList} "@b{]}" @i{timeSet}
+@item @i{timeSet} @tab ::= @tab "@b{(} " @i{timeExpression} "@b{)}" | @i{timeFunctionExpr}
+@item @i{timeFunctionExpr} @tab ::= @tab @i{timeFunction} [ "@b{(} "  @i{timeParmList} "@b{)}" ]
+@item @i{timeFunction} @tab ::= @tab (@b{y} | @b{year} | @b{q} | @b{quarter} | @b{n} | @b{month} | @b{w} | @b{week} | @b{d} | @b{day} | @b{jan} | @b{january} | @b{feb} | @b{february} | @b{mar} | @b{march} | @b{apr} | @b{april} | @b{may} | @b{jun} | @b{june} | @b{jul} | @b{july} | @b{aug} | @b{august} | @b{sep} | @b{september} | @b{oct} | @b{october} | @b{nov} | @b{november} | @b{dec} | @b{december} | @b{su} | @b{sunday} | @b{mo} | @b{monday} | @b{tu} | @b{tuesday} | @b{we} | @b{wednesday} | @b{th} | @b{thursday} | @b{fr} | @b{friday} | @b{sa} | @b{saturday} | @b{h} | @b{hour} | @b{m} | @b{minute} | @b{s} | @b{second} )
+@item @i{timeParmList} @tab ::= @tab @i{timeParm} @{ @b{,}  @i{timeParm} @} 
+@item @i{timeParm} @tab ::= @tab (@i{integer | integerRange | integerSpan} )
+@item @i{integer} @tab ::= @tab @i{digit}@{ @i{digit} @}
+@item @i{integerRange} @tab ::= @tab @i{integer} @b{..}  @i{integer}
+@item @i{integerSpan} @tab ::= @tab @i{integer} @b{_}  @i{integer}
 @end multitable
 @end cartouche
 
@@ -2108,14 +2108,14 @@ The @i{exclusive or} operator (%) produces a set of intervals where one of the o
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{timeSequence} @tab ::= "@b{@{@}} " @i{statements} "@b{@}}" 
-@item @i{statements} @tab ::= @i{statement} @{ [@b{,} ] @i{statement} @}  
-@item @i{statement} @tab ::= @b{/} | @b{\} | @i{timeStep} |  [@i{integer} | @b{*} ] @i{timeSequence}
-@item @i{timeStep} @tab ::= @i{simpleStep} | @i{complexStep}
-@item @i{simpleStep} @tab ::= [ [ (@b{+} | @b{-} ) ] @i{integer} ] @i{timeUnit} [ @i{simpleStep} ]
-@item @i{timeUnit} @tab ::= @b{s} | @b{m} | @b{h} | @b{d} | @b{w} | @b{n} | @b{q} | @b{y} Note: second, minute, hour, day, week, month, quarter, year
-@item @i{complexStep} @tab ::= [@i{integer} ] "@b{(} " @i{timeExpression} "@b{)} "
+@multitable {----------------------} {---} {------------------------------------------------------}
+@item @i{timeSequence} @tab ::= @tab "@b{@{@}} " @i{statements} "@b{@}}" 
+@item @i{statements} @tab ::= @tab @i{statement} @{ [@b{,} ] @i{statement} @}  
+@item @i{statement} @tab ::= @tab @b{/} | @b{\} | @i{timeStep} |  [@i{integer} | @b{*} ] @i{timeSequence}
+@item @i{timeStep} @tab ::= @tab @i{simpleStep} | @i{complexStep}
+@item @i{simpleStep} @tab ::= @tab [ [ (@b{+} | @b{-} ) ] @i{integer} ] @i{timeUnit} [ @i{simpleStep} ]
+@item @i{timeUnit} @tab ::= @tab @b{s} | @b{m} | @b{h} | @b{d} | @b{w} | @b{n} | @b{q} | @b{y} Note: second, minute, hour, day, week, month, quarter, year
+@item @i{complexStep} @tab ::= @tab [@i{integer} ] "@b{(} " @i{timeExpression} "@b{)} "
 @end multitable
 @end cartouche
 
@@ -2203,10 +2203,10 @@ When specifying a partitioned set, the false state (\) is assumed at the end of 
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{pulseCondition} @tab ::= @b{~} "@b{(} " @i{duration} "@b{)}" 
-@item @i{duration} @tab ::= integer  timeUnit [ duration ]
-@item @i{timeUnit} @tab ::= @b{s} | @b{m} | @b{h} | @b{d} | @b{w} Note: second, minute, hour, day, week
+@multitable {--------------------} {---} {------------------------------------------------------}
+@item @i{pulseCondition} @tab ::= @tab @b{~} "@b{(} " @i{duration} "@b{)}" 
+@item @i{duration} @tab ::= @tab integer  timeUnit [ duration ]
+@item @i{timeUnit} @tab ::= @tab @b{s} | @b{m} | @b{h} | @b{d} | @b{w} Note: second, minute, hour, day, week
 @end multitable
 @end cartouche
 
@@ -2428,20 +2428,20 @@ It is also possible to use @code{WHEN} rules that create @code{WHEN} rules that 
 
 @cartouche
 @b{Syntax: Superset of time sequence}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{sequence} @tab ::= "@b{@{} " @i{statements} "@b{@}}" 
-@item @i{statements}  @tab ::= @i{statement} @{ [@b{,} ] @i{statement} @} 
-@item @i{statement} @tab ::= @b{/} | @b{\} | @i{timeStep} |  @i{seqSuperset}| [@i{integer} | @b{*} ] @i{sequence}
-@item @i{timeStep} @tab ::= @i{simpleStep} | @i{complexStep}
-@item @i{simpleStep} @tab ::= [ [ (@b{+} | @b{-} ) ] @i{integer} ] @i{timeUnit} [@i{simpleStep} ]
-@item @i{timeUnit} @tab ::= @b{s} | @b{m} | @b{h} | @b{d} | @b{w} | @b{n} | @b{q} | @b{y} Note: second, minute, hour, day, week, month, quarter, year
-@item @i{complexStep} @tab ::= [@i{integer} ] "@b{(} " @i{timeExpression} "@b{)}" 
-@item @i{seqSuperset} @tab ::=  @i{seqPublish} | @i{seqAssertion} | @i{seqCommand} | @i{seqOn} | @i{seqIf} 
-@item @i{seqPublish} @tab ::=  @b{=} @i{cellExpression} @b{; }
-@item @i{seqAssertion} @tab ::=  @b{`} @i{assertion} @b{;}
-@item @i{seqCommand} @tab ::=  @b{:} @i{command} @b{;}
-@item @i{seqOn} @tab ::=  (@b{on} | @b{onif} )  "@b{(} " @i{condition} "@b{)}" @i{statement}
-@item @i{seqIf}  @tab ::=  @b{if} "@b{(} " @i{condition} "@b{)}" @i{statement} @b{else} @i{statement}
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{sequence} @tab ::= @tab "@b{@{} " @i{statements} "@b{@}}" 
+@item @i{statements}  @tab ::= @tab @i{statement} @{ [@b{,} ] @i{statement} @} 
+@item @i{statement} @tab ::= @tab @b{/} | @b{\} | @i{timeStep} |  @i{seqSuperset}| [@i{integer} | @b{*} ] @i{sequence}
+@item @i{timeStep} @tab ::= @tab @i{simpleStep} | @i{complexStep}
+@item @i{simpleStep} @tab ::= @tab [ [ (@b{+} | @b{-} ) ] @i{integer} ] @i{timeUnit} [@i{simpleStep} ]
+@item @i{timeUnit} @tab ::= @tab @b{s} | @b{m} | @b{h} | @b{d} | @b{w} | @b{n} | @b{q} | @b{y} Note: second, minute, hour, day, week, month, quarter, year
+@item @i{complexStep} @tab ::= @tab [@i{integer} ] "@b{(} " @i{timeExpression} "@b{)}" 
+@item @i{seqSuperset} @tab ::=  @tab @i{seqPublish} | @i{seqAssertion} | @i{seqCommand} | @i{seqOn} | @i{seqIf} 
+@item @i{seqPublish} @tab ::=  @tab @b{=} @i{cellExpression} @b{; }
+@item @i{seqAssertion} @tab ::=  @tab @b{`} @i{assertion} @b{;}
+@item @i{seqCommand} @tab ::=  @tab @b{:} @i{command} @b{;}
+@item @i{seqOn} @tab ::=  @tab (@b{on} | @b{onif} )  "@b{(} " @i{condition} "@b{)}" @i{statement}
+@item @i{seqIf} @tab ::= @tab @b{if} "@b{(} " @i{condition} "@b{)}" @i{statement} @b{else} @i{statement}
 @end multitable
 @end cartouche
 
@@ -2674,12 +2674,12 @@ The @code{ALERT} command is used to report an event to a set of rules defined wi
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{assertCmd} @tab ::= @b{alert} š  [@i{assertionList} ] [@b{;} [@i{comment} ] ] @b{@bullet{}}
-@item @i{assertionList} @tab ::= @i{cellAssertion} @{@b{ ,} @i{cellAssertion} @}
-@item @i{cellAssertion} @tab ::= @i{cellIdentifier}(@b{=} | @b{==} ) @i{cellExpression} | [@b{!} | @b{?} ] @i{cellIdentifier}
-@item @i{cellIdentifier} @tab ::= @i{identifier} | [@i{identifier} ] "@b{(} " [@i{cellist} ] "@b{)}"
-@item @i{cellList} @tab ::=  @i{cellExpression}  @{ @b{,}  @i{cellExpression} @}
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{assertCmd} @tab ::= @tab @b{alert} š  [@i{assertionList} ] [@b{;} [@i{comment} ] ] @b{@bullet{}}
+@item @i{assertionList} @tab ::= @tab @i{cellAssertion} @{@b{ ,} @i{cellAssertion} @}
+@item @i{cellAssertion} @tab ::= @tab @i{cellIdentifier}(@b{=} | @b{==} ) @i{cellExpression} | [@b{!} | @b{?} ] @i{cellIdentifier}
+@item @i{cellIdentifier} @tab ::= @tab @i{identifier} | [@i{identifier} ] "@b{(} " [@i{cellist} ] "@b{)}"
+@item @i{cellList} @tab ::= @tab @i{cellExpression}  @{ @b{,}  @i{cellExpression} @}
 @end multitable
 @end cartouche
 
@@ -2741,8 +2741,8 @@ The @code{ARCHIVE} command is used to archive the current log file.
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{archiveCmd} @tab ::= @b{archive} [@b{;} [@i{comment}]  ] @b{@bullet{}} 
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{archiveCmd} @tab ::= @tab @b{archive} [@b{;} [@i{comment}]  ] @b{@bullet{}} 
 @end multitable
 @end cartouche
 
@@ -2771,12 +2771,12 @@ The @code{ASSERT} command is used to report a state change.  The syntax is ident
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{assertCmd} @tab ::= (@b{assert} š | @b{`} ) [@i{assertionList} ] [@b{;} [@i{comment} ] ] @b{@bullet{}} 
-@item @i{assertionList} @tab ::= @i{cellAssertion} @{ @b{,} @i{cellAssertion} @}
-@item @i{cellAssertion} @tab ::= @i{cellIdentifier} (@b{=} | @b{==} ) @i{cellExpression} | [@b{!} | @b{?} ] @i{cellIdentifier}
-@item @i{cellIdentifier} @tab ::= @i{identifier} | @i{identifier} "@b{(} " [@i{cellist} ] "@b{)}"
-@item @i{cellist} @tab ::=  @i{cellExpression}  @{ @b{,}  @i{cellExpression} @}
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{assertCmd} @tab ::= @tab (@b{assert} š | @b{`} ) [@i{assertionList} ] [@b{;} [@i{comment} ] ] @b{@bullet{}} 
+@item @i{assertionList} @tab ::= @tab @i{cellAssertion} @{ @b{,} @i{cellAssertion} @}
+@item @i{cellAssertion} @tab ::= @tab @i{cellIdentifier} (@b{=} | @b{==} ) @i{cellExpression} | [@b{!} | @b{?} ] @i{cellIdentifier}
+@item @i{cellIdentifier} @tab ::= @tab @i{identifier} | @i{identifier} "@b{(} " [@i{cellist} ] "@b{)}"
+@item @i{cellist} @tab ::= @tab @i{cellExpression}  @{ @b{,}  @i{cellExpression} @}
 @end multitable
 @end cartouche
 
@@ -2826,11 +2826,11 @@ The @code{DECLARE} statement is used to name special objects in a name space uni
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{declareCmd} @tab ::= @b{declare} š @i{term} š @i{declareType} š @i{declareSpec} @b{[ ;} [@i{comment} ]] @b{@bullet{}} 
-@item @i{term} @tab see Chapter 3, Identifiers
-@item @i{declareType} @tab ::= @b{identity} | @b{calendar} | @b{module} | @b{skill}
-@item @i{declareSpec} @tab type-specific specification
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{declareCmd} @tab ::= @tab @b{declare} š @i{term} š @i{declareType} š @i{declareSpec} @b{[ ;} [@i{comment} ]] @b{@bullet{}} 
+@item @i{term} @tab ::= @tab see Chapter 3, Identifiers
+@item @i{declareType} @tab ::= @tab @b{identity} | @b{calendar} | @b{module} | @b{skill}
+@item @i{declareSpec} @tab ::= @tab type-specific specification
 @end multitable
 @end cartouche
 
@@ -2844,9 +2844,9 @@ A NodeBrain identity is similar to the familiar notion of a user account for app
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{identityDeclareCmd} @tab ::= @b{declare} š @i{term} š @b{identity} [ š @i{identityRank} ] [@b{;} [@i{comment} ]] @b{@bullet{}} 
-@item @i{identityRank} @tab ::= see @code{RANK} command
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{identityDeclareCmd} @tab ::= @tab @b{declare} š @i{term} š @b{identity} [ š @i{identityRank} ] [@b{;} [@i{comment} ]] @b{@bullet{}} 
+@item @i{identityRank} @tab ::= @tab see @code{RANK} command
 @end multitable
 @end cartouche
 
@@ -2863,10 +2863,10 @@ Calendars are declared for reference in time expressions. This is done to simpli
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{calendarDeclareCmd} @tab ::= @b{declare} š@i{term} š @b{calendar} š  @i{timeExpression} @b{[ ;} @i{comment} ] @b{@bullet{}} 
-@item @i{term} @tab Must start with uppercase letter (e.g., MyBday)
-@item @i{timeExpression} @tab see Chapter 5, Time Expressions
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{calendarDeclareCmd} @tab ::= @tab @b{declare} š@i{term} š @b{calendar} š  @i{timeExpression} @b{[ ;} @i{comment} ] @b{@bullet{}} 
+@item @i{term} @tab ::= @tab Must start with uppercase letter (e.g., MyBday)
+@item @i{timeExpression} @tab ::= @tab see Chapter 5, Time Expressions
 @end multitable
 @end cartouche
 
@@ -2898,19 +2898,19 @@ Modules are declared to help NodeBrain locate them or to specify special initial
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{moduleDeclareCmd} @tab ::= @b{declare} š @i{term} š @b{module} š  @i{moduleSpec} [@b{;} @i{comment} ] @b{@bullet{}} 
-@item @i{moduleSpec} @tab ::= [@b{@{ "}@i{pathList}@b{"} @b{@}} ] [@i{module} | @i{fileSpec} ] [@b{(} @i{cellist} @b{)} ] [ : @i{text} ]
-@item @i{pathList} @tab ::= path @{ (@b{;} | @b{:} ) path @} 
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{moduleDeclareCmd} @tab ::= @tab @b{declare} š @i{term} š @b{module} š  @i{moduleSpec} [@b{;} @i{comment} ] @b{@bullet{}} 
+@item @i{moduleSpec} @tab ::= @tab [@b{@{ "}@i{pathList}@b{"} @b{@}} ] [@i{module} | @i{fileSpec} ] [@b{(} @i{cellist} @b{)} ] [ : @i{text} ]
+@item @i{pathList} @tab ::= @tab path @{ (@b{;} | @b{:} ) path @} 
 A colon may not be used as a path separator on Windows
-@item @i{module} @tab ::= @i{identifier} 
+@item @i{module} @tab ::= @tab @i{identifier} 
 Platform independent variable part of preferred module filename.
 @b{nb_}@i{identifier}@b{.}@i{suffix}
-@item @i{suffix} @tab ::= @b{.so} | @b{.sl} | @b{.dylib} | @b{.dll} 
+@item @i{suffix} @tab ::= @tab @b{.so} | @b{.sl} | @b{.dylib} | @b{.dll} 
 NodeBrain uses the platform standard.
-@item @i{fileSpec} @tab ::= @b{"} [@i{path} @b{/} ] @i{filename} @b{"}
-@item @i{cellList} @tab ::= @i{cellExpression} @{ , @i{cellExpression} @}
-@item @i{text} @tab Any sequence of characters understood by the node module.
+@item @i{fileSpec} @tab ::= @tab @b{"} [@i{path} @b{/} ] @i{filename} @b{"}
+@item @i{cellList} @tab ::= @tab @i{cellExpression} @{ , @i{cellExpression} @}
+@item @i{text} @tab ::= @tab Any sequence of characters understood by the node module.
 @end multitable
 @end cartouche
 
@@ -2978,13 +2978,13 @@ Like modules, you typically don’t need to declare skills unless you want to spec
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{skillDeclareCmd} @tab ::= @b{declare} š @i{term} š @b{skill} š  @i{skillSpec} [@b{;} @i{comment} ] @b{@bullet{}} 
-@item @i{skillSpec} @tab ::= [@i{module}@b{.} ] @i{skill} [@b{(} @i{cellList} @b{)} ] [@b{:} @i{text} ]
-@item @i{module} @tab ::= @i{identifier}
-@item @i{skill} @tab ::= @i{identifier}
-@item @i{cellList} @tab ::= @i{cellExpression} @{ , @i{cellExpression} @}
-@item @i{text} @tab Any sequence of characters understood by the node module.
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{skillDeclareCmd} @tab ::= @tab @b{declare} š @i{term} š @b{skill} š  @i{skillSpec} [@b{;} @i{comment} ] @b{@bullet{}} 
+@item @i{skillSpec} @tab ::= @tab [@i{module}@b{.} ] @i{skill} [@b{(} @i{cellList} @b{)} ] [@b{:} @i{text} ]
+@item @i{module} @tab ::= @tab @i{identifier}
+@item @i{skill} @tab ::= @tab @i{identifier}
+@item @i{cellList} @tab ::= @tab @i{cellExpression} @{ , @i{cellExpression} @}
+@item @i{text} @tab ::= @tab Any sequence of characters understood by the node module.
 @end multitable
 @end cartouche
 
@@ -3029,11 +3029,11 @@ The @code{DEFINE} command is used to define NodeBrain objects.
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{defineCmd} @tab ::= @b{define} š @i{term} š @i{objectType} [ š @i{objectSpec} ] [@b{;} [@i{comment} ]] @b{@bullet{}} 
-@item @i{term} @tab see Chapter 3, Identifiers
-@item @i{objectType} @tab ::= @b{cell} | @b{node}  | @b{if} | @b{listener} | @b{on} | @b{when}
-@item @i{objectSpec} @tab type-specific specification
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{defineCmd} @tab ::= @tab @b{define} š @i{term} š @i{objectType} [ š @i{objectSpec} ] [@b{;} [@i{comment} ]] @b{@bullet{}} 
+@item @i{term} @tab ::= @tab  see Chapter 3, Identifiers
+@item @i{objectType} @tab ::= @tab @b{cell} | @b{node}  | @b{if} | @b{listener} | @b{on} | @b{when}
+@item @i{objectSpec} @tab ::= @tab type-specific specification
 @end multitable
 @end cartouche
 
@@ -3081,9 +3081,9 @@ The primary knowledge container in NodeBrain is an object called a cell. You def
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{cellDefineCmd} @tab ::= @b{define} š @i{term} š @b{cell} [ š @i{cellExpression}] [@b{;} [@i{comment} ]] @b{@bullet{}} 
-@item @i{cellExpression} @tab see Chapter 4, Conditions
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{cellDefineCmd} @tab ::= @tab @b{define} š @i{term} š @b{cell} [ š @i{cellExpression}] [@b{;} [@i{comment} ]] @b{@bullet{}} 
+@item @i{cellExpression} @tab ::= @tab see Chapter 4, Conditions
 @end multitable
 @end cartouche
 
@@ -3118,9 +3118,9 @@ A node is an important NodeBrain object type used to group rules and facts to cr
 
 @cartouche
 @b{Syntax}
-@multitable {-----------------} {-------------------------------------------------------------------}
-@item @i{nodeDefineCmd} @tab ::= @b{define} š @i{term} š @b{node} [š @i{nodeSpec} ] @b{@bullet{}} 
-@item @i{nodeSpec} @tab ::= @i{skillTerm} [ "@b{(} " @i{cellList}"@b{)}" ] [@b{;} [@i{comment} ] | @b{:} @i{text}  ]
+@multitable {-----------------} {---} {-------------------------------------------------------------------}
+@item @i{nodeDefineCmd} @tab ::= @tab @b{define} š @i{term} š @b{node} [š @i{nodeSpec} ] @b{@bullet{}} 
+@item @i{nodeSpec} @tab ::= @tab @i{skillTerm} [ "@b{(} " @i{cellList}"@b{)}" ] [@b{;} [@i{comment} ] | @b{:} @i{text}  ]
 @end multitable
 @end cartouche
 
@@ -3175,14 +3175,14 @@ An @code{IF} object is a rule that responds to a node alert (see @code{ALERT}com
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{ifDefineCmd} @tab ::= @b{define} š @i{term} š @b{if} "@b{(} " @i{condition} "@b{)} " [@i{action} ] @b{@bullet{}}
-@item @i{condition} @tab see Chapter 4, Conditions
-@item @i{action} @tab ::=  [@b{[} @i{priority} @b{]} ] [@i{assertionList} ] [@b{;} @i{comment} | @b{:} @i{command} ]
-@item @i{priority} @tab number from -128 to 127 with a default of 0
-@item @i{assertionList} @tab ::= @i{cellAssertion} @{ , @i{cellAssertion} @}
-@item @i{cellAssertion} @tab ::= @i{cellIdentifier} (@b{=} | @b{==} ) @i{cellExpression}
-@item @i{command} @tab see Chapter 10, Commands
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{ifDefineCmd} @tab ::= @tab @b{define} š @i{term} š @b{if} "@b{(} " @i{condition} "@b{)} " [@i{action} ] @b{@bullet{}}
+@item @i{condition} @tab ::= @tab see Chapter 4, Conditions
+@item @i{action} @tab ::= @tab [@b{[} @i{priority} @b{]} ] [@i{assertionList} ] [@b{;} @i{comment} | @b{:} @i{command} ]
+@item @i{priority} @tab ::= @tab number from -128 to 127 with a default of 0
+@item @i{assertionList} @tab ::= @tab @i{cellAssertion} @{ , @i{cellAssertion} @}
+@item @i{cellAssertion} @tab ::= @tab @i{cellIdentifier} (@b{=} | @b{==} ) @i{cellExpression}
+@item @i{command} @tab ::= @tab see Chapter 10, Commands
 @end multitable
 @end cartouche
 
@@ -3219,16 +3219,16 @@ Macros may be defined to provide a parameter-based notation for generating singl
 
 @cartouche
 @b{Syntax: Macro Definition}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{MacroDefinition} @tab ::= @b{define} @i{term} @b{macro} [ "@b{(} " @i{MacroParameters}"@b{)}" ]  @b{:%} @i{MacroSequence}
-@item @i{MacroParameters} @tab ::= @i{MacroParameterList} [@b{:}  @i{MacroDefaults} ]
-@item @i{MacroParameterList} @tab ::= @i{identifier} @{ , @i{identifier} @}
-@item @i{MacroDefaults} @tab ::= assertion @{ , @i{assertion} @}
-@item @i{assertion} @tab ::= @i{identifier} (@b{=} | @b{==} ) @i{cellExpression}
-@item @i{MacroSequence} @tab ::= @i{MacroItem} [@i{MacroSequence} ]
-@item @i{MacroItem} @tab ::= @i{MacroSymbol} | @i{MacroCharacter}
-@item @i{MacroSymbol} @tab ::= @b{%@{} @i{identifier} @b{@}}
-@item @i{MacroCharacter} @tab ::= Any character other than \0 and \n, except ‘%‘ followed by "@{"
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{MacroDefinition} @tab ::= @tab @b{define} @i{term} @b{macro} [ "@b{(} " @i{MacroParameters}"@b{)}" ]  @b{:%} @i{MacroSequence}
+@item @i{MacroParameters} @tab ::= @tab @i{MacroParameterList} [@b{:}  @i{MacroDefaults} ]
+@item @i{MacroParameterList} @tab ::= @tab @i{identifier} @{ , @i{identifier} @}
+@item @i{MacroDefaults} @tab ::= @tab assertion @{ , @i{assertion} @}
+@item @i{assertion} @tab ::= @tab @i{identifier} (@b{=} | @b{==} ) @i{cellExpression}
+@item @i{MacroSequence} @tab ::= @tab @i{MacroItem} [@i{MacroSequence} ]
+@item @i{MacroItem} @tab ::= @tab @i{MacroSymbol} | @i{MacroCharacter}
+@item @i{MacroSymbol} @tab ::= @tab @b{%@{} @i{identifier} @b{@}}
+@item @i{MacroCharacter} @tab ::= @tab Any character other than \0 and \n, except ‘%‘ followed by "@{"
 @end multitable
 @end cartouche
 
@@ -3266,9 +3266,9 @@ Nerve cells can be defined in NodeBrain to assist in rule debugging. A nerve cel
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{nerveDefineCmd} @tab ::= @b{define} š @i{term} š @b{nerve} [ š @i{condition} ] [@b{;} [@i{comment} ]] @b{@bullet{}} 
-@item @i{condition} @tab see Chapter 4, Conditions
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{nerveDefineCmd} @tab ::= @tab @b{define} š @i{term} š @b{nerve} [ š @i{condition} ] [@b{;} [@i{comment} ]] @b{@bullet{}} 
+@item @i{condition} @tab ::= @tab  see Chapter 4, Conditions
 @end multitable
 @end cartouche
 
@@ -3282,14 +3282,14 @@ An @code{ON} object is a rule that responds to assertions. (See @code{ASSERT} an
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{onDefineCmd} @tab ::= @b{define} š @i{term} š @b{on} "@b{(} " @i{condition} "@b{)} " [@i{action}] @b{@bullet{}} 
-@item @i{condition} @tab see Chapter 4, Conditions
-@item @i{action} @tab ::=  [ "[" @i{priority}"]" ] [@i{assertionList} ] [@b{;} @i{comment} | @b{:} @i{command} ]
-@item @i{priority} @tab number from -128 to 127 with a default of 0
-@item @i{assertionList} @tab ::= @i{cellAssertion} @{ , @i{cellAssertion} @}
-@item @i{cellAssertion} @tab ::= @i{cellIdentifier} (@b{=} | @b{==} ) @i{cellExpression}
-@item @i{command} @tab see Chapter 10, Commands
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{onDefineCmd} @tab ::= @tab @b{define} š @i{term} š @b{on} "@b{(} " @i{condition} "@b{)} " [@i{action}] @b{@bullet{}} 
+@item @i{condition} @tab ::= @tab see Chapter 4, Conditions
+@item @i{action} @tab ::=  @tab [ "[" @i{priority}"]" ] [@i{assertionList} ] [@b{;} @i{comment} | @b{:} @i{command} ]
+@item @i{priority} @tab ::= @tab number from -128 to 127 with a default of 0
+@item @i{assertionList} @tab ::= @tab @i{cellAssertion} @{ , @i{cellAssertion} @}
+@item @i{cellAssertion} @tab ::= @tab @i{cellIdentifier} (@b{=} | @b{==} ) @i{cellExpression}
+@item @i{command} @tab ::= @tab see Chapter 10, Commands
 @end multitable
 @end cartouche
 
@@ -3324,14 +3324,14 @@ A @code{WHEN} rule is defined with the same syntax as IF and ON rules, only with
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{whenDefineCmd} @tab ::= @b{define} š @i{term} š @b{when} "@b{(}" @i{condition} "@b{)}" [@i{action} ] @b{@bullet{}} 
-@item @i{condition} @tab see Chapter 4, Conditions
-@item @i{action} @tab ::=  [ "[" @i{priority} "]" ] [@i{assertionList} ] [@b{;} @i{comment} | @b{:} @i{command} ]
-@item @i{priority} @tab number from -128 to 127 with a default of 0
-@item @i{assertionList} @tab ::= @i{cellAssertion} @{, @i{assertionList} @}
-@item @i{cellAssertion} @tab ::= @i{cellIdentifier} (@b{=} | @b{==} ) @i{cellExpression}
-@item @i{command} @tab see Chapter 10, Commands
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{whenDefineCmd} @tab ::= @tab @b{define} š @i{term} š @b{when} "@b{(}" @i{condition} "@b{)}" [@i{action} ] @b{@bullet{}} 
+@item @i{condition} @tab ::= @tab see Chapter 4, Conditions
+@item @i{action} @tab ::= @tab [ "[" @i{priority} "]" ] [@i{assertionList} ] [@b{;} @i{comment} | @b{:} @i{command} ]
+@item @i{priority} @tab ::= @tab number from -128 to 127 with a default of 0
+@item @i{assertionList} @tab ::= @tab @i{cellAssertion} @{, @i{assertionList} @}
+@item @i{cellAssertion} @tab ::= @tab @i{cellIdentifier} (@b{=} | @b{==} ) @i{cellExpression}
+@item @i{command} @tab ::= @tab see Chapter 10, Commands
 @end multitable
 @end cartouche
 
@@ -3365,9 +3365,9 @@ The @code{DISABLE} command is used to temporarily block the normal functioning o
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{disableCmd} @tab ::= @b{disable} š @i{term} [ š ] [@b{;} [@i{comment} ] ] @b{@bullet{}} 
-@item @i{term} @tab Rule, cell, or listener term
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{disableCmd} @tab ::= @tab @b{disable} š @i{term} [ š ] [@b{;} [@i{comment} ] ] @b{@bullet{}} 
+@item @i{term} @tab ::= @tab Rule, cell, or listener term
 @end multitable
 @end cartouche
 
@@ -3387,9 +3387,9 @@ The @code{ENABLE} command is used to restore the normal functioning of an object
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{enableCmd} @tab ::= @b{enable} š @i{term} [ š ] [@b{;} [@i{comment} ] ] @b{@bullet{}} 
-@item @i{Term} @tab Rule, cell, or listener term
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{enableCmd} @tab ::= @tab @b{enable} š @i{term} [ š ] [@b{;} [@i{comment} ] ] @b{@bullet{}} 
+@item @i{Term} @tab ::= @tab Rule, cell, or listener term
 @end multitable
 @end cartouche
 
@@ -3402,8 +3402,8 @@ The @code{EXIT} command is used to terminate with an exit code from 0 to 255. Th
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{exitCmd} @tab ::= @b{exit} š @i{cellExpression} [ š ] [@b{;} [@i{comment} ] ] @b{@bullet{}} 
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{exitCmd} @tab ::= @tab @b{exit} š @i{cellExpression} [ š ] [@b{;} [@i{comment} ] ] @b{@bullet{}} 
 @end multitable
 @end cartouche
 
@@ -3453,9 +3453,9 @@ The @code{FORECAST} command is used to test a time condition to ensure the expec
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{forecastCmd} @tab ::= @b{forecast} š @b{~} "@b{(} " @i{timeExpression} ‘@b{)}" [ š ] [@b{;} [@i{comment} ] ] @b{@bullet{}}
-@item @i{timeExpression} @tab See Chapter 5, Time Expressions
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{forecastCmd} @tab ::= @tab @b{forecast} š @b{~} "@b{(} " @i{timeExpression} ‘@b{)}" [ š ] [@b{;} [@i{comment} ] ] @b{@bullet{}}
+@item @i{timeExpression} @tab ::= @tab See Chapter 5, Time Expressions
 @end multitable
 @end cartouche
 
@@ -3501,9 +3501,9 @@ The @code{Load} command may be used to pre-load dynamic libraries supporting nod
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{loadCmd} @tab ::= @b{load}  š @b{"} @i{libraryFileName} @b{"} ] [ [ š ] @b{;} [@i{comment} ]] @b{@bullet{}} 
-@item @i{libraryFileName} @tab Filename with fully qualified path or relative path.
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{loadCmd} @tab ::= @tab @b{load}  š @b{"} @i{libraryFileName} @b{"} ] [ [ š ] @b{;} [@i{comment} ]] @b{@bullet{}} 
+@item @i{libraryFileName} @tab ::= @tab Filename with fully qualified path or relative path.
 @end multitable
 @end cartouche
 
@@ -3515,9 +3515,9 @@ The @code{Query} command is used to direct the interpreter to attempt a solution
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{queryCmd} @tab ::= @b{query} [ š @i{term} ] [ [ š ] @b{;} [@i{comment}]] @b{@bullet{}} 
-@item @i{term} @tab A node, rule, or cell term.
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{queryCmd} @tab ::= @tab @b{query} [ š @i{term} ] [ [ š ] @b{;} [@i{comment}]] @b{@bullet{}} 
+@item @i{term} @tab ::= @tab node, rule, or cell term.
 @end multitable
 @end cartouche
 
@@ -3553,9 +3553,9 @@ The @code{RANK} command is used to associate an identity with a standard set of 
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{rankCmd} @tab ::= @b{rank} š @i{identityName} š @i{rank} [ š ] [@b{;} [@i{comment} ] ] @b{@bullet{}} 
-@item @i{rank} @tab ::= @b{guest} | @b{peer} | @b{user} | @b{owner}
+@multitable {-------------} {---} {-------------------------------------------------------}
+@item @i{rankCmd} @tab ::= @tab @b{rank} š @i{identityName} š @i{rank} [ š ] [@b{;} [@i{comment} ] ] @b{@bullet{}} 
+@item @i{rank} @tab ::= @tab @b{guest} | @b{peer} | @b{user} | @b{owner}
 @end multitable
 @end cartouche
 
@@ -3599,10 +3599,10 @@ The @code{SET} command is used to assign values to NodeBrain options from within
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{setCmd} @tab ::= @b{set} š @i{setList} ] [@b{;} [@i{comment}]] @b{@bullet{}} 
-@item @i{setList} @tab ::= @i{setAssignment} @{, @i{setAssignment} @}
-@item @i{setAssignment} @tab ::= @i{switchOption} | @i{variableOption} = @b{"} @i{string} @b{"}
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{setCmd} @tab ::= @tab @b{set} š @i{setList} ] [@b{;} [@i{comment}]] @b{@bullet{}} 
+@item @i{setList} @tab ::= @tab @i{setAssignment} @{, @i{setAssignment} @}
+@item @i{setAssignment} @tab ::= @tab @i{switchOption} | @i{variableOption} = @b{"} @i{string} @b{"}
 @end multitable
 @end cartouche
 
@@ -3652,12 +3652,12 @@ The @code{SHOW} command is used to display NodeBrain objects. This is primarily 
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{showCmd} @tab ::= @b{show}  š [ (@i{showExpr} | @i{showItem} ) [@i{showQualifier} ]] [@b{;} [ @i{comment} ]] @b{@bullet{}} 
-@item @i{showExpr} @tab ::= @b{.} | @i{term} | @b{(} @i{cellExpression} @b{)}
-@item @i{showItem} @tab ::= (@b{-} | @b{+} | @b{=}  | @b{/} | @b{*} )  [š] [@i{showMenuItem} ]
-@item @i{showMenuItem} @tab Name of menu item.
-@item @i{showQualifier} @tab Qualifiers are supported for terms and some menu items.
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{showCmd} @tab ::= @tab @b{show}  š [ (@i{showExpr} | @i{showItem} ) [@i{showQualifier} ]] [@b{;} [ @i{comment} ]] @b{@bullet{}} 
+@item @i{showExpr} @tab ::= @tab @b{.} | @i{term} | @b{(} @i{cellExpression} @b{)}
+@item @i{showItem} @tab ::= @tab (@b{-} | @b{+} | @b{=}  | @b{/} | @b{*} )  [š] [@i{showMenuItem} ]
+@item @i{showMenuItem} @tab ::= @tab Name of menu item.
+@item @i{showQualifier} @tab ::= @tab Qualifiers are supported for terms and some menu items.
 @end multitable
 @end cartouche
 
@@ -3720,8 +3720,8 @@ The @code{STOP} command is used to terminate a NodeBrain agent (daemon or servic
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{stopCmd} @tab ::= @b{stop} [ [ š ] @b{;} [@i{comment} ] ] @b{@bullet{}} 
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{stopCmd} @tab ::= @tab @b{stop} [ [ š ] @b{;} [@i{comment} ] ] @b{@bullet{}} 
 @end multitable
 @end cartouche
 
@@ -3741,9 +3741,9 @@ The @code{UNDEFINE} command is used to remove the definition of a term that is n
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{undefineCmd} @tab ::= @b{undefine} š @i{term}  [ [ š ] @b{;} [@i{comment} ] ] @b{@bullet{}} 
-@item @i{term} @tab Any term known to the current context.
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{undefineCmd} @tab ::= @tab @b{undefine} š @i{term}  [ [ š ] @b{;} [@i{comment} ] ] @b{@bullet{}} 
+@item @i{term} @tab ::= @tab Any term known to the current context.
 @end multitable
 @end cartouche
 
@@ -3768,12 +3768,12 @@ The @code{USE} command sets options for the addressed context.
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{useCmd} @tab ::= @b{use} [ š ] [@b{(} @i{optionList} @b{)} ] [ š ] [@b{:} @i{consultant} | @b{;} [@i{comment} ] ] @b{@bullet{}} 
-@item @i{optionList} @tab ::= @i{optionSpec} @{ @b{,} @i{optionSpec} @}
-@item @i{optionSpec} @tab ::= [ ! ] @i{option}
-@item @i{option} @tab ::= echo | hush | trace 
-@item @i{consultant} @tab A shell command whose output supplies values for unknown terms in diagnostic (solve) mode.
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{useCmd} @tab ::= @tab @b{use} [ š ] [@b{(} @i{optionList} @b{)} ] [ š ] [@b{:} @i{consultant} | @b{;} [@i{comment} ] ] @b{@bullet{}} 
+@item @i{optionList} @tab ::= @tab @i{optionSpec} @{ @b{,} @i{optionSpec} @}
+@item @i{optionSpec} @tab ::= @tab [ ! ] @i{option}
+@item @i{option} @tab ::= @tab echo | hush | trace 
+@item @i{consultant} @tab ::= @tab A shell command whose output supplies values for unknown terms in diagnostic (solve) mode.
 @end multitable
 @end cartouche
 
@@ -3806,12 +3806,12 @@ The @code{windows} command is used only for Windows-specific administration func
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{windowsCmd} @tab ::= @b{windows} š @i{winCmd} [ [ š ] ; [@i{comment} ] ] @b{@bullet{}} 
-@item @i{winCmd} @tab ::= @b{showenv} | @i{serviceCmd}
-@item @i{serviceCmd} @tab ::= @i{serviceVerb} š @i{service}
-@item @i{serviceVerb} @tab ::= @b{createService} | @b{deleteService} | @b{startService} | @b{stopService}
-@item @i{service} @tab Name of windows service
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{windowsCmd} @tab ::= @tab @b{windows} š @i{winCmd} [ [ š ] ; [@i{comment} ] ] @b{@bullet{}} 
+@item @i{winCmd} @tab ::= @tab @b{showenv} | @i{serviceCmd}
+@item @i{serviceCmd} @tab ::= @tab @i{serviceVerb} š @i{service}
+@item @i{serviceVerb} @tab ::= @tab @b{createService} | @b{deleteService} | @b{startService} | @b{stopService}
+@item @i{service} @tab ::= @tab Name of windows service
 @end multitable
 @end cartouche
 
@@ -3956,14 +3956,14 @@ Example:	> @b{^Looks like we have a problem. }
 @cindex – or = (Servant)
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{servantCmd} @tab ::= (@b{-}|@b{=}) š [@i{servantUser}] š [@i{servantOut}] [@i{servantExec}] [@i{servantArgs}] @b{@bullet{}} 
-@item @i{servantUser} @tab ::= @b{[} @i{username} @b{]}  *** Not supported on Windows ***
-@item @i{servantOut} @tab ::= [@i{servantRedirect} [@i{servantRedirect} ] ]  [@b{:} ]
-@item @i{servantRedirect} @tab ::= (@b{!} | @b{|} | @b{%} | @b{>} [@b{>} ] @i{servantFile} ) 
-@item @i{servantFile} @tab ::= @i{fileName} š  | @b{"}  @i{fileName} @b{"} )
-@item @i{servantExec} @tab ::= (@b{$} | @b{@@} ) ( š | @i{servantFile} ) | $$ | @@@@
-@item @i{servantArgs} @tab ::= string interpreted as shell command or arguments to the executable 
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{servantCmd} @tab ::= @tab (@b{-}|@b{=}) š [@i{servantUser}] š [@i{servantOut}] [@i{servantExec}] [@i{servantArgs}] @b{@bullet{}} 
+@item @i{servantUser} @tab ::= @tab @b{[} @i{username} @b{]}  *** Not supported on Windows ***
+@item @i{servantOut} @tab ::= @tab [@i{servantRedirect} [@i{servantRedirect} ] ]  [@b{:} ]
+@item @i{servantRedirect} @tab ::= @tab (@b{!} | @b{|} | @b{%} | @b{>} [@b{>} ] @i{servantFile} ) 
+@item @i{servantFile} @tab ::= @tab @i{fileName} š  | @b{"}  @i{fileName} @b{"} )
+@item @i{servantExec} @tab ::= @tab (@b{$} | @b{@@} ) ( š | @i{servantFile} ) | $$ | @@@@
+@item @i{servantArgs} @tab ::= @tab string interpreted as shell command or arguments to the executable 
 @end multitable
 @end cartouche
 
@@ -3973,9 +3973,9 @@ The syntax of the servant command has possibilities far more complicated than yo
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{servantCmd} @tab ::= (@b{-} | @b{=} ) @i{shellCmd} @b{@bullet{}} 
-@item @i{shellCmd} @tab ::= string interpreted by the host shell (e.g., @code{/bin/sh} or @code{cmd.exe})
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{servantCmd} @tab ::= @tab (@b{-} | @b{=} ) @i{shellCmd} @b{@bullet{}} 
+@item @i{shellCmd} @tab ::= @tab string interpreted by the host shell (e.g., @code{/bin/sh} or @code{cmd.exe})
 @end multitable
 @end cartouche
 
@@ -4004,9 +4004,9 @@ The command output on @code{stdout} may be directed to the NodeBrain interpreter
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{servantCmd} @tab ::= (@b{-} | @b{=} ) [@b{:} ] @i{shellCmd} @b{@bullet{}} 
-@item @i{shellCmd} @tab ::= string interpreted by the host shell  (e.g., @code{/bin/sh} or @code{cmd.exe})
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{servantCmd} @tab ::= @tab (@b{-} | @b{=} ) [@b{:} ] @i{shellCmd} @b{@bullet{}} 
+@item @i{shellCmd} @tab ::= @tab string interpreted by the host shell  (e.g., @code{/bin/sh} or @code{cmd.exe})
 @end multitable
 @end cartouche
 
@@ -4022,15 +4022,15 @@ If you are not satisfied with the default destinations for @code{stdout} and @co
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{servantCmd} @tab ::= (@b{-} | @b{=} ) [@i{servantRedirect} [@i{servantRedirect} ] ] [@b{:} ] @i{shellCmd} @b{@bullet{}} 
-@item @i{servantRedirect} @tab ::= (@b{!} | @b{|} | @b{%} | @b{>} [@b{>}] @i{servantFile} )
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{servantCmd} @tab ::= @tab (@b{-} | @b{=} ) [@i{servantRedirect} [@i{servantRedirect} ] ] [@b{:} ] @i{shellCmd} @b{@bullet{}} 
+@item @i{servantRedirect} @tab ::= @tab (@b{!} | @b{|} | @b{%} | @b{>} [@b{>}] @i{servantFile} )
 @b{!}   -  /dev/null
 @b{|}	-  log file
 @b{%}	-  write to generated filename in "out" directory
 @b{>} [@b{>}] @i{servantFile}		- write or append to specified @i{filename}
-@item @i{servantFile} @tab ::= @i{fileName} š | @b{"} @i{fileName} @b{"}  
-@item @i{shellCmd} @tab ::= string interpreted by the host shell  (e.g., @code{/bin/sh} or @code{cmd.exe})
+@item @i{servantFile} @tab ::= @tab @i{fileName} š | @b{"} @i{fileName} @b{"}  
+@item @i{shellCmd} @tab ::= @tab string interpreted by the host shell  (e.g., @code{/bin/sh} or @code{cmd.exe})
 @end multitable
 @end cartouche
 
@@ -4178,21 +4178,21 @@ Directives are used in source files to conditionally select lines for processing
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @tab Note: Directive statements start with percent (%) in column 1.
-@item @i{directive} @tab ::= @i{assertDirective} | @i{defaultDirective} | @i{ifDirective} |  @i{quitDirective}
-@item @i{assertDirective} @tab ::= @b{%assert} [ š @i{assertionList} ] [@b{;} [@i{comment}] ] @b{@bullet{}}
-@item @i{assertionList} @tab ::= @i{assertion} @{ @b{,} @i{assertionList} @}
-@item @i{assertion} @tab ::= @i{identifier} (@b{=} | @b{==} ) @i{cellExpression}
-@item @i{defaultDirective} @tab ::= @b{%default} [ š @i{assertionList} ] [ ; [@i{comment}] ] @b{@bullet{}} 
-@item @i{ifDirective} @tab ::= @b{%if(}@i{condition} @b{)}  [ [ š ] @b{;} [@i{comment} ] ] @b{@bullet{}} 
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @tab ::= @tab Note: Directive statements start with percent (%) in column 1.
+@item @i{directive} @tab ::= @tab @i{assertDirective} | @i{defaultDirective} | @i{ifDirective} |  @i{quitDirective}
+@item @i{assertDirective} @tab ::= @tab @b{%assert} [ š @i{assertionList} ] [@b{;} [@i{comment}] ] @b{@bullet{}}
+@item @i{assertionList} @tab ::= @tab @i{assertion} @{ @b{,} @i{assertionList} @}
+@item @i{assertion} @tab ::= @tab @i{identifier} (@b{=} | @b{==} ) @i{cellExpression}
+@item @i{defaultDirective} @tab ::= @tab @b{%default} [ š @i{assertionList} ] [ ; [@i{comment}] ] @b{@bullet{}} 
+@item @i{ifDirective} @tab ::= @tab @b{%if(}@i{condition} @b{)}  [ [ š ] @b{;} [@i{comment} ] ] @b{@bullet{}} 
      @dots{}
     [@b{%elseif(}@i{@i{condition}} @b{)}  [ [ š ] @b{;} [@i{comment} ] ] @b{@bullet{}} ]
      @dots{}
     [@b{%else}  [ [ š ] @b{;} [@i{comment} ] ] @b{@bullet{}} ]
      @dots{}
      @b{%endif}  [ [ š ] @b{;} [@i{comment} ] ] @b{@bullet{}}
-@item @i{quitDirective} @tab ::= @b{%quit}
+@item @i{quitDirective} @tab ::= @tab @b{%quit}
 @end multitable
 @end cartouche
 
@@ -4228,10 +4228,10 @@ Directives are not intended as a procedural scripting language. This feature is 
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{assertDirective} @tab ::= @b{%assert} [ š @i{assertionList} ] [@b{;} [@i{comment}] ] @b{@bullet{}}
-@item @i{assertionList} @tab ::= @i{assertion} @{ @b{,} @i{assertion} @}
-@item @i{assertion} @tab ::= @i{identifier} (@b{=} | @b{==} ) @i{cellExpression}
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{assertDirective} @tab ::= @tab @b{%assert} [ š @i{assertionList} ] [@b{;} [@i{comment}] ] @b{@bullet{}}
+@item @i{assertionList} @tab ::= @tab @i{assertion} @{ @b{,} @i{assertion} @}
+@item @i{assertion} @tab ::= @tab @i{identifier} (@b{=} | @b{==} ) @i{cellExpression}
 @end multitable
 @end cartouche
 
@@ -4272,10 +4272,10 @@ This actually sets %a to the literal value "$@{x@}". The following command sets 
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{defaultDirective} @tab ::= @b{%default} [ š @i{assertionList} ] [ ; [@i{comment}] ] @b{@bullet{}} 
-@item @i{assertionList} @tab ::= @i{assertion} @{ @b{,} @i{assertion} @}
-@item @i{assertion} @tab ::= @i{identifier} (@b{=} | @b{==} ) @i{cellExpression}
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{defaultDirective} @tab ::= @tab @b{%default} [ š @i{assertionList} ] [ ; [@i{comment}] ] @b{@bullet{}} 
+@item @i{assertionList} @tab ::= @tab @i{assertion} @{ @b{,} @i{assertion} @}
+@item @i{assertion} @tab ::= @tab @i{identifier} (@b{=} | @b{==} ) @i{cellExpression}
 @end multitable
 @end cartouche
 
@@ -4297,8 +4297,8 @@ In the example above, the local term abc is 1 and the local term xyz is "somethi
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{ifDirective} @tab ::= @b{%if} "@b{(}"@i{condition}"@b{)}"  [ [ š ] ; [@i{comment} ] ] @b{@bullet{}} 
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{ifDirective} @tab ::= @tab @b{%if} "@b{(}"@i{condition}"@b{)}"  [ [ š ] ; [@i{comment} ] ] @b{@bullet{}} 
      @item @dots{}
     @item [@b{%elseif} "@b{(}"@i{condition} "@b{)}"  [ [ š ] ; [@i{comment} ] ] @b{@bullet{}} ]
       @item @dots{}
@@ -4327,11 +4327,11 @@ The @code{%INCLUDE} directive is used to interpret another NodeBrain (@code{*.nb
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{includeCmd} @tab ::= @b{%INCLUDE} š @i{fileName} [ ,  @i{assertionList} ] [@b{;} [@i{comment} ]] @b{@bullet{}} 
-@item @i{filename} @tab Name of NodeBrain (*.nb) source file.  Enclose in quotes if the filename includes spaces (e.g., Windows).
-@item @i{assertionList} @tab ::= @i{cellAssertion} @{ , @i{cellAssertion} @}
-@item @i{cellAssertion} @tab ::= @i{cellIdentifier} (@b{=} | @b{==} ) @i{cellExpression}
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{includeCmd} @tab ::= @tab @b{%INCLUDE} š @i{fileName} [ ,  @i{assertionList} ] [@b{;} [@i{comment} ]] @b{@bullet{}} 
+@item @i{filename} @tab ::= @tab Name of NodeBrain (*.nb) source file.  Enclose in quotes if the filename includes spaces (e.g., Windows).
+@item @i{assertionList} @tab ::= @tab @i{cellAssertion} @{ , @i{cellAssertion} @}
+@item @i{cellAssertion} @tab ::= @tab @i{cellIdentifier} (@b{=} | @b{==} ) @i{cellExpression}
 @end multitable
 @end cartouche
 
@@ -4377,8 +4377,8 @@ The @code{%QUIT} directive is used to end processing of a source file.
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{quitDirective} @tab ::= @b{%quit} [ [š] @b{;} [@i{comment} ]] @b{@bullet{}} 
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{quitDirective} @tab ::= @tab @b{%quit} [ [š] @b{;} [@i{comment} ]] @b{@bullet{}} 
 @end multitable
 @end cartouche
 
@@ -4390,8 +4390,8 @@ NodeBrain commands are presented to the interpreter as single lines. A newline c
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{continuation} @tab ::= @i{part1} [š]  \  [š] @b{@bullet{}}
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{continuation} @tab ::= @tab @i{part1} [š]  \  [š] @b{@bullet{}}
 [š]  @i{part2} [š]  \  [š] @b{@bullet{}}
       @dots{}
 [š] @i{partN}  [ [š] @b{;} [@i{comment} ]] @b{@bullet{}}
@@ -4406,35 +4406,35 @@ Translators are used by various NodeBrain node modules to convert foreign text i
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{translatorSection} @tab ::= [ š ] @i{translatorStmt}  @b{@bullet{}}  [@i{translatorSection} ]
-@item @i{translatorStmt} @tab ::= @i{blankLine} | @i{comment} | @i{section}  
-@item @i{blankLine} @tab Null line or line containing nothing but space or tab characters
-@item @i{comment} @tab ::= @b{#} @i{anytext}
-@item @i{section} @tab ::= [@i{ignoreOption} ] [@i{branchId} ] @i{sectionStmt}  
-@item @i{ignoreOption} @tab ::= @b{!}
-@item @i{branchId} @tab ::= @i{path} [.@i{number} ]
-@item @i{path} @tab ::= @i{branch} [.@i{path}] 
-@item @i{branch} @tab ::= [@i{continueOption} ] (@i{label} | @i{value} |  @i{regex} | @i{assignment} ) 
-@item @i{continueOption} @tab ::= @b{@@} 
-@item @i{label} @tab ::= @i{alpha} @{ @i{alphanumeric} @} 
-@item @i{value} @tab ::= @b{"} @i{text} @b{"} 
-@item @i{regex} @tab ::= @b{(}@i{regularExpression} @b{)} 
-@item @i{assignment} @tab ::= @b{[} @i{projectionExpression} @b{]}
-@item @i{sectionStmt} @tab ::= @i{leafStmt | blockStmt}
-@item @i{leafStmt} @tab ::= @i{include | link | commandStmt} 
-@item @i{include} @tab ::= @b{$} @i{filename}
-@item @i{link} @tab ::= @b{~} @i{filename}
-@item @i{commandStmt} @tab ::= @b{:} @i{projectionExpression}
-@item @i{blockStmt} @tab ::= @b{@{} [@i{comment} ] @b{@bullet{}}@i{translatorSection} @b{@}}
-@item @i{projectionExpression} @tab ::= (@i{text}| @b{$[} @i{stringId} [ , @i{charF charR} ] @b{]} )  [@i{projectionExpression} ]
-@item @i{stringId} @tab ::=  [@i{regexRef} ] ( ‘@i{name} ‘ | @i{number} | @b{<} | @b{>} | ~ | - | @b{=} | )
-@item @i{regexRef} @tab ::= @b{.} [@i{regexRef} ]
-@item @i{name} @tab Name of group (?’ @i{name}’@dots{}) in the referenced regular expression 
-@item @i{number} @tab Number of group (@dots{}) in the referenced regular expression
-@item @i{charF} @tab Character to find
-@item @i{charR} @tab Character to replace @i{charF}
-@item @i{regularExpression} @tab See documentation at www.pcre.org.
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{translatorSection} @tab ::= @tab [ š ] @i{translatorStmt}  @b{@bullet{}}  [@i{translatorSection} ]
+@item @i{translatorStmt} @tab ::= @tab @i{blankLine} | @i{comment} | @i{section}  
+@item @i{blankLine} @tab ::= @tab Null line or line containing nothing but space or tab characters
+@item @i{comment} @tab ::= @tab @b{#} @i{anytext}
+@item @i{section} @tab ::= @tab [@i{ignoreOption} ] [@i{branchId} ] @i{sectionStmt}  
+@item @i{ignoreOption} @tab ::= @tab @b{!}
+@item @i{branchId} @tab ::= @tab @i{path} [.@i{number} ]
+@item @i{path} @tab ::= @tab @i{branch} [.@i{path}] 
+@item @i{branch} @tab ::= @tab [@i{continueOption} ] (@i{label} | @i{value} |  @i{regex} | @i{assignment} ) 
+@item @i{continueOption} @tab ::= @tab @b{@@} 
+@item @i{label} @tab ::= @tab @i{alpha} @{ @i{alphanumeric} @} 
+@item @i{value} @tab ::= @tab @b{"} @i{text} @b{"} 
+@item @i{regex} @tab ::= @tab @b{(}@i{regularExpression} @b{)} 
+@item @i{assignment} @tab ::= @tab @b{[} @i{projectionExpression} @b{]}
+@item @i{sectionStmt} @tab ::= @tab @i{leafStmt | blockStmt}
+@item @i{leafStmt} @tab ::= @tab @i{include | link | commandStmt} 
+@item @i{include} @tab ::= @tab @b{$} @i{filename}
+@item @i{link} @tab ::= @tab @b{~} @i{filename}
+@item @i{commandStmt} @tab ::= @tab @b{:} @i{projectionExpression}
+@item @i{blockStmt} @tab ::= @tab @b{@{} [@i{comment} ] @b{@bullet{}}@i{translatorSection} @b{@}}
+@item @i{projectionExpression} @tab ::= @tab (@i{text}| @b{$[} @i{stringId} [ , @i{charF charR} ] @b{]} )  [@i{projectionExpression} ]
+@item @i{stringId} @tab ::=  @tab [@i{regexRef} ] ( ‘@i{name} ‘ | @i{number} | @b{<} | @b{>} | ~ | - | @b{=} | )
+@item @i{regexRef} @tab ::= @tab @b{.} [@i{regexRef} ]
+@item @i{name} @tab ::= @tab Name of group (?’ @i{name}’@dots{}) in the referenced regular expression 
+@item @i{number} @tab ::= @tab Number of group (@dots{}) in the referenced regular expression
+@item @i{charF} @tab ::= @tab Character to find
+@item @i{charR} @tab ::= @tab Character to replace @i{charF}
+@item @i{regularExpression} @tab ::= @tab See documentation at www.pcre.org.
 @end multitable
 @end cartouche
 
@@ -5140,9 +5140,9 @@ NodeBrain supports multiple forms of symbolic substitution: preprocessor, substi
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{SubstituionCmd} @tab ::= @b{%} š @dots{} @i{SymbolicExpression} @dots{}
-@item @i{processSubstitution} @tab ::= @b{%@{} @i{cellExpression} @b{@}}
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{SubstituionCmd} @tab ::= @tab @b{%} š @dots{} @i{SymbolicExpression} @dots{}
+@item @i{processSubstitution} @tab ::= @tab @b{%@{} @i{cellExpression} @b{@}}
 @end multitable
 @end cartouche
 
@@ -5176,9 +5176,9 @@ This substitution does not apply to commands received by listeners. This is prim
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{SubstituionCmd} @tab ::= @b{$} š @dots{} @i{SymbolicExpression} @dots{}
-@item @i{SymbolicExpression} @tab ::= @b{$@{} @i{cellExpression} @b{@}}
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{SubstituionCmd} @tab ::= @tab @b{$} š @dots{} @i{SymbolicExpression} @dots{}
+@item @i{SymbolicExpression} @tab ::= @tab @b{$@{} @i{cellExpression} @b{@}}
 @end multitable
 @end cartouche
 
@@ -5250,8 +5250,8 @@ To avoid getting a local process term, your can explicitly specify back up to th
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{cellDefSubstitution} @tab ::= @dots{} @b{$}@i{term} @dots{} 
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{cellDefSubstitution} @tab ::= @tab @dots{} @b{$}@i{term} @dots{} 
 @end multitable 
 @end cartouche
 
@@ -5303,8 +5303,8 @@ Command actions (e.g., on(@i{condition}):@i{command}) are parsed when the rule f
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{cellValueSubstitution} @tab ::= @dots{} @b{$(} @i{cellExpression}  @b{)} @dots{} 
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{cellValueSubstitution} @tab ::= @tab @dots{} @b{$(} @i{cellExpression}  @b{)} @dots{} 
 @end multitable 
 @end cartouche 
 
@@ -5322,27 +5322,27 @@ Like symbolic cell names, a symbolic cell expression is only useful when definin
 
 @cartouche
 @b{Syntax: Macro Definition}
-@multitable {-------------} {------------------------------------------------------}
-@item @i{MacroDefinition} @tab ::= @b{define} @i{term} @b{macro} [ "@b{(} " @i{MacroParameters} "@b{)}"  ] @b{:} @i{MacroSequence}
-@item @i{MacroParameters} @tab ::= @i{MacroParameterList} [@b{:}  @i{MacroDefaults} ]
-@item @i{MacroParameterList} @tab ::= @i{identifier} @{ , @i{identifier} @}
-@item @i{MacroDefaults} @tab ::= assertion @{ , @i{assertion} @}
-@item @i{assertion} @tab ::= @i{identifier} (@b{=} | @b{==} ) @i{cellExpression}
-@item @i{MacroSequence} @tab ::= @i{MacroItem} [@i{MacroSequence} ]
-@item @i{MacroItem} @tab ::= @i{MacroSymbol} | @i{MacroCharacter}
-@item @i{MacroSymbol} @tab ::= @b{%%} "@b{@{} " @i{identifier} "@b{@}}"
-@item @i{MacroCharacter} @tab ::= Any character other than \0 and \n, except ‘%‘ followed by "%@{"
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{MacroDefinition} @tab ::= @tab @b{define} @i{term} @b{macro} [ "@b{(} " @i{MacroParameters} "@b{)}"  ] @b{:} @i{MacroSequence}
+@item @i{MacroParameters} @tab ::= @tab @i{MacroParameterList} [@b{:}  @i{MacroDefaults} ]
+@item @i{MacroParameterList} @tab ::= @tab @i{identifier} @{ , @i{identifier} @}
+@item @i{MacroDefaults} @tab ::= @tab assertion @{ , @i{assertion} @}
+@item @i{assertion} @tab ::= @tab @i{identifier} (@b{=} | @b{==} ) @i{cellExpression}
+@item @i{MacroSequence} @tab ::= @tab @i{MacroItem} [@i{MacroSequence} ]
+@item @i{MacroItem} @tab ::= @tab @i{MacroSymbol} | @i{MacroCharacter}
+@item @i{MacroSymbol} @tab ::= @tab @b{%%} "@b{@{} " @i{identifier} "@b{@}}"
+@item @i{MacroCharacter} @tab ::= @tab Any character other than \0 and \n, except ‘%‘ followed by "%@{"
 @end multitable
 @end cartouche
 
 @cartouche
 @b{Syntax: Macro Command}
-@multitable {------------} {-------------------------------------------------------}
-@item @i{MacroCommand} @tab ::= @b{$}@i{term} [ "@b{(} " @i{MacroArguments} "@b{)}" ] [;]
-@item @i{MacroArguments} @tab ::= @i{MacroArguementList} [@b{:}  @i{MacroAssertions} ]
-@item @i{MacroArgumentList} @tab ::= @i{identifier} @{ @b{,}  @i{MacroArgumentList} i@}
-@item @i{MacroAssertions} @tab ::= @i{assertion} @{ @b{,} @i{assertion} @}
-@item @i{assertion} @tab ::= @i{identifier} (@b{=} | @b{==} ) @i{cellExpression}
+@multitable {------------} {---} {-------------------------------------------------------}
+@item @i{MacroCommand} @tab ::= @tab @b{$}@i{term} [ "@b{(} " @i{MacroArguments} "@b{)}" ] [;]
+@item @i{MacroArguments} @tab ::= @tab  @i{MacroArguementList} [@b{:}  @i{MacroAssertions} ]
+@item @i{MacroArgumentList} @tab ::= @tab @i{identifier} @{ @b{,}  @i{MacroArgumentList} i@}
+@item @i{MacroAssertions} @tab ::= @tab @i{assertion} @{ @b{,} @i{assertion} @}
+@item @i{assertion} @tab ::= @tab @i{identifier} (@b{=} | @b{==} ) @i{cellExpression}
 @end multitable 
 @end cartouche
 
