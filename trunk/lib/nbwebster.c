@@ -474,7 +474,7 @@ static void nbWebsterError(nbCELL context,nbWebSession *session,char *text){
   void *data;
   size_t size;
   int len;
-  char *html=    // 2012-12-25 eat - AST 7 - removed client supplied resource from reply html
+  const char *html=    // 2012-12-25 eat - AST 7 - removed client supplied resource from reply html
     "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n"
     "<html>\n<head>\n"
     "<title>500 Internal Server Error</title>\n"
@@ -485,7 +485,7 @@ static void nbWebsterError(nbCELL context,nbWebSession *session,char *text){
     "<hr>\n%s\n"
     "<i>NodeBrain Webster Server</i>\n"
     "</body>\n</html>\n";
-  char *response=   // 2012-12-25 eat - AST 27 - removed client supplied resource from reply html
+  const char *response=   // 2012-12-25 eat - AST 27 - removed client supplied resource from reply html
     "HTTP/1.1 500 Internal Server Error\r\n"
     "Date: %s\r\n"
     "Server: NodeBrain Webster\r\n"
@@ -517,7 +517,7 @@ static void nbWebsterBadRequest(nbCELL context,nbWebSession *session,char *text)
   void *data;
   size_t size;
   int   len;
-  char *html=    // 2012-12-25 eat - AST 28 - removed client supplied request from the reply html
+  const char *html=    // 2012-12-25 eat - AST 28 - removed client supplied request from the reply html
     "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n"
     "<html>\n<head>\n"
     "<title>400 Bad Request</title>\n"
@@ -527,7 +527,7 @@ static void nbWebsterBadRequest(nbCELL context,nbWebSession *session,char *text)
     "<hr>\n"
     "<i>NodeBrain Webster Server</i>\n"
     "</body>\n</html>\n";
-  char *response=  // 2012-12-25 eat - AST 31 - removed client supplied request from the reply html
+  const char *response=  // 2012-12-25 eat - AST 31 - removed client supplied request from the reply html
     "HTTP/1.1 400 Bad Request\r\n"
     "Date: %s\r\n"
     "Server: NodeBrain Webster\r\n"
@@ -810,7 +810,7 @@ static void nbWebsterResourceNotFound(nbCELL context,nbWebServer *webster,nbWebS
   void *data;
   size_t size;
   int   len;
-  char *html=   // 2012-12-25 eat - AST 36 - removed client supplied resource from html reply
+  const char *html=   // 2012-12-25 eat - AST 36 - removed client supplied resource from html reply
     "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n"
     "<html>\n<head>\n"
     "<title>404 Not Found</title>\n"
@@ -820,7 +820,7 @@ static void nbWebsterResourceNotFound(nbCELL context,nbWebServer *webster,nbWebS
     "<hr>\n"
     "<address>NodeBrain Webster Server</address>\n"
     "</body></html>\n";
-  char *response=  // 2012-12-25 eat - AST 50 - removed Webster version
+  const char *response=  // 2012-12-25 eat - AST 50 - removed Webster version
     "HTTP/1.1 404 Not Found\r\n"
     "Date: %s\r\n"
     "Server: NodeBrain Webster\r\n"
@@ -909,7 +909,7 @@ static void nbWebsterServe(nbCELL context,nbWebServer *webster,nbWebSession *ses
   if(session->queryString){
     //nbLogMsg(context,0,'T',"webServer: queryString=%s",session->queryString);
     if(0>nbWebsterCgi(context,session,filename,session->queryString)){
-      char *html=
+      const char *html=
         "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n"
         "<html>\n<head>\n"
         "<title>500 Internal Server Error</title>\n"
@@ -920,7 +920,7 @@ static void nbWebsterServe(nbCELL context,nbWebServer *webster,nbWebSession *ses
         "<hr>\n"
         "<i>NodeBrain Webster Server</i>\n"
         "</body>\n</html>\n";
-      char *response=
+      const char *response=
         "HTTP/1.1 500 Internal Server Error\r\n"
         "Date: %s\r\n"
         "Server: NodeBrain Webster\r\n"
@@ -936,7 +936,7 @@ static void nbWebsterServe(nbCELL context,nbWebServer *webster,nbWebSession *ses
       *(ctimeCurrent+strlen(ctimeCurrent)-1)=0;
       nbLogMsg(context,0,'T',"Error returned by webCgi");
       page=nbProxyPageOpen(context,&data,&size);
-      len=snprintf((char *)data,size,ctimeCurrent,session->reqhost,filename,strlen(html),nb_charset,html); // 2012-12-27 eat - CID 762002
+      len=snprintf((char *)data,size,response,ctimeCurrent,session->reqhost,filename,strlen(html),nb_charset,html); // 2012-12-27 eat - CID 762002
       if(len>=size) sprintf((char *)data,response,ctimeCurrent,"","",strlen(html),nb_charset,html);
       nbLogMsg(context,0,'T',"Reply:\n%s\n",(char *)data);
       nbProxyPageProduced(context,page,strlen((char *)data));
@@ -949,7 +949,7 @@ static void nbWebsterServe(nbCELL context,nbWebServer *webster,nbWebSession *ses
 #else
   else if(stat(filename,&filestat)==0 && S_ISDIR(filestat.st_mode)){
 #endif
-    char *html=
+    const char *html=
       "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n"
       "<html><head>\n"
       "<title>301 Moved Permanently</title>\n"
@@ -959,7 +959,7 @@ static void nbWebsterServe(nbCELL context,nbWebServer *webster,nbWebSession *ses
       "<hr/>\n"
       "<address>NodeBrain Webster Server</address>\n"
       "</body>\n</html>\n";
-    char *response=
+    const char *response=
       "HTTP/1.1 301 Moved Permanently\r\n"
       "Date: %s\r\n"
       "Server: NodeBrain Webster\r\n"
@@ -988,7 +988,7 @@ static void nbWebsterServe(nbCELL context,nbWebServer *webster,nbWebSession *ses
 #else
   else if((fildes=open(filename,O_RDONLY))<0){
 #endif
-    char *html=
+    const char *html=
       "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n"
       "<html>\n<head>\n"
       "<title>404 Not Found</title>\n"
@@ -998,7 +998,7 @@ static void nbWebsterServe(nbCELL context,nbWebServer *webster,nbWebSession *ses
       "<hr>\n"
       "<address>NodeBrain Webster</address>\n"
       "</body></html>\n";
-    char *response=
+    const char *response=
       "HTTP/1.1 404 Not Found\r\n"
       "Date: %s\r\n"
       "Server: NodeBrain Webster\r\n"
@@ -1055,7 +1055,7 @@ static void webRequirePassword(nbCELL context,nbWebSession *session){
   void *data;
   size_t size;
   int   len;
-  char *html=
+  const char *html=
     "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n"
     "<HTML><HEAD>\n"
     "<TITLE>401 Authorization Required</TITLE>\n"
@@ -1070,7 +1070,7 @@ static void webRequirePassword(nbCELL context,nbWebSession *session){
     "<HR>\n"
     "<ADDRESS>NodeBrain Webster Server</ADDRESS>\n"
     "</BODY></HTML>\n\n";
-  char *response=
+  const char *response=
     "HTTP/1.1 401 Authorization Required\r\n"
     "Date: %s\r\n"
     "Server: NodeBrain Webster\r\n"

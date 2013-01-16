@@ -267,16 +267,11 @@ nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cld
   char *cursor,*delim;
   nbCHILD child;
 
-  if(!(options&NB_CHILD_SHELL) && strlen(parms)>sizeof(parmbuf)){   // 2013-01-01 eat - VID 4613,5380,5423-0.8.13-1
+  if(!(options&NB_CHILD_SHELL) && strlen(parms)>=sizeof(parmbuf)){   // 2013-01-01 eat - VID 4613,5380,5423-0.8.13-1
     snprintf(msg,msglen,"Parm string is exceeds limit of %d - not spawning child",NB_BUFSIZE-1);
     return(NULL);
     }
-  //outMsg(0,'T',"nbChildOpen() options=%x",options);
-#if !defined(mpe) && !defined(ANYBSD)
-  if((pid=vfork())<0){
-#else
   if((pid=fork())<0){
-#endif
     snprintf(msg,msglen,"Unable to create child process - %s",strerror(errno));
     return(NULL);
     }
@@ -354,7 +349,8 @@ nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cld
       //   An unbalanced quote is delimited by end of string
       argv[argc]=pgm;
       argc++;
-      strcpy(parmbuf,parms);  // Take a copy so we can chop it up with null terminators for each parm - length checked above
+      strncpy(parmbuf,parms,sizeof(parmbuf)-1);  // Take a copy so we can chop it up with null terminators for each parm - length checked above
+      *(parmbuf+sizeof(parmbuf)-1)=0;  // 2013-01-13 eat - checked above but helping the checker here
       cursor=parmbuf;          // 2013-01-01 eat - VID 4613,5380,5423-0.8.13-1 Changed this code to just work within parmbuf
       while(*cursor==' ') cursor++;
       while(*cursor){

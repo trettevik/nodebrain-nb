@@ -191,6 +191,7 @@
 * 2012-08-31 dtl 0.8.12 Checker updates: handled malloc error
 * 2012-12-27 eat 0.8.13 Checker updates
 * 2012-12-31 eat 0.8.13 Checker updates
+* 2013-01-13 eat 0.8.13 Checker updates - rosecheckers
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -249,38 +250,42 @@ void bfiIndexFree(struct bfiindex *top){
 struct bfiindex *bfiIndexParse(char *s,char *msg,size_t msglen){ // 2012-12-31 eat - VID 5210,5457,5136 - changed msglen from int to size_t
   int type=0,min=32000,max=-32000;
   struct bfiindex *top=NULL,*entry;  
-  //char *cursor=s,*comma,element[NB_BFI_INDEX_SIZE],sfrom[NB_BFI_INDEX_SIZE],sto[NB_BFI_INDEX_SIZE];
   char *cursor=s,*comma,element[NB_BFI_INDEX_SIZE],sfrom[sizeof(element)],sto[sizeof(element)];
+  size_t size;
     
   while(*cursor!=0){
     if((comma=strchr(cursor,','))==NULL) comma=cursor+strlen(cursor);
-    if((comma-cursor)<sizeof(element)) strcpy(element,cursor);
-    else{
+    size=comma-cursor;
+    if(size>=sizeof(element)){
       snprintf(msg,msglen,"Index element exceeds maximum size of %d characters at: %s",NB_BFI_INDEX_SIZE-1,cursor);
       bfiIndexFree(top);
       return(NULL);
       }
+    strncpy(element,cursor,size);
+    *(element+size)=0;
     if((cursor=strchr(element,'_'))!=NULL){ //if '_' found
       type=Span;
       *cursor=0;
+      cursor++;
       strcpy(sfrom,element); // safe - ignore Checker
-      if(strlen(cursor+1)>=sizeof(sto)){
+      if(strlen(cursor)>=sizeof(sto)){
         snprintf(msg,msglen,"bfiIndexParse: Logic error - element should not be larger than sto");
         bfiIndexFree(top);
         return(NULL);
         }
-      strcpy(sto,cursor+1);  // safe - ignore Checker
+      strncpy(sto,cursor,sizeof(sto));  // strcpy would be fine, but help the checker
       }
     else if((cursor=strstr(element,".."))!=NULL){ //if ".." found
       type=Range;
       *cursor=0;
+      cursor+=2;
       strcpy(sfrom,element); // safe - ignore Checker
-      if(strlen(cursor+2)>=sizeof(sto)){
+      if(strlen(cursor)>=sizeof(sto)){
         snprintf(msg,msglen,"bfiIndexParse: Logic error - element should not be larger than sto");
         bfiIndexFree(top);
         return(NULL);
        }
-      strcpy(sto,cursor+2);  // safe - ignore Checker
+      strncpy(sto,cursor,sizeof(sto));  // strcpy would be fine, but help the checker
       }
     else{
       type=Simple;
@@ -292,7 +297,7 @@ struct bfiindex *bfiIndexParse(char *s,char *msg,size_t msglen){ // 2012-12-31 e
       bfiIndexFree(top);
       return(NULL);
       }
-    entry=nbAlloc(sizeof(struct bfiindex));
+    entry=(struct bfiindex *)nbAlloc(sizeof(struct bfiindex));
     entry->type=type;
     if((entry->from=atoi(sfrom))<min) min=entry->from;
     if(entry->from>max) max=entry->from;    
@@ -303,7 +308,7 @@ struct bfiindex *bfiIndexParse(char *s,char *msg,size_t msglen){ // 2012-12-31 e
     cursor=comma;
     if(*cursor) cursor++;
     }  
-  entry=nbAlloc(sizeof(struct bfiindex));  /* insert the min/max entry */ 
+  entry=(struct bfiindex *)nbAlloc(sizeof(struct bfiindex));  /* insert the min/max entry */ 
   entry->type=type;
   entry->from=min;
   entry->to=max;

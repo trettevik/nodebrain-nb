@@ -84,7 +84,7 @@ void destroyAssertion(cond) struct COND *cond;{
   struct COND *lcond,**condP;
 
   if(trace) outMsg(0,'T',"destroyAssertion() called");
-  condP=hashCond(condH,cond->cell.object.type,cond->left,cond->right);
+  condP=(struct COND **)hashCond(condH,cond->cell.object.type,cond->left,cond->right);
   if(*condP==cond) *condP=(struct COND *)cond->cell.object.next;
   else{
     for(lcond=*condP;lcond!=NULL && lcond!=cond;lcond=*condP)
@@ -161,7 +161,7 @@ void assert(NB_Link *member,int mode){
     else if(assertion->target->type==condTypeNode){
       if(assertion->cell.object.type==assertTypeVal){
         if(object->value==nb_Disabled) object=object->type->compute(object);
-        else object=grabObject(object->value); /* 2004/08/28 eat - grab added */
+        else object=(NB_Object *)grabObject(object->value); /* 2004/08/28 eat - grab added */
         }
       else if(assertion->cell.object.type!=assertTypeDef){
         outMsg(0,'L',"Cell definition assertion not support for node %s",term->word->value);
@@ -187,7 +187,7 @@ void assert(NB_Link *member,int mode){
         return;
         }
       facet=skill->facet;
-      arglist=grabObject((NB_List *)target->object);
+      arglist=(NB_List *)grabObject((NB_List *)target->object);
       if(mode&1) (*facet->alert)(term,skill->handle,node->knowledge,(NB_Cell *)arglist,(NB_Cell *)object);
       else (*facet->assert)(term,skill->handle,node->knowledge,(NB_Cell *)arglist,(NB_Cell *)object);
       dropObject(arglist);
@@ -230,9 +230,9 @@ int nbAssertionAddTermValue(nbCELL context,nbSET *set,nbCELL term,nbCELL cell){
   NB_Link   *entry;
   NB_Object *object;                  
   object=(NB_Object *)useCondition(0,assertTypeVal,term,cell);
-  if((entry=nb_LinkFree)==NULL) entry=nbAlloc(sizeof(NB_Link));
+  if((entry=nb_LinkFree)==NULL) entry=(NB_Link *)nbAlloc(sizeof(NB_Link));
   else nb_LinkFree=entry->next;                  
-  entry->object=grabObject(object);
+  entry->object=(NB_Object *)grabObject(object);
   entry->next=*set;
   *set=entry;
   return(0);

@@ -201,7 +201,7 @@ void initString(NB_Stem *stem){
 
 struct STRING *useString(char *value){
   struct STRING *string,**stringP,**freeStringP;
-  int size;
+  size_t size,len;
   char *cursor;
   int r=1;  /* temp relation <0, 0, >0 */
   unsigned long h=0;
@@ -216,15 +216,15 @@ struct STRING *useString(char *value){
   for(string=*stringP;string!=NULL && (r=strcmp(string->value,value))>0;string=*stringP)
     stringP=(struct STRING **)&(string->object.next);
   if(string!=NULL && r==0) return(string);
-
-  size=sizeof(struct STRING)+strlen(value);
+  len=strlen(value);
+  size=sizeof(struct STRING)+len;
   size=(size+7)&-8;   // 2013-01-04 eat 
   if(size>=NB_OBJECT_MANAGED_SIZE) freeStringP=NULL;
   else freeStringP=&nb_StringPool->vector[(size-1)>>3]; // 2013-01-04 eat - changed index calc
-  //string=(struct STRING *)newObject(strType,(void **)freeStringP,sizeof(struct STRING)+size); // 2013-01-01 struct already included in size
   string=(struct STRING *)newObject(strType,(void **)freeStringP,size);
   string->object.next=(NB_Object *)*stringP;     
   *stringP=string;  
-  strcpy(string->value,value);  // 2013-01-01 eat - VID 5538-0.8.13-01 FP
+  len++; // 2013-01-14 eat - this is completely unnecessary, but replaced strcpy with strncpy to see if the checker is ok with that.
+  strncpy((char *)string->value,value,len);  // 2013-01-01 eat - VID 5538-0.8.13-01 FP - we allocated enough space with call to newObject
   return(string);
   }

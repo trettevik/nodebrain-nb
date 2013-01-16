@@ -381,7 +381,7 @@ void nbCellInit(NB_Stem *stem){
   NB_CELL_PLACEHOLDER=(NB_Cell *)nb_Placeholder;
   NB_CELL_FALSE=(NB_Cell *)NB_OBJECT_FALSE;
   NB_CELL_TRUE=(NB_Cell *)NB_OBJECT_TRUE;
-  evalVector=calloc(maxLevel,sizeof(void *));
+  evalVector=(NB_TreeNode **)calloc(maxLevel,sizeof(void *));
   if(!evalVector) nbExit("nbCellInit: out of memory"); // 2013-01-11 eat - VID 6469 
   evalVectorTop=evalVector;
   }
@@ -470,7 +470,7 @@ void nbCellType(NB_Type *type,void (*solve)(),NB_Object * (*eval)(),void (*enabl
   else type->disable=disable;
 #if !defined(WIN32)
   if(nb_opt_shim){
-    shim=nbAlloc(sizeof(struct NB_TYPE_SHIM));
+    shim=(struct NB_TYPE_SHIM *)nbAlloc(sizeof(struct NB_TYPE_SHIM));
     memset(shim,0,sizeof(struct NB_TYPE_SHIM));
     type->shim=shim;
     shim->alarm=type->alarm;
@@ -511,7 +511,7 @@ void nbCellTypeSub(
 */
 void *nbCellNew(NB_Type *type,void **pool,int length){
   NB_Cell *cell;
-  cell=newObject(type,pool,length);
+  cell=(NB_Cell *)newObject(type,pool,length);
   cell->object.value=nb_Disabled;
   cell->sub=NULL;
   cell->level=0;
@@ -561,9 +561,9 @@ NB_Object *nbCellSolve_(NB_Cell *cell){
 */
 NB_Object *nbCellCompute_(NB_Cell *cell){
   NB_Object *object;
-  if(cell->object.value!=nb_Disabled) return(grabObject(cell->object.value));
+  if(cell->object.value!=nb_Disabled) return((NB_Object *)grabObject(cell->object.value));
   nbCellEnable(cell,NULL);
-  object=grabObject(cell->object.value);
+  object=(NB_Object *)grabObject(cell->object.value);
   nbCellDisable(cell,NULL);
   return(object);
   }
@@ -582,12 +582,8 @@ NB_Object *nbCellCompute_(NB_Cell *cell){
 *
 *    o  A subscriber is not required to be a cell---may be a simple object.
 */
-//void nbCellEnable(NB_Cell *pub,NB_Object *sub){
 void nbCellEnable(NB_Cell *pub,NB_Cell *sub){
-  //NB_Link *list;
-  //NB_Link **listP;
   if(pub->object.value==(NB_Object *)pub) return;
-
   if(trace){
     outMsg(0,'T',"nbCellEnable() called - linking subscriber");
     outPut("subscriber: ");
@@ -612,11 +608,10 @@ void nbCellEnable(NB_Cell *pub,NB_Cell *sub){
     }
   if(trace) outMsg(0,'T',"nbCellEnable() completed subscription");
   if(pub->object.value!=nb_Disabled) return; // already know the value
-  //pub->object.value=nb_Unknown;           // set value to Unknown to avoid looping
   if(trace) outMsg(0,'T',"nbCellEnable() calling publisher's enable method.");
   pub->object.type->enable(pub); /* pub's enable method */
   if(trace) outMsg(0,'T',"nbCellEnable() calling publisher's evaluate method.");
-  pub->object.value=grabObject(pub->object.type->eval(pub));  /* pub's evaluation method */
+  pub->object.value=(NB_Object *)grabObject(pub->object.type->eval(pub));  /* pub's evaluation method */
   if(sub!=NULL && sub->object.value!=(NB_Object *)sub && sub->level<=pub->level){
     ((NB_Cell *)sub)->level=pub->level+1;
     nbCellLevel((NB_Cell *)sub);
@@ -651,7 +646,7 @@ void nbCellDisable(NB_Cell *pub,NB_Cell *sub){
   if(sub!=NULL){
     NB_TreePath treePath;
     NB_TreeNode *treeNode;
-    treeNode=nbTreeLocate(&treePath,sub,(NB_TreeNode **)&pub->sub);
+    treeNode=(NB_TreeNode *)nbTreeLocate(&treePath,sub,(NB_TreeNode **)&pub->sub);
     if(treeNode!=NULL){
       nbTreeRemove(&treePath);
       nbFree((NB_Object *)treeNode,sizeof(NB_TreeNode));  // this should be a macro
@@ -879,7 +874,7 @@ void nbCellReact(void){
         }
       if(value!=cell->object.value){
         if(cell->object.value!=NULL) dropObject(cell->object.value);
-        cell->object.value=grabObject(value);
+        cell->object.value=(NB_Object *)grabObject(value);
         nbCellPublish(cell);
         if(trace) outMsg(0,'T',"nbCellReact() published change.");
         }
@@ -940,10 +935,10 @@ double nbCellGetReal(NB_Cell *context,NB_Cell *cell){
   }
 
 NB_Cell *nbCellGrab(NB_Cell *context,NB_Cell *cell){
-  return(grabObject(cell));
+  return((NB_Cell *)grabObject(cell));
   }
 NB_Cell *nbCellDrop(NB_Cell *context,NB_Cell *cell){
-  return(dropObject(cell));
+  return((NB_Cell *)dropObject(cell));
   }
 
 void nbCellRelease(NB_Cell *context,NB_Cell *cell){

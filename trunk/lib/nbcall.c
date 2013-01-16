@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -56,6 +56,7 @@
 * ---------- -----------------------------------------------------------------
 * 2002-09-07 Ed Trettevik (original version introduced in 0.4.1)
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning message. (gcc 4.5.0)
+* 2013-01-13 eat 0.8.13 Checker updates - rosechecker
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -86,11 +87,11 @@ NB_Object *evalCallMod(struct CALL *call){
   NB_Link *member;
   struct REAL *lreal,*rreal;
 
-  if(list==NULL ||
-    (member=list->link)==NULL ||
-    (lreal=(struct REAL *)member->object)==NULL || 
-    (member=member->next)==NULL ||
-    (rreal=(struct REAL *)member->object)==NULL) return(nb_Unknown);
+  if(list==NULL) return(nb_Unknown);  // 2013-01-13 eat - rosecheckers
+  if((member=list->link)==NULL) return(nb_Unknown);
+  if((lreal=(struct REAL *)member->object)==NULL) return(nb_Unknown);
+  if((member=member->next)==NULL) return(nb_Unknown);
+  if((rreal=(struct REAL *)member->object)==NULL) return(nb_Unknown);
   lreal=(struct REAL *)((NB_Object *)lreal)->value;
   rreal=(struct REAL *)((NB_Object *)rreal)->value;
   if(lreal->object.type!=realType || rreal->object.type!=realType) return(nb_Unknown);

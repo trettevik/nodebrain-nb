@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -127,6 +127,7 @@
 *            and required a timer to be cleared before setting a new one.
 * 2012-01-09 dtl 0.8.6  Checker updates
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
+* 2013-01-13 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h> 
@@ -157,9 +158,6 @@ void nbClockInit(NB_Stem *stem){
 void nbClockSetTimer(time_t etime,NB_Cell *object){
   NB_Timer **timerP,*newTimer;
 
-  //outMsg(0,'T',"nbClockSetTimer: called time=%d object=%p",(int)etime,object);
-  //printObject(object);
-  //outPut("\n");
   /* This can be improved by using a more complex structure.  A simple list seems
   *  to work, but one can imagine problems when the queue gets long.
   */
@@ -169,11 +167,9 @@ void nbClockSetTimer(time_t etime,NB_Cell *object){
     *timerP=(*timerP)->next;
     newTimer->next=nb_timerFree;
     nb_timerFree=newTimer;
-    if(etime==0) return;
-    outMsg(0,'W',"Object timer was reset.");
     }
-  else if(etime==0) return;
-  if(nb_timerFree==NULL) newTimer=nbAlloc(sizeof(NB_Timer));
+  if(etime==0) return;
+  if(nb_timerFree==NULL) newTimer=(NB_Timer *)nbAlloc(sizeof(NB_Timer));
   else{
     newTimer=nb_timerFree;
     nb_timerFree=newTimer->next;

@@ -252,7 +252,7 @@ unsigned int nbIpGetUdpServerSocket(NB_Cell *context,char *addr,unsigned short p
   else{  // handle local (unix) domain sockets
     un_addr.sun_family=AF_UNIX;
     //strcpy(un_addr.sun_path,addr);
-    snprintf(un_addr.sun_path,sizeof(un_addr.sun_path),addr); // 2012-12-31 eat - VID 4953-0.8.13-1 - truncating if necessary
+    snprintf(un_addr.sun_path,sizeof(un_addr.sun_path),"%s",addr); // 2012-12-31 eat - VID 4953-0.8.13-1 - truncating if necessary
     if(unlink(addr)){ // 2012-12-31 eat - VID 5130-0.8.13-1
       outMsg(0,'W',"nbIpGetUdpServerSocket: Unable to unlink before bind - %s",strerror(errno));
       }
@@ -486,9 +486,7 @@ int nbIpGetUdpSocketPair(int *socket1,int *socket2){
 struct IP_CHANNEL *nbIpAlloc(void){
   NB_IpChannel *channel;
 
-  //if ((channel=malloc(sizeof(NB_IpChannel)))==NULL) //2012-01-31 dtl: handled error
-  //  {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);}
-  channel=nbAlloc(sizeof(NB_IpChannel));
+  channel=(NB_IpChannel *)nbAlloc(sizeof(NB_IpChannel));
   channel->socket=0;
   *(channel->ipaddr)=0;
   *(channel->unaddr)=0;
@@ -750,10 +748,7 @@ int nbIpGet(NB_IpChannel *channel,char *buffer){
     outMsg(0,'E',"chget: Invalid record encountered. Expecting %d more bytes. Received %d.  errno=%d",expect,i,errno);
     return(-3);
     }
-//2012-01-31 dtl: len already checked, "buffer" has sizeof NB_BUFSIZE, safe to copy
-// memcpy(buffer,channel->buffer,len); //Checker severity 5
-  for(i=0;i<len;i++) *(buffer+i)=*((char*)channel->buffer+i);       
-  buffer[len]=0; /* null terminate */
+  memcpy(buffer,channel->buffer,len); // 2013-01-13 eat - restored
   return(len);
   }
 /*
