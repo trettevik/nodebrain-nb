@@ -314,7 +314,7 @@ static int nbTlsVerify(int preverify_ok,X509_STORE_CTX *ctx){
 */
 nbTLSX *nbTlsCreateContext(int option,void *handle,int timeout,char *keyFile,char *certFile,char *trustedCertsFile){
   nbTLSX *tlsx;
-  const SSL_METHOD *method;
+  SSL_METHOD *method;
   SSL_CTX    *ctx=NULL;
   char *ctxContext="nbTls";
   static int initialize=1; // changed to 0 after we initialize

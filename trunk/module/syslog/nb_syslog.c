@@ -790,6 +790,7 @@ void *loggerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
       return(NULL);
       }
     ident=strdup(nbCellGetString(context,cell));
+    if(!ident) nbExit("loggerConstruct: out of memory"); // 2013-01-17 eat - VID 6546
     }
   cell=nbListGetCellValue(context,&argSet);
   if(cell!=NULL){

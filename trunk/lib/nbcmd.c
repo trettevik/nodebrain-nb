@@ -244,7 +244,8 @@
 *                       Providing a warning message for a couple releases.
 * 2012-12-15 eat 0.8.13 Checker updates
 * 2012-12-31 eat 0.8.13 Checker updates
-# 2013-01-01 eat 0.8.13 Checker updates
+* 2013-01-01 eat 0.8.13 Checker updates
+* 2013-01-16 eat 0.8.13 Checker updates
 *==============================================================================
 */
 #include <nb/nbi.h>
@@ -1495,12 +1496,9 @@ int nbCmdDeclare(nbCELL context,void *handle,char *verb,char *cursor){
          
 int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
   char ident[256],type[256];
-  //char ident[256],type[256],token[256];
-  //NB_Term *term,*typeTerm,*context=(NB_Term *)contextCell;  // goof with context type
   NB_Term *term,*typeTerm;  // goof with context type
   struct COND *ruleCond;
   NB_Object *object;
-  //struct SCHED *sched;
   struct ACTION *action;
   struct TYPE *rule_type;
   NB_Link *assertions=NULL;
@@ -1510,7 +1508,6 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
   
   char symid,*cursave;
   char *delim;
-  //char msg[1024];
 
   if(!(clientIdentity->authority&AUTH_DEFINE)){
     outMsg(0,'E',"Identity \"%s\" not authorized to define terms.",clientIdentity->name->value);
@@ -1547,11 +1544,11 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     return(1);
     }
 
-  // check for deprecated types
-  if(strcmp(type,"expert")==0){
-    outMsg(0,'W',"Deprecated type - use \"node\" instead of \"expert\"");
-    strcpy(type,"node");
-    }
+  // 2013-01-16 eat - time for this to go
+  //if(strcmp(type,"expert")==0){
+  //  outMsg(0,'W',"Deprecated type - use \"node\" instead of \"expert\"");
+  //  strcpy(type,"node");
+  //  }
 
   if((typeTerm=nbTermFind(nb_TypeGloss,type))==NULL){
     outMsg(0,'E',"Type \"%s\" not defined.",type);
@@ -2026,7 +2023,7 @@ void nbCmdTranslate(nbCELL context,char *verb,char *cursor){
     outMsg(0,'E',"File name may not be greater than %d characters.",sizeof(filename)-1);
     return;
     }
-  strcpy(filename,cursor);
+  snprintf(filename,sizeof(filename),"%s",cursor);  // 2013-01-16 eat - RC-STR31-C
   outFlush(); 
   nbTranslatorExecuteFile(context,(nbCELL)(xtrTerm->def),filename);
   }
@@ -2190,7 +2187,7 @@ void nbCmd(nbCELL context,char *cursor,unsigned char cmdopt){
       if(symid!='t'){
         if(*cursave=='`'){   // accept assert abbreviation
           symid='t';
-          strcpy(verb,"assert"); // note: we let this go down to the lookup for authority checking
+          snprintf(verb,sizeof(verb),"%s","assert"); // note: we let this go down to the lookup for authority checking // 2013-01-16 eat - RC-STR31-C
           }
         else{
           symid=*cursave;

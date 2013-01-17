@@ -136,12 +136,9 @@ void *servantConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *tex
   servant=nbAlloc(sizeof(nbServant));
   servant->context=context;
   servant->process=NULL;
-  //strncpy(servant->cmd,text,sizeof(servant->cmd));
-  strcpy(servant->cmd,text);  // 2012-10-16 eat - length checked above
-  //nbLogMsg(context,0,'T',"Command: %s",servant->cmd);
+  snprintf(servant->cmd,sizeof(servant->cmd),"%s",text);  // 2012-10-16 eat - length checked above // 2013-01-17 eat - VID 6572
   filecount++;  // modulo 256
-  sprintf(servant->log,"servant.%8.8d.%3.3d.out",(int)time(NULL),filecount);
-  //nbLogMsg(context,0,'T',"Log: %s",servant->log);
+  snprintf(servant->log,sizeof(servant->log),"servant.%8.8d.%3.3d.out",(int)time(NULL),filecount);
   nbListenerEnableOnDaemon(context);
   return(servant);
   }

@@ -426,8 +426,8 @@ nbServer *smtpServer(nbCELL context,char *cursor,char *qDir,char *msg){
     sprintf(msg,"Queue directory name too long for buffer");
     return(NULL);
     }
-  server=nbAlloc(sizeof(nbServer));
-  strcpy(server->qDir,qDir);
+  server=(nbServer *)nbAlloc(sizeof(nbServer));
+  snprintf(server->qDir,sizeof(server->qDir),"%s",qDir);  // 2013-01-17 eat - VID 6525 FP but changed from strcpy to snprintf
   inCursor=server->idName;
   while(*cursor==' ') cursor++;
   while(*cursor && *cursor!='@'){

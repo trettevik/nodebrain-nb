@@ -456,7 +456,7 @@ NB_Term *nbModuleDeclare(NB_Term *context,char *ident,char *cursor){
       cursor++;
       }
     *delim=0;
-    if(*modname==0) sprintf(filename,"nb_%s%s",ident,LT_MODULE_EXT);
+    if(*modname==0) snprintf(filename,sizeof(filename),"nb_%s%s",ident,LT_MODULE_EXT);
     else{
       if(*path!=0){  // enforce new syntax rules when we have a path
         if(strchr(modname,'/')!=NULL || strchr(modname,'.')!=NULL || strchr(modname,'?')!=NULL){

@@ -987,15 +987,14 @@ static int webPath(nbCELL context,nbWebSession *session,void *handle){
   filetype=webGetFileType(filestat.st_mode);
   if(!*filetype) filetype="regular";
   tm=localtime(&filestat.st_mtime);
-  sprintf(filetime,"%4.4d-%2.2d-%2.2d %2.2d:%2.2d\n",tm->tm_year+1900,tm->tm_mon+1,tm->tm_mday,tm->tm_hour,tm->tm_min);
-  sprintf(filesize,"%d",(int)filestat.st_size);
-  sprintf(text,
+  snprintf(filetime,sizeof(filetime),"%4.4d-%2.2d-%2.2d %2.2d:%2.2d\n",tm->tm_year+1900,tm->tm_mon+1,tm->tm_mday,tm->tm_hour,tm->tm_min);
+  snprintf(filesize,sizeof(filesize),"%d",(int)filestat.st_size);
+  snprintf(text,sizeof(text),
     "<p><table>"
     "<tr><th>Modified</th><th>Size</th><th>Type</th><th>Path</th></tr>\n"
     "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n"
     "</table>",
     filetime,filesize,filetype,webGetLinkedPath(whtml,name));
-
   nbWebsterPutText(context,session,text);
 
 // Display contents of regular files and directories
