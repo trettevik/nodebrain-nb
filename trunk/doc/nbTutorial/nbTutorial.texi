@@ -1,7 +1,7 @@
 \input texinfo   @c -*-texinfo-*-
 @c %**start of header
 @setfilename nbTutorial.info
-@include version.texi
+@include version-nbTutorial.texi
 @settitle NodeBrain Tutorial
 @c %**end of header
 
