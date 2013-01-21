@@ -4,6 +4,11 @@
 @setfilename nbLanguage.info
 @include version.texi
 @settitle NodeBrain Language Reference
+@dircategory NodeBrain
+@direntry
+* nbLanguage: (nodebrain).       NodeBrain Language Reference
+@end direntry
+@set UPDATED-YEAR 2013
 @c %**end of header
 
 @finalout
@@ -2010,11 +2015,13 @@ The conflict operator (=) selects intervals of a set that intersect other interv
 @subsection Connect
 @cindex Connect
 The connect operator (|) combines intervals where the end of one is greater than or equal to the start of another. In other words, it combines overlapping and successive intervals.
+
 @image{langref4-4-2,,,,png}
 
 @subsection Partition
-@cindex Psrtition
+@cindex Partition
 The partition operator (#) generates a partitioned set using the start of each interval in the operand set.
+
 @image{langref4-4-3,,,,png}
 
 @subsection Not
@@ -2027,6 +2034,7 @@ The not operator (!) generates a set with intervals that fill the gaps not cover
 @subsection Overlap
 @cindex Overlap
 The overlap operator (&) generates intervals covered by more than one interval in the operand set.
+
 @image{langref4-4-5,,,,png}
 
 @subsection Normalize
@@ -2038,6 +2046,7 @@ The normalize operator (~) combines intervals that overlap, but retains successi
 @subsection Unique
 @cindex Unique
 The unique operator (%) generates intervals covered by one and only one interval of the operand set. It preserves non-overlapping edges.
+
 @image{langref4-4-7,,,,png}
 
 @section Infix Operators
