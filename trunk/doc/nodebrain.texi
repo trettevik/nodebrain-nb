@@ -3,10 +3,10 @@
 @setfilename nodebrain.info
 @include version-nodebrain.texi
 @settitle NodeBrain Documents
-@dircategory NodeBrain Agent
+@dircategory NodeBrain
 @direntry
 * NodeBrain: (nodebrain).	State and Event Monitoring Agent
-* nb: (nodebrain).	NodeBrain command
+* nb: (nodebrain)Command.	NodeBrain command
 @end direntry
 @c %**end of header
 
