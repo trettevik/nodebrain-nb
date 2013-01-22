@@ -897,7 +897,14 @@ static int webMenu(nbCELL context,nbWebSession *session,void *handle){
   return(0);
   }
 
-static int allalphanum(const char *word){
+static int webIsMenu(const char *word){
+  const char *cursor=word;
+  while(*cursor && (isalnum(*cursor) || *cursor=='/')) cursor++;
+  if(*cursor) return(0);
+  return(1);
+  }
+
+static int webIsName(const char *word){
   const char *cursor=word;
   while(*cursor && isalnum(*cursor)) cursor++;
   if(*cursor) return(0);
@@ -920,7 +927,7 @@ static int webBookmark(nbCELL context,nbWebSession *session,void *handle){
   if(!note) note="";
   url=nbWebsterGetParam(context,session,"url");
   if(!url) url="";
-  if(!allalphanum(menu) || !allalphanum(name)){  // 2013-01-21 eat - VID 5591,5609-0.8.13-5 - scrub input impacting file name
+  if(!webIsMenu(menu) || !webIsName(name)){  // 2013-01-21 eat - VID 5591,5609-0.8.13-5 - scrub input impacting file name
     webError(context,session,"Menu and name must be alphanumeric","");
     return(0); 
     }
