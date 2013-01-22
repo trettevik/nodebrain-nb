@@ -73,6 +73,7 @@
 * 2012-08-31 dtl 0.8.12 handled err
 * 2012-10-13 eat 0.8.12 Replace malloc/free with nbAlloc/nbFree
 * 2012-12-15 eat 0.8.13 Checker updates
+* 2013-01-21 eat 0.8.13 Checker updates
 *=====================================================================
 */
 #include "config.h"
@@ -896,6 +897,13 @@ static int webMenu(nbCELL context,nbWebSession *session,void *handle){
   return(0);
   }
 
+static int allalphanum(const char *word){
+  const char *cursor=word;
+  while(*cursor && isalnum(*cursor)) cursor++;
+  if(*cursor) return(0);
+  return(1);
+  }
+
 static int webBookmark(nbCELL context,nbWebSession *session,void *handle){
   char filename[1024];
   char *menu,*name,*note,*url;
@@ -912,9 +920,10 @@ static int webBookmark(nbCELL context,nbWebSession *session,void *handle){
   if(!note) note="";
   url=nbWebsterGetParam(context,session,"url");
   if(!url) url="";
-  // include function to check for valid parameters
-  // perhaps that should be included in 
-  //    websterResourceError(context,session);
+  if(!allalphanum(menu) || !allalphanum(name)){  // 2013-01-21 eat - VID 5591,5609-0.8.13-5 - scrub input impacting file name
+    webError(context,session,"Menu and name must be alphanumeric","");
+    return(0); 
+    }
   nbLogMsg(context,0,'T',"bookmark: menu='%s',name='%s',note='%s',url='%s'",menu,name,note,url);
   // check for existing entry
   sprintf(filename,"%s/webster/%s/%s",session->webster->rootdir,menu,name);

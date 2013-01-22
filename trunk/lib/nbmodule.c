@@ -636,9 +636,8 @@ void nbModuleShowPath(nbCELL context,char *pathcur){
 void nbModuleShowPath(nbCELL context,char *pathcur){
   struct dirent *ent;
   char *fullpath,*cursor,*delim,*separator;
-  char modname[512],path[1024],fullpathbuf[1024],dirname[1024];
+  char modname[512],path[1024],dirname[1024],fullpathbuf[PATH_MAX];
   DIR *dir;
-  int n;
   size_t len;
 
   while(*pathcur){
@@ -646,7 +645,10 @@ void nbModuleShowPath(nbCELL context,char *pathcur){
     separator=strchr(pathcur,NB_MODULE_PATH_SEPARATOR);
     if(separator!=NULL && (delim==NULL || separator<delim)) delim=separator;
     if(delim){
-      if((n=delim-pathcur)>0 && n<sizeof(dirname)) {strncpy(dirname,pathcur,n);*(dirname+n)=0;}// dtl added check
+      len=delim-pathcur;
+      if(len>=sizeof(dirname)) len=sizeof(dirname)-1;
+      strncpy(dirname,pathcur,len);
+      *(dirname+len)=0;
       pathcur=delim+1;
       }
     else{
@@ -659,14 +661,13 @@ void nbModuleShowPath(nbCELL context,char *pathcur){
         cursor=ent->d_name;
         if(strncmp(cursor,"nb_",3)==0){
           cursor+=3;
-          if((delim=strchr(cursor,'.'))){
+          if((delim=strchr(cursor,'.'))!=NULL){
             strncpy(modname,cursor,delim-cursor);
             *(modname+(delim-cursor))=0;
             if(strncmp(delim,LT_MODULE_EXT,strlen(LT_MODULE_EXT))==0){
               cursor=delim+strlen(LT_MODULE_EXT);
               if(*cursor=='.' && strcmp(cursor+1,NB_API_VERSION)==0){
                 len=snprintf(path,sizeof(path),"%s/%s",dirname,ent->d_name);
-                if(len>=sizeof(path)) *(path+sizeof(path)-1)=0;
                 fullpath=realpath(path,fullpathbuf);
                 if(!fullpath) fullpath=path;
                 outPut("    %s -> %s\n",modname,fullpath);

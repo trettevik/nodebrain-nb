@@ -1,6 +1,11 @@
 # Peer module check script
 
 declare peer module {"../.libs"}; # for checking only
+
+define clunk  node peer("default@(queue/clunk)");
+show clunk
+clunk:this is a test
+
 define peer node peer("default@socket/peer");
 
 # Start a server to send commands to

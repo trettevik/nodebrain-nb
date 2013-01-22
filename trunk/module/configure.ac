@@ -64,8 +64,6 @@ AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
 
-#CFLAGS="-I../../lib/include -Wall -fstack-protector-all -Wno-strict-aliasing $CFLAGS"
-
 #=====================================
 # LIBTOOL stuff
 

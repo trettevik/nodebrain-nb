@@ -97,8 +97,7 @@ libnb_a_HEADERS = \
 
 lib_LTLIBRARIES = libnb.la
 
-#libnb_la_CFLAGS = -Iinclude -Wall -fstack-protector-all -Wstrict-aliasing=2
-libnb_la_CFLAGS = -Iinclude -Wall -fstack-protector-all -fno-strict-aliasing
+libnb_la_CFLAGS = -Iinclude -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-all -fno-strict-aliasing
 libnb_la_LDFLAGS = -release ${PACKAGE_VERSION}
 
 libnb_la_SOURCES = \

@@ -761,7 +761,7 @@ nbMsgState *nbMsgLogStateFromRecord(nbCELL context,nbMsgRec *msgrec){
 *    count
 *    text pointer
 */
-char *nbMsgHeaderExtract(nbMsgRec *msgrec,int node,uint32_t *tranTimeP,uint32_t *tranCountP,uint32_t *recordTimeP,uint32_t *recordCountP,uint32_t *fileTimeP,uint32_t *fileCountP,char *flags){
+char *nbMsgHeaderExtract(nbMsgRec *msgrec,int node,uint32_t *tranTimeP,uint32_t *tranCountP,uint32_t *recordTimeP,uint32_t *recordCountP,uint32_t *fileTimeP,uint32_t *fileCountP,unsigned char *flags){
   nbMsgId *msgid=&msgrec->si;
   int msglen;
 
@@ -1046,7 +1046,7 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,unsigned char n
   int msgbuflen;
   char *errStr;
   uint32_t tranTime,tranCount,recordTime,recordCount,fileTime,fileCount;
-  char fileState;            // flag bits on file header/footer
+  unsigned char fileState;            // flag bits on file header/footer
   char linkname[128];
   char linkedname[32];
   int linklen;
@@ -1864,7 +1864,7 @@ int nbMsgLogPrune(nbCELL context,char *cabal,char *nodeName,unsigned char node,i
   char filename[128];
   struct stat filestat;
   uint32_t tranTime,tranCount,recordTime,recordCount,fileTime,fileCount;
-  char fileState;
+  unsigned char fileState;
   char linkname[128];
   char linkedname[32];
   int linklen;
@@ -1877,15 +1877,15 @@ int nbMsgLogPrune(nbCELL context,char *cabal,char *nodeName,unsigned char node,i
   time_t pruneTime;
   int deleted=0;          // number of files deleted
   int pruning=0;          // deleting files
-  char strTime[64];
+  char strTime[21];
 
   // Get prune time
   time(&utime);
   pruneTime=utime-seconds; 
-  strncpy(strTime,ctime(&pruneTime),sizeof(strTime)-1);  // 2012-12-16 eat - CID 751640
-  *(strTime+sizeof(strTime)-1)=0;
-  outMsg(0,'I',"Pruning cabal %s node %s intstance %d files to %s.",cabal,nodeName,node,strTime);
-
+  nbClockToString(utime,strTime);
+  //strncpy(strTime,ctime(&pruneTime),sizeof(strTime)-1);  // 2012-12-16 eat - CID 751640
+  //*(strTime+sizeof(strTime)-1)=0;
+  outMsg(0,'I',"Pruning cabal %s node %s intstance %d files to %s",cabal,nodeName,node,strTime);
   // Get the file name
   snprintf(linkname,sizeof(linkname),"message/%s/%s/%s.msg",cabal,nodeName,nodeName); 
   if(lstat(linkname,&filestat)<0){
@@ -1942,8 +1942,9 @@ int nbMsgLogPrune(nbCELL context,char *cabal,char *nodeName,unsigned char node,i
     }
   close(file);
   // Step up through the files until we find one to prune
-  while(!(fileState&NB_MSG_FILE_STATE_FIRST) || pruning){
-    outMsg(0,'T',"File %s time %d with %d remaining.",filename,fileTime,fileTime-pruneTime);
+  //while(!(fileState&NB_MSG_FILE_STATE_FIRST) || pruning){
+  while(!(fileState&NB_MSG_FILE_STATE_FIRST)){  // 2013-01-19 eat - we no longer have to worry about pruning file with old format
+    outMsg(0,'T',"File %s time %d with %d remaining. state=%u",filename,fileTime,fileTime-pruneTime,fileState);
     if(fileTime<pruneTime){
       if(pruning){
         if(unlink(filename)<0) outMsg(0,'E',"nbMsgLogPrune: Unable to remove file %s - %s\n",filename,strerror(errno));
@@ -1972,6 +1973,7 @@ int nbMsgLogPrune(nbCELL context,char *cabal,char *nodeName,unsigned char node,i
             return(-1);
             }
           close(file);
+          fileState^=NB_MSG_FILE_STATE_FIRST;
           }     
         pruning=1;      // start pruning
         }
@@ -1998,6 +2000,11 @@ int nbMsgLogPrune(nbCELL context,char *cabal,char *nodeName,unsigned char node,i
       return(-1);
       }
     }
+  outMsg(0,'T',"File %s time %d with %d remaining. state=%u",filename,fileTime,fileTime-pruneTime,fileState);
+  if(fileTime<pruneTime && pruning){
+    if(unlink(filename)<0) outMsg(0,'E',"nbMsgLogPrune: Unable to remove file %s - %s\n",filename,strerror(errno));
+    else deleted++;
+    } 
   outMsg(0,'I',"Message cabal %s node %s instance %d pruned successfully - %d files deleted.\n",cabal,nodeName,node,deleted);
   return(0);
   }
@@ -2669,7 +2676,7 @@ unsigned char *nbMsgCacheStomp(nbCELL context,nbMsgCache *msgcache,int msglen){
         qmsglen=(*(msgcache->start+1)<<8)+*(msgcache->start+2); // get length of message we are stomping on
         msgcache->fileOffset+=qmsglen;  // maintain offset of queue start in message log file
         msgcache->start+=1+qmsglen; // step to next record
-        if(msgTrace) nbLogMsg(context,0,'E',"nbMsgCacheStomp: msgcache->start=%p",msgcache->start);
+        if(msgTrace) nbLogMsg(context,0,'T',"nbMsgCacheStomp: msgcache->start=%p",msgcache->start);  // 2013-01-19 eat - type change from E to T
         if(*msgcache->start==0xff){
           if(msgcache->start==msgcache->end){
             msgqrec=msgcache->bufferStart;

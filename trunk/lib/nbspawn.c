@@ -158,13 +158,16 @@ int nbSpawnChild(nbCELL context,int options,char *cursor){
     if(process->status&NB_MEDULLA_PROCESS_STATUS_GENFILE)
       outPut("[%d] Started: %c=\"%s\" %s%s\n",nb_mode_check ? 0:process->pid,'%',outname,process->prefix,process->cmd);
     else outPut("[%d] Started: %s%s\n",nb_mode_check ? 0:process->pid,process->prefix,process->cmd);
-    nbMedullaProcessReadBlocking(process);  // read stdin and stdout using blocking IO
+    outFlush();
+    // 2013-01-19 eat - nbMedullaProcessWait calles nbMedullaProcessReadBlocking right away, so commenting this call
+    //nbMedullaProcessReadBlocking(process);  // read stdin and stdout using blocking IO
     nbMedullaProcessWait(process);  // wait for the process to end
     }
   else{
     if(process->status&NB_MEDULLA_PROCESS_STATUS_GENFILE)
       outMsg(0,'I',"[%d] Started: %c=\"%s\" %s%s",nb_mode_check ? 0:process->pid,'%',outname,process->prefix,process->cmd);
     else outMsg(0,'I',"[%d] Started: %s%s",nb_mode_check ? 0:process->pid,process->prefix,process->cmd);
+    outFlush();
     }
   return(process->pid);
   }

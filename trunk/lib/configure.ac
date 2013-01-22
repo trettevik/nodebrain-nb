@@ -86,6 +86,7 @@
 # 2012/10/12 eat 0.8.12 New version
 # 2012/10/24 eat 0.8.12 Included AC_PROG_CC_C_0 and removed platform checks
 # 2012/12/15 eat 0.8.13 New Version - new checker
+# 2013/01/19 eat 0.8.13 Included patch submit by Jeroen Roovers (gentoo)
 #=============================================================================
 
 AC_PREREQ(2.62)
@@ -95,7 +96,6 @@ AC_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(config)
 AM_INIT_AUTOMAKE
 
-#CFLAGS="-Wall -O0 -Iinclude $CFLAGS"
 # define module directory variables
 
 AC_DEFINE_UNQUOTED(NB_API_VERSION,"0",[NodeBrain API version])
@@ -129,6 +129,8 @@ AC_CHECK_LIB(pcre,pcre_compile,,[AC_MSG_ERROR(Required library -lpcre not found.
 AC_CHECK_LIB(readline,readline,,[AC_MSG_ERROR(Required library -lreadline not found. Specify path in LDFLAGS.)])
 AC_CHECK_LIB(history,add_history,,[AC_MSG_ERROR(Required library -lhistory not found. Specify path in LDFLAGS.)])
 AC_CHECK_LIB(ssl,SSL_library_init,,[AC_MSG_ERROR(Required library -lssl not found. Specify path in LDFLAGS.)])
+#PKG_CHECK_MODULES(libssl,openssl)
+#PKG_CHECK_MODULES([libssl],[openssl],[LIBS="$LIBS `$PKG_CONFIG --cflags --libs openssl`"],[AC_MSG_ERROR(Required library -lssl not found. You may want to download it from http://www.openssl.org/ or locate it and include in LDFLAGS or LD_LIBRARY_PATH to support this build.)])
 
 AC_SEARCH_LIBS(socket,socket)
 AC_SEARCH_LIBS(inet_ntoa,nsl)

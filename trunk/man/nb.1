@@ -1,7 +1,7 @@
 .\" Process this file with "groff -man -Tascii foo.1" or "nbman2ht foo.1"
 .\" See NodeBrain Developer Guide for project standards
 .\"
-.TH nb 1 "June 2012" "NodeBrain 0.8.10" "NodeBrain Administrator Guide"
+.TH nb 1 "February 2013" "NodeBrain 0.8.13" "NodeBrain Administrator Guide"
 .SH NAME
 \fBnb\fP - NodeBrain Interpreter, Agent, Client, and Utility.
 .SH SYNOPSIS
@@ -74,7 +74,7 @@
 .B =
 | \fIfile\fP [ \fB,\fP \fIassertion\fP ]
 |
-\fB-"'\fP\fIprefix\fP\fB"\fP
+\fB-">\fP\fIprefix\fP\fB"\fP
 }
 .SH DESCRIPTION
 NodeBrain, \fBnb\fP(1),
@@ -158,11 +158,11 @@ This turns on the --prompt option described under \fBOPTIONS\fP below.
 After processing all arguments, a prompt of the form "\fIprefix\fP\fB>\fP" is displayed to stdout.
 Commands entered at the prompt are appended to the prefix before intepretation.  This is used
 to direct commands to a specific node without having to type the prefix on each command line. 
-While in interactive mode, a new prefix directive may be entered at a prompt.  A prefix directive is
+While in interactive mode, a new prefix directive may be entered at a prompt.  A prefix directive
 is only recognized when used as an option or in response to an interactive prompt.
 .IP
 .nf
-\fB-"'\fP\fIprefix\fP\fB"\fP
+\fB-">\fP\fIprefix\fP\fB"\fP
 .fi
 .P
 Arguments are processed in the order specified on the command line, enabling option changes,
@@ -408,6 +408,9 @@ In early 2009, NodeBrain 0.7 was released with support for a simplified syntax.
 Support for some features was moved out of the interpreter and into node modules, replacing feature
 specific syntax with syntax common to all nodes.
 
+In February of 2013, NodeBrain 0.8 was released, adding a message feature that enables events to be
+shared between agents more quickly, statistical anomaly detection, and security patches.
+
 .SH BUGS
 For a complete and current list of known bugs, refer to the project web site.  The bugs listed
 here are worth noting because they are not high on our list to resolve, so they may 
@@ -469,10 +472,5 @@ Ed Trettevik <eat@nodebrain.org>
 
 .\"ht doc
 [5]
-.I NodeBrain Module Reference
-- http://www.nodebrain.org 
-
-.\"ht doc
-[6]
 .I NodeBrain API Reference
 - http://www.nodebrain.org 

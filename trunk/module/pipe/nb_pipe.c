@@ -366,7 +366,7 @@ void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
     nbLogMsg(context,0,'E',"Expecting string pipe file name as first parameter");
     return(NULL);
     }
-  client=nbAlloc(sizeof(NB_MOD_Client));
+  client=(NB_MOD_Client *)nbAlloc(sizeof(NB_MOD_Client));
   client->filenamecell=cell;
   client->filename=nbCellGetString(context,cell);
   return(client);
@@ -378,14 +378,26 @@ void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
 *    <node>[(<args>)][:<text>]
 */
 int clientCommand(nbCELL context,void *skillHandle,NB_MOD_Client *client,nbCELL arglist,char *text){
-  sprintf(client->buffer,"%s\n",text);
+  int wrote;
+  size_t size;
+
+  size=strlen(text)+1;
+  if(size>=sizeof(client->buffer) || size>INT_MAX){
+    nbLogMsg(context,0,'E',"Text may not exceed %zu characters",sizeof(client->buffer));
+    return(-1);
+    }
+  snprintf(client->buffer,sizeof(client->buffer),"%s\n",text);
   client->fildes=open(client->filename,O_WRONLY|O_APPEND);
   if(client->fildes<0){ // 2012-12-27 eat 0.8.13 - CID 751565
     nbLogMsg(context,0,'E',"Unable to open %s for append - %s",client->filename,strerror(errno));
     return(-1);
     }
-  write(client->fildes,client->buffer,strlen(client->buffer));
+  wrote=write(client->fildes,client->buffer,size);
   close(client->fildes);
+  if(wrote<0){
+    nbLogMsg(context,0,'E',"Unable to write to pipe - %s",strerror(errno));
+    return(-1);
+    }
   return(0);
   }
 

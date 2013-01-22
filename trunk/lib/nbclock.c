@@ -293,7 +293,7 @@ char *nbClockToBuffer(char *buffer){
 /*
 *  Convert UTC time to character string (nb_clockFormat determines format)
 */    
-#define CTIME_SIZE 30    //buffer has at least sizeof 30 
+#define CTIME_SIZE 21    //buffer has at least sizeof 21 
 char *nbClockToString(time_t utc,char *buffer){
   struct tm *printTm;
 

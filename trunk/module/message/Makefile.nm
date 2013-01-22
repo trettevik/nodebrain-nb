@@ -8,4 +8,5 @@ nb_message_la_CFLAGS  = $(NB_MOD_CFLAGS)
 nb_message_la_LDFLAGS = -module -version-info 0:1
 
 EXTRA_DIST = \
-  caboodle/check/message.nb~
+  caboodle/check/message.nb- \
+  caboodle/check/message.pl

@@ -104,6 +104,13 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 * 2012-12-15 eat 0.8.13 Checker updates
 * 2012-12-27 eat 0.8.13 Checker updates
+* 2013-01-19 eat 0.8.13 Resolved a problem with blocking servants totally blocking
+*            The nbMedullaProcessReadBlocking function was for some crazy reason
+*            doing a blocking read on stderr and then stdout.  This required the
+*            process to end before stdout was read.  If the process wrote enough
+*            to stdout to fill buffers and block waiting for the medulla to read
+*            it we had a deadly embrace.  Now stdout and stderr are read concurrently
+*            and the problem is resolved.
 *=============================================================================
 */
 #define NB_INTERNAL
@@ -996,6 +1003,12 @@ int nbMedullaProcessReadBlocking(nbPROCESS process){
 #else
  
 int nbMedullaProcessReadBlocking(nbPROCESS process){
+  fd_set fdset;
+  char buffer[NB_BUFSIZE];
+  int len,sent,rc;
+  int readyfd;
+  int maxfile;
+
   // if not currently blocking, switch to a blocking mode
   if(!(process->status&NB_MEDULLA_PROCESS_STATUS_BLOCKING)){
     // Our closing of the putfile here may turn out to be a problem.
@@ -1013,17 +1026,69 @@ int nbMedullaProcessReadBlocking(nbPROCESS process){
     if(process->getfile>0) nbMedullaWaitDisable(0,process->getfile);
     process->status|=NB_MEDULLA_PROCESS_STATUS_BLOCKING;
     }
-  if(process->logfile>0){
-    while(nbMedullaProcessLogger(process)==0);
-    close(process->logfile);
-    process->logfile=-1;
+  // 2013-01-19 eat - reworked this for -:command option where the command didn't end causing stderr to block the process
+  if(process->logfile<=0 && process->getfile<=0) return(0);
+  while(1){  // read as long as we have data
+    FD_ZERO(&fdset);  // this should be done once to a static variable
+    maxfile=-1;
+    if(process->logfile>=0){
+      FD_SET(process->logfile,&fdset);
+      maxfile=process->logfile;
+      }
+    if(process->getfile>=0){
+      FD_SET(process->getfile,&fdset);
+      if(process->getfile>maxfile) maxfile=process->getfile;
+      }
+    if(maxfile<0) return(0);
+    readyfd=select(maxfile+1,&fdset,NULL,NULL,NULL);
+    while(readyfd<0 && errno==EINTR) readyfd=select(maxfile+1,&fdset,NULL,NULL,NULL);
+    if(readyfd<0){
+      fprintf(stderr,"nbMedullaProcessReadBlocking: select error - %s\n",strerror(errno));
+      return(1);
+      }
+    if(process->logfile>0 && FD_ISSET(process->logfile,&fdset)){
+      len=read(process->logfile,buffer,sizeof(buffer));
+      while(len==-1 && errno==EINTR) len=read(process->logfile,buffer,sizeof(buffer));
+      if(len<=0){
+        if(len<0) fprintf(stderr,"[%d] Error reading from process stderr\n",process->pid);
+        //else fprintf(stderr,"[%d] End of file on stderr\n",process->pid);
+        close(process->logfile);
+        process->logfile=-1;
+        if(process->logQueue!=NULL) process->logQueue=nbMedullaQueueClose(process->logQueue);
+        if(process->getfile<0 && process->status&NB_MEDULLA_PROCESS_STATUS_ENDED)
+          nbMedullaProcessClose(process);
+        }
+      else{
+        sent=nbMedullaQueuePut(process->logQueue,buffer,len);
+        len=nbMedullaQueueGet(process->logQueue,buffer,sizeof(buffer));
+        while(len>=0){
+          rc=(process->logger)(process,process->pid,process->session,buffer);
+          len=nbMedullaQueueGet(process->logQueue,buffer,sizeof(buffer));
+          }
+        }
+      }
+    if(process->getfile>0 && FD_ISSET(process->getfile,&fdset)){
+      len=read(process->getfile,buffer,sizeof(buffer));
+      while(len==-1 && errno==EINTR) len=read(process->getfile,buffer,sizeof(buffer));
+      if(len<=0){
+        if(len<0) fprintf(stderr,"[%d] Error reading from process stdout\n",process->pid);
+        //else fprintf(stderr,"[%d] End of file on stdout\n",process->pid);
+        close(process->getfile);
+        process->getfile=-1;
+        if(process->getQueue!=NULL) process->getQueue=nbMedullaQueueClose(process->getQueue);
+        if(process->logfile<0 && process->status&NB_MEDULLA_PROCESS_STATUS_ENDED)
+          nbMedullaProcessClose(process);
+        }
+      else{
+        sent=nbMedullaQueuePut(process->getQueue,buffer,len);
+        len=nbMedullaQueueGet(process->getQueue,buffer,sizeof(buffer));
+        while(len>=0){
+          rc=(process->consumer)(process,process->pid,process->session,buffer);
+          len=nbMedullaQueueGet(process->getQueue,buffer,sizeof(buffer));
+          }
+        }
+      }
     }
-  if(process->getfile>0){
-    while(nbMedullaProcessReader(process)==0);
-    close(process->getfile);
-    process->getfile=-1;
-    }
-  return(0);
   }
 
 #endif
@@ -1977,19 +2042,19 @@ nbPROCESS nbMedullaProcessClose(nbPROCESS process){
     process->getpipe=NULL;
 #else
   if(process->getfile>=0){
-    fprintf(stderr,"[%d] Logic Error: nbMedullaProcesClose() called with open stdout\n",process->pid);
+    fprintf(stderr,"[%d] Logic Error: nbMedullaProcessClose() called with open stdout\n",process->pid);
     close(process->getfile);
     process->getfile=-1;
 #endif
     }
 #if defined(WIN32)
   if(process->logpipe!=NULL){
-    fprintf(stderr,"[%d] Logic Error: nbMedullaProcesClose() called with open stderr\n",process->pid);
+    fprintf(stderr,"[%d] Logic Error: nbMedullaProcessClose() called with open stderr\n",process->pid);
     nbMedullaFileClose(process->logpipe);
     process->logpipe=NULL;
 #else
   if(process->logfile>=0){
-    fprintf(stderr,"[%d] Logic Error: nbMedullaProcesClose() called with open stderr\n",process->pid);
+    fprintf(stderr,"[%d] Logic Error: nbMedullaProcessClose() called with open stderr\n",process->pid);
     close(process->logfile);
     process->logfile=-1;
 #endif

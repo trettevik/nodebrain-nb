@@ -254,7 +254,7 @@ unsigned int nbIpGetUdpServerSocket(NB_Cell *context,char *addr,unsigned short p
     //strcpy(un_addr.sun_path,addr);
     snprintf(un_addr.sun_path,sizeof(un_addr.sun_path),"%s",addr); // 2012-12-31 eat - VID 4953-0.8.13-1 - truncating if necessary
     if(unlink(addr)){ // 2012-12-31 eat - VID 5130-0.8.13-1
-      outMsg(0,'W',"nbIpGetUdpServerSocket: Unable to unlink before bind - %s",strerror(errno));
+      if(trace) outMsg(0,'W',"nbIpGetUdpServerSocket: Unable to unlink before bind - %s",strerror(errno));
       }
     if(bind(server_socket,(struct sockaddr *)&un_addr,sizeof(un_addr))<0){
       outMsg(0,'E',"nbIpGetUdpServerSocket: Unable to bind to local domain socket %s. errno=%d",addr,errno);

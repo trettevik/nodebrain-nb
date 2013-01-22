@@ -6,7 +6,7 @@ includedir=@includedir@
 Name: NodeBrain
 Description: A declarative rule-based language for state and event monitoring
 Version: @VERSION@
-Requires: readline openssl pcre
+Requires.private: readline openssl pcre
 Libs: -L${libdir} @LIBS@ -lnb 
 Cflags: -I${includedir}
 

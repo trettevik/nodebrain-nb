@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -272,6 +272,7 @@
 * 2012-10-17 eat 0.8.12 Replaced padding loops with RAND_bytes
 * 2012-10-17 eat 0.8.12 Checker updates
 * 2012-12-16 eat 0.8.13 Checker updates
+* 2013-01-20 eat 0.8.13 Checker updates
 *=============================================================================
 */
 #include <openssl/rand.h>
@@ -1464,7 +1465,7 @@ void nbpServeExecute(struct LISTENER *ear,struct NBP_SESSION *session,struct NBP
 void nbpServePutFile(struct NBP_SESSION *session,struct NBP_MESSAGE *msgbuf){
   FILE *file;
   int len;
-  size_t size;
+  size_t size,wrote;
   struct CHANNEL *channel=session->channel;
   char *buffer=session->buffer;
   char mode,*openmode,filename[512];
@@ -1513,7 +1514,12 @@ void nbpServePutFile(struct NBP_SESSION *session,struct NBP_MESSAGE *msgbuf){
   len=chget(channel,buffer,NB_BUFSIZE);
   if(mode=='b') while(len>0){
     size=len;
-    fwrite(buffer,1,size,file);     /* should check for errors */
+    wrote=fwrite(buffer,1,size,file);
+    if(wrote!=size){   // 2013-01-20 eat
+      /* send PUTFILE[HALT] */
+      nbpMsg(session,NBP_TRAN_PUTFILE,NBP_MSG_HALT,"NBP000E PUTFILE: write error",0);
+      return;
+      }
     len=chget(channel,buffer,NB_BUFSIZE);
     }
   else while(len>0){

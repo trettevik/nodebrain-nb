@@ -333,7 +333,10 @@ extern int nbListenerStart(nbCELL context){
         outMsg(0,'E',"Unable to change root directory to %s - %s",servejail,strerror(errno));
         exit(NB_EXITCODE_FAIL);
         }
-      chdir("/");  // 2012-12-31 eat - VID 530-0.8.13-01  
+      if(chdir("/")<0){  // 2012-12-31 eat - VID 530-0.8.13-01  
+        outMsg(0,'E',"Unable to change working directory to %s - %s",servejail,strerror(errno));
+        exit(NB_EXITCODE_FAIL);
+        }
       outMsg(0,'I',"Root directory changed to %s",servejail);
       }
     // switch group if requested

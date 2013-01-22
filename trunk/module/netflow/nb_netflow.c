@@ -77,6 +77,7 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree for fixed blocks
 * 2012-12-27 eat 0.8.13 Checker updates
 * 2013-01-14 eat 0.8.13 Checker updates
+* 2013-01-20 eat 0.8.13 Checker updates
 *=====================================================================
 */
 #include <config.h>
@@ -294,6 +295,7 @@ struct nfv7flow{
 int openHistory(char *filename,int periods,size_t len){
   int file;  
   char *buffer;
+  int wrote;
 
 #if !defined(FREEBSD) && !defined(mpe) && !defined(MACOS) && !defined(WIN32)
   if((file=open(filename,O_RDWR|O_SYNC))<0){
@@ -313,7 +315,19 @@ int openHistory(char *filename,int periods,size_t len){
     buffer=(char *)nbAlloc(len);
     memset(buffer,0,len);
     while(periods>0){
-      write(file,buffer,len);
+      wrote=write(file,buffer,len);
+      if(wrote<0){
+        fprintf(stderr,"openHistory: write failed - %s\n",strerror(errno));
+        close(file);
+        nbFree(buffer,len);  // 2013-01-21 eat - CID 968593 - was leaking buffer storage
+        return(-1);
+        }
+      if(wrote!=len){
+        fprintf(stderr,"openHistory: write returned len %d - should have been %zu",wrote,len); // 2013-01-21 eat - CID 968592 - fixed format for len
+        close(file);
+        nbFree(buffer,len);  // 2013-01-21 eat - CID 968593 - was leaking buffer storage
+        return(-1);
+        }
       periods--;
       }
     nbFree(buffer,len);

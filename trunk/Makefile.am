@@ -70,8 +70,9 @@
 
 SUBDIRS = lib . module
 
-info_TEXINFOS = doc/nb.texi doc/nbTutorial/nbTutorial.texi
+info_TEXINFOS = doc/nodebrain.texi doc/nbTutorial/nbTutorial.texi doc/nbLanguage/nbLanguage.texi
 doc_nbTutorial_TEXINFOS = doc/fdl.texi
+doc_nbLanguage_TEXINFOS = doc/fdl.texi
 
 dist_man_MANS = \
   man/caboodle.nb.5 \

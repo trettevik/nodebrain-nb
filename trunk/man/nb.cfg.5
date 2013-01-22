@@ -1,7 +1,7 @@
 .\" Process this file with "groff -man -Tascii foo.1" or "nbman2ht foo.1"
 .\" See NodeBrain Developer Guide for project standards
 .\"
-.TH nb.cfg 5 "June 2012" "NodeBrain 0.8.10" "NodeBrain Administrator Guide"
+.TH nb.cfg 5 "February 2013" "NodeBrain 0.8.13" "NodeBrain Administrator Guide"
 .SH NAME
 nb.cfg - NodeBrain Configuration Files
 .SH SYNOPSIS
@@ -53,7 +53,7 @@ Authentication is the responsibility
 of any node module providing communication with external entities.
 Here's an example of a "peer.client" node that uses an
 identity for authentication and authorization. 
-Refer to the \fINodeBrain Module Reference\fP for module configuration instructions.
+Refer to the \fIPeer NodeBrain Module\fP manual for more information.
 
 .nf
   # define a peer node
@@ -114,7 +114,7 @@ See
 .\"ht page
 \fBnb\fP(1) for information on message format.
 .SH "HISTORY"
-The \fB~/.nb/user.nb\fP file was introduced with NodeBrain Protocol (NBP) client authentication in March, 2000, although it was originally called private.nb and renamed in version 0.7.1.
+The \fB~/.nb/user.nb\fP file was introduced with NodeBrain Protocol (NBP) client authentication in March, 2000, although it was originally called private.nb and renamed in version 0.7.1.  This file is now more general and no longer associated with NBP which has moved to the Peer module.
 
 The \fB.nb/caboodle.nb\fP file was introduced in version 0.7.1 in July, 2008.
 
@@ -158,10 +158,5 @@ Ed Trettevik <eat@nodebrain.org>
 
 .\"ht doc
 [5]
-.I NodeBrain Module Reference 
-- http://www.nodebrain.org
-
-.\"ht doc
-[6]
 .I NodeBrain API Reference 
 - http://www.nodebrain.org

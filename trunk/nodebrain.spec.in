@@ -18,7 +18,7 @@ Requires(preun): /sbin/install-info
 
 %build
 %configure 
-make CFLAGS="$CFLAGS -O1"
+make CFLAGS="$CFLAGS"
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -116,5 +116,9 @@ This package contains static libraies for nodebrain.
 #-------------------------------------------------------------------------
 
 %changelog
-* Fri Feb 26 2010 John Ellson <ellson@research.att.com> - @PACKAGE_VERSION@-1
+* Fri Feb 26 2010 John Ellson <ellson@research.att.com> - 0.8.3-1
 - First rpm packaging.
+
+* Sun Jan 20 2013 Ed Trettevik <eat@nodebrain.org> - 0.8.13-1
+- Updated for 0.8.13
+

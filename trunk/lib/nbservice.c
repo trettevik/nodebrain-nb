@@ -109,6 +109,7 @@
 * 2008-11-11 eat 0.7.3  Change failure exit code to NB_EXITCODE_FAIL
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2012-12-27 eat 0.7.13 Checker updates
+* 2013-01-20 eat 0.7.13 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -548,6 +549,7 @@ void daemonize(){
   int fd;
   int pidfd;
   char pidbuffer[12];
+  int wrote;
 
   pid=getpid();
   ppid=getppid();
@@ -605,7 +607,7 @@ void daemonize(){
   close(2);
   fd=dup(1);
   if(fd!=2){
-    if(fd<0) printf("Unable to dup stderr - %s\n",strerror(errno));
+    if(fd<0) printf("Unable to dup stdout - %s\n",strerror(errno));
     else{
       printf("Unexpected fd when attempting open of stderr - fd=%d\n",fd);
       close(fd);
@@ -616,7 +618,16 @@ void daemonize(){
   // 2010-11-28 eat - now switch stdout to /dev/null if not already
   if(*log){
     close(1);
-    dup(0);
+    fd=dup(0);
+    if(fd!=1){
+      if(fd<0) printf("Unable to dup stdin - %s\n",strerror(errno));
+      else{
+        printf("Unexpected fd when attempting open of stdout - fd=%d\n",fd);
+        close(fd);
+        }
+      printf("NodeBrain %s[%d] terminating with severe error - exit code=%d\n",myname,pid,NB_EXITCODE_FAIL);
+      exit(NB_EXITCODE_FAIL);
+      }
     }
   umask(S_IWGRP|S_IRWXO);  // 2008-06-11 eat - avoid group write and all other user access
   agent=1;
@@ -644,7 +655,13 @@ void daemonize(){
       exit(NB_EXITCODE_FAIL);
       }
     sprintf(pidbuffer,"%d\n",pid);
-    write(pidfd,pidbuffer,strlen(pidbuffer));
+    wrote=write(pidfd,pidbuffer,strlen(pidbuffer));
+    if(wrote!=strlen(pidbuffer)){
+      outMsg(0,'E',"Unable to write pid file '%s' - errno=%d %s",servepid,errno,strerror(errno));
+      outMsg(0,'E',"NodeBrain %s[%d] terminating with severe error - exit code=%d",myname,pid,NB_EXITCODE_FAIL);
+      outFlush();
+      exit(NB_EXITCODE_FAIL);
+      }
     close(pidfd);
     }
   return;

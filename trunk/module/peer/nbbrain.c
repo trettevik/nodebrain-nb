@@ -228,24 +228,26 @@ struct BRAIN * nbBrainNew(int version,char *string){
       else{
         for(delim=cursor;*delim!=0 && *delim!=':' && *delim!='{' && *delim!='(' && *delim!=' ';delim++);
         len=delim-cursor;
-        if(len>255){
-          nbLogMsgI(0,'E',"Hostname longer than 255 limit before ':' encountered.");
-          destroyBrain(brain);
-          return(NULL);
-          }
-        strncpy(ident,cursor,len);
-        ident[len]=0;
-        cursor=delim;
-        brain->hostname=((struct STRING *)nbCellCreateString(NULL,ident))->value;
-        if(*cursor==':'){
-          if((ipaddr=chgetaddr(ident))==NULL){
-            nbLogMsgI(0,'E',"Unknown host name \"%s\".",ident);
+        if(len>0){
+          if(len>255){
+            nbLogMsgI(0,'E',"Hostname longer than 255 limit before ':' encountered.");
             destroyBrain(brain);
             return(NULL);
             }
-          brain->ipaddr=((struct STRING *)nbCellCreateString(NULL,ipaddr))->value;
+          strncpy(ident,cursor,len);
+          ident[len]=0;
+          cursor=delim;
+          brain->hostname=((struct STRING *)nbCellCreateString(NULL,ident))->value;
+          if(*cursor==':'){
+            if((ipaddr=chgetaddr(ident))==NULL){
+              nbLogMsgI(0,'E',"Unknown host name \"%s\".",ident);
+              destroyBrain(brain);
+              return(NULL);
+              }
+            brain->ipaddr=((struct STRING *)nbCellCreateString(NULL,ipaddr))->value;
+            }
+          else brain->ipaddr="";
           }
-        else brain->ipaddr="";
         }
       if(*cursor==':'){
         if(brain->hostname==NULL){

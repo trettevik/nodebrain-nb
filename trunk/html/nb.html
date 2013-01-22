@@ -14,7 +14,7 @@
 <table width="100%"><tr>
 <td align="left" width="20%">nb(1)</td>
 <td align="center" width="60%"><span style="font-size: 14pt">NodeBrain Administrator Guide</span>
-<br>Version 0.8.10 - June 2012</td>
+<br>Version 0.8.13 - February 2013</td>
 <td align="right" width="20%">nb(1)</td>
 </tr></table>
 <p style="font-size: 7pt">
@@ -121,7 +121,7 @@
 <b>=</b>
 | <i>file</i> [ <b>,</b> <i>assertion</i> ]
 |
-<b>-&quot;'</b><i>prefix</i><b>&quot;</b>
+<b>-&quot;&gt;</b><i>prefix</i><b>&quot;</b>
 }
 </td></tr></table>
 <a name="DESCRIPTION"></a>
@@ -213,11 +213,11 @@ This turns on the --prompt option described under <b>OPTIONS</b> below.
 After processing all arguments, a prompt of the form &quot;<i>prefix</i><b>&gt;</b>&quot; is displayed to stdout.
 Commands entered at the prompt are appended to the prefix before intepretation.  This is used
 to direct commands to a specific node without having to type the prefix on each command line. 
-While in interactive mode, a new prefix directive may be entered at a prompt.  A prefix directive is
+While in interactive mode, a new prefix directive may be entered at a prompt.  A prefix directive
 is only recognized when used as an option or in response to an interactive prompt.
 <p><table width="100%" border="0" cellspacing="0" cellpadding="5">
 <tr><td width="5%" align="left" valign="top">&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
-<b>-&quot;'</b><i>prefix</i><b>&quot;</b><br>
+<b>-&quot;&gt;</b><i>prefix</i><b>&quot;</b><br>
 </td></tr></table>
 Arguments are processed in the order specified on the command line, enabling option changes,
 variable setting, and commands before, between and after file arguments.  All arguments are
@@ -529,6 +529,8 @@ base source code.
 <p>In early 2009, NodeBrain 0.7 was released with support for a simplified syntax.
 Support for some features was moved out of the interpreter and into node modules, replacing feature
 specific syntax with syntax common to all nodes.
+<p>In February of 2013, NodeBrain 0.8 was released, adding a message feature that enables events to be
+shared between agents more quickly, statistical anomaly detection, and security patches.
 <p></td></tr></table>
 <a name="BUGS"></a>
 <h3>BUGS</h3>
@@ -582,8 +584,7 @@ Ed Trettevik &lt;eat@nodebrain.org&gt;
 <p><p>[2] <a href="http://www.nodebrain.org "><i>NodeBrain Tutorial</i></a><br>
 <p><p>[3] <a href="http://www.nodebrain.org "><i>NodeBrain User Guide </i></a><br>
 <p><p>[4] <a href="http://www.nodebrain.org "><i>NodeBrain Language Reference</i></a><br>
-<p><p>[5] <a href="http://www.nodebrain.org "><i>NodeBrain Module Reference</i></a><br>
-<p><p>[6] <a href="http://www.nodebrain.org "><i>NodeBrain API Reference</i></a><br>
+<p><p>[5] <a href="http://www.nodebrain.org "><i>NodeBrain API Reference</i></a><br>
 </td></table>
 <hr>
-<table width="100%"><tr><td align="left" width="33%">NodeBrain 0.8.10</td><td align="center" width="34%">June 2012</td><td align="right" width="33%">nb(1)</td></tr></table>
+<table width="100%"><tr><td align="left" width="33%">NodeBrain 0.8.13</td><td align="center" width="34%">February 2013</td><td align="right" width="33%">nb(1)</td></tr></table>

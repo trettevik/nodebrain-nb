@@ -451,7 +451,7 @@ static void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
     return(NULL);
     }
   brainSpec=nbCellGetString(context,cell);
-  client=nbAlloc(sizeof(nbClient));
+  client=(nbClient *)nbAlloc(sizeof(nbClient));
   // get identity to portray
   client->self=NULL;
   *portrayIdent=0;
@@ -509,9 +509,9 @@ static void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,cha
 
 static int clientShow(nbCELL context,void *skillHandle,nbClient *client,int option){
   if(option!=NB_SHOW_REPORT) return(0);
-  nbLogPut(context," using %s ",client->self->name->value);
+  nbLogPut(context," using %s",client->self->name->value);
   nbCellShow(context,(nbCELL)client->self);
-  nbLogPut(context,"\n specification: ");
+  nbLogPut(context,"\n option=%d\n specification: ",client->option);
   //nbCellShow(context,(nbCELL)peer->brain);
   printBrain(client->brain);
   nbLogPut(context,"\n");
@@ -572,7 +572,7 @@ static int clientCommand(nbCELL context,void *skillHandle,nbClient *client,nbCEL
     /* if we are deadly embraceable spawn a child */
     /* in the future allow an option to declare a peer as not embraceable---never connecting back */
     if(nb_mode_embraceable && option!=0){
-      char name[512];
+      char name[1024];
       if(option==2) snprintf(cmd,sizeof(cmd),":%s:%s",nbNodeGetNameFull(context,name,sizeof(name)),text); //dtl: replaced sprintf
       else snprintf(cmd,sizeof(cmd),":%s(%d):%s",nbNodeGetNameFull(context,name,sizeof(name)),option,text); //dtl: replaced sprintf
       nbSpawnSkull(context,NULL,cmd);
