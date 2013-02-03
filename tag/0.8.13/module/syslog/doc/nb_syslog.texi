@@ -1,0 +1,243 @@
+\input texinfo   @c -*-texinfo-*-
+@c %**start of header
+@setfilename nb_syslog.info
+@include version.texi
+@settitle Syslog NodeBrain Module
+@c %**end of header
+
+@finalout
+@paragraphindent none
+@setchapternewpage odd
+
+@copying
+Syslog NodeBrain Module@*
+June 2012@*
+The Boeing Company, P.O. Box 3707, Seattle, WA 98124, USA
+
+@sp 2
+@b{Version @value{VERSION}}
+
+Author: Ed Trettevik <eat@@nodebrain.org>
+
+Copyright @copyright{} 2012 The Boeing Company
+
+@sp 1
+Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
+
+@sp 1
+NodeBrain(TM) is a trademark of The Boeing Company.   All other trademarks and registered trademarks referenced in this document are the trademarks of their respective owners.
+
+@sp 2
+@b{Software License}
+
+@multitable {------------------------------} {----------------------------------------------------}
+@item Copyright @copyright{} 1998-2012 @tab The Boeing Company
+@item @tab Ed Trettevik <eat@@nodebrain.org>
+@end multitable
+
+The Syslog NodeBrain Module is free software; you can redistribute it and/or  modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option)any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License formore details.
+
+You should have received a copy of the GNU General PublicLicense along with this program; if not, write to Free Software Foundation,Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+@end copying
+
+@iftex
+@titlepage
+@c @image{./image001,32pt,32pt,,gif}
+
+@titlefont{Syslog NodeBrain Module}
+@sp 1
+@tex
+\vskip4pt \hrule height 3pt width \hsize
+@end tex
+@sp 3
+@b{Version @value{VERSION}}
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+
+@c History Preface and Document Conventions 
+@page
+@b{History}
+
+@multitable {-------------} {--------------------------------------------------------------------------------------------------------}
+@item 2012-06-04 @tab
+Title: @i{Syslog NodeBrain Module}@*  
+Author: Ed  Trettevik <eat@@nodebrain.org>@*
+Publisher: The Boeing Company
+
+@item 2012-06-04 @tab
+Release 0.8.10
+@itemize @bullet
+@item This is a first edition.
+@end itemize
+
+@end multitable
+
+@page
+@b{Preface}
+
+@sp 1
+This manual is intended for users of the Syslog NodeBrain Module, a plug-in for sending and receiving syslog messages.
+The reader is expected to be familiar with the basic concepts of NodeBrain.  See www.nodebrain.org for general information
+on NodeBrain.
+
+@include conventions.texi
+
+@end titlepage
+
+@end iftex
+
+@c ----------------------------------------------------------
+@c Not printed document
+
+@ifnottex
+@node Top
+@top Syslog NodeBrain Module
+
+This manual is for the Syslog NodeBrain Module (version @value{VERSION}, @value{UPDATED-MONTH}) used to send and receive syslog messages.
+@*@*
+Copyright @copyright{} 2012 The Boeing Company
+@quotation
+Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
+@end quotation
+@ifnotplaintext
+@b{Short Table Of Contents}
+@menu
+* Concepts:: Foundation
+* Tutorial:: Introduction by Example
+* Commands:: Syntax and Semantics
+* Triggers:: Conditions and Response
+@end menu
+@menu
+* GNU Free Documentation License::
+* Index::
+@end menu
+@end ifnotplaintext
+@end ifnottex
+
+@c Set page footings
+@oddfooting @thistitle @| @| @thispage
+@evenfooting @thispage @| @| @thistitle
+
+@c Contents
+@oddheading @| @| 
+@evenheading @| @|
+@contents
+
+@c Set page headings for document
+@oddheading @thischapter @| @| @value{UPDATED-MONTH}
+@evenheading @value{UPDATED-MONTH} @| @| @thischapter
+
+@node Concepts
+@chapter Concepts
+@cindex Concepts
+
+The Syslog module implements nodes that send or receive syslog messages.
+
+@node Tutorial
+@chapter Tutorial
+@cindex tutorial
+@include nb_syslog_tutorial.texi
+
+@node Commands
+@chapter Commands
+@cindex commands
+
+This section describes commands used with a Syslog node.
+ 
+@section Define
+@cindex define command
+
+The @command{define} command is used to create a Syslog node.
+ 
+@cartouche
+@b{Syntax}
+@multitable {---------------------} {---------------------------------------------------------------------}
+@item @i{syslogDefineCmd}
+@tab ::= @b{define} @ringaccent{s} @i{term} @ringaccent{s} @b{node} [ @ringaccent{s} @i{syslogDef} ] @bullet{} 	   
+@item @i{syslogDef}
+@tab ::= @b{syslog("}@i{translator}@b{",}@i{socket}@b{);}
+@item @i{translator}
+@tab ::= name of translator file (*.nbx)
+@item @i{socket} @tab ::= @i{port} | @b{"udp://}@i{interface}@b{:}@i{port}@b{"} | @b{"udp://}@i{socketfile}@b{"}
+@end multitable		 
+@end cartouche
+
+@*
+The @i{translator} arguments may be any cell expression that resolves to a string value containing a filename. The value at definition time is used. A syslog node will not response to or recognize changes to the value of expressions for these parameters.
+
+The @i{translator} by convention has a ".nbx" suffix. See "Translators" under the @command{DEFINE} command in the @i{NodeBrain Language Reference} for instructions on coding translator files.
+
+@cartouche
+@smallexample
+define syslog node syslog("messages.nbx",1514);
+define syslog node syslog("messages.nbx","udp://0.0.0.0:514");
+define syslog node syslog("messages.nbx","udp://socket/syslog-foobar");
+@end smallexample
+@end cartouche
+
+@section Assert
+@cindex assert command
+
+Assertions are not supported by this module.
+
+@section Disable
+@cindex disable command
+
+The @command{disable} commands may be used to stop the node from listening for syslog messages on the specified port.
+
+@cartouche
+@smallexample
+disable @i{node}
+@end smallexample
+@end cartouche
+
+@section Enable
+@cindex enable command
+
+The @command{enable} command may be used to start listening for syslog messages on the specified port.
+
+@cartouche
+@smallexample
+enable @i{node}
+@end smallexample
+@end cartouche
+
+A Syslog node is automatically enabled when an agent goes into background mode (daemonizes).  So the enable command is
+only required if you want to enable it when running in a different mode, or to re-enable the node after it has been
+disabled.
+
+@section Node Commands
+@cindex node commands
+
+
+A trace mode can be toggled on or off to assist in debugging translator rules. When trace is on, lines from the file are displayed when processed.
+
+@cartouche
+@smallexample
+	@i{node}:@b{trace}
+	@i{node}:@b{notrace}
+@end smallexample
+@end cartouche
+
+@section Module Commands
+
+The Syslog module currently implements no module commands.
+
+@node Triggers
+@chapter Triggers
+@cindex triggers
+
+All the triggers of a Syslog server node are implemented by the specified translator.  A Syslog client node has no triggers.
+
+@node GNU Free Documentation License
+@unnumbered GNU Free Documentation License
+@include fdl.texi
+
+@node Index
+@unnumbered Index 
+@printindex cp 
+@bye 
+

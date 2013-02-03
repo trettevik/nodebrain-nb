@@ -1,0 +1,14 @@
+#!/usr/local/bin/nb
+# File: tutorial/tree/stuff.nb
+define stuff node tree;
+define r1 on(stuff(x,y)>17 and stuff(x,y,z)="Sally");
+stuff. assert ("Kathy","apple")=2,(1,2,3)="Sally",(1,2)=27;
+assert x=1,y=2;
+assert z=3;
+show stuff
+assert ?stuff(1,2);
+show stuff
+assert ?stuff(1,2,3);
+show stuff
+assert a=stuff("Kathy","apple");
+show a

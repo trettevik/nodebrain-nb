@@ -1,0 +1,10 @@
+#!bin/nb -d
+#
+# Peer module check script
+#
+set log="log/server.log";
+-cp /dev/null log/server.log
+
+declare peer module {"../.libs"};
+define server node peer.server("default@socket/peer");
+server. define r1 on(a=1) b=2:-echo hi

@@ -1,0 +1,74 @@
+N o d e B r a i n   0.8.13
+
+========================================================================
+
+File:        README for nb-0.8.13 release files
+
+Package:     NodeBrain (nb)
+
+Version:     0.8 - Dopey
+
+Release:     0.8.13 
+
+Date:        February 4, 2013
+
+Reference:   http://www.nodebrain.org
+               1) Online documentation
+               2) Signatures to verify release file integrity
+
+Warning:     This version has incompatibilities with prior versions that
+             may require minor changes to rules used with prior releases.
+
+See NEWS for a list of changes in this release.
+
+======================================================================== 
+
+Installation Instructions for Linux/Unix Platforms
+
+a) From source code distribution - install to standard directories
+
+     $ tar -xzf nodebrain-0.8.13.tar.gz
+     $ cd nodebrain-0.8.13
+     $ ./configure
+     $ make
+     $ make check
+     $ make install
+
+b) From binary RPM file (x86_64 platform example)
+
+     $ rpm --install nodebrain-0.8.13-1.x86_64.rpm
+
+c) From source RPM file 
+
+     $ rpmbuild --rebuild nodebrain-0.8.13-1.src.rpm
+
+======================================================================== 
+
+Although prior releases of NodeBrain were tested on various platforms,
+at time of release this version has only been tested on RHEL 5.7, x86_64.
+It should work on other Linux platforms, and be relatively easy to port
+to Unix platforms.  The project has stopped porting to Windows, and the
+conditional compilation for Windows is no longer expected to work.  We
+hope to support Windows again at some future release, but it is not a
+high priority at this time.  
+
+======================================================================== 
+
+Copyright (C) 1998-2009 The Boeing Company
+                        Ed Trettevik <eat@nodebrain.org>
+
+NodeBrain is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+Software License:  See COPYING file (also LICENSE.txt on Windows)

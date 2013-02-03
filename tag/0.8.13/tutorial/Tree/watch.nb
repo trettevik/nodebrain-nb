@@ -1,0 +1,11 @@
+#!/usr/local/bin/nb
+# File: tutorial/tree/watch.nb
+define watchtype node tree;
+watchtype. assert ("tree fell"),("log rolled"),("frog croaked");
+define r1 if(watchtype(type));
+
+# Sample events
+alert type="tide out";
+alert type="log rolled";
+alert type="tide in";
+alert type="frog croaked";

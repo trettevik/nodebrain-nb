@@ -1,0 +1,6 @@
+table { background-color: #f8f8f8; padding: 1px;}
+table th { color: white; background-color: #808080; padding: 5px;}
+table td { background-color: #f0f0f0; padding: 5px;}
+table.cartouche { background-color: #F8F8F8; margin: 0; -moz-border-radius: 15px; border-radius: 15px; border: 1; }
+table.cartouche td {border: 0;}
+pre.smallexample { font-size:inherit; }
