@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 ## =============================================================================
 ##
-## Copyright (C) 1998-2010 The Boeing Company
+## Copyright (C) 1998-2013 The Boeing Company
 ##                         Ed Trettevik <eat@nodebrain.org>
 ##
 ## NodeBrain is free software; you can redistribute it and/or modify
