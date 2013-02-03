@@ -1,0 +1,38 @@
+#!/bin/sh
+#==========================================================================
+# Name:   build-nb
+#
+# Title:  NodeBrain Build Script
+#
+# Function:
+#
+#   This script is used with a source or binary NodeBrain distribution to
+#   perform the standard GNU style "./configure" and "make" steps of an
+#   install process.
+#
+# Synopsis:
+#
+#    ./build-nb
+#
+#    [MAKE=<make>] ./build-nb
+#
+# Description:
+#
+#   This script is intended to make the build process slightly easier for
+#   someone who is not familiar with a GNU style build.
+#   
+# 2004/10/11 Ed Trettevik
+#===========================================================================
+if test -x "/opt/sfw/bin/gmake"; then
+  make="${MAKE-/opt/sfw/bin/gmake}"
+else
+  make="${MAKE-make}"
+fi
+
+if test -x "/opt/sfw/bin/gcc"; then PATH=$PATH:/opt/sfw/bin; export PATH; fi
+if test -x "/usr/ccs/bin/ar"; then PATH=$PATH:/usr/ccs/bin; export PATH; fi
+
+./configure; if test $? -ne 0; then echo "build-nb ./configure failed"; exit 1; fi
+${make}; if test $? -ne 0; then echo "build-nb ${make} failed"; exit 1; fi
+${make} check; if test $? -ne 0; then echo "build-nb ${make} failed"; exit 1; fi
+echo "build-nb was successful"

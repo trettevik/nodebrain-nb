@@ -1,0 +1,6 @@
+<p><h1>Caboodle Home Page</h1>
+<p>This is a default Webster home page for a NodeBrain configuration directory we call a <i>caboodle</i>.  It is the working directory of a NodeBrain agent.  In this case, it is an agent with a node using the Webster node module (plug-in).
+<p>You are encouraged to replace this file to provide your own caboodle documentation for display within the Webster interface.
+<ul>
+<i>caboodle</i>/webster/index.ht
+</ul>

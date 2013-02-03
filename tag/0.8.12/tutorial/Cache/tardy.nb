@@ -1,0 +1,7 @@
+#!/usr/local/bin/nb
+# File: tutorial/cache/tardy.nb
+define tardy node cache:(!~(6s):Source);
+tardy. define r1 if(_action="expire"): $ # ${Source} has been quiet for ${_interval}
+tardy. assert ("Fred");
+# Press the ENTER key once repeatedly until the rule fires
+# Should happen in 6 seconds

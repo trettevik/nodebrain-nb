@@ -1,0 +1,544 @@
+<html>
+<head>
+<meta name="generator" content="nbman2ht">
+<meta name="Content-Style" content="text/css">
+<title>NodeBrain Manual Page</title>
+<style>
+  body  {font-family: verdana; font-size: 10pt;}
+  table {font-size: 10pt;}
+  h3    {font-size: 10pt;}
+  pre   {font-size: 10pt;}
+</style>
+</head>
+<body>
+<table width="100%"><tr>
+<td align="left" width="20%">nb.syn(5)</td>
+<td align="center" width="60%"><span style="font-size: 14pt">NodeBrain Administrator Guide</span>
+<br>Version 0.8.10 - June 2012</td>
+<td align="right" width="20%">nb.syn(5)</td>
+</tr></table>
+<p style="font-size: 7pt">
+<a href="#NAME">NAME</a>
+| <a href="#SYNOPSIS">SYNOPSIS</a>
+| <a href="#DESCRIPTION">DESCRIPTION</a>
+| <a href="#PURPOSE">PURPOSE</a>
+| <a href="#COMMANDS">COMMANDS</a>
+| <a href="#CELL EXPRESSIONS">CELL EXPRESSIONS</a>
+| <a href="#SKILL METHODS">SKILL METHODS</a>
+| <a href="#ASSERTIONS">ASSERTIONS</a>
+| <a href="#RULES">RULES</a>
+| <a href="#CONTEXT">CONTEXT</a>
+| <a href="#INCLUDES">INCLUDES</a>
+| <a href="#BUGS">BUGS</a>
+| <a href="#AUTHOR">AUTHOR</a>
+| <a href="#SEE ALSO">SEE ALSO</a>
+</p>
+<hr>
+<!--  Process this file with "groff -man -Tascii foo.1" or "nbman2ht foo.1" -->
+<!--  See NodeBrain Developer Guide for project standards -->
+<!--  -->
+<a name="NAME"></a>
+<h3>NAME</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+nb.syn - NodeBrain Syntax
+</td></tr></table>
+<a name="SYNOPSIS"></a>
+<h3>SYNOPSIS</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+<i>command</i> ::= [<i>context</i><b>. </b>] <i>verb</i> <i>body</i> [<b>;</b>]
+<p><i>verb</i> ::= <b>declare</b> | <b>define</b> | <b>assert</b> | <b>alert</b> | <b>source</b> | ...
+<p><b>declare</b> <i>term</i> <i>decType</i> <i>declaration</i>
+<p><i>decType</i> ::= <b>identity</b> | <b>module</b> | <b>skill</b> | <b>calendar</b>
+<p><b>define</b> <i>term</i> <i>defType</i> <i>definition</i>
+<p><i>defType</i> ::= <b>cell</b> | <b>node</b> | <b>on</b> | <b>if</b> | <b>when</b> | <b>macro</b> | ...
+<p><b>define</b> <i>term</i> <b>cell</b> [<i>cellExpression</i>]
+<p><b>define</b> <i>term</i> <b>node</b> [<i>nodeSpecification</i>]
+<p><b>define</b> <i>term</i> (<b>on</b>|<b>when</b>|<b>if</b>)<b>(</b><i>cellExpression</i><b>)</b> ...
+<p>(<b>assert</b>|<b>alert</b>) <i>term</i><b>=</b><i>cellExpression</i>[<b>,</b> ... ]
+</td></tr></table>
+<a name="DESCRIPTION"></a>
+<h3>DESCRIPTION</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+This manual page introduces the syntax and structure of the NodeBrain language used
+in configuration files and event streams.  From this, you should be able to read a
+configuration file or event stream and get a general idea of the information it conveys to NodeBrain.
+However, if you need to create or maintain complicated
+rule sets, you will need to reference the documents 
+available at http://www.nodebrain.org.  Here we will try not to be rigorous, relying mostly on
+examples to give you the general idea.
+</td></tr></table>
+<a name="PURPOSE"></a>
+<h3>PURPOSE</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+NodeBrain is a declarative language, in contrast to a procedural language like most programming languages
+you know.  This means you would not want to use NodeBrain for most tasks you can perform easily with
+your favorite scripting language.  For example, you would NOT use NodeBrain to read a file,
+extract information, and
+produce a report.  Instead, the NodeBrain language is intended simply to provide
+rules and assertions to a NodeBrain agent.
+</td></tr></table>
+<a name="COMMANDS"></a>
+<h3>COMMANDS</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+To some degree, it is helpful to think of NodeBrain commands as &quot;transactions&quot;, because commands
+may come from multiple sources (peers, queues, FIFO's, etc.) as individual units of work.
+The interpreter processes commands
+in whatever order they arrive from these command streams.
+The <b>SOURCE</b> command provides a way to process a complete file of commands as a single
+unit of work, but you should think of a <b>SOURCE</b> command as a single transaction.  
+<p>Commands are all coded as a single line of text.  There is no provision for extending a command
+beyond the end of one line and onto the next.  We sometimes break a command into multiple lines
+in examples for readability, but this is not supported by the interpreter.
+</td></tr></table>
+<a name="CELL EXPRESSIONS"></a>
+<h3>CELL EXPRESSIONS</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+You can think of NodeBrain cells somewhat like the cells in a spreadsheet.  They have definitions (formulas)
+and values.  The major difference is the way in which cells are referenced.  In a spreadsheet, cells are
+referenced by absolute or relative row and column.  In NodeBrain, a cell is referenced by name, or by the expression (formula)
+that determines the value.  In fact, a named cell is really two cells---one that references another.
+The following example uses 11 cells: a, 1, b, 2, c, 3, x, b*c, a+b*c, y, and b*c+3.
+It is important to understand there is only one b*c cell, and there are two cells that reference it: a+b*c and b*c+3. 
+<p><ul>
+define a cell 1;<br>
+define b cell 2;<br>
+define c cell 3;<br>
+define x cell a+b*c;<br>
+define y cell b*c+3;<br>
+</ul>
+<p>When the value of a cell changes, the new value is &quot;published&quot; to the referencing cells that have &quot;subscribed&quot; to
+its value. Let's look at what happens when we assert a new value for c.
+<p><ul>
+assert c=4;<br>
+</ul>
+<p>If we assume all terms have subscribed to the values of their defining formulas (we will not go into alternatives here),
+then the value of x and y automatically change from 7 and 9 respectively to 9 and 11 respectively.  There is an
+intermediate step where the value of the cell b*c changes from 6 to 8.  This should give you an idea of how NodeBrain
+cells are defined by expressions, and how they respond to changes.  This is important because the whole goal of NodeBrain
+is to be able to respond appropriately to new information given a set of existing knowledge.
+<p>We used an arithmetic example above, but NodeBrain is perhaps more interested in logical expressions.
+<p><ul>
+define a cell 1;<br>
+define b cell 0;<br>
+define c cell a and b;  # c=0; <br>
+define d cell a or b;   # d=1;<br>
+define e cell not a;    # e=0;<br>
+</ul>
+<p>Parentheses are used to control the order of precedence on the operators.  It is best to use them when it may be unclear
+which operation will be performed first.
+<p><ul>
+define x cell (((a+b)*c)&gt;5 or a*b&gt;20) and d;<br>
+</ul>
+<p>A cell may have a real number value (e.g. 1, 1.78), a character string value (e.g. &quot;abc&quot;, &quot;this is fun&quot;), or an unknown
+value (&quot;?&quot;).  In all three cases, a cell has a logical value.  This is because all known values other than 0 are 
+interpreted as &quot;true&quot; by logical operators (e.g. AND, OR, NOT), and because the logical operators recognize three states:
+true, false, and unknown.  Here are some examples.
+<p><table width="100%" border="0" cellspacing="0" cellpadding="5">
+<tr><td width="5%" align="left" valign="top">&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
+<p><table border="0" cols="3">
+<tr><th width="5%" align="left" valign="top">Expression&nbsp;&nbsp;&nbsp;</th><th width="5%" align="left" valign="top">&nbsp;&nbsp;&nbsp;</th><th width="90%" align="left" valign="top">Value&nbsp;&nbsp;&nbsp;</th></tr>
+<tr><td width="5%" align="left" valign="top">1 and 0&nbsp;&nbsp;&nbsp;</td><td width="5%" align="left" valign="top">=&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">0&nbsp;&nbsp;&nbsp;</td></tr>
+<tr><td width="5%" align="left" valign="top">1 and 1&nbsp;&nbsp;&nbsp;</td><td width="5%" align="left" valign="top">=&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">1&nbsp;&nbsp;&nbsp;</td></tr>
+<tr><td width="5%" align="left" valign="top">1 and &quot;abc&quot;&nbsp;&nbsp;&nbsp;</td><td width="5%" align="left" valign="top">=&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">1&nbsp;&nbsp;&nbsp;</td></tr>
+<tr><td width="5%" align="left" valign="top">0 and 1.3&nbsp;&nbsp;&nbsp;</td><td width="5%" align="left" valign="top">=&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">0&nbsp;&nbsp;&nbsp;</td></tr>
+<tr><td width="5%" align="left" valign="top">1 and ??&nbsp;&nbsp;&nbsp;</td><td width="5%" align="left" valign="top">=&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">??&nbsp;&nbsp;&nbsp;</td></tr>
+<tr><td width="5%" align="left" valign="top">0 and ??&nbsp;&nbsp;&nbsp;</td><td width="5%" align="left" valign="top">=&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">0&nbsp;&nbsp;&nbsp;</td></tr>
+<tr><td width="5%" align="left" valign="top">1 or  0&nbsp;&nbsp;&nbsp;</td><td width="5%" align="left" valign="top">=&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">1&nbsp;&nbsp;&nbsp;</td></tr>
+<tr><td width="5%" align="left" valign="top">0 or  33.2&nbsp;&nbsp;&nbsp;</td><td width="5%" align="left" valign="top">=&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">1&nbsp;&nbsp;&nbsp;</td></tr>
+<tr><td width="5%" align="left" valign="top">0 or  &quot;abc&quot;&nbsp;&nbsp;&nbsp;</td><td width="5%" align="left" valign="top">=&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">1&nbsp;&nbsp;&nbsp;</td></tr>
+<tr><td width="5%" align="left" valign="top">1 or  ??&nbsp;&nbsp;&nbsp;</td><td width="5%" align="left" valign="top">=&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">1&nbsp;&nbsp;&nbsp;</td></tr>
+<tr><td width="5%" align="left" valign="top">0 or  ??&nbsp;&nbsp;&nbsp;</td><td width="5%" align="left" valign="top">=&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">??&nbsp;&nbsp;&nbsp;</td></tr>
+</table>
+</td></tr></table>
+<p>NodeBrain also has time expressions &quot;~(...)&quot; that evaluate to true or false at any given second in time based on the system
+clock.  This is based on standard notions of a calendar and units or intervals of time, and a kind of algebra for manipulation
+of sets of &quot;line&quot; segments.  We won't go into it here, but the following examples illustrate the general idea.
+<p><table width="100%" border="0" cellspacing="0" cellpadding="5">
+<tr><td width="5%" align="left" valign="top">&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
+<p><table border="0" cols="2">
+<tr><th width="5%" align="left" valign="top">Expression&nbsp;&nbsp;&nbsp;</th><th width="90%" align="left" valign="top">True during (False otherwise)&nbsp;&nbsp;&nbsp;</th></tr>
+<tr><td width="5%" align="left" valign="top">~(mo,we)&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">Monday or Wednesday&nbsp;&nbsp;&nbsp;</td></tr>
+<tr><td width="5%" align="left" valign="top">~(fr.d(1))&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">Fridays falling on the first day of a month&nbsp;&nbsp;&nbsp;</td></tr>
+<tr><td width="5%" align="left" valign="top">~(h(14).su)&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">Hour 14 (14:00) on Sunday&nbsp;&nbsp;&nbsp;</td></tr>
+<tr><td width="5%" align="left" valign="top">~(h(8).fr.d(15))&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">Hour 8 (08:00) of Fridays falling on the 15th&nbsp;&nbsp;&nbsp;</td></tr>
+<tr><td width="5%" align="left" valign="top">~(mo[1]month)&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">First Monday of a month&nbsp;&nbsp;&nbsp;</td></tr>
+<tr><td width="5%" align="left" valign="top">~(tu[-2]month)&nbsp;&nbsp;&nbsp;</td><td width="90%" align="left" valign="top">Second to last Tuesday of a month&nbsp;&nbsp;&nbsp;</td></tr>
+</table>
+</td></tr></table>
+<p>A &quot;node condition&quot; is another form of cell expression that looks like a function call. You can think of
+it as a function call that executes whenever one of the argument cell expressions changes.    
+<p><ul>
+define mystuff node tree;  # create node with skill provided by the &quot;tree&quot; module<br>
+define r1 on(x=40 and <b>mystuff(a,b,c+7)</b>) a=b+2;<br>
+</ul>
+<p>The way in which mystuff(a,b,c+7) is evaluated is determined by the skill &quot;tree&quot; associated with
+the  mystuff node.  This skill is provided by a &quot;node module&quot; (NodeBrain plugin). Evaluation
+of a node condition is just one of the methods that may be
+implemented by a node module.
+</td></tr></table>
+<a name="SKILL METHODS"></a>
+<h3>SKILL METHODS</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+A node module implements one or more skills.  For each skill, it implements methods defined by the NodeBrain Node Module C API.
+Each line in the command examples below illustrates a reference to a different skill method.
+<p><ul>
+declare names module {&quot;.&quot;}names;<br>
+declare nickname skill <b>names.nick(...):...</b>  # initialize skill<br>
+define mynicks node <b>nickname(&quot;builtin&quot;)</b>;  # construct node<br>
+assert <b>mynicks(&quot;Ry&quot;,&quot;Ryan&quot;)</b>,<b>mynicks(&quot;Tay&quot;,&quot;Taylor&quot;)</b>; # assert nicknames<br>
+define isnick cell <b>mynicks(name)</b>; # node condition<br>
+show <b>mynicks</b>;   # display knowledge associated with mynick<br>
+<b>mynicks(2,a+5)</b>; # node command<br>
+</ul>
+<p>We know from the syntax what method within the node module is invoked in each reference to the
+node &quot;mynicks&quot;, but we would need documentation on the node module <i>names</i> and its skill <i>nick</i> to
+know how the arguments are processed.  The arguments can be any cell expression in general,
+but the domain of valid values may be restricted by the node module.
+<p>The DECLARE commands shown above are normally not required when using installed node modules
+with default options.  Here's an example using the tree module, which does not implement the command method.
+<p><ul>
+define mynicks node <b>tree</b>;  # construct node<br>
+assert <b>mynicks(&quot;Ry&quot;)=&quot;Ryan&quot;</b>,<b>mynicks(&quot;Tay&quot;)=&quot;Taylor&quot;</b>; # assert nicknames<br>
+define isnick cell <b>mynicks(name)</b>; # node condition<br>
+show <b>mynicks</b>;   # display knowledge associated with mynick<br>
+</ul>
+<p></td></tr></table>
+<a name="ASSERTIONS"></a>
+<h3>ASSERTIONS</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+An assertion is used to convey new information to an executing instance of the NodeBrain
+interpreter.  (We sometimes refer to an executing instance of the NodeBrain interpreter as a &quot;skull.&quot;)
+Simple assertions are like assignment statements with a cell name on the left and a cell expression
+on the right.
+<p><ul>
+assert x=a*b+c,y=a+b*c;<br>
+</ul>
+<p>When the value of a named cell changes as a result of the assertion, NodeBrain reacts to the change
+by re-evaluating cells that reference the modified cell.  We say the cell &quot;publishes&quot; changes to the
+&quot;subscriber&quot; cells.  When re-evaluation of subscriber cells change their value, they in term publish
+their changes to subscriber cells.  This can percolate all the way up the subscriber hierarchy as long
+as re-evaluation produces a change.
+<p><ul>
+define x cell a+b;<br>
+define y cell a&gt;b; # 1 if a greater than b, 0 otherwise<br>
+define z cell x+y;<br>
+define r on(z&gt;20):-echo hello<br>
+assert a=13,b=7; # this triggers rule r because z=21<br>
+# next line causes re-evaluation of x and y (subscribers of a and b)<br>
+assert a=12,b=8;<br>
+assert a=2;      # this causes re-evaluation of x, y, z, and r<br>
+</ul>
+<p>Notice the difference in our comments for the second and last assertions above?  The reason the
+last assertion caused re-evaluation of z is because x and/or y changed. Then r was re-evaluated
+because z changed.
+<p>Because assertions are common in NodeBrain, as are assignments in other languages, NodeBrain
+has a shorthand notation using a back-tick to mean ASSERT.
+(We insist on a verb, or a symbol that represents a verb.)
+<p><ul>
+`x=a+b;<br>
+assert x=a+b;<br>
+</ul>
+<p>We can assert values using &quot;=&quot; or definitions using &quot;==&quot;.  The following examples give the same
+definition to a cell named x.       
+<p><ul>
+define x cell a+b;    # define x as a+b<br>
+<br>
+assert x==a+b;        # define x as a+b<br>
+<br>
+</ul>
+<p>The DEFINE command in this example defines a new cell named x.  The ASSERT command with &quot;==&quot;
+is the same if x is not already defined.  If x is already defined, the DEFINE command will fail
+while the ASSERT command with redefine x.  In the ASSERT command it is also possible for x to
+be in a parent context (explained later).
+<p><ul>
+assert x==a+b;  # define x<br>
+<br>
+assert x==a*b;  # redefine x<br>
+<br>
+define x cell a+b;  # fails because x is already defined.<br>
+<br>
+</ul>
+<p>An ALERT command is just like an ASSERT command, except it enables IF rules as you will see
+in the next section.
+<p><ul>
+alert a=13,b=7;  # assert a=13 and b=7 with IF rules enabled.<br>
+<br>
+</ul>
+</td></tr></table>
+<a name="RULES"></a>
+<h3>RULES</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+To respond to specific conditions or events, NodeBrain needs rules that tell it what to watch for
+and what action to take if the condition is true.
+<p><ul>
+define r1 on(a=b) x=2;<br>
+<br>
+define r2 if(a=b):-ps -ef | grep nb <br>
+<br>
+define r3 when(a=b):-echo hello<br>
+<br>
+</ul>
+<p>An ON rule fires whenever the condition transitions from False or Unknown to True.
+<p><ul>
+define r1 on(a=b) x=2;<br>
+<br>
+assert a=7,b=7;   # r1 fires<br>
+<br>
+assert a=2;       # r1 transitions to False<br>
+<br>
+assert a=7;       # r1 fires<br>
+<br>
+assert a=5,b=5;   # r1 remains true and does not fire<br>
+<br>
+assert b=??;      # r1 transitions to Unknown<br>
+<br>
+assert ?b;        # an easier way to assert that b has an unknown value<br>
+<br>
+assert a=2,b=2;   # r1 fires<br>
+<br>
+</ul>
+<p>An IF rule fires when True after an ALERT command.  Notice we didn't say &quot;transitions to True.&quot;
+It will fire on an ALERT even when conditions remains True.
+<p><ul>
+define r2 if(a=b):-ps -ef | grep nb<br>
+<br>
+assert a=7,b=7;   # r2 does not fire because IF rules ignore ASSERT<br>
+<br>
+alert a=2,b=2;    # r2 fires<br>
+<br>
+alert a=2,b=2;    # r2 fires<br>
+<br>
+alert a=1,b=1;    # r2 fires<br>
+<br>
+alert a=0,b=4;    # r2 does not fire because the condition is false<br>
+<br>
+alert b=0;        # r2 fires because the condition is true<br>
+<br>
+alert c=5;        # r2 fires because the condition is still true<br>
+<br>
+</ul>
+<p>The ON rule is used for state monitoring and responds to both the ASSERT and ALERT commands.
+Although it can be used for state monitoring and event monitoring it only responds to state changes.
+The IF rule is used for event monitoring and responds only to ALERT commands. (See COMMAND
+PREFIX section below for further restrictions.)  It treats every
+ALERT command as an event, where the named cells are event attributes.  An ALERT with the same
+parameters as the previous ALERT is recognized by the IF rule as a new event---even when none
+of the cells it monitors are referenced in the ALERT, as shown in the last line of the example
+above.  The ON rule sees alerts as non-events when they don't change the monitored state.
+<p>The last rule we want to talk about here is the WHEN rule.  It is identical to the ON rule, 
+except it only fires one time and &quot;undefines&quot; itself.  The WHEN rule applies equally to the
+ASSERT and ALERT commands, so it can be used for both state and event monitoring.
+<p>There is also a thing called a &quot;sequence rule.&quot;  We are not going to talk about the details
+here but will show you what it looks like. It can appear as a command or a cell expression.
+The thing to know is that it looks like &quot;{...}&quot; and it monitors for a sequence of events,
+can change its own value, and can pass commands to the interpreter.
+<p><ul>
+# this is a sequence rule that acts like a WHEN rule<br>
+<br>
+{on(a=7)`b=&quot;abc&quot;;}<br>
+<br>
+# this is like two WHEN rules that apply in sequence <br>
+<br>
+{on(a=b)`x=2;on(a&gt;7)`x=5;}<br>
+<br>
+# this is a rule for changing the value of a cell<br>
+<br>
+assert y=={=5;*{on(a=2);=4;on(a=5);=3}};<br>
+<br>
+</ul>
+<p>In the last example above, the value of y is initially 5.  It then alternates between 4 and
+3 as &quot;a&quot; transitions to 2 and 5 respectively.
+</td></tr></table>
+<a name="CONTEXT"></a>
+<h3>CONTEXT</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+NodeBrain commands are interpreted within the context of a set of terms and rules called a &quot;node&quot;.
+A term may have a different meaning in a different context.  In the following example we define
+a node, &quot;connie&quot;, and define three terms within the associated context. 
+<p><ul>
+define connie node;<br>
+<br>
+connie. define a cell 1;<br>
+<br>
+connie. define b cell a+5;<br>
+<br>
+connie. define hi on(a+b&gt;3):-echo hello<br>
+<br>
+</ul>
+<p>The context prefix &quot;connie.&quot; (the period is important) on the DEFINE commands
+tells the interpreter how to interpret the commands.  This same example, without the context
+prefix would look like this.
+<p><ul>
+define connie node;<br>
+<br>
+define connie.a cell 1;<br>
+<br>
+define connie.b cell connie.a+5;<br>
+<br>
+define connie.hi on(connie.a+connie.b&gt;3):-echo hello<br>
+<br>
+</ul>
+<p>Referenced terms may be resolved at a higher level context if not defined in the target context.
+<p><ul>
+define connie node;<br>
+<br>
+connie. define tex node;<br>
+<br>
+connie. define a cell 1;<br>
+<br>
+connie.tex. define b cell a+5;<br>
+<br>
+# &quot;a&quot; is connie.a because there is no connie.tex.a<br>
+<br>
+# but &quot;b&quot; is connie.tex.b because we are defining it in connie.tex<br>
+<br>
+</ul>
+<p>Undefined terms that are referenced in a cell expression are implicitly defined in the target context.
+<p><ul>
+define connie node;<br>
+<br>
+connie. define b cell a+5; # &quot;a&quot; is implicitly defined<br>
+<br>
+</ul>
+<p>The next example shows the equivalent explicit definition of &quot;a&quot;.
+<p><ul>
+define connie node;<br>
+<br>
+connie. define a cell ?; # connie.a is a cell with an unknown value<br>
+<br>
+connie. define b cell a+5;<br>
+<br>
+</ul>
+<p>You can reference an undefined term in the target context when there is a defined term in a  
+parent context.  This is done by putting a period (&quot;.&quot;) in front of the term.
+<p><ul>
+define connie node;<br>
+<br>
+connie. define tex node;<br>
+<br>
+connie. define a cell 1<br>
+<br>
+connie.tex. define b cell .a+5;<br>
+<br>
+# &quot;.a&quot; is connie.tex.a, not connie.a <br>
+<br>
+# The implicit definition is &quot;define connie.txt.a cell ?;&quot;<br>
+<br>
+</ul>
+<p>An ALERT command only applies to IF rules defined in the target context.
+<p><ul>
+define connie node;<br>
+<br>
+connie. define r if(a) x=2;<br>
+<br>
+alert a=1;          # this does NOT cause connie.r to fire.<br>
+<br>
+alert connie.a=1;   # this does NOT cause connie.r to fire.<br>
+<br>
+connie. alert a=1;  # this DOES cause connie.r to fire.<br>
+<br>
+</ul>
+<ul>
+ <br>
+</ul>
+</td></tr></table>
+<a name="INCLUDES"></a>
+<h3>INCLUDES</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+The %INCLUDE directive and
+SOURCE command are important to understand because they are frequently used in one
+file to include commands from another like, the source command in a 
+shell script or an include directive in a C program.
+<p><ul>
+# include commands from myExtraRules.nb<br>
+<br>
+%include myExtraFules.nb,a=2,context=&quot;abc&quot;;<br>
+<br>
+- or -<br>
+<br>
+source myExtraFules.nb,a=2,context=&quot;abc&quot;;<br>
+<br>
+</ul>
+<p>There is no difference between the INCLUDE directive and SOURCE command.  The INCLUDE
+directive may seem more appropriate within a rule file, while the SOURCE command may
+seem more appropriate in interactive mode or as a transaction to an agent.
+<p>The parameters a=2 and context=&quot;abc&quot; are available within myExtraRules.nb for
+controlling conditional processing and symbolic substitution.
+<p><ul>
+% define %{context} node;<br>
+<br>
+%if(a&gt;1);<br>
+<br>
+% %{context}. define r0 on(x&gt;21):-mail fred@flintstone.com &lt; myap.log<br>
+<br>
+%endif;<br>
+<br>
+% %{context}. define r1 on(x=17) m=0;<br>
+<br>
+</ul>
+<p>Again, we've only provided enough information here to help you read NodeBrain
+rule files, not enough to prepare you to write them.  Refer to the online
+documentation for more information.
+</td></tr></table>
+<a name="BUGS"></a>
+<h3>BUGS</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+See
+<a href="nb.html"><b>nb</b></a>(1).  NodeBrain prototype releases, those starting with a 0 like
+0.8.4, should be used for experimental purposes only, unless you are able to
+verify they are reliable for your application from your own testing.  The author uses these
+releases in production applications, but makes no claim they will work as
+expected in your applications. 
+But please experiment and report bugs by linking to the project page from the home page, 
+http://www.nodebrain.org, or send email to &lt;bugs@nodebrain.org&gt;.
+</td></tr></table>
+<a name="AUTHOR"></a>
+<h3>AUTHOR</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+Ed Trettevik &lt;eat@nodebrain.org&gt;
+</td></tr></table>
+<a name="SEE ALSO"></a>
+<h3>SEE ALSO</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+<a href="nb.html"><b>nb</b></a>(1),
+<a href="nb.man.html"><b>nb.man</b></a>(7),
+<a href="nb.cfg.html"><b>nb.cfg</b></a>(5),
+<a href="nb.mod.html"><b>nb.mod</b></a>(7),
+<a href="nb.lib.html"><b>nb.lib</b></a>(3)
+<p><p>[1] <a href="http://www.nodebrain.org "><i>NodeBrain Home Page </i></a><br>
+<p><p>[2] <a href="http://www.nodebrain.org "><i>NodeBrain Tutorial </i></a><br>
+<p><p>[3] <a href="http://www.nodebrain.org "><i>NodeBrain User Guide </i></a><br>
+<p><p>[4] <a href="http://www.nodebrain.org "><i>NodeBrain Language Reference</i></a><br>
+<p><p>[5] <a href="http://www.nodebrain.org "><i>NodeBrain Module Reference</i></a><br>
+<p><p>[6] <a href="http://www.nodebrain.org "><i>NodeBrain API Reference</i></a><br>
+</td></table>
+<hr>
+<table width="100%"><tr><td align="left" width="33%">NodeBrain 0.8.10</td><td align="center" width="34%">June 2012</td><td align="right" width="33%">nb.syn(5)</td></tr></table>

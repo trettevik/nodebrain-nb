@@ -1,0 +1,9 @@
+#!/usr/local/bin/nb -d
+# File: tutorial/Webster/webster3
+-rm log/webster.log
+set log="log/webster.log";
+define webster node webster("default@0.0.0.0:62443");
+webster. define Protocol     cell "HTTPS"; # Default is "HTTPS"
+webster. define Authenticate cell "password";   # Default is "yes"
+webster. define AccessList   cell "security/AccessList.conf";
+webster. define DocumentRoot cell "web";    # Default is "web"

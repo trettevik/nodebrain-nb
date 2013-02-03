@@ -1,0 +1,3 @@
+#load "../lib/.libs/libnbp.so";
+#declare peer module {"../module/peer/.libs"};
+#declare tree module {"../module/tree/.libs"};

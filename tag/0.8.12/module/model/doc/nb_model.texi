@@ -1,0 +1,213 @@
+\input texinfo   @c -*-texinfo-*-
+@c %**start of header
+@setfilename nb_model.info
+@include version.texi
+@settitle Sample NodeBrain Module
+@c %**end of header
+
+@finalout
+@paragraphindent none
+@setchapternewpage odd
+
+@copying
+Sample NodeBrain Module@*
+June 2012@*
+The Boeing Company, P.O. Box 3707, Seattle, WA 98124, USA
+
+@sp 2
+@b{Version @value{VERSION}}
+
+Author: Ed Trettevik <eat@@nodebrain.org>
+
+Copyright @copyright{} 2012 The Boeing Company
+
+@sp 1
+Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
+
+@sp 1
+NodeBrain(TM) is a trademark of The Boeing Company.   All other trademarks and registered trademarks referenced in this document are the trademarks of their respective owners.
+
+@sp 2
+@b{Software License}
+
+@multitable {------------------------------} {----------------------------------------------------}
+@item Copyright @copyright{} 1998-2012 @tab The Boeing Company
+@item @tab Ed Trettevik <eat@@nodebrain.org>
+@end multitable
+
+The Sample NodeBrain Module is free software; you can redistribute it and/or  modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option)any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License formore details.
+
+You should have received a copy of the GNU General PublicLicense along with this program; if not, write to Free Software Foundation,Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+@end copying
+
+@iftex
+@titlepage
+@c @image{./image001,32pt,32pt,,gif}
+
+@titlefont{Sample NodeBrain Module}
+@sp 1
+@tex
+\vskip4pt \hrule height 3pt width \hsize
+@end tex
+@sp 3
+@b{Version @value{VERSION}}
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+
+@c History Preface and Document Conventions 
+@page
+@b{History}
+
+@multitable {-------------} {--------------------------------------------------------------------------------------------------------}
+@item 2012-06-04 @tab
+Title: @i{Sample NodeBrain Module}@*  
+Author: Ed  Trettevik <eat@@nodebrain.org>@*
+Publisher: The Boeing Company
+
+@item 2012-06-04 @tab
+Release 0.8.10
+@itemize @bullet
+@item This is a first edition.
+@end itemize
+
+@end multitable
+
+@page
+@b{Preface}
+
+@sp 1
+This manual is intended for users of the Sample NodeBrain Module, a plug-in for <Sample>.
+The reader is expected to be familiar with the basic concepts of NodeBrain.  See www.nodebrain.org for general information
+on NodeBrain.
+
+@include conventions.texi
+
+@end titlepage
+
+@end iftex
+
+@c ----------------------------------------------------------
+@c Not printed document
+
+@ifnottex
+@node Top
+@top Sample NodeBrain Module
+
+This manual is for the Sample NodeBrain Module (version @value{VERSION}, @value{UPDATED}) used to <Sample>.
+@*@*
+Copyright @copyright{} 2012 The Boeing Company
+@quotation
+Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
+@end quotation
+@ifnotplaintext
+@b{Short Table Of Contents}
+@menu
+* Concepts:: Foundation
+* Tutorial:: Introduction by Example
+* Commands:: Syntax and Semantics
+* Triggers:: Conditions and Response
+@end menu
+@menu
+* GNU Free Documentation License::
+* Index::
+@end menu
+@end ifnotplaintext
+@end ifnottex
+
+@c Set page footings
+@oddfooting @thistitle @| @| @thispage
+@evenfooting @thispage @| @| @thistitle
+
+@c Contents
+@oddheading @| @| 
+@evenheading @| @|
+@contents
+
+@c Set page headings for document
+@oddheading @thischapter @| @| @value{UPDATED-MONTH}
+@evenheading @value{UPDATED-MONTH} @| @| @thischapter
+
+@node Concepts
+@chapter Concepts
+@cindex Concepts
+
+The Sample module implements nodes that <Sample>.
+
+@node Tutorial
+@chapter Tutorial
+@cindex tutorial
+@include nb_model_tutorial.texi
+
+@node Commands
+@chapter Commands
+@cindex commands
+
+This section describes commands used with a Sample node.
+ 
+@section Define
+@cindex define command
+
+The @command{define} command is used to create a Sample node.
+ 
+@subheading Syntax
+@multitable {---------------------} {---------------------------------------------------------------}
+	   
+@item @i{auditDefineCmd}	
+@tab ::= @b{define} @v{s} @i{term} @v{s} @b{node} [@v{s}@i{audiDef} ] @bullet{} 	   
+			   
+@item @i{auditDef}	
+@tab ::= @b{audit(} "@i{filename} " , " @i{translatorName} " , @i{schedule} @b{)};	   
+			   
+@item @i{filename}	
+@tab ::= name of file to audit	   
+			   
+@item @i{translatorName}	
+@tab ::= name of translator file (*.nbx)	   
+			   
+@item @i{schedule}	
+@tab ::= @i{cellExpression}    	   
+
+@end multitable		 
+
+@*
+The @i{filename} and @i{translatorName} arguments may be any cell expression that resolves to a string value containing a filename. The value at definition time is used. An audit node will not response to or recognize changes to the value of expressions for these parameters.
+
+The @i{translatorName} by convention has a ".nbx" suffix. See "Translators" under the @command{DEFINE} command in the @i{NodeBrain Language Reference} for instructions on coding translator files.
+
+The schedule parameter may be any cell expression. New lines in the audit file are translated each time the schedule parameter transitions to TRUE. Normally a time condition is used to check the audit file for new lines on a periodic basis (e.g., every 10 seconds) as show in the following example.
+
+@example
+define Sample node Sample;
+@end example
+
+@section Assert
+@cindex assert command
+
+Assertions are not supported by this module.
+
+@section Node Commands
+@cindex node commands
+
+This module does not implement node commands.
+
+@section Module Commands
+
+This module does not implements module commands.
+
+@node Triggers
+@chapter Triggers
+@cindex triggers
+
+This modules does not implement triggers.
+
+@node GNU Free Documentation License
+@unnumbered GNU Free Documentation License
+@include fdl.texi
+
+@node Index
+@unnumbered Index 
+@printindex cp 
+@bye 
