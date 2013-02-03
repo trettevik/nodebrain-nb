@@ -1,6 +1,0 @@
-makeinfo --html --no-split --number-sections --css-include=../../model/doc/style.css nb_snmptrap.texi
-makeinfo --plaintext --no-split --number-sections --output=nb_snmptrap.txt nb_snmptrap.texi
-makeinfo --docbook --no-split --number-sections --output=nb_snmptrap_DocBook.xml nb_snmptrap.texi
-makeinfo --xml --no-split --number-sections nb_snmptrap.texi
-makeinfo --no-split --number-sections nb_snmptrap.texi
-texi2pdf -D -V -o nb_snmptrap.pdf nb_snmptrap.texi

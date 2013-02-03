@@ -1,6 +1,0 @@
-# don't enable for checking because the port may be used
-~ > # don't enable for checking because the port may be used
-declare snmptrap module {"../.libs"}; # for checking only
-~ > declare snmptrap module {"../.libs"}; # for checking only
-define snmptrap node snmptrap(50162):trace,dump;
-~ > define snmptrap node snmptrap(50162):trace,dump;

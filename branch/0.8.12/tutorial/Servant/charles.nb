@@ -1,6 +1,0 @@
-#!/usr/local/bin/nb -s
-# File: tutorial/Servant/charles.nb
-define price node servant:|=|:./charles.pl
-define ouch on(gas>4 or bread>3):stop;
-define getgasprice on(~(3s)):price:gas
-define getbreadprice on(~(3s)):price:bread
