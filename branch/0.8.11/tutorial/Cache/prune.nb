@@ -1,2 +1,0 @@
-horace. assert ?("purchase","London");
-show horace
