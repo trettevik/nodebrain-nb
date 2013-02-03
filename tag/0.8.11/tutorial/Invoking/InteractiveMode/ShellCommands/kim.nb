@@ -1,0 +1,3 @@
+#!/usr/local/bin/nb
+-date
+-ls -al kim.nb

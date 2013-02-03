@@ -1,0 +1,31 @@
+# 
+# File:   treeEvents.nb
+#
+# Title:  Sample event file for treeRules.nb
+#
+# Description:
+#
+#   Use this with treeRules.nb as shown here
+#   to experiment with nb_mod_tree.
+#
+#   ./treeRules.nb treeEvents.nb
+#
+# 2004/04/05 eat 0.6.0  constructed
+#=================================================
+assert tab(1,2,3);
+assert tab("abc","def","ghi");
+assert tab(1,"def");
+assert tab("a","b","c","d","e");
+show tab;
+assert a="a",b="b",c="c";
+assert a=1;
+assert a=1,b=2,c=3;          # rTrue  fires
+assert a="abc";              # rUnknown  fires
+assert b="def";
+assert c="ghi";              # rTrue  fires
+
+assert a=100,b=200;          # rUnknown  fires   
+assert tab(8,7,9);
+assert tab(100,200,300);  
+assert c=300;                # rTrue  fires
+assert !tab(100,200,300);    # rFalse  fires

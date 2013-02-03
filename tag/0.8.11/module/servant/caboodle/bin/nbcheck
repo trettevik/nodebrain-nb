@@ -1,0 +1,61 @@
+#!/bin/sh
+#
+# Name:   nbcheck
+#
+# Title:  NodeBrain Check Script Driver
+#
+# This is a little script to execute every NodeBrain check
+# script in a directory.  By default the directory is "check".
+# It is recommended that the current working directory be a
+# caboodle, that this script reside in the caboodle's "bin"
+# directory, and that all check scripts in the caboodle's
+# "check" directory be designed to operate within the caboodle
+# identified by the current working directory.
+# 
+# 2004/10/10 eat 0.6.1  first prototype
+# 2008/10/20 eat 0.7.3  modified to support "make distcheck"
+# 2008/10/20 eat 0.7.3  modified to execute nb via bin/nb caboodle symbolic link
+# 2009/02/28 eat 0.7.5  modified to work with older bourne shell
+#============================================================
+
+#set -x
+
+dir=$1
+checkpat=".*\.nb\~"
+
+if test "x${dir}" = "x"; then dir=check; fi
+
+maxit=0
+ 
+for file in ${dir}/*.nb- ${dir}/*.nb~; do
+  if test "$file" != "${dir}/*.nb-" -a "$file" != "${dir}/*.nb~"; then
+    echo "Check ${file}"
+    if test `expr "$file" : "$checkpat"` != 0 ; then
+      bin/nb +bU ~${file} > ${file}.out 2>&1 
+    else
+      bin/nb +bU $file > ${file}.out 2>&1
+      fi
+    exit=$?
+    if test $exit -gt 256; then exit=$exit-256; fi
+    if test $exit -ne 0; then
+      echo "exit code=${exit}";
+      if test -f "${file}~" && test `expr "$file" : "$checkpat"` != 0 ; then rm ${file}~; fi
+    else 
+      if test `expr "$file" : "$checkpat"` = 0 ; then if test -f "${file}.out"; then rm ${file}.out; fi 
+      else
+        diff ${file} ${file}~ > ${file}.diff 2>&1
+        if test $?==0; then
+          rm ${file}.diff ${file}.out ${file}~
+        else
+          echo "Serious error in check logic"
+          echo "See ${file}.out for more information"
+          exit=256
+          fi  
+        fi   
+      fi
+    if test "${exit}" -gt "${maxit}"; then maxit=$exit; fi
+    fi
+  done
+
+echo "Highest exit code=${maxit}"
+exit ${maxit}

@@ -1,0 +1,20 @@
+declare translator module {"../.libs"}; # for checking only
+~ > declare translator module {"../.libs"}; # for checking only
+define translator node translator("plan/translator/translator.nbx");
+~ > define translator node translator("plan/translator/translator.nbx");
+~ 1970/01/01 00:00:01 NB000I Loading translator "plan/translator/translator.nbx"
+~ ---------- --------
+~ (abc def (.*)){
+~   :assert a="$[1]";
+~   }
+~ ()
+~ ---------- --------
+~ 1970/01/01 00:00:02 NB000I Translator "plan/translator/translator.nbx" loaded successfully.
+translator: abc def hij
+~ > translator: abc def hij
+~ > translator. assert a="hij";
+translator: def hij abc
+~ > translator: def hij abc
+translator: hij abc def jih
+~ > translator: hij abc def jih
+~ > translator. assert a="jih";
