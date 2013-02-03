@@ -1,7 +1,0 @@
-#!/usr/local/bin/nb
-assert a=1,b=0,c=?,x,!y,?z;
-show -t
-#
-assert a=5,b=7;
-define r1 on(a<b);
-show (a<b)

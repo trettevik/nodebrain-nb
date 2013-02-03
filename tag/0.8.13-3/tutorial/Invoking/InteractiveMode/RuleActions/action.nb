@@ -1,4 +1,0 @@
-#!/usr/local/bin/nb
-define cmdRule on(a and b): show x;
-assert x=3;
-assert a,b;
