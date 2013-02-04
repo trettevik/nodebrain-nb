@@ -74,7 +74,7 @@
 #include <shlobj.h>
 #include <io.h>
 #include <process.h>
-#include <time.h>
+//#include <time.h>
 //#include <regexw.h>  // version 0.6.2 - rxspencer.dll from GnuWin32 project
 
 #else  // not windows
@@ -85,6 +85,15 @@
 #include <unistd.h>      // 0.6.4
 #if defined(HAVE_SYS_TYPES_H)
 #include <sys/types.h>
+#endif
+#if defined(HAVE_LIMITS_H)
+#include <limits.h>
+#endif
+#if defined(HAVE_SYS_LIMITS_H)
+#include <sys/limits.h>
+#endif
+#if defined(HAVE_MACHINE_LIMITS_H)
+#include <machine/limits.h>
 #endif
 #if defined(HAVE_SYS_SELECT_H)
 #include <sys/select.h>  // 0.6.4

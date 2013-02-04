@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2009 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -73,6 +73,7 @@
 *                       through this mechanism.
 * 2005/12/05 eat 0.6.4  Modified signal handling to exit when not agent
 * 2006/01/06 eat 0.6.4  Moved signal handling into nbstem.c
+* 2013-02-03 eat 0.8.13 Included support for nbkit command
 *=============================================================================
 */
 #include <nb/nb.h>
@@ -86,6 +87,21 @@ int nbMain(int argc,char *argv[]){     /* You may omit this conditional block if
 #endif                                 /* don't need a Windows service */
 
   nbCELL context=NULL;
+
+/*
+*  See if we should operate as nbkit instead of nb. This
+*  provides just enough support for nbkit functionality
+*  to avoid having to install the old nbkit perl script.
+*/
+  if(argc>0 && strlen(argv[0])>0){
+    char *name=argv[0];
+    char *basename=name+strlen(name)-1;
+    while(basename>name && *basename!='/') basename--;
+    if(*basename=='/') basename++;
+    if(strcmp(basename,"nbkit")==0){
+      return(nbKit(argc,argv));       // 2013-02-03 eat - CID 971428 Intentional - argc and argv tainted
+      }
+    }
 /*
 *  You might process the parameters here if this where
 *  a custom program using the NodeBrain library.  Then

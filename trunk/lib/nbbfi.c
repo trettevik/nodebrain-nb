@@ -193,6 +193,7 @@
 * 2012-12-31 eat 0.8.13 Checker updates
 * 2013-01-13 eat 0.8.13 Checker updates - rosecheckers
 * 2013-01-23 eat 0.8.13 Checker updates
+* 2013-02-03 eat 0.8.13 Checker updates - CID 971426
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -275,7 +276,7 @@ struct bfiindex *bfiIndexParse(char *s,char *msg,size_t msglen){ // 2012-12-31 e
         return(NULL);
         }
       strncpy(sto,cursor,sizeof(sto));  // strcpy would be fine, but help the checker
-      *(sto+sizeof(sto))=0;             // 2013-01-23 eat - VID 6827 FP in other application but help the checker more
+      *(sto+sizeof(sto)-1)=0;           // 2013-01-23 eat - VID 6827 FP in other application but help the checker more
       }
     else if((cursor=strstr(element,".."))!=NULL){ //if ".." found
       type=Range;
@@ -288,7 +289,7 @@ struct bfiindex *bfiIndexParse(char *s,char *msg,size_t msglen){ // 2012-12-31 e
         return(NULL);
        }
       strncpy(sto,cursor,sizeof(sto));  // strcpy would be fine, but help the checker
-      *(sto+sizeof(sto))=0;             // 2013-01-23 eat - VID 6829 FP in other application but help the checker more
+      *(sto+sizeof(sto)-1)=0;             // 2013-01-23 eat - VID 6829 FP in other application but help the checker more
       }
     else{
       type=Simple;

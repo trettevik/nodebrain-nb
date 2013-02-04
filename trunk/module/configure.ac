@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 #=============================================================================
 #
-# Copyright (C) 1998-2011 The Boeing Company
+# Copyright (C) 1998-2013 The Boeing Company
 #                         Ed Trettevik <eat@nodebrain.org>
 #
 # NodeBrain is free software; you can redistribute it and/or modify
@@ -58,7 +58,7 @@
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([nb_module],[0.8.13],[bugs@nodebrain.org])
+AC_INIT([nb_module],[0.8.14],[bugs@nodebrain.org])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
@@ -111,6 +111,19 @@ AC_SUBST([NB_MOD_PATH],[../.libs])
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([strchr])
 AC_CHECK_FUNCS([setenv])
+
+# Checks for header files.
+AC_HEADER_DIRENT
+AC_HEADER_STDC
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h netinet/in.h stdlib.h string.h sys/socket.h sys/time.h time.h sys/limits.h limits.h machine/limits.h])
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+AC_STRUCT_TM
+AC_TYPE_UID_T
 
 #===================================== 
 # Let the more complicated modules configure themselves

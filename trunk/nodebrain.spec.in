@@ -90,9 +90,9 @@ This package contains development files for nodebrain.
 %files devel
 %defattr(-,root,root,-)
 %dir %{_includedir}/nb
-%{_includedir}/nb
-%{_libdir}/*.so
-%{_libdir}/*/*.so
+%{_includedir}/nb/*
+%exclude %{_libdir}/*.so
+%exclude %{_libdir}/*/*.so
 %{_libdir}/pkgconfig/*.pc
 %{_mandir}/man3/*.3*
 
@@ -116,9 +116,9 @@ This package contains static libraies for nodebrain.
 #-------------------------------------------------------------------------
 
 %changelog
-* Fri Feb 26 2010 John Ellson <ellson@research.att.com> - 0.8.3-1
-- First rpm packaging.
-
 * Sun Jan 20 2013 Ed Trettevik <eat@nodebrain.org> - 0.8.13-1
 - Updated for 0.8.13
+
+* Fri Feb 26 2010 John Ellson <ellson@research.att.com> - 0.8.3-1
+- First rpm packaging.
 

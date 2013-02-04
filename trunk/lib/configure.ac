@@ -90,7 +90,7 @@
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([libnb],[0.8.13],[bugs@nodebrain.org])
+AC_INIT([libnb],[0.8.14],[bugs@nodebrain.org])
 AC_CONFIG_SRCDIR([nb.c])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(config)
@@ -117,7 +117,7 @@ LT_SYS_MODULE_EXT
 LT_FUNC_DLSYM_USCORE
 
 # define a release date variable
-AC_DEFINE(NB_RELEASE_DATE,"2012-12-25",[Define release date])
+AC_DEFINE(NB_RELEASE_DATE,"2013-02-02",[Define release date])
 
 # Checks for programs.
 AC_PROG_CC
@@ -141,7 +141,7 @@ AC_SEARCH_LIBS(fmod,m,,[AC_MSG_ERROR(Required math library -lm not found. Specif
 # Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_STDC
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h netinet/in.h stdlib.h string.h sys/socket.h sys/time.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h netinet/in.h stdlib.h string.h sys/socket.h sys/time.h sys/limits.h limits.h machine/limits.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST

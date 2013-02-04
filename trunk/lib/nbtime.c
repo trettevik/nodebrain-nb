@@ -164,7 +164,7 @@
 */
 #define _USE_32BIT_TIME_T
 #include <nb/nbi.h>
-#include <limits.h>
+//#include <limits.h>
 #if defined(WIN32)
 //#include <sys/timeb.h>
 #endif

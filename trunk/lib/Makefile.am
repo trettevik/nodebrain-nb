@@ -64,6 +64,7 @@ libnb_a_HEADERS = \
   include/nb/nbcmd.h \
   include/nb/nbidentity.h \
   include/nb/nbip.h \
+  include/nb/nbkit.h \
   include/nb/nblist.h \
   include/nb/nblistener.h \
   include/nb/nblog.h \
@@ -114,6 +115,7 @@ libnb_la_SOURCES = \
   nbiconv.c \
   nbidentity.c \
   nbip.c \
+  nbkit.c \
   nblist.c \
   nblistener.c \
   nblog.c \
@@ -165,6 +167,7 @@ libnb_la_SOURCES = \
   include/nb/nbiconv.h \
   include/nb/nbidentity.h \
   include/nb/nbip.h \
+  include/nb/nbkit.h \
   include/nb/nblist.h \
   include/nb/nblistener.h \
   include/nb/nbmacro.h \
