@@ -29,4 +29,5 @@ EXTRA_DIST = \
   caboodle/agent/server.nb \
   caboodle/check/peer.nb- \
   caboodle/log/README \
+  caboodle/queue/clunk/default/README \
   caboodle/socket/README 

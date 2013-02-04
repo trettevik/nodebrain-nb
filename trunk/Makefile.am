@@ -122,6 +122,9 @@ EXTRA_DIST = \
   Readme.txt \
   nodebrain.spec.in \
   nodebrain.spec \
+  debian/control \
+  debian/rules \
+  debian/changelog \
   nb.pc.in \
   build-nb \
   install-nb \
@@ -161,6 +164,7 @@ nodebrain_SOURCES =
 install-exec-hook:
 	cd ${DESTDIR}@bindir@ && mv -f nodebrain nb-$(VERSION)$(EXEEXT)
 	cd ${DESTDIR}@bindir@ && if test ! -f nb -a ! -h nb; then ln -s nb-$(VERSION)$(EXEEXT) nb; fi
+	cd ${DESTDIR}@bindir@ && if test ! -f nbkit -a ! -h nbkit; then ln -s nb nbkit; fi
 
 ## Remove $(bindir)/nb-x.x.x program and $(libdir)/nb/x.x.x directory
 

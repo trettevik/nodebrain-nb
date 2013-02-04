@@ -65,6 +65,7 @@ browser interface for administrators.
 %dir %{_libdir}/nb/0.8
 %{_bindir}/nb
 %{_bindir}/nb-%{version}
+%{_bindir}/nbkit
 %{_libdir}/libnb-%{version}.so
 %{_libdir}/libnb.so
 %{_libdir}/nb/*.so.*
