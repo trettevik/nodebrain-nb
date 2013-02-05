@@ -11,4 +11,5 @@ EXTRA_DIST = \
   caboodle/check/baseline.nb~ \
   caboodle/cache/baseline/test/README \
   doc/nb_baseline.texi \
+  doc/nb_baseline_tutorial.texi \
   doc/version.texi 

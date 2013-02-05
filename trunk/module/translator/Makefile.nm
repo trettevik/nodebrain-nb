@@ -9,4 +9,7 @@ nb_translator_la_LDFLAGS = -module -version-info 0:1
 
 EXTRA_DIST = \
   caboodle/check/translator.nb~ \
-  caboodle/plan/translator/translator.nbx  
+  caboodle/plan/translator/translator.nbx \
+  doc/nb_translator.texi \
+  doc/nb_translator_tutorial.texi \
+  doc/version.texi

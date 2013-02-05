@@ -57,6 +57,8 @@
 
 #include <nb/nbstd.h>         // define some standard system stuff
 
+#include <nb/nbkit.h>         // nbkit command support
+
 // Supporting interface includes
 
 #include <nb/nbspine.h>       // Spinal API

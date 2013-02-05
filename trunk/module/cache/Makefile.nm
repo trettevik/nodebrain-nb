@@ -8,4 +8,7 @@ nb_cache_la_CFLAGS  = $(NB_MOD_CFLAGS)
 nb_cache_la_LDFLAGS = -module -version-info 0:1
 
 EXTRA_DIST = \
-  caboodle/check/cache.nb~ 
+  caboodle/check/cache.nb~ \
+  doc/nb_cache.texi \ 
+  doc/nb_cache_tutorial.texi \
+  doc/version.texi

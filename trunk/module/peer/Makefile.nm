@@ -30,4 +30,7 @@ EXTRA_DIST = \
   caboodle/check/peer.nb- \
   caboodle/log/README \
   caboodle/queue/clunk/default/README \
-  caboodle/socket/README 
+  caboodle/socket/README \
+  doc/nb_peer.texi \
+  doc/nb_peer_tutorial.texi \
+  doc/version.texi 

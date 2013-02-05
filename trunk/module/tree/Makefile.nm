@@ -8,4 +8,7 @@ nb_tree_la_CFLAGS  = $(NB_MOD_CFLAGS)
 nb_tree_la_LDFLAGS = -module -version-info 0:4
 
 EXTRA_DIST = \
-  caboodle/check/tree.nb~
+  caboodle/check/tree.nb~ \
+  doc/nb_tree.texi \
+  doc/nb_tree_tutorial.texi \
+  doc/version.texi

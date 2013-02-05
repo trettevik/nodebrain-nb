@@ -10,4 +10,7 @@ nb_pipe_la_LDFLAGS = -module -version-info 0:1
 EXTRA_DIST = \
   caboodle/check/pipe.nb~ \
   caboodle/pipe/README \
-  caboodle/servant/echo.sh
+  caboodle/servant/echo.sh \
+  doc/nb_pipe.texi \
+  doc/nb_pipe_tutorial.texi \
+  doc/version.texi

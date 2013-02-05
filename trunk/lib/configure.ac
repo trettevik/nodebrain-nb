@@ -124,11 +124,14 @@ AC_PROG_CC
 AM_PROG_CC_C_O
 
 # Checks for libraries.
-LIBS="-lncurses"
+# LIBS="-lncurses"
 AC_CHECK_LIB(pcre,pcre_compile,,[AC_MSG_ERROR(Required library -lpcre not found.  Specify path in LDFLAGS.)])
+AC_SEARCH_LIBS(initscr,ncurses)
 AC_CHECK_LIB(readline,readline,,[AC_MSG_ERROR(Required library -lreadline not found. Specify path in LDFLAGS.)])
 AC_CHECK_LIB(history,add_history,,[AC_MSG_ERROR(Required library -lhistory not found. Specify path in LDFLAGS.)])
-AC_CHECK_LIB(ssl,SSL_library_init,,[AC_MSG_ERROR(Required library -lssl not found. Specify path in LDFLAGS.)])
+#AC_CHECK_LIB(ssl,SSL_library_init,,[AC_MSG_ERROR(Required library -lssl not found. Specify path in LDFLAGS.)])
+AC_SEARCH_LIBS(SSL_library_init,ssl)
+AC_SEARCH_LIBS(X509_get_subject_name,crypto)
 #PKG_CHECK_MODULES(libssl,openssl)
 #PKG_CHECK_MODULES([libssl],[openssl],[LIBS="$LIBS `$PKG_CONFIG --cflags --libs openssl`"],[AC_MSG_ERROR(Required library -lssl not found. You may want to download it from http://www.openssl.org/ or locate it and include in LDFLAGS or LD_LIBRARY_PATH to support this build.)])
 
@@ -136,7 +139,7 @@ AC_SEARCH_LIBS(socket,socket)
 AC_SEARCH_LIBS(inet_ntoa,nsl)
 
 AC_SEARCH_LIBS(fmod,m,,[AC_MSG_ERROR(Required math library -lm not found. Specify path in LDFLAGS.)])
-#AC_CHECK_LIB(dl, main)
+AC_SEARCH_LIBS(dlopen,dl)
 
 # Checks for header files.
 AC_HEADER_DIRENT

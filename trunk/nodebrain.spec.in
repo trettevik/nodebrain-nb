@@ -1,7 +1,10 @@
-Summary: A declarative rule-based language for state and event monitoring
 Name: @PACKAGE_NAME@
 Version: @PACKAGE_VERSION@
 Release: 1%{?dist}
+
+%define _disable_ld_no_undefined 1
+
+Summary: A declarative rule-based language for state and event monitoring
 License: GPLv2
 Group: Applications/Engineering
 Source: @PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.gz

@@ -66,13 +66,14 @@
 ## 2008/10/17 eat 0.7.2  Modified for LIBTOOL
 ## 2008/10/24 eat 0.7.3  Moving modules down to a sub-package in "module" directory
 ## 2010/02/27 eat 0.7.9  Included DESTDIR
+## 2013/02/03 eat 0.8.13 Included nbkit man pages
 ##=============================================================================
 
 SUBDIRS = lib . module
 
 info_TEXINFOS = doc/nodebrain.texi doc/nbTutorial/nbTutorial.texi doc/nbLanguage/nbLanguage.texi
-doc_nbTutorial_TEXINFOS = doc/fdl.texi
-doc_nbLanguage_TEXINFOS = doc/fdl.texi
+doc_nbTutorial_nbTutorial_TEXINFOS = doc/nbTutorial/fdl.texi
+doc_nbLanguage_nbLanguage_TEXINFOS = doc/nbLanguage/fdl.texi
 
 dist_man_MANS = \
   man/caboodle.nb.5 \
@@ -87,7 +88,9 @@ dist_man_MANS = \
   man/nb.mod.7 \
   man/nb.syn.5 \
   man/nodebrain.1 \
-  man/user.nb.5
+  man/user.nb.5 \
+  man/nbkit.1 \
+  man/nbkit-caboodle.7
 
 # Build html pages for man pages
 
@@ -103,6 +106,10 @@ html/nb.mod.html: man/nb.mod.7
 	bin/nbman2ht man/nb.mod.7 > html/nb.mod.html
 html/nb.syn.html: man/nb.syn.5
 	bin/nbman2ht man/nb.syn.5 > html/nb.syn.html
+html/nbkit.html: man/nbkit.1
+	bin/nbman2ht man/nbkit.1 > html/nbkit.html
+html/nbkit-caboodle.html: man/nbkit-caboodle.7
+	bin/nbman2ht man/nbkit-caboodle.7 > html/nbkit-caboodle.html
 
 noinst_DATA = \
   html/nb.html \
@@ -110,7 +117,9 @@ noinst_DATA = \
   html/nb.lib.html \
   html/nb.man.html \
   html/nb.mod.html \
-  html/nb.syn.html
+  html/nb.syn.html \
+  html/nbkit.html \
+  html/nbkit-caboodle.html
 
 ##NB_MOD_SUFFIX = so
 

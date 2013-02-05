@@ -6,7 +6,7 @@ Maintainer: Ed Trettevik <ed.a.trettevik@boeing.com>
 Changed-By: Ed Trettevik <ed.a.trettevik@boeing.com>
 Architecture: any
 Package: nodebrain
-Depends: libpcre3, libssl, libreadline
+Depends: ncurses, libpcre3, libssl, libcrypto, libreadline
 Build-Depends: debhelper (>=7.0.50~), libpcre3-dev, libssl-dev, libreadline-dev
 Files:
-f814fd20b17a6bc30f0f76acb24b1efe 2000879 nodebrain-0.8.14.tar.gz
+deafa03799aefc693333255921d797e4 2071911 nodebrain-0.8.14.tar.gz

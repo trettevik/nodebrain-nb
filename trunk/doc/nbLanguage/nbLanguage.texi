@@ -198,11 +198,11 @@ We use a modified BNF (Backus Neur Form) notation to describe the syntax of the 
 @cartouche
 @b{Syntax}
 @multitable {----------------} {---} {-----------------------------------------------------------------------------------------}
-@item @i{assertCmd}  @tab ::= @tab ( @b{assert} | @b{`} ) [@i{assertionList} ] [ @b{;} [@i{comment} ] ] @b{@bullet{}}
-@item @i{assertionList}  @tab ::= @tab @i{cellAssertion} @b{ ,} @i{cellAssertion}
+@item @i{assertCmd}  @tab ::= @tab ( @b{assert} s* | @b{`} ) [@i{assertionList} ] [ @b{;} [@i{comment} ] ] @b{@bullet{}}
+@item @i{assertionList}  @tab ::= @tab @i{cellAssertion} @{ @b{,} @i{cellAssertion} @}
 @item @i{cellAssertion}  @tab ::= @tab @i{cellIdentifier} (@b{=} | @b{==} ) @i{cellExpression} | [@b{!} | @b{?} ] @i{cellIdentifier}
 @item @i{cellIdentifier} @tab ::= @tab @i{identifier} | [@i{identifier} ] @b{(} [@i{cellist} ] @b{)}
-@item @i{cellList}  @tab ::= @tab @i{cellExpression}   @b{,}  @i{cellExpression}
+@item @i{cellList}  @tab ::= @tab @i{cellExpression}  @{ @b{,} @i{cellExpression} @}
 @end multitable
 @end cartouche
 
@@ -227,7 +227,7 @@ We deviate from BNF in the distinction between terminal symbols and syntax rule 
 To emphasize the importance of white space or an end-of-line character, we use special symbols.
 
 @example
-	š		White space identifier
+	s*		White space identifier
 	@bullet{}	End-of-line identifier ( LF | CR | null character)
 @end example
 
@@ -260,12 +260,12 @@ The following rules describe the syntax of NodeBrain's modified BNF.
 @multitable {------------------------} {---} {-------------------------------------------------------------------------}
 
 @item @i{rule}  @tab ::= @tab @i{identifier}@b{ ::=} @i{expression}
-@item @i{expression}  @tab ::= @tab  @i{term} @{ š @b{|} š @i{term} @}
-@item @i{term} @tab ::= @tab @i{factor} [ š @i{term} ]
+@item @i{expression}  @tab ::= @tab  @i{term} @{ s* @b{|} s* @i{term} @}
+@item @i{term} @tab ::= @tab @i{factor} [ s* @i{term} ]
 @item @i{factor}  @tab ::= @tab @i{identifier} | @i{spaceIdentifier} | @i{eolIdentifier} | @i{terminal} | @i{subExpression} | @i{optionalExpression} | @i{repeatExpression}
 @item @i{identifier}  @tab ::=  @tab @i{alpha} @{ @i{alpha} @}
 @item @i{alpha}  @tab ::=  @tab @b{a-z} | @b{A-Z}
-@item @i{spaceIdentifier}  @tab ::=  @tab @i{š} Represents one or more space characters
+@item @i{spaceIdentifier}  @tab ::=  @tab @i{s*} Represents one or more space characters
 @item @i{eolIdentifier}  @tab ::=  @tab @b{@bullet{} } Represents end-of-line character
 @item @i{terminal}  @tab ::=  @tab @i{string} | " string " | @i{boldString}
 @item @i{string}  @tab ::=  @tab @i{character} @{ @i{character} @}
@@ -390,12 +390,9 @@ Some common numeric functions are also recognized by the interpreter. Examples a
 @multitable {-------------------------------} {---------------}
 
 @headitem Function Call Example @tab Result
-@item mod(45,2) @tab
-@item 1 @tab 
-@item floor(16.2345 @tab
-@item 16 @tab
-@item exp(35.5) @tab
-@item e35.4 @tab
+@item mod(45,2) @tab 1  
+@item floor(16.2345) @tab 16 
+@item exp(35.5) @tab @math{e^{35.4}} 
 @end multitable
 
 @section True, False, and Unknown
@@ -412,7 +409,7 @@ In addition, any string and any number other than 0 are true in a logical contex
 
 @example
 "abc"	(true)
-27 (true)
+27      (true)
 -5.4	(true)
 @end example
 
@@ -484,7 +481,7 @@ While normal Boolean logic is limited to values of 0 and 1 (False and True), Nod
 
 @multitable {-----------------}{------------------}{----------------}
 
-@headitem A @tab B@item A & B
+@headitem A @tab B @tab A & B
 @item 0 @tab 0 @tab 0
 @item 0 @tab 1 @tab 0
 @item 0 @tab ? @tab 0
@@ -614,7 +611,7 @@ The previous section showed how simple @code{ON} rules can be used to implement 
 @image{langref1-8,,,,png}
 
 @example 
-@{on(green);on(blue);on(red); @i{action}; @}
+@{on(green);on(blue);on(red);@i{action};@}
 @end example
 
 Sequence rules are covered in more detail in Chapter 6, Rules.
@@ -958,7 +955,7 @@ A string literal is, no surprise here, a sequence of characters enclosed in quot
 Numbers are always stored as floating-point objects. The following numeric literal identifiers all reference the same value.
 
 @example
-	2100		2.1e+3	21.0e2
+	2100	2.1e+3	   21.0e2
 @end example
 
 A number must always start with a numeric digit (0-9) or a sign (+ or -). Here are some more examples.
@@ -985,17 +982,17 @@ This chapter describes the basic syntax and semantics of logical expressions use
 
 @cartouche
 @b{Syntax}
-@multitable {-------------------------} {---} {----------------------------------------------------------------------------------------------}
+@multitable {-------------------------} {---} {---------------------------------------------------------------------------}
 @item @i{condition} @tab ::= @tab @i{relationalCondition} | @i{infixBoolCondition} | @i{atomicCondition} | @i{delayedCondition}
-@item @i{relationalCondition}  @tab ::= @tab @i{cell} [š] (@b{=} | @b{<>} | @b{<} | @b{>} | @b{<=} | @b{>= }) [š] @i{cell} 
-@item @i{cell}  @tab ::= @tab @i{identifier} | @i{stringLiteral} | @i{numberLiteral} | @b{?} | @b{ (} [š] @i{cellExpression} [š]  @b{) }|   @i{nodeCondition}
-@item @i{infixBoolCondition}  @tab ::= @tab @i{condition} [š] (@i{infixBoolOperator} ) [š] @i{simpleCondition}
-@item @i{infixBoolOperator}  @tab ::= @tab @b{and} | @b{&} | @b{nand} | @b{!&} | @b{or} | @b{|} | @b{nor} | @b{!|} | xor | @b{|!&} | @b{^} | @b{&^&} | @b{|^|} | @b{&~&} | @b{|~|}
+@item @i{relationalCondition}  @tab ::= @tab @i{cell} [s*] (@b{=} | @b{<>} | @b{<} | @b{>} | @b{<=} | @b{>= }) [s*] @i{cell} 
+@item @i{cell}  @tab ::= @tab @i{identifier} | @i{stringLiteral} | @i{numberLiteral} | @b{?} | @b{ (} [s*] @i{cellExpression} [s*]  @b{) }|   @i{nodeCondition}
+@item @i{infixBoolCondition}  @tab ::= @tab @i{condition} [s*] (@i{infixBoolOperator} ) [s*] @i{simpleCondition}
+@item @i{infixBoolOperator}  @tab ::= @tab @b{and} | @b{&} | @b{nand} | @b{!&} | @b{or} | @b{|} | @b{nor} | @b{!|} | @b{xor} | @b{|!&} | @b{^} | @b{&^&} | @b{|^|} | @b{&~&} | @b{|~|}
 @item @i{simpleCondition} @tab ::= @tab @i{relationalCondition} |@i{atomicCondition}
 @item @i{atomicCondition} @tab ::= @tab @i{cell} | @i{prefixBoolCondition} | @i{timeCondition}
-@item @i{prefixBoolCondition} @tab ::= @tab (@b{not} | @b{! } | @b{!!} | @b{?} | @b{!?} | @b{[]} ) @i{automicCondition}
+@item @i{prefixBoolCondition} @tab ::= @tab (@b{not} | @b{! } | @b{!!} | @b{?} | @b{!?} | @b{[]} ) @i{atomicCondition}
 @item @i{nodeCondition} @tab ::= @tab @i{identifier} "@b{(} " @i{cellList} "@b{)}"
-@item @i{cellList} @tab ::= @tab [@i{cellExpression} @{ @b{,} @i{cellExpression} @} ]
+@item @i{cellList} @tab ::= @tab [ @i{cellExpression} @{ @b{,} @i{cellExpression} @} ]
 @item @i{timeCondition} @tab ::= @tab @b{~} "@b{(} " @i{timeExpression} "@b{)}"
 @item @i{delayedCondition} @tab ::= @tab @i{condition} @b{~^} (@b{1} | @b{0} | @b{?} ) "@b{(} " @i{timeExpression} "@b{)}"
 @end multitable
@@ -1008,10 +1005,10 @@ A subset of NodeBrain condition syntax should be familiar to anyone who has prog
 Relational operators always return Unknown (?) when one or more of the operands is unknown. When both of the operands are Known (K) and of the same type (number or string), relational operators return True (1) or False (0) as you would expect for equal, not equal, less than, greater than, less than or equal, and greater than or equal.
 
 @example
-	? – Unknown      K – Known
+	? -  Unknown      K -  Known
 @end example
 
-@multitable {-----}{----}{----------}{----------}{----------}{----------}{----------}{----------}
+@multitable {------------}{-----------}{----------}{----------}{----------}{----------}{----------}{----------}
 @headitem A @tab B @tab A = B @tab A<>B @tab A < B @tab A > B @tab A<=B @tab A>=B
 @item ? @tab ? @tab ? @tab ? @tab ? @tab ? @tab ? @tab ?
 @item ? @tab K @tab ? @tab ? @tab ? @tab ? @tab ? @tab ?
@@ -1022,7 +1019,7 @@ Relational operators always return Unknown (?) when one or more of the operands 
 
 Relational operators will accept operands of different types. However, NodeBrain arbitrarily claims that numbers are less than strings and strings are less than objects of any other type.
 @example
-n – number   <   s – string   <   . – any other type
+n -  number   <   s -  string   <   . -  any other type
 @end example
 
 @multitable {-----}{----}{----------}{----------}{----------}{----------}{----------}{----------}
@@ -1084,7 +1081,7 @@ A double NOT (!!) will convert any True value to 1, and a NOT UNKNOWN (!?) will 
 
 @multitable {----------}{----------}{--------------------------}
 @headitem Prefix @tab Function @tab Description
-@item A?B @tab Default  @tab B if A is Unkown, else A
+@item A?B @tab Default  @tab B if A is Unknown, else A
 @item (A|B)&A @tab @tab B if A is False, else A
 @item (A&B)|A @tab @tab B if A is True, else A
 @item A|B @tab Or  @tab B if A is False or (A is Unknown and B is not False), else A
@@ -1106,14 +1103,14 @@ A double NOT (!!) will convert any True value to 1, and a NOT UNKNOWN (!?) will 
 
 All but one infix operator supports standard Boolean logic, but they are extended to support Unknown values and True values other than 1. They are also extended to return True values other than 1 in some cases. A "Default" operator provides a way to specify default values to replace Unknown. 
 
-@multitable {----------}{----------}{--------------------------}
+@multitable {--------------}{----------------}{----------------------------------------------}
 @headitem Infix  @tab Function  @tab Description 
 @item A && B @tab Lazy AND @tab B if A is True, else A 
 @item A & B @tab AND @tab Both A and B are True
-@item A !& B @tab NAND @tab Not (A and B) – either A or B is False
+@item A !& B @tab NAND @tab Not (A and B) -  either A or B is False
 @item A || B @tab Lazy OR @tab B if A is False, else A
 @item A | B @tab OR @tab Either A or B is True
-@item A !| B @tab NOR @tab Not (A or B) – both A and B are False
+@item A !| B @tab NOR @tab Not (A or B) -  both A and B are False
 @item A|!&B @tab XOR @tab (A or B) and not (A and B)
 @item A ? B @tab Default @tab A if known, else B
 @end multitable
@@ -1158,13 +1155,13 @@ If you study the truth table above, you will notice shaded cells indicating when
 @cindex Enabled Monitoring Operators
 The enabled monitoring operators are similar to the lazy @code{AND} (&&) and lazy @code{OR} (||) described in the previous section in that the left operand determines if the cell subscribes to the right operand. However, the logic table is modified so the left operand simply controls when the right operand is monitored. The cell value is always Unknown when the right operand is not monitored and always the value of the right operand when it is monitored.
 
-@multitable {----------}{----------}{---------------------------}
+@multitable {----------}{----------}{---------------------------------------------}
 @headitem Infix @tab Function @tab Description
 @item A &~& B @tab AndMon @tab B If A is True, else Unknown
 @item A |~| B @tab OrMon @tab B If A is False, else Unknown 
 @end multitable
 
-@multitable {----------}{----------}{----------}{----------}
+@multitable {-----------------}{----------------}{----------------}{---------------}
 @headitem A @tab B @tab A &~& B @tab A |~| B
 @item 0 @tab 0 @tab ? A @tab 0 B 
 @item 0 @tab T @tab ? A @tab T B
@@ -1184,13 +1181,13 @@ These operators should be used instead of the lazy @code{AND} and @code{OR} when
 @cindex Value Capture Operators
 The value capture operators take the idea of enabled monitoring a bit further. These operators never subscribe to the value of the right operand. Instead, they compute and capture the value of the right operand when the left operand toggles to a specific state.
 
-@multitable {----------}{----------}{---------------------------}
+@multitable {---------------}{---------------}{-----------------------------------------}
 @headitem Infix @tab Function @tab Description
 @item A &^& B @tab And Capture @tab If A toggles True, capture B
 @item A |^| B @tab Or Capture @tab If A toggles False, capture B
 @end multitable
 
-@multitable {----------}{----------}{----------}{----------}{----------}
+@multitable {-------------}{---------------}{---------------}{---------------}{-------------}
 @headitem A @tab B @tab C @tab A &^& B @tab A |^| B
 @item 0 ->T @tab B @tab C @tab B @tab C 
 @item ? ->T @tab B @tab C @tab B @tab C
@@ -1402,7 +1399,7 @@ The behavior of the state delay operators is summarized in the following tables,
 
 @subheading assert c2==(c1 ~^?(delay))
 @multitable {-------------}{-------------}{-------------}
-@headitem  C1 at time t @tab C2 at time t C2 at t+delay
+@headitem  C1 at time t @tab C2 at time t @tab C2 at t+delay
 @item ? @tab C2 @tab ?
 @item F @tab F @tab F
 @item T @tab T @tab T
@@ -1478,7 +1475,7 @@ NodeBrain rules schedule actions. The scheduling of an action may be event based
 
 @cartouche
 @b{Syntax}
-@multitable {-----------------------} {---} {------------------------------------------------------}
+@multitable {-----------------------} {---} {----------------------------------------------------------------}
 @item @i{timeExpression} @tab ::= @tab @i{timePrefixExpr | timeInfixExpr | timeIndexExpr | timeFunctionExpr}
 @item @i{timePrefixExpr} @tab ::= @tab (@b{=} | "@b{|}" | @b{#} | @b{!} | @b{&} | @b{~} | @b{%} ) @i{timeSet}
 @item @i{timeInfixExpr} @tab ::= @tab @i{timeSet}  (@b{,} | @b{.} | @b{!} | @b{#} | @b{&} | "@b{|}" | @b{%} ) @i{timeSet}
@@ -1510,7 +1507,7 @@ A time condition is true during specific time intervals, so it can be visualized
 
 @image{langref4-1-2,,,,png}
 
-The word "interval" means a segment of time with a defined start and stop time. The start time is included and the stop time is excluded. In other words, C(t) is true where t>=start and t<stop for any interval in the set which represents C. The word "uration" means a segment of time of a given length, but without a fixed start time. It is important not to confuse the use of the words "interval" and "duration."
+Here, the word "interval" means a segment of time with a defined start and stop time. The start time is included and the stop time is excluded. In other words, C(t) is true where t>=start and t<stop for any interval in the set which represents C. The word "duration" means a segment of time of a given length, but without a fixed start time. It is important not to confuse the use of the words "interval" and "duration."
 
 @subsection Partitioned Set
 @cindex Partitioned Set
@@ -1518,13 +1515,13 @@ A partitioned set is a special case where the end of each interval is the start 
 
 @image{langref4-1-3,,,,png}
 
-Although you might expect time conditions represented by partitioned sets to be true for all time, they actually become false and then return to true at the beginning of each interval. This provides a "leading edge" to trigger events.
+Although you might expect time conditions represented by partitioned sets to be true for all time, they actually become false and then return to true at the beginning of each interval. This provides a leading edge to trigger events.
 
 @image{langref4-1-3b,,,,png}
 
 @subsection Normal Set
 @cindex Normal Set
-A "normal" set does not have overlapping intervals. A set is "abnormal" when it has overlapping intervals. Abnormal sets are useful for defining complex time conditions as you will see later. However, the set for a complete time condition is normalized for interpretation as a Boolean function of time. The figure below illustrates how an abnormal set is normalized for condition interpretation. A condition is true at times included in any interval. When one interval starts at the stop time of another interval, the intervals are not combined. They only combine when the intervals overlap. Normalization will not alter a partitioned set.
+A normal set does not have overlapping intervals. A set is abnormal when it has overlapping intervals. Abnormal sets are useful for defining complex time conditions as you will see later. However, the set for a complete time condition is normalized for interpretation as a Boolean function of time. The figure below illustrates how an abnormal set is normalized for condition interpretation. A condition is true at times included in any interval. When one interval starts at the stop time of another interval, the intervals are not combined. They only combine when the intervals overlap. Normalization will not alter a partitioned set.
 
 @image{langref4-1-4,,,,png}
   
@@ -1550,7 +1547,7 @@ day(1,15,28)
  
 @subsection Operators
 @cindex Operators
-Time expression operators are used to construct time interval sets based on other time interval sets. Some operators have a "Boolean logic" orientation. For example, when used in a time expression, @i{and}, @i{or}, and @i{not} operate on time interval sets to produce new sets that behave in the same way separate time conditions would if combined using these same "Boolean" operators. The following logical expressions will have the same value at any given time.
+Time expression operators are used to construct time interval sets based on other time interval sets. Some operators have a Boolean logic orientation. For example, when used in a time expression, @i{and}, @i{or}, and @i{not} operate on time interval sets to produce new sets that behave in the same way separate time conditions would if combined using these same Boolean operators. The following logical expressions will have the same value at any given time.
 
 @example
 threshold=5 & @b{~(monday)} & ! (@b{~(january)} | @b{~(june)})
@@ -1560,7 +1557,7 @@ threshold=5 & @b{~(monday&!(january|june))}
 Other operators are based purely on the notion of time interval sets. The figure below illustrates the @i{union} operation, which accepts any two sets, @i{a} and @i{b}, as operands and produces a new set (@i{a},@i{b}). This condition includes the time intervals from both sets. (The @i{union} operator symbol is a comma.)
 @image{langref4-1-7,,,,png}
 
-The union operator (,) is an example of an infix operator, meaning it is specified between two sets. Other operators, like "!" (not), work on a single set. These operators are specified before the set and are called "prefix" operators.
+The union operator (,) is an example of an infix operator, meaning it is specified between two sets. Other operators, like "!" (not), work on a single set. These operators are specified before the set and are called prefix operators.
 
 A complex operator, [], enables indexed selection. The example below selects January 5.
 
@@ -1585,9 +1582,9 @@ severity=9 and user="Fred" and ~(sunday)
 
 @item Time functions generate sets of time intervals based on the Gregorian calendar.
 @example
-Monday
-June
-Quarter
+monday
+june
+quarter
 @end example
 @item Parameters select a subset of a time function's intervals.
 
@@ -1612,16 +1609,16 @@ If @i{a} and @i{b} are time interval sets, @i{a}[n] @i{b} is a set of intervals 
 
 @image{langref4-2,,,,png}
 
-The number @i{} may be preceded by a minus sign (-) to reverse the direction of count. That is, @i{a[-n]b} selects the @i{n}th from the last overlapping interval of @i{a} for each interval of @i{b}.
+The number @i{n} may be preceded by a minus sign (-) to reverse the direction of count. That is, @i{a[-n]b} selects the @i{n}th from the last overlapping interval of @i{a} for each interval of @i{b}.
 
 Here are some examples of indexed selection using time functions as operands.
 
 @example
-       day[1]month		first day of the month
-       day[-1]month		last day of the month
-       month[2]year		second month of the year
-       day[62]year		sixty-second day of the year
-       day[-3]year		3rd to last day of the year
+       day[1]month              first day of the month
+       day[-1]month             last day of the month
+       month[2]year             second month of the year
+       day[62]year              sixty-second day of the year
+       day[-3]year              3rd to last day of the year
 @end example
 
 @subsection Index Lists
@@ -1633,7 +1630,7 @@ Any number of indexes may be specified in an index list as illustrated below.
 	month[1,3,5,7,9,11]year
 @end example
 
-The result, as one you might expect, is to select every indexed interval. We refer to comma (,) as the "Union" operator. The following schedules are identical.
+The result, as one you might expect, is to select every indexed interval. The comma (,) is referred to as the Union operator. The following schedules are identical.
 
 @example
 	day[1,15,20]month
@@ -1657,7 +1654,7 @@ Suppose you want to specify a schedule with intervals starting on the 1st day of
 	day[1_15]month
 @end example
 
-You may combine simple indexes, index ranges and spanned index ranges in a single index list.
+You may combine simple indexes, index ranges, and spanned index ranges in a single index list.
 
 @example
 	day[1,3,10..17,18_20,25]month
@@ -1667,7 +1664,7 @@ You may combine simple indexes, index ranges and spanned index ranges in a singl
 @cindex Interval Selection Parameters
 Interval selection parameters are used similar to the indexed selection operator, [], introduced in the previous section. However, interval selection parameters use an implied function to perform selection. For example, day(1) specifies the first day of every month. In this case, the month function is implied.
 
-The interpretation of selection parameters is inconsistent from function to function with respect to the base index and unit we are indexing, or indexing within. However, parameters generally conform to standard usage, so are relatively intuitive. 
+The interpretation of selection parameters is inconsistent from function to function with respect to the base index and unit you are indexing, or indexing within. However, parameters generally conform to standard usage, so are relatively intuitive. 
 
 The indexed selection operator, [], provides a more consistent and flexible notation than selection parameters, so make use of indexed selection notation in the description of selection parameters. For review, if @i{a} and @i{b} are interval sets, then @i{a}[1]@i{b} specifies, for each interval of @i{b}, the first interval of @i{a} that overlaps the interval of @i{b}. The expressions below both return the first day of every month.
 
@@ -1685,7 +1682,7 @@ The selection parameter notation is convenient because one of @i{a} or @i{b} is 
 	day[15]month[1]year
 @end example
 
-For functions other than "specific month of year" (jan(),feb(),mar(),@dots{}), you specify @i{a}, and @i{b} is understood. This is illustrated by the last two examples above which show month(1) to be equivalent to month[1]year. In most cases, where @i{a} is partitioned, @i{b} is understood to be the partitioned schedule with intervals just larger than @i{a}. However, there are exceptions. In general, the translation from the convenient parameter notation to the consistent indexed selection notation is something one needs to learn. The column labeled "parameter(i)" in the following table describes this translation.
+For functions other than "specific month of year" (jan(),feb(),mar(),@dots{}), you specify @i{a}, and @i{b} is understood. This is illustrated by the last two examples above, which show month(1) to be equivalent to month[1]year. In most cases, where @i{a} is partitioned, @i{b} is understood to be the partitioned schedule with intervals just larger than @i{a}. However, there are exceptions. In general, the translation from the convenient parameter notation to the consistent indexed selection notation is something one needs to learn. The column labeled "parameter(i)" in the following table describes this translation.
 
 @multitable {----------}{----------}{----------}{------------------}{----------}
 @headitem  Function @tab Abbr @tab Parent @tab Parameter(i) @tab Range of i
@@ -1743,7 +1740,7 @@ Any number of parameters may be specified in a parameter list as illustrated bel
 	month(1,3,5,7,9,11)
 @end example
 
-The result, as you might expect, is to select every interval matching any of the specified parameters. We refer to comma (,) as the "Union" operator. The following schedules are identical.
+The result, as you might expect, is to select every interval matching any of the specified parameters. The comma (,) is referred to as the Union operator. The following schedules are identical.
 
 @example
 	day(1,15,20)
@@ -1795,7 +1792,7 @@ Again, it is helpful to describe this notation in terms of indexed selection. Th
        day[11]month[10]year
 @end example
 
-The use of parent parameters is not limited to one level. This is illustrated by the following set of equivalent expressions.
+Use of parent parameters is not limited to one level. The following set of equivalent expressions illustrates this concept.
 
 @example
        minute(1999/12/24@@11:00)
@@ -1825,21 +1822,21 @@ No separator: millennium, century, decade, year
 	
 @i{year}@b{/}@i{month}@b{/}@i{day}@@@i{hour:minute:second}
 
-day(2005/1/15)		day(15).month(1).year(2005)
-	month(2006/7)		month(7).year(2006)
-       hour(1/25@@10)		hour(10).day(1/25)
-       hour(5@@11)			hour(11).day(5)
-	minute(1/25@@10:42)	minute(10:42).day(1/25)
-	minute(12:17)		minute(17).hour(12)
-	minute(15@@12:17)		minute(17).hour(12).day(15)
-  	second(12:17:52)		second(52).minute(12:17)
-	second(5@@12:17:52)	second(52).minute(12:17).day(5)
+day(2005/1/15)          day(15).month(1).year(2005)
+month(2006/7)           month(7).year(2006)
+hour(1/25@@10)           hour(10).day(1/25)
+hour(5@@11)              hour(11).day(5)
+minute(1/25@@10:42)      minute(10:42).day(1/25)
+minute(12:17)           minute(17).hour(12)
+minute(15@@12:17)        minute(17).hour(12).day(15)
+second(12:17:52)        second(52).minute(12:17)
+second(5@@12:17:52)      second(52).minute(12:17).day(5)
 
 Uncommon parent parameters.
-        sunday(1/3)			sunday(3).jan
-	january(2006/15)		day(2006/1/15)
-	quarter(1/3)			quarter(3).year(1)
-	week(1/27)			week(27).year(1)		
+sunday(1/3)             sunday(3).jan
+january(2006/15)        day(2006/1/15)
+quarter(1/3)            quarter(3).year(1)
+week(1/27)              week(27).year(1)		
 @end example
 
 The "specific month of year" functions (jan, feb, mar, @dots{}) are an exception that require special attention. The base parameters select days within the specific month, but the parent function is year. You should avoid using parent parameters when the meaning is not clear.
@@ -1849,9 +1846,9 @@ The "specific month of year" functions (jan, feb, mar, @dots{}) are an exception
 Range and span parameters specify a first and last parameter for a series of consecutive intervals within a schedule. Parent parameters may be used in either or both of the ends.
 
 @example
-	hour(4/15@@12_17)		hour(12_17).day(4/15)
-	hour(4/15@@12_16@@12)	(hour(12).day(4/15))_(hour(13).day(16))
-       hour(15@@20_12@@5)		(hour(20).day(15))_(hour(6).day(12))
+hour(4/15@@12_17)        hour(12_17).day(4/15)
+hour(4/15@@12_16@@12)    (hour(12).day(4/15))_(hour(13).day(16))
+hour(15@@20_12@@5)       (hour(20).day(15))_(hour(6).day(12))
 @end example 
 
 @section Time Functions
@@ -1868,13 +1865,14 @@ A time function is defined for each of the digits of a four digit year. Typicall
 	year(2003)
 @end example
 
-@multitable {---------------}{----------}{---------------}{-----------------------------------}
+@multitable {---------------}{--------------}{-------------------}{----------------------------------------}
 @headitem Function @tab Abbr @tab Parent @tab Boundary
 @item millennium  @tab @tab - @tab First second of millennium
 @item century  @tab @tab millennium @tab First second of century
 @item decade  @tab @tab century @tab First second of decade
 @item year @tab y @tab decade @tab First second of year
 @end multitable
+
 
 The examples below specify equivalent schedules. (The current implementation does not support these examples. No schedule greater than January 2038 can actually be represented in the internal UTC format used by NodeBrain.)
 
@@ -1891,16 +1889,16 @@ The breakout of each digit of a year is a bit strange perhaps, but it provides s
 	year(0,2,4,6,8)		Even years
 	year(1,3,5,7,9)		Odd years
 
-	year(0_9)			Same as decade
-	year(00_99)			Same as century
-	year(000_999)		Same as millennium
+	year(0_9)               Same as decade
+	year(00_99)             Same as century
+	year(000_999)           Same as millennium
 @end example
 
 @subsection Quarter, Month, January through December
 @cindex Quarter, Month, January through December
 A @i{year} is divided into the standard 12 months selected using the @i{month} function. Specific months may be selected using the function named for the month (@i{january}, @i{february}, @i{march}, @dots{}, @dots{}@i{december}). The year is also divided into four three-month quarters selected using the @i{quarter} function.
 
-@multitable {---------------}{----------}{---------------}{-----------------------------------}
+@multitable {---------------}{---------------}{--------------------}{--------------------------------------------}
 @headitem Function @tab Abbr @tab Parent @tab Boundary
 @item quarter @tab q @tab year @tab 1st second of Jan., Apr., Jul., Oct.
 @item month @tab n @tab year @tab 1st second of month
@@ -1929,10 +1927,10 @@ The examples below show the relationship between @i{quarter} and @i{month}.
 @i{Year} is the parent schedule for all of these functions.
 
 @example
-	quarter(2005/3)	quarter(3).year(2005)
-	month(2009/7)	month(7).year(2009)
-	january(2007/15)	january(15).year(2007)
-				day(2007/1/15)
+	quarter(2005/3)         quarter(3).year(2005)
+	month(2009/7)           month(7).year(2009)
+	january(2007/15)        january(15).year(2007)
+			        day(2007/1/15)
 @end example
 
 Notice the strange case of individual months like January. The parent schedule is year, but the intervals are days, like the @i{day} function. The calendar @i{month} functions are more intuitive when a year is not specified.
@@ -1945,7 +1943,7 @@ Notice the strange case of individual months like January. The parent schedule i
 @cindex Week, Day, Sunday through Saturday
 The @i{day} schedule function returns 24-hour intervals corresponding to days of the Gregorian calendar. The @i{week} function returns 7-day intervals corresponding to weeks of the Gregorian calendar. The individual days of a week are returned by the functions cleverly named @i{sunday}, @i{monday}, @i{tuesday}, @i{wednesday}, @i{thursday}, @i{friday}, and @i{saturday}.
 
-@multitable {---------------}{----------}{---------------}{-----------------------------------}
+@multitable {---------------}{---------------}{--------------------}{----------------------------------------}
 @headitem Function @tab Abbr @tab Parent @tab Boundary
 @item week @tab w @tab year @tab 1st second of Sunday
 @item day @tab d @tab month @tab 1st second of day
@@ -1958,21 +1956,21 @@ The @i{day} schedule function returns 24-hour intervals corresponding to days of
 @item saturday @tab sa @tab month @tab "
 @end multitable
 
-The parent schedule for @i{week} is @i{year}, while the parent of @i{day} and @i{sunday} thru @i{saturday} is @i{month}. 
+The parent schedule for @i{week} is @i{year}, while the parent of @i{day} and @i{sunday} through @i{saturday} is @i{month}. 
 
 @example
-	week(20)	The 20th week overlapping each year   -  week[20]year
-			To get 20th full week, use "w.su[20]year".
-	day(15)	The 15th day of each month.
-	tuesday	Every Tuesday
-	saturday(3)	3rd Saturday of each month
+	week(20)        20th week overlapping each year   -  week[20]year
+                        To get 20th full week, use "w.su[20]year".
+	day(15)         15th day of each month
+	tuesday         Every Tuesday
+	saturday(3)     3rd Saturday of each month
 @end example
 
 @subsection Hour, Minute, Second
 @cindex Hour, Minute, Second
 The @i{hour}, @i{minute}, and @i{second} functions are used to specify time intervals within a day. The @i{day} schedule is the parent of @i{hour}, which is the parent of @i{minute}, which is the parent of @i{second}.
  
-@multitable {-------------}{----------}{---------------}{-----------------------}
+@multitable {-------------}{----------------}{--------------------}{-------------------------------}
 @headitem Function @tab Abbr @tab Parent @tab Boundary
 @item hour @tab h @tab day @tab 1st second of hour
 @item minute @tab m @tab hour @tab 1st second of minute
@@ -1980,21 +1978,21 @@ The @i{hour}, @i{minute}, and @i{second} functions are used to specify time inte
 @end multitable
 	
 @example
-	hour(7)		The 8th hour of every day. (07:00 to 08:00)
-	hour(15@@7)		7:00 to 8:00 on the 15th of each month.
-	minute(5)		The 6th minute of every hour
-	minute(7:45)		07:45 to 07:46 every day.		
-	second(0:10)		The 11th second of every hour.
+	hour(7)                 8th hour of every day. (07:00 to 08:00)
+	hour(15@@7)             7:00 to 8:00 on the 15th of each month
+	minute(5)               6th minute of every hour
+	minute(7:45)            07:45 to 07:46 every day		
+	second(0:10)            11th second of every hour
 
-	s(5).m(30).h(10)	10:30:05 to 10:30:06 every day.
-	s(10:30:05)		10:30:05 to 10:30:06 every day.
+	s(5).m(30).h(10)        10:30:05 to 10:30:06 every day
+	s(10:30:05)             10:30:05 to 10:30:06 every day
 @end example
  
 @section Prefix Operators
 @cindex Prefix Operators
 Time interval sets can be transformed into new sets using the prefix operators described in this section.
 
-@multitable {-----------------}{-----------------}{----------------------------------------------------}
+@multitable {-----------------}{---------------------}{---------------------------------------------------------}
 @headitem Syntax @tab Operation @tab Description
 @item @b{=@i{a}} @tab Conflict @tab Intervals of @i{a} that intersect other intervals of @i{a}.
 @item @b{|@i{a}} @tab Connect @tab Combine connecting (end = start) intervals and overlapping intervals. 
@@ -2054,13 +2052,13 @@ The unique operator (%) generates intervals covered by one and only one interval
 Time condition operators are used in expressions to build new interval sets from the output of time functions and other time expressions. The infix operators, described in this section, perform operations on two sets. The operator is specified between the sets as shown in the examples below.
 
 @example
-	sunday.january	Sundays of January
-	day!tuesday		Any day except Tuesday
+	sunday.january          Sundays of January
+	day!tuesday             Any day except Tuesday
 @end example
 
 Many of the operator symbols are used as both infix and prefix operators. If $ were an operator symbol, it would be nice if you could say "$a" is the same as "a$a". In some cases (e.g., | and #) this would be a true statement. In others, it clearly isn’t. For example, "!a" is not the same as "a!a". However, there is always some similarity in infix and prefix operations represented by the same symbol. For example, !, &, and | are always somehow reminding us of Boolean Not, And, and Or.
 
-@multitable {-----------------} {-----------------} {---------------------------------------------------}
+@multitable {-----------------} {----------------------} {---------------------------------------------------------}
 @headitem Syntax @tab Operation @tab Description
 @item @i{a}@b{,}@i{b} @tab Union @tab Union of intervals from @i{a} and @i{b}
 @item @i{a}@b{.}@i{b} @tab Selection @tab Intervals of @i{b} that intersect intervals of @i{b}
@@ -2074,6 +2072,7 @@ Many of the operator symbols are used as both infix and prefix operators. If $ w
 @subsection Union
 @cindex Union
 The union operator (,) produces a set containing all intervals found in either of the two operand sets. Intervals found in both operand sets are found only once in the resulting set. In other words, duplicates are not produced.
+
 @image{langref4-5-1,,,,png}
 
 @subsection Selection
@@ -2118,13 +2117,13 @@ The @i{exclusive or} operator (%) produces a set of intervals where one of the o
 @cartouche
 @b{Syntax}
 @multitable {----------------------} {---} {------------------------------------------------------}
-@item @i{timeSequence} @tab ::= @tab "@b{@{@}} " @i{statements} "@b{@}}" 
+@item @i{timeSequence} @tab ::= @tab "@b{@{} " @i{statements} "@b{@}}" 
 @item @i{statements} @tab ::= @tab @i{statement} @{ [@b{,} ] @i{statement} @}  
 @item @i{statement} @tab ::= @tab @b{/} | @b{\} | @i{timeStep} |  [@i{integer} | @b{*} ] @i{timeSequence}
 @item @i{timeStep} @tab ::= @tab @i{simpleStep} | @i{complexStep}
 @item @i{simpleStep} @tab ::= @tab [ [ (@b{+} | @b{-} ) ] @i{integer} ] @i{timeUnit} [ @i{simpleStep} ]
 @item @i{timeUnit} @tab ::= @tab @b{s} | @b{m} | @b{h} | @b{d} | @b{w} | @b{n} | @b{q} | @b{y} Note: second, minute, hour, day, week, month, quarter, year
-@item @i{complexStep} @tab ::= @tab [@i{integer} ] "@b{(} " @i{timeExpression} "@b{)} "
+@item @i{complexStep} @tab ::= @tab [ @i{integer} ] "@b{(} " @i{timeExpression} "@b{)} "
 @end multitable
 @end cartouche
 
@@ -2141,8 +2140,8 @@ A time sequence, by itself, starts from the time it is translated by the interpr
 @example
        forecast ~@{/2d\d/3d\@}
        
-       sa yyyy/mm/08 15:43 – mo yyyy/mm/10 15:43
-	tu yyyy/mm/11 15:43 – fr yyyy/mm/12 15:43
+       sa yyyy/mm/08 15:43 - mo yyyy/mm/10 15:43
+       tu yyyy/mm/11 15:43 - fr yyyy/mm/12 15:43
 @end example
 A time sequence can be aligned to the intervals of another set using the select operator (.). The following schedules are the same.
 
@@ -2160,7 +2159,7 @@ A recurring event at any time of day can be schedule for a specified duration. T
 You can also specify a repeating time sequence within a time sequence. This example specifies 4 hours on and 4 hours off indefinitely.
 
 @example
-	~@{*@{/4h\4h@}@}
+       ~@{*@{/4h\4h@}@}
 @end example
 
 Intervals of a repeating time sequence are selected by (and aligned to) another time interval set just like a non-repeating time sequence. The following example specifies 4 hours on and 4 hours off during intervals of 2 days on and 2 days of during each monthly interval.
@@ -2212,7 +2211,7 @@ When specifying a partitioned set, the false state (\) is assumed at the end of 
 
 @cartouche
 @b{Syntax}
-@multitable {--------------------} {---} {------------------------------------------------------}
+@multitable {--------------------} {---} {-------------------------------------------------------------------}
 @item @i{pulseCondition} @tab ::= @tab @b{~} "@b{(} " @i{duration} "@b{)}" 
 @item @i{duration} @tab ::= @tab integer  timeUnit [ duration ]
 @item @i{timeUnit} @tab ::= @tab @b{s} | @b{m} | @b{h} | @b{d} | @b{w} Note: second, minute, hour, day, week
@@ -2222,9 +2221,9 @@ When specifying a partitioned set, the false state (\) is assumed at the end of 
 For monitoring applications, you often just need a simple repeating schedule of a specific duration. For that, there is a simplified syntax. The following schedules produce the same results.
 
 @example
-       ~(15m)		Pulse condition
+       ~(15m)         Pulse condition
        
-       ~@{*@{15m/@}@}		Time sequence 
+       ~@{*@{15m/@}@}   Time sequence 
 @end example
 
 A pulse conditions resolves to a single number of seconds. For example, "2h1m3s" resolves to 7263 seconds. The value of a pulse condition is not true until the duration is complete. It then remains true, except for the last second of every duration. This provides a leading edge to trigger rule conditions.
@@ -2241,8 +2240,8 @@ Here you see a simple rule to run a script every 10 minutes. The script will run
 A rule associates an action with a condition. It tells the rule engine what to watch for and what to do if it sees it. In English, you might express a rule using a sentence of the form "If @i{condition}, then @i{action}." For example, "If it starts to rain, then go inside the barn." NodeBrain supports commands with similar structures. 
 
 @example
-define @i{term type}(@i{condition}) action;			[Simple rule]
-@{@i{type}(@i{condition});@i{action};@i{type}(@i{condition});@i{action}; @}	[Sequence rule]
+define @i{term type}(@i{condition}) action;                          [Simple rule]
+@{@i{type}(@i{condition});@i{action};@i{type}(@i{condition});@i{action}; @}     [Sequence rule]
 @end example
 
 @section Simple Rules
@@ -2256,29 +2255,29 @@ define @i{term type}(@i{condition}) @i{action};
 	define r2 on(a=2 and b=1) c=7.5;
 	define r3 when(a+b=9) ?c :=/home/fred/niner.pl;
 	
-	disable r1;	# This prevents rule r1 from responding to the condition
-	enable r1;	# This causes rule r1 to start responding again
-	undefined r1;	# This removes r1 from the engine’s memory
+	disable r1;     # This prevents rule r1 from responding to the condition
+	enable r1;      # This causes rule r1 to start responding again
+	undefined r1;   # This removes r1 from the engine's memory
 @end example
 
 The different types of conditions (if, on, or when) provide for different behavior.
 
-@multitable {----------------} {----------------------------------------------------}
+@multitable {----------------} {-----------------------------------------------------------------}
 @headitem Type @tab Behavior
-@item if @tab Only responds to @code{ALERT}’s to the context in which the rule is defined. Responds when the condition is true, even if it was already true. This is used for "event" monitoring.
-@item on @tab Responds to any @code{ASSERT} or @code{ALERT} that transitions the condition to a true state. This is used for "state" monitoring.
-@item when @tab Like @code{ON}, but is automatically undefined when the condition transitions to true for the first time. This is a one-time rule. As such, it can be used for either "event" or "state" monitoring.
+@item if @tab Only responds to @code{ALERT}’s to the context in which the rule is defined. Responds when the condition is true, even if it was already true. This is used for event monitoring.
+@item on @tab Responds to any @code{ASSERT} or @code{ALERT} that transitions the condition to a true state. This is used for state monitoring.
+@item when @tab Like @code{ON}, but is automatically undefined when the condition transitions to true for the first time. This is a one-time rule. As such, it can be used for either event or state monitoring.
 @end multitable
 
-The action for simple rules may be a "compiled" assertion or a command that is interpreted each time the rule fires.
+The action for simple rules may be a compiled assertion or a command that is interpreted each time the rule fires.
 
 @example
 	define @i{term type}(@i{condition}) [@i{assertion}] [:@i{command} | ; ]
 
-	define r0 on(a=7);			[no action]
-	define r1 on(a=1) b=2;		[assertion only]
-	define r2 on(a=3):-dir		[command only]
-	define r3 on(a=5) b=3:-dir		[assertion and command]
+	define r0 on(a=7);              [no action]
+	define r1 on(a=1) b=2;          [assertion only]
+	define r2 on(a=3):-dir          [command only]
+	define r3 on(a=5) b=3:-dir      [assertion and command]
 @end example
 
 You can group a set of rules within the context of a node. Normally when you have a large number of rules you can organize them into smaller sets by using multiple nodes. For example, suppose you are monitoring 5 servers. The rules for a single server might look something like this.
@@ -2326,7 +2325,7 @@ In this example, you have been assuming the various elements of state associated
 	assert server.’myhost1.enterprise.com’.pingable=0;
 @end example
 
-You are also assuming that you may have rules with conditions based on more than one variable for a given server or for multiple servers. And finally, you are assuming you may have different thresholds for each server. When these assumptions are true, you need to maintain the state of all parameters for each server. If these assumptions are not true, you can simplify our rule set by creating just one set of rules for all servers.
+You are also assuming that you may have rules with conditions based on more than one variable for a given server or for multiple servers. And, finally, assume you may have different thresholds for each server. When these assumptions are true, you need to maintain the state of all parameters for each server. If these assumptions are not true, you can simplify the rule set by creating just one set of rules for all servers.
 
 @example
 	define server node;
@@ -2343,7 +2342,7 @@ With this set of rules, assertions might look like this. Notice that the server 
 	server. assert name="myhost1.enterprise.com",pingable=0;
 @end example
 
-Depending on how you collect the variable values, it may be convenient to report all of the variables to at once.
+Depending on how you collect the variable values, it may be convenient to report all of the variables at once.
 
 @example
 	server. assert name="myhost1.enterprise.com",disk=82,cpu=95,pingable;
@@ -2355,7 +2354,7 @@ In this case, you can once again introduce compound conditions based on multiple
 	server. define r4 on(disk<20 and cpu<10) @i{action4};
 @end example
 
-You may notice we are slowly converting this application from a state monitoring system into an event monitoring system. By doing this you have created two new problem. First, the rules fail to respond to a problem on a given server when the same problem existed for the server that reported previously. Remember, @code{ON} rules only fire when the condition transitions to True. So you need to change the rules to @code{IF} rules and use @code{ALERT} instead of @code{ASSERT}.
+You may notice you are slowly converting this application from a state monitoring system into an event monitoring system. By doing this you have created two new problems. First, the rules fail to respond to a problem on a given server when the same problem existed for the server that reported previously. Remember, @code{ON} rules only fire when the condition transitions to True. So you need to change the rules to @code{IF} rules and use @code{ALERT} instead of @code{ASSERT}.
 
 @example
 	define server node;
@@ -2405,7 +2404,7 @@ This is fine, but if the only action is to issue an alarm, you can create an ala
 
 See Appendix C, section C.1 Sample Alarm Script, for an example of what the alarm cache node might look like.
 
-Another type of rule, @code{WHEN}, can be used in situations where you want to detect a condition one time only. This can be used for both state monitoring and event monitoring.
+Another type of rule, @code{WHEN}, can be used in situations when you want to detect a condition one time only. This can be used for both state and event monitoring.
 
 @example
 	define r1 when(a=1 and b=2):=/home/me/script.pl
@@ -2415,7 +2414,7 @@ Another type of rule, @code{WHEN}, can be used in situations where you want to d
 	alert a=1,b=2;
 @end example
 
-For a real world example of this, let’s assume you have a trouble ticket system with an interface that returns a ticket number when you open a new ticket, and an interface to close a ticket by number. A rule to generate a ticket might look like this.
+For a real world example, let's assume you have a trouble ticket system with an interface that returns a ticket number when you open a new ticket, and an interface to close a ticket by number. A rule to generate a ticket might look like this.
 
 @example
 	define r1 on(condition):@dots{}
@@ -2473,18 +2472,20 @@ A sequence rule can be more efficient to process because it automatically enable
 Coding efficiency is the second goal. One aspect of this is illustrated by the example above. You are able to use one rule instead of three, and you don't have to mess with the state variable. However, there are other advantages to sequence rules.  Because a sequence rule supports local variables, it is easier to avoid naming conflicts by using local variables that are not exposed to all rules like context terms. In the following example, when A=5 the value of B is captured as %b (local variables start with "%"). This variable is then used in the second condition.
 
 @example
-	@{*@{on(A=5)`%b=B: @i{command1};on(A=%b+2): @i{command2}; @}@}
+	@{*@{on(A=5)`%b=B: @i{command1};on(A=%b+2): @i{command2};@}@}
 @end example
 
 Sequence rules are not named. This may be convenient in situations where you have rules that generate rules.
 
 @example
-	define watching node cache:(x);
+define watching node cache:(x);
 define r1 if(A=1 and not watching(B)): @dots{}
-   @{`watching(B),%b=B;on(A=7 and B=%B)`!watching(%b);: @i{command}; @}
+   @{`watching(B),%b=B;on(A=7 and B=%B)`!watching(%b);: @i{command};@}
+@end example
 
 (The "@dots{}" at the end of a line indicates, in documentation only, the next line is a continuation that you must code on a single line.)
 
+@example
 alert A=1,B=2; # spin off sequence rule for B=2 - new thread
 alert A=2,B=4; 
 alert A=1,B=2; 
@@ -2499,7 +2500,7 @@ Although this is a trivial example, it illustrates the general idea. You want to
 @example
 	define watching node cache:(x);
 	define r1 if(A=1 and not watching(B)) watching(B);
-	define r2 if(A=7 and watching(B)) !watching(B): @i{command}
+	define r2 if(A=7 and watching(B)) !watching(B):@i{command}
 @end example
 
 But if you add a little more complexity to this problem, it becomes more difficult with simple rules. Suppose an event attribute C provides the value of A you want to watch for.
@@ -2511,10 +2512,10 @@ But if you add a little more complexity to this problem, it becomes more difficu
 In this case, you might want to use a sequence rule.
 
 @example
-	define watching node cache:(x);
+define watching node cache:(x);
 define r1 if(A=1 and not watching(B)): @dots{}
    @{`watching(B),%b=B,%c=C; @dots{}
-      on(A=%c and B=%B)`!watching(%b);: @i{command}; @}
+      on(A=%c and B=%B)`!watching(%b);:@i{command};@}
 @end example
 
 With increasing numbers of key event attributes and steps in the sequence you need to monitor, you expect the use of sequence rules to reduce the dependence on cache nodes and state variables to maintain state. This should reduce the number of rules and the complexity of simple rule conditions.
@@ -2541,8 +2542,8 @@ Example:	:myCache. alert ("abc");
 A sequence command statement can be any valid interpreter statement delimited by a semi-colon. This is somewhat restrictive because valid commands may contain semi-colons. You can get around this using delayed symbolic substitution. (In a future release, we plan to have built-in variables for this purpose.)
 
 @example
-	@code{define semi cell ";";}
-	@code{@{on(cond1);:$ =script1.pl abc$$@{semi@}script2.pl;on(cond1);@dots{} @}}
+	define semi cell ";";
+	@{on(cond1);:$ =script1.pl abc$$@{semi@}script2.pl;on(cond1);@dots{}@}
 @end example
 
 @subsection Sequence Publish Statement
@@ -2557,31 +2558,31 @@ Examples:	=5;
 		=a+b;
 @end example
 
-Publishing a value for a sequence is useful when a sequence is used within a cell expression. If the following example, the sequence takes on an initial value of 5 and then alternates between 3 and 4 based on the transition of A to 2 and a 10 minute timer.
+Publishing a value for a sequence is useful when a sequence is used within a cell expression. In the following example, the sequence takes on an initial value of 5 and then alternates between 3 and 4 based on the transition of A to 2 and a 10 minute timer.
 
 @example
-	assert X==@{=5;* @{onif(A=2);=3;10m;=4@}@}+B;
+	assert X==@{=5;*@{onif(A=2);=3;10m;=4@}@}+B;
 	define r1 on(X=3 and Y>7) @i{action};
 @end example
 
-When the sequence publishes a new value the expression @{@dots{}@}+B is re-evaluated and the new value is published to X causing re-evaluation of X=3 and potentially the AND condition in r1.
+When the sequence publishes a new value, the expression @{@dots{}@}+B is re-evaluated and the new value is published to X, causing re-evaluation of X=3 and potentially the AND condition in r1.
 
 Because a sequence is a superset of a time sequence, you may use / and \ as shorthand notation to publish 1 and 0 respectively.
 
 @example
 	/	same as	=1;
-	\	same as 	=0;
+	\	same as =0;
 @end example
 
 @subsection Sequence WAIT Statements
 @cindex Sequence WAIT Statements
 @example
-Syntax:	(timeExpression)
-		timeInterval
+Syntax:         (timeExpression)
+                timeInterval
 
-Example:	(mo,we,fr)	[wait until next Monday, Wednesday or Friday]
-		(m(45))	[wait until 45 minutes after the hour]
-		10s		[wait 10 seconds]
+Example:        (mo,we,fr)      [wait until next Monday, Wednesday, or Friday]
+                (m(45))         [wait until 45 minutes after the hour]
+                10s             [wait 10 seconds]
 @end example
 
 The @code{WAIT} statements are the same as in a time sequence. (See Chapter 5, Time Conditions.)
@@ -2589,11 +2590,11 @@ The @code{WAIT} statements are the same as in a time sequence. (See Chapter 5, T
 @subsection Sequence ON and ONIF Statements
 @cindex Sequence ON and ONIF Statements
 @example
-Syntax:	on(condition);
-		onif(condition);
+Syntax:         on(condition);
+                onif(condition);
 
-Examples:	on(a=1 and b=2);
-		onif(a=1 and b=2);
+Examples:       on(a=1 and b=2);
+                onif(a=1 and b=2);
 @end example
 
 The @code{ON} and @code{ONIF} statements block execution of a sequence thread until the specified condition is True (@code{ONIF}) or transitions to True (@code{ON}). If the condition is already True when the statement executes, @code{ONIF} will not block, and @code{ON} will block until the next transition to True.
@@ -2601,11 +2602,11 @@ The @code{ON} and @code{ONIF} statements block execution of a sequence thread un
 @subsection Sequence IF Statement
 @cindex Sequence IF Statement
 @example
-Syntax:	if(condition) statement; [else statement;]
+Syntax:         if(condition) statement; [else statement;]
 
-Examples:	if(a=1)`b=2;
-		if(a=1)`b=2;else`b=7;
-		if(a=1) @{`b=2;show –t; @}else@{`b=7;cSystem. assert (system); @}
+Examples:       if(a=1)`b=2;
+                if(a=1)`b=2;else`b=7;
+                if(a=1) @{`b=2;show -t; @}else@{`b=7;cSystem. assert (system);@}
 @end example
 
 The @code{IF} statement is similar to that in your favorite high level language. You should not confuse the @code{IF} statement with simple @code{IF} rules. The @code{IF} statement does not wait for a condition to be True and has no relationship to the @code{ALERT} command.
@@ -2613,13 +2614,13 @@ The @code{IF} statement is similar to that in your favorite high level language.
 @subsection Sequence Repeat Statement
 @cindex Sequence Repeat Statement
 @example
-Syntax:	@{ @i{integer} | * @} @{@dots{}@}
+Syntax:         @{ @i{integer} | * @} @{@dots{}@}
 
-Examples:	5@{(mo);on(a=2):myscript.pl; @}
-		*@{on(a=3):myscript.pl; @}
+Examples:        5@{(mo);on(a=2):myscript.pl; @}
+                 *@{on(a=3):myscript.pl; @}
 @end example
 
-The repeat statement is used to perform a subsequence a specific number of times or forerver (*).
+The repeat statement is used to perform a subsequence a specific number of times or forever (*).
 
 @subsection Sequence Rule Deficiencies
 @cindex Sequence Rule Deficiencies
@@ -2644,11 +2645,11 @@ All commands conform to a common general syntax.
 @cartouche
 @b{Syntax}
 @multitable {----------------} {---} {-----------------------------------------------------------------------------------------}
-@item @i{command} @tab ::=  @tab (@i{contextPrefix}  @i{command} |  @i{simpleCmd} ) @b{@bullet{}}
-@item @i{simpleCmd} @tab ::= @tab (@i{verb} @i{body}  |  @i{nodeCommand} | @i{specialSymbolCmd} )
+@item @i{command} @tab ::=  @tab (@i{contextPrefix} s*  @i{command} |  @i{simpleCmd} ) @b{@bullet{}}
+@item @i{simpleCmd} @tab ::= @tab (@i{verb} s* @i{body}  |  @i{nodeCommand} | @i{specialSymbolCmd} )
 @item @i{verb} @tab ::= @tab predefined verb--see sections of this chapter for verbs 
 @item @i{body} @tab ::= @tab See syntax for individual commands by verb
-@item @i{contextPrefix} @tab ::= @tab @i{contextIdentifier} . <9a>
+@item @i{contextPrefix} @tab ::= @tab @i{contextIdentifier} . s*
 @item @i{nodeCommand} @tab ::= @tab @i{contextIdentifier} "@b{(}" @i{cellist}"@b{)}" [@b{;} | @b{:} @i{text }]
 @item @i{contextIdentifier} @tab ::= @tab @i{nodeTerm} [ . @i{contextIdentifier} ] 
 @item @i{specialSymbolCmd} @tab ::= @tab See Chapter 7, Special Symbol Commands 
@@ -2658,9 +2659,9 @@ All commands conform to a common general syntax.
 A command may start with a context prefix that tells the interpreter the context in which to interpret the command following the prefix. A context prefix is a context identifier ending with a period. Every term of a context identifier must be defined as a node. In the following sample code, the context prefixes are shown in bold font.
 
 @example
-	define kinda node;
-	@b{kinda.} define really node;
-         @b{kinda.really.} define solar cell;
+        define kinda node;
+        @b{kinda.} define really node;
+        @b{kinda.really.} define solar cell;
 @end example
 
 A node command also starts with a context identifier, but the identifier is followed by a left parenthesis or a colon, and the identifier must be defined with a skill. Using a skill named "magic", it might look like this.
@@ -2684,7 +2685,7 @@ The @code{ALERT} command is used to report an event to a set of rules defined wi
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{assertCmd} @tab ::= @tab @b{alert} š  [@i{assertionList} ] [@b{;} [@i{comment} ] ] @b{@bullet{}}
+@item @i{assertCmd} @tab ::= @tab @b{alert} s*  [@i{assertionList} ] [@b{;} [@i{comment} ] ] @b{@bullet{}}
 @item @i{assertionList} @tab ::= @tab @i{cellAssertion} @{@b{ ,} @i{cellAssertion} @}
 @item @i{cellAssertion} @tab ::= @tab @i{cellIdentifier}(@b{=} | @b{==} ) @i{cellExpression} | [@b{!} | @b{?} ] @i{cellIdentifier}
 @item @i{cellIdentifier} @tab ::= @tab @i{identifier} | [@i{identifier} ] "@b{(} " [@i{cellist} ] "@b{)}"
@@ -2770,8 +2771,8 @@ The name of the log file must be set.
 When the @code{ARCHIVE} command is issued, nb renames the current log file by inserting the time YYYYMMDDHHMMSS and creates a new one.
 
 @example
-	/var/log/goofy.20030118000000.log	# archived log
-	/var/log/goofy.log				# new current log
+	/var/log/goofy.20030118000000.log       # archived log
+	/var/log/goofy.log                      # new current log
 @end example
 
 @section Assert
@@ -2781,7 +2782,7 @@ The @code{ASSERT} command is used to report a state change.  The syntax is ident
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{assertCmd} @tab ::= @tab (@b{assert} š | @b{`} ) [@i{assertionList} ] [@b{;} [@i{comment} ] ] @b{@bullet{}} 
+@item @i{assertCmd} @tab ::= @tab (@b{assert} s* | @b{`} ) [@i{assertionList} ] [@b{;} [@i{comment} ] ] @b{@bullet{}} 
 @item @i{assertionList} @tab ::= @tab @i{cellAssertion} @{ @b{,} @i{cellAssertion} @}
 @item @i{cellAssertion} @tab ::= @tab @i{cellIdentifier} (@b{=} | @b{==} ) @i{cellExpression} | [@b{!} | @b{?} ] @i{cellIdentifier}
 @item @i{cellIdentifier} @tab ::= @tab @i{identifier} | @i{identifier} "@b{(} " [@i{cellist} ] "@b{)}"
@@ -2820,8 +2821,8 @@ Multiple rows may be deleted by negating a partial row specification.
 
 @example
 	connie. assert ?("huey","duey"),A=1,B=2;
-	connie. assert ?("huey"),A=1,B=2;		# delete any row starting "huey"
-	connie. assert ?(),A=1,B=2; 			# delete all rows
+	connie. assert ?("huey"),A=1,B=2;               # delete any row starting "huey"
+	connie. assert ?(),A=1,B=2;                     # delete all rows
 @end example
 
 The way a node handles assertions depends on the node module providing the functionality. A cache is used as an example here, but other node modules will implement different behavior.
@@ -2836,7 +2837,7 @@ The @code{DECLARE} statement is used to name special objects in a name space uni
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{declareCmd} @tab ::= @tab @b{declare} š @i{term} š @i{declareType} š @i{declareSpec} @b{[ ;} [@i{comment} ]] @b{@bullet{}} 
+@item @i{declareCmd} @tab ::= @tab @b{declare} s* @i{term} s* @i{declareType} s* @i{declareSpec} @b{[ ;} [@i{comment} ]] @b{@bullet{}} 
 @item @i{term} @tab ::= @tab see Chapter 3, Identifiers
 @item @i{declareType} @tab ::= @tab @b{identity} | @b{calendar} | @b{module} | @b{skill}
 @item @i{declareSpec} @tab ::= @tab type-specific specification
@@ -2853,15 +2854,15 @@ A NodeBrain identity is similar to the familiar notion of a user account for app
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {---} {------------------------------------------------------}
-@item @i{identityDeclareCmd} @tab ::= @tab @b{declare} š @i{term} š @b{identity} [ š @i{identityRank} ] [@b{;} [@i{comment} ]] @b{@bullet{}} 
+@multitable {-------------} {---} {-------------------------------------------------------------------}
+@item @i{identityDeclareCmd} @tab ::= @tab @b{declare} s* @i{term} s* @b{identity} [ s* @i{identityRank} ] [@b{;} [@i{comment} ]] @b{@bullet{}} 
 @item @i{identityRank} @tab ::= @tab see @code{RANK} command
 @end multitable
 @end cartouche
 
 Node modules that accept commands from external sources (e.g., peer) must specify the active identity when issuing commands to the interpreter and are fully responsible for identity authentication. This allows for a wide variety of authentication mechanisms while providing a common authorization mechanism. The peer module uses a public/private key authentication technique for socket connects, while peer queues and the pipe module rely on standard file permissions. The Webster module uses x509 certificates or fixed passwords. Although there are no current examples, a module could use one-time password authentication. 
 
-Sets of permissions are associated with identity ranks, which are similar predefined user groups with static permissions. An identity’s rank defaults to "guest" if not specified. Use the @code{RANK} command to change the rank of an identity.
+Sets of permissions are associated with identity ranks, which are similar predefined user groups with static permissions. An identity's rank defaults to "guest" if not specified. Use the @code{RANK} command to change the rank of an identity.
 
 See the @code{RANK} command for information on permissions. 
 
@@ -2872,8 +2873,8 @@ Calendars are declared for reference in time expressions. This is done to simpli
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {---} {------------------------------------------------------}
-@item @i{calendarDeclareCmd} @tab ::= @tab @b{declare} š@i{term} š @b{calendar} š  @i{timeExpression} @b{[ ;} @i{comment} ] @b{@bullet{}} 
+@multitable {-------------} {---} {-------------------------------------------------------------------}
+@item @i{calendarDeclareCmd} @tab ::= @tab @b{declare} s*@i{term} s* @b{calendar} s*  @i{timeExpression} @b{[ ;} @i{comment} ] @b{@bullet{}} 
 @item @i{term} @tab ::= @tab Must start with uppercase letter (e.g., MyBday)
 @item @i{timeExpression} @tab ::= @tab see Chapter 5, Time Expressions
 @end multitable
@@ -2907,9 +2908,9 @@ Modules are declared to help NodeBrain locate them or to specify special initial
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {---} {------------------------------------------------------}
-@item @i{moduleDeclareCmd} @tab ::= @tab @b{declare} š @i{term} š @b{module} š  @i{moduleSpec} [@b{;} @i{comment} ] @b{@bullet{}} 
-@item @i{moduleSpec} @tab ::= @tab [@b{@{ "}@i{pathList}@b{"} @b{@}} ] [@i{module} | @i{fileSpec} ] [@b{(} @i{cellist} @b{)} ] [ : @i{text} ]
+@multitable {-------------} {---} {-----------------------------------------------------------------------}
+@item @i{moduleDeclareCmd} @tab ::= @tab @b{declare} s* @i{term} s* @b{module} s*  @i{moduleSpec} [@b{;} @i{comment} ] @b{@bullet{}} 
+@item @i{moduleSpec} @tab ::= @tab [ @b{@{ "}@i{pathList}@b{"} @b{@}} ] [@i{module} | @i{fileSpec} ] [ @b{(} @i{cellist} @b{)} ] [ : @i{text} ]
 @item @i{pathList} @tab ::= @tab path @{ (@b{;} | @b{:} ) path @} 
 A colon may not be used as a path separator on Windows
 @item @i{module} @tab ::= @tab @i{identifier} 
@@ -2936,11 +2937,11 @@ If you are declaring a module only to help NodeBrain locate it, you may declare 
 The last example above does not allow for a path list. NodeBrain will look only in the current directory. The following examples specify multiple directories to search in sequence.
 
 @example
-	declare snmptrap module @{".:..:/home/fred" @};
-	declare snmptrap module @{".:..:/home/fred" @}mysnmptrap;
+	declare snmptrap module @{".:..:/home/fred"@};
+	declare snmptrap module @{".:..:/home/fred"@}mysnmptrap;
 @end example
 
-If you don’t specify a path list or a path as part of the filename, the native system search path applies. You can often control this with a platform-specific environment variable like @code{LD_LIBRARY_PATH}. NodeBrain also allows you to override this with a platform-independent environment variable, @code{NB_MODULE_PATH}.
+If you don't specify a path list or a path as part of the filename, the native system search path applies. You can often control this with a platform-specific environment variable like @code{LD_LIBRARY_PATH}. NodeBrain also allows you to override this with a platform-independent environment variable, @code{NB_MODULE_PATH}.
 
 @example
 	export NB_MODULE_PATH="/home/fred:/home/fred/mod";
@@ -2988,8 +2989,8 @@ Like modules, you typically don’t need to declare skills unless you want to spec
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{skillDeclareCmd} @tab ::= @tab @b{declare} š @i{term} š @b{skill} š  @i{skillSpec} [@b{;} @i{comment} ] @b{@bullet{}} 
-@item @i{skillSpec} @tab ::= @tab [@i{module}@b{.} ] @i{skill} [@b{(} @i{cellList} @b{)} ] [@b{:} @i{text} ]
+@item @i{skillDeclareCmd} @tab ::= @tab @b{declare} s* @i{term} s* @b{skill} s*  @i{skillSpec} [ @b{;} @i{comment} ] @b{@bullet{}} 
+@item @i{skillSpec} @tab ::= @tab [ @i{module}@b{.} ] @i{skill} [ @b{(} @i{cellList} @b{)} ] [@b{:} @i{text} ]
 @item @i{module} @tab ::= @tab @i{identifier}
 @item @i{skill} @tab ::= @tab @i{identifier}
 @item @i{cellList} @tab ::= @tab @i{cellExpression} @{ , @i{cellExpression} @}
@@ -3001,13 +3002,13 @@ Like modules, you typically don’t need to declare skills unless you want to spec
 If you leave off the module identifier, NodeBrain assumes the module name is the same as the skill name. In either case, the skill is associated with an explicit or implicit module identifier. If this identifier is a declared module, the skill will bind to the declared module. Otherwise, NodeBrain attempts to bind the skill to an implicit module.
 
 @example
-         @b{nb_}@i{identifier.suffix}
+@b{nb_}@i{identifier.suffix}
 @end example
 
 This is illustrated by the following example.
 
 @example
-	declare mysql skill sql("databaseA","table1","field1,field2,field3"):trace;
+declare mysql skill sql("databaseA","table1","field1,field2,field3"):trace;
 @end example
 
 In this example, NodeBrain will look for @code{nb_sql.so} on a system that uses @code{*.so} when trying to locate the node module.
@@ -3039,7 +3040,7 @@ The @code{DEFINE} command is used to define NodeBrain objects.
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{defineCmd} @tab ::= @tab @b{define} š @i{term} š @i{objectType} [ š @i{objectSpec} ] [@b{;} [@i{comment} ]] @b{@bullet{}} 
+@item @i{defineCmd} @tab ::= @tab @b{define} s* @i{term} s* @i{objectType} [ s* @i{objectSpec} ] [ @b{;} [@i{comment} ]] @b{@bullet{}} 
 @item @i{term} @tab ::= @tab  see Chapter 3, Identifiers
 @item @i{objectType} @tab ::= @tab @b{cell} | @b{node}  | @b{if} | @b{listener} | @b{on} | @b{when}
 @item @i{objectSpec} @tab ::= @tab type-specific specification
@@ -3091,7 +3092,7 @@ The primary knowledge container in NodeBrain is an object called a cell. You def
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{cellDefineCmd} @tab ::= @tab @b{define} š @i{term} š @b{cell} [ š @i{cellExpression}] [@b{;} [@i{comment} ]] @b{@bullet{}} 
+@item @i{cellDefineCmd} @tab ::= @tab @b{define} s* @i{term} s* @b{cell} [ s* @i{cellExpression} ] [ @b{;} [@i{comment} ]] @b{@bullet{}} 
 @item @i{cellExpression} @tab ::= @tab see Chapter 4, Conditions
 @end multitable
 @end cartouche
@@ -3128,8 +3129,8 @@ A node is an important NodeBrain object type used to group rules and facts to cr
 @cartouche
 @b{Syntax}
 @multitable {-----------------} {---} {-------------------------------------------------------------------}
-@item @i{nodeDefineCmd} @tab ::= @tab @b{define} š @i{term} š @b{node} [š @i{nodeSpec} ] @b{@bullet{}} 
-@item @i{nodeSpec} @tab ::= @tab @i{skillTerm} [ "@b{(} " @i{cellList}"@b{)}" ] [@b{;} [@i{comment} ] | @b{:} @i{text}  ]
+@item @i{nodeDefineCmd} @tab ::= @tab @b{define} s* @i{term} s* @b{node} [ s* @i{nodeSpec} ] @b{@bullet{}} 
+@item @i{nodeSpec} @tab ::= @tab @i{skillTerm} [ "@b{(} " @i{cellList}"@b{)}" ] [ @b{;} [@i{comment} ] | @b{:} @i{text}  ]
 @end multitable
 @end cartouche
 
@@ -3185,9 +3186,9 @@ An @code{IF} object is a rule that responds to a node alert (see @code{ALERT}com
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{ifDefineCmd} @tab ::= @tab @b{define} š @i{term} š @b{if} "@b{(} " @i{condition} "@b{)} " [@i{action} ] @b{@bullet{}}
+@item @i{ifDefineCmd} @tab ::= @tab @b{define} s* @i{term} s* @b{if} "@b{(} " @i{condition} "@b{)} " [ @i{action} ] @b{@bullet{}}
 @item @i{condition} @tab ::= @tab see Chapter 4, Conditions
-@item @i{action} @tab ::= @tab [@b{[} @i{priority} @b{]} ] [@i{assertionList} ] [@b{;} @i{comment} | @b{:} @i{command} ]
+@item @i{action} @tab ::= @tab [ @b{[} @i{priority} @b{]} ] [ @i{assertionList} ] [@b{;} @i{comment} | @b{:} @i{command} ]
 @item @i{priority} @tab ::= @tab number from -128 to 127 with a default of 0
 @item @i{assertionList} @tab ::= @tab @i{cellAssertion} @{ , @i{cellAssertion} @}
 @item @i{cellAssertion} @tab ::= @tab @i{cellIdentifier} (@b{=} | @b{==} ) @i{cellExpression}
@@ -3230,11 +3231,11 @@ Macros may be defined to provide a parameter-based notation for generating singl
 @b{Syntax: Macro Definition}
 @multitable {-------------} {---} {------------------------------------------------------}
 @item @i{MacroDefinition} @tab ::= @tab @b{define} @i{term} @b{macro} [ "@b{(} " @i{MacroParameters}"@b{)}" ]  @b{:%} @i{MacroSequence}
-@item @i{MacroParameters} @tab ::= @tab @i{MacroParameterList} [@b{:}  @i{MacroDefaults} ]
+@item @i{MacroParameters} @tab ::= @tab @i{MacroParameterList} [ @b{:}  @i{MacroDefaults} ]
 @item @i{MacroParameterList} @tab ::= @tab @i{identifier} @{ , @i{identifier} @}
 @item @i{MacroDefaults} @tab ::= @tab assertion @{ , @i{assertion} @}
 @item @i{assertion} @tab ::= @tab @i{identifier} (@b{=} | @b{==} ) @i{cellExpression}
-@item @i{MacroSequence} @tab ::= @tab @i{MacroItem} [@i{MacroSequence} ]
+@item @i{MacroSequence} @tab ::= @tab @i{MacroItem} [ @i{MacroSequence} ]
 @item @i{MacroItem} @tab ::= @tab @i{MacroSymbol} | @i{MacroCharacter}
 @item @i{MacroSymbol} @tab ::= @tab @b{%@{} @i{identifier} @b{@}}
 @item @i{MacroCharacter} @tab ::= @tab Any character other than \0 and \n, except ‘%‘ followed by "@{"
@@ -3276,7 +3277,7 @@ Nerve cells can be defined in NodeBrain to assist in rule debugging. A nerve cel
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{nerveDefineCmd} @tab ::= @tab @b{define} š @i{term} š @b{nerve} [ š @i{condition} ] [@b{;} [@i{comment} ]] @b{@bullet{}} 
+@item @i{nerveDefineCmd} @tab ::= @tab @b{define} s* @i{term} s* @b{nerve} [ s* @i{condition} ] [ @b{;} [@i{comment} ]] @b{@bullet{}} 
 @item @i{condition} @tab ::= @tab  see Chapter 4, Conditions
 @end multitable
 @end cartouche
@@ -3292,9 +3293,9 @@ An @code{ON} object is a rule that responds to assertions. (See @code{ASSERT} an
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{onDefineCmd} @tab ::= @tab @b{define} š @i{term} š @b{on} "@b{(} " @i{condition} "@b{)} " [@i{action}] @b{@bullet{}} 
+@item @i{onDefineCmd} @tab ::= @tab @b{define} s* @i{term} s* @b{on} "@b{(} " @i{condition} "@b{)} " [ @i{action} ] @b{@bullet{}} 
 @item @i{condition} @tab ::= @tab see Chapter 4, Conditions
-@item @i{action} @tab ::=  @tab [ "[" @i{priority}"]" ] [@i{assertionList} ] [@b{;} @i{comment} | @b{:} @i{command} ]
+@item @i{action} @tab ::=  @tab [ "[" @i{priority}"]" ] [ @i{assertionList} ] [@b{;} @i{comment} | @b{:} @i{command} ]
 @item @i{priority} @tab ::= @tab number from -128 to 127 with a default of 0
 @item @i{assertionList} @tab ::= @tab @i{cellAssertion} @{ , @i{cellAssertion} @}
 @item @i{cellAssertion} @tab ::= @tab @i{cellIdentifier} (@b{=} | @b{==} ) @i{cellExpression}
@@ -3316,14 +3317,14 @@ The triggering mechanism for @code{ON} rules is different than the mechanism for
 @example
 	define r2 on(a=1 and b=2): @i{action}
 
-	assert a=0,?b;	# no response
-	assert a=1,b=2;	# rule r2 will fire
-	assert ?a,b=0;	# no response
-	assert a=1;		# no response
-	assert b=2;		# rule r2 will fire
-	assert a=1,b=2;	# no response
- 	assert a=0;		# no response
-	assert a=1;		# rule r2 will fire
+	assert a=0,?b;   # no response
+	assert a=1,b=2;  # rule r2 will fire
+	assert ?a,b=0;   # no response
+	assert a=1;      # no response
+	assert b=2;      # rule r2 will fire
+	assert a=1,b=2;  # no response
+ 	assert a=0;      # no response
+	assert a=1;      # rule r2 will fire
 @end example
 
  
@@ -3334,11 +3335,11 @@ A @code{WHEN} rule is defined with the same syntax as IF and ON rules, only with
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{whenDefineCmd} @tab ::= @tab @b{define} š @i{term} š @b{when} "@b{(}" @i{condition} "@b{)}" [@i{action} ] @b{@bullet{}} 
+@item @i{whenDefineCmd} @tab ::= @tab @b{define} s* @i{term} s* @b{when} "@b{(}" @i{condition} "@b{)}" [ @i{action} ] @b{@bullet{}} 
 @item @i{condition} @tab ::= @tab see Chapter 4, Conditions
-@item @i{action} @tab ::= @tab [ "[" @i{priority} "]" ] [@i{assertionList} ] [@b{;} @i{comment} | @b{:} @i{command} ]
+@item @i{action} @tab ::= @tab [ "[" @i{priority} "]" ] [ @i{assertionList} ] [@b{;} @i{comment} | @b{:} @i{command} ]
 @item @i{priority} @tab ::= @tab number from -128 to 127 with a default of 0
-@item @i{assertionList} @tab ::= @tab @i{cellAssertion} @{, @i{assertionList} @}
+@item @i{assertionList} @tab ::= @tab @i{cellAssertion} @{ , @i{assertionList} @}
 @item @i{cellAssertion} @tab ::= @tab @i{cellIdentifier} (@b{=} | @b{==} ) @i{cellExpression}
 @item @i{command} @tab ::= @tab see Chapter 10, Commands
 @end multitable
@@ -3375,7 +3376,7 @@ The @code{DISABLE} command is used to temporarily block the normal functioning o
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{disableCmd} @tab ::= @tab @b{disable} š @i{term} [ š ] [@b{;} [@i{comment} ] ] @b{@bullet{}} 
+@item @i{disableCmd} @tab ::= @tab @b{disable} s* @i{term} [ s* ] [@b{;} [@i{comment} ] ] @b{@bullet{}} 
 @item @i{term} @tab ::= @tab Rule, cell, or listener term
 @end multitable
 @end cartouche
@@ -3397,7 +3398,7 @@ The @code{ENABLE} command is used to restore the normal functioning of an object
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{enableCmd} @tab ::= @tab @b{enable} š @i{term} [ š ] [@b{;} [@i{comment} ] ] @b{@bullet{}} 
+@item @i{enableCmd} @tab ::= @tab @b{enable} s* @i{term} [ s* ] [@b{;} [@i{comment} ] ] @b{@bullet{}} 
 @item @i{Term} @tab ::= @tab Rule, cell, or listener term
 @end multitable
 @end cartouche
@@ -3412,19 +3413,19 @@ The @code{EXIT} command is used to terminate with an exit code from 0 to 255. Th
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{exitCmd} @tab ::= @tab @b{exit} š @i{cellExpression} [ š ] [@b{;} [@i{comment} ] ] @b{@bullet{}} 
+@item @i{exitCmd} @tab ::= @tab @b{exit} s* @i{cellExpression} [ s* ] [@b{;} [@i{comment} ] ] @b{@bullet{}} 
 @end multitable
 @end cartouche
 
 Suppose you have a diagnostic script for identifying a creature based on three attributes: (1) number of legs, (2) type of coat, and (3) existence of a tail.
 
 @example
-	#!/usr/local/bin/nb –q
-	# File: creature.nb
-	use : creature.pl
-	define dog on(legs=4 and coat="fur" and tail):exit 1;
-       define human on(legs=2 and (coat="skin" or coat="leather")):exit 2;
-	define bird on(legs=2 and coat="feathers" and tail):exit 3;
+        #!/usr/local/bin/nb -q
+        # File: creature.nb
+        use : creature.pl
+        define dog on(legs=4 and coat="fur" and tail):exit 1;
+        define human on(legs=2 and (coat="skin" or coat="leather")):exit 2;
+        define bird on(legs=2 and coat="feathers" and tail):exit 3;
 @end example
 
 Here’s a Perl script that pretends to do the hard work of examining the creature, with fixed values for legs and tail, but somewhat random choice of coat. This will cause the answer to vary between Bird and Human.
@@ -3463,7 +3464,7 @@ The @code{FORECAST} command is used to test a time condition to ensure the expec
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{forecastCmd} @tab ::= @tab @b{forecast} š @b{~} "@b{(} " @i{timeExpression} ‘@b{)}" [ š ] [@b{;} [@i{comment} ] ] @b{@bullet{}}
+@item @i{forecastCmd} @tab ::= @tab @b{forecast} s* @b{~} "@b{(} " @i{timeExpression} ‘@b{)}" [ s* ] [@b{;} [ @i{comment} ] ] @b{@bullet{}}
 @item @i{timeExpression} @tab ::= @tab See Chapter 5, Time Expressions
 @end multitable
 @end cartouche
@@ -3511,7 +3512,7 @@ The @code{Load} command may be used to pre-load dynamic libraries supporting nod
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{loadCmd} @tab ::= @tab @b{load}  š @b{"} @i{libraryFileName} @b{"} ] [ [ š ] @b{;} [@i{comment} ]] @b{@bullet{}} 
+@item @i{loadCmd} @tab ::= @tab @b{load}  s* @b{"} @i{libraryFileName} @b{"} ] [ [ s* ] @b{;} [ @i{comment} ]] @b{@bullet{}} 
 @item @i{libraryFileName} @tab ::= @tab Filename with fully qualified path or relative path.
 @end multitable
 @end cartouche
@@ -3525,7 +3526,7 @@ The @code{Query} command is used to direct the interpreter to attempt a solution
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{queryCmd} @tab ::= @tab @b{query} [ š @i{term} ] [ [ š ] @b{;} [@i{comment}]] @b{@bullet{}} 
+@item @i{queryCmd} @tab ::= @tab @b{query} [ s* @i{term} ] [ [ s* ] @b{;} [@i{comment}]] @b{@bullet{}} 
 @item @i{term} @tab ::= @tab node, rule, or cell term.
 @end multitable
 @end cartouche
@@ -3563,7 +3564,7 @@ The @code{RANK} command is used to associate an identity with a standard set of 
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {-------------------------------------------------------}
-@item @i{rankCmd} @tab ::= @tab @b{rank} š @i{identityName} š @i{rank} [ š ] [@b{;} [@i{comment} ] ] @b{@bullet{}} 
+@item @i{rankCmd} @tab ::= @tab @b{rank} s* @i{identityName} s* @i{rank} [ s* ] [@b{;} [ @i{comment} ] ] @b{@bullet{}} 
 @item @i{rank} @tab ::= @tab @b{guest} | @b{peer} | @b{user} | @b{owner}
 @end multitable
 @end cartouche
@@ -3609,8 +3610,8 @@ The @code{SET} command is used to assign values to NodeBrain options from within
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{setCmd} @tab ::= @tab @b{set} š @i{setList} ] [@b{;} [@i{comment}]] @b{@bullet{}} 
-@item @i{setList} @tab ::= @tab @i{setAssignment} @{, @i{setAssignment} @}
+@item @i{setCmd} @tab ::= @tab @b{set} s* @i{setList} [@b{;} [ @i{comment}]] @b{@bullet{}} 
+@item @i{setList} @tab ::= @tab @i{setAssignment} @{ , @i{setAssignment} @}
 @item @i{setAssignment} @tab ::= @tab @i{switchOption} | @i{variableOption} = @b{"} @i{string} @b{"}
 @end multitable
 @end cartouche
@@ -3619,16 +3620,11 @@ This first set of switch options may be turned on with a single lowercase letter
 
 @multitable {------------------------------} {----------------------------------------------------}
 @headitem Switch Options @tab Description
-@item b  bail @tab This option causes nb to terminate on an error condition and return and exit code of 255. This enables scripts that invoke nb to respond to error conditions. Without this option, nb logs error conditions and continues.
-@item B  noBail @tab
-@item s  servant @tab After all arguments have been processed, enter servant mode. Unlike the "daemon" option, which actually forks itself to become an orphaned child in the background, the "servant" option tells NodeBrain to enter a server state without forking and prepare to communicate on stdin and stdout.
-@item S  noServant @tab 
-@item d  daemon @tab After all arguments have been processed, enter a server state as a background daemon process.
-@item D  noDaemon  @tab
-@item p  prompt @tab After all arguments have been processed, prompt an interactive user and read standard input.
-@item P  noPrompt @tab
-@item t  trace @tab Trace internal function calls. This option spits out a lot of garbage to the log file (@code{stderr}) and only has value to NodeBrain developers.
-@item T  noTrace @tab
+@item b  bail or B no Bail @tab This option causes nb to terminate on an error condition and return and exit code of 255. This enables scripts that invoke nb to respond to error conditions. Without this option, nb logs error conditions and continues.
+@item s  servant or S noServant @tab After all arguments have been processed, enter servant mode. Unlike the "daemon" option, which actually forks itself to become an orphaned child in the background, the "servant" option tells NodeBrain to enter a server state without forking and prepare to communicate on stdin and stdout.
+@item d  daemon or D noDaemon @tab After all arguments have been processed, enter a server state as a background daemon process.
+@item p  prompt or P noPrompt @tab After all arguments have been processed, prompt an interactive user and read standard input.
+@item t  trace or T noTrace @tab Trace internal function calls. This option spits out a lot of garbage to the log file (@code{stderr}) and only has value to NodeBrain developers.
 @end multitable
 
 The following options assign values to control variables.
@@ -3642,16 +3638,12 @@ The following options assign values to control variables.
 And then there are more debugging options that you should never need unless you are a NodeBrain developer trying to debug a problem.
 
 @multitable {------------------------------} {----------------------------------------------------}
-@headitem Debug Switches @tab Description@item showLevel @tab @code{SHOW} command will display cell levels.
-@item noshowLevel @tab
-@item showValue @tab @code{SHOW} command will show value of sub-expressions.
-@item noshowValue  @tab
-@item traceSource @tab Display source file lines as input
-@item notraceSource @tab
-@item traceFile @tab Display @code{LOG} file listener input lines
-@item notraceFile @tab
-@item traceSymbolic @tab Display each phase of symbolic substitution
-@item notraceSymbolic @tab
+@headitem Debug Switches @tab Description
+@item showLevel or noshowLevel @tab @code{SHOW} command will display cell levels.
+@item showValue or noshowValue @tab @code{SHOW} command will show value of sub-expressions.
+@item traceSource or notraceSource @tab Display source file lines as input
+@item traceFile or notraceFile @tab Display @code{LOG} file listener input lines
+@item traceSymbolic or notraceSymbolic @tab Display each phase of symbolic substitution
 @end multitable
 
  
@@ -3662,9 +3654,9 @@ The @code{SHOW} command is used to display NodeBrain objects. This is primarily 
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{showCmd} @tab ::= @tab @b{show}  š [ (@i{showExpr} | @i{showItem} ) [@i{showQualifier} ]] [@b{;} [ @i{comment} ]] @b{@bullet{}} 
+@item @i{showCmd} @tab ::= @tab @b{show}  s* [ (@i{showExpr} | @i{showItem} ) [ @i{showQualifier} ]] [@b{;} [ @i{comment} ]] @b{@bullet{}} 
 @item @i{showExpr} @tab ::= @tab @b{.} | @i{term} | @b{(} @i{cellExpression} @b{)}
-@item @i{showItem} @tab ::= @tab (@b{-} | @b{+} | @b{=}  | @b{/} | @b{*} )  [š] [@i{showMenuItem} ]
+@item @i{showItem} @tab ::= @tab (@b{-} | @b{+} | @b{=}  | @b{/} | @b{*} )  [s*] [ @i{showMenuItem} ]
 @item @i{showMenuItem} @tab ::= @tab Name of menu item.
 @item @i{showQualifier} @tab ::= @tab Qualifiers are supported for terms and some menu items.
 @end multitable
@@ -3730,7 +3722,7 @@ The @code{STOP} command is used to terminate a NodeBrain agent (daemon or servic
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{stopCmd} @tab ::= @tab @b{stop} [ [ š ] @b{;} [@i{comment} ] ] @b{@bullet{}} 
+@item @i{stopCmd} @tab ::= @tab @b{stop} [ [ s* ] @b{;} [ @i{comment} ] ] @b{@bullet{}} 
 @end multitable
 @end cartouche
 
@@ -3744,14 +3736,14 @@ This example would stop an agent at 00:00 Sunday falling on the 21st day of the 
 
 If a @code{STOP} command is issued in an interactive or batch script, it will terminate the script with an exit code of zero without processing remaining command line argument. See @code{EXIT} and @code{QUIT} as alternatives.
 
-6.17 @section Undefine
+@section Undefine
 @cindex Undefine
 The @code{UNDEFINE} command is used to remove the definition of a term that is not referenced. Referenced terms can not be undefined.
 
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{undefineCmd} @tab ::= @tab @b{undefine} š @i{term}  [ [ š ] @b{;} [@i{comment} ] ] @b{@bullet{}} 
+@item @i{undefineCmd} @tab ::= @tab @b{undefine} s* @i{term}  [ [ s* ] @b{;} [ @i{comment} ] ] @b{@bullet{}} 
 @item @i{term} @tab ::= @tab Any term known to the current context.
 @end multitable
 @end cartouche
@@ -3778,7 +3770,7 @@ The @code{USE} command sets options for the addressed context.
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{useCmd} @tab ::= @tab @b{use} [ š ] [@b{(} @i{optionList} @b{)} ] [ š ] [@b{:} @i{consultant} | @b{;} [@i{comment} ] ] @b{@bullet{}} 
+@item @i{useCmd} @tab ::= @tab @b{use} [ s* ] [ @b{(} @i{optionList} @b{)} ] [ s* ] [ @b{:} @i{consultant} | @b{;} [ @i{comment} ] ] @b{@bullet{}} 
 @item @i{optionList} @tab ::= @tab @i{optionSpec} @{ @b{,} @i{optionSpec} @}
 @item @i{optionSpec} @tab ::= @tab [ ! ] @i{option}
 @item @i{option} @tab ::= @tab echo | hush | trace 
@@ -3797,15 +3789,15 @@ The following options control processing of commands within the context.
 In diagnostic NodeBrain scripts, you may optionally specify a consultant command for resolving unknown cell values. When the following script runs, the "whatis" command will be called to get the value of "a" and "b".
 
 @example
-	#!/usr/local/bin/nb
-	define connie node;
-       connie. use:whatis this
-	connie. define r1 on(a>10 and b<5):@i{action1}
-	connie. define r2 on(a<5 and b>10):@i{action2}
-	solve
+        #!/usr/local/bin/nb
+        define connie node;
+        connie. use:whatis this
+        connie. define r1 on(a>10 and b<5):@i{action1}
+        connie. define r2 on(a<5 and b>10):@i{action2}
+        solve
 
-	$ whatis this "a"
-	$ whatis this "b"
+        $ whatis this "a"
+        $ whatis this "b"
 @end example
 
 
@@ -3816,9 +3808,9 @@ The @code{windows} command is used only for Windows-specific administration func
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{windowsCmd} @tab ::= @tab @b{windows} š @i{winCmd} [ [ š ] ; [@i{comment} ] ] @b{@bullet{}} 
+@item @i{windowsCmd} @tab ::= @tab @b{windows} s* @i{winCmd} [ [ s* ] ; [ @i{comment} ] ] @b{@bullet{}} 
 @item @i{winCmd} @tab ::= @tab @b{showenv} | @i{serviceCmd}
-@item @i{serviceCmd} @tab ::= @tab @i{serviceVerb} š @i{service}
+@item @i{serviceCmd} @tab ::= @tab @i{serviceVerb} s* @i{service}
 @item @i{serviceVerb} @tab ::= @tab @b{createService} | @b{deleteService} | @b{startService} | @b{stopService}
 @item @i{service} @tab ::= @tab Name of windows service
 @end multitable
@@ -3932,9 +3924,9 @@ The greater than symbol is used to assign a command prefix in interactive mode. 
 Syntax:	> > @i{prefix}
 
 Example:	> @b{> fred. }
-		fred.> @b{assert a=1;}		[same as > @b{fred. assert a=1;}]
+		fred.> @b{assert a=1;}          [same as > @b{fred. assert a=1;}]
 		fred.> @b{>fred:}
-		fred("x"):> @b{assert a=1;}	[same as > @b{fred("x"): assert a=1;}]
+		fred("x"):> @b{assert a=1;}     [same as > @b{fred("x"): assert a=1;}]
 		fred:> >
 		>
 @end example
@@ -3943,10 +3935,10 @@ Example:	> @b{> fred. }
 @cindex ` (Assert)
 The backtick is just shorthand for the @code{ASSERT} verb.
 @example
-Syntax:	> @b{`assertion;}
+Syntax:         > @b{`assertion;}
 
-Example:	> @b{`a=1,b=2;}
-Same As:	> @b{assert a=1,b=2;}
+Example:        > @b{`a=1,b=2;}
+Same As:        > @b{assert a=1,b=2;}
 @end example
 
 
@@ -3961,24 +3953,24 @@ Example:	> @b{^Looks like we have a problem. }
 		> @b{^assert a=1; }  # assuming stdout is going to a parent nb
 @end example
 
-@section – or = (Servant)
-@cindex – or = (Servant)
+@section - or = (Servant)
+@cindex - or = (Servant)
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{servantCmd} @tab ::= @tab (@b{-}|@b{=}) š [@i{servantUser}] š [@i{servantOut}] [@i{servantExec}] [@i{servantArgs}] @b{@bullet{}} 
+@item @i{servantCmd} @tab ::= @tab (@b{-}|@b{=}) s* [@i{servantUser}] s* [@i{servantOut}] [@i{servantExec}] [@i{servantArgs}] @b{@bullet{}} 
 @item @i{servantUser} @tab ::= @tab @b{[} @i{username} @b{]}  *** Not supported on Windows ***
-@item @i{servantOut} @tab ::= @tab [@i{servantRedirect} [@i{servantRedirect} ] ]  [@b{:} ]
+@item @i{servantOut} @tab ::= @tab [ @i{servantRedirect} [ @i{servantRedirect} ] ]  [@b{:} ]
 @item @i{servantRedirect} @tab ::= @tab (@b{!} | @b{|} | @b{%} | @b{>} [@b{>} ] @i{servantFile} ) 
-@item @i{servantFile} @tab ::= @tab @i{fileName} š  | @b{"}  @i{fileName} @b{"} )
-@item @i{servantExec} @tab ::= @tab (@b{$} | @b{@@} ) ( š | @i{servantFile} ) | $$ | @@@@
+@item @i{servantFile} @tab ::= @tab @i{fileName} s*  | @b{"}  @i{fileName} @b{"} )
+@item @i{servantExec} @tab ::= @tab (@b{$} | @b{@@} ) ( s* | @i{servantFile} ) | $$ | @@@@
 @item @i{servantArgs} @tab ::= @tab string interpreted as shell command or arguments to the executable 
 @end multitable
 @end cartouche
 
 The servant command is used to invoke another program to perform a task, either because the program already exists, or because the task is more appropriate for a procedural language.
 
-The syntax of the servant command has possibilities far more complicated than you will normally need. Let’s first look at a simple subset.
+The syntax of the servant command has possibilities far more complicated than you will normally need. Let's first look at a simple subset.
 
 @cartouche
 @b{Syntax}
@@ -4038,7 +4030,7 @@ If you are not satisfied with the default destinations for @code{stdout} and @co
 @b{|}	-  log file
 @b{%}	-  write to generated filename in "out" directory
 @b{>} [@b{>}] @i{servantFile}		- write or append to specified @i{filename}
-@item @i{servantFile} @tab ::= @tab @i{fileName} š | @b{"} @i{fileName} @b{"}  
+@item @i{servantFile} @tab ::= @tab @i{fileName} s* | @b{"} @i{fileName} @b{"}  
 @item @i{shellCmd} @tab ::= @tab string interpreted by the host shell  (e.g., @code{/bin/sh} or @code{cmd.exe})
 @end multitable
 @end cartouche
@@ -4190,17 +4182,17 @@ Directives are used in source files to conditionally select lines for processing
 @multitable {-------------} {---} {------------------------------------------------------}
 @item @tab ::= @tab Note: Directive statements start with percent (%) in column 1.
 @item @i{directive} @tab ::= @tab @i{assertDirective} | @i{defaultDirective} | @i{ifDirective} |  @i{quitDirective}
-@item @i{assertDirective} @tab ::= @tab @b{%assert} [ š @i{assertionList} ] [@b{;} [@i{comment}] ] @b{@bullet{}}
+@item @i{assertDirective} @tab ::= @tab @b{%assert} [ s* @i{assertionList} ] [@b{;} [@i{comment}] ] @b{@bullet{}}
 @item @i{assertionList} @tab ::= @tab @i{assertion} @{ @b{,} @i{assertionList} @}
 @item @i{assertion} @tab ::= @tab @i{identifier} (@b{=} | @b{==} ) @i{cellExpression}
-@item @i{defaultDirective} @tab ::= @tab @b{%default} [ š @i{assertionList} ] [ ; [@i{comment}] ] @b{@bullet{}} 
-@item @i{ifDirective} @tab ::= @tab @b{%if(}@i{condition} @b{)}  [ [ š ] @b{;} [@i{comment} ] ] @b{@bullet{}} 
+@item @i{defaultDirective} @tab ::= @tab @b{%default} [ s* @i{assertionList} ] [ ; [@i{comment}] ] @b{@bullet{}} 
+@item @i{ifDirective} @tab ::= @tab @b{%if(}@i{condition} @b{)}  [ [ s* ] @b{;} [@i{comment} ] ] @b{@bullet{}} 
      @dots{}
-    [@b{%elseif(}@i{@i{condition}} @b{)}  [ [ š ] @b{;} [@i{comment} ] ] @b{@bullet{}} ]
+    [@b{%elseif(}@i{@i{condition}} @b{)}  [ [ s* ] @b{;} [@i{comment} ] ] @b{@bullet{}} ]
      @dots{}
-    [@b{%else}  [ [ š ] @b{;} [@i{comment} ] ] @b{@bullet{}} ]
+    [@b{%else}  [ [ s* ] @b{;} [@i{comment} ] ] @b{@bullet{}} ]
      @dots{}
-     @b{%endif}  [ [ š ] @b{;} [@i{comment} ] ] @b{@bullet{}}
+     @b{%endif}  [ [ s* ] @b{;} [@i{comment} ] ] @b{@bullet{}}
 @item @i{quitDirective} @tab ::= @tab @b{%quit}
 @end multitable
 @end cartouche
@@ -4238,7 +4230,7 @@ Directives are not intended as a procedural scripting language. This feature is 
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{assertDirective} @tab ::= @tab @b{%assert} [ š @i{assertionList} ] [@b{;} [@i{comment}] ] @b{@bullet{}}
+@item @i{assertDirective} @tab ::= @tab @b{%assert} [ s* @i{assertionList} ] [@b{;} [@i{comment}] ] @b{@bullet{}}
 @item @i{assertionList} @tab ::= @tab @i{assertion} @{ @b{,} @i{assertion} @}
 @item @i{assertion} @tab ::= @tab @i{identifier} (@b{=} | @b{==} ) @i{cellExpression}
 @end multitable
@@ -4282,7 +4274,7 @@ This actually sets %a to the literal value "$@{x@}". The following command sets 
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{defaultDirective} @tab ::= @tab @b{%default} [ š @i{assertionList} ] [ ; [@i{comment}] ] @b{@bullet{}} 
+@item @i{defaultDirective} @tab ::= @tab @b{%default} [ s* @i{assertionList} ] [ ; [@i{comment}] ] @b{@bullet{}} 
 @item @i{assertionList} @tab ::= @tab @i{assertion} @{ @b{,} @i{assertion} @}
 @item @i{assertion} @tab ::= @tab @i{identifier} (@b{=} | @b{==} ) @i{cellExpression}
 @end multitable
@@ -4307,13 +4299,13 @@ In the example above, the local term abc is 1 and the local term xyz is "somethi
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{ifDirective} @tab ::= @tab @b{%if} "@b{(}"@i{condition}"@b{)}"  [ [ š ] ; [@i{comment} ] ] @b{@bullet{}} 
+@item @i{ifDirective} @tab ::= @tab @b{%if} "@b{(}"@i{condition}"@b{)}"  [ [ s* ] ; [@i{comment} ] ] @b{@bullet{}} 
      @item @dots{}
-    @item [@b{%elseif} "@b{(}"@i{condition} "@b{)}"  [ [ š ] ; [@i{comment} ] ] @b{@bullet{}} ]
+    @item [@b{%elseif} "@b{(}"@i{condition} "@b{)}"  [ [ s* ] ; [@i{comment} ] ] @b{@bullet{}} ]
       @item @dots{}
-   @item [@b{%else}  [ [ š ] @b{;} [@i{comment} ] ] @b{@bullet{}} ]
+   @item [@b{%else}  [ [ s* ] @b{;} [@i{comment} ] ] @b{@bullet{}} ]
      @item @dots{}
-     @item @b{%endif}  [ [ š ] @b{;} [@i{comment} ] ] @b{@bullet{}}
+     @item @b{%endif}  [ [ s* ] @b{;} [@i{comment} ] ] @b{@bullet{}}
 @end multitable
 @end cartouche
 
@@ -4337,7 +4329,7 @@ The @code{%INCLUDE} directive is used to interpret another NodeBrain (@code{*.nb
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{includeCmd} @tab ::= @tab @b{%INCLUDE} š @i{fileName} [ ,  @i{assertionList} ] [@b{;} [@i{comment} ]] @b{@bullet{}} 
+@item @i{includeCmd} @tab ::= @tab @b{%INCLUDE} s* @i{fileName} [ ,  @i{assertionList} ] [@b{;} [@i{comment} ]] @b{@bullet{}} 
 @item @i{filename} @tab ::= @tab Name of NodeBrain (*.nb) source file.  Enclose in quotes if the filename includes spaces (e.g., Windows).
 @item @i{assertionList} @tab ::= @tab @i{cellAssertion} @{ , @i{cellAssertion} @}
 @item @i{cellAssertion} @tab ::= @tab @i{cellIdentifier} (@b{=} | @b{==} ) @i{cellExpression}
@@ -4387,7 +4379,7 @@ The @code{%QUIT} directive is used to end processing of a source file.
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{quitDirective} @tab ::= @tab @b{%quit} [ [š] @b{;} [@i{comment} ]] @b{@bullet{}} 
+@item @i{quitDirective} @tab ::= @tab @b{%quit} [ [s*] @b{;} [@i{comment} ]] @b{@bullet{}} 
 @end multitable
 @end cartouche
 
@@ -4400,10 +4392,10 @@ NodeBrain commands are presented to the interpreter as single lines. A newline c
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{continuation} @tab ::= @tab @i{part1} [š]  \  [š] @b{@bullet{}}
-[š]  @i{part2} [š]  \  [š] @b{@bullet{}}
+@item @i{continuation} @tab ::= @tab @i{part1} [s*]  \  [s*] @b{@bullet{}}
+[s*]  @i{part2} [s*]  \  [s*] @b{@bullet{}}
       @dots{}
-[š] @i{partN}  [ [š] @b{;} [@i{comment} ]] @b{@bullet{}}
+[s*] @i{partN}  [ [s*] @b{;} [@i{comment} ]] @b{@bullet{}}
 @end multitable
 @end cartouche
 
@@ -4416,7 +4408,7 @@ Translators are used by various NodeBrain node modules to convert foreign text i
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{translatorSection} @tab ::= @tab [ š ] @i{translatorStmt}  @b{@bullet{}}  [@i{translatorSection} ]
+@item @i{translatorSection} @tab ::= @tab [ s* ] @i{translatorStmt}  @b{@bullet{}}  [@i{translatorSection} ]
 @item @i{translatorStmt} @tab ::= @tab @i{blankLine} | @i{comment} | @i{section}  
 @item @i{blankLine} @tab ::= @tab Null line or line containing nothing but space or tab characters
 @item @i{comment} @tab ::= @tab @b{#} @i{anytext}
@@ -5150,7 +5142,7 @@ NodeBrain supports multiple forms of symbolic substitution: preprocessor, substi
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{SubstituionCmd} @tab ::= @tab @b{%} š @dots{} @i{SymbolicExpression} @dots{}
+@item @i{SubstituionCmd} @tab ::= @tab @b{%} s* @dots{} @i{SymbolicExpression} @dots{}
 @item @i{processSubstitution} @tab ::= @tab @b{%@{} @i{cellExpression} @b{@}}
 @end multitable
 @end cartouche
@@ -5185,8 +5177,8 @@ This substitution does not apply to commands received by listeners. This is prim
 
 @cartouche
 @b{Syntax}
-@multitable {-------------} {---} {------------------------------------------------------}
-@item @i{SubstituionCmd} @tab ::= @tab @b{$} š @dots{} @i{SymbolicExpression} @dots{}
+@multitable {-------------} {---} {----------------------------------------------------------------}
+@item @i{SubstitutionCmd} @tab ::= @tab @b{$} s* @dots{} @i{SymbolicExpression} @dots{}
 @item @i{SymbolicExpression} @tab ::= @tab @b{$@{} @i{cellExpression} @b{@}}
 @end multitable
 @end cartouche

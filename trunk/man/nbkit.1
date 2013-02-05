@@ -1,0 +1,324 @@
+.\" Process this file with "groff -man -Tascii foo.1" or "nbman2ht foo.1"
+.\" See NodeBrain Developer's Guide for project standards
+.\"
+.TH nbkit 1 "February 2013" "Caboodle NodeBrain Kit 0.8.13" "NodeBrain Kit Manual"
+.SH NAME
+\fBnbkit\fP - NodeBrain Kit Utility
+.SH SYNOPSIS
+.B nbkit
+{ \fB-c\fP | \fB--caboodles\fP | \fB-k\fP | \fB--kits\fP }
+.P
+.B nbkit
+\fIcaboodle\fP \fIverb\fP [\fIarguments\fP]
+.P
+.B nbkit
+\fIcaboodle\fP
+.B link
+\fIdirectory\fP
+.P
+.B nbkit
+\fIcaboodle\fP
+.B unlink
+.P
+.B nbkit
+\fIcaboodle\fP
+.B use
+\fIkit\fp [\fIdirectory\fP]
+.P
+.B nbkit
+\fIcaboodle\fP
+.B export
+.P
+.B nbkit
+\fIcaboodle\fP 
+.B alarm
+[\fBroute="\fP...\fB"\fP]
+[\fBappl="\fP...\fB"\fP]
+[\fBgroup="\fP...\fB"\fP]
+[\fBnode="\fP...\fB"\fP]
+[\fBseverity="\fP...\fB"\fP]
+[\fBtext="\fP...\fB"\fP]
+.P
+.B nbkit
+\fIcaboodle\fP {
+.B archive
+|
+.B bounce
+|
+.B config
+|
+.B connect
+|
+.B start
+|
+.B stop
+} \fIagent\fP
+.P
+.B nbkit
+\fIcaboodle\fP {
+.B commit
+|
+.B compile
+|
+.B disable
+|
+.B edit
+|
+.B enable
+|
+.B list
+|
+.B setup
+|
+.B view
+} \fIplan\fP
+
+.SH DESCRIPTION
+The \fBnbkit\fP(1) command is used to manage
+NodeBrain applications that conform to a structure defined by the Caboodle NodeBrain Kit described
+by the \fBnbkit-caboodle\fP(7) manual page.
+In addition to this command line interface, the Caboodle NodeBrain Kit
+provides a web interface supporting most of the same operations
+using a web browser.
+
+The following common terms have a specific meaning within the context of the Caboodle NodeBrain Kit.
+.IP \fBcaboodle\fP 11
+A directory containing a collection of components organized into
+a predefined set of subdirectories.  Components make reference to other components using paths
+relative to the caboodle.  This makes a caboodle portable.
+
+.IP \fBkit\fP
+A collection of components organized like a caboodle, but intended
+for distribution and used to construct caboodles or add functionality to existing caboodles.
+A caboodle may be composed from multiple kits.
+
+.IP \fBagent\fP
+A NodeBrain script that runs as a background process, or daemon. 
+
+.IP \fBplan\fP
+An XML document used to represent a set of NodeBrain rules or configuration files based on
+a model.  A plan compiler converts a plan from XML document format into a target format, often
+NodeBrain rules.
+
+.SH ARGUMENTS
+.IP "\fB-c\fP | \fB--caboodle\fP" 17
+Display a list of defined caboodles.
+
+.IP "\fB-k\fP | \fB--kits\fP" 
+Display a list of installed NodeBrain kits.
+
+.IP \fIcaboodle\fP 11
+This argument is specified on most nbkit commands to identify the caboodle upon which to operate.
+The value specified is a single word alias for the caboodle path.
+See the "link" in the next section.
+
+.IP \fIverb\fP
+This argument identifies the operation to be performed on the specified caboodle.
+
+.IP \fIarguments\fP
+Additional arguments depend on the verb specified.
+
+.SH CABOODLE COMMANDS
+Commands that operate on a caboodle without reference to specific components are described in this section.
+Commands that operate on agents and plans are described in the next two sections. 
+.IP \fBlink\fP 11
+Use to define a caboodle.  This command simply creates a symbolic link in the home
+directory of the user under a subdirectory of ".nbkit/".
+Other commands make use of the symbolic link to set the working directory before performing an operation.
+
+    nbkit \fIcaboodle\fP link \fIdirectory\fP
+
+For a caboodle directory "/var/foobar" that you want to reference as "foobar",
+you would enter the following command.
+
+    nbkit foobar link /var/foobar
+
+.IP \fBunlink\fP
+Use to undefine a caboodle. 
+
+    nbkit \fIcaboodle\fP unlink
+
+If you want to redefine a caboodle to use a different directory, it is not necessary to use "unlink".
+You may simply issue a "link" command again specifying a different directory.
+
+.IP \fBuse\fP
+The "use" verb associates a caboodle with an installed kit.  This makes the components
+provided by the kit available to the caboodle.  If the kit argument is omitted, you will be prompted
+to select from a list of installed kits.
+
+    nbkit \fIcaboodle\fP use [\fIkit\fP]
+
+To associate nbkit-system-0.8.13 with a caboodle, the command would be as follows.
+
+    nbkit \fIcaboodle\fP use nbkit-system-0.8.13
+
+.IP \fBexport\fP
+Use to export a caboodle to /tmp/\fIcaboodle\fP.tar.gz as a backup or to copy to another server.
+Log files and other files considered to be caboodle specific and of no value to similar caboodles are not exported.
+
+    nbkit \fIcaboodle\fP export
+
+To create or update a similar caboodle, simply extract the exported tar file into the target caboodle.
+
+    cd /var/mycaboodle
+    tar -xf /tmp/\fIcaboodle\fP.tar.gz
+
+.IP \fBalarm\fP
+Generate an alarm to subscribers.
+This command sends a NodeBrain alert command to the alarm node of the Caboodle agent supporting the specified
+caboodle.  Multiple optional alarm attributes may be specified.  Some have default values when not specified.
+All alarm attributes may be referenced by an alarm subscription, which is required for actual distribution of the
+alarm.
+
+    nbkit \fIcaboodle\fP alarm \fIattribute\fP="\fIvalue\fP" [ ... ]
+
+Specify one or more alarm attributes:
+.RS 
+.IP \fBappl\fP 11
+Specify the name of the application to which the alarm applies.
+
+.IP \fBgroup\fP
+Specify a value that categories the alarm; e.g. "OS", "Database", "Web".  The group
+attribute is intented to route alarms to a unique group of subject experts.  This is unlike the route
+attributes which may be used to provide visibility to various interested recipients.
+
+.IP \fBnode\fP
+Specify the hostname associated with the alarm.  By default, the local hostname is used.
+
+.IP \fBroute\fP
+Specify a comma seperated list of routing codes for alarm subscriptions.
+The codes are strings that have meaning within a given application.  For example, if the caboodle is a
+security event monitoring application, a value of "SOC" might be used to indicate the alarm is intented for
+the Security Operations Center.  Multiple codes may be entered; e.g. "SOC,NOC".
+
+.IP \fBseverity\fP
+Specify a level of severity for the alarm.  Typical values are "critical", "major", "minor", "warning" and "info",
+although you may select alternate values that work better in the context of your application.
+
+.IP \fBtext\fP
+Specify message text that describes the alarm condition; e.g. "Roof flew off the barn".  You may include a message
+identifier of the form AAANNNN at the start of the text; e.g. "PWS0125 Roof flew off the barn".
+.RE
+
+.SH AGENT COMMANDS
+Commands in this section operate on NodeBrain agents and are handed off
+to the bin/nbkit_agent command within the specified caboodle.
+An \fIagent\fP is a NodeBrain script that runs as a daemon.
+
+    nbkit \fIcaboodle\fP \fIverb\fP \fIagent\fP
+
+The \fIagent\fP parameter must specify the name of an agent plan and/or the name of a NodeBrain script in the agent
+subdirectory; e.g. "Caboodle".
+To start the Caboodle agent provided by the Caboodle NodeBrain Kit, the command would be:
+
+    nbkit \fIcaboodle\fP start Caboodle
+
+Specify one of the following verbs:
+.IP \fBarchive\fP 11
+Start a new log file after renaming the current log file with a current time stamp.
+
+.IP \fBbounce\fP
+Stop and start the agent.  If the current expected state is "down", the agent will be started and the expected
+state will change to "up".
+
+.IP \fBcheck\fP
+Check expected state of an agent and change the current state to match.
+If an agent is expected to be "up" but is currently "down", it is started.
+If it is "up" and expected "down", it is stopped.
+
+.IP \fBconnect\fP
+Invoke the NodeBrain interpreter in interactive mode and prompt for commands to be issued to the specified agent.
+
+.IP \fBstart\fP
+Start the specified agent if it is currently "down" and set the expected state to "up".
+
+.IP \fBstop\fP
+Stop the specified agent if it is currently "up" and set the expected state to "down".
+
+.SH PLAN COMMANDS
+Commands in this section operate on NodeBrain plans and are handled by
+the bin/nbkit_plan command within the specified caboodle.
+A \fIplan\fP is an XML document that normally translates into a set of NodeBrain rules
+or a configuration file based on a model.  Compilers are provided to perform this
+translation.  When an agent is managed as a plan, just one type of plan,
+these commands may be used to operate on the agent. 
+
+    nbkit \fIcaboodle\fP \fIverb\fP \fIplan\fP
+
+Operations performed by these commands may also be performed by the NodeBrain Planner
+web interface.  
+
+.IP \fBcompile\fP 11
+Convert a plan XML document into the target format.
+.IP \fBdisable\fP
+Put a plan in a disabled state, or disable a relationship between two plans.
+.IP \fBedit\fP
+Edit a plan configuration file.
+The XML document is converted into a temporary file with a less complex format and vi is invoked 
+to edit the file.
+After exiting vi, the file is converted back into XML document format.
+The XML document is then optionally converted into a target format by the associated compiler.
+
+.IP \fBenable\fP
+Allow a plan to generate alerts and start probe.
+.IP \fBhelp\fP
+Display this list of commands.
+.IP \fBlist\fP
+Display a list of configured plan.
+.IP \fBpause\fP
+Disable a plan without impact to probe scheduler.
+.IP \fBremove\fP
+Remove a plan from configuration.
+.IP \fBreset\fP
+Clear a plan memory and reload rules.
+.IP \fBrename\fP
+Rename a plan.
+.IP \fBsetup\fP
+Invoke assisted setup script for a plan.
+.IP \fBshow\fP
+Display plan relationships.
+.IP \fBstatus\fP
+Display current status of plans.
+.IP \fBview\fP
+Browse a plan configuration file.
+
+.SH FILES
+.IP ~/.nbkit/\fIcaboodle\fP
+The caboodles are defined by a user, the caboodle name is defined as a symbolic
+link to the caboodle directory.  The links are located in the ".nbkit" subdirectory
+of the home directory of the user.
+.IP /usr/share/nbkit/\fIkit\fP
+When kits are installed, the platform indepenent components are in this directory
+or "/usr/local/share/nbkit/\fIkit\fP
+
+.SH HISTORY
+The nbkit command was developed as part of the Caboodle NodeBrain Kit
+at The Boeing Company in 2006.  It derives from a similar scheme developed for
+NodeBrain in 1998 called the System Monitor Kit or Sysmon.
+
+.SH BUGS
+For a complete and current list of known bugs, refer to the project web site, http://nodebrain.org.
+
+Please report bugs by linking to the project page from the home page, 
+http://www.nodebrain.org, or send email to <bugs@nodebrain.org>.
+
+.SH AUTHOR
+Ed Trettevik <eat@nodebrain.org>
+
+.SH SEE ALSO
+.\"ht page
+\fBnbkit-caboodle\fP(7)
+.\"ht page
+\fBnb.man\fP(7),
+.\"ht page
+\fBnb\fP(1)
+
+.\"ht doc
+[1]
+.I NodeBrain Home Page 
+- http://www.nodebrain.org 
+
+.\"ht doc
+[2]
+.I Caboodle NodeBrain Kit Manual 
+- http://www.nodebrain.org 
