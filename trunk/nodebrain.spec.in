@@ -3,6 +3,7 @@ Version: @PACKAGE_VERSION@
 Release: 1%{?dist}
 
 %define _disable_ld_no_undefined 1
+%define is_mandriva %(test -e /etc/mandriva-release && echo 1 || echo 0)
 
 Summary: A declarative rule-based language for state and event monitoring
 License: GPLv2
@@ -95,8 +96,13 @@ This package contains development files for nodebrain.
 %defattr(-,root,root,-)
 %dir %{_includedir}/nb
 %{_includedir}/nb/*
+%if $is_mandriva
+%ghost %{_libdir}/*.so
+%ghost %{_libdir}/*/*.so
+%else
 %exclude %{_libdir}/*.so
 %exclude %{_libdir}/*/*.so
+%endif
 %{_libdir}/pkgconfig/*.pc
 %{_mandir}/man3/*.3*
 
