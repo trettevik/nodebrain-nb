@@ -300,10 +300,15 @@ Sometimes commands that must be coded on a single line in interactive mode are s
 
 @ifnottex
 @node Top
-@top NodeBrain Language Reference @value{VERSION}
+@top NodeBrain Language Reference
 
-This document is for NodeBrain (version @value{VERSION}, @value{UPDATED-MONTH}), an open source agent for state and event monitoring.
+This document is for the NodeBrain rule engine, an open source agent for state and event monitoring applications.
+The NodeBrain language syntax and symantics are fully described in this document.
+Readers new to NodeBrain are encouraged to start with the @i{NodeBrain Tutorial}, which introduces concepts
+using simple examples.
 
+Release @value{VERSION}, @value{UPDATED-MONTH}
+@*@*
 Copyright @copyright{} 2006-2013 The Boeing Company
 
 @quotation
