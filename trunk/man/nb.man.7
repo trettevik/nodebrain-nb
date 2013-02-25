@@ -1,7 +1,7 @@
 .\" Process this file with "groff -man -Tascii foo.1" or "nbman2ht foo.1"
 .\" See NodeBrain Developer Guide for project standards
 .\"
-.TH nb.man 7 "February 2013" "NodeBrain 0.8.13" "NodeBrain Administrator Guide"
+.TH nb.man 7 "February 2013" "NodeBrain 0.8.14" "NodeBrain Administrator Guide"
 .SH NAME
 nb.man - NodeBrain Overview
 .SH SYNOPSIS
@@ -17,10 +17,10 @@ nb.man - NodeBrain Overview
 \fBnb.syn\fP    - Rule Language Command Syntax
 
 .\"ht page
-\fBnb.mod\fP    - Node Modules (nb_mod_\fImodule\fP.so plug-ins)
+\fBnb.mod\fP    - Node Modules (nb_<module>.so plugins)
 
 .\"ht page
-\fBnb.lib\fP    - C API Function Library (libnb.a)
+\fBnb.lib\fP    - C API Function Library (libnb.so)
 
 .\"ht page
 \fBnb.man\fP    - Overview
@@ -405,9 +405,10 @@ Ed Trettevik <eat@nodebrain.org>
 .\"ht page
 \fBnb.mod\fP(5),
 .\"ht page
-\fBnb.lib\fP(3) 
+\fBnb.lib\fP(3), 
 .\"ht page
-\fBnbkit\fP(1) 
+\fBnbkit\fP(1), 
+.\"ht page
 \fBnbkit-caboodle\fP(7) 
 
 .\"ht doc
@@ -422,15 +423,5 @@ Ed Trettevik <eat@nodebrain.org>
 
 .\"ht doc
 [3]
-.I NodeBrain User Guide 
-- http://www.nodebrain.org  
-
-.\"ht doc
-[4]
 .I NodeBrain Language Reference
-- http://www.nodebrain.org  
-
-.\"ht doc
-[5]
-.I NodeBrain API Reference
 - http://www.nodebrain.org  

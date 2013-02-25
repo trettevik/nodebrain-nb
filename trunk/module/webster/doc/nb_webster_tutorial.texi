@@ -18,7 +18,7 @@ For this tutorial, the files are in the @code{tutorial/Webster} subdirectory of 
 # File: tutorial/Webster/webster1
 -rm webster.log
 set out=".",log="webster.log";
-@b{define webster node webster("default@@0.0.0.0:62443");}
+@b{define webster node webster;}
 @b{webster. define uri cell "http://0.0.0.0:62443");}
 @b{webster. define Authenticate cell "no";}  # Default is "yes"
 @end smallexample

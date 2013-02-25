@@ -1,17 +1,19 @@
-NodeBrain 0.8.13 Change Summary
+NodeBrain 0.8.14 Change Summary
 
-* Released February 4, 2013
+* Released February 11, 2013
 
-     Versions 0.8.4 through 0.8.12 were not released.
+     Versions 0.8.4 through 0.8.13 were not released.
      Although 0.8.3 software was released, the website
      was not updated with new documentation.
 
 * Theme: Security Patches and Document Format
 
-     This is a patch release, so no new functionality
-     is provided.  However, 0.8 documentation was not
-     previously released, so the new functionality of
-     the 0.8.3 release will be new to most readers.
+     Many security patches are included in this release
+     and primary documents have been converted to texinfo.
+     Although only a couple insignificant functional changes
+     are included in this release, the features introduced
+     in the 0.8.3 release will be new to most readers.
+
      See news below for NodeBrain 0.8.3.
 
 * Documentation:
@@ -26,7 +28,7 @@ NodeBrain 0.8.13 Change Summary
 
 * Incompatibilities
 
-  o  The greater than (">") is now used instead of a single
+  o  The "greater than" (">") is now used instead of a single
      quote (') to set a command prefix in interactive mode.
      Use of a single quote was incompatible with the single
      quoted terms feature.  A command must be able to start
@@ -45,7 +47,11 @@ NodeBrain 0.8.13 Change Summary
 
 * New Fetures
 
-  o  None
+  o  An nbkit command has been introduced to support
+     NodeBrain kits provided by other packages.
+
+  o  The ">" command replaced the single quote command
+     for defining an interactive command prefix.
 
 * Deprecated Syntax:
 

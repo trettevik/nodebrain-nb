@@ -34,16 +34,14 @@ find %{buildroot} -type f -name "*.la" -exec rm -f {} ';'
 rm -f %{buildroot}/%{_infodir}/dir
 
 %post
-if [ -f %{_infodir}/nb.info.gz ]; then # for --excludedocs
-   /sbin/install-info %{_infodir}/nb.info.gz --dir-file=%{_infodir}/dir ||:
-   /sbin/install-info %{_infodir}/nbTutorial.info.gz --dir-file=%{_infodir}/dir ||:
+if [ -f %{_infodir}/nodebrain.info.gz ]; then # for --excludedocs
+   /sbin/install-info %{_infodir}/nodebrain.info.gz %{_infodir}/dir ||:
 fi
 
 %preun
 if [ $1 = 0 ]; then
     if [ -f %{_infodir}/nb.info.gz ]; then # for --excludedocs
-        /sbin/install-info --delete %{_infodir}/nb.info.gz %{_infodir}/dir ||:
-        /sbin/install-info --delete %{_infodir}/nbTutorial.info.gz %{_infodir}/dir ||:
+        /sbin/install-info --delete %{_infodir}/nodebrain.info.gz %{_infodir}/dir ||:
     fi
 fi
 
@@ -96,7 +94,7 @@ This package contains development files for nodebrain.
 %defattr(-,root,root,-)
 %dir %{_includedir}/nb
 %{_includedir}/nb/*
-%if $is_mandriva
+%if %is_mandriva
 %ghost %{_libdir}/*.so
 %ghost %{_libdir}/*/*.so
 %else

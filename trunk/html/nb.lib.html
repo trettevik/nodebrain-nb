@@ -14,7 +14,7 @@
 <table width="100%"><tr>
 <td align="left" width="20%">nb.lib(3)</td>
 <td align="center" width="60%"><span style="font-size: 14pt">NodeBrain Administrator Guide</span>
-<br>Version 0.8.13 - February 2013</td>
+<br>Version 0.8.14 - February 2013</td>
 <td align="right" width="20%">nb.lib(3)</td>
 </tr></table>
 <p style="font-size: 7pt">
@@ -61,7 +61,8 @@ available to main routines.  This is the same API provided to node modules (plug
 <tr><td width="5%">&nbsp;</td>
 <td width="94%" valign="top" align="left">
 If you want to experiment with embedding the NodeBrain interpreter in your
-own program, refer to the <i>NodeBrain API Reference</i>.
+own program, you can use nb.c and various modules in the source distribution as
+sample code.
 Here's a trivial example.
 <p><pre>
   #include &lt;nb/nb.h&gt;
@@ -82,7 +83,10 @@ Here's a trivial example.
     nbStop(context);
     }
 </pre>
-</td></tr></table>
+<p>The <i>NodeBrain API Reference</i> needs a lot of work before it will be published,
+and the API will be unstable prior to a 1.0 release. So consider it experimental
+only.
+<p></td></tr></table>
 <a name="FILES"></a>
 <h3>FILES</h3>
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
@@ -137,9 +141,7 @@ Ed Trettevik &lt;eat@nodebrain.org&gt;
 <a href="nb.mod.html"><b>nb.mod</b></a>(7) 
 <p><p>[1] <a href="http://www.nodebrain.org  "><i>NodeBrain Home Page</i></a><br>
 <p><p>[2] <a href="http://www.nodebrain.org  "><i>NodeBrain Tutorial </i></a><br>
-<p><p>[3] <a href="http://www.nodebrain.org  "><i>NodeBrain User Guide </i></a><br>
-<p><p>[4] <a href="http://www.nodebrain.org  "><i>NodeBrain Language Reference</i></a><br>
-<p><p>[5] <a href="http://www.nodebrain.org  "><i>NodeBrain API Reference</i></a><br>
+<p><p>[3] <a href="http://www.nodebrain.org  "><i>NodeBrain Language Reference</i></a><br>
 </td></table>
 <hr>
-<table width="100%"><tr><td align="left" width="33%">NodeBrain 0.8.13</td><td align="center" width="34%">February 2013</td><td align="right" width="33%">nb.lib(3)</td></tr></table>
+<table width="100%"><tr><td align="left" width="33%">NodeBrain 0.8.14</td><td align="center" width="34%">February 2013</td><td align="right" width="33%">nb.lib(3)</td></tr></table>

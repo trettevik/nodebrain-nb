@@ -5,7 +5,7 @@
 @settitle NodeBrain Tutorial
 @dircategory NodeBrain
 @direntry
-* nbTutorial: (nodebrain).       NodeBrain Tutorial
+* nbTutorial: (nbTutorial).       NodeBrain Tutorial
 @end direntry
 @set UPDATED-YEAR 2013
 @c %**end of header
@@ -24,7 +24,7 @@ The Boeing Company,  P.O. Box 3707, Seattle, WA 98124, USA
 
 Author: Ed Trettevik <eat@@nodebrain.org>
 
-Copyright @copyright{} 2006-@value{UPDATED-YEAR} The Boeing Company
+Copyright @copyright{} 2006--@value{UPDATED-YEAR} The Boeing Company
 
 @sp 1
 Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
@@ -36,7 +36,7 @@ NodeBrain(TM) is a trademark of The Boeing Company.   All other trademarks and r
 @b{Software License}
 
 @multitable {------------------------------} {----------------------------------------------------}
-@item Copyright @copyright{} 1998--2012 @tab The Boeing Company
+@item Copyright @copyright{} 1998--@value{UPDATED-YEAR} @tab The Boeing Company
 @item @tab Ed Trettevik <eat@@nodebrain.org>
 @end multitable
 
@@ -197,12 +197,17 @@ $
 @c Not printed document
 
 @ifnottex
-@node Top
-@top NodeBrain Tutorial @value{VERSION}
+@node Top, Invoking NodeBrain, (nodebrain), (nodebrain)
+@top NodeBrain Tutorial 
 
-This tutorial is for NodeBrain (version @value{VERSION}, @value{UPDATED-MONTH}), an open source agent
-for state and event monitoring.
-@*@*
+This tutorial is for the NodeBrain rule engine, an open source agent
+for state and event monitoring applications.
+The tutorial is intended for programmers new to NodeBrain rule development.
+After completing this tutorial, refer to the @i{NodeBrain Language Reference} and
+node module manuals for additional information.
+
+Release @value{VERSION}, @value{UPDATED-MONTH}
+
 Copyright @copyright{} 2006-@value{UPDATED-YEAR} The Boeing Company
 
 @quotation

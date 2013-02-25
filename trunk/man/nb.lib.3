@@ -1,7 +1,7 @@
 .\" Process this file with "groff -man -Tascii foo.1" or "nbman2ht foo.1"
 .\" See NodeBrain Developer Guide for project standards
 .\"
-.TH nb.lib 3 "February 2013" "NodeBrain 0.8.13" "NodeBrain Administrator Guide"
+.TH nb.lib 3 "February 2013" "NodeBrain 0.8.14" "NodeBrain Administrator Guide"
 .SH NAME
 nb.lib - NodeBrain Library
 .SH SYNOPSIS
@@ -13,7 +13,8 @@ The NodeBrain library, \fBlibnb.so\fP, makes the NodeBrain C API
 available to main routines.  This is the same API provided to node modules (plug-ins).
 .SH EXAMPLE
 If you want to experiment with embedding the NodeBrain interpreter in your
-own program, refer to the \fINodeBrain API Reference\fP.
+own program, you can use nb.c and various modules in the source distribution as
+sample code.
 Here's a trivial example.
 
 .\"ht fixed
@@ -36,6 +37,11 @@ Here's a trivial example.
     nbStop(context);
     }
 .fi
+
+The \fINodeBrain API Reference\fP needs a lot of work before it will be published,
+and the API will be unstable prior to a 1.0 release. So consider it experimental
+only.
+
 .SH FILES
 .IP nb.h
 Header file for NodeBrain C API.
@@ -79,15 +85,5 @@ Ed Trettevik <eat@nodebrain.org>
 
 .\"ht doc
 [3]
-.I NodeBrain User Guide 
-- http://www.nodebrain.org  
-
-.\"ht doc
-[4]
 .I NodeBrain Language Reference
-- http://www.nodebrain.org  
-
-.\"ht doc
-[5]
-.I NodeBrain API Reference
 - http://www.nodebrain.org  

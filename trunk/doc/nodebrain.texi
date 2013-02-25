@@ -5,15 +5,32 @@
 @settitle NodeBrain Documents
 @dircategory NodeBrain
 @direntry
-* NodeBrain: (nodebrain).	State and Event Monitoring Agent
-* nb: (nodebrain)Command.	NodeBrain command
+* nb: (nodebrain).                    NodeBrain rule engine
 @end direntry
 @c %**end of header
 
 @node Top
-NodeBrain is a program for monitoring state and events.
+NodeBrain is a rule engine for the construction of state and events
+monitoring applications.
+You can browse documentation on the web at http://nodebrain.org.
 @ifinfo
-@inforef{Top,fun,nbTutorial.info}
-
-@inforef{Top,fun,nbLanguage.info}
+@menu
+* Tutorial: (nbTutorial).             Introduction by example
+* Language: (nbLanguage).             NodeBrain Language Reference
+@end menu
+@c @inforef{Top,fun,nbTutorial.info}
+@c @inforef{Top,fun,nbLanguage.info}
 @end ifinfo
+
+Manual pages are also available using the @code{man} command.
+
+@multitable {----------}  {--------------------------------------------------------}
+@headitem Page @tab Content
+@item nb @tab Interpreter, Agent, Client, Utility
+@item nb.cfg @tab Configuration Files
+@item nb.syn @tab Rule Language Command Syntax
+@item nb.mod @tab Node Modules (nb_<module>.so plugins)
+@item nb.lib @tab C API Function Library (libnb.so)
+@item nb.man @tab Overview
+@item nbkit @tab NodeBrain Kit and Caboodle Utility
+@end multitable

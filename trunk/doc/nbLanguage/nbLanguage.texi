@@ -6,7 +6,7 @@
 @settitle NodeBrain Language Reference
 @dircategory NodeBrain
 @direntry
-* nbLanguage: (nodebrain).       NodeBrain Language Reference
+* nbLanguage: (nbLanguage).       NodeBrain Language Reference
 @end direntry
 @set UPDATED-YEAR 2013
 @c %**end of header
@@ -299,7 +299,7 @@ Sometimes commands that must be coded on a single line in interactive mode are s
 @c Not printed document
 
 @ifnottex
-@node Top
+@node Top, Language Concepts, (nodebrain), (nodebrain)
 @top NodeBrain Language Reference
 
 This document is for the NodeBrain rule engine, an open source agent for state and event monitoring applications.
@@ -308,8 +308,8 @@ Readers new to NodeBrain are encouraged to start with the @i{NodeBrain Tutorial}
 using simple examples.
 
 Release @value{VERSION}, @value{UPDATED-MONTH}
-@*@*
-Copyright @copyright{} 2006-2013 The Boeing Company
+
+Copyright @copyright{} 2006-@value{UPDATED-YEAR} The Boeing Company
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} preceding the index at the end of this document.

@@ -1,20 +1,20 @@
 .\" Process this file with "groff -man -Tascii foo.1" or "nbman2ht foo.1"
 .\" See NodeBrain Developer's Guide for project standards
 .\"
-.TH nbkit-caboodle 7 "February 2013" "Caboodle NodeBrain Kit" "NodeBrain Kit Manual"
+.TH nbkit-caboodle 7 "February 2013" "NodeBrain 0.8.14" "NodeBrain Administrator Guide"
 .SH NAME
-\fBnbkit-caboodle\fP - Caboodle NodeBrain Kit 0.8.13
+\fBnbkit-caboodle\fP - Caboodle NodeBrain Kit
 .SH SYNOPSIS
-\fBnbkit\fP \fIcaboodle\fP { \fBstart\fP | \fBstop\fP | \fBbounce\fP } \fBCaboodle\fP
+\fBnbkit\fP \fIcaboodle\fP { \fBstart\fP | \fBstop\fP | \fBbounce\fP | ... } \fBCaboodle\fP
 
 .SH DESCRIPTION
-The Caboodle NodeBrain Kit provides a simple common framework for building and managing NodeBrain applications.
+The Caboodle NodeBrain Kit provides a framework for building and managing NodeBrain applications.
 While NodeBrain is a rule intepreter that can be used however you like, NodeBrain kits
-following this framework are intended to provide a quick path
-to a working application.  You are encouraged to build application kits based on this framework, unless you have
-another approach you prefer.  
+conform to this framework to provide a quick path
+to a working application.  You are encouraged to build applications and application kits based on this framework,
+unless you find or create a framework that works better for your application.
 
-The following common terms have a specific meaning within the context of the Caboodle NodeBrain Kit.
+The following common terms have a specific meaning within the context of a NodeBrain kit.
 .IP \fBcaboodle\fP 11
 A directory containing a collection of components organized into
 a predefined set of subdirectories.  Components make reference to other components using paths
@@ -30,7 +30,7 @@ A NodeBrain script that runs as a background process, or daemon.
 
 .IP \fBplan\fP
 An XML document used to represent a set of NodeBrain rules or configuration files based on
-a model.  A plan compiler converts a plan from XML document format into a target format, often
+a translation scheme.  A plan compiler converts a plan from XML document format into a target format, often
 NodeBrain rules.
 
 .IP \fBadapter\fP

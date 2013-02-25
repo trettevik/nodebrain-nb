@@ -239,13 +239,14 @@ sub alternate{
   }
 #=====================================================================
 # main body
-
+#     .IP \fB-c\fP \fB--caboodle\fP 17
 while(<>){
   $inline=$_;
+  $inline=$1."\n" if($inline=~/^(\.IP.*?)\s+\d+$/);  # 2013-02-04 eat ignore column width
   $lb=$bl;     # last line blank
   $bl=0;       # this line blank
   # unbulletted lists implied by spaces at start of line
-  if(/^\s+(.+)$/){ 
+  if($inline=~/^\s+(.+)$/){ 
     $text=&format($1,$nf);
     if(!$list){
       html("<ul>\n"); # start a list
@@ -260,17 +261,17 @@ while(<>){
     $bl=1;     # act like last line was blank
     }
   # blank line paragraph start
-  if(/^\s*$/){
+  if($inline=~/^\s*$/){
     html("<p>");
     $bl=1;
     }
   # comment
-  elsif(/^\.\\"(.*)$/){
+  elsif($inline=~/^\.\\"(.*)$/){
     $line=$1;
     if($line=~/^ht (.*)$/){helper($1);}
     else{html("<!-- $line -->\n");}
     }
-  elsif(/^\.(.*?)( (.*))?$/){
+  elsif($inline=~/^\.(.*?)( (.*))?$/){
     $code=$1;
     $line=$3;
     if($line=~/^\s+(.*)$/){$line=$1;}
@@ -293,10 +294,10 @@ while(<>){
       else{
         if(!$lb){html("<p>");}
         html("<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"5\">\n");
+        $ip=1;
         }
       $text=&format($line,$nf);
       html("<tr><td width=\"5%\" align=\"left\" valign=\"top\">$text&nbsp;&nbsp;&nbsp;</td><td width=\"94%\" align=\"left\" valign=\"top\">\n");
-      $ip=1;
       }
     elsif($code eq 'P'){
       if($ip){
@@ -307,6 +308,16 @@ while(<>){
         $text=&format($line,$nf);
         html("<p>$line\n");
         }
+      }
+    elsif($code eq 'RS'){
+      html("<table><tr><td>\n");
+      $saveip=$ip;
+      $ip=0;
+      }
+    elsif($code eq 'RE'){
+      html("</td></tr></table>\n") if($ip); # close the internal table
+      html("</td></tr></table>\n");
+      $ip=$saveip;
       }
     elsif($code eq 'SH'){
       if($shtab){html("</td></tr></table>\n");}

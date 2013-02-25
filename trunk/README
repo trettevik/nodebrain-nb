@@ -1,16 +1,16 @@
-N o d e B r a i n   0.8.13
+N o d e B r a i n   0.8.14
 
 ========================================================================
 
-File:        README for nb-0.8.13 release files
+File:        README for nodebrain-0.8.14 release files
 
 Package:     NodeBrain (nb)
 
 Version:     0.8 - Dopey
 
-Release:     0.8.13 
+Release:     0.8.14 
 
-Date:        February 4, 2013
+Date:        February 11, 2013
 
 Reference:   http://www.nodebrain.org
                1) Online documentation
@@ -27,8 +27,8 @@ Installation Instructions for Linux/Unix Platforms
 
 a) From source code distribution - install to standard directories
 
-     $ tar -xzf nodebrain-0.8.13.tar.gz
-     $ cd nodebrain-0.8.13
+     $ tar -xzf nodebrain-0.8.14.tar.gz
+     $ cd nodebrain-0.8.14
      $ ./configure
      $ make
      $ make check
@@ -36,11 +36,11 @@ a) From source code distribution - install to standard directories
 
 b) From binary RPM file (x86_64 platform example)
 
-     $ rpm --install nodebrain-0.8.13-1.x86_64.rpm
+     $ rpm --install nodebrain-0.8.14-1.x86_64.rpm
 
 c) From source RPM file 
 
-     $ rpmbuild --rebuild nodebrain-0.8.13-1.src.rpm
+     $ rpmbuild --rebuild nodebrain-0.8.14-1.src.rpm
 
 ======================================================================== 
 
@@ -54,7 +54,7 @@ high priority at this time.
 
 ======================================================================== 
 
-Copyright (C) 1998-2009 The Boeing Company
+Copyright (C) 1998-2013 The Boeing Company
                         Ed Trettevik <eat@nodebrain.org>
 
 NodeBrain is free software; you can redistribute it and/or modify
