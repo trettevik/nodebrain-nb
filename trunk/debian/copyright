@@ -1,13 +1,13 @@
 Format-Specification: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?op=file&rev=135
-Name: nbkit-caboodle
+Name: nodebrain
 Maintainer: Ed Trettevik <eat@nodebrain.org>
 Source: http://svn.code.sf.net/p/nodebrain/code/nb
 
-Copyright: 2013 The Boeing Company <eat@nodebrain.org>
+Copyright: 1998-2013 The Boeing Company <eat@nodebrain.org>
 License: GPL-2+
 
 Files: debian/*
-Copyright: 2013 The Boeing Company <eat@nodebrain.org>
+Copyright: 1998-2013 The Boeing Company <eat@nodebrain.org>
 License: GPL-2+
 
 License: GPL-2+

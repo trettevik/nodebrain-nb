@@ -11,6 +11,5 @@
 
 %:
 	dh $@
-
 # Commands not to run
 override_dh_auto_test:

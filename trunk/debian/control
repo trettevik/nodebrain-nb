@@ -1,16 +1,22 @@
-Source: nbkit-caboodle
-Section: development
+Source: nodebrain
+Section: interpreters
 Priority: optional
 Maintainer: Ed Trettevik <eat@nodebrain.org>
-Build-Depends: debhelper (>=7.0.50~)
+Build-Depends: debhelper (>=7.0.50~), libpcre3-dev, libssl-dev, libreadline-dev
 Standards-Version: 3.8.4
 Homepage: http://www.nodebrain.org
 
-Package: nbkit-caboodle
+Package: nodebrain
 Architecture: any
-Depends: perl, perl-xml-simpleobject
-Description: Caboodle NodeBrain Kit
- The Caboodle NodeBrain Kit is a simple framework for managing NodeBrain
- applications.  It provides a method of organizing the components of a
- typical NodeBrain application and managing rules as XML documents edited
- via command line or web interface.
+Depends: libpcre3, libssl, libreadline
+Description: NodeBrain Program, Library and Base Modules
+ NodeBrain is an interpreter of a declarative rule-based language
+ designed for construction of state and event monitoring applications.
+ It interacts with other monitoring components to perform simple element
+ state monitoring or complex event correlation based on user specified
+ rules. It is extended through the development of node modules (plug-ins)
+ using NodeBrain's C API, and servants (programs written in any language)
+ that interact with NodeBrain via stdin, stdout, and stderr. A small set
+ of plug-ins are distributed with NodeBrain to provide commonly needed
+ features such as peer-to-peer communication, log monitoring, event caching,
+ and a web browser interface for administrators. 
