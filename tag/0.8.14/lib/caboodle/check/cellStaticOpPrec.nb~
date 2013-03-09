@@ -1,0 +1,50 @@
+#!../nb/nb
+~ > #!../nb/nb
+#
+~ > #
+# File:# cellStaticOpPrec.nb 
+~ > # File:# cellStaticOpPrec.nb 
+#
+~ > #
+# Test cell expression operator precedence
+~ > # Test cell expression operator precedence
+#=======================================================
+~ > #=======================================================
+#
+~ > #
+define r00 on(a=1 ~^1(10s) | b & c & d | e & f | g);
+~ > define r00 on(a=1 ~^1(10s) | b & c & d | e & f | g);
+show r00
+~ > show r00
+~ r00 = ! == on(((a=1)~^1(10s))|((b&(c&d))|((e&f)|g)));
+# on(((a=1)~^1(10s))|((b&(c&d))|((e&f)|g)))
+~ > # on(((a=1)~^1(10s))|((b&(c&d))|((e&f)|g)))
+define r01 on(a=1 and b=2 or c=5 and d=9*e+7 or x*2>y/4*2);
+~ > define r01 on(a=1 and b=2 or c=5 and d=9*e+7 or x*2>y/4*2);
+show r01
+~ > show r01
+~ r01 = ! == on(((a=1)&(b=2))|(((c=5)&(d=((9*e)+7)))|((x*2)>((y/4)*2))));
+#        on(((a=1)&(b=2))|(((c=5)&(d=((9*e)+7)))|((x*2)>((y/4)*2))));
+~ > #        on(((a=1)&(b=2))|(((c=5)&(d=((9*e)+7)))|((x*2)>((y/4)*2))));
+#
+~ > #
+define r02 on((4*5+5)*4-100+40/10*2);
+~ > define r02 on((4*5+5)*4-100+40/10*2);
+show r02
+~ > show r02
+~ r02 = ! == on(((((4*5)+5)*4)-100)+((40/10)*2));
+#        on(((((4*5)+5)*4)-100)+((40/10)*2));
+~ > #        on(((((4*5)+5)*4)-100)+((40/10)*2));
+#
+~ > #
+define r03 on(a=5*2+17 ~^?(15s) ^ b*40+2>5+8/c & d | e);
+~ > define r03 on(a=5*2+17 ~^?(15s) ^ b*40+2>5+8/c & d | e);
+show r03
+~ > show r03
+~ r03 = ! == on(((((a=((5*2)+17))~^?(15s))^(((b*40)+2)>(5+(8/c))))&d)|e);
+#        on(((((a=((5*2)+17))~^?(15s))^(((b*40)+2)>(5+(8/c))))&d)|e);
+~ > #        on(((((a=((5*2)+17))~^?(15s))^(((b*40)+2)>(5+(8/c))))&d)|e);
+#
+~ > #
+# Verify that all terms match the representation in the comment.
+~ > # Verify that all terms match the representation in the comment.

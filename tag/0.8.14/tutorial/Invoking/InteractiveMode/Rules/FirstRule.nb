@@ -1,0 +1,8 @@
+#!/usr/local/bin/nb
+define myFirstRule on(a=1 and b=2);
+assert a=1;
+assert c=3;
+assert b=2;
+assert a=0;
+assert c=1;
+assert a=1;

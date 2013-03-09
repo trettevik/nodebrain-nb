@@ -1,0 +1,706 @@
+ÿþ\input texinfo   @c -*-texinfo-*-
+@c %**start of header
+@setfilename nb_peer.info
+@include version.texi
+@settitle Peer NodeBrain Module
+@c %**end of header
+
+@finalout
+@paragraphindent none
+@setchapternewpage odd
+
+
+@copying
+Peer NodeBrain Module@*
+June 2012@*
+The Boeing Company,  P.O. Box 3707, Seattle, WA 98124, USA
+
+@sp 2
+@b{Release 0.8}
+
+Author: Ed Trettevik <eat@@nodebrain.org>
+
+Copyright @copyright{} 2006, 2007, 2008, 2009, 2010, 2011 The Boeing Company
+
+@sp 1
+Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} preceding the index at the end of this document.
+
+@sp 1
+NodeBrain(TM) is a trademark of The Boeing Company.   All other trademarks and registered trademarks referenced in this document are the trademarks of their respective owners.
+
+@sp 2
+@b{Software License}
+
+@multitable {------------------------------} {----------------------------------------------------}
+@item Copyright @copyright{} 1998--2010 @tab The Boeing Company
+@item @tab Ed Trettevik <eat@@nodebrain.org>
+@end multitable
+
+The Peer module is free software; you can redistribute it and/or  modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option)any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License formore details.
+
+You should have received a copy of the GNU General PublicLicense along with this program; if not, write to Free Software Foundation,Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+@end copying
+
+@iftex
+@titlepage
+@c @image{./image001,32pt,32pt,,gif}
+
+@titlefont{Peer Module Module}
+@sp 1
+@tex
+\vskip4pt \hrule height 3pt width \hsize
+@end tex
+@sp 3
+@b{Version @value{VERSION}}
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+
+@c History Preface and Document Conventions 
+@page
+@b{History}
+
+@multitable {-------------} {--------------------------------------------------------------------------------------------------------}
+@item 2005-10-12 @tab
+Title: @i{Peer NodeBrain Module}@*  
+Author: Ed  Trettevik <eat@@nodebrain.org>@*
+Publisher: The Boeing Company
+
+@item 2012-06-18 @tab
+Release 0.8.10
+@itemize @bullet
+@item Revised to reflect changes since release 0.7.3.
+@end itemize
+
+@end multitable
+
+@page
+@b{Preface}
+
+@sp 1
+This manual is intended for users of the Peer NodeBrain Module, a plug-in for communication between NodeBrain processes.
+This module is expected to change a bit by release 1.0, primarily by the addition of an option to use TLS in addition to, or instead of,
+the current authentication and encryption features.
+@sp 1
+The Message module is now the preferred method of exchanging high volume messages between NodeBrain processes.
+The Peer module is still preferred in low volume cases where it is helpful to see a response to individual commands.
+@sp 1
+See www.nodebrain.org for more information and the latest update to this document.
+
+@include conventions.texi
+
+@end titlepage
+
+@end iftex
+
+@c ----------------------------------------------------------
+@c Not printed document
+
+@ifnottex
+@node Top
+@top Peer NodeBrain Module
+
+This tutorial is for NodeBrain (version @value{VERSION}, @value{UPDATED-MONTH}), an open source agent
+for state and event monitoring.
+
+Copyright @copyright{} 2006, 2007, 2008, 2009, 2010, 2011, 2012 The Boeing Company
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
+@end quotation
+@ifnotplaintext
+@b{Short Table Of Contents}
+@menu
+* Concepts:: Foundation
+* Tutorial:: Introduction by Example
+* Commands:: Syntax and Semantics
+* Triggers:: Conditions and Response
+@end menu
+@menu
+* GNU Free Documentation License::
+* Index::
+@end menu
+@end ifnotplaintext
+@end ifnottex
+
+@c Set page footings
+@oddfooting @thistitle @| @| @thispage
+@evenfooting @thispage @| @| @thistitle
+
+@c Contents
+@oddheading @| @| 
+@evenheading @| @|
+@contents
+
+@c Set page headings for document
+@oddheading @thischapter @| @| @value{UPDATED-MONTH}
+@evenheading @value{UPDATED-MONTH} @| @| @thischapter
+
+@node Concepts
+@chapter Concepts 
+@cindex concepts
+
+The peer module provides support for external communication between NodeBrain nodes within the same process, in two separate processes on the same system, or two processes running on different systems.  This includes TCP/IP communication using network or local domain sockets and communication via peer queue files.  Both methods can be combined to provide store-and-forward transmission of messages to ensure delivery when interrupted by network or agent outages.
+
+The peer module implements the NodeBrain protocol (NBP) originally built into the NodeBrain Interpreter.
+
+@node Tutorial
+@chapter Tutorial
+@cindex tutorial
+@include nb_peer_tutorial.texi
+
+@node Commands
+@chapter Commands
+@cindex commands
+
+This section describes commands used with the Peer modules.
+
+@section Peer Server Skill
+@cindex peer server skill
+A peer server accepts connections and serves requests from other NodeBrain processes using compatible peer node modules.  The server authenticates clients and issues commands sent from the client within the context of the server node.  It simply accepts commands from remote nodes and passes them on to the interpreter using the client s authenticated identity.
+
+@subsection Peer Server Definition
+@cindex Peer Server Definition
+
+@subheading Syntax
+@table @command
+   
+@item peerDefineCmd
+::= define $ term $ node [ $ peerServerDef ] "     
+   
+@item peerServerDef
+::= peer.server(  serverSpec  );   
+   
+@item serverSpec
+::= serverIdentity @@ socketSpec    
+   
+@item serverIdentity
+::= name of server identity for authentication   
+   
+@item socketSpec
+::= inetSocket | localSocket    
+   
+@item inetSocket
+::= [ hostname | ipaddress ]  : port   
+   
+@item localSocket
+::= filepath   
+ 
+@end table   
+
+The following example defines a peer server node that accepts connections from other servers on port 50000 using identity "fred."
+
+@cartouche
+@smallexample
+define buddy node peer.server("fred@@0.0.0.0:50000");
+@end smallexample
+@end cartouche
+
+On servers that have multiple network interfaces, connections may be limited to a given interface by specifying the interface address.
+
+@cartouche
+@smallexample
+define buddy node peer.server("fred@@192.168.1.100:50000");
+@end smallexample
+@end cartouche
+
+Access can be limited to the local host to avoid remote connections by specifying the loopback address.
+
+@cartouche
+@smallexample
+buddy node peer.server("fred@@localhost:50000");
+@end smallexample
+@end cartouche
+
+Access can also be limited to the local host by using a local domain socket.
+
+@cartouche
+@smallexample
+define buddy node peer.server( fred@@/tmp/mysocket );
+@end smallexample
+@end cartouche
+  
+The Assert, Evaluate, and Command methods are not implemented for this skill. 
+ 
+Enable and Disable methods are implemented, so the @code{ENABLE} and @code{DISABLE} commands can be used to control when the node listens for connections.
+
+@cartouche
+@smallexample
+> disable term;      [Stop listening for connections.] 
+> enable term;       [Start listening for connections.]
+@end smallexample
+@end cartouche
+
+@section Peer Queue Skill
+@cindex peer queue skill
+
+A peer queue provides a file-based mechanism for passing data between application components.  The design is intended to be simple, rugged, and independent.  It is not intended for high performance.  
+
+The file structure and locking scheme is sufficiently simple to enable non-NodeBrain application components to directly write to or read from a peer message queue.  However, it is normally best to use the nb program with the peer module to send and receive messages when using a peer message queue.
+
+@subsection Peer Queue Definition
+@cindex peer queue definition
+
+ 
+@subheading Syntax
+@table @command
+   
+@item peerQueueDefine
+::= define $ term $ node [ $ peerQueueDef ] "     
+   
+@item peerQueueDef
+::= peer.queue(  queueSpec  , schedule);   
+   
+@item queueSpec
+::= queue directory path     
+   
+@item schedule
+::= cell expression---normally a time condition     
+ 
+@end table   
+
+The following example would be used to process commands from a queue directory with a path off @code{/tmp/queue/automon}.  This queue would be checked every 30 seconds for new commands.
+
+@cartouche
+@smallexample
+define input node peer.queue("/tmp/queue/automon",~(30s));
+@end smallexample
+@end cartouche
+
+@subsection Message Directory and File Names
+
+A message file path has several components: queue, identity, time, count, and type.
+
+@cartouche
+@smallexample
+queue/identity/time.count.type
+@end smallexample
+@end cartouche
+
+The queue and identity components are specified when a peer is defined.
+
+@cartouche
+@smallexample
+define term node peer("identity@@(queue)");
+@end smallexample
+@end cartouche
+ 
+It is important to understand that only file permissions can prevent an unauthorized user from writing a message under any given identity.  It is best when producer and consumer processes run under the same user account.
+
+The type component of a message file name identifies the type of content and file format.
+
+@table @samp
+
+@item Q
+Header 
+
+@item q
+command queue
+
+@item c
+command 
+
+@item t
+text 
+
+@end table   
+
+Each message directory (queue/identity) has a header file used to control message file names.
+
+@cartouche
+@smallexample
+queue/identity/00000000000.000000.Q
+@end smallexample
+@end cartouche
+
+This file contains a simple 21 byte record of the form show here, where ttttttttttt is a UTC time and cccccc is a counter.  
+
+@cartouche
+@smallexample
+ttttttttttt.cccccc
+@end smallexample
+@end cartouche
+
+A command queue message file contains one command per line with a special character in the first position of each line.
+
+@table @samp
+@item >
+unprocessed command
+
+@item #
+processed command
+
+@end table   
+
+
+A command queue message file (.q) is processes by executing each command and marking it complete by replacing ">" with "#".  This enables a consumer to terminate processing in the middle of a command queue message file and restart where it left off later.
+
+A command message file (.c) is processed by interpreting each command without marking individual commands complete.  This is just like including a ".nb" source file.
+
+The peer node module does not yet have the needed functionality to process text message files (.t) and package message files (.p), although it can write them to a message queue to be processed by a custom consumer program.  An example of a text message file is an email received by the Mail node module.  These files can be transmitted to a message queue on another host for parsing.  The structure of a package message file has not been defined.  We are simply reserving this type code for future use.  We expect it to be used for managing rule file updates or NodeBrain software updates.  Header information will describe the package file content and required actions.
+
+@subsection Message Queue Processing
+
+When writing a command to a queue, the peer module references the header file to find the name of the current command queue message file.  If the header file contains a value like the one shown below, the current command queue message file name is this same value with ".q" appended.
+
+@table @samp
+
+@item 01043454323.000000         
+[ content of header file ]
+
+@item 01043454323.000000.q
+[ current message file name ]
+
+@end table   
+
+There are three conditions under which the current command queue message file name is "incremented."  This happens when
+
+@enumerate
+@item
+the command queue interval expires
+
+@item
+a message file of a different type is written
+
+@item
+a consumer begins reading from a queue
+@end enumerate
+
+Otherwise, commands are appended to the current command queue message file with a prefix of ">".
+
+When a queue is specified in a peer definition, a command queue interval may be specified.  This will cause the peer module to start a new command queue message file whenever a command is written after the current interval has expired.  For example, if the command queue interval is set at 1 hour, at least one command queue message file will be created for each hour in which a command is queued.
+
+Any time a text (.t), command (.c), or package (.p) message file is queued, the header is updated to provide a unique file name for the message file.  The time component is set to the current time.  If this matches the current command queue time, the count in the header file is incremented by 2 to skip over the count used by the message file.  In other words, NodeBrain interrupts the current command queue message file to allow another message file to be queued in order.    
+
+When the peer module reads a message queue, it first updates the header record to force the start of a new commend queue message file.  This is similar to the process described previously, except the counter is only incremented by 1 if the time component doesn t change.  The message queue directory is then processed only through the file name that was current before the update.  Each message file is locked by producers and consumers to avoid simultaneous access.  A consumer will skip over a busy file and catch it on the next pass.
+
+If a system clock is reset to an earlier time, a peer message queue must preserve file sequence to avoid attempts to overwrite existing files.  This is accomplished by never reducing the time in the header file.  If the count in the header file exceeds 999999, the time component is incremented and the count is set to 000000.  This preserves file name sequence.  There is no dependence on correct times in a message queue.  However, when a message queue has multiple directories (is written using multiple identities), the message files are processed in order by the messages file names.  This is only important when the queue contains several files, perhaps because the consumer stopped for a long period.  It enables the consumer to process message files in the same general order they were produced.  The sequencing of commands from different identities in a backlogged queue will depend on the granularity of the message queue interval.
+
+@section Peer Client Skill
+@cindex peer client skill
+
+
+The peer client skill is used to communicate with a peer server and/or a peer queue.
+
+@subsection Peer Client Definition
+@cindex peer client defintion
+
+ 
+@subheading Syntax
+@table @command
+   
+@item peerDefineCmd
+::= define $ term $ node [ $ peerDef ] "     
+   
+@item peerDef
+::= peer.client(  peerSpec   [ , schedule ] );   
+   
+@item peerSpec
+::= [ [ clientIdentity ~ ] serverSpec [ @{ timeout @} ] ]  [ ( qSpec ) ]   
+   
+@item clientIdentity
+::= name of client identity to portray   
+   
+@item serverSpec
+::= serverIdentity @@ socketSpec    
+   
+@item serverIdentity
+::= name of server identity (see peer.server)   
+   
+@item socketSpec
+::=  inetSocket | localSocket    
+   
+@item inetSocket
+::= [ hostname | ipaddress ]  : port   
+   
+@item localSocket
+::= filepath (Must include at least one "/" - use "./" if necessary)   
+   
+@item qSpec
+::= qDirectoryPath [ ( qInterval ) ]    
+   
+@item schedule
+::= See Time Conditions   
+@end table    
+
+A peer node can be used to perform four different functions, depending on how it is defined and what command options are used.
+
+@enumerate
+
+@item
+Send commands to a remote peer server node.
+
+@item
+Store commands in a peer message queue.
+
+@item
+Store-and-forward command to a remote peer server node through a peer message queue.
+
+@item
+Process commands from a peer message queue.
+@end enumerate
+
+Suppose a NodeBrain agent running on yoyo.com has the following peer server node.
+
+@cartouche
+@smallexample
+define server node peer.server("charlie@@0.0.0.0:32171");
+@end smallexample
+@end cartouche
+
+A NodeBrain client with the following peer node is able to send commands to the agent, provided the identities "sally" and "charlie" are properly defined on both systems.
+
+@cartouche
+@smallexample
+define client node peer("sally~charlie@@yoyo.com:32171");
+@end smallexample
+@end cartouche
+
+
+@subsection Peer Client Command
+@cindex peer client command
+
+
+@subheading Syntax
+@table @command
+   
+@item peerCmd
+::= context[(option)][: text]  "     
+   
+@item option
+::= 0 | 1 | 2  | 3   
+ 
+@end table  
+
+A peer client command is used to send a single command to a peer server, directly, or indirectly via a store and forward queue.
+
+If no option is specified, the operation is determined by the combination of server and queue specified. 
+
+@multitable {-------------} {-------------} {-------------}{-----------------------------------------------------------------------------------------} 
+@headitem Option @tab Server@tab Queue@tab Operation   
+ 
+@item null @tab No@tab yes@tab Command text is written to queue.   
+@item null @tab Yes@tab yes@tab Command text is written to queue and then queue is forwarded if server is available.   
+@item null @tab Yes@tab no@tab Command text sent directly to server 
+
+@end multitable
+
+
+If an option is specified, the operation is determined by the option, unless the requirements are not met, in which case the option is ignored and the operation is determined as shown above.
+
+
+ 
+@multitable {-------------} {-------------} {-------------} {-----------------------------------------------------------------------------------------} 
+@headitem Option@tab Server@tab Queue@tab Operation   
+@item 0@tab Allowed@tab Required@tab Command text is written to queue.   
+@item 1@tab Required@tab Required@tab Command text is written to queue and then queue is forwarded if server is available.   
+@item 2@tab Required@tab Allowed@tab Command text sent directly to server   
+@item 3@tab Required@tab Allowed@tab An interactive session is established with a new  skull  spawned by the server. 
+
+@end multitable
+
+
+@section Peer Service Skill
+@cindex peer service skill
+
+The service skill supports commands related to peers that are not specific to individual client and server nodes.
+
+@subsection Peer Service Definition
+@cindex peer service definition
+
+
+ 
+@subheading Syntax
+@table @command
+   
+@item peerServiceDefine
+::= define $ term $ node [ $  peerServiceDef ] "     
+   
+@item peerServiceDef
+::= peer.service;   
+ 
+@end table    
+
+
+@subsection Identify Command
+@cindex identify command
+
+ 
+@subheading Syntax
+@table @command
+   
+@item identifyCmd
+::= node: identify $ identityName [ $ bitSize ] [ $ ] [; [ comment ] ] "     
+   
+@item node
+::= peer service node term   
+   
+@item bitSize
+::= integer   
+
+@end table    
+ 
+
+The @code{IDENTIFY} command is used to generate a random private identity key.  By default a 64-bit key is generated but you may override the bit size with any positive integer value.  The generated identity key is placed in your home directory in a file named  nb_peer.keys .  If the identity name is not already specified, a new entry is appended.
+
+@cartouche
+@smallexample
+identify lilly 32;
+@end smallexample
+@end cartouche
+
+The command above would generate a relatively insecure private key and append an entry like the following to ~/.nb/nb_peer.keys
+
+@cartouche
+@smallexample
+lilly 7.f64e1e7f3.f20707fa2.0;
+@end smallexample
+@end cartouche
+
+The structure of the key is as follows, where owner is generated as 0 and otherwise not used by NodeBrain.
+
+@cartouche
+@smallexample
+pubExponent.pubModulus.privateExponent.owner
+@end smallexample
+@end cartouche
+
+To protect your private keys, it is important to set nb_peer.keys file permissions to allow read/write by owner only.  NodeBrain is not intended for use in publicly shared applications, so there is no requirement for a public key server.  You may construct a public key from your private key by replacing the third number with 0.
+
+@cartouche
+@smallexample
+lilly 7.f64e1e7f3.0.0;
+@end smallexample
+@end cartouche
+
+A NodeBrain peer public identity key should be managed as a shared secret key.  Share it only with trusted administrators of peers requiring communication with your NodeBrain application.
+
+@subsection Copy Command
+@cindex copy comman
+
+ 
+@subheading Syntax
+@table @command
+   
+@item peerCopyCmd
+::= node : copy ( copyToFileSpec | copyToQueueSpec )  [ ; [comment] ] "     
+   
+@item node
+::= peer service node term   
+   
+@item copyToFileSpec
+::= @{ a | b @} $ peerFileSpec $ peerFileSpec   
+   
+@item copyToQueueSpec
+::= @{ c | q | t  @} $ peerFileSpec $ peerQueueSpec    
+   
+@item peerFileSpec
+::= [ clientNode : ] filename   
+   
+@item peerQueueSpec
+::= [ clientNode : ] queueNode   
+   
+@item clientNode
+::= peer client node term   
+ 
+@end table   
+
+We include documentation of the deprecated @code{COPY} command here to support a transition to the peer copy skill.
+
+The @code{COPY} command is used for secure file transfers using NodeBrain peer authentication and data encryption.
+
+Event monitoring applications often require file transmission for application administration (e.g., rule file update) and bulk event transfers.  For administration, NodeBrain provides ascii (text) and binary file transfers.  The first parameter to the @code{COPY} command is "a" for ascii or "b" for binary.
+
+@cartouche
+@smallexample
+copy a /tmp/newrules.nb @@goofy:/tmp/newrules.nb; # ascii file transfer
+copy b /usr/local/bin/nb @@goofy:/tmp/nb; # binary file transfer
+@end smallexample
+@end cartouche
+
+The second and third parameters specify the source file and destination file respectively.  A NodeBrain agent may be used to push or pull a file.  When pulling a file, a brain is specified for the source file.
+
+@cartouche
+@smallexample
+copy a @@goofy:/opt/mymonitor/rules.nb /tmp/rules.nb; # pull
+@end smallexample
+@end cartouche
+
+You may also copy files between two remote servers by specifying NodeBrain agent names on both the source and destination.
+
+@cartouche
+@smallexample
+copy a @@huey:/opt/mymonitor/rules.nb @@duey:/tmp/rules.nb;
+@end smallexample
+@end cartouche
+
+Use of the NodeBrain @code{COPY} command for application administration is optional.  This feature is included for environments where other secure tools are not available.
+
+The @code{COPY} command is also used to place a copy of a file into a local or remote NodeBrain message queue for processing.  The first parameter specifies the type of message file to create.
+
+@table @samp
+
+
+@item c
+command
+
+@item q
+command queue
+
+@item t
+text
+
+@end table   
+
+When copying to a queue, the destination is a brain name instead of a file name.  NodeBrain will generate a unique file name in the target message queue directory.
+
+@cartouche
+@smallexample
+copy q my_command_set.nb goofy
+@end smallexample
+@end cartouche
+
+The message queue directory name is derived from the brain definition and the currently portrayed identity.
+
+@cartouche
+@smallexample
+declare goofy brain silly@@goofus.nodebrain.org:49828[/var/spool/nb];
+portray huey;
+copy q my_command_set.nb goofy
+@end smallexample
+@end cartouche
+
+Given the brain declaration and identity shown above, the copy command would create a message queue file as follows, where ttttttttttt is the current time (UTC) and nnnnnn is a unique number for files within that second and "q" is the message file type.
+
+@cartouche
+@smallexample
+/var/spool/nb/goofy/huey/ttttttttttt.nnnnnn.q
+@end smallexample
+@end cartouche
+
+Like administrative file transfers, message queue file transfers may have a remote source and/or destination.
+
+@cartouche
+@smallexample
+copy t @@agent1:/tmp/my_command_set.nb @@agent2:goofy
+@end smallexample
+@end cartouche
+
+This feature is provided for convenient transmission of event data from a source system to a monitoring system.  You may use other tools like ssh and scp for this purpose if preferred in your environment.
+
+@node Triggers
+@chapter Triggers
+@cindex triggers
+
+This module does not implement triggers.
+
+@node GNU Free Documentation License
+@unnumbered GNU Free Documentation License
+
+@node Index 
+@unnumbered Index 
+@printindex cp 
+@bye 
+

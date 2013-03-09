@@ -1,0 +1,50 @@
+#!/usr/bin/perl
+#================================================================================
+# Change History
+#
+# Date        Name/Vers/Change
+# ----------  -------------------------------------------------------------------
+# 2001/02/02  eat 0.7.3  Modified "About this note" text.
+# 2003/09/27  eat 0.8.4  Included route parameter.
+#================================================================================
+use strict;
+
+my $CABOODLE=`pwd`;
+chomp($CABOODLE);
+
+my ($text,$date,$time,$host,$source,$route,$appl,$group,$node,$object,$severity);
+
+my $parmstr='"'.join('" "',@ARGV).'"';
+eval '$'.$1.'$2;' while $ARGV[0] =~ /^([A-Za-z_0-9]+=)(.*)/ && shift;
+
+if(!$host){
+  chop($host=`hostname`);
+  my ($fqdn)=gethostbyname($host);
+  $host=$fqdn if($fqdn);
+  }
+
+$node=$host if(!$node);
+$route=$1 if($route=~/^,(.*),$/);
+
+print "root\@$node\n";  # Reply address
+print "$text\n";                       # Subject
+print "Date:    	$date\n";      # Body
+print "Time:    	$time\n";
+print "Host:    	$host\n";
+print "Caboodle:	$CABOODLE\n";
+print "Source:  	$source\n";
+print "Route:   	$route\n\n";
+print "Appl:    	$appl\n";
+print "Group:   	$group\n";
+print "Node:    	$node\n";
+print "Object:  	$object\n";
+print "Severity:	$severity\n";
+print "\n";
+$|=1; # force unbuffered print
+print "Message: $text\n\n";
+
+print "\n<>  About this note:\n\n";
+print "You have received this note based on application alarm distribution rules.  If you would like to be removed from the distribution for this alarm, contact your application administrator.\n";
+print "\n";
+print "Alarm Distribution Rules\n";
+print "NodeBrain Caboodle Kit\n";

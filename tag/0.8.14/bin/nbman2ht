@@ -1,0 +1,403 @@
+#!/usr/bin/perl
+#
+# Convert minimal nroff format man pages to html
+#
+# See NodeBrain Developer's Guide for a description of the
+# man page coding standards assumed by this script.
+#=================================================================================
+
+# put html in buffer  (or print while debugging)
+
+sub html{ 
+  (my $text)=@_;
+  #print($text);
+  $html.=$text;
+  }
+
+# Replace \fP with </i> or </b>
+
+sub formatstop{
+  (my $line,my $tag)=@_;
+  if($line=~/^(.*?)\\fP(.*)$/){$line=$1."</$tag>".$2;}
+  return($line);
+  }
+
+# and then replace nroff formatting with html
+#
+#   leading \fP      -->  nothing
+#   \fBsomething\fP  -->  <b>something</b>
+#   \fIsomehting\fI  -->  <i>something</i>
+#   \\               -->  \
+#
+# Repace html special characters with variables
+#
+#   &                -->  &amp;
+#   "                -->  &quot;
+#   >                -->  &gt;
+#   <                -->  &lt;
+
+sub format{
+  (my $text,my $nf)=@_;
+  my $nl=0;
+  if($text=~/\n$/){
+    chomp($text);
+    $nl=1;
+    }
+  if($text=~/^\\fP(.*$)/){$text=$1;}         # drop leading plain font
+  $text.=' ';                                # put space on end for splits
+  $text=join("\&amp;",split(/\&/,$text));    # replace & with &amp;
+  $text=join("\&quot;",split(/"/,$text));    # replace " with &quot;
+  $text=join("\&gt;",split(/\>/,$text));     # replace > with &gt;
+  $text=join("\&lt;",split(/\</,$text));     # replace < with &lt;
+  # Note: This would not handle \\fB or \\fI properly - but don't do that
+  $text=join("\\",split(/\\\\/,$text));      # replace \\ with \
+  $text=join("`",split(/\\`/,$text));        # replace \` with `
+  if($text=~/^(.*)\s+$/){$text=$1;}          # take space off the end 
+  while($text=~/^(.*?)\\fB(.*)$/){$text=$1."<b>".&formatstop($2,"b");}
+  while($text=~/^(.*?)\\fI(.*)$/){$text=$1."<i>".&formatstop($2,"i");}
+  if($nf){$text.="<br>\n";}
+  elsif($nl){$text.="\n";}
+  return($text);
+  }
+
+# Process lines of man page based on helper comments
+#
+#   .\"ht doc    - change doc reference to link a document
+#   .\"ht page   - change bold text to link another man page
+#   .\"ht fixed  - change .nf ... .fi  to <pre> ... </pre>
+#   .\"ht table  - change text table to html table
+
+sub helper{
+  (my $tag)=@_;
+
+  #   .\"ht page
+  #   \fBnb.cfg\fP(5),
+  #
+  #         <a href="nb.cfg.html"><b>nb.cfg<\b></a>(5),
+
+  if($tag eq 'page'){
+    my $line=<>;
+    if($line=~/^\\fB(.*?)\\fP(.*)$/){
+      html("<a href=\"$1.html\"><b>$1</b></a>$2\n"); 
+      }
+    else{
+      html("<!-- page reference syntax error -->\n");
+      html($line);
+      }
+    }
+
+  #   .\"ht doc
+  #   [1]
+  #   .I NodeBrain User's Guide
+  #   - http://www.nodebrain.org/nbUserGuide.pdf
+  #
+  #        <p>[1]
+  #        <a href="http://www.nodebrain.org/nbUserGuide.pdf">
+  #        <i>NodeBrain User's Guide</i></a><br>
+  
+  elsif($tag eq 'doc'){
+    my $item=<>; 
+    if($item=~/^(\[\d+\])$/){$item=$1;} # a funny chomp
+    else{
+      html("<!-- doc reference syntax error in reference number line -->\n");
+      html($item);
+      return;
+      }
+    my $title=<>;
+    if($title=~/^\.I (.*)$/){$title=$1;}
+    else{
+      html("<!-- doc reference syntax error in title line -->\n");
+      html($title);
+      return;
+      }
+    my $link=<>;
+    if($link=~/^- (.*)$/){$link=$1;}
+    else{
+      html("<!-- doc reference syntax error in link line -->\n");
+      html($link);
+      return;
+      }
+    html("<p>$item <a href=\"$link\"><i>$title</i></a><br>\n");
+    }
+
+  #   .\"ht fixed
+  #   .nf
+  #   text ... 
+  #   .fi
+  #        <pre>
+  #        text ...
+  #        </pre>
+
+  elsif($tag eq 'fixed'){
+    my $line=<>;
+    if($line=~/^\.nf/){
+      html("<pre>\n");
+      $line=<>;
+      }
+    else{
+      html("<!-- fixed block syntax error - expecting .nf -->\n");
+      html($line);
+      return;
+      }
+    while(!($line=~/^\.fi/)){
+      html(&format($line,$nf));
+      $line=<>;
+      }
+    html("</pre>\n");
+    }
+
+  #   .\"ht table
+  #   .nf
+  #   heading
+  #   ----------- ----------- ------------ ...
+  #   rows
+  #   .fi
+  #
+  #        <table ...>
+  #        <tr><td>column1</td>...</tr>    
+  #        ...
+  #        </table>
+
+  elsif($tag eq 'table'){
+    my $line=<>;
+    if($line=~/^\.nf/){$heading=<>;}
+    else{
+      html("<!-- table block syntax error - expecting .nf -->\n");
+      html($line);
+      return;
+      }
+    my $rule=<>;
+    if(!($rule=~/^-[ |-]+$/)){
+      html("<!-- table block syntax error - expecting rule line \"---\" -->\n");
+      html($rule);
+      return;
+      }
+    my @columnlen;
+    my $columns=0;
+    while($rule=~/^(-+\s+)(-.*)$/){
+      push(@columnlen,length($1));
+      $columns++;
+      $rule=$2;
+      }
+    if($rule=~/^-+\s*$/){
+      push(@columnlen,200);  # last column takes rest of line
+      $columns++;
+      }
+    else{
+      html("<!-- table block syntax error - rule line contains unexpected character  -->\n");
+      html($rule);
+      return;
+      }
+    html("<p><table border=\"0\" cols=\"$columns\">\n");
+    my $text;
+    $line=$heading;
+    my $tag="th";
+    my $w;
+    while(!($line=~/^\.fi/)){
+      $w=5;
+      html("<tr>");
+      foreach $len (@columnlen){
+        $text=substr($line,0,$len);
+        $line=substr($line,$len);
+        if($text=~/^\s*(.*?)\s*$/){$text=$1;}
+        $text=&format($text,0);
+        $w=90 if($len==200);
+        html("<$tag width=\"$w%\" align=\"left\" valign=\"top\">$text&nbsp;&nbsp;&nbsp;</$tag>");
+        }
+      html("</tr>\n");
+      $line=<>;
+      $tag="td";
+      }
+    html("</table>\n");
+    }
+
+  }
+
+sub alternate{
+  (my $line,my $odd,my $even)=@_;
+  my $useodd=1; 
+  while($line){
+    if($line=~/^\s*"(.*?)"\s+(.*)$/){$line=$2;}
+    elsif($line=~/^\s*(.*?)\s+(.*)$/){$line=$2;}
+    elsif($line=~/^\s*"(.*?)"\s*$/){$line='';}
+    elsif($line=~/^\s*(.*)$/){$line='';}
+    else{
+      html("$line\n");
+      html("<!-- alternating font syntax error -->\n");
+      return;
+      }
+    if($useodd){ 
+      html("<$odd>$1</$odd> ");
+      $useodd=0;
+      }
+    else{
+      html("<$even>$1</$even> ");
+      $useodd=1;
+      }
+    }
+  html("\n");
+  }
+#=====================================================================
+# main body
+#     .IP \fB-c\fP \fB--caboodle\fP 17
+while(<>){
+  $inline=$_;
+  $inline=$1."\n" if($inline=~/^(\.IP.*?)\s+\d+$/);  # 2013-02-04 eat ignore column width
+  $lb=$bl;     # last line blank
+  $bl=0;       # this line blank
+  # unbulletted lists implied by spaces at start of line
+  if($inline=~/^\s+(.+)$/){ 
+    $text=&format($1,$nf);
+    if(!$list){
+      html("<ul>\n"); # start a list
+      $list=1;
+      }
+    html("$text<br>\n");
+    next;
+    }
+  elsif($list){        # end a list
+    html("</ul>\n");
+    $list=0;
+    $bl=1;     # act like last line was blank
+    }
+  # blank line paragraph start
+  if($inline=~/^\s*$/){
+    html("<p>");
+    $bl=1;
+    }
+  # comment
+  elsif($inline=~/^\.\\"(.*)$/){
+    $line=$1;
+    if($line=~/^ht (.*)$/){helper($1);}
+    else{html("<!-- $line -->\n");}
+    }
+  elsif($inline=~/^\.(.*?)( (.*))?$/){
+    $code=$1;
+    $line=$3;
+    if($line=~/^\s+(.*)$/){$line=$1;}
+    if($code eq 'B'){
+      $text=&format($line);
+      html("<b>$text</b>\n");
+      }
+    elsif($code eq 'BI'){
+      alternate($line,"b","i");
+      }
+    elsif($code eq 'I'){
+      $text=&format($line);
+      html("<i>$text</i>\n");
+      }
+    elsif($code eq 'IB'){
+      alternate($line,"i","b");
+      }
+    elsif($code eq 'IP'){
+      if($ip){html("</td></tr>\n");}
+      else{
+        if(!$lb){html("<p>");}
+        html("<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"5\">\n");
+        $ip=1;
+        }
+      $text=&format($line,$nf);
+      html("<tr><td width=\"5%\" align=\"left\" valign=\"top\">$text&nbsp;&nbsp;&nbsp;</td><td width=\"94%\" align=\"left\" valign=\"top\">\n");
+      }
+    elsif($code eq 'P'){
+      if($ip){
+        html("</td></tr></table>\n");
+        $ip=0;
+        }
+      if($line){
+        $text=&format($line,$nf);
+        html("<p>$line\n");
+        }
+      }
+    elsif($code eq 'RS'){
+      html("<table><tr><td>\n");
+      $saveip=$ip;
+      $ip=0;
+      }
+    elsif($code eq 'RE'){
+      html("</td></tr></table>\n") if($ip); # close the internal table
+      html("</td></tr></table>\n");
+      $ip=$saveip;
+      }
+    elsif($code eq 'SH'){
+      if($shtab){html("</td></tr></table>\n");}
+      if($line=~/^\s*"(.*?)"\s*$/){$line=$1;}
+      push(@toc,$line);
+      html("<a name=\"$line\"></a>\n");
+      html("<h3>$line</h3>\n");
+      html("<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">\n");
+      html("<tr><td width=\"5%\">&nbsp;</td>\n");
+      html("<td width=\"94%\" valign=\"top\" align=\"left\">\n");
+      $shtab=1;
+      }
+    elsif($code eq 'TH'){
+      if($line=~/^\s*(.*?)\s+(\d+)\s+"(.*?)"\s+"(.*?)"\s+"(.*?)"\s*$/){
+        $file=$1;
+        $mansection=$2;
+        $mandate=$3;
+        $version=$4;
+        $mantitle=$5;
+        $version_no="?";
+        $version_no=$2 if($version=~/^(.*?)\s+(.*)$/);
+        }
+      else{html($inline);}
+      }
+    elsif($code eq 'nf'){
+      $nf=1;
+      }
+    elsif($code eq 'fi'){
+      $nf=0;
+      }
+    else{
+      html($inline);
+      }
+    }
+  else{
+    html(&format($inline,$nf));
+    }
+  }
+if($shtab){html("</td></table>\n");}
+
+# heading
+
+$text="<html>
+<head>
+<meta name=\"generator\" content=\"nbman2ht\">
+<meta name=\"Content-Style\" content=\"text/css\">
+<title>NodeBrain Manual Page</title>
+<style>
+  body  {font-family: verdana; font-size: 10pt;}
+  table {font-size: 10pt;}
+  h3    {font-size: 10pt;}
+  pre   {font-size: 10pt;}
+</style>
+</head>
+<body>";
+print("$text\n");
+
+# title line
+
+print("<table width=\"100%\"><tr>\n");
+print("<td align=\"left\" width=\"20%\">$file($mansection)</td>\n");
+print("<td align=\"center\" width=\"60%\"><span style=\"font-size: 14pt\">$mantitle</span>\n<br>Version $version_no - $mandate</td>\n");
+print("<td align=\"right\" width=\"20%\">$file($mansection)</td>\n");
+print("</tr></table>\n");
+
+# table of contents
+
+print("<p style=\"font-size: 7pt\">\n");
+$section=shift(@toc);
+print("<a href=\"#$section\">$section</a>\n");
+foreach $section (@toc){
+  print("| <a href=\"#$section\">$section</a>\n");
+  }
+print("</p>\n");
+print("<hr>\n");
+
+# body
+
+print("$html");
+
+# footing
+print("<hr>\n");
+print("<table width=\"100%\"><tr><td align=\"left\" width=\"33%\">$version</td><td align=\"center\" width=\"34%\">$mandate</td><td align=\"right\" width=\"33%\">$file($mansection)</td></tr></table>\n");

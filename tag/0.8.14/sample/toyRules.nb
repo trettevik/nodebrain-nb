@@ -1,0 +1,47 @@
+#!../nb
+#
+# File:   toyRules.nb
+#
+# Title:  Rules to test sample module nb_mod_toy.
+#
+# Description:
+#   
+#   This rules may be used to study nb_mod_toy
+#   behavior to better understand ModeBrain Expert
+#   Skill Modules.  Use in combination with an
+#   event file like toyEvents.nb
+#
+#   ./toyRules.nb toyEvents.nb
+#
+# 2004/04/05 eat 0.6.0  constructed
+#=======================================================
+
+# Declare Module
+#
+#   This is only required for testing in the sample
+#   directory with a module you built in the parent
+#   directory.  After NodeBrain is installed, this is
+#   not required.
+
+declare toy module {".."};     
+
+# Define Nodes
+#
+#   o  The "assert a=0;" is there to keep the counter
+#      nodes from creating an "a" in their own
+#      context.  
+#   
+define sum node toy.sum;
+define add node toy.add;
+assert a=0;  
+define aisoneCounter node toy.count(a=1);
+define aistrueCounter node toy.count(a);
+
+# Define rules
+#  
+#   o  We just want to see when the rules fire, so
+#      have not included actions.
+#
+define r1 on(sum(a,b)>5 and add(a,b,c)<20);
+define r2 on(aisoneCounter>2);
+define r3 on(aistrueCounter>2);

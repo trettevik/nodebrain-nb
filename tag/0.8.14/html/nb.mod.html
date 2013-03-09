@@ -1,0 +1,269 @@
+<html>
+<head>
+<meta name="generator" content="nbman2ht">
+<meta name="Content-Style" content="text/css">
+<title>NodeBrain Manual Page</title>
+<style>
+  body  {font-family: verdana; font-size: 10pt;}
+  table {font-size: 10pt;}
+  h3    {font-size: 10pt;}
+  pre   {font-size: 10pt;}
+</style>
+</head>
+<body>
+<table width="100%"><tr>
+<td align="left" width="20%">nb.mod(7)</td>
+<td align="center" width="60%"><span style="font-size: 14pt">NodeBrain Administrator Guide</span>
+<br>Version 0.8.14 - February 2013</td>
+<td align="right" width="20%">nb.mod(7)</td>
+</tr></table>
+<p style="font-size: 7pt">
+<a href="#NAME">NAME</a>
+| <a href="#SYNOPSIS">SYNOPSIS</a>
+| <a href="#DESCRIPTION">DESCRIPTION</a>
+| <a href="#FILES">FILES</a>
+| <a href="#RULES">RULES</a>
+| <a href="#ENVIRONMENT">ENVIRONMENT</a>
+| <a href="#DIAGNOSTICS">DIAGNOSTICS</a>
+| <a href="#HISTORY">HISTORY</a>
+| <a href="#BUGS">BUGS</a>
+| <a href="#AUTHOR">AUTHOR</a>
+| <a href="#SEE ALSO">SEE ALSO</a>
+</p>
+<hr>
+<!--  Process this file with "groff -man -Tascii foo.1" or "nbman2ht foo.1" -->
+<!--  See NodeBrain Developer Guide for project standards -->
+<!--  -->
+<a name="NAME"></a>
+<h3>NAME</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+nb.mod - NodeBrain Node Modules (plug-ins)
+</td></tr></table>
+<a name="SYNOPSIS"></a>
+<h3>SYNOPSIS</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+<b>#include &lt;nb/nb.h&gt; </b>
+<p><b>int </b> <i>skillAssert</i> <b>(nbCELL </b> <i>context</i> <b>, void *</b> <i>skillHandle</i> <b>, void *</b> <i>knowledgeHandle</i> <b>, nbCELL </b> <i>arglist</i> <b>);</b> 
+<p><b>nbCELL </b> <i>skillEvaluate</i> <b>(nbCELL </b> <i>context</i> <b>, void *</b> <i>skillHandle</i> <b>, void *</b> <i>knowledgeHandle</i> <b>, nbCELL </b> <i>arglist</i> <b>);</b> 
+<p><b>void *</b> <i>skillBind</i> <b>(nbCELL </b> <i>context</i> <b>,nbCELL </b> <i>skill</i> <b>,nbCELL </b> <i>arglist</i> <b>,char *</b> <i>text</i> <b>){</b> 
+<p><table width="100%" border="0" cellspacing="0" cellpadding="5">
+<tr><td width="5%" align="left" valign="top">&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
+<b>nbSkillSetMethod(</b> <i>context</i> <b>,</b> <i>skill</i> <b>,NB_EXPERT_ASSERT,</b> <i>skillAssert</i> <b>);</b> 
+<p><b>nbSkillSetMethod(</b> <i>context</i> <b>,</b> <i>skill</i> <b>,NB_EXPERT_EVALUATE,</b> <i>skillEvaluate</i> <b>);</b> 
+<p><ul>
+... create <i>skillHandle</i> here using <i>arglist</i> and <i>text</i> ...<br>
+</ul>
+<p><b>return(</b> <i>skillHandle</i> <b>);</b> 
+<p><b>}</b>
+</td></tr></table>
+<b>declare </b> <i>module  </i> <b>module</b> 
+<i>path</i><b>/nb_mod_</b><i>package</i><b>.</b>(<b>so</b>|<b>dylib</b>|<b>dll</b>)<b>;</b>
+<p><b>declare </b> <i>module  </i> <b>module</b> 
+[ <b>{&quot;</b><i>path</i><b>&quot;}</b> ] [ <i>package</i> [ <b>(</b><i>args</i><b>)</b> ] [ <b>;</b> | <b>:</b><i>text</i> ]
+<p><b>declare </b> <i>skill   </i> <b>skill</b> 
+[ <i>module</i><b>.</b> ] <i>skill</i> [ <b>(</b><i>args</i><b>)</b> ] [ <b>;</b> | <b>:</b><i>text</i> ]
+<p><b>define  </b> <i>term    </i> <b>node</b> 
+[ <i>skill</i> [ <b>(</b><i>args</i><b>)</b> ] ] [ <b>;</b> | <b>:</b><i>text</i> ]
+<p></td></tr></table>
+<a name="DESCRIPTION"></a>
+<h3>DESCRIPTION</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+NodeBrain modules
+are dynamic load libraries used as plug-ins to extend the capabilities of NodeBrain,
+<a href="nb.html"><b>nb</b></a>(1),
+using a defined application program interface (API). There is presently only one
+such interface defined - 
+<i>NodeBrain Node Module C API. </i>
+Within the context of NodeBrain, we refer to modules that use this interface simply as  
+&quot;node modules.&quot; A node module implements one or more skills.  For each skill, the 
+module must implement one or more skill methods (functions) within a defined set. Once
+declared, a skill may be associated with any number of nodes.  A node is an object
+that has the defined skill, but also (often) the ability to accumulate a set of knowledge
+independent of other nodes with the same skill.
+<p>You will not find enough information here to learn how to write a node module.
+Here we
+only provide enough information, hopefully, to demystify NodeBrain modules for
+those installing or using an existing module.  A <b>NodeBrain API Reference</b> has
+been started, but needs a lot work before it will be released.
+<p>See http://www.nodebrain.org for more information.
+</td></tr></table>
+<a name="FILES"></a>
+<h3>FILES</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+<p><table width="100%" border="0" cellspacing="0" cellpadding="5">
+<tr><td width="5%" align="left" valign="top"><b>/usr/local/include/nb/nb.h</b>&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
+NodeBrain API header file.
+</td></tr>
+<tr><td width="5%" align="left" valign="top"><b>/usr/local/lib/nb/x.x/nb_</b><i>module.suffix</i>&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
+NodeBrain modules may be located anywhere, provided you direct nb to them using the
+NB_MODULE_PATH environment variable or a path in a module declaration command.  If no path
+is specified and a module is not found using the native search path, NodeBrain checks
+in /usr/local/lib/nb/x.x as show above, where <i>suffix</i> is determined by the platform.
+</td></tr>
+<tr><td width="5%" align="left" valign="top"><b>nb_mod_</b><i>module</i><b>.so</b>&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
+[Solaris and Linux]
+</td></tr>
+<tr><td width="5%" align="left" valign="top"><b>nb_mod_</b><i>module</i><b>.sl</b>&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
+[HP-UX]
+</td></tr>
+<tr><td width="5%" align="left" valign="top"><b>nb_mod_</b><i>module</i><b>.dylib</b>&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
+[Mac OS x]
+</td></tr>
+<tr><td width="5%" align="left" valign="top"><b>nb_mod_</b><i>module</i><b>.dll</b>&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
+[Windows]     
+</td></tr></table>
+</td></tr></table>
+<a name="RULES"></a>
+<h3>RULES</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+Here we use the <b>Tree</b> node module included in the NodeBrain distribution to 
+illustrate how a module is referenced in rules (commands). The Tree module implements a table using a
+tree structure internally. In this example, we define two Tree nodes---one
+for a critical device table and one for a problem device table.
+<p><ul>
+# declare module - unnecessary if the module is in the standard directory<br>
+</ul>
+<p><ul>
+declare tree module {&quot;.&quot;}tree;  <br>
+</ul>
+<p><ul>
+# declare skill - unnecessary if no special parameters are specified<br>
+</ul>
+<p><ul>
+declare tree skill tree:trace; <br>
+</ul>
+<p><ul>
+# table of critical devices<br>
+</ul>
+<p><ul>
+define criticalDevice node tree;<br>
+</ul>
+<p><ul>
+# table of problem devices<br>
+</ul>
+<p><ul>
+define problemDevice node tree;<br>
+</ul>
+<p><ul>
+# rules that respond when a device has a new problem<br>
+</ul>
+<p><ul>
+define event node;<br>
+</ul>
+<p><ul>
+event. define r1 if(type=&quot;problem&quot; and ?problemDevice(device)) problemDevice(device):<i>actionA</i><br>
+</ul>
+<p><ul>
+event. define r2 if(type=&quot;problem&quot; and ?problemDevice(device) and criticalDevice(device)):<i>actionB</i><br>
+</ul>
+<p><ul>
+event. define r3 if(type=&quot;restored&quot;) ?problemDevice(device);<br>
+</ul>
+<p><ul>
+# sample initialization of the critical device table<br>
+</ul>
+<p><ul>
+assert criticalDevice(&quot;abc&quot;);<br>
+</ul>
+<p><ul>
+assert criticalDevice(&quot;def&quot;);<br>
+</ul>
+<p><ul>
+# sample events from a monitoring application<br>
+</ul>
+<p><ul>
+event. alert type=&quot;problem&quot;,device=&quot;abc&quot;;<br>
+</ul>
+<p><ul>
+event. alert type=&quot;restored&quot;,device=&quot;abc&quot;;<br>
+</ul>
+</td></tr></table>
+<a name="ENVIRONMENT"></a>
+<h3>ENVIRONMENT</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+Some of the C functions nb
+calls (e.g. for loading dynamic modules) are influenced by environment variables in
+ways we assume you can figure out for your environment.
+<p><table width="100%" border="0" cellspacing="0" cellpadding="5">
+<tr><td width="5%" align="left" valign="top">NB_MODULE_PATH&nbsp;&nbsp;&nbsp;</td><td width="94%" align="left" valign="top">
+The NB_MODULE_PATH environment variable provides a platform independent way of specifying a path
+for locating node modules.  This path overrides the native system
+search paths by qualifying module names so that a search is avoided.  The following
+example illustrates a setting that directs NodeBrain to search the current directory
+first and then the parent directory when loading modules (plug-ins).
+<p>NB_MODULE_PATH=&quot;./:../&quot; nb myscript.nb
+</td></tr></table>
+</td></tr></table>
+<a name="DIAGNOSTICS"></a>
+<h3>DIAGNOSTICS</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+If NodeBrain is unable to load a module an error message is displayed.
+<p><ul>
+<i>yyyy/mm/dd hh:mm:ss</i> <b>NB000E Unable to load</b> <i>file</i><br>
+</ul>
+<p>When a module is successfully loaded but the symbol referenced in a skill declaration
+is not found, a message is displayed.
+<p><ul>
+<i>yyyy/mm/dd hh:mm:ss</i> <b>NB000E Symbol</b> <i>symbol</i> <b>not found</b><br>
+</ul>
+<p>NodeBrain does not attempt to load a module when it is declared.  Instead, it waits
+until a module is referenced by a DEFINE command for a node to avoid loading
+modules unnecessarily.  For this reason, either of the messages above will follow a
+node definition when there is an error.
+</td></tr></table>
+<a name="HISTORY"></a>
+<h3>HISTORY</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+Node modules (plug-ins) were introduced in NodeBrain prototype release 0.6.0 in April, 2004.
+</td></tr></table>
+<a name="BUGS"></a>
+<h3>BUGS</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+Although node modules were supported in prior releases on Linux, Solaris, HP-UX, OS X,
+and Windows, release 0.8.14 has only been tested on Linux.
+<p>For a complete and current list of bugs, you should refer to the project web site. 
+<p>Please report bugs by linking to the project page from the home page, 
+http://www.nodebrain.org, or send email to &lt;bugs@nodebrain.org&gt;.
+</td></tr></table>
+<a name="AUTHOR"></a>
+<h3>AUTHOR</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+Ed Trettevik &lt;eat@nodebrain.org&gt;
+</td></tr></table>
+<a name="SEE ALSO"></a>
+<h3>SEE ALSO</h3>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="5%">&nbsp;</td>
+<td width="94%" valign="top" align="left">
+<a href="nb.html"><b>nb</b></a>(1),    
+<a href="nb.man.html"><b>nb.man</b></a>(7),
+<a href="nb.cfg.html"><b>nb.cfg</b></a>(5),
+<a href="nb.syn.html"><b>nb.syn</b></a>(5),
+<a href="nbkit.html"><b>nbkit</b></a>(1),
+<a href="nbkit-caboodle.html"><b>nbkit-caboodle</b></a>(7) 
+<p><p>[1] <a href="http://www.nodebrain.org  "><i>NodeBrain Home Page</i></a><br>
+<p><p>[2] <a href="http://www.nodebrain.org  "><i>NodeBrain Tutorial </i></a><br>
+<p><p>[3] <a href="http://www.nodebrain.org  "><i>NodeBrain Language Reference</i></a><br>
+</td></table>
+<hr>
+<table width="100%"><tr><td align="left" width="33%">NodeBrain 0.8.14</td><td align="center" width="34%">February 2013</td><td align="right" width="33%">nb.mod(7)</td></tr></table>
