@@ -1,16 +1,16 @@
-N o d e B r a i n   0.8.14
+N o d e B r a i n   0.8.15
 
 ========================================================================
 
-File:        README for nodebrain-0.8.14 release files
+File:        README for nodebrain-0.8.15 release files
 
 Package:     NodeBrain (nb)
 
 Version:     0.8 - Dopey
 
-Release:     0.8.14 
+Release:     0.8.15 
 
-Date:        February 11, 2013
+Date:        March 10, 2013
 
 Reference:   http://www.nodebrain.org
                1) Online documentation
@@ -27,8 +27,8 @@ Installation Instructions for Linux/Unix Platforms
 
 a) From source code distribution - install to standard directories
 
-     $ tar -xzf nodebrain-0.8.14.tar.gz
-     $ cd nodebrain-0.8.14
+     $ tar -xzf nodebrain-0.8.15.tar.gz
+     $ cd nodebrain-0.8.15
      $ ./configure
      $ make
      $ make check
@@ -36,11 +36,11 @@ a) From source code distribution - install to standard directories
 
 b) From binary RPM file (x86_64 platform example)
 
-     $ rpm --install nodebrain-0.8.14-1.x86_64.rpm
+     $ rpm --install nodebrain-0.8.15-1.x86_64.rpm
 
 c) From source RPM file 
 
-     $ rpmbuild --rebuild nodebrain-0.8.14-1.src.rpm
+     $ rpmbuild --rebuild nodebrain-0.8.15-1.src.rpm
 
 ======================================================================== 
 
