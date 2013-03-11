@@ -89,9 +89,9 @@
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([nodebrain],[0.8.14],[bugs@nodebrain.org])
+AC_INIT([nodebrain],[0.8.15],[bugs@nodebrain.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SUBDIRS([lib module])
 AM_INIT_AUTOMAKE
-AC_CONFIG_FILES([Makefile nodebrain.spec nb.pc])
+AC_CONFIG_FILES([Makefile nodebrain.spec nodebrain.dsc nb.pc])
 AC_OUTPUT

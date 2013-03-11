@@ -112,6 +112,12 @@
 * 2012-12-15 eat 0.8.13 Checker updates
 * 2012-12-31 eat 0.8.13 Checker updates
 * 2013-01-11 eat 0.8.13 Checker updates 
+* 2013-03-10 eat 0.8.15 Dropping NB_API_VERSION from module names.
+*                       Modules where ${_libdir}/nb/0.x/nb_<name>.so.0 symbolic
+*                       links, but now just ${_libdir}/nb/0.x/nb_<name>.so files.
+*                       The API version is in the path 0.x, and the x determine
+*                       compatibilty of the module with an application using
+*                       nb-0.x.p and the associated libnb-0.x.p.so
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -469,12 +475,13 @@ NB_Term *nbModuleDeclare(NB_Term *context,char *ident,char *cursor){
         if(*delim=='?'){
           outMsg(0,'W',"Question mark in module name is deprecated"); 
           delim--;
-#if defined(WIN32)
+// 2013-03-10 eat - dropping version from module name - version is in path
+//#if defined(WIN32)
 //          sprintf(delim,".%s%s",NB_API_VERSION,LT_MODULE_EXT);
           sprintf(delim,"%s",LT_MODULE_EXT);
-#else
-          sprintf(delim,"%s.%s",LT_MODULE_EXT,NB_API_VERSION);
-#endif
+//#else
+//          sprintf(delim,"%s.%s",LT_MODULE_EXT,NB_API_VERSION);
+//#endif
           isFile=1;
           } 
         if(strchr(modname,'/')!=NULL || strncmp(modname,"nb_",3)==0) isFile=1;
@@ -483,11 +490,12 @@ NB_Term *nbModuleDeclare(NB_Term *context,char *ident,char *cursor){
         outMsg(0,'W',"Deprecated syntax - enclose file name in quotes or use [{<path>}][<modId>] instead");
         strcpy(filename,modname);
         }
-#if defined(WIN32)
+// 2013-03-10 eat - dropping version from module name - version is in path
+//#if defined(WIN32)
       else sprintf(filename,"nb_%s%s",modname,LT_MODULE_EXT);
-#else
-      else sprintf(filename,"nb_%s%s.%s",modname,LT_MODULE_EXT,NB_API_VERSION);
-#endif
+//#else
+//      else sprintf(filename,"nb_%s%s.%s",modname,LT_MODULE_EXT,NB_API_VERSION);
+//#endif
       }
     } 
   while(*cursor==' ') cursor++;
@@ -615,16 +623,18 @@ void nbModuleShowPath(nbCELL context,char *pathcur){
           if(delim=strchr(cursor,'.')){
             strncpy(modname,cursor,delim-cursor);
             *(modname+(delim-cursor))=0;
-            if(strncmp(delim,LT_MODULE_EXT,strlen(LT_MODULE_EXT))==0){
-              cursor=delim+strlen(LT_MODULE_EXT);
-              if(*cursor=='.' && strcmp(cursor+1,NB_API_VERSION)==0){
-                sprintf(path,"%s/%s",dirname,info.cFileName);
-		if(GetFullPathName(path,sizeof(fullpathbuf),fullpathbuf,NULL)>0)
-                  fullpath=fullpathbuf;
-		else fullpath=path;
-                outPut("    %s -> %s\n",modname,fullpath);
-                }
+            // 2012-03-10 eat - dropping NB_API_VERSION from module names
+            //if(strncmp(delim,LT_MODULE_EXT,strlen(LT_MODULE_EXT))==0){
+            if(strcmp(delim,LT_MODULE_EXT)==0){
+              //cursor=delim+strlen(LT_MODULE_EXT);
+              //if(*cursor=='.' && strcmp(cursor+1,NB_API_VERSION)==0){
+              sprintf(path,"%s/%s",dirname,info.cFileName);
+              if(GetFullPathName(path,sizeof(fullpathbuf),fullpathbuf,NULL)>0)
+                fullpath=fullpathbuf;
+              else fullpath=path;
+              outPut("    %s -> %s\n",modname,fullpath);
               }
+              //}
             }
           } 
         } while(FindNextFile(dir,&info));
@@ -664,15 +674,17 @@ void nbModuleShowPath(nbCELL context,char *pathcur){
           if((delim=strchr(cursor,'.'))!=NULL){
             strncpy(modname,cursor,delim-cursor);
             *(modname+(delim-cursor))=0;
-            if(strncmp(delim,LT_MODULE_EXT,strlen(LT_MODULE_EXT))==0){
-              cursor=delim+strlen(LT_MODULE_EXT);
-              if(*cursor=='.' && strcmp(cursor+1,NB_API_VERSION)==0){
-                len=snprintf(path,sizeof(path),"%s/%s",dirname,ent->d_name);
-                fullpath=realpath(path,fullpathbuf);
-                if(!fullpath) fullpath=path;
-                outPut("    %s -> %s\n",modname,fullpath);
-                }
+            // 2012-03-10 eat - dropping NB_API_VERSION from module names
+            //if(strncmp(delim,LT_MODULE_EXT,strlen(LT_MODULE_EXT))==0){
+            if(strcmp(delim,LT_MODULE_EXT)==0){
+              //cursor=delim+strlen(LT_MODULE_EXT);
+              //if(*cursor=='.' && strcmp(cursor+1,NB_API_VERSION)==0){
+              len=snprintf(path,sizeof(path),"%s/%s",dirname,ent->d_name);
+              fullpath=realpath(path,fullpathbuf);
+              if(!fullpath) fullpath=path;
+              outPut("    %s -> %s\n",modname,fullpath);
               }
+              //}
             }
           }
         }
@@ -688,7 +700,9 @@ void nbModuleShowPath(nbCELL context,char *pathcur){
 void nbModuleShowInstalled(nbCELL context){
   char *pathcur;
 
-  outPut("\nPattern: nb_<module>%s.%s\n",LT_MODULE_EXT,NB_API_VERSION);
+  // 2013-03-10 eat - dropping NB_API_VERSION from module name
+  //outPut("\nPattern: nb_<module>%s.%s\n",LT_MODULE_EXT,NB_API_VERSION);
+  outPut("\nPattern: nb_<module>%s\n",LT_MODULE_EXT);
   pathcur=getenv("NB_MODULE_PATH");
   if(pathcur){
     outPut("\nNB_MODULE_PATH=%s\n",pathcur);

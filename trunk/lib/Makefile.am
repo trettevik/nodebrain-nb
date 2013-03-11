@@ -221,7 +221,8 @@ nb_SOURCES = nb.c
 
 #nb_LDADD = .libs/libnb.so
 nb_LDADD = .libs/libnb.la
-nb_DEPENDENCIES = .libs/libnb-${PACKAGE_VERSION}.so
+#nb_DEPENDENCIES = .libs/libnb-${PACKAGE_VERSION}.so
+nb_DEPENDENCIES = libnb.la
 
 EXTRA_DIST = nbcfgw.h
 

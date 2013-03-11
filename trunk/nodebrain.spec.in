@@ -22,7 +22,7 @@ Requires(preun): /sbin/install-info
 
 %build
 %configure 
-make CFLAGS="$CFLAGS"
+make %{?_smp_mflags} CFLAGS="$CFLAGS"
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -40,7 +40,7 @@ fi
 
 %preun
 if [ $1 = 0 ]; then
-    if [ -f %{_infodir}/nb.info.gz ]; then # for --excludedocs
+    if [ -f %{_infodir}/nodebrain.info.gz ]; then # for --excludedocs
         /sbin/install-info --delete %{_infodir}/nodebrain.info.gz %{_infodir}/dir ||:
     fi
 fi
@@ -63,17 +63,15 @@ browser interface for administrators.
 %files
 %defattr(-,root,root,-)
 %doc AUTHORS COPYING ChangeLog NEWS README THANKS
-%dir %{_libdir}/nb
-%dir %{_libdir}/nb/0.8
+%dir %{_libdir}/nb-%{version}
 %{_bindir}/nb
 %{_bindir}/nb-%{version}
 %{_bindir}/nbkit
 %{_libdir}/libnb-%{version}.so
 %{_libdir}/libnb.so
-%{_libdir}/nb/*.so.*
-%{_libdir}/nb/*/*.so.*
+%{_libdir}/nb-%{version}/*.so
 %exclude %{_libdir}/*.a
-%exclude %{_libdir}/*/*.a
+%exclude %{_libdir}/nb-%{version}/*.a
 %{_mandir}/man1/*.1*
 %{_mandir}/man5/*.5*
 %{_mandir}/man7/*.7*
@@ -96,10 +94,10 @@ This package contains development files for nodebrain.
 %{_includedir}/nb/*
 %if %is_mandriva
 %ghost %{_libdir}/*.so
-%ghost %{_libdir}/*/*.so
+%ghost %{_libdir}/nb-%{version}
 %else
 %exclude %{_libdir}/*.so
-%exclude %{_libdir}/*/*.so
+%exclude %{_libdir}/nb-%{version}
 %endif
 %{_libdir}/pkgconfig/*.pc
 %{_mandir}/man3/*.3*
@@ -118,12 +116,15 @@ This package contains static libraies for nodebrain.
 %files static
 %defattr(-,root,root,-)
 %{_libdir}/*.a
-%{_libdir}/*/*.a
+%exclude %{_libdir}/nb-%{version}
 
 
 #-------------------------------------------------------------------------
 
 %changelog
+* Sun Mar 10 2013 Ed Trettevik <eat@nodebrain.org> - 0.8.15-1
+- Switch location of modules to %{_libdir}/nb-%{version}
+
 * Sun Jan 20 2013 Ed Trettevik <eat@nodebrain.org> - 0.8.13-1
 - Updated for 0.8.13
 

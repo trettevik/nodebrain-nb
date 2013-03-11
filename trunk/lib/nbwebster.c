@@ -731,7 +731,10 @@ static int nbWebsterCgi(nbCELL context,nbWebSession *session,char *file,char *qu
       }
     strncpy(dir,file,delim-file);
     *(dir+(delim-file))=0;
-    chdir(dir);
+    if(chdir(dir)<0){
+      nbLogMsg(context,0,'E',"Unable to chdir to %s - %s",dir,strerror(errno));
+      return(-1);
+      }
     getcwd(dir,sizeof(dir));
     nbLogMsg(context,0,'T',"During pwd=%s",dir);
     }

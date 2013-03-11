@@ -1,3 +1,78 @@
+NodeBrain 0.8.15 Change Summary
+
+* Released March 10, 2013
+
+* Theme: Packaging
+
+     Trying to clean up the packaging a bit before
+     submitting to a couple Linux distributions.
+    
+* Documentation:
+
+  o  Use 0.8.14 documentation.  No updates to user
+     documentation since the changes are only in packaging.
+
+* Incompatibilities: 
+
+  o  The directory where node modules are installed
+     and searched for by default has changed.  If anyone
+     installs custom node modules in the old default
+     locations, they will not be found by this release
+     of NodeBrain.  You can resolve this problem by
+     setting the NB_MODULE_PATH environment variable.
+
+  o  Modules are no longer loaded using the major version
+     symbolic link created by libtool.  The module version
+     numbers and symbolic links have been removed.
+
+     New: /usr/lib64/nb-0.8.15/nb_audit.so
+     Old: /usr/lib64/nb/0.8/nb_audit.so.0 -> ../nb_audit.so.0.0.1
+
+     You may still use version numbers on your node modules
+     if you like, but the base symbolic link will provide
+     access to your module instead of the .0 link.
+
+* New Features:
+
+  o  Debian packaging files are now included in a debian
+     directory, and a prototype nodebrain.dsc file is
+     included at the top level.  The digest in this file
+     must be replaced when creating a debian package,
+     since it can not be correct and be included within
+     the original source file.
+
+  o  Node modules are now installed to ${libdir}/nb-${version}
+     instead of just ${libdir}/nb, and the minor
+     version directory ${libdir}/nb/<major>.<minor> and
+     associated symbolics have been eliminated.  This change
+     is intended to better enable the use of multiple versions
+     of NodeBrain on a machine.
+
+  o  Modules are no longer built with version numbers.  The
+     path identifies the version.
+
+  o  When installed using an rpm file built with "make rpm",
+     the symbolic links produced by libtool for modules
+     are no longer installed.
+
+  o  The package was modified slightly to enable the --job
+     make option for faster builds.
+
+  o  The %{?_smp_mflags} macro is used to set the --job
+     make option in an RPM build.
+
+  o  ChangeLog files are created automatically from the
+     source repository.
+
+* Deprecated Syntax: (none)
+
+* Bug Fixes: 
+
+  o  Some of the packaging "new features" identified above
+     actually address deficiencies identified in by Jason
+     Tibbitts in a Fedora package review, see Red Hat 
+     Bugzilla Bug 592504.
+     
 NodeBrain 0.8.14 Change Summary
 
 * Released February 11, 2013
@@ -66,7 +141,7 @@ NodeBrain 0.8.14 Change Summary
 
   o  Many security flaws were fixed.
 
-
+=========================================================
 NodeBrain 0.8.3 Change Summary
 
 * Released September 6, 2010
