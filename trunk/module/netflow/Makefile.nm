@@ -5,7 +5,8 @@
 nblib_LTLIBRARIES = nb_netflow.la
 nb_netflow_la_SOURCES = nb_netflow.c
 nb_netflow_la_CFLAGS  = $(NB_MOD_CFLAGS)
-nb_netflow_la_LDFLAGS = -module -version-info 0:1
+#nb_netflow_la_LDFLAGS = -module -version-info 0:1
+nb_netflow_la_LDFLAGS = -module -avoid-version
 
 EXTRA_DIST = \
   caboodle/check/netflow.nb~

@@ -44,6 +44,7 @@
 ## ---------- -----------------------------------------------------------------
 ## 2008/10/27 Ed Trettevik (version 0.7.3 - split out from nb package)
 ## 2010/02/27 eat 0.7.9  Included DESTDIR
+## 2013-03-10 eat 0.8.15 Installing modules directly to version subdirectory
 ##===================================o==========================================
 ACLOCAL_AMFLAGS = -I m4
 
@@ -71,17 +72,17 @@ moddiff:
 # Construct a minor version module directory
 #    /usr/local/lib/nb/x.y/nb_<module>.so.x.y.z   where x=major y=minor and z=patch
 #
-install-exec-hook:
-	minor=`echo $(VERSION) | sed 's/\([0-9]*.[0-9]*\).[^ ]*/\1/'`; \
-	if test ! -d "${DESTDIR}@libdir@/nb/$$minor"; then mkdir -p ${DESTDIR}@libdir@/nb/$$minor; fi; \
-	ext=`grep LT_MODULE_EXT config.h | sed 's/[^"]*"\([^"]*\)"/\1/'`; \
-	major=`echo $$minor | sed 's/\([0-9]*\).[^ ]*/\1/'`; \
-	list="$(SUBDIRS)"; \
-	for subdir in $$list; do \
-	  module=`ls -al $$subdir/.libs/nb_$$subdir$$ext | sed 's/.*nb_[^ ]*.*\(nb\_.*\)/\1/'`; \
-	  test -h "${DESTDIR}@libdir@/nb/$$minor/nb_$$subdir$$ext.$$major" && rm ${DESTDIR}@libdir@/nb/$$minor/nb_$$subdir$$ext.$$major; \
-	  ln -s ../$$module ${DESTDIR}@libdir@/nb/$$minor/nb_$$subdir$$ext.$$major; \
-	  done
+#install-exec-hook:
+#minor=`echo $(VERSION) | sed 's/\([0-9]*.[0-9]*\).[^ ]*/\1/'`; \
+#if test ! -d "${DESTDIR}@libdir@/nb/$$minor"; then mkdir -p ${DESTDIR}@libdir@/nb/$$minor; fi; \
+#ext=`grep LT_MODULE_EXT config.h | sed 's/[^"]*"\([^"]*\)"/\1/'`; \
+#major=`echo $$minor | sed 's/\([0-9]*\).[^ ]*/\1/'`; \
+#list="$(SUBDIRS)"; \
+#for subdir in $$list; do \
+#  module=`ls -al $$subdir/.libs/nb_$$subdir$$ext | sed 's/.*nb_[^ ]*.*\(nb\_.*\)/\1/'`; \
+#  test -h "${DESTDIR}@libdir@/nb/$$minor/nb_$$subdir$$ext.$$major" && rm ${DESTDIR}@libdir@/nb/$$minor/nb_$$subdir$$ext.$$major; \
+#  ln -s ../$$module ${DESTDIR}@libdir@/nb/$$minor/nb_$$subdir$$ext.$$major; \
+#  done
 
 uninstall-local:
-	rm -fr $(libdir)/nb/$(VERSION
+	rm -fr $(libdir)/nb/$(VERSION)

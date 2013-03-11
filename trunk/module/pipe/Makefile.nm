@@ -5,7 +5,8 @@
 nblib_LTLIBRARIES = nb_pipe.la
 nb_pipe_la_SOURCES = nb_pipe.c
 nb_pipe_la_CFLAGS  = $(NB_MOD_CFLAGS)
-nb_pipe_la_LDFLAGS = -module -version-info 0:1
+#nb_pipe_la_LDFLAGS = -module -version-info 0:1
+nb_pipe_la_LDFLAGS = -module -avoid-version
 
 EXTRA_DIST = \
   caboodle/check/pipe.nb~ \

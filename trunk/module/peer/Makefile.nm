@@ -23,7 +23,8 @@ nb_peer_la_SOURCES = nb_peer.c \
   nb_peer.h
 
 nb_peer_la_CFLAGS  = $(NB_MOD_CFLAGS)
-nb_peer_la_LDFLAGS = -module -version-info 0:1 -lcrypto
+#nb_peer_la_LDFLAGS = -module -version-info 0:1 -lcrypto
+nb_peer_la_LDFLAGS = -module -avoid-version -lcrypto
 
 EXTRA_DIST = \
   caboodle/agent/server.nb \

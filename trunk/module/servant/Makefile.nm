@@ -5,7 +5,8 @@
 nblib_LTLIBRARIES = nb_servant.la
 nb_servant_la_SOURCES = nb_servant.c
 nb_servant_la_CFLAGS  = $(NB_MOD_CFLAGS)
-nb_servant_la_LDFLAGS = -module -version-info 0:1
+#nb_servant_la_LDFLAGS = -module -version-info 0:1
+nb_servant_la_LDFLAGS = -module -avoid-version
 
 EXTRA_DIST = \
   caboodle/check/self.nb- \

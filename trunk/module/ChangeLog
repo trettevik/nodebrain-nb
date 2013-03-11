@@ -1,0 +1,21 @@
+------------------------------------------------------------------------
+r206 | trettevik | 2013-03-10 19:59:36 -0700 (Sun, 10 Mar 2013) | 1 line
+Changed paths:
+   M /nb/trunk/module/syslog/nb_syslog.c
+
+unnecessary change - experimenting with ChangeLog generation
+------------------------------------------------------------------------
+r207 | trettevik | 2013-03-10 20:47:34 -0700 (Sun, 10 Mar 2013) | 1 line
+Changed paths:
+   D /nb/trunk/module/audit/ChangeLog
+   M /nb/trunk/module/audit/Makefile.am
+   M /nb/trunk/module/audit/Makefile.nm
+
+ChangeLog
+------------------------------------------------------------------------
+r208 | trettevik | 2013-03-10 20:48:56 -0700 (Sun, 10 Mar 2013) | 1 line
+Changed paths:
+   A /nb/trunk/module/audit/ChangeLog
+
+fiddle
+------------------------------------------------------------------------

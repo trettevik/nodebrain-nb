@@ -58,11 +58,14 @@
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([nb_module],[0.8.14],[bugs@nodebrain.org])
+AC_INIT([nb_module],[0.8.15],[bugs@nodebrain.org])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
+
+# Set module subdirectory by minor version - ${libdir}/nb/${NB_MOD_DIR}/
+AC_SUBST([NB_MOD_DIR],[0.8.15])
 
 #=====================================
 # LIBTOOL stuff
@@ -124,11 +127,6 @@ AC_TYPE_SIZE_T
 AC_HEADER_TIME
 AC_STRUCT_TM
 AC_TYPE_UID_T
-
-#===================================== 
-# Let the more complicated modules configure themselves
-
-#AC_CONFIG_SUBDIRS([webster])
 
 #=====================================
 # Create the Makefile
