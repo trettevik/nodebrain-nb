@@ -5,7 +5,8 @@
 nblib_LTLIBRARIES = nb_audit.la
 nb_audit_la_SOURCES = nb_audit.c
 nb_audit_la_CFLAGS  = ${NB_MOD_CFLAGS}
-nb_audit_la_LDFLAGS = -module -version-info 0:1
+#nb_audit_la_LDFLAGS = -module -version-info 0:1
+nb_audit_la_LDFLAGS = -module -avoid-version
 
 EXTRA_DIST = \
   caboodle/check/audit.nb~ \
