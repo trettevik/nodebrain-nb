@@ -615,7 +615,7 @@ void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
 
   argSet=nbListOpen(context,arglist);
   cell=nbListGetCellValue(context,&argSet);
-  if(cell!=NULL){
+  if(cell){
     if(nbCellGetType(context,cell)!=NB_TYPE_STRING){
       nbLogMsg(context,0,'E',"First argument must be string message identifier");
       return(NULL);
