@@ -1,6 +1,6 @@
 NodeBrain 0.8.15 Change Summary
 
-* Released March 10, 2013
+* Released March 16, 2013
 
 * Theme: Packaging
 
@@ -9,8 +9,8 @@ NodeBrain 0.8.15 Change Summary
     
 * Documentation:
 
-  o  Use 0.8.14 documentation.  No updates to user
-     documentation since the changes are only in packaging.
+  o  No content changes.  Documents were rebuilt causing
+     and update to version number.
 
 * Incompatibilities: 
 
