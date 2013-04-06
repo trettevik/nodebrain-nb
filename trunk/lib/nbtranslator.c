@@ -312,12 +312,13 @@
 *
 *            We've included "$" as a valid first character of a translator
 *            line for this purpose.  It must be followed immediately by a
-*            cell expression enclosed in parentheses, "$(<expression)", which
+*            cell expression enclosed in parentheses, "$(<expression>)", which
 *            is consistent with the "value of" syntax in NodeBrain cell
 *            expressions.
 * 2012-12-15 eat 0.8.13 Checker updates
 * 2012-12-27 eat 0.8.13 Checker updates
 * 2013-01-01 eat 0.8.13 Checker updates
+* 2013-03-16 eat 0.8.15 Fixed defect in search for named regular expressions
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -586,7 +587,7 @@ int nbProjectionEncode(char *buffer,int buflen,struct REGEXP_STACK *reStackP,int
           }
         else if(symid=='t'){
           i=pcre_get_stringnumber(reStackP->regexp[reIndex]->re,ident);
-          while(i<0 && reIndex>=0){
+          while(i<0 && reIndex>0){ // 2013-03-16 eat - fixed defect of reIndex>=0
             exp++,reIndex--;
             i=pcre_get_stringnumber(reStackP->regexp[reIndex]->re,ident);
             }

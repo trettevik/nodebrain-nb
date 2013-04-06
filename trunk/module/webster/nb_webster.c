@@ -74,6 +74,7 @@
 * 2012-10-13 eat 0.8.12 Replace malloc/free with nbAlloc/nbFree
 * 2012-12-15 eat 0.8.13 Checker updates
 * 2013-01-21 eat 0.8.13 Checker updates
+* 2013-04-06 eat 0.8.14 Checker updates
 *=====================================================================
 */
 #include "config.h"
@@ -214,7 +215,7 @@ static void webHeading(nbCELL context,nbWebSession *session){
     "</td>\n"
     "<td align='center' valign='middle'>\n"
     "<span style='font-size: 10px; color: white'>\n"
-    "N o d e B r a i n &nbsp; C a b o o d l e &nbsp; K i t &nbsp; 0.8.13\n"
+    "C a b o o d l e &nbsp; K i t &nbsp; 0.8.15\n"
     "</span>\n"
     "<span style='font-size: 3px; color: white'><br><br></span>\n"
     "<span style='font-size: 10px; color: white'>\n"
@@ -1003,7 +1004,8 @@ static int webPath(nbCELL context,nbWebSession *session,void *handle){
   filetype=webGetFileType(filestat.st_mode);
   if(!*filetype) filetype="regular";
   tm=localtime(&filestat.st_mtime);
-  snprintf(filetime,sizeof(filetime),"%4.4d-%2.2d-%2.2d %2.2d:%2.2d\n",tm->tm_year+1900,tm->tm_mon+1,tm->tm_mday,tm->tm_hour,tm->tm_min);
+  // 2013-04-06 eat - VID 7073-Plugin-1.1.0-4-R612 - removed newline character from format string
+  snprintf(filetime,sizeof(filetime),"%4.4d-%2.2d-%2.2d %2.2d:%2.2d",tm->tm_year+1900,tm->tm_mon+1,tm->tm_mday,tm->tm_hour,tm->tm_min);
   snprintf(filesize,sizeof(filesize),"%d",(int)filestat.st_size);
   snprintf(text,sizeof(text),
     "<p><table>"

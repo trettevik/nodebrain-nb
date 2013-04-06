@@ -4,7 +4,7 @@ NodeBrain 0.8.15 Change Summary
 
 * Theme: Packaging
 
-     Trying to clean up the packaging a bit before
+     Cleaning up the packaging a bit before
      submitting to a couple Linux distributions.
     
 * Documentation:
@@ -72,6 +72,10 @@ NodeBrain 0.8.15 Change Summary
      actually address deficiencies identified in by Jason
      Tibbitts in a Fedora package review, see Red Hat 
      Bugzilla Bug 592504.
+
+  o  A bug was fixed in a translator function.  Previously
+     references to undefined named subpatterns in regular
+     expressions caused an array indexing error.
      
 NodeBrain 0.8.14 Change Summary
 

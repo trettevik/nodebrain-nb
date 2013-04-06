@@ -108,19 +108,13 @@ struct REGEXP *newRegexp(char *expression,int flags){
 
   string=useString(expression);
   reP=hashRegexp(regexpH,string,flags);  /* do we already have this regexp? */
-  re=*reP;
   for(re=*reP;re!=NULL && (re->flags<flags || (re->flags==flags && re->string<string));re=*reP)
     reP=(struct REGEXP **)&re->object.next;  
   if(re!=NULL && re->flags==flags && re->string==string) return(re); // reuse if found
-  /* compile regular expression */
-  //if(regcomp(&preg,expression,flags)!=0){
-  //  outMsg(0,'E',"Regular expression syntax error in \"%s\".",expression);
-  //  return(NULL);
-  //  }
   preg=pcre_compile(expression,flags,&msg,&offset,NULL);
   if(preg==NULL){
     outMsg(0,'E',"Regular expression syntax error at: %s",expression);
-    if(msg) outMsg(0,'E',"Regular expression syntax error: %s",msg);
+    if(msg) outMsg(0,'E',"Regular expression syntax error at offset %d: %s",offset,msg);
     return(NULL);
     }
   re=newObject(regexpType,(void **)&freeRegexp,sizeof(struct REGEXP));
