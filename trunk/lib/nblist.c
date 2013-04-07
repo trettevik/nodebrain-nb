@@ -201,7 +201,7 @@ NB_Link *newMember(NB_Term *context,char **cursor){
     entry->next=NULL;
     next=&(entry->next);
     entry->object=grabObject(object);
-    symid=nbParseSymbol(token,cursor);
+    symid=nbParseSymbol(token,sizeof(token),cursor);
     }
   return(member);
   }

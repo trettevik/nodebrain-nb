@@ -789,7 +789,7 @@ static int peerCmdIdentify(nbCELL context,void *handle,char *verb,char *text){
   char *userdir;
 
   savecursor=cursor;
-  symid=nbParseSymbol((char *)identityName,&cursor);
+  symid=nbParseSymbol((char *)identityName,sizeof(identityName),&cursor);
   if(symid!='t'){
     nbLogMsg(context,0,'E',"Expecting identity name at [%s].",savecursor);
     return(1);
@@ -798,7 +798,7 @@ static int peerCmdIdentify(nbCELL context,void *handle,char *verb,char *text){
     nbLogMsg(context,0,'E',"Identity \"%s\" already defined.",identityName);
     return(1);
     }
-  symid=nbParseSymbol((char *)bitsStr,&cursor);
+  symid=nbParseSymbol((char *)bitsStr,sizeof(bitsStr),&cursor);
   if(symid=='i'){
     bits=atoi((char *)bitsStr);
     if(bits>1024){

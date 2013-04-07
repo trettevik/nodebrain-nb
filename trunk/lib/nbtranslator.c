@@ -577,7 +577,7 @@ int nbProjectionEncode(char *buffer,int buflen,struct REGEXP_STACK *reStackP,int
         break;
       default:
         cursave=subcur;
-        symid=nbParseSymbol(ident,&subcur);
+        symid=nbParseSymbol(ident,sizeof(ident),&subcur);
         if(symid=='i'){
           i=atoi(ident);
           if(i>reStackP->regexp[reIndex]->nsub){

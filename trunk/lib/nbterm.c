@@ -535,7 +535,7 @@ NB_Term *nbTermFind(NB_Term *term,char *identifier){
   char qualifier[256];
   char *qursor=qualifier;
 
-  if((cursor=getQualifier(qualifier,cursor))==NULL) return(NULL);
+  if((cursor=nbParseQualifier(qualifier,sizeof(qualifier),cursor))==NULL) return(NULL);
   if(*qualifier!='.'){
     if(strcmp("@",qualifier)==0) term=locGloss;
     else if(NULL==(term=nbTermFindInScope(term,qualifier))) return(NULL);
@@ -549,7 +549,7 @@ NB_Term *nbTermFind(NB_Term *term,char *identifier){
     if(term==NULL) return(NULL);
     } 
   while(*cursor!=0 && *cursor!='}'){
-    if((cursor=getQualifier(qualifier,cursor))==NULL) return(NULL);
+    if((cursor=nbParseQualifier(qualifier,sizeof(qualifier),cursor))==NULL) return(NULL);
     word=grabObject(useString(qualifier));
     term=nbTermFindHere(term,word);
     dropObject(word);
@@ -564,7 +564,7 @@ NB_Term *nbTermFindDown(NB_Term *term,char *identifier){
   char qualifier[256];
 
   while(*cursor!=0 && *cursor!='}'){
-    if((cursor=getQualifier(qualifier,cursor))==NULL) return(NULL);
+    if((cursor=nbParseQualifier(qualifier,sizeof(qualifier),cursor))==NULL) return(NULL);
     word=grabObject(useString(qualifier));
     term=nbTermFindHere(term,word);
     dropObject(word);
@@ -686,7 +686,7 @@ NB_Term *nbTermNew(NB_Term *context,char *ident,void *def){
         }
       }
     while(*cursor!=0){
-      cursor=getQualifier(qualifier,cursor);
+      cursor=nbParseQualifier(qualifier,sizeof(qualifier),cursor);
       // This should only be done for the first qualifier, but just checking to see if this is the problem
       // NOTE: nbTermNew gets called when "@" is first defined and we don't yet have locGloss
       if(strcmp("@",qualifier)==0 && *cursor!=0) term=locGloss;

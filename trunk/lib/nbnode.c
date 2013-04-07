@@ -483,7 +483,7 @@ struct NB_SKILL *nbSkillParse(NB_Term *context,char *cursor){
   NB_List *args=NULL;
   char *cursave,symid,ident[256],*text;
   cursave=cursor;
-  symid=nbParseSymbol(ident,&cursor);
+  symid=nbParseSymbol(ident,sizeof(ident),&cursor);
   if(symid!='t'){
     outMsg(0,'E',"Expecting skill identifier [<module>.]<symbol>() at \"%s\"",cursave);
     return(NULL);
@@ -524,14 +524,14 @@ NB_Term *nbNodeParse(NB_Term *context,char *ident,char *cursor){
     outMsg(0,'T',"Command redirection recognized");
     cursor++;
     cursave=cursor;
-    symid=nbParseSymbol(token,&cursor);
+    symid=nbParseSymbol(token,sizeof(token),&cursor);
     if(symid!='t'){
       outMsg(0,'E',"Expecting node term at: %s",cursave);
       termUndef(term);
       return(NULL);
       }
     }
-  symid=nbParseSymbol(token,&cursor);
+  symid=nbParseSymbol(token,sizeof(token),&cursor);
   if(symid==';') return(NULL);
   if(symid!='t'){
     outMsg(0,'E',"Expecting skill name or end of line at: %s",cursave);

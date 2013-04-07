@@ -403,11 +403,11 @@ int cacheParseThreshold(context,threshold,source)
     i=0;
     }
   else threshold[0]=0;
-  symid=nbParseSymbol(token,source);
+  symid=nbParseSymbol(token,sizeof(token),source);
   for(;i<=CACHE_THRESHOLD_INDEX_LIMIT && symid=='i';i++){
     threshold[i]=atoi(token);
-    symid=nbParseSymbol(token,source);
-    if(symid==',') symid=nbParseSymbol(token,source);
+    symid=nbParseSymbol(token,sizeof(token),source);
+    if(symid==',') symid=nbParseSymbol(token,sizeof(token),source);
     }
   if(symid=='i'){
     nbLogMsg(context,0,'E',"A maximum of %d thresholds may be specified.",CACHE_THRESHOLD_INDEX_LIMIT);
@@ -467,7 +467,7 @@ struct CACHE_ATTR *newCacheAttr(nbCELL context,char **source,int level,struct CA
     }
   else{
     cursave=cursor;
-    symid=nbParseSymbol(ident,&cursor);
+    symid=nbParseSymbol(ident,sizeof(ident),&cursor);
     if(symid!='t'){
       nbLogMsg(context,0,'E',"Expecting attribute name at \"%s\"",cursave);
       }
@@ -594,7 +594,7 @@ struct CACHE *newCache(nbCELL context,char *cursor){
       return(NULL);
       }
     cursor++;
-    symid=nbParseSymbol(token,&cursor);
+    symid=nbParseSymbol(token,sizeof(token),&cursor);
     if(symid!='i'){
       nbLogMsg(context,0,'E',"Expecting number to begin interval specification.");
       return(NULL);

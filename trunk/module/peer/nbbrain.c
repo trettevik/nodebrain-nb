@@ -173,13 +173,13 @@ struct BRAIN * nbBrainNew(int version,char *string){
   brain->dsec=0;
   brain->rsec=0;
 
-  symid=nbParseSymbol(ident,&cursor);
+  symid=nbParseSymbol(ident,sizeof(ident),&cursor);
   if(symid==';') return(brain);
   if(symid=='t'){
     if(*cursor=='~'){
       brain->myId=((struct STRING *)nbCellCreateString(NULL,ident))->value;
       cursor++;
-      symid=nbParseSymbol(ident,&cursor);
+      symid=nbParseSymbol(ident,sizeof(ident),&cursor);
       }
     if(*cursor!='@'){
       nbLogMsgI(0,'E',"Expecting '@' symbol at: %s",cursor);
@@ -256,7 +256,7 @@ struct BRAIN * nbBrainNew(int version,char *string){
           }
         cursor++;
         cursave=cursor;
-        symid=nbParseSymbol(ident,&cursor);
+        symid=nbParseSymbol(ident,sizeof(ident),&cursor);
         if(symid!='i'){
           nbLogMsgI(0,'E',"Expecting integer port number at: %s",cursave);
           destroyBrain(brain);
@@ -273,10 +273,10 @@ struct BRAIN * nbBrainNew(int version,char *string){
         }
       else brain->port=0;
       }
-    symid=nbParseSymbol(ident,&cursor);
+    symid=nbParseSymbol(ident,sizeof(ident),&cursor);
     if(symid=='{'){
       cursave=cursor;
-      symid=nbParseSymbol(ident,&cursor);
+      symid=nbParseSymbol(ident,sizeof(ident),&cursor);
       if(symid!='i'){
         nbLogMsgI(0,'E',"Expecting persistent connection options at \"%s\"",cursave);
         destroyBrain(brain);
@@ -290,11 +290,11 @@ struct BRAIN * nbBrainNew(int version,char *string){
         return(NULL);
         }
       cursave=cursor;
-      symid=nbParseSymbol(ident,&cursor);
+      symid=nbParseSymbol(ident,sizeof(ident),&cursor);
       if(symid==','){
         cursor++;
         cursave=cursor;
-        symid=nbParseSymbol(ident,&cursor);
+        symid=nbParseSymbol(ident,sizeof(ident),&cursor);
         if(symid!='i'){
           nbLogMsgI(0,'E',"Expecting reconnect delay seconds at \"%s\"",cursave);
           destroyBrain(brain);
@@ -308,7 +308,7 @@ struct BRAIN * nbBrainNew(int version,char *string){
           return(NULL);
           }
         cursave=cursor;
-        symid=nbParseSymbol(ident,&cursor);
+        symid=nbParseSymbol(ident,sizeof(ident),&cursor);
         }
       if(symid!='}'){
         nbLogMsgI(0,'E',"Expecting \"}\" at \"%s\"",cursave);
@@ -316,7 +316,7 @@ struct BRAIN * nbBrainNew(int version,char *string){
         return(NULL);
         }
       cursor++;
-      symid=nbParseSymbol(ident,&cursor);
+      symid=nbParseSymbol(ident,sizeof(ident),&cursor);
       }
     }
   if(symid=='(' || symid=='['){
@@ -334,7 +334,7 @@ struct BRAIN * nbBrainNew(int version,char *string){
     if(*delim=='('){
       cursor=delim+1;
       cursave=cursor;
-      symid=nbParseSymbol(ident,&cursor);
+      symid=nbParseSymbol(ident,sizeof(ident),&cursor);
       if(symid!='i'){
         nbLogMsgI(0,'E',"Expecting queue seconds at \"%s\"",cursave);
         destroyBrain(brain);
@@ -352,7 +352,7 @@ struct BRAIN * nbBrainNew(int version,char *string){
       if(*cursor==','){
         cursor++;
         cursave=cursor;
-        symid=nbParseSymbol(ident,&cursor);
+        symid=nbParseSymbol(ident,sizeof(ident),&cursor);
         if(symid!='i'){
           nbLogMsgI(0,'E',"Expecting queue file size limit at \"%s\"",cursave);
           destroyBrain(brain);
@@ -370,7 +370,7 @@ struct BRAIN * nbBrainNew(int version,char *string){
         if(*cursor==','){
           cursor++;
           cursave=cursor;
-          symid=nbParseSymbol(ident,&cursor);
+          symid=nbParseSymbol(ident,sizeof(ident),&cursor);
           if(symid!='i'){
             nbLogMsgI(0,'E',"Expecting queue size limit at \"%s\"",cursave);
             destroyBrain(brain);

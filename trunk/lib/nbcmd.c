@@ -476,7 +476,7 @@ int nbCmdShow(nbCELL context,void *handle,char *verb,char *cursor){
   cursave=cursor;
   while(*cursor==' ') cursor++;
   if(*cursor==0 || strchr("+-=/%*",*cursor)==NULL){
-    symid=nbParseSymbol(ident,&cursor);
+    symid=nbParseSymbol(ident,sizeof(ident),&cursor);
     if(symid=='t' || symid=='('){
       if(symid=='('){ /* compute a cell expression */
         if(NULL==(def=(NB_Cell *)nbParseCell((NB_Term *)context,&cursor,0))) return(1);
@@ -501,7 +501,7 @@ int nbCmdShow(nbCELL context,void *handle,char *verb,char *cursor){
         val=grabObject((NB_Cell *)term->cell.object.value);
         def=grabObject((NB_Cell *)term->def);
         }
-      optid=nbParseSymbol(ident,&cursor);
+      optid=nbParseSymbol(ident,sizeof(ident),&cursor);
       len=strlen(ident);
       if(optid==';'){
         if(symid=='t')  nbTermShowReport(term);
@@ -550,7 +550,7 @@ int nbCmdShow(nbCELL context,void *handle,char *verb,char *cursor){
   symid=*cursor;
   cursor++;
   cursave=cursor;
-  optid=nbParseSymbol(ident,&cursor);  
+  optid=nbParseSymbol(ident,sizeof(ident),&cursor);  
   if(optid!='t' && optid!='?' && optid!=';'){  // 2012-12-27 eat 0.8.13 - CID 751517
     outMsg(0,'E',"Unrecognized show command.  Use show command without parameters for help.");
     return(0);
@@ -686,7 +686,7 @@ int nbCmdShow(nbCELL context,void *handle,char *verb,char *cursor){
 #endif
   else if(symid=='*'){  /* help topic */   
     if(strncmp(ident,"about",len)==0){
-      symid=nbParseSymbol(ident,&cursor);
+      symid=nbParseSymbol(ident,sizeof(ident),&cursor);
       if(symid=='t'){
         if(strncmp(ident,"copyright",len)==0) showCopyright();
         else if(strncmp(ident,"version",len)==0) showVersion();
@@ -718,7 +718,7 @@ int nbCmdQuery(nbCELL context,void *handle,char *verb,char *cursor){
     }
   if(strcmp(verb,"solve")==0) outMsg(0,'W',"The 'solve' command is deprecated, use 'query' instead.");
     
-  symid=nbParseSymbol(ident,&cursor);
+  symid=nbParseSymbol(ident,sizeof(ident),&cursor);
   if(symid==';'){
      nbRuleSolve((NB_Term *)context);
      return(0);
@@ -747,7 +747,7 @@ int nbCmdQuery(nbCELL context,void *handle,char *verb,char *cursor){
 void nbParseArgAssertion(char *cursor){
   char ident[256],value[1024],symid,*valcur;
  
-  symid=nbParseSymbol(ident,&cursor);
+  symid=nbParseSymbol(ident,sizeof(ident),&cursor);
   if(symid!='t'){
     outMsg(0,'E',"Expecting term at \"%s\".",ident);
     return;
@@ -762,7 +762,7 @@ void nbParseArgAssertion(char *cursor){
     outPut("Value is [%s]\n",cursor);
     }
   valcur=cursor;
-  symid=nbParseSymbol(value,&cursor);
+  symid=nbParseSymbol(value,sizeof(value),&cursor);
   if(*cursor==0){
     if(symid=='i' || symid=='r'){
       nbTermNew(symGloss,ident,parseReal(value));
@@ -917,12 +917,12 @@ int nbCmdSet(nbCELL context,void *handle,char *verb,char *cursor){
       }
     }
   while(symid==','){
-    symid=nbParseSymbol(ident,&cursor);
+    symid=nbParseSymbol(ident,sizeof(ident),&cursor);
     if(symid!='t'){
       outMsg(0,'E',"Expecting term \"%s\".",ident);
       return(1);
       }    
-    symid=nbParseSymbol(operator,&cursor);
+    symid=nbParseSymbol(operator,sizeof(operator),&cursor);
     if(symid=='='){ /* non-boolean option */
       /* let's tolerate strings without quotes for the command line */
       if(*cursor!='"' && (*cursor<'0' || *cursor>'9')){
@@ -934,7 +934,7 @@ int nbCmdSet(nbCELL context,void *handle,char *verb,char *cursor){
         *strcur=0;
         symid='s';
         }
-      else symid=nbParseSymbol(token,&cursor);
+      else symid=nbParseSymbol(token,sizeof(token),&cursor);
       if(symid=='s'){ /* string */
         if(strcmp(ident,"tee")==0){
           nbSetOptStr(ident,lname,token,sizeof(lname));
@@ -1009,7 +1009,7 @@ int nbCmdSet(nbCELL context,void *handle,char *verb,char *cursor){
         outMsg(0,'E',"Unrecognized value [%s] for \"%s\".",token,ident);
         return(1);
         }
-      symid=nbParseSymbol(ident,&cursor);  
+      symid=nbParseSymbol(ident,sizeof(ident),&cursor);  
       }
     else if(symid==',' || symid==';'){ /* boolean option */
       if(strcmp(ident,"a")==0      || strcmp(ident,"audit")==0)     nb_opt_audit=1;
@@ -1210,18 +1210,18 @@ int nbLetOld(char *cursor,NB_Term *context,int mode){
     return(-1);
     }
   while(symid==','){
-    symid=nbParseSymbol(ident,&cursor);
+    symid=nbParseSymbol(ident,sizeof(ident),&cursor);
     if(symid!='t'){
       outMsg(0,'E',"Expecting term \"%s\".",ident);
       return(-1);
       }
-    symid=nbParseSymbol(operator,&cursor);
+    symid=nbParseSymbol(operator,sizeof(ident),&cursor);
     if(symid!='='){
       outMsg(0,'E',"Expecting '=' \"%s\".",operator);
       return(-1);
       }
     cursave=cursor;
-    symid=nbParseSymbol(token,&cursor);
+    symid=nbParseSymbol(token,sizeof(ident),&cursor);
     term=nbTermFind(context,ident);
     if(term==NULL){
       term=nbTermNew(context,ident,nb_Unknown);
@@ -1243,7 +1243,7 @@ int nbLetOld(char *cursor,NB_Term *context,int mode){
       }
     /* else dropObjectLight(object) - drop if zero but don't dec */
     cursave=cursor;
-    symid=nbParseSymbol(ident,&cursor);  
+    symid=nbParseSymbol(ident,sizeof(ident),&cursor);  
     }
   if(symid!=';'){
     outMsg(0,'E',"Expected delimiter ';' not found. [%s]",cursor);
@@ -1265,7 +1265,7 @@ int nbCmdEnable(nbCELL context,void *handle,char *verb,char *cursor){
     return(1);
     }
   cursave=cursor;
-  symid=nbParseSymbol(ident,&cursor);
+  symid=nbParseSymbol(ident,sizeof(ident),&cursor);
   if(symid!='t'){
     outMsg(0,'E',"Expecting term at \"%s\"",cursave);
     return(1);
@@ -1368,7 +1368,7 @@ struct IDENTITY *iIdentity(char **cursorP){
   char ident[256];
 
   cursave=*cursorP;
-  symid=nbParseSymbol(ident,cursorP); 
+  symid=nbParseSymbol(ident,sizeof(ident),cursorP); 
   if(symid!='t'){
     outMsg(0,'E',"Expecting term identifier at [%s].",cursave);
     return(NULL);
@@ -1399,7 +1399,7 @@ int nbCmdRank(nbCELL context,void *handle,char *verb,char *cursor){
   if(identity==NULL) return(1);
   
   cursave=cursor;
-  symid=nbParseSymbol(ident,&cursor); 
+  symid=nbParseSymbol(ident,sizeof(ident),&cursor); 
   if(symid!='t'){
     outMsg(0,'E',"Expecting permission name at [%s].",cursave);
     return(1);
@@ -1440,14 +1440,14 @@ int nbCmdDeclare(nbCELL context,void *handle,char *verb,char *cursor){
     return(1);
     }
   cursave=cursor;
-  symid=nbParseSymbol(ident,&cursor); 
+  symid=nbParseSymbol(ident,sizeof(ident),&cursor); 
   if(symid!='t'){
     outMsg(0,'E',"Expecting term identifier at [%s].",cursave);
     return(1);
     }
   while(*cursor==' ') cursor++;
   cursave=cursor;
-  symid=nbParseSymbol(type,&cursor);
+  symid=nbParseSymbol(type,sizeof(ident),&cursor);
   if(symid!='t'){
     outMsg(0,'E',"Expecting term identitier at [%s].",cursave);
     return(1);
@@ -1514,7 +1514,7 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     return(1);
     }
   cursave=cursor;
-  symid=nbParseSymbol(ident,&cursor);
+  symid=nbParseSymbol(ident,sizeof(ident),&cursor);
   if(symid!='t'){
     outMsg(0,'E',"Expecting term identifier at [%s].",cursave);
     return(1);
@@ -1538,7 +1538,7 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     return(1);
     }
   cursave=cursor;
-  symid=nbParseSymbol(type,&cursor);
+  symid=nbParseSymbol(type,sizeof(type),&cursor);
   if(symid!='t'){
     outMsg(0,'E',"Expecting type identifier at \"%s\"",cursave);
     return(1);
@@ -1578,10 +1578,10 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
       if(*cursor=='['){   /* get priority */
         cursor++;
         cursave=cursor;
-        symid=nbParseSymbol(rulePrtyStr,&cursor);
+        symid=nbParseSymbol(rulePrtyStr,sizeof(rulePrtyStr),&cursor);
         if(symid=='+' || symid=='-'){
           rulePrtySign=symid;
-          symid=nbParseSymbol(rulePrtyStr,&cursor);
+          symid=nbParseSymbol(rulePrtyStr,sizeof(rulePrtyStr),&cursor);
           }
         if(symid!='i'){
           outMsg(0,'E',"Expecting integer priority at \"%s\"",cursave);
@@ -1710,7 +1710,7 @@ int nbCmdUndefine(nbCELL context,void *handle,char *verb,char *cursor){
   char symid,ident[256];
   NB_Term *term;
 
-  symid=nbParseSymbol(ident,&cursor);
+  symid=nbParseSymbol(ident,sizeof(ident),&cursor);
   if(symid=='-'){
     /* we have dropped support for undefining a class of objects */
     /* why would anyone want to do that */
@@ -1786,7 +1786,7 @@ int nbCmdForecast(nbCELL context,void *handle,char *verb,char *cursor){
     outMsg(0,'E',"Identity \"%s\" does not have authority to forecast.",clientIdentity->name->value);
     return(1);
     }
-  symid=nbParseSymbol(ident,&cursor);
+  symid=nbParseSymbol(ident,sizeof(ident),&cursor);
   if(symid=='t'){
     if((term=nbTermFind((NB_Term *)context,ident))==NULL){
       outMsg(0,'E',"Term \"%s\" not defined.",ident);
@@ -1815,7 +1815,7 @@ int nbCmdForecast(nbCELL context,void *handle,char *verb,char *cursor){
     return(1);
     }
   cursave=cursor;
-  symid=nbParseSymbol(ident,&cursor);
+  symid=nbParseSymbol(ident,sizeof(ident),&cursor);
   if(symid!=';'){
     outMsg(0,'E',"Expecting end of command at \"%s\".",cursave);
     return(1);
@@ -2182,7 +2182,7 @@ void nbCmd(nbCELL context,char *cursor,unsigned char cmdopt){
       return;
       } 
     else{
-      symid=nbParseSymbol(verb,&cursor);  /* check for a term */
+      symid=nbParseSymbol(verb,sizeof(verb),&cursor);  /* check for a term */
       //outMsg(0,'T',"symid=%c verb=%s",symid,verb);
       if(symid!='t'){
         if(*cursave=='`'){   // accept assert abbreviation

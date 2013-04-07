@@ -118,6 +118,7 @@
 *                       The API version is in the path 0.x, and the x determine
 *                       compatibilty of the module with an application using
 *                       nb-0.x.p and the associated libnb-0.x.p.so
+* 2013-04-06 eat 0.8.15 Modified nbModuleDeclare to avoid buffer overflow
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -405,7 +406,8 @@ NB_Term *nbModuleDeclare(NB_Term *context,char *ident,char *cursor){
   struct NB_MODULE *module;
   NB_List *args=NULL;
   NB_Term *term;
-  char path[512],modname[64],filename[256],*text="",*delim;
+  char path[512],modname[512],filename[512],*text="",*delim;  // 2013-04-06 eat - changed size of modname and filename
+  size_t len;
 
   if(nbTermFind(moduleC,ident)!=NULL){
     outMsg(0,'E',"Module \"%s\" already declared.",ident);
@@ -455,22 +457,26 @@ NB_Term *nbModuleDeclare(NB_Term *context,char *ident,char *cursor){
     }
   else{  
     int isFile=0;  // treated like quoted filename if deprecated syntax found
-    delim=modname;
-    while(*cursor!=' ' && *cursor!='(' && *cursor!=':' && *cursor!=';' && *cursor!=0){
-      *delim=*cursor;
-      delim++;
-      cursor++;
-      }
-    *delim=0;
-    if(*modname==0) snprintf(filename,sizeof(filename),"nb_%s%s",ident,LT_MODULE_EXT);
+    delim=cursor;
+    while(*delim!=' ' && *delim!='(' && *delim!=':' && *delim!=';' && *delim!=0) delim++;
+    len=delim-cursor;
+    if(len==0) snprintf(filename,sizeof(filename),"nb_%s%s",ident,LT_MODULE_EXT);
     else{
+      if(len>=sizeof(modname)){
+        outMsg(0,'E',"Module name too long for buffer at--> %s",cursor);
+        return(NULL);
+        }
+      strncpy(modname,cursor,len);
+      *(modname+len)=0;
+      delim=modname+len;
+      cursor+=len;
       if(*path!=0){  // enforce new syntax rules when we have a path
         if(strchr(modname,'/')!=NULL || strchr(modname,'.')!=NULL || strchr(modname,'?')!=NULL){
           outMsg(0,'E',"Module name contains invalid characters: '/', '.', or '?'");
           return(NULL);
           }
         }
-      else if(delim>modname+2){          // support deprecated syntax when we have no path
+      else if(len>2 && len+strlen(LT_MODULE_EXT)<sizeof(modname)){          // support deprecated syntax when we have no path
         delim--;
         if(*delim=='?'){
           outMsg(0,'W',"Question mark in module name is deprecated"); 
@@ -478,7 +484,7 @@ NB_Term *nbModuleDeclare(NB_Term *context,char *ident,char *cursor){
 // 2013-03-10 eat - dropping version from module name - version is in path
 //#if defined(WIN32)
 //          sprintf(delim,".%s%s",NB_API_VERSION,LT_MODULE_EXT);
-          sprintf(delim,"%s",LT_MODULE_EXT);
+          snprintf(delim,sizeof(modname)-len,"%s",LT_MODULE_EXT);
 //#else
 //          sprintf(delim,"%s.%s",LT_MODULE_EXT,NB_API_VERSION);
 //#endif

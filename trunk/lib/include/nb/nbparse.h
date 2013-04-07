@@ -32,6 +32,8 @@
 * 2002-08-25 Ed Trettevik (original version split out of nblogic.c)
 * 2005-04-08 eat 0.6.2  API function definitions moved to nbapi.h
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2013-04-06 eat 0.8.15 Renamed getQualifier to nbParseQualifier
+* 2013-04-06 eat 0.8.15 Added size parameter to nbParseQualifier and nbParseSymbol
 *=============================================================================
 */
 #ifndef _NB_PARSE_H_
@@ -74,7 +76,7 @@ char *my_strtok_r(char *cursor,char *delim,char **newcur);
 int isAlpha(char c);
 int isNumeric(char c);
 int isAlphaNumeric(char c);
-char *getQualifier(char *qCursor,char *sCursor);
+char *nbParseQualifier(char *qCursor,size_t size,char *sCursor);
 
 #endif // NB_INTERNAL
 
@@ -84,6 +86,6 @@ char *getQualifier(char *qCursor,char *sCursor);
 #if defined(WIN32)
 _declspec (dllexport)
 #endif
-extern char nbParseSymbol(char *ident,char **cursor);
+extern char nbParseSymbol(char *ident,size_t size,char **cursor);
 
 #endif

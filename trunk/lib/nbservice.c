@@ -398,7 +398,7 @@ void nbwCreateService(char* service){
 void nbwCommand(nbCELL context,char *cmdverb,char *cursor){
   char symid,verb[strSize],service[strSize];
 
-  symid=nbParseSymbol(verb,&cursor);
+  symid=nbParseSymbol(verb,sizeof(verb),&cursor);
   if(symid!='t'){
     outMsg(0,'E',"Expected verb not found");
     return;
@@ -439,7 +439,7 @@ void nbwCommand(nbCELL context,char *cmdverb,char *cursor){
       outPut("Local Application Data:     %s\n",buf);
     }
   else if(strstr(verb,"Service")!=NULL){  /* service commands - keep this last */
-    if((symid=nbParseSymbol(service,&cursor))==';') strcpy(service,"nodebrain");
+    if((symid=nbParseSymbol(service,sizeof(service),&cursor))==';') strcpy(service,"nodebrain");
     else if(symid!='t'){
       outMsg(0,'E',"Expecting service name");
       return;

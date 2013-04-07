@@ -310,7 +310,7 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
     return(ip);
     }
   cursave=cursor;
-  symid=nbParseSymbol(ident,&cursor);
+  symid=nbParseSymbol(ident,sizeof(ident),&cursor);
   if(symid=='*' || symid=='i' || symid=='-' || symid=='+' || (opt==1 && (symid=='t' || symid=='{' || symid=='('))){
     if(symid=='t' || symid=='{' || symid=='('){
       count=1;
@@ -319,7 +319,7 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
     else if(symid=='i') count=atoi(ident);
     else if(symid=='-' || symid=='+'){
       sign=symid;
-      symid=nbParseSymbol(ident,&cursor);
+      symid=nbParseSymbol(ident,sizeof(ident),&cursor);
       if(symid!='i'){
         snprintf(msg,msglen,"Expecting integer at -->%s",cursave);
         return(NULL);
@@ -472,7 +472,7 @@ char *nbRuleParseStatement(nbCELL context,int opt,NB_Plan *plan,char *ip,int cou
       if(NULL==(ip=nbRuleParseStatement(context,opt,plan,ip,counter,source,&cursor,msg,msglen))) return(NULL);
       if(*cursor==';') cursor++; /* be flexible for the moment */
       tmIf->jump=ip-(char *)tmIf;  /* jump over {then} if false */
-      symid=nbParseSymbol(ident,&cursor);
+      symid=nbParseSymbol(ident,sizeof(ident),&cursor);
       if(strcmp(ident,"else")==0){ 
         tmBranch=(struct NB_PLAN_BRANCH *)ip;   /* Jump over else after doing then */
         tmBranch->op=(NB_PlanOp)&nbPlanBranch;

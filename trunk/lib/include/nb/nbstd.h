@@ -62,6 +62,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <math.h>   /* version 0.4.1 */
+#include <ctype.h>  // 2013-04-06 eat - character type functions
 
 #if defined(WIN32)
 

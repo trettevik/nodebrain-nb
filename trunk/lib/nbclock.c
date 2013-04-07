@@ -360,7 +360,7 @@ void nbClockShowTimers(char *cursor){
   char *cursave=cursor;
   int subscribers;
 
-  symid=nbParseSymbol(ident,&cursor);
+  symid=nbParseSymbol(ident,sizeof(ident),&cursor);
   if(symid=='t'){
     if(strcmp(ident,"utc")==0)       {nb_clockFormat=0;}
     else if(strcmp(ident,"local")==0){nb_clockFormat=1;nb_clockClock=NB_CLOCK_LOCAL;}
@@ -371,7 +371,7 @@ void nbClockShowTimers(char *cursor){
       }
     while(*cursor==' ') cursor++;
     cursave=cursor;
-    symid=nbParseSymbol(ident,&cursor);
+    symid=nbParseSymbol(ident,sizeof(ident),&cursor);
     if(symid!=';'){
       outMsg(0,'E',"Unexpected option at \"%s\".",cursave);
       nb_clockFormat=nb_clockFormatSave;

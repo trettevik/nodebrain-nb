@@ -134,7 +134,7 @@ NB_Link *nbMacroParseTermList(nbCELL context,char **source){
   next=&member;
   while(symid==','){
     cursave=*source;
-    symid=nbParseSymbol(ident,source);
+    symid=nbParseSymbol(ident,sizeof(ident),source);
     if(symid!='t'){
       if(member==NULL) return(NULL);
       outMsg(0,'E',"Expecting term at \"%s\".",cursave);
@@ -148,7 +148,7 @@ NB_Link *nbMacroParseTermList(nbCELL context,char **source){
     entry->next=NULL;
     next=&(entry->next);
     entry->object=grabObject(object);
-    symid=nbParseSymbol(ident,source);
+    symid=nbParseSymbol(ident,sizeof(ident),source);
     }
   return(member);
   }
@@ -240,7 +240,7 @@ char *nbMacroSub(nbCELL context,char **cursorP){
   NB_Link *arg=NULL,*parm;
   NB_Link *assertion=NULL;
   
-  symid=nbParseSymbol(ident,&cursor);
+  symid=nbParseSymbol(ident,sizeof(ident),&cursor);
   if(symid!='t'){
     outMsg(0,'E',"Expecting macro term at \"%s\".",*source);
     return(NULL);

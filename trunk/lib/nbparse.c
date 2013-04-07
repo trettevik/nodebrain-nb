@@ -127,6 +127,9 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 * 2012-12-27 eat 0.8.13 Checker updates
 * 2013-01-01 eat 0.8.13 Checker updates
+* 2013-04-06 eat 0.8.15 Renamed getQualifier to nbParseQualifier
+* 2013-04-06 eat 0.8.15 Added size parameter to nbParseSymbol and nbParseQualifier
+* 2013-04-06 eat 0.8.15 Added size parameter to nbParseTerm and nbParseTimeSymbol
 *==============================================================================
 */
 #include <nb/nbi.h>
@@ -198,53 +201,34 @@ char *my_strtok_r(char *cursor,char *delim,char **newcur){
 *             We also accept leading periods "." here. This may not be the appropriate
 *             place for that, but it works for now.
 */ 
-int nbParseTerm(char **termP,char **cursorP){
+static int nbParseTerm(char **termP,size_t size,char **cursorP){
   char *term=*termP,*cursor=*cursorP;
-  int len;
+  size_t len;
   
-  while(*cursor=='.'){  /* accept leading periods on a term qualifier */
-    *term=*cursor;
-    term++;
-    cursor++;
-    }      
-  if(*cursor=='_'){     // accept leading underscore
-    *term=*cursor;
-    term++;
-    cursor++;
-    }
+  *term=0;
+  while(*cursor=='.') cursor++;  // accept leading periods on a term qualifier
+  if(*cursor=='_') cursor++;     // accept leading underscore
   if(*cursor=='\''){
-    *term=*cursor;
-    term++;
     cursor++;
-    while(*cursor!='\'' && *cursor!=0 && *cursor!='\n'){
-      *term=*cursor;
-      term++;
-      cursor++;
-      }
+    while(*cursor!='\'' && *cursor!=0 && *cursor!='\n') cursor++;
     if(*cursor!='\''){
       outMsg(0,'E',"Qualifier with unbalanced quotes at: %s",*cursorP);
-      **termP=0;
       return(0);
       }
-    *term=*cursor;
-    term++;
     cursor++;
     }
-  // 2005/05/14 eat 0.6.3  This was cleaned up to not accept special symbols
-  //else if(isAlpha(*cursor)){
   else if(NB_ISALPHA((int)*cursor)){
-    *term=*cursor;
-    term++;
     cursor++;
-    //while(isAlphaNumeric((int)*cursor)){
-    while(NB_ISALPHANUMERIC((int)*cursor)){
-      *term=*cursor;
-      term++;
-      cursor++;
-      }
+    while(NB_ISALPHANUMERIC((int)*cursor)) cursor++;
     }
+  len=cursor-*cursorP;
+  if(len>=size){
+    outMsg(0,'E',"Term length exceeds buffer size"); 
+    return(0);
+    }
+  strncpy(term,*cursorP,len);
+  term+=len;
   *term=0;
-  len=term-*termP;
   *termP=term;
   *cursorP=cursor;
   return(len);  
@@ -258,17 +242,17 @@ int nbParseTerm(char **termP,char **cursorP){
 *
 *  We need to review the use of these special prefixes within term glossaries.
 */
-char *getQualifier(char *qCursor,char *sCursor){
+char *nbParseQualifier(char *qCursor,size_t size,char *sCursor){
   if(*sCursor=='@' || *sCursor=='$' || *sCursor=='%'){
     *qCursor=*sCursor;
     qCursor++;
     sCursor++;
     // Give special attention to @. or $. or %.
     // In these cases just return the single symbol
-    if(*sCursor=='.') *qCursor=0;
-    else nbParseTerm(&qCursor,&sCursor);  // 2012-12-27 eat - CID 751522 - intentional
+    if(*sCursor=='.' || *sCursor==0) *qCursor=0;
+    else if(nbParseTerm(&qCursor,size-1,&sCursor)==0) return(NULL);  // 2012-12-27 eat - CID 751522 - intentional
     }
-  else if(nbParseTerm(&qCursor,&sCursor)==0) return(NULL);
+  else if(nbParseTerm(&qCursor,size,&sCursor)==0) return(NULL);
   if(*sCursor=='.') sCursor++; /* step over one trailing period */  
   return(sCursor);  
   }
@@ -276,39 +260,50 @@ char *getQualifier(char *qCursor,char *sCursor){
 /*
 *  Parse time condition symbol - just looking for balanced brackets
 */
-void nbParseTimeSymbol(char *symid,char **identP,char **sourceP){
-  int paren;
-  char *symbol=*identP,*cursor=*sourceP;
+static void nbParseTimeSymbol(char *symid,char *ident,size_t size,char **sourceP){
+  int paren=1;
+  char *cursor=*sourceP,*start,*end;
+  size_t len;
+
+  *ident=0;
   if(*cursor=='{'){   /* handle schedule plans */
-    *symbol=*cursor; symbol++; cursor++;
-    paren=1;
+    start=cursor;
+    cursor++;
     while(paren>0 && *cursor!=0){
       if(*cursor=='{') paren++;
       else if(*cursor=='}') paren--;
-      *symbol=*cursor; symbol++; cursor++;
+      cursor++;
       }
-    if(paren>0){
-      // 2010-09-17 eat - changed **sourceP to *sourceP to fix crash on unbalanced parens
-      outMsg(0,'E',"Unbalanced braces {} in time condition \"%s\".",*sourceP);
-      *symid='.';
-      }
+    end=cursor;
     }
   else if(*cursor=='('){
     cursor++;
-    paren=1;
+    start=cursor; // don't return the paren
     while(paren>0 && *cursor!=0){
       if(*cursor=='(') paren++;
       else if(*cursor==')') paren--;
-      *symbol=*cursor; symbol++; cursor++;
+      cursor++;
       }
-    if(paren>0){
-      // 2010-09-17 eat - changed **sourceP to *sourceP to fix crash on unbalanced parens
-      outMsg(0,'E',"Unbalanced parentheses in time condition \"%s\".",*sourceP);
-      *symid='.';
-      }
-    else symbol--;  /* drop trailing parenthesis */
+    end=cursor-1;  // drop trailing parenthesis from identifier
     }
-  *identP=symbol;
+  else{
+    outMsg(0,'E',"Type expression must start with '(' or '{' symbol at--> %s",*sourceP);
+    *symid='.';
+    return;
+    }
+  if(paren>0){
+    outMsg(0,'E',"Unbalanced parentheses in time condition \"%s\".",*sourceP);
+    *symid='.';
+    return;
+    }
+  len=end-start;
+  if(len>=size){
+    outMsg(0,'E',"Time condition exceeds buffer size at--> %s",start);
+    *symid='.';
+    return;
+    }
+  strncpy(ident,start,len);
+  *(ident+len)=0;
   *sourceP=cursor;
   }
 
@@ -391,124 +386,118 @@ void nbParseTimeSymbol(char *symid,char **identP,char **sourceP){
 * 2006/01/06 eat 0.6.4  recognize null delimiter (0) as term delimiter after "."
 * 2008-11-11 eat 0.7.3  Split infix operators out to nbParseSymbolInfix()
 */
-char nbParseSymbol(char *symbol,char **source){
-  char *cursor,*symsave,symid;
-  //char *cur;
-  //int paren;
+char nbParseSymbol(char *symbol,size_t size,char **source){
+  char *cursor,*start,*symcur=symbol,symid='.';
+  size_t len;
 
   if(parseTrace) outMsg(0,'T',"nbParseSymbol called [%s].",*source);
+  if(size==0) outMsg(0,'E',"Symbol too long for buffer");
   cursor=*source;
-  symsave=symbol;
   *symbol=0;
   while(*cursor==' ') cursor++;
+  start=cursor;
   switch(nb_CharClass[(int)*cursor]){
     case NB_CHAR_NUMBER: // handle numbers - integer and real 
-      while(NB_ISNUMERIC((int)*cursor)){
-        *symbol=*cursor;
-        symbol++;
-        cursor++;
-        }
+      while(NB_ISNUMERIC((int)*cursor)) cursor++;
       symid='i';
       if(*cursor=='.'){
-        *symbol=*cursor;
-        symbol++;
         cursor++;
-        while(NB_ISNUMERIC((int)*cursor)){
-          *symbol=*cursor;
-          symbol++;
-          cursor++;
-          }
+        while(NB_ISNUMERIC((int)*cursor)) cursor++;
         symid='r';
         }
       if(*cursor=='e' && (*(cursor+1)=='+' || *(cursor+1)=='-') && NB_ISNUMERIC((int)*(cursor+2))){
-        *symbol=*cursor; symbol++; cursor++;
-        *symbol=*cursor; symbol++; cursor++;
-        *symbol=*cursor; symbol++; cursor++;
-        while(NB_ISNUMERIC((int)*cursor)){
-          *symbol=*cursor;
-          symbol++;
-          cursor++;
-          }
+        cursor+=3;
+        while(NB_ISNUMERIC((int)*cursor)) cursor++;
         symid='r';
+        }
+      len=cursor-start;
+      if(len<size){
+        strncpy(symbol,start,len);
+        *(symbol+len)=0;
+        }
+      else{
+        outMsg(0,'E',"Symbol too long for buffer");
+        symid='.';
         }
       break;
     case NB_CHAR_ALPHA:      // handle words and identifiers including single quoted strings
     case NB_CHAR_TERMQUOTE:
-      //outMsg(0,'T',"NB_CHAR_ALPHA or NB_CHAR_TERMQUOTE");
-      if(!nbParseTerm(&symbol,&cursor)) return('.');
+      if((len=nbParseTerm(&symcur,size,&cursor))==0) return('.');
+      size-=len;  // size is always at least one here
       symid='t';
       if(*cursor=='.'){
         while(*cursor=='.'){
-          *symbol=*cursor;
-          symbol++;
+          *symcur=*cursor;
+          symcur++;
+          size--;  // we know size is at least one here
           cursor++;
-          //if(*cursor!=0 && *cursor!=' ' && !nbParseTerm(&symbol,&cursor)) return('.');
-          if(!nbParseTerm(&symbol,&cursor)) symbol--;
+          if((len=nbParseTerm(&symcur,size,&cursor))==0) symcur--;
           }
-        // this seems problematic because a term can start with a period
-        if(*symbol=='.') cursor--; // 2006-01-06 eat 0.6.4 - backup when term ends with period
+        if(*symcur=='.') cursor--; // 2006-01-06 eat 0.6.4 - backup when term ends with period
         }
-      else if(strcmp(symsave,"not")==0) symid='!';
+      else if(strcmp(symbol,"not")==0) symid='!';
       break;
     case NB_CHAR_LEADING:     // leading symbol for special identifiers
-      //outMsg(0,'T',"NB_CHAR_LEADING");
       if(*cursor=='$' && *(cursor+1)=='('){
         symid='$';
         strncpy(symbol,cursor,2);
-        symbol+=2;
+        *(symbol+2)=0;
         cursor+=2;
         }
       else if(*cursor=='%' && *(cursor+1)=='('){
         symid='%';
         strncpy(symbol,cursor,2);
-        symbol+=2;
+        *(symbol+2)=0;
         cursor+=2;
         }
       else{
-        *symbol=*cursor;
-        symbol++;
+        *symcur=*cursor;
+        symcur++;
+        size--;    // size must be at least one
         cursor++;
         // 2009-10-28 eat - included support for real numbers starting with "." (e.g. .35)
-        if(*symsave=='.' && NB_ISNUMERIC((int)*cursor)){
+        if(*symbol=='.' && NB_ISNUMERIC((int)*cursor)){
           symid='r';
-          while(NB_ISNUMERIC((int)*cursor)){
-            *symbol=*cursor;
-            symbol++;
-            cursor++;
-            }
+          start=cursor;
+          while(NB_ISNUMERIC((int)*cursor)) cursor++;
           if(*cursor=='e' && (*(cursor+1)=='+' || *(cursor+1)=='-') && NB_ISNUMERIC((int)*(cursor+2))){
-            *symbol=*cursor; symbol++; cursor++;
-            *symbol=*cursor; symbol++; cursor++;
-            *symbol=*cursor; symbol++; cursor++;
-            while(NB_ISNUMERIC((int)*cursor)){
-              *symbol=*cursor;
-              symbol++;
-              cursor++;
-              }
+            cursor+=3;
+            while(NB_ISNUMERIC((int)*cursor)) cursor++;
+            }
+          len=cursor-start;
+          if(len<size){
+            strncpy(symcur,start,len);
+            *(symcur+len)=0;
+            }
+          else{
+            outMsg(0,'E',"Symbol too long for buffer");
+            symid='.';
             }
           }
         else{
           symid='t';
-          if(nbParseTerm(&symbol,&cursor)){
-            while(*cursor=='.' && nbParseTerm(&symbol,&cursor));
+          if((len=nbParseTerm(&symcur,size,&cursor))>0){
+            size-=len;
+            while(*cursor=='.' && (len=nbParseTerm(&symcur,size,&cursor))>0) size-=len;
             }
-          // 2009-10-28 eat - included test on symsave to not treat single period as a trailing period
-          if(symbol>symsave+1 && *(symbol-1)=='.'){  // step back from trailing period
-            symbol--;
+          // 2009-10-28 eat - included test on symbol to not treat single period as a trailing period
+          if(symcur>symbol+1 && *(symcur-1)=='.'){  // step back from trailing period
+            symcur--;
             cursor--;
             }
+          *symcur=0;
           }
         }
       break;
     case NB_CHAR_QUOTE:    // handle string literals
       cursor++;
-      while(*cursor!='\"' && *cursor!=0 && *cursor!='\n'){
-        *symbol=*cursor;
-        symbol++;
-        cursor++;
-        }
-      if(*cursor=='\"'){
-        *symbol=0;
+      start=cursor;
+      while(*cursor!='\"' && *cursor!=0 && *cursor!='\n') cursor++;
+      len=cursor-start;
+      if(len>=size) outMsg(0,'E',"String too long for buffer");
+      else if(*cursor=='\"'){
+        strncpy(symbol,start,len);
+        *(symbol+len)=0;
         cursor++;
         symid='s';
         }
@@ -520,40 +509,45 @@ char nbParseSymbol(char *symbol,char **source){
     case NB_CHAR_RELATION:   // handle assignment operator
       if(*cursor=='='){
         symid='=';
-        *symbol=*cursor; symbol++; cursor++;
+        *symcur=*cursor; symcur++; cursor++;
         if(*cursor=='='){
-          *symbol=*cursor; symbol++; cursor++; 
+          *symcur=*cursor; symcur++; cursor++; 
           }
+        *symcur=0;
         }
       else symid='.';
       break;
     case NB_CHAR_TILDE:
-      symid=*cursor;
+      symid='~';
       cursor++;
       /* handle change */
       if(*cursor=='='){
         symid='c';
-        *symbol=*cursor; symbol++; cursor++;
+        *symcur=*cursor; symcur++; cursor++;
+        *symcur=0;
         break;
         }
-      nbParseTimeSymbol(&symid,&symbol,&cursor);
+      while(*cursor==' ') cursor++;
+      nbParseTimeSymbol(&symid,symcur,size,&cursor);
       break;
     case NB_CHAR_NOT:     // handle operators starting with "!"
       symid='!'; 
-      *symbol=*cursor; symbol++; cursor++;
+      *symcur=*cursor; symcur++; cursor++;
       if(*cursor=='!') symid='1';                // !!
       else if(*cursor=='?') symid='k';           // !?
       if(symid!='!'){
-        *symbol=*cursor; symbol++; cursor++;
+        *symcur=*cursor; symcur++; cursor++;
         }
+      *symcur=0;
       break;
     case NB_CHAR_COMBO:    // handle combination operators and related single char operators
       /* handle unknown value */
       if(*cursor=='?' && *(cursor+1)=='?'){
           symid='u';
-          *symbol=*cursor; symbol++; cursor++;
-          *symbol=*cursor; symbol++; cursor++;
+          *symcur=*cursor; symcur++; cursor++;
+          *symcur=*cursor; symcur++; cursor++;
           outMsg(0,'W',"Replace deprecated '?\?' with '?' or '(?)'."); // escape to avoid a trigraph warning
+          *symcur=0;
           break;
           }
       // consider getting rid of the closed world operator syntax
@@ -562,14 +556,16 @@ char nbParseSymbol(char *symbol,char **source){
       /* handle closed world prefix operator */
       else if(*cursor=='[' && *(cursor+1)==']'){
         symid='w';
-        *symbol=*cursor; symbol++; cursor++;
-        *symbol=*cursor; symbol++; cursor++;
+        *symcur=*cursor; symcur++; cursor++;
+        *symcur=*cursor; symcur++; cursor++;
+        *symcur=0;
         break;
         }
       // fall through to handle single character when combo not found
     case NB_CHAR_SOLO:    // handle characters not combining with others
       symid=*cursor;
-      *symbol=*cursor; symbol++; cursor++;
+      *symcur=*cursor; symcur++; cursor++;
+      *symcur=0;
       break;
     case NB_CHAR_DELIM:
       symid=*cursor;
@@ -581,8 +577,7 @@ char nbParseSymbol(char *symbol,char **source){
       symid='.'; 
     }
   *source=cursor;
-  *symbol=0;
-  if(parseTrace) outMsg(0,'T',"nbParseSymbol returning ['%c',\"%s\"] [%s].",symid,symsave,cursor);
+  if(parseTrace) outMsg(0,'T',"nbParseSymbol returning ['%c',\"%s\"] [%s].",symid,symbol,cursor);
   return(symid);
   }
 
@@ -591,49 +586,48 @@ char nbParseSymbol(char *symbol,char **source){
 *
 *    See comments above with nbParseSymbol
 */
-char nbParseSymbolInfix(char *symbol,char **source){
-  char *cursor,*symsave,symid;
-  //char *cur;
-  //int paren;
+static char nbParseSymbolInfix(char *symbol,size_t size,char **source){
+  char *cursor,*start,*symcur=symbol,symid='.';
+  size_t len;
 
   if(parseTrace) outMsg(0,'T',"nbParseSymbolInfix called [%s].",*source);
   cursor=*source;
-  symsave=symbol;
   *symbol=0;
   while(*cursor==' ') cursor++;
+  start=cursor;
   switch(nb_CharClass[(int)*cursor]){
     case NB_CHAR_ALPHA:      // handle words and identifiers including single quoted strings
-      while(NB_ISALPHA((int)*cursor)){
-        *symbol=*cursor;
-        symbol++;
-        cursor++;
+      while(NB_ISALPHA((int)*cursor)) cursor++;
+      len=cursor-start;
+      if(len<size){
+        strncpy(symbol,start,len);
+        *(symbol+len)=0;
+        if(strcmp(symbol,"and")==0) symid='&';
+        else if(strcmp(symbol,"nand")==0) symid='a';
+        else if(strcmp(symbol,"or")==0) symid='|';
+        else if(strcmp(symbol,"nor")==0) symid='o';
+        else if(strcmp(symbol,"xor")==0) symid='x';
         }
-      *symbol=0;
-      if(strcmp(symsave,"and")==0) symid='&';
-      else if(strcmp(symsave,"nand")==0) symid='a';
-      else if(strcmp(symsave,"or")==0) symid='|';
-      else if(strcmp(symsave,"nor")==0) symid='o';
-      else if(strcmp(symsave,"xor")==0) symid='x';
-      else symid='.';
       break;
     case NB_CHAR_RELATION:   // handle relational operators
-      while(*cursor!=0 && strchr("=<>",*cursor)!=NULL){
-        *symbol=*cursor;
-        symbol++;
-        cursor++;
+      while(*cursor!=0 && strchr("=<>",*cursor)!=NULL) cursor++;
+      len=cursor-start;
+      if(len<size){
+        strncpy(symbol,start,len);
+        *(symbol+len)=0;
+        symid='=';
         }
-      symid='=';
       break;
     case NB_CHAR_TILDE:
       /* handle regular expression match */
-      if(*(cursor+1)=='~'){
+      if(*(start+1)=='~'){
+        strncpy(symbol,start,2);
+        *(symbol+2)=0;
         symid='m';
-        *symbol=*cursor; symbol++; cursor++;
-        *symbol=*cursor; symbol++; cursor++;
         }
       /* handle time condition (prefix) and match (infix) conditions */
       else{
-        symid=*cursor;
+        symid='~';
         cursor++;
         if(*cursor=='^'){  // new syntax time delay: ~^1(...) ~^0(...) ~^?(...)
           cursor++;
@@ -642,83 +636,92 @@ char nbParseSymbolInfix(char *symbol,char **source){
           else if(*cursor=='?') symid='U';
           else symid='.';
           cursor++;
-          nbParseTimeSymbol(&symid,&symbol,&cursor);
+          nbParseTimeSymbol(&symid,symbol,size,&cursor);
           }
         // support deprecated syntax
         else if(*cursor=='T' || *cursor=='F' || *cursor=='U'){
           symid=*cursor;
           cursor++;
-          nbParseTimeSymbol(&symid,&symbol,&cursor);
+          nbParseTimeSymbol(&symid,symbol,size,&cursor);
           }
         else symid='m';
         }
       break;
     case NB_CHAR_NOT:     // handle operators starting with "!"
       symid='!';
-      *symbol=*cursor; symbol++; cursor++;
+      *symcur=*cursor; symcur++; cursor++;
       if(*cursor=='&') symid='a';
       else if(*cursor=='|') symid='o';
       if(symid!='!'){
-        *symbol=*cursor; symbol++; cursor++;
+        *symcur=*cursor; symcur++; cursor++;
         }
+      *symcur=0;
       break;
     case NB_CHAR_COMBO:    // handle combination operators and related single char operators
       if(*cursor=='|'){
         if(*(cursor+1)=='|'){  // lazy and
           symid='O';
-          *symbol=*cursor; symbol++; cursor++;
-          *symbol=*cursor; symbol++; cursor++;
+          *symcur=*cursor; symcur++; cursor++;
+          *symcur=*cursor; symcur++; cursor++;
+          *symcur=0;
           break;
           }
         else if(*(cursor+1)=='~' && *(cursor+2)=='|'){ // |~| or enable monitor
           symid='e';
-          *symbol=*cursor; symbol++; cursor++;
-          *symbol=*cursor; symbol++; cursor++;
-          *symbol=*cursor; symbol++; cursor++;
+          *symcur=*cursor; symcur++; cursor++;
+          *symcur=*cursor; symcur++; cursor++;
+          *symcur=*cursor; symcur++; cursor++;
+          *symcur=0;
           break;
           }
         else if(*(cursor+1)=='^' && *(cursor+2)=='|'){ // |^| or value capture
           symid='v';
-          *symbol=*cursor; symbol++; cursor++;
-          *symbol=*cursor; symbol++; cursor++;
-          *symbol=*cursor; symbol++; cursor++;
+          *symcur=*cursor; symcur++; cursor++;
+          *symcur=*cursor; symcur++; cursor++;
+          *symcur=*cursor; symcur++; cursor++;
+          *symcur=0;
           break;
           }
         /* handle exclusive or |!& */
         else if(strncmp(cursor,"|!&",3)==0){
           symid='x';
-          *symbol=*cursor; symbol++; cursor++;
-          *symbol=*cursor; symbol++; cursor++;
-          *symbol=*cursor; symbol++; cursor++;
+          *symcur=*cursor; symcur++; cursor++;
+          *symcur=*cursor; symcur++; cursor++;
+          *symcur=*cursor; symcur++; cursor++;
+          *symcur=0;
           break;
           }
         }
       else if(*cursor=='&'){
         if(*(cursor+1)=='&'){   // && lazy and
           symid='A';
-          *symbol=*cursor; symbol++; cursor++;
-          *symbol=*cursor; symbol++; cursor++;
+          *symcur=*cursor; symcur++; cursor++;
+          *symcur=*cursor; symcur++; cursor++;
+          *symcur=0;
           break;
           }
         else if(*(cursor+1)=='~' && *(cursor+2)=='&'){  // &^& and value capture
           symid='E';
-          *symbol=*cursor; symbol++; cursor++;
-          *symbol=*cursor; symbol++; cursor++;
-          *symbol=*cursor; symbol++; cursor++;
+          *symcur=*cursor; symcur++; cursor++;
+          *symcur=*cursor; symcur++; cursor++;
+          *symcur=*cursor; symcur++; cursor++;
+          *symcur=0;
           break;
           }
         else if(*(cursor+1)=='^' && *(cursor+2)=='&'){  // &^& and value capture
           symid='V';
-          *symbol=*cursor; symbol++; cursor++;
-          *symbol=*cursor; symbol++; cursor++;
-          *symbol=*cursor; symbol++; cursor++;
+          *symcur=*cursor; symcur++; cursor++;
+          *symcur=*cursor; symcur++; cursor++;
+          *symcur=*cursor; symcur++; cursor++;
+          *symcur=0;
           break;
           }
         }
       // fall through to handle single character when combo not found
     case NB_CHAR_SOLO:    // handle characters not combining with others
       symid=*cursor;
-      *symbol=*cursor; symbol++; cursor++;
+      *symcur=*cursor; symcur++; cursor++;
+      *symcur=0;
       break;
     case NB_CHAR_DELIM:
       //outMsg(0,'T',"NB_CHAR_DELIM");
@@ -731,9 +734,9 @@ char nbParseSymbolInfix(char *symbol,char **source){
     default:
       symid='.';
     }
-  if(symid=='.') *symsave=0,cursor=*source;
-  else *source=cursor,*symbol=0;
-  if(parseTrace) outMsg(0,'T',"nbParseSymbolInfix returning ['%c',\"%s\"] [%s].",symid,symsave,cursor);
+  if(symid=='.') cursor=*source;
+  else *source=cursor;
+  if(parseTrace) outMsg(0,'T',"nbParseSymbolInfix returning ['%c',\"%s\"] [%s].",symid,symbol,cursor);
   return(symid);
   }
 
@@ -754,7 +757,7 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
   char symid;
 
   if(parseTrace) outMsg(0,'T',"nbParseObject(): called -->%s",*cursor);
-  symid=nbParseSymbol(ident,cursor);
+  symid=nbParseSymbol(ident,sizeof(ident),cursor);
   if(parseTrace) outMsg(0,'T',"nbParseObject(): nbParseSymbol returned ['%c',\"%s\"]-->%s",symid,ident,*cursor);
 
   if(NB_ISCELLDELIM((int)symid)) return(NULL);
@@ -850,7 +853,7 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
     case '+': // number 
       savecursor=*cursor;
       *token=symid;
-      symid=nbParseSymbol(ident,cursor); 
+      symid=nbParseSymbol(ident,sizeof(ident),cursor); 
       if(symid=='r' || symid=='i'){
         strcpy(token+1,ident);
         return((NB_Object *)parseReal(token));
@@ -886,7 +889,7 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
         }
       /* default to cell term if not define */
       savecursor=*cursor;
-      symid=nbParseSymbol(token,cursor);
+      symid=nbParseSymbol(token,sizeof(ident),cursor);
       if(symid!='('){
         (*cursor)=savecursor;
         // 2006-12-22 eat - when ready, experiment with using nb_Disabled definition for "undefined" terms
@@ -895,7 +898,7 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
         return((NB_Object *)term);
         }
       right=parseList(context,cursor);
-      symid=nbParseSymbol(token,cursor);
+      symid=nbParseSymbol(token,sizeof(ident),cursor);
       if(symid!=')'){
         outMsg(0,'E',"Expecting \")\" at end of parameter list.");
         return(NULL);
@@ -947,7 +950,7 @@ NB_Object *nbParseRel(NB_Term *context,char **cursor){
   if(parseTrace) outMsg(0,'T',"nbParseRel(): called [%s].",*cursor);
   if((lobject=nbParseCell(context,cursor,5))==NULL) return(NULL);
   savecursor=*cursor;
-  symid=nbParseSymbolInfix(operator,cursor);
+  symid=nbParseSymbolInfix(operator,sizeof(operator),cursor);
   if(parseTrace) outMsg(0,'T',"nbParseRel(): nbParseSymbol returned ['%c',\"%s\"].",symid,operator);
   if(strchr(")}]:;",symid)!=NULL) return(lobject);
 
@@ -975,7 +978,7 @@ NB_Object *nbParseRel(NB_Term *context,char **cursor){
   if(symid=='m'){
     char token[1024];
     struct REGEXP *re;
-    if((symid=nbParseSymbol(token,cursor))!='s'){
+    if((symid=nbParseSymbol(token,sizeof(token),cursor))!='s'){
       outMsg(0,'E',"Expecting string literal regular expression.");
       return(NULL);
       }
@@ -1016,7 +1019,7 @@ NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
   while(1){
     if(parseTrace) outMsg(0,'T',"nbParseCell(%d): calling nbParseSymbolInfix [%s].",level,*cursor);
     cursave=*cursor;
-    symid=nbParseSymbolInfix(operator,cursor);
+    symid=nbParseSymbolInfix(operator,sizeof(operator),cursor);
     if(parseTrace) outMsg(0,'T',"nbParseCell(%d): back from nbParseSymbolInfix [%s].",level,*cursor);
     if(strchr(")}]:;",symid)!=NULL) return(lobject);
     if(symid=='.'){
@@ -1132,15 +1135,15 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
   next=&member;
   while(symid==','){
     *curP=cursor;
-    symid=nbParseSymbol(ident,&cursor);
+    symid=nbParseSymbol(ident,sizeof(ident),&cursor);
     if(symid=='!'){
       not=1;
-      symid=nbParseSymbol(ident,&cursor);
+      symid=nbParseSymbol(ident,sizeof(ident),&cursor);
       }
     else not=0;
     if(symid=='?'){
       unknown=1;
-      symid=nbParseSymbol(ident,&cursor);
+      symid=nbParseSymbol(ident,sizeof(ident),&cursor);
       }
     else unknown=0;
     if(symid=='('){  /* allow for null term */
@@ -1155,7 +1158,7 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
     if(*cursor=='('){ /* node assertion */
       cursor++;
       list=parseList(cellContext,&cursor);
-      symid=nbParseSymbol(ident2,&cursor);
+      symid=nbParseSymbol(ident2,sizeof(ident2),&cursor);
       if(symid!=')'){
         outMsg(0,'E',"Expecting ')' at end of parameter list.");
         return(NULL);
@@ -1174,7 +1177,7 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
         type=assertTypeRef;
         cursor+=2;
         *curP=cursor;
-        symid=nbParseSymbol(ident2,&cursor);
+        symid=nbParseSymbol(ident2,sizeof(ident2),&cursor);
         if(symid!='t'){
           outMsg(0,'E',"What? Expecting term at \"%s\".",*curP);
           return(NULL);
@@ -1244,7 +1247,7 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
     * otherwise we can let nbTermAssign do it
     */
     *curP=cursor;
-    symid=nbParseSymbol(ident,&cursor);
+    symid=nbParseSymbol(ident,sizeof(ident),&cursor);
     }
   return(member);
   }

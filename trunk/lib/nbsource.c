@@ -104,7 +104,7 @@ int nbSourceIgnoreTil(nbCELL context,FILE *file,char *buf,int til){
   while(nbSourceGet(buf,NB_BUFSIZE,file)!=NULL){
     if(*buf=='%' && *(buf+1)!=' '){
       cursor=buf+1;
-      symid=nbParseSymbol(ident,&cursor);
+      symid=nbParseSymbol(ident,sizeof(ident),&cursor);
       if(strcmp(ident,"if")==0){
         directive=nbSourceIgnoreTil(context,file,buf,1);
         if(directive!=1) return(directive);  /* should be 0 or -1 */
@@ -257,7 +257,7 @@ int nbSourceTil(nbCELL context,FILE *file){
       /* handle directive statements %if(), %elseif( ), %else, %endif */
       if(*buf=='%'){
         cursor=buf+1;
-        symid=nbParseSymbol(ident,&cursor);
+        symid=nbParseSymbol(ident,sizeof(ident),&cursor);
         if(symid=='t'){
           if(strcmp(ident,"quit")==0) return(0);
           else if(strcmp(ident,"endif")==0) return(1);
