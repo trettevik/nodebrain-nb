@@ -54,6 +54,7 @@
 * 2012-06-16 eat 0.8.10 Replaced srand with srandom
 * 2012-10-13 eat 0.8.13 Replaced malloc with nbAlloc
 * 2013-01-01 eat 0.8.13 Checher updates
+* 2013-04-08 eat 0.8.15 Change prefix switch from -"'..." to -">..." to match command
 *============================================================================*/
 #include <nb/nbi.h>
 #include <nb/nbmedulla.h>
@@ -131,7 +132,8 @@ void nbServeParseArgs(nbCELL context,struct NB_STEM *stem,int argc,char *argv[])
           nbSource(context,argv[i]);
           nb_flag_input=1;
           }
-        else if(*cursor=='\''){  // handle command prefix argument
+        else if(*cursor=='>' || *cursor=='\''){  // handle command prefix argument
+          if(*cursor=='\'') outMsg(0,'W',"The single quote is deprecated. Use > to set a command prefix.");
           cursor++;
           while(*cursor==' ') cursor++;
           if(strlen(cursor)>NB_CMD_PROMPT_LEN-3){
