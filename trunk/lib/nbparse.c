@@ -287,7 +287,7 @@ static void nbParseTimeSymbol(char *symid,char *ident,size_t size,char **sourceP
     end=cursor-1;  // drop trailing parenthesis from identifier
     }
   else{
-    outMsg(0,'E',"Type expression must start with '(' or '{' symbol at--> %s",*sourceP);
+    outMsg(0,'E',"Time expression must start with '(' or '{' symbol at--> %s",*sourceP);
     *symid='.';
     return;
     }
@@ -528,7 +528,8 @@ char nbParseSymbol(char *symbol,size_t size,char **source){
         break;
         }
       while(*cursor==' ') cursor++;
-      nbParseTimeSymbol(&symid,symcur,size,&cursor);
+      if(*cursor=='(' || *cursor=='{') nbParseTimeSymbol(&symid,symcur,size,&cursor);
+      else symid='.';
       break;
     case NB_CHAR_NOT:     // handle operators starting with "!"
       symid='!'; 
@@ -636,7 +637,7 @@ static char nbParseSymbolInfix(char *symbol,size_t size,char **source){
           else if(*cursor=='?') symid='U';
           else symid='.';
           cursor++;
-          nbParseTimeSymbol(&symid,symbol,size,&cursor);
+          if(symid!='.') nbParseTimeSymbol(&symid,symbol,size,&cursor);
           }
         // support deprecated syntax
         else if(*cursor=='T' || *cursor=='F' || *cursor=='U'){
