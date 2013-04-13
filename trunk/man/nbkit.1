@@ -1,7 +1,7 @@
 .\" Process this file with "groff -man -Tascii foo.1" or "nbman2ht foo.1"
 .\" See NodeBrain Developer's Guide for project standards
 .\"
-.TH nbkit 1 "March 2013" "NodeBrain 0.8.15" "NodeBrain Administrator Guide"
+.TH nbkit 1 "April 2013" "NodeBrain 0.8.15" "NodeBrain Administrator Guide"
 .SH NAME
 \fBnbkit\fP - NodeBrain Kit Utility
 .SH SYNOPSIS
@@ -72,11 +72,22 @@
 
 .SH DESCRIPTION
 The \fBnbkit\fP(1) command is used to manage
-NodeBrain applications that conform to a structure defined by the Caboodle NodeBrain Kit described
-by the \fBnbkit-caboodle\fP(7) manual page.
-In addition to this command line interface, the Caboodle NodeBrain Kit
-provides a web interface supporting most of the same operations
-using a web browser.
+NodeBrain applications that conform to the \fBNodeBrain Kit and Caboodle Framework\fP
+described by the \fBnbkit.caboodle\fP(7) manual page.
+While the \fBnbkit\fP(1) command is provided with the NodeBrain rule engine, it is designed to
+work with caboodles built using NodeBrain kits.  
+Caboodles reside on systems where the rule engine is installed,
+while kits are development tools not normally installed on production systems.
+ 
+The \fBCaboodle NodeBrain Kit\fP provides the key components of a caboodle necessary 
+for many of the nbkit command options described here to work.  Without a caboodle constructed from the
+Caboodle NodeBrain Kit (or a compatible package), the nbkit command has little or no value.
+The Caboodle NodeBrain Kit also provides caboodle components enabling a web interface for
+browser access to most of the same operations performed using the nbkit command.
+
+The nbkit command is primarily a method of invoking an nbkit_ command within a caboodle.  This means
+the actual behavior of many of the commands described here will depend of the version of the Caboodle
+NodeBrain Kit used to create your caboodle.
 
 The following common terms have a specific meaning within the context of a NodeBrain kit.
 .IP \fBcaboodle\fP 11
@@ -330,7 +341,7 @@ Ed Trettevik <eat@nodebrain.org>
 
 .SH SEE ALSO
 .\"ht page
-\fBnbkit-caboodle\fP(7)
+\fBnbkit.caboodle\fP(7)
 .\"ht page
 \fBnb.man\fP(7),
 .\"ht page

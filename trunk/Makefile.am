@@ -90,7 +90,7 @@ dist_man_MANS = \
   man/nodebrain.1 \
   man/user.nb.5 \
   man/nbkit.1 \
-  man/nbkit-caboodle.7
+  man/nbkit.caboodle.7
 
 # Build html pages for man pages
 
@@ -108,8 +108,8 @@ html/nb.syn.html: man/nb.syn.5
 	bin/nbman2ht man/nb.syn.5 > html/nb.syn.html
 html/nbkit.html: man/nbkit.1
 	bin/nbman2ht man/nbkit.1 > html/nbkit.html
-html/nbkit-caboodle.html: man/nbkit-caboodle.7
-	bin/nbman2ht man/nbkit-caboodle.7 > html/nbkit-caboodle.html
+html/nbkit.caboodle.html: man/nbkit.caboodle.7
+	bin/nbman2ht man/nbkit.caboodle.7 > html/nbkit.caboodle.html
 
 noinst_DATA = \
   html/nb.html \
@@ -119,7 +119,7 @@ noinst_DATA = \
   html/nb.mod.html \
   html/nb.syn.html \
   html/nbkit.html \
-  html/nbkit-caboodle.html
+  html/nbkit.caboodle.html
 
 ##NB_MOD_SUFFIX = so
 
