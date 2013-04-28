@@ -16,7 +16,7 @@
 ##
 ## You should have received a copy of the GNU General Public License
 ## along with this program; if not, write to the Free Software
-## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+## Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 ##
 ##=============================================================================
 ## Program:  NodeBrain (nb)
@@ -76,21 +76,14 @@ doc_nbTutorial_nbTutorial_TEXINFOS = doc/nbTutorial/fdl.texi
 doc_nbLanguage_nbLanguage_TEXINFOS = doc/nbLanguage/fdl.texi
 
 dist_man_MANS = \
-  man/caboodle.nb.5 \
-  man/NodeBrain.1 \
   man/nb.1 \
-  man/nb.3 \
-  man/nb.5 \
-  man/nb.7 \
   man/nb.cfg.5 \
   man/nb.lib.3 \
-  man/nb.man.7 \
   man/nb.mod.7 \
   man/nb.syn.5 \
-  man/nodebrain.1 \
-  man/user.nb.5 \
   man/nbkit.1 \
-  man/nbkit.caboodle.7
+  man/nbkit.caboodle.7 \
+  man/nodebrain.7
 
 # Build html pages for man pages
 
@@ -100,8 +93,6 @@ html/nb.cfg.html: man/nb.cfg.5
 	bin/nbman2ht man/nb.cfg.5 > html/nb.cfg.html
 html/nb.lib.html: man/nb.lib.3
 	bin/nbman2ht man/nb.lib.3 > html/nb.lib.html
-html/nb.man.html: man/nb.man.7
-	bin/nbman2ht man/nb.man.7 > html/nb.man.html
 html/nb.mod.html: man/nb.mod.7
 	bin/nbman2ht man/nb.mod.7 > html/nb.mod.html
 html/nb.syn.html: man/nb.syn.5
@@ -110,16 +101,18 @@ html/nbkit.html: man/nbkit.1
 	bin/nbman2ht man/nbkit.1 > html/nbkit.html
 html/nbkit.caboodle.html: man/nbkit.caboodle.7
 	bin/nbman2ht man/nbkit.caboodle.7 > html/nbkit.caboodle.html
+html/nodebrain.html: man/nodebrain.7
+	bin/nbman2ht man/nodebrain.7 > html/nodebrain.html
 
 noinst_DATA = \
   html/nb.html \
   html/nb.cfg.html \
   html/nb.lib.html \
-  html/nb.man.html \
   html/nb.mod.html \
   html/nb.syn.html \
   html/nbkit.html \
-  html/nbkit.caboodle.html
+  html/nbkit.caboodle.html \
+  html/nodebrain.html
 
 ##NB_MOD_SUFFIX = so
 
@@ -131,6 +124,7 @@ EXTRA_DIST = \
   Readme.txt \
   nodebrain.spec.in \
   nodebrain.spec \
+  debian/compat \
   debian/control \
   debian/rules \
   debian/changelog \
@@ -153,9 +147,9 @@ EXTRA_DIST = \
   html/nb.cfg.html \
   html/nb.html \
   html/nb.lib.html \
-  html/nb.man.html \
   html/nb.mod.html \
-  html/nb.syn.html 
+  html/nb.syn.html \
+  html/nodebrain.html
 
 include tutmake.inc
 

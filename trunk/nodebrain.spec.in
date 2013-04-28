@@ -1,19 +1,19 @@
 Name: @PACKAGE_NAME@
 Version: @PACKAGE_VERSION@
-Release: 1%{?dist}
+Release: 2%{?dist}
 
 %define _disable_ld_no_undefined 1
 %define is_mandriva %(test -e /etc/mandriva-release && echo 1 || echo 0)
 
 Summary: A declarative rule-based language for state and event monitoring
-License: GPLv2
-Group: Applications/Engineering
+License: GPL-2.0+
+Group: Development/Languages/Other
 Source: @PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.gz
 URL: http://www.nodebrain.org/
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-BuildRequires: readline-devel pcre-devel openssl-devel gettext
+BuildRequires: readline-devel pcre-devel openssl-devel gettext pkgconfig
 Requires(post): /sbin/install-info
 Requires(preun): /sbin/install-info
 
@@ -73,6 +73,7 @@ browser interface for administrators.
 %exclude %{_libdir}/*.a
 %exclude %{_libdir}/nb-%{version}/*.a
 %{_mandir}/man1/*.1*
+%{_mandir}/man3/*.3*
 %{_mandir}/man5/*.5*
 %{_mandir}/man7/*.7*
 %{_infodir}/*.info*
@@ -80,7 +81,7 @@ browser interface for administrators.
 #-- nodebrain-devel rpm --------------------------------------------------
 
 %package devel
-Group:          Development/Libraries
+Group:          Development/Libraries/Other
 Summary:        Development package for nodebrain
 Requires:       pkgconfig
 Requires:       nodebrain = %{version}-%{release}
@@ -100,13 +101,12 @@ This package contains development files for nodebrain.
 %exclude %{_libdir}/nb-%{version}
 %endif
 %{_libdir}/pkgconfig/*.pc
-%{_mandir}/man3/*.3*
 
 
 #-- nodebrain-static rpm --------------------------------------------------
 
 %package static
-Group:          Development/Libraries
+Group:          Development/Libraries/Other
 Summary:        Static libraries for nodebrain
 Requires:       nodebrain-devel = %{version}-%{release}
 
@@ -122,8 +122,11 @@ This package contains static libraies for nodebrain.
 #-------------------------------------------------------------------------
 
 %changelog
+* Sat Apr 27 2013 Ed Trettevik <eat@nodebrain.org> - 0.8.15-2
+- Changed to please rpmlint
+
 * Sun Mar 10 2013 Ed Trettevik <eat@nodebrain.org> - 0.8.15-1
-- Switch location of modules to %{_libdir}/nb-%{version}
+- Switch location of modules to {_libdir}/nb-{version}
 
 * Sun Jan 20 2013 Ed Trettevik <eat@nodebrain.org> - 0.8.13-1
 - Updated for 0.8.13

@@ -1,6 +1,6 @@
 NodeBrain 0.8.15 Change Summary
 
-* Released April 14, 2013
+* Released April 28, 2013
 
 * Theme: Packaging
 
@@ -9,8 +9,7 @@ NodeBrain 0.8.15 Change Summary
     
 * Documentation:
 
-  o  No content changes.  Documents were rebuilt causing
-     and update to version number.
+  o  %use directive added.
 
 * Incompatibilities: 
 
@@ -63,6 +62,22 @@ NodeBrain 0.8.15 Change Summary
 
   o  ChangeLog files are created automatically from the
      source repository.
+
+  o  The %use directive has been added.  It is similar to
+     the %include directive and the source command, except:
+
+	1) It sources the specified file at the top level
+           context instead of the current context.
+        2) It only sources the file if it hasn't already
+           been sourced.
+        3) It does not accept parameters.
+
+     This is intended for files that provide a resource
+     to other files. By including %use directives in
+     files that require the resource, the high level
+     files (e.g. an agent) is not required to know
+     while resource files are required by the files it
+     sources.
 
 * Deprecated Syntax: (none)
 
