@@ -623,7 +623,7 @@ Sequence rules are covered in more detail in Chapter 6, Rules.
 
 @section Command Processing
 @cindex Command Processing
-The NodeBrain language is a declarative language. With the exception of the @code{%IF} source file directive and sequence rules, it does not have procedural flow of control constructs like @code{IF-THEN-ELSE}, @code{CASE}, @code{WHILE}, @code{UNTIL}, and @code{FOR}. It does not have sequential compound statements like "@code{DO; @dots{} END;}" or "@code{@{@dots{}@}}". It does not support conventional user-defined functions or subroutines. It is not a general purpose programming language like C or Perl. NodeBrain is a special purpose declarative language. A NodeBrain programmer specifies rules that are similar to @code{IF-THEN} statements. However, the @code{IF} conditions in NodeBrain, unlike those in procedural languages, are "constantly" being evaluated. There is no concept of "order" to the evaluation of rules.
+The NodeBrain language is a declarative language. With the exception of the @code{%if} source file directive and sequence rules, it does not have procedural flow of control constructs like @code{IF-THEN-ELSE}, @code{CASE}, @code{WHILE}, @code{UNTIL}, and @code{FOR}. It does not have sequential compound statements like "@code{DO; @dots{} END;}" or "@code{@{@dots{}@}}". It does not support conventional user-defined functions or subroutines. It is not a general purpose programming language like C or Perl. NodeBrain is a special purpose declarative language. A NodeBrain programmer specifies rules that are similar to @code{IF-THEN} statements. However, the @code{IF} conditions in NodeBrain, unlike those in procedural languages, are "constantly" being evaluated. There is no concept of "order" to the evaluation of rules.
 
 On the other hand, commands are "executed" in the order they are presented to the interpreter. It may be helpful to think of a NodeBrain interpreter as a transaction processor. Each statement is a transaction that does one or more of the following:
 
@@ -3967,7 +3967,7 @@ Example:	> @b{^Looks like we have a problem. }
 @item @i{servantUser} @tab ::= @tab @b{[} @i{username} @b{]}  *** Not supported on Windows ***
 @item @i{servantOut} @tab ::= @tab [ @i{servantRedirect} [ @i{servantRedirect} ] ]  [@b{:} ]
 @item @i{servantRedirect} @tab ::= @tab (@b{!} | @b{|} | @b{%} | @b{>} [@b{>} ] @i{servantFile} ) 
-@item @i{servantFile} @tab ::= @tab @i{fileName} s*  | @b{"}  @i{fileName} @b{"} )
+@item @i{servantFile} @tab ::= @tab @i{filename} s*  | @b{"}  @i{filename} @b{"} )
 @item @i{servantExec} @tab ::= @tab (@b{$} | @b{@@} ) ( s* | @i{servantFile} ) | $$ | @@@@
 @item @i{servantArgs} @tab ::= @tab string interpreted as shell command or arguments to the executable 
 @end multitable
@@ -4035,7 +4035,7 @@ If you are not satisfied with the default destinations for @code{stdout} and @co
 @b{|}	-  log file
 @b{%}	-  write to generated filename in "out" directory
 @b{>} [@b{>}] @i{servantFile}		- write or append to specified @i{filename}
-@item @i{servantFile} @tab ::= @tab @i{fileName} s* | @b{"} @i{fileName} @b{"}  
+@item @i{servantFile} @tab ::= @tab @i{filename} s* | @b{"} @i{filename} @b{"}  
 @item @i{shellCmd} @tab ::= @tab string interpreted by the host shell  (e.g., @code{/bin/sh} or @code{cmd.exe})
 @end multitable
 @end cartouche
@@ -4198,7 +4198,10 @@ Directives are used in source files to conditionally select lines for processing
     [@b{%else}  [ [ s* ] @b{;} [@i{comment} ] ] @b{@bullet{}} ]
      @dots{}
      @b{%endif}  [ [ s* ] @b{;} [@i{comment} ] ] @b{@bullet{}}
+@item @i{includeDirective} @tab ::= @tab @b{%include} s* @i{filename} [ ,  @i{assertionList} ] [@b{;} [@i{comment} ]] @b{@bullet{}} 
+@item @i{filename} @tab ::= @tab Name of NodeBrain (*.nb) source file.  Enclose in quotes if the filename includes spaces (e.g., Windows).
 @item @i{quitDirective} @tab ::= @tab @b{%quit}
+@item @i{useDirective} @tab ::= @tab @b{%use} s* @i{filename} [@b{;} [@i{comment} ]] @b{@bullet{}} 
 @end multitable
 @end cartouche
 
@@ -4228,8 +4231,8 @@ assert teamid=14;
 
 Directives are not intended as a procedural scripting language. This feature is only included to enable simple variation in rule files. More complex procedures can be written in your favorite scripting language.
 
-@section %ASSERT Directive
-@cindex %ASSERT Directive
+@section %assert Directive
+@cindex %assert directive
 
 
 @cartouche
@@ -4242,7 +4245,7 @@ Directives are not intended as a procedural scripting language. This feature is 
 @end cartouche
 
 
-The @code{%ASSERT} directive is like an @code{ASSERT} command, only it operates in a special context established for a source file. We call this the @i{local} context. The terms assigned or defined by the @code{%ASSERT} directive are only available to other directives during the processing of a source file. Once a file has been processed, the local context is destroyed.
+The @code{%assert} directive is like an @code{ASSERT} command, only it operates in a special context established for a source file. We call this the @i{local} context. The terms assigned or defined by the @code{%assert} directive are only available to other directives during the processing of a source file. Once a file has been processed, the local context is destroyed.
 
 @example
 	%assert a=1,b="Critical";
@@ -4272,8 +4275,8 @@ This actually sets %a to the literal value "$@{x@}". The following command sets 
 @end example
 
  
-@section %DEFAULT Directive
-@cindex %DEFAULT Directive
+@section %default Directive
+@cindex %default Directive
 
 
 @cartouche
@@ -4285,7 +4288,7 @@ This actually sets %a to the literal value "$@{x@}". The following command sets 
 @end multitable
 @end cartouche
 
-The @code{%DEFAULT} directive is like the @code{%ASSERT} directive, only terms that have already been defined will not be modified. This is used to establish defaults that can be overridden when the file is included.
+The @code{%default} directive is like the @code{%assert} directive, only terms that have already been defined will not be modified. This is used to establish defaults that can be overridden when the file is included.
 
 @example
 > source mysource.nb,abc=1;
@@ -4297,8 +4300,8 @@ The @code{%DEFAULT} directive is like the @code{%ASSERT} directive, only terms t
 
 In the example above, the local term abc is 1 and the local term xyz is "something." If the term abc had not been specified on the include command, then abc would be 5.
 
-@section %IF Directive
-@cindex %IF Directive
+@section %if Directive
+@cindex %if Directive
 
 
 @cartouche
@@ -4315,7 +4318,7 @@ In the example above, the local term abc is 1 and the local term xyz is "somethi
 @end cartouche
 
 
-The @code{%IF} directive is used for conditional processing of lines in a source file. It works just like you would expect an @code{IF} statement to work. The conditions are evaluated in the local context. There is no access to active context variables. Only local context symbolic substitution, %@{term@}, is supported.
+The @code{%if} directive is used for conditional processing of lines in a source file. It works just like you would expect an @code{IF} statement to work. The conditions are evaluated in the local context. There is no access to active context variables. Only local context symbolic substitution, %@{term@}, is supported.
 
 @example
 %if(a=27 or b=2);
@@ -4327,14 +4330,14 @@ The @code{%IF} directive is used for conditional processing of lines in a source
 %endif;
 @end example
 
-@section INCLUDE Directive
-@cindex INCLUDE Directive
-The @code{%INCLUDE} directive is used to interpret another NodeBrain (@code{*.nb}) source file within the current context, with optional symbolic substitution.
+@section %include Directive
+@cindex %include directive
+The @code{%include} directive is used to interpret another NodeBrain (@code{*.nb}) source file within the current context, with optional symbolic substitution.
 
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{includeCmd} @tab ::= @tab @b{%INCLUDE} s* @i{fileName} [ ,  @i{assertionList} ] [@b{;} [@i{comment} ]] @b{@bullet{}} 
+@item @i{includeDirective} @tab ::= @tab @b{%include} s* @i{filename} [ ,  @i{assertionList} ] [@b{;} [@i{comment} ]] @b{@bullet{}} 
 @item @i{filename} @tab ::= @tab Name of NodeBrain (*.nb) source file.  Enclose in quotes if the filename includes spaces (e.g., Windows).
 @item @i{assertionList} @tab ::= @tab @i{cellAssertion} @{ , @i{cellAssertion} @}
 @item @i{cellAssertion} @tab ::= @tab @i{cellIdentifier} (@b{=} | @b{==} ) @i{cellExpression}
@@ -4375,16 +4378,30 @@ The cell expressions used in the argument list to an include file are interprete
 
 
 
-@section %QUIT Directive
-@cindex %QUIT Directive
+@section %quit Directive
+@cindex %quit directive
 
 
-The @code{%QUIT} directive is used to end processing of a source file. 
+The @code{%quit} directive is used to end processing of a source file. 
 
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
 @item @i{quitDirective} @tab ::= @tab @b{%quit} [ [s*] @b{;} [@i{comment} ]] @b{@bullet{}} 
+@end multitable
+@end cartouche
+
+@section %use Directive
+@cindex %use directive
+The @code{%use} directive is for including NodeBrain (@code{*.nb}) source files that provide a top level resource to other files.  It is similar to the @code{%include} directive and the @code{source} command, but differs in three important ways: 1) the specified file is sourced at the top level context instead of the current context, 2) it is sourced only if not already sourced via a prior @code{%use} directive, and 3) no parameters may be specified on the @code{use} directive. 
+
+This directive is intended for files that serve as a resource to any number of source files. It liberates high level files from having to prepare the resource nodes required by subordinate files before sourcing them, or even having to know what resource nodes are required.
+
+@cartouche
+@b{Syntax}
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{useDirective} @tab ::= @tab @b{%use} s* @i{filename} [ ,  @i{assertionList} ] [@b{;} [@i{comment} ]] @b{@bullet{}}
+@item @i{filename} @tab ::= @tab Name of NodeBrain (*.nb) source file.  Enclose in quotes if the filename includes spaces (e.g., Windows).
 @end multitable
 @end cartouche
 
@@ -5152,7 +5169,7 @@ NodeBrain supports multiple forms of symbolic substitution: preprocessor, substi
 @end multitable
 @end cartouche
 
-Preprocessor terms are defined in a separate dictionary from rule terms. They may be assigned values as arguments to @code{nb}, as arguments to a rule file, and within a rule file using the @code{%ASSERT} directive or the @code{ASSERT} command.
+Preprocessor terms are defined in a separate dictionary from rule terms. They may be assigned values as arguments to @code{nb}, as arguments to a rule file, and within a rule file using the @code{%assert} directive or the @code{ASSERT} command.
 
 @example
 	nb a=1 b="abc" myscript	[global process terms "a" and "b"]
@@ -5174,7 +5191,7 @@ Preprocessor substitution is accomplished by enclosing a term in braces preceded
 
 Preprocessor substitution applies to rule files, including standard input (@code{stdin}). It is performed on every line of a file before it is processed in any other way, completely independent of command syntax.
 
-This substitution does not apply to commands received by listeners. This is primarily because the notion of conditional interpretation, at least in the form of the multi-line @code{%IF} directive, doesn't apply well to commands arriving at a listener. However, the global process term dictionary is available to all commands. The ability to update it depends on one's authority, but read access is available to any identity with the ability to issue a command. You will see in the next section how global process terms can be used in symbolic string substitution of a different form.
+This substitution does not apply to commands received by listeners. This is primarily because the notion of conditional interpretation, at least in the form of the multi-line @code{%if} directive, doesn't apply well to commands arriving at a listener. However, the global process term dictionary is available to all commands. The ability to update it depends on one's authority, but read access is available to any identity with the ability to issue a command. You will see in the next section how global process terms can be used in symbolic string substitution of a different form.
 
 @section Substitution Command
 @cindex Substitution Command
@@ -5637,8 +5654,8 @@ The @code{DEFINE} statement no longer recognizes the previously deprecated types
 The following commands are obsolete.
 
 @example
-@code{DEFAULT} 	- see @code{%DEFAULT} directive
-@code{LET} 		- see @code{%ASSERT} directive
+@code{DEFAULT} 	- see @code{%default} directive
+@code{LET} 		- see @code{%assert} directive
 @end example
 
 The + prefix is obsolete for node commands.

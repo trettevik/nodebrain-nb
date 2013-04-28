@@ -38,6 +38,12 @@
 * 2010/11/07 eat 0.8.5  Supporting "\" at end of line for continuation
 * 2011-02-19 eat 0.8.5  Fixed bug in IF with source substitution in skipped block
 *            Was not acception "% " in a IF or ELSE block being skipped over
+* 2013-04-27 eat 0.8.15 Added support for %use directive
+*            A %use directive is like an %include directive (or source command)
+*            with three exceptions:
+*              1) The file is sourced at the local root node (top level)
+*              2) Parameters are not allowed (use preprocessor variables
+*              3) A given file will only source once in a session.
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -256,6 +262,7 @@ int nbSourceTil(nbCELL context,FILE *file){
         }
       /* handle directive statements %if(), %elseif( ), %else, %endif */
       if(*buf=='%'){
+        outPut("%s",buf);
         cursor=buf+1;
         symid=nbParseSymbol(ident,sizeof(ident),&cursor);
         if(symid=='t'){
@@ -270,7 +277,8 @@ int nbSourceTil(nbCELL context,FILE *file){
           else if(strcmp(ident,"default")==0){
             if(nbLet(cursor,symContext,1)!=0) return(-1);
             }
-          else if(strcmp(ident,"include")==0) nbSource(context,cursor);
+          else if(strcmp(ident,"use")==0) nbSource((nbCELL)locGloss,1,cursor);
+          else if(strcmp(ident,"include")==0) nbSource(context,0,cursor);
           else{
             outMsg(0,'E',"Directive \"%s\" not recognized.",ident);
             return(-1);
@@ -292,9 +300,35 @@ int nbSourceTil(nbCELL context,FILE *file){
   }
 
 /*
-*  Include command file with symbolic substitution
+*  Keep track files that have been loaded via %use directive
+*
+*  Return code:  0 - not yet sourced, 1 - already sourced
 */
-void nbSource(nbCELL context,char *cursor){
+int nbSourced(nbCELL context,char *filename){
+  static NB_TreeNode *fileTree=NULL;
+  NB_TreeNode *node;
+  NB_TreePath path;
+  nbCELL key;
+
+  key=nbCellCreateString(context,filename);
+  if(nbTreeLocate(&path,key,&fileTree)==NULL){
+     node=nbAlloc(sizeof(NB_TreeNode));
+     node->left=NULL;
+     node->right=NULL;
+     node->key=key;
+     nbTreeInsert(&path,node);
+     }
+  else return(1);
+  return(0);
+  }
+
+/*
+*  Include command file with symbolic substitution
+*
+*    context - node where commands are interpreted
+*    option  - 0 - source command or %include directive, 1 - %use directive
+*/
+void nbSource(nbCELL context,int option,char *cursor){
   FILE *file;
   char filename[256],*fcursor;
   //char buf[NB_BUFSIZE];
@@ -312,11 +346,13 @@ void nbSource(nbCELL context,char *cursor){
     fcursor=strchr(cursor,'"');
     if(fcursor==NULL){
       outMsg(0,'E',"Unbalanced quote in file name");
+      termUndef(symContext);      // undefine symbolic context
       symContext=symContextSave;
       return;
       }
     if(sizeof(filename)-1<fcursor-cursor){
       outMsg(0,'E',"File name too long - %d bytes supported",sizeof(filename)-1);
+      termUndef(symContext);      // undefine symbolic context
       symContext=symContextSave;
       return;
       }
@@ -343,15 +379,22 @@ void nbSource(nbCELL context,char *cursor){
     *fcursor=0;
     }
   while(*cursor==' ') cursor++;
-  if(*cursor==',') cursor++;
-  else while(*cursor==' ') cursor++;
-  if(*cursor!=0 && *cursor!=';'){
-    if(nbLet(cursor,symContext,0)!=0) return;
+  if(option==1 && *cursor!=0 && *cursor!=';'){
+    outMsg(0,'E',"Unexpected character at --> %s",cursor);
+    termUndef(symContext);      // undefine symbolic context
+    symContext=symContextSave;
+    return;
+    }
+  if(*cursor==',' && nbLet(cursor+1,symContext,0)!=0){
+    termUndef(symContext);      // undefine symbolic context
+    symContext=symContextSave;
+    return;
     }
   if(strcmp(filename,"-")==0) nbParseStdin(1);
   else if(strcmp(filename,"=")==0) nbParseStdin(0);
   else{
-    if((file=fopen(filename,"r"))==NULL)
+    if(option==1 && nbSourced(context,filename));  // only source once for %use directive
+    else if((file=fopen(filename,"r"))==NULL)
       outMsg(0,'E',"Source file \"%s\" not found.",filename);
     else{
       if(nb_mode_check) outCheck(NB_CHECK_START,filename);
@@ -370,4 +413,3 @@ void nbSource(nbCELL context,char *cursor){
   termUndef(symContext);      // undefine symbolic context
   symContext=symContextSave;  // restore symbolic context
   }
-

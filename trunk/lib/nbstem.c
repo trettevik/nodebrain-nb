@@ -55,6 +55,7 @@
 * 2012-10-13 eat 0.8.13 Replaced malloc with nbAlloc
 * 2013-01-01 eat 0.8.13 Checher updates
 * 2013-04-08 eat 0.8.15 Change prefix switch from -"'..." to -">..." to match command
+* 2013-04-27 eat 0.8.15 Included option parameter in nbSource calls
 *============================================================================*/
 #include <nb/nbi.h>
 #include <nb/nbmedulla.h>
@@ -129,7 +130,7 @@ void nbServeParseArgs(nbCELL context,struct NB_STEM *stem,int argc,char *argv[])
       case '-':
         cursor++;
         if(*cursor==0 || *cursor==','){
-          nbSource(context,argv[i]);
+          nbSource(context,0,argv[i]);
           nb_flag_input=1;
           }
         else if(*cursor=='>' || *cursor=='\''){  // handle command prefix argument
@@ -147,14 +148,14 @@ void nbServeParseArgs(nbCELL context,struct NB_STEM *stem,int argc,char *argv[])
           }
         else nbCmdSet(context,stem,"set",cursor-1);
         break;
-      case '=': nbSource(context,argv[i]); nb_flag_input=1; break;
+      case '=': nbSource(context,0,argv[i]); nb_flag_input=1; break;
       case ':': nbCmd(context,cursor+1,1); nb_flag_input=1; break;
       default:
         if(NULL!=(equal=strchr(cursor,'='))){
-          if(NULL!=(comma=strchr(cursor,',')) && comma<equal) nbSource(context,cursor);
+          if(NULL!=(comma=strchr(cursor,',')) && comma<equal) nbSource(context,0,cursor);
           else nbParseArgAssertion(cursor);
           }
-        else nbSource(context,cursor);
+        else nbSource(context,0,cursor);
         nb_flag_input=1;
       }
     }
@@ -529,7 +530,7 @@ int nbServe(nbCELL context,int argc,char *argv[]){
   nbServeParseArgs(context,stem,argc,argv);  /* parse arguments */
   outFlush();
 
-  if(!nb_opt_servant && (nb_opt_prompt || !nb_flag_input)) nbSource(context,"-");
+  if(!nb_opt_servant && (nb_opt_prompt || !nb_flag_input)) nbSource(context,0,"-");
   if(nb_opt_query){
     nbCmdQuery(context,stem,"query","");
     nbRuleReact(); /* let rules fire */  

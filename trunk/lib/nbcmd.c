@@ -246,6 +246,7 @@
 * 2012-12-31 eat 0.8.13 Checker updates
 * 2013-01-01 eat 0.8.13 Checker updates
 * 2013-01-16 eat 0.8.13 Checker updates
+* 2013-04-27 eat 0.8.15 Included option parameter in nbSource calls
 *==============================================================================
 */
 #include <nb/nbi.h>
@@ -1162,11 +1163,6 @@ int nbCmdAssert(nbCELL context,void *handle,char *verb,char *cursor){
 */
 int nbLet(char *cursor,NB_Term *context,int mode){
   NB_Link *assertion=NULL;
-  //char ident[256],operator[256],token[4096],*cursave;
-  //NB_Term *term;
-  //NB_Object *object;
-  //int found;
-  //char symid=',';
 
   if(!(clientIdentity->authority&AUTH_ASSERT)){
     outMsg(0,'E',"Identity \"%s\" does not have authority to assign symbolic values.",clientIdentity->name->value);
@@ -1982,7 +1978,7 @@ void nbParseStdin(int prompt){
 
 int nbCmdSource(nbCELL context,void *handle,char *verb,char *cursor){
   //nbParseSource(context,cursor);
-  nbSource(context,cursor);
+  nbSource(context,0,cursor);
   return(0);
   }
 
@@ -2242,7 +2238,7 @@ void nbCmd(nbCELL context,char *cursor,unsigned char cmdopt){
       // should these really be available here - what is the scope of symContext - investigate
       if(strcmp(verb,"%assert")==0) nbLet(cursor,symContext,0);    /* AUTH_ASSERT  */
       else if(strcmp(verb,"%default")==0) nbLet(cursor,symContext,1);   /* AUTH_ASSERT  */
-      else if(strcmp(verb,"%include")==0) nbSource(context,cursor);       /* AUTH_DEFINE  */
+      else if(strcmp(verb,"%include")==0) nbSource(context,0,cursor);       /* AUTH_DEFINE  */
       else if((verbObject=nbVerbFind(context,verb))!=NULL){
         if(!(clientIdentity->authority&verbObject->authmask)){
           outMsg(0,'E',"Identity \"%s\" does not have authority to issue %s command.",clientIdentity->name->value,verb);
