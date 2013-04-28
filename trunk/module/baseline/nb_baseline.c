@@ -546,7 +546,7 @@ static void treeLoad(nbCELL context,void *skillHandle,BTree *tree){
   period=cycleTime/tree->interval;
   tree->period=period;
   sprintf(filename,"%s/%8.8d.nb",tree->directory,tree->period*tree->interval);
-  nbSource(context,filename); // load using the command interpreter
+  nbSource(context,0,filename); // load using the command interpreter
   }
 
 static void treeAlarm(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL cell){
