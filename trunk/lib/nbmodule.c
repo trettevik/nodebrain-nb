@@ -481,13 +481,7 @@ NB_Term *nbModuleDeclare(NB_Term *context,char *ident,char *cursor){
         if(*delim=='?'){
           outMsg(0,'W',"Question mark in module name is deprecated"); 
           delim--;
-// 2013-03-10 eat - dropping version from module name - version is in path
-//#if defined(WIN32)
-//          sprintf(delim,".%s%s",NB_API_VERSION,LT_MODULE_EXT);
           snprintf(delim,sizeof(modname)-len,"%s",LT_MODULE_EXT);
-//#else
-//          sprintf(delim,"%s.%s",LT_MODULE_EXT,NB_API_VERSION);
-//#endif
           isFile=1;
           } 
         if(strchr(modname,'/')!=NULL || strncmp(modname,"nb_",3)==0) isFile=1;
@@ -496,12 +490,11 @@ NB_Term *nbModuleDeclare(NB_Term *context,char *ident,char *cursor){
         outMsg(0,'W',"Deprecated syntax - enclose file name in quotes or use [{<path>}][<modId>] instead");
         strcpy(filename,modname);
         }
-// 2013-03-10 eat - dropping version from module name - version is in path
-//#if defined(WIN32)
+      else if(3+strlen(modname)+strlen(LT_MODULE_EXT)>=sizeof(filename)){  // 2013-04-27 eat - VID 8759-0.8.15-2-R231
+        outMsg(0,'E',"Module name too long for buffer");
+        return(NULL);
+        }
       else sprintf(filename,"nb_%s%s",modname,LT_MODULE_EXT);
-//#else
-//      else sprintf(filename,"nb_%s%s.%s",modname,LT_MODULE_EXT,NB_API_VERSION);
-//#endif
       }
     } 
   while(*cursor==' ') cursor++;
