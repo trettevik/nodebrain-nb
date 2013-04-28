@@ -3,30 +3,31 @@
 .\"
 .TH nb.man 7 "April 2013" "NodeBrain 0.8.15" "NodeBrain Administrator Guide"
 .SH NAME
-nb.man - NodeBrain Overview
-.SH SYNOPSIS
-\fBman\fP \fIpage\fP
+\fBnodebrain\fP - NodeBrain State and Event Monitoring Agent
+.SH TOPICS
+Broad topics are covered by separate manual pages.  If you are looking for something more specific
+than the overview provided here, select the page of interest.
 .IP
 .\"ht page
-\fBnb\fP        - Interpreter, Agent, Client, Utility
+\fBnodebrain\fP      - Overview
 
 .\"ht page
-\fBnb.cfg\fP    - Configuration Files
+\fBnb\fP             - Interpreter, Agent, Client, Utility
 
 .\"ht page
-\fBnb.syn\fP    - Rule Language Command Syntax
+\fBnb.cfg\fP         - Configuration Files
 
 .\"ht page
-\fBnb.mod\fP    - Node Modules (nb_<module>.so plugins)
+\fBnb.syn\fP         - Rule Language Command Syntax
 
 .\"ht page
-\fBnb.lib\fP    - C API Function Library (libnb.so)
+\fBnb.mod\fP         - Node Modules (nb_<module>.so plugins)
 
 .\"ht page
-\fBnb.man\fP    - Overview
+\fBnb.lib\fP         - C API Function Library (libnb.so)
 
 .\"ht page
-\fBnbkit\fP     - Kit Utility
+\fBnbkit\fP          - Kit Utility
 
 .\"ht page
 \fBnbkit.caboodle\fP - Kit and Caboodle Framework
@@ -35,7 +36,7 @@ nb.man - NodeBrain Overview
 .SH DESCRIPTION
 This manual page provides a high level overview of NodeBrain with references to other documentation.
 These pages are provided primarily as a convenience for Unix and Linux system administrators
-who may have to deal with NodeBrain in some way on their system, but don't necessarily want to build
+who may have to deal with NodeBrain in some way on their system, but do not necessarily want to build
 a new application or write NodeBrain rules. For this reason, the NodeBrain man pages are collectively called the
 \fINodeBrain Administrator Guide\fP.  Programmers may find it helpful as well.  Never hurts
 to have a few man pages to get oriented.
@@ -43,7 +44,7 @@ to have a few man pages to get oriented.
 Programmers and system administrators who what to build a new application or just learn more, should
 reference documents available online at http://www.nodebrain.org.
 .SH GOAL
-NodeBrain's primary mission in life is to be a light-weight event monitoring agent. In this respect,
+The primary mission of NodeBrain is to be a light-weight event monitoring agent. In this respect,
 NodeBrain fancies itself to be a tool for creating an event monitoring service like Apache is to web applications and
 sendmail is to mail delivery.  These tools perform a useful service in the background
 without the user awareness associated with a web browser or mail client.  Although the demand for event monitoring
@@ -54,13 +55,13 @@ competing goals.
 
 Secondly, a NodeBrain agent would like to share information with peers. If one agent detects a condition
 of interest, we want it to be able to report the condition to other agents.  This requires network communication
-via TCP/IP, preferably with options for encryption and peer authentication.  This is supported by the peer module
-distributed with NodeBrain.  The peer module implements the NodeBrain Protocol (NBP). 
+via TCP/IP, preferably with options for encryption and peer authentication.  This is supported by the peer and message modules
+distributed with NodeBrain.
 
 Hopefully you are now visualizing a network of agents monitoring local streams of events and reporting
 interesting conditions (generated events) to peers.  But we need a way to get events into these agents other
 than communication with peer agents.  Our real sources of information are external. For this,
-NodeBrain provides modules supporting multiple methods: servant scripts, FIFO's, queues, log file audit, SNMP traps, syslog, etc.
+NodeBrain provides modules supporting multiple methods: servant scripts, FIFO files, queues, log file audit, SNMP traps, syslog, etc.
 It can use STDIN for a batch job or an interactive client, and in both cases communicate with peers.  So NodeBrain
 is also a client that enables the creation of an event stream into an agent.  As a batch job, or utility command,
 it provides a loosely coupled application interface to the agents.  As an interactive client, it provides a
@@ -72,7 +73,7 @@ We need a rule language.  Guess what?  NodeBrain \fIis\fP a rule language, and \
 the interpreter of this language.  Just when you were getting comfortable with the idea that NodeBrain is
 an event monitoring agent, we claim it is an interpreter. Well, actually any program that processes input is an interpreter 
 to some extent, but NodeBrain is a language you can use to write scripts.  
-Here's a script called HelloWorld.
+Here is a script called HelloWorld.
 
 .nf
   #!/usr/local/bin/nb
@@ -88,31 +89,31 @@ Here we execute it.
 .fi
 
 Imagine a Perl interpreter (you can substitute your favorite interpreter) running as a daemon listening for
-code to interpret.  That's a pretty flexible agent.  Perhaps too flexible, but you could write 
+code to interpret.  That is a pretty flexible agent.  Perhaps too flexible, but you could write 
 code to impose constraints and structure on the incoming events and the types of actions the agent would
 be willing to perform for various users or applications.  That would just be a Perl implementation
 of a server of some kind. 
 
-So why do we need a new language, this NodeBrain thing?  Why don't we just build an agent using an existing
+So why do we need a new language, this NodeBrain thing?  Why do we not just build an agent using an existing
 interpreter?  That seems like a good idea if you can easily do what you want.  For example, some people use
-Prolog as a rule engine.  That's nice because of the inferencing capabilities of Prolog.  We are just trying
+Prolog as a rule engine.  That is nice because of the inferencing capabilities of Prolog.  We are just trying
 to do something slightly different---we think. :)  We may have to plead ignorance if
-proven wrong, but what we are trying to do with NodeBrain doesn't seem to be a good match for interpretive
-languages we're familiar with.  We should also point out that NodeBrain is not a good substitute for what
-other interpreters do well.  It is good, in the author's opinion, for a relatively specific problem space---the
+proven wrong, but what we are trying to do with NodeBrain does not seem to be a good match for interpretive
+languages we are familiar with.  We should also point out that NodeBrain is not a good substitute for what
+other interpreters do well.  It is good, in the opinion of author, for a relatively specific problem space---the
 state and event monitoring space.  All of our trusty favorite tools can be used in combination with NodeBrain
 in this problem space.
 
 .SH REACTIVE SCRIPTS
 Monitoring applications typically watch for, and react to, predefined conditions.
-Here's a simple reactive NodeBrain script.
+Here is a simple reactive NodeBrain script.
 
 .nf
   #!/usr/local/bin/nb -p
   define r1 on(a=1 and b=2) x=25;
 .fi
 
-For simplicity, we're illustrating the concept with an interactive script.  In the execution
+For simplicity, we are illustrating the concept with an interactive script.  In the execution
 below, user input is highlighted.  Normally, assertions will come from external sources.
 .IP
 .nf
@@ -154,7 +155,7 @@ x = 25
 .SH DIAGNOSTIC SCRIPTS
 But wait.  There is one more thing NodeBrain would like to add to its resume----diagnostic scripting.
 You should think "baby expert system tool".  NodeBrain has a diagnostic mode that
-enables it to solve for unknown conditions.  Here's a trivial and silly example.
+enables it to solve for unknown conditions.  Here is a trivial and silly example.
 
 .nf
   #!/usr/local/bin/nb -p
@@ -165,10 +166,10 @@ enables it to solve for unknown conditions.  Here's a trivial and silly example.
   define fish on(!legs and coat="scales" and tail);
 .fi
 
-Let's call this diagnostic script "creature" and see what happens when we execute it.  You should imagine
+Let us call this diagnostic script "creature" and see what happens when we execute it.  You should imagine
 that you are asking NodeBrain, with the help of the defined rules, to assist you in identifying a 
 creature at the edge of a swimming pool.  To solve this problem, NodeBrain, requests a little information
-from you. Your responses and NodeBrain's conclusion are highlighted.  
+from you. Your responses and NodeBrain conclusion are highlighted.  
 
 .IP
 .nf
@@ -226,7 +227,7 @@ script to run as a batch job and get the answers to the questions automatically,
 a user.  This is done only for interactive testing of the rules.
 
 The most important thing to notice in the example above is that NodeBrain never asked us what
-kind of tail our creature has. It didn't have to.  It was able to select "person" and reject all
+kind of tail our creature has. It did not have to.  It was able to select "person" and reject all
 other possibilities without knowing anything about the tail.  This is how doctors and car mechanics
 diagnose problems without running every possible expensive test---well, if we are lucky.  So the 
 idea is for an agent to detect a condition based on rules and spawn a diagnostic script to determine
@@ -235,8 +236,8 @@ expensive tests when required.  The diagnostic script can take action to resolve
 it determines there is a problem, or simply report its findings back to the agent rules for
 further decision making.
 .SH STATE AND EVENT MONITORING
-We have been talking about state and event monitoring without providing a definition.  We've been assuming the
-reader has an intuitive understanding that is close enough to what we mean.  Now we'll take the risk of
+We have been talking about state and event monitoring without providing a definition.  We have been assuming the
+reader has an intuitive understanding that is close enough to what we mean.  Now we will take the risk of
 making it less clear by attempting an explanation. 
 
 The first statement below describes a state, and the second statement describes an event.
@@ -254,7 +255,7 @@ In NodeBrain, a state is represented by a unique combination of values in all th
 monitor the state of specific sets of cells for "interesting" changes in state.  A transition to an interesting
 state is recognized as an event of interest.  In this scenario, we might argue that we are doing state monitoring and deriving events.
 
-Now, let's think about it from the perspective of the source of this information.  If the sun is behind a cloud,
+Now, let us think about it from the perspective of the source of this information.  If the sun is behind a cloud,
 and you want to work in your internal office (no windows) until the sun comes out, you might ask a co-working with a window 
 seat to let you know if the sun comes out from behind a cloud.  When the co-worker comes to your office and says "The sun is out",
 the statement
@@ -312,7 +313,7 @@ instead of ASSERT.
   \fBalert\fP type="SunCameOut";
 .fi
 
-Here's a rule to monitor for this event.  We are now using IF instead of ON.
+Here is a rule to monitor for this event.  We are now using IF instead of ON.
 
 .nf
   define sunCameOut \fBif\fP(type="SunCameOut"): ... action ...
@@ -337,12 +338,12 @@ also true that we can monitor events to detect states.
 
 The details are not important here, the point is simply that NodeBrain supports both the notion of a state and an event, and
 can translate between the two.  It is very important to be able to recognize a reported event as just further evidence of
-a known state.  If you have a leaky roof, every drip is an event.  However, you don't want to call the roof repair company every time
+a known state.  If you have a leaky roof, every drip is an event.  However, you do not want to call the roof repair company every time
 you detect a drip---you want to call them once each time the roof transitions into a state of disrepair, as evidenced by your
 first detection of a drip.  Notice we converted from an event (drip) to a state (roof is in disrepair) and monitored for a state change
 to recognized a higher level event (roof has transitioned to a state of disrepair).
 .SH THE NAME
-It may be obvious, but let's comment on the name, "NodeBrain".  
+It may be obvious, but let us comment on the name, "NodeBrain".  
 First the "Brain" part.  Like almost every program, \fBnb\fP(1) is a decision maker.
 In the animal world, as best we understand it, this function is assigned to brains
 when not overridden by hearts.
@@ -371,10 +372,10 @@ The *\fB.nb\fP suffix may also be used for executable scripts as an alternative 
 no extention.  It is a preferred alternative on Windows systems.
 .IP \fIname\fP
 Rule file with shebang ("#!") header to run as a script that might be re-written in
-a different language.  I'm not personally keen on "executable" files having 
+a different language.  I am not personally keen on "executable" files having 
 extensions that identify the language.  Seems silly to have to rename a script         
 and modify all references just because we change the language.  But this 
-is a lazy programmer's perspective.
+is the perspective of a lazy programmer.
 .IP \fIname\fP\fB.nbx\fP
 Text translation rules to convert a foreign text stream into a NodeBrain command steam.
 .P
