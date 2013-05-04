@@ -338,7 +338,7 @@ int openHistory(char *filename,int periods,size_t len){
 /*
 *  Read history period 
 */
-int readHistory(int file,void *buffer,int period,size_t len){
+static int readHistory(int file,void *buffer,int period,size_t len){ # 2013-05-04 eat VID-8894-0.8.15-3-R240 - changed to static to help checker
   long pos=period*len;
 
   if(!file) return(0);
@@ -350,14 +350,15 @@ int readHistory(int file,void *buffer,int period,size_t len){
 /*
 *  Write history period
 */
-int writeHistory(int file,char *buffer,int period,size_t len){
+/* comment ount until ready to use
+static int writeHistory(int file,char *buffer,int period,size_t len){
   long pos=period*len;
 
   if(lseek(file,pos,SEEK_SET)!=pos) return(0);
   if(write(file,buffer,len)!=(int)len) return(0);
   return(1);
   }
-
+*/
 /*
 *  Format a Version 5 Netflow Export Datagram to the log file
 */
