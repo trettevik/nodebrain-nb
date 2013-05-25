@@ -1,0 +1,50 @@
+#!/usr/bin/perl
+# Update all the ChangeLog files from the repository.
+#
+#   This project uses NEWS files for user level change summary info.
+#
+# Invoke this stript from top of the build directory
+#
+#   $ bin/nbchangelog  <start>:<stop>
+# 
+# To find the revision of a release tag,<start>, do this:
+#
+#   $ svn log -v --stop-on-copy https://svn.code.sf.net/p/nodebrain/code/nb/tag/0.8.14
+#
+# To find the latest revision number <stop> do this:
+#
+#   $ svn info -r 'HEAD'
+#
+#==================================================================================
+use strict;
+
+sub makeLog{
+  my ($dir,$range)=@_;
+  system("cd $dir;svn log -v -r$range > ChangeLog");
+  }
+
+sub findLogs{
+  my ($dir,$range)=@_;
+  opendir(DIR,"$dir")||die;
+  my @file=readdir(DIR);
+  closedir(DIR);
+  foreach my $file (sort @file){
+    next if($file=~/\./);
+    next if($file eq 'doc');
+    if($file=~/ChangeLog/){
+      makeLog($dir,$range);
+      }
+    elsif(-d "$dir/$file"){
+      findLogs("$dir/$file",$range);
+      }
+    }
+  }
+
+my $range=shift();
+if(!$range){
+  print("must supply version range in form  '<start>:<stop>'\n");
+  }
+my $build=`pwd`;
+chomp($build);
+print("cwd=$build -r$range\n");
+findLogs($build,$range);

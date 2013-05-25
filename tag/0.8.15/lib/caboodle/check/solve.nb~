@@ -1,0 +1,38 @@
+#!./nb
+~ > #!./nb
+# The solve.pl script returns a cell expression to
+~ > # The solve.pl script returns a cell expression to
+# provide a value for terms with Unknown values.
+~ > # provide a value for terms with Unknown values.
+define e1 node;
+~ > define e1 node;
+e1. use :check/solve.pl e1
+~ > e1. use :check/solve.pl e1
+e1. define r1 on(a="hello");
+~ > e1. define r1 on(a="hello");
+e1. define r2 on(b="goodbye");
+~ > e1. define r2 on(b="goodbye");
+define eUser node;
+~ > define eUser node;
+eUser. define r3 on(b=5);
+~ > eUser. define r3 on(b=5);
+query
+~ > query
+~ 1970/01/01 00:00:01 NB000T Resolving "a" via command : check/solve.pl e1 "a"
+~ Value=("hello")
+~ 1970/01/01 00:00:02 NB000T Resolving "b" via command : check/solve.pl e1 "b"
+~ Value=("goodbye")
+~ 1970/01/01 00:00:03 NB000W No consultant for eUser.b
+~ 1970/01/01 00:00:04 NB000I Rule e1.r2 fired 
+~ 1970/01/01 00:00:05 NB000I Rule e1.r1 fired 
+show -t
+~ > show -t
+~ @ = ! == node 
+~ eUser = ! == node 
+~ eUser.r3 = ! == on(eUser.b=5);
+~ eUser.b = ?
+~ e1 = ! == node 
+~ e1.r2 = ! == on(e1.b="goodbye");
+~ e1.b = "goodbye"
+~ e1.r1 = ! == on(e1.a="hello");
+~ e1.a = "hello"

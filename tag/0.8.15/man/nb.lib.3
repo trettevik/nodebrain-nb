@@ -1,0 +1,89 @@
+.\" Process this file with "groff -man -Tascii foo.1" or "nbman2ht foo.1"
+.\" See NodeBrain Developer Guide for project standards
+.\"
+.TH nb.lib 3 "April 2013" "NodeBrain 0.8.15" "NodeBrain Administrator Guide"
+.SH NAME
+nb.lib - NodeBrain Library
+.SH SYNOPSIS
+.B #include <nb/nb.h>
+
+\fBgcc\fP \fImain_pgm\fP\fB.c -lnb\fP [ -lm -ldl ]
+.SH DESCRIPTION
+The NodeBrain library, \fBlibnb.so\fP, makes the NodeBrain C API
+available to main routines.  This is the same API provided to node modules (plug-ins).
+.SH EXAMPLE
+If you want to experiment with embedding the NodeBrain interpreter in your
+own program, you can use nb.c and various modules in the source distribution as
+sample code.
+Here's a trivial example.
+
+.\"ht fixed
+.nf
+  #include <nb/nb.h>
+  int main(int argc,char *argv[]){
+    nbCELL context;
+
+    printf("hello\\n");
+
+    // Start the NodeBrain interpreter
+    context=nbStart(argc,argv);
+
+    // Issue some commands 
+    nbCmd(context,"assert a==x+y;",NB_CMDOPT_ECHO);
+    nbCmd(context,"define r1 on(a>4):show -cells",NB_CMDOPT_ECHO);
+    nbCmd(context,"assert x=2,y=3;",NB_CMDOPT_ECHO);
+
+    // Stop the interpreter
+    nbStop(context);
+    }
+.fi
+
+The \fINodeBrain API Reference\fP needs a lot of work before it will be published,
+and the API will be unstable prior to a 1.0 release. So consider it experimental
+only.
+
+.SH FILES
+.IP nb.h
+Header file for NodeBrain C API.
+.IP libnb.so
+NodeBrain C API library - dynamic.
+.IP libnb.a
+NodeBrain C API library - static.
+.P
+.SH ENVIRONMENT
+.IP NB_MODULE_PATH
+See
+.\"ht page
+\fBnb.mod\fP(3).
+.P
+.SH BUGS
+The NodeBrain library is untested except for the API functions that
+are exercised by \fBnb\fP(1) and the distributed node modules.
+.SH AUTHOR
+Ed Trettevik <eat@nodebrain.org>
+.SH "SEE ALSO"
+.\"ht page
+\fBnodebrain\fP(7),
+.\"ht page
+\fBnb\fP(1),    
+.\"ht page
+\fBnb.cfg\fP(5),
+.\"ht page
+\fBnb.syn\fP(5),
+.\"ht page
+\fBnb.mod\fP(7) 
+
+.\"ht doc
+[1]
+.I NodeBrain Home Page
+- http://www.nodebrain.org  
+
+.\"ht doc
+[2]
+.I NodeBrain Tutorial 
+- http://www.nodebrain.org  
+
+.\"ht doc
+[3]
+.I NodeBrain Language Reference
+- http://www.nodebrain.org  

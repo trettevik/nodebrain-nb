@@ -1,0 +1,11 @@
+# File: tutorial/RuleTypes/rules.nb
+define r0 when(a=1 and b=2);
+define r1 on(a=1 and b=2);
+define r2 on(a=2 and b=2);
+define r3 if(a=1 and b=2);
+assert a=1,b=2;
+assert a=1,b=2;
+assert a=2;
+assert a=27;
+alert a=1;
+alert a=1;

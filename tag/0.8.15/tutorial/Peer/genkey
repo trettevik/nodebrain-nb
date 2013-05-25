@@ -1,0 +1,4 @@
+#!/usr/local/bin/nb
+# File: tutorial/Peer/genkey
+define myService node peer.service;
+myService:identify buddy;

@@ -1,0 +1,7 @@
+#!/usr/local/bin/nb -d
+# File: tutorial/Syslog/syslog.nb
+-rm syslog.log
+set log="syslog.log",out=".";
+define syslog node cache(~(h(8))):(~(1h):route,appl,group,node,object,severity,text(1));
+syslog. define alarm if(text._hitState):$ -|mail.form source=tutorial route="${route}" appl="${appl}" group="${group}" node="${node}" severity="${severity}" text="${text}" >> mail.log
+syslog. define audit node syslog("syslog.nbx",1514);
