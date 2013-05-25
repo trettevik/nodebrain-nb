@@ -1,0 +1,471 @@
+.\" Process this file with "groff -man -Tascii foo.1" or "nbman2ht foo.1"
+.\" See NodeBrain Developer Guide for project standards
+.\"
+.TH nb 1 "April 2013" "NodeBrain 0.8.15" "NodeBrain Administrator Guide"
+.SH NAME
+\fBnb\fP - NodeBrain Interpreter, Agent, Client, and Utility.
+.SH SYNOPSIS
+.B nb
+{
+.B -b
+|
+.B --bail
+|
+.B -B
+| 
+.B --noBail
+|
+.B -d
+|
+.B --daemon
+|
+.B -D
+|
+.B --noDaemon
+|
+.B -p
+|
+.B --prompt
+|
+.B -P
+|
+.B --noPrompt
+|
+.B -s
+|
+.B --servant
+|
+.B -S
+|
+.B --noServant
+|
+.B -q
+| 
+.B --query
+|
+.B -Q
+|
+.B --noQuery
+|
+.B -t
+|
+.B --trace
+|
+.B -T
+|
+.B --noTrace
+| 
+\fB--pidfile=\fP\fIfile\fP
+|
+\fB--logfile=\fP\fIfile\fP
+|
+\fB--outdir=\fP\fIdir\fP
+|
+\fB--user=\fP\fIuser\fP 
+|
+\fB--group=\fP\fIgroup\fP 
+|
+\fIvariable\fP\fB=\fP\fIvalue\fP
+|
+\fB:"\fP\fIcommand\fP\fB"\fP
+|
+.B -
+|
+.B =
+| \fIfile\fP [ \fB,\fP \fIassertion\fP ]
+|
+\fB-">\fP\fIprefix\fP\fB"\fP
+}
+.SH DESCRIPTION
+NodeBrain, \fBnb\fP(1),
+is a rule engine for state and event
+monitoring applications.  It can be used as an application agent
+(Unix daemon or Windows service), interactive client, or command line
+utility.  The NodeBrain rule language is relatively small and
+integrates with host shell scripting languages and command line
+utilities.  The interpreter is designed to be lightweight,
+flexible, and extendable via modules conforming to NodeBrain's
+Node Module C API.  A module is included to support the
+NodeBrain Protocol (NBP), providing 
+encrypted and authenticated peer-to-peer communication.
+
+See http://www.nodebrain.org for more information.
+.SH ARGUMENTS
+Options begin with a minus sign ("-").  They may be specified as a single character
+following a single minus, or as a word following a double minus ("--").  See
+the \fBOPTIONS\fP section for a description of available options.
+.IP
+\fB-\fP\fIo\fP
+.IP
+\fB--\fP\fIoption\fP
+.P
+Variable settings start with a double minus ("--") followed be a setting assignment.
+See the \fBSETTINGS\fP section for a description of available settings.
+.IP
+\fB--\fP\fIsetting\fP\fB=\fP\fIvalue\fP
+.P
+Source variables may be assigned for symbolic
+substitution or conditional command interpretation within scripts.  These are application
+specific global source variables you assign for your own purposes and reference as
+%\fIvariable\fP or %{\fIvariable\fP} inside a source file.  When a value contains spaces
+or special characters you will need to quote the value or the entire argument.  Although command shells 
+allow escaped quotes (\\") in a quoted argument, NodeBrain will not accept a quote within the value
+being assigned.
+.IP
+.nf
+\fIvariable\fP\fB=\fP\fIvalue\fP
+\fIvariable\fP\fB="\fP\fIvalue\fP\fB"\fP
+\fB"\fP\fIvariable\fP\fB=\fP\fIvalue\fP\fB"\fP
+.fi
+.P
+Commands may by specified as arguments starting with a semi-colon.  When commands contain spaces
+or special characters you will need to quote the argument.  Quotes used within the command must
+be escaped or enclosed within outer single quotes; e.g., ":assert name=\\"john doe\\";"  
+or ':assert name="john doe";'. 
+.IP
+.nf
+\fB:\fP\fIcommand\fP
+\fB:"\fP\fIcommand\fP\fB"\fP
+.fi
+.P
+A command file may be specified with an optional assertion to set local source variables for
+symbolic substitution (%\fIvariable\fP or %{\fIvariable\fP}) and/or conditional interpretation.  Special file names of "-" and "="
+may be used to read from standard input (stdin).  A minus sign "-" is used when you want a prompt for
+interactive input.  An equal symbol "=" is used when you are piping commands into nb and want them
+written to standard output (stdout) without prompts.
+.IP
+.nf
+\fIfile\fP[,\fIassertion\fP]
+\fB-\fP[,\fIassertion\fP]
+\fB=\fP[,\fIassertion\fP]
+.fi
+.P
+An assertion is a comma seperated list of assignments.  Assignment of string values requires the
+use of quotes, so you will need to enclose the entire argument in quotes and escape the quotes 
+within the assertion.  Here are some examples of file arguments.
+.IP
+.nf
+myscript.nb  
+myscript.nb,a=1,b=2
+"myscript.nb,a=\\"abc\\",b=\\"def\\""
+-
+=,a=1
+"=,a=\\"abc\\""
+.fi
+.P
+To select interactive mode with a command prefix, a prefix directive may be entered as an option.
+This turns on the --prompt option described under \fBOPTIONS\fP below.
+After processing all arguments, a prompt of the form "\fIprefix\fP\fB>\fP" is displayed to stdout.
+Commands entered at the prompt are appended to the prefix before intepretation.  This is used
+to direct commands to a specific node without having to type the prefix on each command line. 
+While in interactive mode, a new prefix directive may be entered at a prompt.  A prefix directive
+is only recognized when used as an option or in response to an interactive prompt.
+.IP
+.nf
+\fB-">\fP\fIprefix\fP\fB"\fP
+.fi
+.P
+Arguments are processed in the order specified on the command line, enabling option changes,
+variable setting, and commands before, between and after file arguments.  All arguments are
+processed within a common name space.  A series of arguments are processed like lines in a script.
+The table of examples below shows the relationship between a command line argument and
+a command within a NodeBrain script.
+
+.IP
+.\"ht table
+.nf
+Argument Syntax                Command Syntax
+---------------------------    --------------------------
+-d                             set daemon;
+--noDaemon                     set noDaemon;
+a=1                            %assert ..a=1;
+b="abc"                        %assert ..b="abc";
+c=abc                          %assert ..c="abc";
+:"assert a=1,b=\\"hello\\""      assert a=1,b="hello";
+:"show -t"                     show -t 
+myscript.nb                    source myscript.nb;
+myscript.nb,a=1,b=2            source myscript.nb,a=1,b=2;
+.fi
+.P
+.SH OPTIONS
+The first set of options are used to specify an action to be taken after
+all of the command line arguments, including files, are processes.  Using these options
+after file arguments will override options set in the file.  These final actions
+are optionally performed in the order of --prompt, --query, and --servant or --daemon. 
+.IP -d
+The --daemon option is used to place nb in background mode after
+processing all arguments.  This is the default option when listeners
+are defined, but must be explicitly specified for
+deaf daemons that are purely schedule driven.  
+.IP -D
+The --noDaemon option causes nb to not go into background mode after
+processing all arguments.
+This is the default option when no listeners have been defined.
+When listeners have been defined, the --daemon option is the default, but 
+is overridden when you explicitly specify the --noDaemon option.
+.IP -p
+The --prompt option causes nb to prompt the interactive user for input
+after processing all arguments.  This is the default when nb is 
+invoked without any arguments.
+.IP -P
+The --noPrompt option is used to turn off the --prompt option.
+.IP -q 
+The --query option is used to query for unknown values after processing all arguments.  This option is used for diagnostic scripts.
+.IP -Q
+The --noQuery option is used to turn off the --query option.
+.IP -s
+The --servant option is used to enter a server mode without going into the background.
+With this option, NodeBrain assumes it is already a child and prepares to communicate
+with a parent or piped processes on stdin and stdout.
+.IP -S
+The --noServant option is used to turn of the --servant option.  This can be used to override
+a -s option coded on the hash-bang header of a NodeBrain script.
+.P
+The next set of options control the behavior of NodeBrain while commands
+are processed and internal events are triggered.  These options must be
+specified somewhere before the
+file arguments you want processed with the option.
+.IP -b
+The --bail option is used to terminate on the
+first error message with an exit code of 1.  This option is useful when a script 
+or program calls nb to perform a task and wants to know if
+the request is successful. In this case, we also assume that every step of a multi-step
+command script must be successful for there to be any value in continuing.
+.IP -B
+The --noBail option turns off the --bail option.
+.IP -t
+The --trace option is used by developers for debugging NodeBrain internal logic.  Trace
+messages are written while this option is on.
+.IP -T
+The --noTrace option turns off the --trace option.
+.P
+.SH SETTINGS
+Settings passed as arguments may be used as an alternative to specifying settings using a \fBset\fP command within a script.
+They can also be used to override settings within a script if specified later in the sequence of parameters.
+.IP --logfile=\fIfile\fP
+The logfile setting specifies a file where the log is written when nb daemonizes.  An alias of "--log" is
+recognized for compatibility with earlier version.
+.IP --outdir=\fIdir\fP
+The outdir setting specifies a directory where output of a spawned process is stored if not directed elsewhere.
+An alias of "--out" is recognized for compatibility with earlier versions.
+.IP --pidfile=\fIfile\fP
+The pidfile setting specifies a file where the process identifier (PID) is to be stored when daemonizing.
+This can be used by init scripts (/etc/init.d).
+.IP --user=\fIuser\fP
+When running as root, the user setting causes the process user to be set after deamonizing.
+This setting is ignored for non-root users.
+.IP --group=\fIgroup\fP
+When running as root, the group setting causes the process group to be set after deamonizing.
+This setting is ignored for non-root users.
+.P
+.SH COMMANDS
+There are three important types of commands, used to  
+
+  1) define a rule (i.e. condition and response),
+
+  2) assert a state change, and
+
+  3) take immediate action (e.g. execute a shell command).
+
+Here's one example of each, where the host shell command "echo" is used in both a rule and an immediate action.
+
+  define r1 on(a=b and c<5):-echo "r1 happened"
+
+  assert a=1,b=1,c=3;
+
+  -echo "r1 should have happened by now"
+
+A full description of the NodeBrain command language is beyond the scope of this manual.
+See documents available online at www.nodebrain.org.
+
+See \fBnb.syn\fP(5) for an introduction to command syntax.
+.SH SCRIPTS
+In some cases you may want to use NodeBrain as a special purpose scripting
+language.  We say "special purpose" because NodeBrain is not procedural,
+and therefore not what you might expect in a scripting language.  However,
+it may be a bit more convenient to invoke NodeBrain and a set of rules
+by coding a shebang ("#!") line on the rule file.
+
+  \fB#!/usr/bin/nb\fP \fIargument\fP
+  ... commands ... 
+
+If our example file is named "myscript", we could invoke it as
+
+  $ \fB./myscript\fP
+
+instead of
+
+  $ \fBnb\fP \fIargument\fP \fBmyscript\fP
+
+saving a few keystrokes. This is a Unix/Linux feature supported by NodeBrain
+simply because lines starting with hash ("#") are treated as comments.
+.SH Nodes
+The notion of a \fBnode\fP in the NodeBrain model is similar to that of
+a function in other languages.  Sets of rules are associated with nodes.
+\fBNode modules\fP provide extended capabilities for knowledge representation
+and evaluation.  Communication between nodes is supported by the interpreter
+for nodes within a single NodeBrain process (skull), and node modules support
+communication between nodes in separate NodeBrain processes, including processes
+on different machines.  Node modules also support communication with other 
+applications via pipes, log files, TCP/IP socket connections, and command queues.
+.SH FILES
+.IP ~/.nb/user.nb
+Commands in a user profile are processed when nb starts,
+before arguments are processed.  It is handy for definitions a user want to be
+available any time nb is executed.
+.IP .nb/caboodle.nb
+If a caboodle profile is found relative to the working directory, it is processed
+after the user profile.  A caboodle is a directory designed to be the working
+directory for a NodeBrain application, where files are referenced with relative
+paths to simplify the configuration of multiple instances of an application.
+A caboodle profile is a convenient way for multiple agents to share definitions
+within an application.
+.IP *.nb
+We recommend a ".nb" suffix on NodeBrain command (rule) files, although it is
+not required.  
+.IP *.nbs
+Optionally, you may want to use a ".nbs" suffix on scripts with a shebang ("#!")
+line.  I personally prefer no suffix on files that can be executed as commands.
+.IP *.nbx
+We recommend a ".nbx" suffix on NodeBrain translator rule files.  This also is
+not required.
+.P
+See
+.\"ht page
+\fBnb.cfg\fP(5) for more information on files.
+.SH ENVIRONMENT
+
+
+Some of the C functions nb
+calls (e.g. for loading dynamic modules) are influenced by environment variables in
+ways we assume you can figure out for your environment.
+.IP NB_MODULE_PATH
+The NB_MODULE_PATH variable provides a platform independent way of specifying a path
+for locating node modules.  This path overrides the native system
+search paths by qualifying module names so that a search is avoided.  The following
+example illustrates a setting that directs NodeBrain to search the current directory
+first and then the parent directory when loading modules (plug-ins).
+.IP
+.nf
+NB_MODULE_PATH="./:../" nb myscript.nb
+.fi
+.P
+.SH EXIT STATUS
+.IP 0
+Successful completion.
+.IP >0
+An error occurred while the
+.B bail
+option was enabled, or a severe error terminated execution.  Use the diagnostic messages to identify the specific error.
+.P
+.SH DIAGNOSTICS
+NodeBrain is a bit verbose in logging commands and messages, at least in prototype versions where we want to be
+able to watch over NodeBrain's actions more closely.  The message format is
+
+.IP
+.IB "yyyy/mm/dd hh:mm:ss " "NB000" "a" " " "text"
+.P
+where "a" identifies a severity. 
+.IP
+.nf
+I  - Information
+T  - Trace (debug information)
+W  - Warning
+E  - Error                   
+L  - Logic (error in NodeBrain code---condition that should not occur)
+.fi
+.P
+Messages generated by node modules have a similar structure.
+.IP
+.IB "yyyy/mm/dd hh:mm:ss " "NM000" "a module term" ": " "text"
+.P
+In version 1.0 you can expect "000" to be replaced with a message number from 001 to 999, providing better 
+identification of each message condition. Options may also be added to make nb less verbose in logging
+input commands and output messages.
+.SH HISTORY
+In 1998, NodeBrain was developed at The Boeing Company for Unix and Linux system monitoring 
+in a small lab environment.
+In this application, NodeBrain was the decision making component in a kit that included
+Perl scripts for configuration, rule administration, state probes and rule actions.
+
+In 2000, NodeBrain was used in a second experimental application at Boeing for
+enterprise wide intrusion detection alert correlation.  In this application, it was adapted to handle
+events at a higher rate, support for Windows was added, and it was bundled with an Oracle
+database with a web user interface.
+
+In February 2003, NodeBrain 0.5 was released as a "working prototype" under the
+GNU General Public License  
+and is now managed as an Open Source project on http://SourceForge.net.  The initial release
+was flawed in many respects and generated little interest in the Open Source community.
+
+In April 2004, NodeBrain 0.6 was released with some of the rough edges smoothed a bit.  For example,
+the expected GNU style "configure, make, make install" sequence was supported by the source distribution, replacing
+"edit this handcrafted make file for your environment".  A prototype C API was included for node
+modules (plug-ins) to enable programmers to extend the capabilities of NodeBrain without fussing with
+base source code.
+
+In early 2009, NodeBrain 0.7 was released with support for a simplified syntax.
+Support for some features was moved out of the interpreter and into node modules, replacing feature
+specific syntax with syntax common to all nodes.
+
+In February of 2013, NodeBrain 0.8 was released, adding a message feature that enables events to be
+shared between agents more quickly, statistical anomaly detection, and security patches.
+
+.SH BUGS
+For a complete and current list of known bugs, refer to the project web site.  The bugs listed
+here are worth noting because they are not high on our list to resolve, so they may 
+survive a few releases.
+.IP o
+Time expressions will sometimes not produce the expected results because of what we
+call "the boundary problem" in our scheduling algorithm. There are normally ways to
+work around this problem by forcing a larger interval on the right side of an expression or sub-expression. You should 
+use the FORECAST command to verify time expressions before using them in a rule.
+.IP o
+The --daemon option does not place nb in background mode on Windows.  Instead, it ties up
+your command Window while continuing to run.  However, NodeBrain will run as a service on Windows and
+provides commands for creating, starting, stopping and deleting services.
+.P
+Since this is a prototype 0.x version, you can expect to encounter a few bugs that are
+unknown to the author. We have only started to developed a test suite for exercising individual
+features in a structured systematic way. Regression testing
+is primarily performed using the author's own applications by comparing
+the response of two different versions receiving a common (parallel) event stream.
+While this is useful for discovering bugs that might impact the
+author's applications, it does not test the variety of rules
+and event streams you might invent. 
+
+Please report bugs by linking to the project page from the home page, 
+http://www.nodebrain.org, or send email to <bugs@nodebrain.org>.
+.SH AUTHOR
+Ed Trettevik <eat@nodebrain.org>
+.SH SEE ALSO
+.\"ht page
+\fBnodebrain\fP(7),
+.\"ht page
+\fBnb.cfg\fP(5),
+.\"ht page
+\fBnb.syn\fP(5),
+.\"ht page
+\fBnb.mod\fP(7),
+.\"ht page
+\fBnb.lib\fP(3),
+.\"ht page
+\fBnbkit\fP(1),
+.\"ht page
+\fBnbkit.caboodle\fP(7)
+
+
+.\"ht doc
+[1]
+.I NodeBrain Home Page 
+- http://www.nodebrain.org 
+
+.\"ht doc
+[2]
+.I NodeBrain Tutorial
+- http://www.nodebrain.org 
+
+.\"ht doc
+[3]
+.I NodeBrain Language Reference
+- http://www.nodebrain.org 

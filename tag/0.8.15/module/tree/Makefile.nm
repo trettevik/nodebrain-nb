@@ -1,0 +1,15 @@
+## This file, Makefile.nm, provides module specific make rules.  It
+## is included by Makefile.am, which you should reference for more
+## information.
+     
+nblib_LTLIBRARIES = nb_tree.la
+nb_tree_la_SOURCES = nb_tree.c
+nb_tree_la_CFLAGS  = $(NB_MOD_CFLAGS)
+#nb_tree_la_LDFLAGS = -module -version-info 0:4
+nb_tree_la_LDFLAGS = -module -avoid-version
+
+EXTRA_DIST = \
+  caboodle/check/tree.nb~ \
+  doc/nb_tree.texi \
+  doc/nb_tree_tutorial.texi \
+  doc/version.texi

@@ -1,0 +1,4 @@
+This is a note from the alarmMe.pl script in the NodeBrain tutorial.
+
+The NodeBrain tutorial provides a set of very small sample
+components that illustrate basic NodeBrain concepts.

@@ -1,0 +1,6 @@
+makeinfo --html --no-split --number-sections --css-include=../../model/doc/style.css nb_tree.texi
+makeinfo --plaintext --no-split --number-sections --output=nb_tree.txt nb_tree.texi
+makeinfo --docbook --no-split --number-sections --output=nb_tree_DocBook.xml nb_tree.texi
+makeinfo --xml --no-split --number-sections nb_tree.texi
+makeinfo --no-split --number-sections nb_tree.texi
+texi2pdf -D -V -o nb_tree.pdf nb_tree.texi

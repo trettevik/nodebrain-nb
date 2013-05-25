@@ -1,0 +1,6 @@
+# don't enable listener for checking because port may be used
+~ > # don't enable listener for checking because port may be used
+declare console module {"../.libs"}; # for checking only
+~ > declare console module {"../.libs"}; # for checking only
+define console node console(50001):trace,dump;
+~ > define console node console(50001):trace,dump;
