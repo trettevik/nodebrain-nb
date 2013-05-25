@@ -338,7 +338,7 @@ int openHistory(char *filename,int periods,size_t len){
 /*
 *  Read history period 
 */
-static int readHistory(int file,void *buffer,int period,size_t len){ # 2013-05-04 eat VID-8894-0.8.15-3-R240 - changed to static to help checker
+static int readHistory(int file,void *buffer,int period,size_t len){ // 2013-05-04 eat VID-8894-0.8.15-3-R240 - changed to static to help checker
   long pos=period*len;
 
   if(!file) return(0);
