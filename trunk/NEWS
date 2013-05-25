@@ -1,6 +1,6 @@
 NodeBrain 0.8.15 Change Summary
 
-* Released May 5, 2013
+* Released May 25, 2013
 
 * Theme: Packaging
 
@@ -91,6 +91,9 @@ NodeBrain 0.8.15 Change Summary
   o  A bug was fixed in a translator function.  Previously
      references to undefined named subpatterns in regular
      expressions caused an array indexing error.
+
+  o  A overlapping strcpy bug was fixed in function that
+     handles line continuation.
      
 NodeBrain 0.8.14 Change Summary
 
