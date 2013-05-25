@@ -44,6 +44,7 @@
 *              1) The file is sourced at the local root node (top level)
 *              2) Parameters are not allowed (use preprocessor variables
 *              3) A given file will only source once in a session.
+* 2013-05-25 eat 0.8.15 Fixed overlapping strcpy bug
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -56,7 +57,7 @@
 *  symbol "\".
 */
 static char *nbSourceGet(char *buffer,size_t buflen,FILE *file){
-  char *buf=buffer;
+  char *buf=buffer,*bufcur;
   size_t len;
   char *last,*next;
 
@@ -77,7 +78,11 @@ static char *nbSourceGet(char *buffer,size_t buflen,FILE *file){
     *buf=0;
     if(fgets(buf,buflen,file)==NULL) return(buffer); // 2013-01-01 eat - VID 761-0.8.13-1
     for(next=buf;*next==' ';next++);
-    if(next>buf) strcpy(buf,next);
+    // 2013-05-25 eat - replaced overlapping strcpy
+    if(next>buf){
+      for(bufcur=buf;*next;bufcur++,next++) *bufcur=*next;
+      *bufcur=0;
+      }
     len=strlen(buf);
     if(len<1) return(buffer);
     last=buf+len-1;
