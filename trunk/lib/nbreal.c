@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -92,14 +92,8 @@ struct REAL *realFree=NULL;
 */
 void *hashReal(struct HASH *hash,double n){
   unsigned long h,*l;
-//  printf("hashReal sizeof(long)=%d sizeof(double)=%d\n",sizeof(n),sizeof(h));
   l=(unsigned long *)&n;
   h=*l;
-//#if !defined(_LP64)
-//  printf("hashReal using _LP64\n");
-//  h=h^*(l+1);
-//#endif
-//  printf("hashReal index=%d\n",h%hash->modulo);
   return(&(hash->vect[h%hash->modulo]));
   }
 
