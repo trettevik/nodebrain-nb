@@ -7,6 +7,7 @@ Makefile.in
 Makefile
 nb
 nodebrain
+nodebrain.dsc
 nbTutorial.info
 configure
 libtool
@@ -32,4 +33,6 @@ doc/stamp-1
 doc/stamp-vti
 doc/version-nb.texi
 doc/version-nbTutorial.texi
+doc/nbLanguage/stamp-*
+doc/nbTutorial/stamp-*
 html
