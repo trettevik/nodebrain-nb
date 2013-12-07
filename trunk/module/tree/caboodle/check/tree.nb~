@@ -8,7 +8,7 @@ assert alder(1,2,3);
 ~ > assert alder(1,2,3);
 show alder;
 ~ > show alder;
-~ alder = ! == node tree
+~ alder = # == node tree
 ~   1
 ~     2
 ~       3=1

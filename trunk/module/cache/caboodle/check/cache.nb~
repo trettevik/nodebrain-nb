@@ -82,7 +82,7 @@ alder. assert ?(a,b,c);
 ~ > alder. assert ?(a,b,c);
 show (alder(a,b,c)); 
 ~ > show (alder(a,b,c)); 
-~ () = 0 == alder(a,b,c)
+~ () = ! == alder(a,b,c)
 alder. assert (1,2,3);
 ~ > alder. assert (1,2,3);
 ~ 1970/01/01 00:00:01 NB000I Rule r1 fired 
@@ -93,7 +93,7 @@ assert !alder(1,2,3);
 ~ > assert !alder(1,2,3);
 show (alder(a,b,c)); 
 ~ > show (alder(a,b,c)); 
-~ () = 0 == alder(a,b,c)
+~ () = ! == alder(a,b,c)
 assert alder(a,b,c);
 ~ > assert alder(a,b,c);
 ~ 1970/01/01 00:00:01 NB000I Rule r1 fired 
