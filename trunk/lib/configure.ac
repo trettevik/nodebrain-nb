@@ -88,10 +88,11 @@
 # 2012/12/15 eat 0.8.13 New Version - new checker
 # 2013/01/19 eat 0.8.13 Included patch submit by Jeroen Roovers (gentoo)
 # 2013-03-10 eat 0.8.15 Changed NB_MODULE_PATH to only look in the minor version directories
+# 2013-12-05 eat 0.9.0  New version - not compatible with rules designed for prior versions
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([libnb],[0.8.15],[bugs@nodebrain.org])
+AC_INIT([libnb],[0.9.0],[bugs@nodebrain.org])
 AC_CONFIG_SRCDIR([nb.c])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(config)
@@ -100,8 +101,7 @@ AM_INIT_AUTOMAKE
 # define module directory variables
 
 AC_DEFINE_UNQUOTED(NB_API_VERSION,"0",[NodeBrain API version])
-#NB_MODULE_PATH=".nb:/usr/local/lib/nb/0.8:/usr/lib/nb/0.8:/usr/lib64/nb/0.8:/usr/local/lib/nb:/usr/lib/nb:/usr/lib64/nb"
-NB_MODULE_PATH=".nb:/usr/local/lib/nb-0.8.15:/usr/lib/nb-0.8.15:/usr/lib64/nb-0.8.15"
+NB_MODULE_PATH=".nb:/usr/local/lib/nb-0.9.0:/usr/lib/nb-0.9.0:/usr/lib64/nb-0.9.0"
 NB_MODULE_PATH_SEPARATOR=":"
 AC_DEFINE_UNQUOTED(NB_MODULE_PATH,"${NB_MODULE_PATH}",[Module path])
 AC_DEFINE_UNQUOTED(NB_MODULE_PATH_SEPARATOR,'${NB_MODULE_PATH_SEPARATOR}',[Module path separator])
@@ -119,7 +119,7 @@ LT_SYS_MODULE_EXT
 LT_FUNC_DLSYM_USCORE
 
 # define a release date variable
-AC_DEFINE(NB_RELEASE_DATE,"2013-03-10",[Define release date])
+AC_DEFINE(NB_RELEASE_DATE,"2013-12-05",[Define release date])
 
 # Checks for programs.
 AC_PROG_CC

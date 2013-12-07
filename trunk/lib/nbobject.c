@@ -183,6 +183,7 @@
 * 2012-10-13 eat 0.8.12 Replaced other uses malloc with nbAlloc
 * 2012-10-13 eat 0.8.12 Added nbHeap function (was first part of nbObjectInit)
 * 2012-12-27 eat 0.8.13 Checker updates
+* 2013-12-05 eat 0.9.0  Included TYPE_NOT_TRUE attribute on types not true
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -194,11 +195,13 @@ int showcount=0;         /* show object usage count */
 
 
 NB_Object *nb_Disabled=NULL;
+NB_Object *nb_False=NULL;
 NB_Object *nb_Unknown=NULL;
 NB_Object *nb_Undefined=NULL;
 NB_Object *nb_Placeholder=NULL;
 
 NB_Type *nb_DisabledType; 
+NB_Type *nb_FalseType;  
 NB_Type *nb_UnknownType;  
 NB_Type *nb_UndefinedType;  
 NB_Type *nb_PlaceholderType;  
@@ -235,6 +238,9 @@ struct NB_OBJECT_POOL *nb_ObjectPool;  // free object pool vector by length
 *  Print methods for special objects used by cell routines.
 */
 void nbDisabledShow(NB_Object *object){
+  outPut("#");
+  }
+void nbFalseShow(NB_Object *object){
   outPut("!");
   }
 void nbUnknownShow(NB_Object *object){
@@ -267,22 +273,27 @@ void nbHeap(){
   }
 
 void nbObjectInit(NB_Stem *stem){
-  nb_DisabledType=newType(stem,"disabled",NULL,TYPE_SPECIAL,nbDisabledShow,NULL);
+  nb_DisabledType=newType(stem,"disabled",NULL,TYPE_SPECIAL|TYPE_NOT_TRUE,nbDisabledShow,NULL);
   nb_DisabledType->apicelltype=NB_TYPE_DISABLED;
   nb_Disabled=newObject(nb_DisabledType,NULL,sizeof(NB_Object));
   nb_Disabled->refcnt=(unsigned int)-1;   /* flag as perminent object */
 
-  nb_UnknownType=newType(stem,"unknown",NULL,TYPE_SPECIAL,nbUnknownShow,NULL);
+  nb_FalseType=newType(stem,"unknown",NULL,TYPE_SPECIAL|TYPE_NOT_TRUE,nbFalseShow,NULL);
+  nb_FalseType->apicelltype=NB_TYPE_FALSE;
+  nb_False=newObject(nb_FalseType,NULL,sizeof(NB_Object));
+  nb_False->refcnt=(unsigned int)-1;    /* flag as perminent object */
+
+  nb_UnknownType=newType(stem,"unknown",NULL,TYPE_SPECIAL|TYPE_NOT_TRUE,nbUnknownShow,NULL);
   nb_UnknownType->apicelltype=NB_TYPE_UNKNOWN;
   nb_Unknown=newObject(nb_UnknownType,NULL,sizeof(NB_Object));
   nb_Unknown->refcnt=(unsigned int)-1;    /* flag as perminent object */
 
-  nb_UndefinedType=newType(stem,"undefined",NULL,TYPE_SPECIAL,nbUndefinedShow,NULL);
+  nb_UndefinedType=newType(stem,"undefined",NULL,TYPE_SPECIAL|TYPE_NOT_TRUE,nbUndefinedShow,NULL);
   nb_UndefinedType->apicelltype=NB_TYPE_UNDEFINED;
   nb_Undefined=newObject(nb_UndefinedType,NULL,sizeof(NB_Object));
   nb_Undefined->refcnt=(unsigned int)-1;    /* flag as perminent object */
 
-  nb_PlaceholderType=newType(stem,"placeholder",NULL,TYPE_SPECIAL,nbPlaceholderShow,NULL);
+  nb_PlaceholderType=newType(stem,"placeholder",NULL,TYPE_SPECIAL|TYPE_NOT_TRUE,nbPlaceholderShow,NULL);
   nb_PlaceholderType->apicelltype=NB_TYPE_PLACEHOLDER;
   nb_Placeholder=newObject(nb_PlaceholderType,NULL,sizeof(NB_Object));
   nb_Placeholder->refcnt=(unsigned int)-1;    /* flag as perminent object */

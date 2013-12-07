@@ -1,3 +1,107 @@
+NodeBrain 0.9.0 (Columbo) Change Summary
+
+* Released TBD
+
+* Theme: Performance
+
+
+* Documentation:
+
+  o  Special value symbols have changed.
+
+       ! - Replaces 0 for "false"
+       # - Replaces ! for "disabled"
+
+  o  Set litterals and operations were added.
+
+       Literal - ["abc",10,"def"]
+       Operations - x["abc"]
+
+* Incompatibilities:
+
+  o  When a rule term is referenced in a cell expression,
+     the term longer maps all true values to 1.  Instead,
+     the value of the condition cell is returned.  This is
+     to maintain consistency between rule references and
+     simple cell references.  However, if you have a rule
+     set that depends on rule terms returning 1 when true,
+     you will need to modify your rules for them to work
+     with this release or higher.
+
+       define r1 on(a or b);
+       define r2 on(r1=1 or c);  --> change this
+       define r2 on(r1 or c);    <-- to this 
+
+  o  Zero is no longer treated as "false" in logical
+     operations.  Instead, a special symbol "!", is
+     used to represet "false".  This means every reference
+     to "0" in rule files and check scripts must be
+     replaced with "!".  References to "0" as a number,
+     where there is no expectation that it be interpretted
+     as "false", need not change. This change, while
+     disruptive, is based on two assumptions:
+
+       1) There is no significant advantage to being able
+          to perform arithmetic on the result of logical
+          operations.  And if there were, we already
+          disrupt this concept by supporting logical
+          operations that produce values other than 0
+          and 1.
+
+       2) By not using 0 to represent "false", we enable
+          logical operations to produce a "true" value
+          of 0.  Otherwise, we discriminate against zero.
+         
+  o  When a cell is "disabled" (the value not maitained
+     and not subscribing to referenced cell values) the
+     show command displays a special symbol where the value
+     of an enabled cell would be displayed. Because this
+     symbol is changing from "!" to "#", check scripts
+     created under prior version of NodeBrain will fail
+     unless you replace the "!" with "#" or regenerate the
+     script under this version.  Replacing the difference
+     is the better way to adapt, since it allows for the
+     detection of unintended incompatibilities.
+
+* New Features: 
+
+  o  Cell evaluation in response to assertions has been
+     accelerated in cases where a term is compared to 
+     a literal.  The benefit of this acceleration depends
+     on how many cells reference unique literals in
+     comparison to any given term and the frequency of
+     assertions to the referenced term. 
+
+  o  Rules (on,when,if) now pass thru the value of the 
+     condition when referenced, like a cell term.  Prior
+     versions converted all true values to 1. This change
+     ensure consistency when referencing named cells.  A
+     rule condition is just a cell condition.
+
+       define x cell a or b;
+       define r1 on(x or y) c=2;
+       define r2 on(r1); # reference to value of (x or y)
+
+  o  A new data type of "set" has been included.  This is
+     an internal feature with some similarity to the Tree
+     module.  The differences are:
+
+       1) A set is one dimentional, while a Tree node is
+          multi-dimentional.
+
+       2) A set does not provide for association, while a
+          Tree node does.
+
+       3) A set can be used in symbolic substitution,
+          while a Tree node can not.  This is only useful
+          for small sets, since it is not practical to
+          symbolically process large sets. 
+     
+  o  Operations on set cell types have been included. 
+     This enables the addition of values to sets,
+     evaluation to determine if a value is in a set,
+     and removal of values from sets.
+
 NodeBrain 0.8.15 Change Summary
 
 * Released May 25, 2013

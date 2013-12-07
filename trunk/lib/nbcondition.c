@@ -19,7 +19,7 @@
 *=============================================================================
 * Program:  NodeBrain
 *
-* File:     nbcondition.h 
+* File:     nbcondition.c 
 *
 * Title:    Condition Object Routines (prototype)
 *
@@ -31,6 +31,8 @@
 * Synopsis:
 *
 *   #include "nb.h"
+*   
+*   ... many functions ...
 *
 * Description
 *
@@ -396,7 +398,8 @@ void alertRule(NB_Cell *rule){
   else if(rule->object.value!=NB_OBJECT_TRUE){ // 2006/10/28 eat - make sure we didn't get alerted to a different true value
     if(trace) outMsg(0,'T',"alertRule scheduled action %u",action);
     scheduleAction(action);
-    rule->object.value=NB_OBJECT_TRUE;
+    //rule->object.value=NB_OBJECT_TRUE;
+    rule->object.value=object; // 2013-12-05 eat - pass the condition value thru
     }
   nbCellPublish(rule);
   }
@@ -405,13 +408,15 @@ void alertRule(NB_Cell *rule){
 *  This evaluation function converts all true values to True.  We may want to change
 *  this to allow any value to pass through.  This would hold for the alertRule() function
 *  as well.  For IF rules, we would need to change the test in contextAlert.
+*
+*  2013-09-29 eat - modified to pass all condition cell values through - revise the note above after testing
 */ 
 NB_Object *evalRule(struct COND *cond){
-  NB_Object *object=((NB_Object *)cond->left)->value;
-  //outMsg(0,'T',"evalRule() called\n");
-  if(object==nb_Unknown) return(nb_Unknown);
-  if(object==NB_OBJECT_FALSE)   return(NB_OBJECT_FALSE);
-  return(NB_OBJECT_TRUE);
+  return((NB_Object *)((NB_Object *)cond->left)->value);
+  //NB_Object *object=((NB_Object *)cond->left)->value;
+  //if(object==nb_Unknown) return(nb_Unknown);
+  //if(object==NB_OBJECT_FALSE)   return(NB_OBJECT_FALSE);
+  //return(NB_OBJECT_TRUE);
   }
 
 NB_Object *evalNerve(struct COND *cond){
@@ -747,7 +752,7 @@ void condChangeReset(void){
     nb_LinkFree=list;
     cond=(struct COND *)(list->object);
     cond->cell.object.value=NB_OBJECT_FALSE;
-    /* seems like we need to purculate here - but might it loop? */
+    /* seems like we need to react here - but might it loop? */
     nbCellPublish((nbCELL)cond);
     }
   nbCellReact();
@@ -954,11 +959,11 @@ struct COND * useCondition(int not,struct TYPE *type,void *left,void *right){
   *  rule.
   *
   */
-  struct COND *cond,*lcond,**condP;
+  struct COND *cond,*loper,*roper,**condP;
   if(trace) outMsg(0,'T',"useCondition() called");
   if(not){
-    lcond=useCondition(0,type,left,right);
-    return(useCondition(0,condTypeNot,lcond,nb_Unknown));
+    loper=useCondition(0,type,left,right);
+    return(useCondition(0,condTypeNot,loper,nb_Unknown));
     }
   /* create a subordinate time condition unique to left condition */  
   if(type==condTypeDelayTrue || type==condTypeDelayFalse || type==condTypeDelayUnknown)
@@ -973,27 +978,25 @@ struct COND * useCondition(int not,struct TYPE *type,void *left,void *right){
   *condP=cond;
   cond->left=grabObject(left);
   cond->right=grabObject(right);
-  lcond=left;
+  loper=left;
+  roper=right;
   if(type->attributes&TYPE_IS_RULE){    /* rules */
-    if(lcond->cell.object.value!=(NB_Object *)lcond){
-      cond->cell.level=lcond->cell.level+1;
-      nbCellEnable((NB_Cell *)lcond,(NB_Cell *)cond);
-      left=lcond->cell.object.value;
+    if(loper->cell.object.value!=(NB_Object *)loper){
+      cond->cell.level=loper->cell.level+1;
+      nbCellEnable((NB_Cell *)left,(NB_Cell *)cond);
+      left=loper->cell.object.value;
       }
-    if(left==nb_Unknown || left==NB_OBJECT_FALSE) cond->cell.object.value=left;
-    else cond->cell.object.value=NB_OBJECT_TRUE;
-
-/*  2002/08/19 eat - set rule value to condition value
-    cond->cell.object.value=nb_Unknown;
-*/
+    // 2013-09-29 - Set the value of a rule term to the value of the condition 
+    //if(left==nb_Unknown || left==NB_OBJECT_FALSE) cond->cell.object.value=left;
+    //else cond->cell.object.value=NB_OBJECT_TRUE;
+    cond->cell.object.value=loper->cell.object.value;
     }
   else{                     /* other conditions */
-    if(lcond->cell.object.value!=(NB_Object *)lcond)
-      cond->cell.level=lcond->cell.level+1;
-    lcond=right;
-    if(lcond->cell.object.value!=(NB_Object *)lcond &&
-      cond->cell.level<=lcond->cell.level)
-      cond->cell.level=lcond->cell.level+1;
+    if(loper->cell.object.value!=(NB_Object *)loper)
+      cond->cell.level=loper->cell.level+1;
+    if(roper->cell.object.value!=(NB_Object *)roper &&
+      cond->cell.level<=roper->cell.level)
+      cond->cell.level=roper->cell.level+1;
     cond->cell.object.value=nb_Disabled;
     }
   if(trace) outMsg(0,'T',"useCondition() returning");

@@ -766,8 +766,9 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
   if(symid==','){(*cursor)--; return(NULL);}
   switch(symid){
     case '!': // !
-      if((object=nbParseRel(context,cursor))==NULL) return(NULL);
-      //if((object=nbParseRel(context,cursor))==NULL) return(NB_OBJECT_FALSE);
+      // 2013-12-05 eat - reversed commenting on next two lines to recognize ! as false
+      //if((object=nbParseRel(context,cursor))==NULL) return(NULL);          // 2013-12-05 eat - commented
+      if((object=nbParseRel(context,cursor))==NULL) return(NB_OBJECT_FALSE); // 2013-12-05 eat - uncommented
       if(object==nb_Unknown) return(nb_Unknown);
       if(object==NB_OBJECT_FALSE) return(NB_OBJECT_TRUE);
       if(object->value==object) return(NB_OBJECT_FALSE);

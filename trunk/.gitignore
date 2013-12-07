@@ -1,3 +1,4 @@
+*.info
 *.o
 *.lo
 *.la
@@ -31,3 +32,4 @@ doc/stamp-1
 doc/stamp-vti
 doc/version-nb.texi
 doc/version-nbTutorial.texi
+html

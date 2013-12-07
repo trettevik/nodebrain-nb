@@ -143,14 +143,14 @@
 *   nbCellEvalTrace       - Shim function for tracing cell evaluation
 *   nbCellSolve_          - Solve for unknown cell values
 *   nbCellCompute_        - Compute a value for a disabled cell
-*   nbCellEnable          - Subscribe to parameter function value changes
-*   nbCellDisable         - Cancel subscription to function value changes
+*   nbCellEnable          - Subscribe to subordinate cell value changes
+*   nbCellDisable         - Cancel subscription to subordinate cell value changes
 *   nbCellPublish         - Publish cell value change to all subscribers
 *   nbCellLevel           - Adjust cell level relative to modified subordinates
 *   nbCellAlert           - Standard cell alert method - schedules re-evaluation
 *   nbCellReact           - React to published changes 
 *
-*   The table below is incomplete, but give a general idea of how the cell functions
+*   The table below is incomplete, but gives a general idea of how the cell functions
 *   provided here interact with the methods of a given type of cell.
 *
 *   Calling Function      Method          Called Functions
@@ -374,8 +374,9 @@ NB_Object *NB_OBJECT_TRUE;
 void nbCellInit(NB_Stem *stem){
   NB_OBJECT_TRUE=(NB_Object *)useReal((double)1);
   NB_OBJECT_TRUE->refcnt=(unsigned int)-1;         /* flag as perminent object */
-  NB_OBJECT_FALSE=(NB_Object *)useReal((double)0);
-  NB_OBJECT_FALSE->refcnt=(unsigned int)-1;        /* flag as perminent object */
+  //NB_OBJECT_FALSE=(NB_Object *)useReal((double)0);
+  NB_OBJECT_FALSE=(NB_Object *)nb_False;           // 2013-12-05 eat - using special false object (not zero)
+  //NB_OBJECT_FALSE->refcnt=(unsigned int)-1;        /* flag as perminent object */
   NB_CELL_DISABLED=(NB_Cell *)nb_Disabled;
   NB_CELL_UNKNOWN=(NB_Cell *)nb_Unknown;
   NB_CELL_PLACEHOLDER=(NB_Cell *)nb_Placeholder;
@@ -524,7 +525,7 @@ void *nbCellNew(NB_Type *type,void **pool,int length){
 NB_Object *nbCellSolve_(NB_Cell *cell){
   if(cell==NULL) return(nb_Unknown);  
   if(cell->object.value!=nb_Unknown && cell->object.value!=nb_Disabled) return(cell->object.value);
-  if(trace || queryTrace) {
+  if(trace || queryTrace){
     if(trace) outMsg(0,'T',"nbCellSolve_() called");
     outPut("cell:");
     printObject((NB_Object *)cell);
@@ -532,7 +533,7 @@ NB_Object *nbCellSolve_(NB_Cell *cell){
     }
   if(trace) outMsg(0,'T',"nbCellSolve_() calling cell's \"solve\" method.");
   cell->object.type->solve(cell);
-  if(trace || queryTrace) {  
+  if(trace || queryTrace){  
     if(trace) outMsg(0,'T',"nbCellSolve_() returning");
     outPut("cell: ");
     printObject((NB_Object *)cell);
@@ -569,21 +570,18 @@ NB_Object *nbCellCompute_(NB_Cell *cell){
   }
  
 /*
-*  Enable value change publication from a cell to a subscriber object).
+*  Enable value change publication from a cell to a subscriber object.
 *  
 *    o  It is safe to enable a NULL publisher or a non-publishing object.
 *       These calls are ignored.  This is done so the caller doesn't need to
 *       test object pointers before calling.
 *
-*    o  We are currently maintaining an ordered list, although this
-*       shouldn't be necessary.  The caller should be responsible for only
-*       substribing once.  For now we order the list and watch for logic 
-*       errors.
-*
 *    o  A subscriber is not required to be a cell---may be a simple object.
+*
+*    o  A tree structure is used to manage the set of all subscribers to a given cell.
 */
 void nbCellEnable(NB_Cell *pub,NB_Cell *sub){
-  if(pub->object.value==(NB_Object *)pub) return;
+  if(pub->object.value==(NB_Object *)pub) return;  // simple object doesn't publish
   if(trace){
     outMsg(0,'T',"nbCellEnable() called - linking subscriber");
     outPut("subscriber: ");
@@ -600,7 +598,7 @@ void nbCellEnable(NB_Cell *pub,NB_Cell *sub){
     NB_TreePath treePath;
     NB_TreeNode *treeNode;
     treeNode=(NB_TreeNode *)nbTreeLocate(&treePath,sub,(NB_TreeNode **)&pub->sub);
-    if(treeNode==NULL){
+    if(treeNode==NULL){  // if not already a subscriber, then subscribe
       treeNode=(NB_TreeNode *)nbAlloc(sizeof(NB_TreeNode));
       treeNode->key=sub;
       nbTreeInsert(&treePath,treeNode);
@@ -629,13 +627,9 @@ void nbCellEnable(NB_Cell *pub,NB_Cell *sub){
 /*
 *  Cancel an object's subscription to cell changes.
 *
-*    We are assuming an unordered list here, but assume an object is
-*    only referenced by one list entry.
+*    A tree structure is used to manage all subscribers to a given cell.
 */
-//void nbCellDisable(NB_Cell *pub,NB_Object *sub){
 void nbCellDisable(NB_Cell *pub,NB_Cell *sub){
-  //NB_Link *list;
-  //NB_Link **listP;
   if(trace){
     outMsg(0,'T',"nbCellDisable() called");
     printObject((NB_Object *)pub);
@@ -826,7 +820,7 @@ void nbCellAlert(NB_Cell *sub){
 *
 * This function is used to adjust the value of cells when the values
 * of subordinate cells change.  It is done by cell level, so changes
-* purculate up the branches of multiple dependent trees.  Reevaluation
+* move up the branches of multiple dependent trees.  Reevaluation
 * is performed by calling a cell's eval method.
 *
 * Purculation is performed by level: 0, 1, 2, etc.  This ensures that

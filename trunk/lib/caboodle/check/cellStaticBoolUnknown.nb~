@@ -32,10 +32,10 @@ assert e5==(? & ?);
 ~ > assert e5==(? & ?);
 assert e6==(? | ?);
 ~ > assert e6==(? | ?);
-assert e7==(? ^ 0);
-~ > assert e7==(? ^ 0);
-assert e8==(0 ^ ?);
-~ > assert e8==(0 ^ ?);
+assert e7==(? ^ !);
+~ > assert e7==(? ^ !);
+assert e8==(! ^ ?);
+~ > assert e8==(! ^ ?);
 assert e9==(? ^ 1);
 ~ > assert e9==(? ^ 1);
 assert eA==(1 ^ ?);
@@ -45,13 +45,13 @@ assert eB==(? ^ ?);
 
 show -cells;
 ~ > show -cells;
-~ @ = ! == node 
-~ r1 = ! == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&(e9&(eA&eB))))))))));
+~ @ = # == node 
+~ r1 = # == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&(e9&(eA&eB))))))))));
 ~ eB = ? == (?^?)
 ~ eA = ? == (1^?)
 ~ e9 = ? == (?^1)
-~ e8 = ? == (0^?)
-~ e7 = ? == (?^0)
+~ e8 = ? == (!^?)
+~ e7 = ? == (?^!)
 ~ e6 = ?
 ~ e5 = ?
 ~ e4 = ?
@@ -64,8 +64,8 @@ show -cells;
 
 assert t=1;
 ~ > assert t=1;
-assert f=0;
-~ > assert f=0;
+assert f=!;
+~ > assert f=!;
 assert u=?;
 ~ > assert u=?;
 
@@ -94,11 +94,11 @@ assert eB==(u ^ u);
 
 show -cells;
 ~ > show -cells;
-~ @ = ! == node 
+~ @ = # == node 
 ~ u = ?
-~ f = 0
+~ f = !
 ~ t = 1
-~ r1 = ! == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&(e9&(eA&eB))))))))));
+~ r1 = # == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&(e9&(eA&eB))))))))));
 ~ eB = ? == (u^u)
 ~ eA = ? == (t^u)
 ~ e9 = ? == (u^t)
@@ -139,11 +139,11 @@ assert eB==( u  ^  u );
 
 show -cells;
 ~ > show -cells;
-~ @ = ! == node 
+~ @ = # == node 
 ~ u = ?
-~ f = 0
+~ f = !
 ~ t = 1
-~ r1 = ! == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&(e9&(eA&eB))))))))));
+~ r1 = # == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&(e9&(eA&eB))))))))));
 ~ eB = ? == (u^u)
 ~ eA = ? == ("a"^u)
 ~ e9 = ? == (u^"a")
@@ -187,12 +187,12 @@ assert eB==(u ^ u);
 
 show -cells;
 ~ > show -cells;
-~ @ = ! == node 
+~ @ = # == node 
 ~ a = "a"
 ~ u = ?
-~ f = 0
+~ f = !
 ~ t = 1
-~ r1 = ! == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&(e9&(eA&eB))))))))));
+~ r1 = # == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&(e9&(eA&eB))))))))));
 ~ eB = ? == (u^u)
 ~ eA = ? == (a^u)
 ~ e9 = ? == (u^a)

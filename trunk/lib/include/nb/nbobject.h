@@ -115,6 +115,7 @@ extern NB_Object *nb_Placeholder;
 #define TYPE_WELDED  1024  /* terms should not release these objects easily */
                            /* - an explicit undefine is required */
 #define TYPE_IS_FACT 0x0800   /* facts */
+#define TYPE_NOT_TRUE 0x1000   // Objects like zero, unknown, and disabled that are not true
 
 typedef struct TYPE{
   struct NB_OBJECT object;     /* object header */
@@ -170,9 +171,10 @@ struct NB_TYPE_SHIM{           // type method trace shim
   };
 
 extern NB_Type *nb_DisabledType; /* Special object type */
+extern NB_Type *nb_FalseType;    /* Special object type */
 extern NB_Type *nb_UnknownType;  /* Special object type */
 extern NB_Type *nb_DefinedType;  /* Special object type */
-extern NB_Type *nb_TypeType;  /* Type object type */
+extern NB_Type *nb_TypeType;     /* Type object type */
 
 struct TYPE *newType(struct NB_STEM *stem,char *name,struct HASH *hash,int  attributes,void (*showExpr)(),void (*destroy)());
 void enableBug(NB_Object *object);
@@ -223,6 +225,7 @@ extern void nbObjectShowTypes(void);
 #define NB_TYPE_NODE         8
 #define NB_TYPE_VERB         9
 #define NB_TYPE_TEXT        10
+#define NB_TYPE_FALSE       11    // 2013-12-05 eat - no longer zero
 
 #if defined(WIN32)
 __declspec(dllexport)

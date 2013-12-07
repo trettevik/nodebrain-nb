@@ -135,7 +135,14 @@ void contextAlert(NB_Term *term){
     }
   node->alertCount++;
   for(action=((NB_Node *)term->def)->ifrule;action!=NULL;action=(struct ACTION *)action->cell.object.next){
-    if(action->cond!=NULL && ((NB_Object *)action->cond)->value==NB_OBJECT_TRUE){ /* if true put on action list */
+    // 2013-11-03 eat - experimenting with rules having the full range of values found in any cell - multiple true
+    //if(action->cond!=NULL && ((NB_Object *)action->cond)->value==NB_OBJECT_TRUE){ /* if true put on action list */
+    // 2013-12-05 eat - switched to using an object type attribute to exclude untrue values - can the value ever be NULL?
+    if(action->cond!=NULL && !(((NB_Object *)action->cond)->value->type->attributes&TYPE_NOT_TRUE)){ /* if true put on action list */
+    //if(action->cond!=NULL &&
+    //  ((NB_Object *)action->cond)->value!=NB_OBJECT_FALSE &&
+    //  ((NB_Object *)action->cond)->value!=nb_Unknown &&
+    //  ((NB_Object *)action->cond)->value!=nb_Disabled){ /* if true put on action list */
       if(action->status=='R') scheduleAction(action);  /* put ready rule on scheduled list */
       }
     }

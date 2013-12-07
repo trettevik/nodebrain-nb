@@ -225,7 +225,6 @@ void initAssertion(NB_Stem *stem){
 //  API Functions
 
 // Add an assertion to an assertion list
-//   This will be moved to nbassertion.c
 int nbAssertionAddTermValue(nbCELL context,nbSET *set,nbCELL term,nbCELL cell){
   NB_Link   *entry;
   NB_Object *object;                  

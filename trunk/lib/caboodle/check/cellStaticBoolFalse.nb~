@@ -22,46 +22,46 @@ define r1 on(e1 and e2 and e3 and e4 and e5 and e6 and e7 and e8 and e9);
 # Test with literal numbers
 ~ > # Test with literal numbers
 
-assert e1==(0    );
-~ > assert e1==(0    );
+assert e1==(!    );
+~ > assert e1==(!    );
 assert e2==(not 1);
 ~ > assert e2==(not 1);
-assert e3==(0 & 0);
-~ > assert e3==(0 & 0);
-assert e4==(0 & 1);
-~ > assert e4==(0 & 1);
-assert e5==(0 & ?);
-~ > assert e5==(0 & ?);
-assert e6==(1 & 0);
-~ > assert e6==(1 & 0);
-assert e7==(? & 0);
-~ > assert e7==(? & 0);
-assert e8==(0 | 0);
-~ > assert e8==(0 | 0);
-assert e9==(0 ^ 1);
-~ > assert e9==(0 ^ 1);
+assert e3==(! & !);
+~ > assert e3==(! & !);
+assert e4==(! & 1);
+~ > assert e4==(! & 1);
+assert e5==(! & ?);
+~ > assert e5==(! & ?);
+assert e6==(1 & !);
+~ > assert e6==(1 & !);
+assert e7==(? & !);
+~ > assert e7==(? & !);
+assert e8==(! | !);
+~ > assert e8==(! | !);
+assert e9==(! ^ 1);
+~ > assert e9==(! ^ 1);
 
 show -cells;
 ~ > show -cells;
-~ @ = ! == node 
-~ r1 = ! == on(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
-~ e9 = 0 == (0^1)
-~ e8 = 0
-~ e7 = 0
-~ e6 = 0
-~ e5 = 0
-~ e4 = 0
-~ e3 = 0
-~ e2 = 0
-~ e1 = 0
+~ @ = # == node 
+~ r1 = # == on(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
+~ e9 = ! == (!^1)
+~ e8 = !
+~ e7 = !
+~ e6 = !
+~ e5 = !
+~ e4 = !
+~ e3 = !
+~ e2 = !
+~ e1 = !
 
 # Test with variable numbers
 ~ > # Test with variable numbers
 
 assert t=1;
 ~ > assert t=1;
-assert f=0;
-~ > assert f=0;
+assert f=!;
+~ > assert f=!;
 
 assert e1==(f    );
 ~ > assert e1==(f    );
@@ -84,57 +84,57 @@ assert e9==(f ^ t);
 
 show -cells;
 ~ > show -cells;
-~ @ = ! == node 
-~ f = 0
+~ @ = # == node 
+~ f = !
 ~ t = 1
-~ r1 = ! == on(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
-~ e9 = 0 == (f^t)
-~ e8 = 0 == (f|f)
-~ e7 = 0 == (?&f)
-~ e6 = 0 == (t&f)
-~ e5 = 0 == (f&?)
-~ e4 = 0 == (f&t)
-~ e3 = 0 == (f&f)
-~ e2 = 0 == (!t)
-~ e1 = 0 == f
+~ r1 = # == on(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
+~ e9 = ! == (f^t)
+~ e8 = ! == (f|f)
+~ e7 = ! == (?&f)
+~ e6 = ! == (t&f)
+~ e5 = ! == (f&?)
+~ e4 = ! == (f&t)
+~ e3 = ! == (f&f)
+~ e2 = ! == (!t)
+~ e1 = ! == f
 
 # Test with literal string (Can only represent true conditions)
 ~ > # Test with literal string (Can only represent true conditions)
 
-assert e1==( 0       );
-~ > assert e1==( 0       );
+assert e1==( !       );
+~ > assert e1==( !       );
 assert e2==(not "a"  );
 ~ > assert e2==(not "a"  );
-assert e3==( 0  &  0 );
-~ > assert e3==( 0  &  0 );
-assert e4==( 0  & "a");
-~ > assert e4==( 0  & "a");
-assert e5==( 0  &  ? );
-~ > assert e5==( 0  &  ? );
-assert e6==("a" &  0 );
-~ > assert e6==("a" &  0 );
-assert e7==( ?  &  0 );
-~ > assert e7==( ?  &  0 );
-assert e8==( 0  |  0 );
-~ > assert e8==( 0  |  0 );
-assert e9==( 0  ^ "a");
-~ > assert e9==( 0  ^ "a");
+assert e3==( !  &  ! );
+~ > assert e3==( !  &  ! );
+assert e4==( !  & "a");
+~ > assert e4==( !  & "a");
+assert e5==( !  &  ? );
+~ > assert e5==( !  &  ? );
+assert e6==("a" &  ! );
+~ > assert e6==("a" &  ! );
+assert e7==( ?  &  ! );
+~ > assert e7==( ?  &  ! );
+assert e8==( !  |  ! );
+~ > assert e8==( !  |  ! );
+assert e9==( !  ^ "a");
+~ > assert e9==( !  ^ "a");
 
 show -cells;
 ~ > show -cells;
-~ @ = ! == node 
-~ f = 0
+~ @ = # == node 
+~ f = !
 ~ t = 1
-~ r1 = ! == on(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
-~ e9 = 0 == (0^"a")
-~ e8 = 0
-~ e7 = 0
-~ e6 = 0
-~ e5 = 0
-~ e4 = 0
-~ e3 = 0
-~ e2 = 0
-~ e1 = 0
+~ r1 = # == on(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
+~ e9 = ! == (!^"a")
+~ e8 = !
+~ e7 = !
+~ e6 = !
+~ e5 = !
+~ e4 = !
+~ e3 = !
+~ e2 = !
+~ e1 = !
 
 # Test with variable string
 ~ > # Test with variable string
@@ -163,20 +163,20 @@ assert e9==(f ^ a);
 
 show -cells
 ~ > show -cells
-~ @ = ! == node 
+~ @ = # == node 
 ~ a = "a"
-~ f = 0
+~ f = !
 ~ t = 1
-~ r1 = ! == on(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
-~ e9 = 0 == (f^a)
-~ e8 = 0 == (f|f)
-~ e7 = 0 == (?&f)
-~ e6 = 0 == (a&f)
-~ e5 = 0 == (f&?)
-~ e4 = 0 == (f&a)
-~ e3 = 0 == (f&f)
-~ e2 = 0 == (!a)
-~ e1 = 0 == f
+~ r1 = # == on(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
+~ e9 = ! == (f^a)
+~ e8 = ! == (f|f)
+~ e7 = ! == (?&f)
+~ e6 = ! == (a&f)
+~ e5 = ! == (f&?)
+~ e4 = ! == (f&a)
+~ e3 = ! == (f&f)
+~ e2 = ! == (!a)
+~ e1 = ! == f
 
-# Verify that all e1-e9 cells above have a value of 0
-~ > # Verify that all e1-e9 cells above have a value of 0
+# Verify that all e1-e9 cells above have a value of !
+~ > # Verify that all e1-e9 cells above have a value of !

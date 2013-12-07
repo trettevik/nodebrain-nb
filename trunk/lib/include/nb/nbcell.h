@@ -51,6 +51,7 @@
 /* condition function values
 */
 extern NB_Object *nb_Disabled;
+extern NB_Object *nb_False;
 extern NB_Object *nb_Unknown;
 extern NB_Object *NB_OBJECT_FALSE;
 extern NB_Object *NB_OBJECT_TRUE;
