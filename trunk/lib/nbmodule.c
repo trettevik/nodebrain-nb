@@ -750,12 +750,10 @@ _declspec (dllexport)
 #else
 extern
 #endif
-int nbSkillSetMethod(nbCELL context,nbCELL skill,int methodId,void *method){
-  NB_Facet *facet=((NB_Skill *)skill)->facet;
+int nbSkillMethod(nbCELL context,nbCELL facetPtr,int methodId,void *method){
+  NB_Facet *facet=(NB_Facet *)facetPtr;
   if(nb_opt_shim){
     if(facet->shim==NULL){
-      //if((facet->shim=malloc(sizeof(struct NB_FACET_SHIM)))==NULL) //2012-01-26 dtl: handled error
-      //  {outMsg(0,'E',"malloc error: out of memory");exit(NB_EXITCODE_FAIL);} //dtl:added
       facet->shim=nbAlloc(sizeof(struct NB_FACET_SHIM));
       memset(facet->shim,0,sizeof(struct NB_FACET_SHIM));
       }
@@ -808,4 +806,19 @@ int nbSkillSetMethod(nbCELL context,nbCELL skill,int methodId,void *method){
       }
     }
   return(0);
+  }
+
+// 2013-12-07 eat - nbSkillSetMethod is supported for compatibility with prior releases
+//   Although facets were partially implemented long ago internally, a modification to the
+//   module API was required to enable modules to specify skill methods for facets.
+//   This function becomes an unnecessary shorthand for specifying skill methods for the
+//   primary facet. 
+#if defined(WIN32)
+_declspec (dllexport)
+#else
+extern
+#endif
+int nbSkillSetMethod(nbCELL context,nbCELL skill,int methodId,void *method){
+  NB_Facet *facet=((NB_Skill *)skill)->facet;
+  return(nbSkillMethod(context,(nbCELL)facet,methodId,method));
   }
