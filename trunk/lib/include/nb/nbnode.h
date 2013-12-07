@@ -62,7 +62,7 @@ struct NB_NODE{
   char             reserved;    /* reserved */
   unsigned short   alertCount;  /* wrap-around counter for alerts */
   struct NB_SKILL  *skill;      /* skill managing this node */
-  struct NB_FACET  *facet;      /* construction facet */
+  struct NB_FACET  *facet;      // facet list - first is prmary facet
   /* struct NB_LIST   *args; */      /* arguments at definition time */
   /* struct STRING    *text; */      /* text at definition time */
   void             *knowledge;  /* knowledge handle - e.g. CACHE */
@@ -89,18 +89,6 @@ typedef struct NB_SKILL{
   struct STRING    *text;
   struct NB_FACET  *facet;  // facet list
   void             *handle;
-//  void             *(*construct)(struct NB_TERM *context,void *skillHandle,NB_Cell *args,char *text);
-//  void             *(*destroy)(struct NB_TERM *context,void *skillHandle,void *objectHandle);
-//  void              (*show)(struct NB_TERM *context,void *skillHandle,void *objectHandle,int option);
-//  int               (*enable)(struct NB_TERM *context,void *skillHandle,void *objectHandle);
-//  int               (*disable)(struct NB_TERM *context,void *skillHandle,void *objectHandle);
-//  void              (*alarm)(struct NB_TERM *context,void *skillHandle,void *objectHandle);
-//  int               (*assert)(struct NB_TERM *context,void *skillHandle,void *objectHandle,NB_Cell *arglist,NB_Cell *value);
-//  struct NB_OBJECT *(*eval)(struct NB_TERM *context,void *skillHandle,void *objectHandle,struct NB_LIST *args);
-//  struct NB_OBJECT *(*compute)(struct NB_TERM *context,void *skillHandle,void *objectHandle,struct NB_LIST *args);
-//  void              (*solve)(struct NB_TERM *context,void *skillHandle,void *objectHandle,struct NB_LIST *args);
-//  int               (*command)(struct NB_TERM *context,void *skillHandle,void *objectHandle,struct NB_LIST *args,char *text);
-//  int               (*alert)(struct NB_TERM *context,void *skillHandle,void *objectHandle,NB_Cell *arglist,NB_Cell *value);
   } NB_Skill;
 
 typedef void *(*NB_SKILL_BIND)(struct NB_TERM *context,void *moduleHandle,NB_Skill *skill,NB_List *args,char *source);
@@ -176,9 +164,7 @@ int nbSkillCmd(NB_Term *context,char **cursor,char *msg);
 NB_Term *nbNodeParse(NB_Term *context,char *ident,char *cursor);
 
 struct NB_SKILL *nbSkillNew(char *ident,NB_List *arglist,char *text);
-struct NB_FACET *nbFacetNew(NB_Skill *skill,char *ident);
-
-
+struct NB_FACET *nbFacetNew(NB_Skill *skill,const char *ident);
 
 #endif // NB_INTERNAL
 

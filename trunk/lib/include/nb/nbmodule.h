@@ -47,6 +47,7 @@
 #if defined(NB_INTERNAL)
 
 #include <nb/nbstem.h>
+#include <nb/nbnode.h>
 
 struct NB_MODULE{            /* module object */
   struct NB_OBJECT object;   /* object header */
@@ -73,6 +74,8 @@ void *nbModuleLoad(char *name,int export,char *msg,size_t msglen);
 #endif
 void nbModuleShowInstalled(nbCELL context);
 
+NB_Facet *nbSkillGetFacet(NB_Skill *skill,const char *ident);
+
 #endif // NB_INTERNAL
 
 //**********************************
@@ -88,4 +91,13 @@ _declspec (dllexport)
 #endif
 extern int nbSkillSetMethod(nbCELL context,nbCELL skill,int methodId,void *method);
 
+#if defined(WIN32)
+_declspec (dllexport)
+#endif
+extern nbCELL nbSkillFacet(nbCELL context,nbCELL skillHandle,const char *ident);
+
+#if defined(WIN32)
+_declspec (dllexport)
+#endif
+extern int nbSkillMethod(nbCELL context,nbCELL facetHandle,int methodId,void *method);
 #endif

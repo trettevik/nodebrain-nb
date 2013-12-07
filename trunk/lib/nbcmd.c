@@ -2209,7 +2209,8 @@ void nbCmd(nbCELL context,char *cursor,unsigned char cmdopt){
             }
           symid=0;
           }
-        else if(*cursor==':' || *cursor=='(') symid=1;  // node command
+        // 2013-12-07 eat - included '_' for facets
+        else if(*cursor==':' || *cursor=='(' || *cursor=='_') symid=1;  // node command
         }
       }
     while(*cursor==' ') cursor++;

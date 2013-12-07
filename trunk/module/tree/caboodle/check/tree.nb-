@@ -1,0 +1,8 @@
+declare tree module {"../.libs"};
+define x node tree;
+x. assert ("abc","def","xyz");
+x. assert ("abc","def","abc");
+x. assert ("abc","def",23);
+show x;
+x_prune("abc","def");
+show x;

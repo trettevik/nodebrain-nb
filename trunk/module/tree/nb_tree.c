@@ -726,6 +726,34 @@ static int *treeCommand(nbCELL context,BTreeSkill *skillHandle,BTree *tree,nbCEL
   }
 
 /*
+*  _prune assert() method
+*
+*  2013-12-07 eat - experimenting with facets
+*             define fred node tree;
+*             fred. assert ("abc","def","xyz");
+*             fred. assert ("abc","def","abc");
+*             assert fred_prune("abc","def");
+*/
+static int treePruneAssert(nbCELL context,void *skillHandle,BTree *tree,nbCELL arglist,nbCELL value){
+  treePrune(context,skillHandle,tree,arglist,"");
+  return(0);
+  }
+
+/*
+*  _prune command() method
+*
+*  2013-12-07 eat - experimenting with facets
+*             define fred node tree;
+*             fred. assert ("abc","def","xyz");
+*             fred. assert ("abc","def","abc");
+*             fred_prune("abc","def");
+*/
+static int *treePruneCommand(nbCELL context,BTreeSkill *skillHandle,BTree *tree,nbCELL arglist,char *text){
+  treePrune(context,skillHandle,tree,arglist,text);
+  return(0);
+  }
+
+/*
 *  skill initialization method
 *
 *    declare <term> skill <module>.<symbol>[(<args>)][:<text>]
@@ -738,6 +766,7 @@ _declspec (dllexport)
 extern void *treeBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
   BTreeSkill *skillHandle;
   char *cursor=text;
+  nbCELL facet; // 2013-12-07 eat - experimenting with facets
 
   skillHandle=(BTreeSkill *)nbAlloc(sizeof(BTreeSkill));
   skillHandle->trace=0;
@@ -754,11 +783,15 @@ extern void *treeBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL argl
       }
     while(*cursor==' ' || *cursor==',') cursor++;
     }
-  /* Still trying to figure out if we want to require method binding */
   nbSkillSetMethod(context,skill,NB_NODE_CONSTRUCT,treeConstruct);
   nbSkillSetMethod(context,skill,NB_NODE_ASSERT,treeAssert);
   nbSkillSetMethod(context,skill,NB_NODE_EVALUATE,treeEvaluate);
   nbSkillSetMethod(context,skill,NB_NODE_SHOW,treeShow);
   nbSkillSetMethod(context,skill,NB_NODE_COMMAND,treeCommand);
+
+  // 2013-12-07 eat - experimenting with facets
+  facet=nbSkillFacet(context,skill,"prune");
+  nbSkillMethod(context,facet,NB_NODE_ASSERT,treePruneAssert);
+  nbSkillMethod(context,facet,NB_NODE_COMMAND,treePruneCommand);
   return(skillHandle);
   }

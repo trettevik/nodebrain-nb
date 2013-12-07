@@ -1,5 +1,5 @@
-#declare tree module {"../.libs"};
-~ > #declare tree module {"../.libs"};
+declare tree module {"../.libs"};
+~ > declare tree module {"../.libs"};
 assert a=1,b=2,c=3;
 ~ > assert a=1,b=2,c=3;
 define alder node tree;

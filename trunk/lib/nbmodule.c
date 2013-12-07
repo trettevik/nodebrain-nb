@@ -745,13 +745,59 @@ int nbSkillTraceAlert(struct NB_TERM *context,void *skillHandle,void *objectHand
 int nbSkillTraceAssert(struct NB_TERM *context,void *skillHandle,void *objectHandle,NB_Cell *arglist,NB_Cell *value);
 #endif
 
+
+/*
+* nbSkillGetFacet is used by the interpreter to lookup a facet for a given skill
+*/
+NB_Facet *nbSkillGetFacet(NB_Skill *skill,const char *ident){
+  NB_Facet *facet;
+  for(facet=skill->facet;facet && strcmp(facet->ident->value,ident);facet=(NB_Facet *)facet->object.next);
+  return(facet);
+  }
+
+/* 
+* nbSkillFacet is used by node modules to define facets.
+*   A facet is a set of skill methods.  A skill can have multiple facets so that a node
+*   of a given type (node module skill) can have more than one set of operations.  When a node
+*   has only a primary facet, only one type of assert (for example) is supported.  Additional
+*   facets can be used to support more types of assertions.  This is true for commands and
+*   evalations and other skill methods also. This function is used create a skill facet.
+*   
+*   We do not expect a facet to be redefined, but it is important that facet identifiers are
+*   unique for a given skill.  So this function only creates new facets when the name is unique
+*   and can therefore be used to lookup an existing facet.
+*/
 #if defined(WIN32)
 _declspec (dllexport)
 #else
 extern
 #endif
-int nbSkillMethod(nbCELL context,nbCELL facetPtr,int methodId,void *method){
-  NB_Facet *facet=(NB_Facet *)facetPtr;
+nbCELL nbSkillFacet(nbCELL context,nbCELL skillHandle,const char *ident){
+  NB_Skill *skill=(NB_Skill *)skillHandle;
+  NB_Facet *facet;
+  
+  //outMsg(0,'T',"nbSkillFacet: called with ident='%s'",ident);
+  if(*ident==0) return((nbCELL)skill->facet); // 2013-12-07 eat - special case for now
+  for(facet=skill->facet;facet && strcmp(facet->ident->value,ident);facet=(NB_Facet *)facet->object.next);
+  if(!facet){
+    facet=nbFacetNew(skill,ident);
+    // 2013-12-07 eat - for now we'll keep the primary facet first - change later
+    facet->object.next=skill->facet->object.next;
+    skill->facet->object.next=(NB_Object *)facet;
+    }
+  //outMsg(0,'T',"nbSkillFacet: returning facet %p",facet);
+  return((nbCELL)facet);
+  }
+
+// nbSkillMethod is used by node modules to define skill methods for facets.
+#if defined(WIN32)
+_declspec (dllexport)
+#else
+extern
+#endif
+int nbSkillMethod(nbCELL context,nbCELL facetHandle,int methodId,void *method){
+  NB_Facet *facet=(NB_Facet *)facetHandle;
+  //outMsg(0,'T',"nbSkillMethod: called with methodId=%d",methodId);
   if(nb_opt_shim){
     if(facet->shim==NULL){
       facet->shim=nbAlloc(sizeof(struct NB_FACET_SHIM));
@@ -805,6 +851,7 @@ int nbSkillMethod(nbCELL context,nbCELL facetPtr,int methodId,void *method){
         break;
       }
     }
+  //outMsg(0,'T',"nbSkillMethod: returning for methodId=%d",methodId);
   return(0);
   }
 
@@ -818,7 +865,7 @@ _declspec (dllexport)
 #else
 extern
 #endif
-int nbSkillSetMethod(nbCELL context,nbCELL skill,int methodId,void *method){
-  NB_Facet *facet=((NB_Skill *)skill)->facet;
+int nbSkillSetMethod(nbCELL context,nbCELL skillHandle,int methodId,void *method){
+  NB_Facet *facet=(NB_Facet *)nbSkillFacet(context,skillHandle,""); // find primary facet
   return(nbSkillMethod(context,(nbCELL)facet,methodId,method));
   }

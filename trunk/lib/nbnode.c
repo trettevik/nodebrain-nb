@@ -264,7 +264,7 @@ void nbNodeShowItem(struct NB_NODE *node){
   if(node->skill==NULL) return;
   //outPut("%s",node->skill->term->word->value);
   outPut("%s",node->skill->ident->value);
-  (*node->skill->facet->show)(node->context,node->skill->handle,node->knowledge,NB_SHOW_ITEM);
+  (*node->facet->show)(node->context,node->skill->handle,node->knowledge,NB_SHOW_ITEM);
   }
 
 void nbNodeShowReport(struct NB_NODE *node){
@@ -444,12 +444,12 @@ struct NB_SKILL *nbSkillNew(char *ident,NB_List *args,char *text){
   return(skill);
   }
 
-struct NB_FACET *nbFacetNew(NB_Skill *skill,char *ident){
+struct NB_FACET *nbFacetNew(NB_Skill *skill,const char *ident){
   NB_Facet *facet;
 
   facet=(NB_Facet *)newObject(facetType,NULL,sizeof(NB_Facet));
   facet->skill=skill;
-  facet->ident=grabObject(useString(ident));
+  facet->ident=grabObject(useString((char *)ident));
   facet->construct=&nbSkillNullConstruct;
   facet->destroy=&nbSkillNullDestroy;
   facet->show=&nbSkillNullShow;
@@ -515,6 +515,7 @@ struct NB_SKILL *nbSkillParse(NB_Term *context,char *cursor){
 NB_Term *nbNodeParse(NB_Term *context,char *ident,char *cursor){
   NB_Node *node;
   NB_Skill *skill;
+  NB_Facet *facet;
   NB_Term *term,*skillTerm;
   NB_List *args=NULL;
   char symid,token[256],*cursave,*tokenP=token,msg[256];
@@ -576,7 +577,8 @@ NB_Term *nbNodeParse(NB_Term *context,char *ident,char *cursor){
     skill->status=1;
     }
   node->facet=skill->facet;  // use primary facet for now
-  node->knowledge=(*node->facet->construct)(term,skill->handle,(NB_Cell *)args,cursor);
+  facet=skill->facet;  // use primary facet for now
+  node->knowledge=(*facet->construct)(term,skill->handle,(NB_Cell *)args,cursor);
   if(node->knowledge==NULL){
     dropObject(args);
     termUndef(term);
@@ -592,6 +594,7 @@ int nbNodeCmd(nbCELL context,char *name,char *cursor){
   NB_Facet *facet=NULL;
   NB_List *args=NULL;
   NB_Term *term;
+  char *cursave,symid,ident[64];
 
   if(NULL==(term=nbTermFind((NB_Term *)context,name))){
     outMsg(0,'E',"Node \"%s\" not defined.",name);
@@ -604,9 +607,24 @@ int nbNodeCmd(nbCELL context,char *name,char *cursor){
   node=(NB_Node *)term->def;
   skill=node->skill;
   facet=node->facet;
+  //facet=skill->facet;
   if(facet==NULL){
     outMsg(0,'E',"Node \"%s\" does not have a command method.",name);
     return(-1);
+    }
+  if(*cursor=='_'){
+    cursor++;
+    cursave=cursor;
+    symid=nbParseSymbol(ident,sizeof(ident),&cursor);
+    if(symid!='t'){
+      outMsg(0,'E',"Expecting facet identifier at->%s",cursave);
+      return(-1);
+      }
+    facet=nbSkillGetFacet(skill,ident);
+    if(!facet){
+      outMsg(0,'E',"Expecting facet identifier at->%s",cursave);
+      return(-1);
+      }
     }
   if(*cursor=='(') args=grabObject(nbSkillArgs((NB_Term *)context,&cursor));
   if(*cursor==':') cursor++;
@@ -634,6 +652,7 @@ int nbNodeCmdIn(nbCELL context,nbCELL args,char *text){
   node=(NB_Node *)term->def;
   skill=node->skill;
   facet=node->facet;
+  //facet=skill->facet;
   if(facet==NULL){
     outMsg(0,'E',"Node \"%s\" does not have a command method.",term->word->value);
     return(-1);
