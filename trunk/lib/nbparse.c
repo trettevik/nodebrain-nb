@@ -1125,17 +1125,19 @@ NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
 *                          assert fred("abc"),fred("def");
 */
 NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP){
-  char *cursor=*curP,ident[256],ident2[256],symid=',';
+  char *cursor=*curP,*cursave,ident[256],ident2[256],facetIdent[256],symid=',';
   NB_Link *member=NULL,*entry,**next;
   NB_Term   *term;
   NB_List   *list=NULL;
   NB_Object *object,*objectL;
+  NB_Facet  *facet;
   struct TYPE *type;
   char not,unknown;
 
   if(parseTrace) outMsg(0,'T',"nbParseAssertion() called");
   next=&member;
   while(symid==','){
+    *facetIdent=0;  // clear facet identifier
     *curP=cursor;
     symid=nbParseSymbol(ident,sizeof(ident),&cursor);
     if(symid=='!'){
@@ -1157,6 +1159,15 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
       return(NULL);
       }
     *curP=cursor;
+    if(*cursor=='_'){ // facet assertion
+      cursor++;
+      cursave=cursor;
+      symid=nbParseSymbol(facetIdent,sizeof(ident2),&cursor);
+      if(symid!='t'){
+        outMsg(0,'E',"Expecting facet at->%s",cursave);
+        return(NULL);
+        }
+      }
     if(*cursor=='('){ /* node assertion */
       cursor++;
       list=parseList(cellContext,&cursor);
@@ -1232,7 +1243,21 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
       outMsg(0,'E',"Term \"%s\" is not open to assertion.",ident);
       return(NULL);
       }
-    if(list!=NULL){
+    if(*facetIdent){ // facet assertions need a NB_FACET_CELL structure instead of COND
+      if(term->def==NULL || term->def->type!=nb_NodeType){
+        outMsg(0,'E',"Term \"%s\" does not support facets.",ident);
+        return(NULL);
+        }
+      facet=nbSkillGetFacet(((NB_Node *)term->def)->skill,facetIdent);
+      if(!facet){
+        outMsg(0,'E',"Facet \"%s\" not defined for term \"%s\".",facetIdent,ident);
+        return(NULL);
+        }
+      objectL=(NB_Object *)nbFacetCellNew(facet,term,list);
+      object=(NB_Object *)useCondition(0,type,objectL,object);
+      list=NULL;
+      }
+    else if(list!=NULL){
       objectL=(NB_Object *)useCondition(0,condTypeNode,term,list);
       object=(NB_Object *)useCondition(0,type,objectL,object);
       list=NULL;

@@ -3,6 +3,22 @@ define x node tree;
 x. assert ("abc","def","xyz");
 x. assert ("abc","def","abc");
 x. assert ("abc","def",23);
-show x;
+show x
 x_prune("abc","def");
-show x;
+show x
+x. assert ("abc","def","xyz");
+x. assert ("abc","def","abc");
+x. assert ("abc","def",23);
+define r1 on(a=1) x_prune("abc","def");
+assert y=1;
+show x
+show r1
+show x
+assert a;
+show x
+x. assert ("abc","def","xyz");
+x. assert ("abc","def","abc");
+x. assert ("abc","def",23);
+show x
+assert x_prune("abc","def");
+show x

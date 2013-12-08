@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -91,6 +91,7 @@
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010/02/28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2012-10-17 eat 0.8.12 Replaced termGetName with nbTermName
+* 2013-12-07 eat 0.9.0  Implementing node facets
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -219,6 +220,7 @@ void nbNodeAlert(nbCELL context,nbCELL node){
 
 NB_Type *skillType=NULL;
 NB_Type *facetType=NULL;
+NB_Type *nb_FacetCellType=NULL;
 NB_Type *condTypeNode=NULL;
 NB_Type *nb_NodeType=NULL;
 
@@ -245,6 +247,15 @@ void printSkill(struct NB_SKILL *skill){
   if(skill->text!=NULL && *(skill->text->value)!=0){
     outPut(":");
     printStringRaw(skill->text);
+    }
+  }
+
+void nbFacetCellShow(struct NB_FACET_CELL *cell){
+  if(cell==NULL) outPut("(?)");
+  else{
+    printObject((NB_Object *)cell->term);
+    if(*cell->facet->ident->value) outPut("_%s",cell->facet->ident->value);
+    printObject((NB_Object *)cell->args);
     }
   }
 
@@ -284,30 +295,48 @@ void nbNodeDestroy(NB_Node *node){
   nb_NodeFree=node;
   }
 
+void nbFacetCellDestroy(struct NB_FACET_CELL *cell){
+  dropObject((NB_Object *)cell->term);
+  dropObject((NB_Object *)cell->args);
+  nbFree(cell,sizeof(cell));
+  }
+
 /* using destroyCondition() for NB_CALL */
 
 /**********************************************************************
 * Private Cell Calculation Methods
 **********************************************************************/
-NB_Object *evalNode(struct NB_NODE *node){
+static NB_Object *evalNode(struct NB_NODE *node){
   if(node->facet==NULL) return(nb_Unknown);
   return((*node->facet->eval)(node->context,node->skill->handle,node->knowledge,NULL));
   }
 
-void solveNode(struct NB_NODE *node){
+static void solveNode(struct NB_NODE *node){
   if(node->facet==NULL) return;
   (*node->facet->solve)(node->context,node->skill->handle,node->knowledge,NULL);
   return;
   }
 
-NB_Object *evalNodeCall(struct NB_CALL *call){
+static NB_Object *evalFacetCell(struct NB_FACET_CELL *cell){
+  NB_Node *node=(NB_Node *)cell->term->def;
+  if(node->cell.object.type!=nb_NodeType) return(nb_Unknown);
+  if(cell->facet==NULL) return(nb_Unknown);
+  return((*cell->facet->eval)(node->context,node->skill->handle,node->knowledge,cell->args));
+  }
+
+static void solveFacetCell(struct NB_FACET_CELL *cell){
+  nbCellSolve_((NB_Cell *)cell->args);
+  return;
+  }
+
+static NB_Object *evalNodeCall(struct NB_CALL *call){
   NB_Node *node=(NB_Node *)call->term->def;
   if(node->cell.object.type!=nb_NodeType) return(nb_Unknown);
   if(node->facet==NULL) return(nb_Unknown);
   return((*node->facet->eval)(node->context,node->skill->handle,node->knowledge,call->args));
   }
 
-void solveNodeCall(struct NB_CALL *call){
+static void solveNodeCall(struct NB_CALL *call){
   nbCellSolve_((NB_Cell *)call->args);
   return;
   }
@@ -315,24 +344,34 @@ void solveNodeCall(struct NB_CALL *call){
 /**********************************************************************
 * Private Cell Management Methods
 **********************************************************************/
-void alarmNode(struct NB_NODE *node){
+static void alarmNode(struct NB_NODE *node){
   if(node->facet==NULL) return;
   (*node->facet->alarm)(node->context,node->skill->handle,node->knowledge);
   }
-void enableNode(struct NB_NODE *node){
+static void enableNode(struct NB_NODE *node){
   if(node->facet==NULL) return;
   (*node->facet->enable)(node->context,node->skill->handle,node->knowledge);
   }
-void disableNode(struct NB_NODE *node){
+static void disableNode(struct NB_NODE *node){
   if(node->facet==NULL) return;
   (*node->facet->disable)(node->context,node->skill->handle,node->knowledge);
   }
-
-void enableNodeCall(struct NB_CALL *call){
+static void enableFacetCell(struct NB_FACET_CELL *cell){
+  outMsg(0,'T',"enableFacetCell: called");
+  nbCellEnable((NB_Cell *)cell->term,(NB_Cell *)cell);
+  outMsg(0,'T',"enableFacetCell: called");
+  nbCellEnable((NB_Cell *)cell->args,(NB_Cell *)cell);
+  outMsg(0,'T',"enableFacetCell: returning");
+  }
+static void disableFacetCell(struct NB_FACET_CELL *cell){
+  nbCellDisable((NB_Cell *)cell->term,(NB_Cell *)cell);
+  nbCellDisable((NB_Cell *)cell->args,(NB_Cell *)cell);
+  }
+static void enableNodeCall(struct NB_CALL *call){
   nbCellEnable((NB_Cell *)call->term,(NB_Cell *)call);
   nbCellEnable((NB_Cell *)call->args,(NB_Cell *)call);
   }
-void disableNodeCall(struct NB_CALL *call){
+static void disableNodeCall(struct NB_CALL *call){
   nbCellDisable((NB_Cell *)call->term,(NB_Cell *)call);
   nbCellDisable((NB_Cell *)call->args,(NB_Cell *)call);
   }
@@ -341,6 +380,9 @@ void disableNodeCall(struct NB_CALL *call){
 * Public Methods
 **********************************************************************/
 void nbNodeInit(NB_Stem *stem){
+  nb_FacetCellType=newType(stem,"nodeFacetCell",NULL,0,nbFacetCellShow,nbFacetCellDestroy);
+  nbCellType(nb_FacetCellType,solveFacetCell,evalFacetCell,enableFacetCell,disableFacetCell);
+  // 2013-12-07 eat - the COND form of node call cells will go away once the facet cell works
   condTypeNode=newType(stem,"nodeCell",condH,0,nbNodeCellShow,destroyCondition);
   nbCellType(condTypeNode,solveNodeCall,evalNodeCall,enableNodeCall,disableNodeCall);
   nb_NodeType=newType(stem,"node",NULL,TYPE_ENABLES,nbNodeShowItem,nbNodeDestroy);
@@ -659,6 +701,17 @@ int nbNodeCmdIn(nbCELL context,nbCELL args,char *text){
     }
   (*facet->command)((NB_Term *)context,skill->handle,node->knowledge,(NB_List *)args,text);
   return(0);
+  }
+
+struct NB_FACET_CELL *nbFacetCellNew(NB_Facet *facet,NB_Term *term,NB_List *args){
+  struct NB_FACET_CELL *facetCell;
+  // include logic here to make sure facet cells are unique - no duplicates
+  // if found, return it and don't create a new one
+  facetCell=(struct NB_FACET_CELL *)nbCellNew(nb_FacetCellType,NULL,sizeof(struct NB_FACET_CELL));
+  facetCell->facet=grabObject(facet);
+  facetCell->term=grabObject(term);
+  facetCell->args=grabObject(args);
+  return(facetCell);
   }
 
 //**********************************

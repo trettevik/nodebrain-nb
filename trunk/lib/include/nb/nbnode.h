@@ -47,6 +47,19 @@
 #include <nb/nblist.h>
 
 /*
+*  Node Facet Cell
+*
+*    We previously used a COND structure for node cells.  But to accomodate
+*    a third parameter (facet) we now create a different structure for node cells.
+*/
+struct NB_FACET_CELL{      // Node facet cell structure
+  struct NB_CELL cell;     // cell header 
+  struct NB_TERM  *term;   // term identifying the node
+  struct NB_FACET *facet;  // facet providing the eval method
+  struct NB_LIST  *args;   // parameter list of cells
+  };
+
+/*
 *  A node cell represents the combination of skill and knowledge.  Basic
 *  skills and knowledge representation are supported by NodeBrain.  Extensions
 *  are supported by skill modules.
@@ -133,6 +146,11 @@ typedef struct NB_FACET_SHIM{
 
 
 /* 
+* 2013-12-07 eat - This is used only for primary facets for now.
+*            Once the NB_FACET_CELL structure above is working correctly,
+*            this structure will be eliminated and primary facet cells
+*            will use the NB_FACET_CELL structure
+*
 * NOTE: 
 *
 *   Effectively, we are extending COND with SKILLCOND by adding another type
@@ -151,6 +169,7 @@ extern struct TYPE *skillType;
 extern struct TYPE *condTypeNode; 
 extern struct TYPE *nb_NodeType;
 extern struct NB_TERM *nb_SkillGloss;
+extern struct TYPE *nb_FacetCellType;
 
 /* Functions */
 
@@ -165,6 +184,7 @@ NB_Term *nbNodeParse(NB_Term *context,char *ident,char *cursor);
 
 struct NB_SKILL *nbSkillNew(char *ident,NB_List *arglist,char *text);
 struct NB_FACET *nbFacetNew(NB_Skill *skill,const char *ident);
+struct NB_FACET_CELL *nbFacetCellNew(NB_Facet *facet,NB_Term *term,NB_List *list);
 
 #endif // NB_INTERNAL
 

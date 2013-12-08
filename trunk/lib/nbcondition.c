@@ -960,7 +960,7 @@ struct COND * useCondition(int not,struct TYPE *type,void *left,void *right){
   *
   */
   struct COND *cond,*loper,*roper,**condP;
-  if(trace) outMsg(0,'T',"useCondition() called");
+  if(trace) outMsg(0,'T',"useCondition: called");
   if(not){
     loper=useCondition(0,type,left,right);
     return(useCondition(0,condTypeNot,loper,nb_Unknown));
@@ -999,7 +999,7 @@ struct COND * useCondition(int not,struct TYPE *type,void *left,void *right){
       cond->cell.level=roper->cell.level+1;
     cond->cell.object.value=nb_Disabled;
     }
-  if(trace) outMsg(0,'T',"useCondition() returning");
+  if(trace) outMsg(0,'T',"useCondition: returning");
   return(cond);
   }
 
