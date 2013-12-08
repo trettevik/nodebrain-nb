@@ -726,6 +726,21 @@ static int *treeCommand(nbCELL context,BTreeSkill *skillHandle,BTree *tree,nbCEL
   }
 
 /*
+*  _prune evaluate() method
+*
+*  2013-12-07 eat - experimenting with facets
+*             define fred node tree;
+*             fred. assert ("abc","def","xyz");
+*             fred. assert ("abc","def","abc");
+*             define r1 on(b && x_prune("abc",def");
+*             assert b;
+*/
+static nbCELL treePruneEvaluate(nbCELL context,BTreeSkill *skillHandle,BTree *tree,nbCELL arglist){
+  treePrune(context,skillHandle,tree,arglist,"");
+  return(tree->notfound);
+  }
+
+/*
 *  _prune assert() method
 *
 *  2013-12-07 eat - experimenting with facets
@@ -792,6 +807,7 @@ extern void *treeBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL argl
   // 2013-12-07 eat - experimenting with facets
   facet=nbSkillFacet(context,skill,"prune");
   nbSkillMethod(context,facet,NB_NODE_ASSERT,treePruneAssert);
+  nbSkillMethod(context,facet,NB_NODE_EVALUATE,treePruneEvaluate);
   nbSkillMethod(context,facet,NB_NODE_COMMAND,treePruneCommand);
   return(skillHandle);
   }

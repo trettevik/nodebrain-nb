@@ -748,7 +748,7 @@ static char nbParseSymbolInfix(char *symbol,size_t size,char **source){
 *   This is level 7 from nbParseCell's perspective
 */
 NB_Object *nbParseObject(NB_Term *context,char **cursor){
-  char ident[NB_BUFSIZE],token[1024];
+  char ident[NB_BUFSIZE],token[1024],facetIdent[256];
   void *right;
   NB_Object *object,*objhold;
   NB_Term *term;
@@ -889,6 +889,16 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
           }
         return(term->def);
         }
+      *facetIdent=0;     // assume no facet specified
+      if(**cursor=='_'){ // facet assertion
+        (*cursor)++;
+        savecursor=*cursor;
+        symid=nbParseSymbol(facetIdent,sizeof(facetIdent),cursor);
+        if(symid!='t'){
+          outMsg(0,'E',"Expecting facet at->%s",savecursor);
+          return(NULL);
+          }
+        }
       /* default to cell term if not define */
       savecursor=*cursor;
       symid=nbParseSymbol(token,sizeof(ident),cursor);
@@ -919,11 +929,23 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
             return(objType->construct(objType,((NB_List *)right)->link));
             }
           }
+        if(*facetIdent){
+          outMsg(0,'E',"Facet \"%s\" not defined for term \"%s\".",facetIdent,ident);
+          return(NULL);
+          }
         /* A term with an Unknown definition can be defined later */
         term=nbTermNew(context,ident,nb_Unknown);
         return((NB_Object *)useCondition(0,condTypeNode,term,right));
         }
       else if(term->def->type==nb_NodeType){
+        if(*facetIdent){
+          NB_Facet *facet=nbSkillGetFacet(((NB_Node *)term->def)->skill,facetIdent);
+          if(!facet){
+            outMsg(0,'E',"Facet \"%s\" not defined for term \"%s\".",facetIdent,ident);
+            return(NULL);
+            }
+          return((NB_Object *)nbFacetCellNew(facet,term,right));
+          }
         return((NB_Object *)useCondition(0,condTypeNode,term,right));
         }
       else{
@@ -1162,7 +1184,7 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
     if(*cursor=='_'){ // facet assertion
       cursor++;
       cursave=cursor;
-      symid=nbParseSymbol(facetIdent,sizeof(ident2),&cursor);
+      symid=nbParseSymbol(facetIdent,sizeof(facetIdent),&cursor);
       if(symid!='t'){
         outMsg(0,'E',"Expecting facet at->%s",cursave);
         return(NULL);

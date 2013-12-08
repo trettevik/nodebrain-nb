@@ -357,11 +357,8 @@ static void disableNode(struct NB_NODE *node){
   (*node->facet->disable)(node->context,node->skill->handle,node->knowledge);
   }
 static void enableFacetCell(struct NB_FACET_CELL *cell){
-  outMsg(0,'T',"enableFacetCell: called");
   nbCellEnable((NB_Cell *)cell->term,(NB_Cell *)cell);
-  outMsg(0,'T',"enableFacetCell: called");
   nbCellEnable((NB_Cell *)cell->args,(NB_Cell *)cell);
-  outMsg(0,'T',"enableFacetCell: returning");
   }
 static void disableFacetCell(struct NB_FACET_CELL *cell){
   nbCellDisable((NB_Cell *)cell->term,(NB_Cell *)cell);
