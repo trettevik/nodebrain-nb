@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2006-2010 The Boeing Company
+* Copyright (C) 2006-2013 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 * 
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -121,6 +121,8 @@
 *     nbTreeLocate()       - Locate a node, constructing a path structure for use by insert or remove
 *     nbTreeLocateValue()  - Like nbTreeLocate(), but used for "key value ordered" trees
 *     nbTreeLocateString() - Like nbTreeValue(), but has built-in string comparison
+*     nbTreeLocateStringCase() - case insensitive
+*     nbTreeLocateBinary() - Like nbTreeValue(), but has built-in binary comparison
 *     nbTreeInsert()       - Insert a node using a path structure returned by a locate function
 *     nbTreeRemove()       - Remove a node using a path structure returned by a locate function
 *
@@ -139,8 +141,9 @@
 *
 * Date       Name/Change
 * ---------- -----------------------------------------------------------------
-* 2006/09/02 Ed Trettevik - first prototype
-* 2007/05/22 eat 0.6.8 - removed from nb_mod_tree.c and made part of the API
+* 2006-09-02 Ed Trettevik - first prototype
+* 2007-05-22 eat 0.6.8 - removed from nb_mod_tree.c and made part of the API
+* 2013-12-09 eat 0.9.0 - Included nbTreeLocateBinary function - alternative to hashing
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -372,7 +375,31 @@ void *nbTreeLocateStringCase(NB_TreePath *path,char *key,NB_TreeNode **rootP){
   return(node);
   }
 
+// Locate Binary
+//
+void *nbTreeLocateBinary(NB_TreePath *path,void *key,size_t size,NB_TreeNode **rootP){
+  NB_TreeNode *node;     // Node poiter
+  NB_TreeNode **nodeP;   // Address of node pointer
+  int depth=0;     // index into path
+  int cmp;         // comparison result
 
+  path->key=key;   // save key for insertions
+  path->rootP=nodeP=path->balanceP=rootP;
+  path->balanceDepth=1;
+  path->node[depth]=(NB_TreeNode *)rootP; // this is a trick that depend on the left pointer
+  path->step[depth++]=0;            // being the first element of the node structure
+  for(node=*rootP;node!=NULL;node=*nodeP){
+    if((cmp=memcmp(key,node->key,size))==0) break;
+    cmp=cmp>0;          // 0 left, 1 right
+    if(node->balance!=0) path->balanceP=nodeP, path->balanceDepth=depth;
+    path->node[depth]=node;
+    if((path->step[depth++]=cmp)) nodeP=&node->right;
+    else nodeP=&node->left;
+    }
+  path->nodeP=nodeP;
+  path->depth=depth;
+  return(node);
+  }
 
 // nbTreeInsert()  - AVL tree node insertion function
 //

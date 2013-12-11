@@ -929,27 +929,20 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
             return(objType->construct(objType,((NB_List *)right)->link));
             }
           }
-        if(*facetIdent){
+        // 2013-12-09 eat - Removing attempt to support sentences before defining the node
+        outMsg(0,'E',"Sentence requires node - \"%s\" not defined as node.",ident);
+        return(NULL);
+        }
+      else if(term->def->type==nb_NodeType){
+        NB_Facet *facet=nbSkillGetFacet(((NB_Node *)term->def)->skill,facetIdent);
+        if(!facet){
           outMsg(0,'E',"Facet \"%s\" not defined for term \"%s\".",facetIdent,ident);
           return(NULL);
           }
-        /* A term with an Unknown definition can be defined later */
-        term=nbTermNew(context,ident,nb_Unknown);
-        return((NB_Object *)useCondition(0,condTypeNode,term,right));
-        }
-      else if(term->def->type==nb_NodeType){
-        if(*facetIdent){
-          NB_Facet *facet=nbSkillGetFacet(((NB_Node *)term->def)->skill,facetIdent);
-          if(!facet){
-            outMsg(0,'E',"Facet \"%s\" not defined for term \"%s\".",facetIdent,ident);
-            return(NULL);
-            }
-          return((NB_Object *)nbFacetCellNew(facet,term,right));
-          }
-        return((NB_Object *)useCondition(0,condTypeNode,term,right));
+        return((NB_Object *)nbSentenceNew(facet,term,right));
         }
       else{
-        outMsg(0,'E',"Node condition requires term defined as node.");
+        outMsg(0,'E',"Sentence requires node - \"%s\" not defined as node.",ident);
         return(NULL);
         }
     }
@@ -1265,9 +1258,9 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
       outMsg(0,'E',"Term \"%s\" is not open to assertion.",ident);
       return(NULL);
       }
-    if(*facetIdent){ // facet assertions need a NB_FACET_CELL structure instead of COND
+    if(*facetIdent || list!=NULL){ // sentence 
       if(term->def==NULL || term->def->type!=nb_NodeType){
-        outMsg(0,'E',"Term \"%s\" does not support facets.",ident);
+        outMsg(0,'E',"Sentence requires node -  \"%s\" not defined as node.",ident);
         return(NULL);
         }
       facet=nbSkillGetFacet(((NB_Node *)term->def)->skill,facetIdent);
@@ -1275,12 +1268,7 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
         outMsg(0,'E',"Facet \"%s\" not defined for term \"%s\".",facetIdent,ident);
         return(NULL);
         }
-      objectL=(NB_Object *)nbFacetCellNew(facet,term,list);
-      object=(NB_Object *)useCondition(0,type,objectL,object);
-      list=NULL;
-      }
-    else if(list!=NULL){
-      objectL=(NB_Object *)useCondition(0,condTypeNode,term,list);
+      objectL=(NB_Object *)nbSentenceNew(facet,term,list);
       object=(NB_Object *)useCondition(0,type,objectL,object);
       list=NULL;
       }

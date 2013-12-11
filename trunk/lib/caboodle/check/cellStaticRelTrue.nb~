@@ -224,8 +224,8 @@ show -cells;
 ~ e5 = 1 == ("a"<=a)
 ~ e4 = 1 == ("a"<=b)
 ~ e3 = 1 == ("a"<b)
-~ e2 = 1 == ("b"=b)
-~ e1 = 1 == ("a"=a)
+~ e2 = 1 == (b="b")
+~ e1 = 1 == (a="a")
 
 # Verify that all e1-e8 cells listed above have values of 1
 ~ > # Verify that all e1-e8 cells listed above have values of 1

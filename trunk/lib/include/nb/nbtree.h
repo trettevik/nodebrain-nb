@@ -220,6 +220,11 @@ extern void *nbTreeLocateStringCase(NB_TreePath *path,char *key,NB_TreeNode **ro
 #if defined(WIN32)
 _declspec (dllexport)
 #endif
+extern void *nbTreeLocateBinary(NB_TreePath *path,void *key,size_t size,NB_TreeNode **rootP);
+
+#if defined(WIN32)
+_declspec (dllexport)
+#endif
 extern void *nbTreeLocateValue(NB_TreePath *path,void *key,NB_TreeNode **rootP,
     int (*compare)(void *handle,void *key1,void *key2),
     void *handle);

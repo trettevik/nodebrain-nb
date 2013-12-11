@@ -220,8 +220,7 @@ void nbNodeAlert(nbCELL context,nbCELL node){
 
 NB_Type *skillType=NULL;
 NB_Type *facetType=NULL;
-NB_Type *nb_FacetCellType=NULL;
-NB_Type *condTypeNode=NULL;
+NB_Type *nb_SentenceType=NULL;
 NB_Type *nb_NodeType=NULL;
 
 //struct HASH *nb_SkillHash=NULL;    /* skill term hash */
@@ -250,7 +249,7 @@ void printSkill(struct NB_SKILL *skill){
     }
   }
 
-void nbFacetCellShow(struct NB_FACET_CELL *cell){
+void nbSentenceShow(struct NB_SENTENCE *cell){
   if(cell==NULL) outPut("(?)");
   else{
     printObject((NB_Object *)cell->term);
@@ -295,7 +294,7 @@ void nbNodeDestroy(NB_Node *node){
   nb_NodeFree=node;
   }
 
-void nbFacetCellDestroy(struct NB_FACET_CELL *cell){
+void nbSentenceDestroy(struct NB_SENTENCE *cell){
   dropObject((NB_Object *)cell->term);
   dropObject((NB_Object *)cell->args);
   nbFree(cell,sizeof(cell));
@@ -317,27 +316,15 @@ static void solveNode(struct NB_NODE *node){
   return;
   }
 
-static NB_Object *evalFacetCell(struct NB_FACET_CELL *cell){
+static NB_Object *evalSentence(struct NB_SENTENCE *cell){
   NB_Node *node=(NB_Node *)cell->term->def;
   if(node->cell.object.type!=nb_NodeType) return(nb_Unknown);
   if(cell->facet==NULL) return(nb_Unknown);
   return((*cell->facet->eval)(node->context,node->skill->handle,node->knowledge,cell->args));
   }
 
-static void solveFacetCell(struct NB_FACET_CELL *cell){
+static void solveSentence(struct NB_SENTENCE *cell){
   nbCellSolve_((NB_Cell *)cell->args);
-  return;
-  }
-
-static NB_Object *evalNodeCall(struct NB_CALL *call){
-  NB_Node *node=(NB_Node *)call->term->def;
-  if(node->cell.object.type!=nb_NodeType) return(nb_Unknown);
-  if(node->facet==NULL) return(nb_Unknown);
-  return((*node->facet->eval)(node->context,node->skill->handle,node->knowledge,call->args));
-  }
-
-static void solveNodeCall(struct NB_CALL *call){
-  nbCellSolve_((NB_Cell *)call->args);
   return;
   }
 
@@ -356,32 +343,21 @@ static void disableNode(struct NB_NODE *node){
   if(node->facet==NULL) return;
   (*node->facet->disable)(node->context,node->skill->handle,node->knowledge);
   }
-static void enableFacetCell(struct NB_FACET_CELL *cell){
+static void enableSentence(struct NB_SENTENCE *cell){
   nbCellEnable((NB_Cell *)cell->term,(NB_Cell *)cell);
   nbCellEnable((NB_Cell *)cell->args,(NB_Cell *)cell);
   }
-static void disableFacetCell(struct NB_FACET_CELL *cell){
+static void disableSentence(struct NB_SENTENCE *cell){
   nbCellDisable((NB_Cell *)cell->term,(NB_Cell *)cell);
   nbCellDisable((NB_Cell *)cell->args,(NB_Cell *)cell);
-  }
-static void enableNodeCall(struct NB_CALL *call){
-  nbCellEnable((NB_Cell *)call->term,(NB_Cell *)call);
-  nbCellEnable((NB_Cell *)call->args,(NB_Cell *)call);
-  }
-static void disableNodeCall(struct NB_CALL *call){
-  nbCellDisable((NB_Cell *)call->term,(NB_Cell *)call);
-  nbCellDisable((NB_Cell *)call->args,(NB_Cell *)call);
   }
 
 /**********************************************************************
 * Public Methods
 **********************************************************************/
 void nbNodeInit(NB_Stem *stem){
-  nb_FacetCellType=newType(stem,"nodeFacetCell",NULL,0,nbFacetCellShow,nbFacetCellDestroy);
-  nbCellType(nb_FacetCellType,solveFacetCell,evalFacetCell,enableFacetCell,disableFacetCell);
-  // 2013-12-07 eat - the COND form of node call cells will go away once the facet cell works
-  condTypeNode=newType(stem,"nodeCell",condH,0,nbNodeCellShow,destroyCondition);
-  nbCellType(condTypeNode,solveNodeCall,evalNodeCall,enableNodeCall,disableNodeCall);
+  nb_SentenceType=newType(stem,"nodeSentence",NULL,0,nbSentenceShow,nbSentenceDestroy);
+  nbCellType(nb_SentenceType,solveSentence,evalSentence,enableSentence,disableSentence);
   nb_NodeType=newType(stem,"node",NULL,TYPE_ENABLES,nbNodeShowItem,nbNodeDestroy);
   nb_NodeType->apicelltype=NB_TYPE_NODE;
   nbCellType(nb_NodeType,solveNode,evalNode,enableNode,disableNode);
@@ -463,9 +439,6 @@ int nbSkillTraceAssert(struct NB_TERM *context,void *skillHandle,void *objectHan
   }
 #endif
 
-/*
-*  Skill constructor - we are using useCondition() for condTypeNode
-*/
 /*
 * Constructor - not intended as a public method
 */
@@ -700,15 +673,15 @@ int nbNodeCmdIn(nbCELL context,nbCELL args,char *text){
   return(0);
   }
 
-struct NB_FACET_CELL *nbFacetCellNew(NB_Facet *facet,NB_Term *term,NB_List *args){
-  struct NB_FACET_CELL *facetCell;
+struct NB_SENTENCE *nbSentenceNew(NB_Facet *facet,NB_Term *term,NB_List *args){
+  struct NB_SENTENCE *sentence;
   // include logic here to make sure facet cells are unique - no duplicates
   // if found, return it and don't create a new one
-  facetCell=(struct NB_FACET_CELL *)nbCellNew(nb_FacetCellType,NULL,sizeof(struct NB_FACET_CELL));
-  facetCell->facet=grabObject(facet);
-  facetCell->term=grabObject(term);
-  facetCell->args=grabObject(args);
-  return(facetCell);
+  sentence=(struct NB_SENTENCE *)nbCellNew(nb_SentenceType,NULL,sizeof(struct NB_SENTENCE));
+  sentence->facet=grabObject(facet);
+  sentence->term=grabObject(term);
+  sentence->args=grabObject(args);
+  return(sentence);
   }
 
 //**********************************

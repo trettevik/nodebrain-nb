@@ -85,6 +85,8 @@
 #include <nb/nbmodule.h>      /* module object */
 #include <nb/nbmacro.h>       /* string macro object */
 
+#include <nb/nbtrick.h>
+
 #include <nb/nb.h>
 
 #endif

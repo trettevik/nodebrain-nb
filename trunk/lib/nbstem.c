@@ -90,6 +90,7 @@ void nbStemInit(NB_Stem *stem){
   initRegexp(stem);
   initTerm(stem);
   initCondition(stem);
+  initTrick(stem);
   initAssertion(stem);
   initCall(stem);              /* must follow initCondition */
   nbNodeInit(stem);

@@ -130,14 +130,15 @@ void printAssertions(NB_Link *link){
 *   mode=2  - default (only set if unknown)
 */
 void assert(NB_Link *member,int mode){
-  struct ASSERTION *assertion,*target;
-  struct NB_FACET_CELL *facetCell;
-  NB_Term   *term;
-  NB_Node   *node;
-  NB_Skill  *skill;
-  NB_Facet  *facet;
-  NB_List   *arglist;
-  NB_Object *object;
+  //struct ASSERTION *assertion,*target;
+  struct ASSERTION *assertion;
+  NB_Sentence *sentence;
+  NB_Term     *term;
+  NB_Node     *node;
+  NB_Skill    *skill;
+  NB_Facet    *facet;
+  NB_List     *arglist;
+  NB_Object   *object;
 
   if(trace) outMsg(0,'T',"assert() called");
   while(member!=NULL){
@@ -159,7 +160,7 @@ void assert(NB_Link *member,int mode){
         }
       else nbTermAssign(term,object->value);
       }
-    else if(assertion->target->type==nb_FacetCellType){
+    else if(assertion->target->type==nb_SentenceType){
       if(assertion->cell.object.type==assertTypeVal){
         if(object->value==nb_Disabled) object=object->type->compute(object);
         else object=(NB_Object *)grabObject(object->value); /* 2004/08/28 eat - grab added */
@@ -168,8 +169,8 @@ void assert(NB_Link *member,int mode){
         outMsg(0,'L',"Cell definition assertion not support for node %s",term->word->value);
         return;
         }
-      facetCell=(struct NB_FACET_CELL *)assertion->target;
-      term=facetCell->term;
+      sentence=(NB_Sentence *)assertion->target;
+      term=sentence->term;
       node=(NB_Node *)term->def;
       if(node->cell.object.type!=nb_NodeType){
         outMsg(0,'E',"Term %s not defined as node",term->word->value);
@@ -181,41 +182,9 @@ void assert(NB_Link *member,int mode){
         dropObject(object);
         return;
         }
-      facet=facetCell->facet;
-      arglist=(NB_List *)grabObject(facetCell->args);
+      facet=sentence->facet;
+      arglist=(NB_List *)grabObject(sentence->args);
       if(mode&1)(*facet->alert)(term,skill->handle,node->knowledge,(NB_Cell *)arglist,(NB_Cell *)object);
-      else (*facet->assert)(term,skill->handle,node->knowledge,(NB_Cell *)arglist,(NB_Cell *)object);
-      dropObject(arglist);
-      dropObject(object);   /* 2004/08/28 eat */
-      nbCellPublish((NB_Cell *)term->def);
-      nbCellPublish((NB_Cell *)term);
-      }
-    // 2013-12-07 eat - this block goes away when we have the facet block above working for primary facets
-    else if(assertion->target->type==condTypeNode){
-      if(assertion->cell.object.type==assertTypeVal){
-        if(object->value==nb_Disabled) object=object->type->compute(object);
-        else object=(NB_Object *)grabObject(object->value); /* 2004/08/28 eat - grab added */
-        }
-      else if(assertion->cell.object.type!=assertTypeDef){
-        outMsg(0,'L',"Cell definition assertion not support for node %s",term->word->value);
-        return;
-        }
-      target=(struct ASSERTION *)assertion->target;
-      term=(NB_Term *)target->target;
-      node=(NB_Node *)term->def;
-      if(node->cell.object.type!=nb_NodeType){
-        outMsg(0,'E',"Term %s not defined as node",term->word->value);
-        dropObject(object); /* 2004/08/28 eat */
-        return;
-        }
-      if((skill=node->skill)==NULL){
-        outMsg(0,'E',"Node %s does not have an assertion method.",term->word->value);
-        dropObject(object);
-        return;
-        }
-      facet=skill->facet;
-      arglist=(NB_List *)grabObject((NB_List *)target->object);
-      if(mode&1) (*facet->alert)(term,skill->handle,node->knowledge,(NB_Cell *)arglist,(NB_Cell *)object);
       else (*facet->assert)(term,skill->handle,node->knowledge,(NB_Cell *)arglist,(NB_Cell *)object);
       dropObject(arglist);
       dropObject(object);   /* 2004/08/28 eat */

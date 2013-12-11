@@ -167,13 +167,26 @@ extern nbCELL nbCellGetValue(nbCELL context,nbCELL cell);
 __declspec(dllexport)
 #endif
 extern void nbCellEnable(nbCELL pub,nbCELL sub);
-//extern void nbCellEnable(nbCELL pub,NB_Object *sub);
+
+#if defined(WIN32)
+__declspec(dllexport)
+#endif
+extern void nbCellEnableTrick(nbCELL pub,nbCELL sub,
+     int (*compare)(void *handle,void *key1,void *key2),
+     void *handle);
 
 #if defined(WIN32)
 __declspec(dllexport)
 #endif
 extern void nbCellDisable(nbCELL pub,nbCELL sub);
-//extern void nbCellDisable(nbCELL pub,NB_Object *sub);
+
+#if defined(WIN32)
+__declspec(dllexport)
+#endif
+void nbCellDisableTrick(nbCELL pub,nbCELL sub,
+     int (*compare)(void *handle,void *key1,void *key2),
+     void *handle);
+
 
 #if defined(WIN32)
 __declspec(dllexport)

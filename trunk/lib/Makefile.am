@@ -91,6 +91,7 @@ libnb_a_HEADERS = \
   include/nb/nbtls.h \
   include/nb/nbtranslator.h \
   include/nb/nbtree.h \
+  include/nb/nbtrick.h \
   include/nb/nbverb.h \
   include/nb/nbwebster.h
 
@@ -149,8 +150,9 @@ libnb_la_SOURCES = \
   nbtext.c \
   nbtime.c \
   nbtls.c \
-  nbtree.c \
   nbtranslator.c \
+  nbtree.c \
+  nbtrick.c \
   nbverb.c \
   nbwebster.c \
   include/nb/nb.h \
@@ -199,8 +201,9 @@ libnb_la_SOURCES = \
   include/nb/nbtext.h \
   include/nb/nbtime.h \
   include/nb/nbtls.h \
+  include/nb/nbtranslator.h \
   include/nb/nbtree.h \
-  include/nb/nbtranslator.h 
+  include/nb/nbtrick.h
 
 # pcre.h \
 # readline/chardefs.h \

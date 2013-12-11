@@ -12,10 +12,11 @@ NodeBrain 0.9.0 (Columbo) Change Summary
        ! - Replaces 0 for "false"
        # - Replaces ! for "disabled"
 
-  o  Set litterals and operations were added.
+  o  Included new data types of "set" and "list".
 
-       Literal - ["abc",10,"def"]
-       Operations - x["abc"]
+  o  Introducing the term "sentence" for the construct
+     node(args) used as a node condition, assertion, or
+     command. 
 
 * Incompatibilities:
 
@@ -63,6 +64,13 @@ NodeBrain 0.9.0 (Columbo) Change Summary
      is the better way to adapt, since it allows for the
      detection of unintended incompatibilities.
 
+  o  When a relational operator "=" has a constant on the
+     left and variable on the right the operands are
+     reversed. This will cause check scripts using a
+     show command for the condition to fail.  The solution
+     is to update the check line starting with "~" to
+     show the operands reversed:  "a"=a becomes a="a"
+
 * New Features: 
 
   o  Cell evaluation in response to assertions has been
@@ -101,6 +109,23 @@ NodeBrain 0.9.0 (Columbo) Change Summary
      This enables the addition of values to sets,
      evaluation to determine if a value is in a set,
      and removal of values from sets.
+
+* Deprecated Syntax: (none)
+
+* Bug Fixes:
+
+  o  Previously a sentence could be specified using a
+     undefined term for the node.  The intent was to
+     enable the node to be defined after referencing
+     rules. However, the intepreter didn't allow the
+     node to be defined later.  Although the term was
+     automatically defined to be undefined, an attempt
+     to define it as a node resulted in an error message
+     saying the term was already defined.
+
+     This bug has been resolved by requiring a node to
+     be defined before it is used in a sentence.  This
+     seems not to create any hardship.
 
 NodeBrain 0.8.15 Change Summary
 

@@ -623,6 +623,67 @@ void nbCellEnable(NB_Cell *pub,NB_Cell *sub){
     outPut("\n"); 
     }
   }
+/*
+*  This is an experiment with subscription trees organized by a provided
+*  comparison routine instead of by subscriber address.
+*/
+void nbCellEnableTrick(NB_Cell *pub,NB_Cell *sub,
+     int (*compare)(void *handle,void *key1,void *key2),
+     void *handle){
+
+  outMsg(0,'T',"nbCellEnableTrick: called");
+  if(pub->object.value==(NB_Object *)pub) return;  // simple object doesn't publish
+  if(trace){
+    outMsg(0,'T',"nbCellEnableTrick() called - linking subscriber");
+    outPut("subscriber: ");
+    printObject((NB_Object *)sub);
+    outPut("\n");
+    outPut("publisher : ");
+    printObject((NB_Object *)pub);
+    outPut(" = ");
+    printObject(pub->object.value);
+    outPut("\n");
+    }
+
+  if(sub!=NULL){
+    NB_TreePath treePath;
+    NB_TreeNode *treeNode;
+    outMsg(0,'T',"nbCellEnableTrick: calling nbTreeLocateValue");
+    treeNode=(NB_TreeNode *)nbTreeLocateValue(&treePath,sub,(NB_TreeNode **)&pub->sub,compare,handle);
+    outMsg(0,'T',"nbCellEnableTrick: nbTreeLocateValue returned %p",treeNode);
+    if(treeNode==NULL){  // if not already a subscriber, then subscribe
+      treeNode=(NB_TreeNode *)nbAlloc(sizeof(NB_TreeNode));
+      treeNode->key=sub;
+      nbTreeInsert(&treePath,treeNode);
+      outMsg(0,'T',"nbCellEnableTrick: nbTreeInsert returned");
+      }
+    }
+  if(trace) outMsg(0,'T',"nbCellEnableTrick: completed subscription");
+  //if(pub->object.value!=nb_Disabled) return; // already know the value
+  //if(trace) outMsg(0,'T',"nbCellEnableTrick: calling publisher's enable method.");
+  //pub->object.type->enable(pub); /* pub's enable method */
+  //if(trace) outMsg(0,'T',"nbCellEnableTrick: calling publisher's evaluate method.");
+  //pub->object.value=(NB_Object *)grabObject(pub->object.type->eval(pub));  /* pub's evaluation method */
+  pub->object.value=nb_Unknown; // don't call trick cell eval method when enabling
+  outMsg(0,'T',"nbCellEnableTrick: checking to see if we want to level - sub=%p",sub);
+  if(sub){
+    outMsg(0,'T',"nbCellEnableTrick: sub->value=%p sub->level=%d pub->level=%d",sub->object.value,sub->level,pub->level);
+    }
+  if(sub!=NULL && sub->object.value!=(NB_Object *)sub && sub->level<=pub->level){
+    outMsg(0,'T',"nbCellEnableTrick: leveling");
+    ((NB_Cell *)sub)->level=pub->level+1;
+    nbCellLevel((NB_Cell *)sub);
+    }
+  if(trace){
+    outMsg(0,'T',"nbCellEnableTrick: returning");
+    outPut("Function: ");
+    printObject((NB_Object *)pub);
+    outPut("\nResult:");
+    printObject(pub->object.value);
+    outPut("\n");
+    }
+  }
+
 
 /*
 *  Cancel an object's subscription to cell changes.
@@ -660,6 +721,40 @@ void nbCellDisable(NB_Cell *pub,NB_Cell *sub){
     }
   if(trace) outMsg(0,'T',"nbCellDisable() returning");
   }
+void nbCellDisableTrick(NB_Cell *pub,NB_Cell *sub,
+     int (*compare)(void *handle,void *key1,void *key2),
+     void *handle){
+  if(trace){
+    outMsg(0,'T',"nbCellDisable() called");
+    printObject((NB_Object *)pub);
+    outPut("\n");
+    }
+  if(pub->object.value==(NB_Object *)pub) return; /* static object */
+  if(pub->object.value==nb_Disabled) return;
+  if(sub!=NULL){
+    NB_TreePath treePath;
+    NB_TreeNode *treeNode;
+    treeNode=(NB_TreeNode *)nbTreeLocateValue(&treePath,sub,(NB_TreeNode **)&pub->sub,compare,handle);
+    if(treeNode!=NULL){
+      nbTreeRemove(&treePath);
+      nbFree((NB_Object *)treeNode,sizeof(NB_TreeNode));  // this should be a macro
+      }
+    }
+  if(pub->sub==NULL){
+    pub->object.type->disable(pub);
+    /* We make an exception for terms who stay enabled when their defined
+    *  to have the value of a static object (not variable).  Perhaps we
+    *  should leave it up to the disable functions, but all except NB_Term
+    *  are currently depending on nbCellDisable() to turn the lights out.
+    */
+    if(pub->object.type!=termType){
+      dropObject(pub->object.value);
+      pub->object.value=nb_Disabled;
+      }
+    }
+  if(trace) outMsg(0,'T',"nbCellDisable() returning");
+  }
+
 
 /*
 *  Publish change to all subscriber objects

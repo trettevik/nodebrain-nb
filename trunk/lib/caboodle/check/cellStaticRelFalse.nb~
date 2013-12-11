@@ -223,8 +223,8 @@ show -cells;
 ~ e5 = ! == ("b"<=a)
 ~ e4 = ! == ("b"<a)
 ~ e3 = ! == ("a"<a)
-~ e2 = ! == ("b"=a)
-~ e1 = ! == ("a"=b)
+~ e2 = ! == (a="b")
+~ e1 = ! == (b="a")
 
 # Verify that all e1-e8 cells listed above have values of !
 ~ > # Verify that all e1-e8 cells listed above have values of !

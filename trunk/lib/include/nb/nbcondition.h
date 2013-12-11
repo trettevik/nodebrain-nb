@@ -41,7 +41,7 @@
 #ifndef _NB_CONDITION_H_
 #define _NB_CONDITION_H_
 
-struct COND {               /* Condition Object - one or two operands */
+typedef struct COND {               /* Condition Object - one or two operands */
   /* This object is pointed to by the TERMs and the left and right
   *  fields of COND.  The operands may also be other object types,
   *  including TERM.
@@ -49,7 +49,7 @@ struct COND {               /* Condition Object - one or two operands */
   struct NB_CELL cell;     /* cell header */
   void   *left;            /* Left Operand     */
   void   *right;           /* Right Operand    */
-  };
+  } NB_Cond;
 
 extern struct COND *condFree;
 extern struct HASH *condH;

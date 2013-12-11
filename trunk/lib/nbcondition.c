@@ -128,6 +128,9 @@
 * 2012-10-17 eat 0.8.12 Replaced termGetName with nbTermName
 * 2012-12-27 eat 0.8.13 Checker updates
 * 2013-01-11 eat 0.8.13 Checker updates
+* 2013-12-09 eat 0.9.0  Replaced condTypeNode with nb_SentenceType objects
+*            This was necessary to add more fields to a sentence (previously
+*            called a node condition.
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -214,7 +217,7 @@ void condPrintRule(struct COND *cond){
 
   if(((NB_Object *)cond->left)->value==cond->left ||
     ((NB_Object *)cond->left)->type==termType ||
-    ((NB_Object *)cond->left)->type==condTypeNode ||
+    ((NB_Object *)cond->left)->type==nb_SentenceType ||
     ((NB_Object *)cond->left)->type==condTypeTime) paren=1;
   outPut("%s",cond->cell.object.type->name);
   if(paren) outPut("(");
@@ -245,7 +248,7 @@ void condPrintRule(struct COND *cond){
 /*
 *  Print conditions with a left and right operand
 */
-void condPrintInfix(cond) struct COND *cond; {
+void condPrintInfix(struct COND *cond){
   outPut("(");
   printObject(cond->left);
   outPut("%s",cond->cell.object.type->name);   // 2012-12-31 eat - VID 5328-0.8.13-1 added format string
@@ -253,14 +256,14 @@ void condPrintInfix(cond) struct COND *cond; {
   outPut(")");
   }
   
-void condPrintTime(cond) struct COND *cond; {
+void condPrintTime(struct COND *cond){
   outPut("%s",cond->cell.object.type->name);   // 2012-12-31 eat - VID 5328-0.8.13-1 added format string
   outPut("(");
   schedPrint(cond->right);
   outPut(")");
   }
 
-void condPrintPrefix(cond) struct COND *cond; {
+void condPrintPrefix(struct COND *cond){
   outPut("(");
   outPut("%s",cond->cell.object.type->name);  // 2012-12-31 eat - VID 5328-0.8.13-1 added format string
   printObject(cond->left);
@@ -275,7 +278,7 @@ void condPrintMatch(struct COND *cond){
   outPut(")");
   }
   
-void condPrintChange(cond) struct COND *cond; {
+void condPrintChange(struct COND *cond){
   outPut("(");
   outPut("%s",cond->cell.object.type->name); // 2012-12-31 eat - VID 5328-0.8.13-1 added format string
   printObject(cond->left);
@@ -439,21 +442,21 @@ NB_Object *evalUnknown(struct COND *cond){
   }
 
 /* Known: !?e  converts Known to True and Unknown to False */
-NB_Object *evalKnown(cond) struct COND *cond; {
+NB_Object *evalKnown(struct COND *cond){
   NB_Object *object=((NB_Object *)cond->left)->value;
   if(object==nb_Unknown) return(NB_OBJECT_FALSE);
   return(NB_OBJECT_TRUE);
   }
 
 /* Closed Word Value: [e] converts Unknown to 0 (False) */
-NB_Object *evalClosedWorld(cond) struct COND *cond; {
+NB_Object *evalClosedWorld(struct COND *cond){
   NB_Object *object=((NB_Object *)cond->left)->value;
   if(object==nb_Unknown) return(NB_OBJECT_FALSE);
   return(object);
   }
 
 /* Not: !e converts 0 to 1 and all True values to 0 */
-NB_Object *evalNot(cond) struct COND *cond; {
+NB_Object *evalNot(struct COND *cond){
   NB_Object *object=((NB_Object *)cond->left)->value;
   if(object==nb_Unknown) return(nb_Unknown);
   if(object==NB_OBJECT_FALSE) return(NB_OBJECT_TRUE);
@@ -461,7 +464,7 @@ NB_Object *evalNot(cond) struct COND *cond; {
   }
 
 /* True: !!e converts all True values to 1 */
-NB_Object *evalTrue(cond) struct COND *cond; {
+NB_Object *evalTrue(struct COND *cond){
   NB_Object *object=((NB_Object *)cond->left)->value;
   if(object==nb_Unknown || object==NB_OBJECT_FALSE) return(object);
   return(NB_OBJECT_TRUE);
@@ -510,7 +513,7 @@ NB_Object *reduceAnd(NB_Object *lobject,NB_Object *robject){
   return(NULL);
   }
 
-NB_Object *evalNand(cond) struct COND *cond; {
+NB_Object *evalNand(struct COND *cond){
   NB_Object *lobject=((NB_Object *)cond->left)->value;
   NB_Object *robject=((NB_Object *)cond->right)->value;
   if(lobject==NB_OBJECT_FALSE || robject==NB_OBJECT_FALSE) return(NB_OBJECT_TRUE);
@@ -560,7 +563,7 @@ NB_Object *reduceOr(NB_Object *lobject,NB_Object *robject){
   return(NULL);
   }
 
-NB_Object *evalNor(cond) struct COND *cond; {
+NB_Object *evalNor(struct COND *cond){
   NB_Object *lobject=((NB_Object *)cond->left)->value;
   NB_Object *robject=((NB_Object *)cond->right)->value;
   if(lobject==NB_OBJECT_FALSE){
@@ -573,7 +576,7 @@ NB_Object *evalNor(cond) struct COND *cond; {
   return(NB_OBJECT_FALSE);
   }
 
-NB_Object *evalXor(cond) struct COND *cond; {
+NB_Object *evalXor(struct COND *cond){
   NB_Object *lobject=((NB_Object *)cond->left)->value;
   NB_Object *robject=((NB_Object *)cond->right)->value;
   if(lobject==nb_Unknown || robject==nb_Unknown) return(nb_Unknown);
@@ -603,7 +606,7 @@ NB_Object *evalFlipFlop(struct COND *cond){
   return(cond->cell.object.value);
   }
 
-NB_Object *evalDelay(cond) struct COND *cond; {
+NB_Object *evalDelay(struct COND *cond){
   /* delay reaction is caused by a scheduled event or subordinate value change */
   struct COND *lcond=cond->left,*rcond=cond->right;
   NB_Object *value=lcond->cell.object.value;
@@ -627,7 +630,7 @@ NB_Object *evalDelay(cond) struct COND *cond; {
   return(nb_Unknown);  /* is this a good thing to return? */  
   }
   
-NB_Object *evalTime(cond) struct COND *cond; {
+NB_Object *evalTime(struct COND *cond){
   /* 1) Time condition reaction is caused by scheduled events */
   /*    because there are no time subordinate conditions */
   /* 2) Delay time conditions always transition to False, and are placed in */
@@ -649,7 +652,7 @@ NB_Object *evalTime(cond) struct COND *cond; {
   return(NB_OBJECT_TRUE);
   }
     
-NB_Object *evalRelEQ(cond) struct COND *cond; {
+NB_Object *evalRelEQ(struct COND *cond){
   NB_Object *left=((NB_Object *)cond->left)->value;
   NB_Object *right=((NB_Object *)cond->right)->value;
   if(left==nb_Unknown || right==nb_Unknown) return(nb_Unknown);
@@ -659,7 +662,7 @@ NB_Object *evalRelEQ(cond) struct COND *cond; {
   return(NB_OBJECT_FALSE);
   }
 
-NB_Object *evalRelNE(cond) struct COND *cond; {
+NB_Object *evalRelNE(struct COND *cond){
   NB_Object *left=((NB_Object *)cond->left)->value;
   NB_Object *right=((NB_Object *)cond->right)->value;
   if(left==nb_Unknown || right==nb_Unknown) return(nb_Unknown);
@@ -669,7 +672,7 @@ NB_Object *evalRelNE(cond) struct COND *cond; {
   return(NB_OBJECT_TRUE);
   }
   
-NB_Object *evalRelLT(cond) struct COND *cond;{
+NB_Object *evalRelLT(struct COND *cond){
   NB_Object *left=((NB_Object *)cond->left)->value;
   NB_Object *right=((NB_Object *)cond->right)->value;
   if(left==nb_Unknown || right==nb_Unknown) return(nb_Unknown);
@@ -681,7 +684,7 @@ NB_Object *evalRelLT(cond) struct COND *cond;{
   return(NB_OBJECT_FALSE);
   }
 
-NB_Object *evalRelLE(cond) struct COND *cond;{
+NB_Object *evalRelLE(struct COND *cond){
   NB_Object *left=((NB_Object *)cond->left)->value;
   NB_Object *right=((NB_Object *)cond->right)->value;
   if(left==nb_Unknown || right==nb_Unknown) return(nb_Unknown);
@@ -693,7 +696,7 @@ NB_Object *evalRelLE(cond) struct COND *cond;{
   return(NB_OBJECT_FALSE);
   }
 
-NB_Object *evalRelGT(cond) struct COND *cond;{
+NB_Object *evalRelGT(struct COND *cond){
   NB_Object *left=((NB_Object *)cond->left)->value;
   NB_Object *right=((NB_Object *)cond->right)->value;
   if(left==nb_Unknown || right==nb_Unknown) return(nb_Unknown);
@@ -705,7 +708,7 @@ NB_Object *evalRelGT(cond) struct COND *cond;{
   return(NB_OBJECT_FALSE);
   }
 
-NB_Object *evalRelGE(cond) struct COND *cond;{
+NB_Object *evalRelGE(struct COND *cond){
   NB_Object *left=((NB_Object *)cond->left)->value;
   NB_Object *right=((NB_Object *)cond->right)->value;
   if(left==nb_Unknown || right==nb_Unknown) return(nb_Unknown);
@@ -757,27 +760,46 @@ void condChangeReset(void){
     }
   nbCellReact();
   }
+
+// 2013-12-09 eat - Experimenting with a trick cell for RelEQ evaluation acceleration
+// RelEQ uses a trick cell when the right operand is a constant
+
+void enableRelEQ(struct COND *cond){
+  if(((NB_Cell*)cond->right)->object.value==cond->right){
+    nbTrickRelEqEnable((NB_Cell *)cond->left,cond);
+    return;
+    } 
+  nbCellEnable((NB_Cell *)cond->left,(NB_Cell *)cond);
+  if(cond->right!=cond->left) nbCellEnable((NB_Cell *)cond->right,(NB_Cell *)cond);
+  }
+
+void disableRelEQ(struct COND *cond){
+  nbCellDisable((NB_Cell *)cond->left,(NB_Cell *)cond);
+  if(cond->right!=cond->left) nbCellDisable((NB_Cell *)cond->right,(NB_Cell *)cond);
+  }
+
+//
  
-void enableRule(cond) struct COND *cond;{
+void enableRule(struct COND *cond){
   if(trace) outMsg(0,'T',"enableRule() called");
   if(cond->cell.object.value==nb_Disabled) {
     nbCellEnable((NB_Cell *)cond->left,(NB_Cell *)cond);
     }
   }
 
-void disableRule(cond) struct COND *cond;{
+void disableRule(struct COND *cond){
   nbCellDisable((NB_Cell *)cond->left,(NB_Cell *)cond);
   }
 
-void enablePrefix(cond) struct COND *cond; {
+void enablePrefix(struct COND *cond){
   nbCellEnable((NB_Cell *)cond->left,(NB_Cell *)cond);
   }
 
-void disablePrefix(cond) struct COND *cond; {
+void disablePrefix(struct COND *cond){
   nbCellDisable((NB_Cell *)cond->left,(NB_Cell *)cond);
   }
 
-void enableInfix(cond) struct COND *cond; {
+void enableInfix(struct COND *cond){
   nbCellEnable((NB_Cell *)cond->left,(NB_Cell *)cond);
   if(cond->right!=cond->left) nbCellEnable((NB_Cell *)cond->right,(NB_Cell *)cond);
   }
@@ -927,7 +949,7 @@ void initCondition(NB_Stem *stem){
   nbCellType(condTypeTimeDelay,solveKnown,evalTime,enableTime,disableTime);
 
   condTypeRelEQ=newType(stem,"=",condH,TYPE_REL,condPrintInfix,destroyCondition);
-  nbCellType(condTypeRelEQ,solveInfix2,evalRelEQ,enableInfix,disableInfix);
+  nbCellType(condTypeRelEQ,solveInfix2,evalRelEQ,enableRelEQ,disableRelEQ);
   condTypeRelNE=newType(stem,"<>",condH,TYPE_REL,condPrintInfix,destroyCondition);
   nbCellType(condTypeRelNE,solveInfix2,evalRelNE,enableInfix,disableInfix);
   condTypeRelLT=newType(stem,"<",condH,TYPE_REL,condPrintInfix,destroyCondition);
@@ -968,6 +990,13 @@ struct COND * useCondition(int not,struct TYPE *type,void *left,void *right){
   /* create a subordinate time condition unique to left condition */  
   if(type==condTypeDelayTrue || type==condTypeDelayFalse || type==condTypeDelayUnknown)
     right=useCondition(0,condTypeTimeDelay,left,right);
+  // 2013-12-09 eat - Experimenting with proxy cell for RelEQ
+  else if(type==condTypeRelEQ && ((struct COND *)left)->cell.object.value==(NB_Object *)left &&
+    ((struct COND *)right)->cell.object.value!=(NB_Object *)right){
+    loper=left;  // make sure the constant is on the right to simplify use of proxy in enable method
+    left=right;
+    right=loper;
+    }
   condP=hashCond(condH,type,left,right);
   for(cond=*condP;cond!=NULL;cond=*condP){
     if(cond->left==left && cond->right==right && cond->cell.object.type==type) return(cond);
