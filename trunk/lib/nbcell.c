@@ -631,7 +631,7 @@ void nbCellEnableTrick(NB_Cell *pub,NB_Cell *sub,
      int (*compare)(void *handle,void *key1,void *key2),
      void *handle){
 
-  outMsg(0,'T',"nbCellEnableTrick: called");
+  //outMsg(0,'T',"nbCellEnableTrick: called");
   if(pub->object.value==(NB_Object *)pub) return;  // simple object doesn't publish
   if(trace){
     outMsg(0,'T',"nbCellEnableTrick() called - linking subscriber");
@@ -648,14 +648,14 @@ void nbCellEnableTrick(NB_Cell *pub,NB_Cell *sub,
   if(sub!=NULL){
     NB_TreePath treePath;
     NB_TreeNode *treeNode;
-    outMsg(0,'T',"nbCellEnableTrick: calling nbTreeLocateValue");
+    //outMsg(0,'T',"nbCellEnableTrick: calling nbTreeLocateValue");
     treeNode=(NB_TreeNode *)nbTreeLocateValue(&treePath,sub,(NB_TreeNode **)&pub->sub,compare,handle);
-    outMsg(0,'T',"nbCellEnableTrick: nbTreeLocateValue returned %p",treeNode);
+    //outMsg(0,'T',"nbCellEnableTrick: nbTreeLocateValue returned %p",treeNode);
     if(treeNode==NULL){  // if not already a subscriber, then subscribe
       treeNode=(NB_TreeNode *)nbAlloc(sizeof(NB_TreeNode));
       treeNode->key=sub;
       nbTreeInsert(&treePath,treeNode);
-      outMsg(0,'T',"nbCellEnableTrick: nbTreeInsert returned");
+      //outMsg(0,'T',"nbCellEnableTrick: nbTreeInsert returned");
       }
     }
   if(trace) outMsg(0,'T',"nbCellEnableTrick: completed subscription");
@@ -665,12 +665,12 @@ void nbCellEnableTrick(NB_Cell *pub,NB_Cell *sub,
   //if(trace) outMsg(0,'T',"nbCellEnableTrick: calling publisher's evaluate method.");
   //pub->object.value=(NB_Object *)grabObject(pub->object.type->eval(pub));  /* pub's evaluation method */
   pub->object.value=nb_Unknown; // don't call trick cell eval method when enabling
-  outMsg(0,'T',"nbCellEnableTrick: checking to see if we want to level - sub=%p",sub);
-  if(sub){
-    outMsg(0,'T',"nbCellEnableTrick: sub->value=%p sub->level=%d pub->level=%d",sub->object.value,sub->level,pub->level);
-    }
+  //outMsg(0,'T',"nbCellEnableTrick: checking to see if we want to level - sub=%p",sub);
+  //if(sub){
+  //  outMsg(0,'T',"nbCellEnableTrick: sub->value=%p sub->level=%d pub->level=%d",sub->object.value,sub->level,pub->level);
+  //  }
   if(sub!=NULL && sub->object.value!=(NB_Object *)sub && sub->level<=pub->level){
-    outMsg(0,'T',"nbCellEnableTrick: leveling");
+    //outMsg(0,'T',"nbCellEnableTrick: leveling");
     ((NB_Cell *)sub)->level=pub->level+1;
     nbCellLevel((NB_Cell *)sub);
     }
