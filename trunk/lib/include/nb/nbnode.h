@@ -47,20 +47,6 @@
 #include <nb/nblist.h>
 
 /*
-*  Sentence Cell
-*
-*    We previously used a COND structure for sentence cells.  But to accomodate
-*    additional parameter (facet and receptor) we now create a unique structure.
-*/
-typedef struct NB_SENTENCE{// sentence cell structure
-  struct NB_CELL cell;     // cell header 
-  struct NB_TERM  *term;   // term identifying the node
-  struct NB_FACET *facet;  // facet providing the method
-  struct NB_LIST  *args;   // parameter list of cells
-  void *receptor;          // receptor - see axons - an evaluation accelerator concept
-  } NB_Sentence;
-
-/*
 *  A node cell represents the combination of skill and knowledge.  Basic
 *  skills and knowledge representation are supported by NodeBrain.  Extensions
 *  are supported by skill modules.
@@ -147,28 +133,21 @@ typedef struct NB_FACET_SHIM{
 
 
 /* 
-* 2013-12-07 eat - This is used only for primary facets for now.
-*            Once the NB_SENTENCE_CELL structure above is working correctly,
-*            this structure will be eliminated and primary facet cells
-*            will use the NB_SENTENCE_CELL structure
-*
 * NOTE: 
 *
 *   Effectively, we are extending COND with SKILLCOND by adding another type
 *   and associated evaluation methods.  This structure must have the
 *   same basic structure as COND (cell and two pointers).
 */
-struct NB_CALL{             /* Skill cell object */
-  struct NB_CELL   cell;    /* cell header */
-  struct NB_TERM  *term;    /* term pointing to node object */
-  // when we start using the facet here, we need to stop managing it as a cond
-  //struct NB_FACET *facet;   /* facet within the node's associated skill */
-  struct NB_LIST  *args;    /* argument list */
-  };
+// 2013-12-15 eat - replaced by NB_SENTENCE
+//struct NB_CALL{             /* Skill cell object */
+//  struct NB_CELL   cell;    /* cell header */
+//  struct NB_TERM  *term;    /* term pointing to node object */
+//  struct NB_LIST  *args;    /* argument list */
+//  };
 
 extern struct TYPE *skillType;
 extern struct TYPE *nb_NodeType;
-extern struct TYPE *nb_SentenceType;
 extern struct NB_TERM *nb_SkillGloss;
 
 /* Functions */
@@ -184,7 +163,6 @@ NB_Term *nbNodeParse(NB_Term *context,char *ident,char *cursor);
 
 struct NB_SKILL *nbSkillNew(char *ident,NB_List *arglist,char *text);
 struct NB_FACET *nbFacetNew(NB_Skill *skill,const char *ident);
-struct NB_SENTENCE *nbSentenceNew(NB_Facet *facet,NB_Term *term,NB_List *list);
 
 #endif // NB_INTERNAL
 

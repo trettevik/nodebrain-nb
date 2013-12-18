@@ -79,6 +79,7 @@ libnb_a_HEADERS = \
   include/nb/nbproxy.h \
   include/nb/nbqueue.h \
   include/nb/nbrule.h \
+  include/nb/nbsentence.h \
   include/nb/nbservice.h \
   include/nb/nbsource.h \
   include/nb/nbspine.h \
@@ -137,6 +138,7 @@ libnb_la_SOURCES = \
   nbregex.c \
   nbrule.c \
   nbsched.c \
+  nbsentence.c \
   nbservice.c \
   nbsource.c \
   nbspawn.c \
@@ -188,6 +190,7 @@ libnb_la_SOURCES = \
   include/nb/nbregex.h \
   include/nb/nbrule.h \
   include/nb/nbsched.h \
+  include/nb/nbsentence.h \
   include/nb/nbservice.h \
   include/nb/nbsource.h \
   include/nb/nbspawn.h \

@@ -247,6 +247,10 @@
 * 2013-01-01 eat 0.8.13 Checker updates
 * 2013-01-16 eat 0.8.13 Checker updates
 * 2013-04-27 eat 0.8.15 Included option parameter in nbSource calls
+* 2013-12-17 eat 0.9.0  Implemented "redefine" command for all types except "node"
+*            A "redefine" commands works just like a "define", except it also
+*            works when the term is already defined and the redefinition is 
+*            compatible with the existing object type.
 *==============================================================================
 */
 #include <nb/nbi.h>
@@ -1506,7 +1510,7 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
   char *delim;
 
   if(!(clientIdentity->authority&AUTH_DEFINE)){
-    outMsg(0,'E',"Identity \"%s\" not authorized to define terms.",clientIdentity->name->value);
+    outMsg(0,'E',"Identity \"%s\" not authorized to %s terms.",clientIdentity->name->value,verb);
     return(1);
     }
   cursave=cursor;
@@ -1529,9 +1533,16 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
   if(*ident=='%') context=(nbCELL)symContext;
   // 2006-12-22 eat - when ready, experiment with using nb_Disabled as definition for "undefined" terms
   //if(NULL!=(term=nbTermFindDown((NB_Term *)context,ident)) && term->def!=nb_Disabled){
-  if(NULL!=(term=nbTermFindDown((NB_Term *)context,ident)) && term->def!=nb_Undefined){
-    outMsg(0,'E',"Term \"%s\" already defined.",ident);
-    return(1);
+  term=nbTermFindDown((NB_Term *)context,ident);
+  if(term && term->def!=nb_Undefined){
+    if(strcmp(verb,"redefine")!=0){
+      outMsg(0,'E',"Term \"%s\" already defined.",ident);
+      return(1);
+      }
+    if(((NB_Object *)term->def)->type==nb_NodeType){
+      outMsg(0,'E',"Sorry, you may not redefine node \"%s\".",ident);
+      return(1);
+      }
     }
   cursave=cursor;
   symid=nbParseSymbol(type,sizeof(type),&cursor);
@@ -1630,7 +1641,8 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     action->status='R';   /* ready */
     ruleCond=useCondition(0,rule_type,object,action);
     action->cond=ruleCond; /* plug the condition pointer into the action */
-    term=nbTermNew((NB_Term *)context,ident,ruleCond);
+    if(term) nbTermAssign(term,(NB_Object *)ruleCond);
+    else term=nbTermNew((NB_Term *)context,ident,ruleCond);
     action->term=term;
     action->context=(NB_Term *)context;
     action->type='R';
@@ -1651,9 +1663,12 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
       outMsg(0,'E',"Expecting ';' at [%s].",cursor);
       return(1);
       }
-    term=nbTermNew((NB_Term *)context,ident,nb_Unknown);
-    ruleCond=useCondition(0,condTypeNerve,object,(struct STRING *)term->word);
-    term->def=(NB_Object *)ruleCond;
+    
+    ruleCond=useCondition(0,condTypeNerve,object,useString(ident));
+    //term=nbTermNew((NB_Term *)context,ident,nb_Unknown);
+    //term->def=(NB_Object *)ruleCond;
+    if(term) nbTermAssign(term,(NB_Object *)ruleCond);
+    else nbTermNew((NB_Term *)context,ident,ruleCond);
     }
   else if(strcmp(type,"cell")==0) {
     object=nbParseCell((NB_Term *)context,&cursor,0);
@@ -1662,7 +1677,9 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
       return(1);
       }
     if(object==NULL) object=nb_Unknown;  // accept empty expression here
-    nbTermNew((NB_Term *)context,ident,object);
+    //nbTermNew((NB_Term *)context,ident,object);
+    if(term) nbTermAssign(term,(NB_Object *)object);
+    else nbTermNew((NB_Term *)context,ident,object);
     }
   else if(strcmp(type,"translator")==0){
     NB_Translator *translator;
@@ -1672,15 +1689,26 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     *delim=0;
     translator=(NB_Translator *)nbTranslatorCompile(context,0,cursor);
     outFlush();
-    if(translator!=NULL) nbTermNew((NB_Term *)context,ident,translator);
+    if(translator!=NULL){
+      //nbTermNew((NB_Term *)context,ident,translator);
+      if(term) nbTermAssign(term,(NB_Object *)translator);
+      else nbTermNew((NB_Term *)context,ident,translator);
+      }
     }
   else if(strcmp(type,"node")==0){
+    if(term){
+      outMsg(0,'E',"Sorry, you may not redefine a term as node.");
+      return(1);
+      }
     nbNodeParse((NB_Term *)context,ident,cursor);
     }
   else if(strcmp(type,"macro")==0){
     NB_Macro *macro;
-    if(NULL!=(macro=nbMacroParse(context,&cursor)))
-      nbTermNew((NB_Term *)context,ident,macro);
+    if(NULL!=(macro=nbMacroParse(context,&cursor))){
+      //nbTermNew((NB_Term *)context,ident,macro);
+      if(term) nbTermAssign(term,(NB_Object *)macro);
+      else nbTermNew((NB_Term *)context,ident,macro);
+      }
     }
   else if(strcmp(type,"text")==0){
     NB_Text *text;
@@ -1695,7 +1723,11 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
       *delim=0;
       text=nbTextLoad(cursor);
       }
-    if(text!=NULL) nbTermNew((NB_Term *)context,ident,text);
+    if(text!=NULL){
+      //nbTermNew((NB_Term *)context,ident,text);
+      if(term) nbTermAssign(term,(NB_Object *)text);
+      else nbTermNew((NB_Term *)context,ident,text);
+      }
     else return(1); // 2012-09-16 eat - notify caller it didn't work
     }
   else outMsg(0,'E',"Type \"%s\" not recognized.",type);
@@ -2342,6 +2374,7 @@ void nbCmdInit(NB_Stem *stem){
   nbVerbDeclare(context,"query",AUTH_CONTROL,0,stem,&nbCmdQuery,"<context>");
   nbVerbDeclare(context,"quit",AUTH_CONTROL,NB_VERB_LOCAL,stem,&nbCmdQuit,"");
   nbVerbDeclare(context,"rank",AUTH_CONTROL,0,stem,&nbCmdRank,"<identity> (owner|peer|guest)");
+  nbVerbDeclare(context,"redefine",AUTH_DEFINE,0,stem,&nbCmdDefine,"<term> <type> ...");
   nbVerbDeclare(context,"set",AUTH_CONTROL,0,stem,&nbCmdSet,"<option>[,...]");
   nbVerbDeclare(context,"show",AUTH_CONNECT,0,stem,&nbCmdShow,"<term> | (<cell>) | ?");
   nbVerbDeclare(context,"solve",AUTH_CONTROL,0,stem,&nbCmdQuery,"<context>");

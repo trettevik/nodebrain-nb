@@ -763,14 +763,20 @@ void nbCellPublish(NB_Cell *pub){
   NB_TreeIterator treeIterator;
   NB_TreeNode *treeNode;
   if(trace){
-    outMsg(0,'T',"nbCellPublish() called");
+    outMsg(0,'T',"nbCellPublish() called for object %p:",pub);
     printObject((NB_Object *)pub);
     outPut("\n");
+    outFlush();
     }
   if(pub->object.value==(NB_Object *)pub) return; /* static object */
   NB_TREE_ITERATE(treeIterator,treeNode,pub->sub){
     ((NB_Object *)treeNode->key)->type->alert((NB_Cell *)treeNode->key); /* could be any object */
     NB_TREE_ITERATE_NEXT(treeIterator,treeNode) 
+    }
+  if(trace){
+    outMsg(0,'T',"nbCellPublish() returning for:");
+    printObject((NB_Object *)pub);
+    outPut("\n");
     }
   }
 

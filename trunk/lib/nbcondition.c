@@ -164,7 +164,7 @@ struct TYPE *condTypeAndCapture;  /* c &^& d  - andCapture(cond,cond)*/
 struct TYPE *condTypeOrCapture;   /* c |^| d  - andCapture(cond,cond)*/
 struct TYPE *condTypeFlipFlop;    /* c ^ d    - flipflop(cond,cond)*/
 struct TYPE *condTypeRelEQ;       /* a=b     - compare(object,object) */
-struct TYPE *condTypeRelNE;       /* a<>b    - compare(object,object) */
+//struct TYPE *condTypeRelNE;       /* a<>b    - compare(object,object) */
 struct TYPE *condTypeRelLT;       /* a<b     - compare(object,object) */
 struct TYPE *condTypeRelLE;       /* a<=b    - compare(object,object) */
 struct TYPE *condTypeRelGT;       /* a>b     - compare(object,object) */
@@ -377,7 +377,7 @@ void alertRule(NB_Cell *rule){
   NB_Object *object=((NB_Object *)((struct COND *)rule)->left)->value;
 
   if(trace){
-    outMsg(0,'T',"alertRule called %u",rule);
+    outMsg(0,'T',"alertRule called %p",rule);
     printObject((NB_Object *)rule);
     outPut("\n");
     } 
@@ -398,13 +398,16 @@ void alertRule(NB_Cell *rule){
     action->status='E';
     rule->object.value=object;
     }
-  else if(rule->object.value!=NB_OBJECT_TRUE){ // 2006/10/28 eat - make sure we didn't get alerted to a different true value
-    if(trace) outMsg(0,'T',"alertRule scheduled action %u",action);
+  // 2013-12-13 eat - commented out the check for NB_OBJECT_TRUE
+  //else if(rule->object.value!=NB_OBJECT_TRUE){ // 2006/10/28 eat - make sure we didn't get alerted to a different true value
+  else if(rule->object.value->type->attributes&TYPE_NOT_TRUE){ // 2013-12-13 eat - only schedule if old value was not true
+    if(trace) outMsg(0,'T',"alertRule scheduled action %p",action);
     scheduleAction(action);
     //rule->object.value=NB_OBJECT_TRUE;
     rule->object.value=object; // 2013-12-05 eat - pass the condition value thru
     }
   nbCellPublish(rule);
+  if(trace) outMsg(0,'T',"alertRule returning");
   }
 
 /*
@@ -662,6 +665,7 @@ NB_Object *evalRelEQ(struct COND *cond){
   return(NB_OBJECT_FALSE);
   }
 
+/*
 NB_Object *evalRelNE(struct COND *cond){
   NB_Object *left=((NB_Object *)cond->left)->value;
   NB_Object *right=((NB_Object *)cond->right)->value;
@@ -671,6 +675,7 @@ NB_Object *evalRelNE(struct COND *cond){
     ((struct REAL *)left)->value==((struct REAL *)right)->value) return(NB_OBJECT_FALSE);
   return(NB_OBJECT_TRUE);
   }
+*/
   
 NB_Object *evalRelLT(struct COND *cond){
   NB_Object *left=((NB_Object *)cond->left)->value;
@@ -774,6 +779,10 @@ void enableRelEQ(struct COND *cond){
   }
 
 void disableRelEQ(struct COND *cond){
+  if(((NB_Cell*)cond->right)->object.value==cond->right){
+    nbTrickRelEqDisable((NB_Cell *)cond->left,cond);
+    return;
+    }
   nbCellDisable((NB_Cell *)cond->left,(NB_Cell *)cond);
   if(cond->right!=cond->left) nbCellDisable((NB_Cell *)cond->right,(NB_Cell *)cond);
   }
@@ -950,8 +959,9 @@ void initCondition(NB_Stem *stem){
 
   condTypeRelEQ=newType(stem,"=",condH,TYPE_REL,condPrintInfix,destroyCondition);
   nbCellType(condTypeRelEQ,solveInfix2,evalRelEQ,enableRelEQ,disableRelEQ);
-  condTypeRelNE=newType(stem,"<>",condH,TYPE_REL,condPrintInfix,destroyCondition);
-  nbCellType(condTypeRelNE,solveInfix2,evalRelNE,enableInfix,disableInfix);
+  // 2013-12-12 eat - experimenting with transformation to replace A<>B with !(A=B)
+  //condTypeRelNE=newType(stem,"<>",condH,TYPE_REL,condPrintInfix,destroyCondition);
+  //nbCellType(condTypeRelNE,solveInfix2,evalRelNE,enableRelEQ,disableRelEQ); // share enable disable with RelEQ
   condTypeRelLT=newType(stem,"<",condH,TYPE_REL,condPrintInfix,destroyCondition);
   nbCellType(condTypeRelLT,solveInfix2,evalRelLT,enableInfix,disableInfix);
   condTypeRelLE=newType(stem,"<=",condH,TYPE_REL,condPrintInfix,destroyCondition);

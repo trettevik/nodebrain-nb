@@ -696,7 +696,7 @@ void scheduleAction(struct ACTION *action){
   for(act=*actP;act!=NULL && action->priority>act->priority;act=*actP) actP=&(act->nextAct);
   action->nextAct=*actP;
   *actP=action;
-  if(trace) outMsg(0,'T',"scheduleAction insert action %u in list",action);
+  if(trace) outMsg(0,'T',"scheduleAction insert action %p in list",action);
   }
 
 struct ACTION *newAction(NB_Cell *context,NB_Term *term,struct COND *cond,char prty,void *assertion,NB_String *cmd,char option){

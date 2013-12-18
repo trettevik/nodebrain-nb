@@ -978,7 +978,11 @@ NB_Object *nbParseRel(NB_Term *context,char **cursor){
   else if(symid=='~'){symid='m'; type=condTypeMatch;}
   else if(symid=='='){
     if(strcmp(operator,"=")==0) type=condTypeRelEQ;
-    else if(strcmp(operator,"<>")==0) type=condTypeRelNE;
+    else if(strcmp(operator,"<>")==0){  // 2013-12-12 eat - experimenting with transformation
+      //type=condTypeRelNE;
+      not^=1;  // exclusive or to switch not
+      type=condTypeRelEQ;
+      }
     else if(strcmp(operator,"<")==0) type=condTypeRelLT;
     else if(strcmp(operator,"<=")==0) type=condTypeRelLE;
     else if(strcmp(operator,">")==0) type=condTypeRelGT;

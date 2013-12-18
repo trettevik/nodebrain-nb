@@ -94,6 +94,7 @@ void nbStemInit(NB_Stem *stem){
   initAssertion(stem);
   initCall(stem);              /* must follow initCondition */
   nbNodeInit(stem);
+  nbSentenceInit(stem);
   //nbListenerInit(stem);
   //nbBrainInit(stem);
   nbMacroInit(stem);
