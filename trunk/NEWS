@@ -4,6 +4,12 @@ NodeBrain 0.9.0 (Columbo) Change Summary
 
 * Theme: Performance
 
+     The primary goal of this version of NodeBrain is to
+     improve performance for large rule sets with some
+     characteristics causing prior versions of NodeBrain
+     to perform poorly.  This is based more on theoretical
+     rules sets than known applications, but the improvements
+     are real.
 
 * Documentation:
 
@@ -12,11 +18,17 @@ NodeBrain 0.9.0 (Columbo) Change Summary
        ! - Replaces 0 for "false"
        # - Replaces ! for "disabled"
 
+  o  "Redefine" command introduced.
+
   o  Included new data types of "set" and "list".
 
   o  Introducing the term "sentence" for the construct
      node(args) used as a node condition, assertion, or
      command. 
+
+  o  Introduced stem cells.
+
+  o  Introduced node facets.
 
 * Incompatibilities:
 
