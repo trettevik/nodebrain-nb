@@ -214,8 +214,13 @@ static NB_Object *evalTrickRelEq(NB_TrickRelEq *trick){
           nbCellPublish(trick->trueCell);
           }
         trick->trueCell=trueCell;
-       }
+        }
       } 
+    else if(trick->trueCell){
+      trick->trueCell->object.value=nb_False;
+      nbCellPublish(trick->trueCell);
+      trick->trueCell=NULL;
+      }
     }
   //outMsg(0,'T',"evalTrickRelEq: returning");
   return(nb_Unknown);
@@ -267,6 +272,7 @@ void initTrick(NB_Stem *stem){
 void nbTrickRelEqEnable(nbCELL pub,struct COND *cond){
   NB_TrickRelEq *trick;
 
+  if(pub->object.value==(NB_Object *)pub) return;  // simple object doesn't publish
   //outMsg(0,'T',"nbTrickRelEqEnable: called");
   //outPut("pub:");
   //printObject((NB_Object *)pub);
@@ -292,6 +298,9 @@ void nbTrickRelEqEnable(nbCELL pub,struct COND *cond){
 
 void nbTrickRelEqDisable(nbCELL pub,struct COND *cond){
   NB_TrickRelEq *trick;
+
+  if(pub->object.value==(NB_Object *)pub) return; /* static object */
+  if(pub->object.value==nb_Disabled) return;
 
   //outMsg(0,'T',"nbTrickRelEqDisable: called");
   //outPut("pub:");
