@@ -1,6 +1,0 @@
-# sally.nb
-define sally node tree;
-assert sally("abc"),sally("def",5)=2;
-show sally
-define r1 on(sally(x));
-assert x="abc";

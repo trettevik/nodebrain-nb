@@ -1,5 +1,0 @@
-# File: tutorial/Ignorance/illnessConsult.nb
-use : ./illnessConsult.pl
-define CommonCold on(cough and soreThroat);
-define Flu on(fever and achy and upsetStomach);
-query;

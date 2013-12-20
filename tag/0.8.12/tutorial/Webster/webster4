@@ -1,6 +1,0 @@
-#!/usr/local/bin/nb -d
-# File: tutorial/Webster/webster4
--rm log/webster.log
-set log="log/webster.log";
-define webster node webster("default@0.0.0.0:62443");
-webster. define Authenticate cell "password";   # Default is "yes"

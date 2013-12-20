@@ -1,6 +1,0 @@
-#!/usr/local/bin/nb
-assert a=1,b=2,mood="happy";
-show a
-show b
-show mood
-

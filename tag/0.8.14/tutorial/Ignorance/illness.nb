@@ -1,3 +1,0 @@
-# File: tutorial/Ignorance/illness.nb
-define CommonCold on(cough and soreThroat);
-define Flu on(fever and achy and upsetStomach);

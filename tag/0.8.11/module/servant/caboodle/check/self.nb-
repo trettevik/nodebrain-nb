@@ -1,7 +1,0 @@
-set -s
-declare servant module {"../.libs"};
-define echo node servant:|=|:bin/nb -s
-echo. define inc on(a=1):echo:^assert a=2;
-echo. define stop on(a=2):stop
-enable echo
-echo:^assert a=1;

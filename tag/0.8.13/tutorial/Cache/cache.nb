@@ -1,7 +1,0 @@
-#!/usr/local/bin/nb
-# File: tutorial/cache/cache.nb
-define horace node cache:(~(24h):type(20),city{10}[5],customer,item,quantity(3));
-horace. define r1 if(type._hitState): $ # There have been ${type._hits} ${type} events
-horace. define r2 if(city._rowState): $ # (${type},${city}) had ${city._rows} different events
-horace. define r3 if(city._kidState): $ # (${type},${city}) had ${city._kids} different customers
-horace. define r4 if(quantity._hitState): $ # (${type},${city},${customer},${item},${quantity}) happened ${quantity._hits} times

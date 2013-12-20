@@ -1,3 +1,0 @@
-#!/usr/local/bin/nb
--:./processCount.pl
-show processes

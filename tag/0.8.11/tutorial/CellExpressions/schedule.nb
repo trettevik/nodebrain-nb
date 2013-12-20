@@ -1,8 +1,0 @@
-define FourOClockHour on(~(h(4))); 
-define MondayWednesayAndFriday on(~(mo,we,fr)); 
-define Four2FiveMonWedFri on(~(h(4).(mo,we,fr)));
-define January9 on(~(jan(9)));
-define WeekOfJanuary15 on(~(w.jan(15)));
-define ThursdayOfWeekOfJanuary15 on(~(th.w.jan(15)));
-define LastFridayInJanuary on(~(fr[-1]jan));
-define TuesdayOfWeekOfLastFridayInJanuary on(~(tu.w.fr[-1]jan));

@@ -1,6 +1,0 @@
-makeinfo --html --no-split --number-sections --css-include=../../model/doc/style.css nb_cache.texi
-makeinfo --plaintext --no-split --number-sections --output=nb_cache.txt nb_cache.texi
-makeinfo --docbook --no-split --number-sections --output=nb_cache_DocBook.xml nb_cache.texi
-makeinfo --xml --no-split --number-sections nb_cache.texi
-makeinfo --no-split --number-sections nb_cache.texi
-texi2pdf -D -V -o nb_cache.pdf nb_cache.texi
