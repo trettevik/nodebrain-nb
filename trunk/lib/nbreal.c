@@ -142,9 +142,9 @@ void destroyReal(struct REAL *real){
 * Public Methods
 **********************************************************************/
 void initReal(NB_Stem *stem){
-  realH=newHash(7919);
+  //realH=newHash(7919);
   //realH=newHash(100003);
-  //realH=newHash(1000003); //2013-12-11 eat - performance testing
+  realH=newHash(1000031); //2013-12-11 eat - performance testing
   realType=newType(stem,"real",realH,0,printReal,destroyReal);
   realType->apicelltype=NB_TYPE_REAL;
   }

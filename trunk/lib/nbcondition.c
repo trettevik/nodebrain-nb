@@ -894,7 +894,8 @@ void destroyRule(struct COND *cond){
 * Public Methods
 **********************************************************************/
 void initCondition(NB_Stem *stem){
-  condH=newHash(100003);  /* initialize condition hash */
+  //condH=newHash(100003);  /* initialize condition hash */
+  condH=newHash(1000031);  // 2013-12-19 eat - debug
   condTypeNerve=newType(stem,"nerve",condH,TYPE_RULE,condPrintNerve,destroyNerve);
   nbCellType(condTypeNerve,solvePrefix,evalNerve,enableRule,disableRule);
 
@@ -978,19 +979,19 @@ void initCondition(NB_Stem *stem){
 
   }
 
+/*
+*  This routine returns a pointer to a condition object.  If the
+*  condition is already defined, the existing structure is returned.
+*  Otherwise a new condition object is constructed.
+*
+*  Conditions are "disabled" until they are referenced by a rule.  Such
+*  a reference is reported by nbCellEnable which builds the back link list
+*  to dependent conditions referenced by a rule.  This prevents the
+*  eval routine from evaluating conditions not referenced by any
+*  rule.
+*
+*/
 struct COND * useCondition(int not,struct TYPE *type,void *left,void *right){
-  /*
-  *  This routine returns a pointer to a condition object.  If the
-  *  condition is already defined, the existing structure is returned.
-  *  Otherwise a new condition object is constructed. 
-  *
-  *  Conditions are "disabled" until they are referenced by a rule.  Such
-  *  a reference is reported by nbCellEnable which builds the back link list
-  *  to dependent conditions referenced by a rule.  This prevents the
-  *  eval routine from evaluating conditions not referenced by any
-  *  rule.
-  *
-  */
   struct COND *cond,*loper,*roper,**condP;
   if(trace) outMsg(0,'T',"useCondition: called");
   if(not){
@@ -1003,7 +1004,7 @@ struct COND * useCondition(int not,struct TYPE *type,void *left,void *right){
   // 2013-12-09 eat - Experimenting with proxy cell for RelEQ
   else if(type==condTypeRelEQ && ((struct COND *)left)->cell.object.value==(NB_Object *)left &&
     ((struct COND *)right)->cell.object.value!=(NB_Object *)right){
-    loper=left;  // make sure the constant is on the right to simplify use of proxy in enable method
+    loper=left;  // make sure the constant is on the right to simplify use of trick in enable method
     left=right;
     right=loper;
     }
