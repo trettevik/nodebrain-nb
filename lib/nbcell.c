@@ -627,10 +627,7 @@ void nbCellEnable(NB_Cell *pub,NB_Cell *sub){
 *  This is an experiment with subscription trees organized by a provided
 *  comparison routine instead of by subscriber address.
 */
-void nbCellEnableTrick(NB_Cell *pub,NB_Cell *sub,
-     int (*compare)(void *handle,void *key1,void *key2),
-     void *handle){
-
+void nbCellEnableTrick(NB_Cell *pub,NB_Cell *sub){
   //outMsg(0,'T',"nbCellEnableTrick: called");
   if(pub->object.value==(NB_Object *)pub) return;  // simple object doesn't publish
   if(trace){
@@ -649,11 +646,11 @@ void nbCellEnableTrick(NB_Cell *pub,NB_Cell *sub,
     NB_TreePath treePath;
     NB_TreeNode *treeNode;
     //outMsg(0,'T',"nbCellEnableTrick: calling nbTreeLocateValue");
-    treeNode=(NB_TreeNode *)nbTreeLocateValue(&treePath,sub,(NB_TreeNode **)&pub->sub,compare,handle);
+    treeNode=(NB_TreeNode *)nbTreeLocateCondRight(&treePath,((NB_Cond *)sub)->right,(NB_TreeNode **)&pub->sub);
     //outMsg(0,'T',"nbCellEnableTrick: nbTreeLocateValue returned %p",treeNode);
     if(treeNode==NULL){  // if not already a subscriber, then subscribe
       treeNode=(NB_TreeNode *)nbAlloc(sizeof(NB_TreeNode));
-      treeNode->key=sub;
+      treePath.key=sub;
       nbTreeInsert(&treePath,treeNode);
       //outMsg(0,'T',"nbCellEnableTrick: nbTreeInsert returned");
       }
@@ -721,9 +718,7 @@ void nbCellDisable(NB_Cell *pub,NB_Cell *sub){
     }
   if(trace) outMsg(0,'T',"nbCellDisable() returning");
   }
-void nbCellDisableTrick(NB_Cell *pub,NB_Cell *sub,
-     int (*compare)(void *handle,void *key1,void *key2),
-     void *handle){
+void nbCellDisableTrick(NB_Cell *pub,NB_Cell *sub){
   if(trace){
     outMsg(0,'T',"nbCellDisable() called");
     printObject((NB_Object *)pub);
@@ -734,7 +729,7 @@ void nbCellDisableTrick(NB_Cell *pub,NB_Cell *sub,
   if(sub!=NULL){
     NB_TreePath treePath;
     NB_TreeNode *treeNode;
-    treeNode=(NB_TreeNode *)nbTreeLocateValue(&treePath,sub,(NB_TreeNode **)&pub->sub,compare,handle);
+    treeNode=(NB_TreeNode *)nbTreeLocateCondRight(&treePath,((NB_Cond *)sub)->right,(NB_TreeNode **)&pub->sub);
     if(treeNode!=NULL){
       nbTreeRemove(&treePath);
       nbFree((NB_Object *)treeNode,sizeof(NB_TreeNode));  // this should be a macro

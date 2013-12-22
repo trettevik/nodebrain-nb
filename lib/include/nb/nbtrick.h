@@ -57,5 +57,6 @@ typedef struct NB_TRICK_REL_EQ{ // trick object
 void initTrick(NB_Stem *stem);
 struct TYPE *nb_TypeTrickRelEq;
 void nbTrickRelEqEnable(nbCELL pub,struct COND *cond);
+void nbTrickRelEqDisable(nbCELL pub,struct COND *cond);
 
 #endif

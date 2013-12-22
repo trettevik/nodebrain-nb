@@ -68,6 +68,13 @@ typedef struct NB_TREE_PATH{
     else break; \
     }
 
+#define NB_TREE_FIND_COND_RIGHT(RIGHT,NODE) \
+  while(NODE!=NULL){ \
+    if(RIGHT<((NB_Cond *)NODE->key)->right) NODE=NODE->left; \
+    else if(RIGHT>((NB_Cond *)NODE->key)->right) NODE=NODE->right; \
+    else break; \
+    }
+
 typedef struct NB_TREE_ITERATOR{
   NB_TreeNode *right[32];
   NB_TreeNode **rightP;
@@ -168,6 +175,9 @@ typedef struct NB_TREE_ITERATOR{
     }
 
 //=============================================================================
+
+void *nbTreeFindCondRight(void *right,NB_TreeNode *node);
+void *nbTreeLocateCondRight(NB_TreePath *path,void *right,NB_TreeNode **rootP);
 
 #if defined(WIN32)
 _declspec (dllexport)

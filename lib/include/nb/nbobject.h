@@ -121,6 +121,7 @@ typedef struct TYPE{
   struct NB_OBJECT object;     /* object header */
   struct NB_STEM   *stem;      /* brain stem cell */ 
   char *name;                  /* symbolic name */
+  struct NB_TREE_NODE *tree;   // Tree of all objects of this type
   struct HASH *hash;           /* hashing table for object lookup */
   int  attributes;             /* see object type attributes above */
   int  apicelltype;            /* cell type code for API */
@@ -169,6 +170,8 @@ struct NB_TYPE_SHIM{           // type method trace shim
   void (*enable)();            /* resubscribe method */
   void (*disable)();           /* subscription cancellation method */
   };
+
+NB_Type *nb_TypeList;
 
 extern NB_Type *nb_DisabledType; /* Special object type */
 extern NB_Type *nb_FalseType;    /* Special object type */

@@ -119,7 +119,7 @@ void disableCall(struct CALL *call){
 * Public Methods
 **********************************************************************/
 void initCall(NB_Stem *stem){
-  callTypeMod=newType(stem,"_mod",condH,0,printCall,destroyCondition);
+  callTypeMod=newType(stem,"_mod",NULL,0,printCall,destroyCondition);
   nbCellType(callTypeMod,solveCall,evalCallMod,enableCall,disableCall);
   }
 

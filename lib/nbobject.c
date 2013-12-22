@@ -625,6 +625,7 @@ struct TYPE *newType(NB_Stem *stem,char *name,struct HASH *hash,int  attributes,
   type->object.refcnt=1;
   type->stem=stem;           
   type->name=name;
+  type->tree=NULL; // 2013-12-21 eat - tree is an alternative to hash
   type->hash=hash;
   type->attributes=attributes;
   type->apicelltype=0;

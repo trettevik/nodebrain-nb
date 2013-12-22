@@ -95,6 +95,7 @@ static NB_TrickRelEq *useTrickRelEq(struct TYPE *type,NB_Cell *pub){
   trick->cell.object.next=(NB_Object *)*trickP;
   *trickP=trick; 
   trick->pub=pub;
+  trick->trueCell=NULL;
   return(trick);
   }
 
@@ -188,41 +189,49 @@ static void printTrick(struct NB_TRICK_REL_EQ *trick){
 *    Evaluate 1 or 2 of the potentially many subscribers
 */
 static NB_Object *evalTrickRelEq(NB_TrickRelEq *trick){
-  NB_TreeNode *treeNode;
-  NB_Cond cond;      // condition to compare to subscribers
+  NB_TreeNode *treeNode=(NB_TreeNode *)trick->cell.sub;
   NB_Cell *trueCell;  // condition that is true
+  void *right=trick->pub->object.value;
 
+  //outMsg(0,'T',"evalTrickRelEq: called");
   // Search for subscriber with right operand equal to new value of pub
-  cond.cell.object.type=condTypeRelEQ; // just to make it a bit legit
-  cond.left=nb_Unknown;
-  cond.right=trick->pub->object.value;
-  if(cond.right==nb_Unknown){
+  if(right==nb_Unknown){
+    //outMsg(0,'T',"evalTrickRelEq: right is Unknown");
     nbCellPublish((NB_Cell *)trick); // force all subscribers to evaluate - replace this with tree traversal setting to unknown and publish subscribers
     trick->trueCell=(NB_Cell *)nb_Unknown;
     }
   else if(trick->trueCell==(NB_Cell *)nb_Unknown){
+    //outMsg(0,'T',"evalTrickRelEq: trueCell is Unknown");
     nbCellPublish((NB_Cell *)trick); // force all subscribers to evaluate
-    treeNode=nbTreeFindValue(&cond,trick->cell.sub,compareTrickRelEq,NULL);
+    //treeNode=nbTreeFindCondRight(right,trick->cell.sub);
+    NB_TREE_FIND_COND_RIGHT(right,treeNode)
     if(treeNode) trick->trueCell=(NB_Cell *)treeNode->key;
     else trick->trueCell=NULL;
     }
-  else if(NULL!=(treeNode=nbTreeFindValue(&cond,trick->cell.sub,compareTrickRelEq,NULL))){
-    trueCell=(NB_Cell *)treeNode->key;
-    if(trueCell!=trick->trueCell){ // This should always be true
-      trueCell->object.value=NB_OBJECT_TRUE;
-      nbCellPublish(trueCell);
-      if(trick->trueCell){
-        trick->trueCell->object.value=nb_False;
-        nbCellPublish(trick->trueCell);
+  else{
+    // if(NULL!=(treeNode=nbTreeFindCondRight(right,trick->cell.sub))){
+    NB_TREE_FIND_COND_RIGHT(right,treeNode)
+    if(treeNode){
+      //outMsg(0,'T',"evalTrickRelEq: found COND");
+      trueCell=(NB_Cell *)treeNode->key;
+      if(trueCell!=trick->trueCell){ // This should always be true
+        trueCell->object.value=NB_OBJECT_TRUE;
+        nbCellPublish(trueCell);
+        if(trick->trueCell){
+          trick->trueCell->object.value=nb_False;
+          nbCellPublish(trick->trueCell);
+          }
+        trick->trueCell=trueCell;
         }
-      trick->trueCell=trueCell;
+      }
+    else if(trick->trueCell){  // we have no match
+      //outMsg(0,'T',"evalTrickRelEq: COND not found - and we have an old trueCell");
+      trick->trueCell->object.value=nb_False;
+      nbCellPublish(trick->trueCell);
+      trick->trueCell=NULL;
       }
     }
-  else if(trick->trueCell){  // we have no match
-    trick->trueCell->object.value=nb_False;
-    nbCellPublish(trick->trueCell);
-    trick->trueCell=NULL;
-    }
+  //else outMsg(0,'T',"evalTrickRelEq: COND not found - and we have no old trueCell");
   //outMsg(0,'T',"evalTrickRelEq: returning");
   return(nb_Unknown);
   }
@@ -371,10 +380,12 @@ void nbTrickRelEqEnable(nbCELL pub,struct COND *cond){
     trick->cell.level=pub->level+1;
     nbCellEnable(pub,(NB_Cell *)trick); 
     }
-  nbCellEnableTrick((NB_Cell *)trick,(NB_Cell *)cond,compareTrickRelEq,NULL);
+  //nbCellEnableTrick((NB_Cell *)trick,(NB_Cell *)cond,compareTrickRelEq,NULL);
+  nbCellEnableTrick((NB_Cell *)trick,(NB_Cell *)cond);
   cond->cell.object.value=cond->cell.object.type->eval(cond);  // evaluate when enabling
   if(cond->cell.object.value==NB_OBJECT_TRUE) trick->trueCell=(NB_Cell *)cond;
   if(pub->object.value==nb_Unknown) trick->trueCell=(NB_Cell *)nb_Unknown;
+  //outMsg(0,'T',"nbTrickRelEqEnable: trueCell=%p",trick->trueCell);
   }
 
 // 2013-12-19 eat - experimenting with type specific trick cells
@@ -399,8 +410,8 @@ void nbTrickRelRangeEnable(nbCELL pub,struct COND *cond){
     }
   //outMsg(0,'T',"nbTrickRelEqEnable: 2 trick->level=%d",trick->cell.level);
   if(((NB_Object *)cond->right)->type==strType)
-    nbCellEnableTrick((NB_Cell *)trick,(NB_Cell *)cond,compareTrickRelString,NULL);
-  else nbCellEnableTrick((NB_Cell *)trick,(NB_Cell *)cond,compareTrickRelReal,NULL);
+    nbCellEnableTrick((NB_Cell *)trick,(NB_Cell *)cond);
+  else nbCellEnableTrick((NB_Cell *)trick,(NB_Cell *)cond);
   cond->cell.object.value=cond->cell.object.type->eval(cond);  // evaluate when enabling
   if(cond->cell.object.value==NB_OBJECT_TRUE) trick->trueCell=(NB_Cell *)cond;
   if(pub->object.value==nb_Unknown) trick->trueCell=(NB_Cell *)nb_Unknown;
@@ -425,7 +436,8 @@ void nbTrickRelEqDisable(nbCELL pub,struct COND *cond){
   //outFlush();
   trick=useTrickRelEq(nb_TypeTrickRelEq,(NB_Cell *)cond->left);
   if(trick->trueCell==(NB_Cell *)cond) trick->trueCell=NULL;
-  nbCellDisableTrick((NB_Cell *)trick,(NB_Cell *)cond,compareTrickRelEq,NULL);
+  //nbCellDisableTrick((NB_Cell *)trick,(NB_Cell *)cond,compareTrickRelEq,NULL);
+  nbCellDisableTrick((NB_Cell *)trick,(NB_Cell *)cond);
   if(trick->cell.sub==NULL){ // if we now have no subscribers
     nbCellDisable(pub,(NB_Cell *)trick);
     destroyTrickRelEq(trick);
@@ -451,8 +463,8 @@ void nbTrickRelRangeDisable(nbCELL pub,struct COND *cond){
   else trick=useTrickRelRange(nb_TypeTrickRelLtReal,(NB_Cell *)cond->left);
   if(trick->trueCell==(NB_Cell *)cond) trick->trueCell=NULL;
   if(((NB_Object *)cond->right)->type==strType)
-    nbCellDisableTrick((NB_Cell *)trick,(NB_Cell *)cond,compareTrickRelString,NULL);
-  else nbCellDisableTrick((NB_Cell *)trick,(NB_Cell *)cond,compareTrickRelReal,NULL);
+    nbCellDisableTrick((NB_Cell *)trick,(NB_Cell *)cond);
+  else nbCellDisableTrick((NB_Cell *)trick,(NB_Cell *)cond);
   if(trick->cell.sub==NULL){ // if we now have no subscribers
     nbCellDisable(pub,(NB_Cell *)trick);
     destroyTrickRelEq(trick);

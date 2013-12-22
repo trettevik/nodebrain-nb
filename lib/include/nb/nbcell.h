@@ -171,9 +171,7 @@ extern void nbCellEnable(nbCELL pub,nbCELL sub);
 #if defined(WIN32)
 __declspec(dllexport)
 #endif
-extern void nbCellEnableTrick(nbCELL pub,nbCELL sub,
-     int (*compare)(void *handle,void *key1,void *key2),
-     void *handle);
+extern void nbCellEnableTrick(nbCELL pub,nbCELL sub);
 
 #if defined(WIN32)
 __declspec(dllexport)
@@ -183,10 +181,7 @@ extern void nbCellDisable(nbCELL pub,nbCELL sub);
 #if defined(WIN32)
 __declspec(dllexport)
 #endif
-void nbCellDisableTrick(nbCELL pub,nbCELL sub,
-     int (*compare)(void *handle,void *key1,void *key2),
-     void *handle);
-
+void nbCellDisableTrick(nbCELL pub,nbCELL sub);
 
 #if defined(WIN32)
 __declspec(dllexport)

@@ -80,25 +80,16 @@ void printAssertion(struct ASSERTION *assertion){
 *  Assertion destructor
 *    This is a copy
 */
-void destroyAssertion(cond) struct COND *cond;{
-  struct COND *lcond,**condP;
+void destroyAssertion(struct COND *cond){
+  //struct COND *lcond,**condP;
 
   if(trace) outMsg(0,'T',"destroyAssertion() called");
-  condP=(struct COND **)hashCond(condH,cond->cell.object.type,cond->left,cond->right);
-  if(*condP==cond) *condP=(struct COND *)cond->cell.object.next;
-  else{
-    for(lcond=*condP;lcond!=NULL && lcond!=cond;lcond=*condP)
-      condP=(struct COND **)&lcond->cell.object.next;
-    if(lcond==cond) *condP=(struct COND *)cond->cell.object.next;
-    }
   dropObject(cond->left);
   nbCellDisable(cond->right,(NB_Cell *)cond);
   dropObject(cond->right);
-  cond->cell.object.next=(NB_Object *)condFree;
-  condFree=cond;
+  freeCondition(cond);
   if(trace) outMsg(0,'T',"destroyAssertion() returning");
   }
-
 
 /**********************************************************************
 * Private Function Calculation Methods
@@ -209,9 +200,9 @@ void printAssertedValues(NB_Link *member){
   }
 
 void initAssertion(NB_Stem *stem){
-  assertTypeDef=newType(stem,"==",condH,0,printAssertion,destroyAssertion);
-  assertTypeVal=newType(stem,"=",condH,0,printAssertion,destroyAssertion);
-  assertTypeRef=newType(stem,"=.=",condH,0,printAssertion,destroyAssertion);
+  assertTypeDef=newType(stem,"==",NULL,0,printAssertion,destroyAssertion);
+  assertTypeVal=newType(stem,"=",NULL,0,printAssertion,destroyAssertion);
+  assertTypeRef=newType(stem,"=.=",NULL,0,printAssertion,destroyAssertion);
   }
 
 /*

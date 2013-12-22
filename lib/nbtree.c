@@ -161,13 +161,15 @@
 // 
 void *nbTreeFind(void *key,NB_TreeNode *node){
   NB_TREE_FIND(key,node)
+  return(node);
+  }
+
+// 2013-12-21 eat - this can be turned into a macro after testing
 /*
-  while(node!=NULL){ 
-    if(key<node->key) node=node->left;
-    else if(key>node->key) node=node->right; // need to use assembler to avoid double comparison
-    else break;
-    }
+*  Find a node where the keys point to COND and we are looking for a specific right pointer
 */
+void *nbTreeFindCondRight(void *right,NB_TreeNode *node){
+  NB_TREE_FIND_COND_RIGHT(right,node)
   return(node);
   }
 
@@ -276,6 +278,35 @@ void *nbTreeLocate(NB_TreePath *path,void *key,NB_TreeNode **rootP){
     if(node->balance!=0) path->balanceP=nodeP, path->balanceDepth=depth;
     path->node[depth]=node;
     if((path->step[depth++]=(key>node->key))) nodeP=&node->right;
+    else nodeP=&node->left;
+    }
+  path->nodeP=nodeP;
+  path->depth=depth;
+  return(node);
+  }
+
+/* 
+*  Locate a noda where the keys point to COND and we are looking for a specific right pointer
+*/
+void *nbTreeLocateCondRight(NB_TreePath *path,void *right,NB_TreeNode **rootP){
+  NB_TreeNode *node;     // Node pointer
+  NB_TreeNode **nodeP;   // Address of node pointer
+  int depth=0;     // index into path
+
+  path->key=NULL;  // caller will fill this in later
+  path->rootP=nodeP=path->balanceP=rootP;
+  path->balanceDepth=1;
+  path->node[depth]=(NB_TreeNode *)rootP; // this is a trick that depend on the left pointer
+  path->step[depth++]=0;                  // being the first element of the node structure
+  for(node=*rootP;node!=NULL;node=*nodeP){
+    // NOTE: we are testing for the least likely condition here first
+    // which increases the probability that we'll do two comparisons.
+    // After testing, revise this to check for < and then > leaving == to the otherwise
+    // Make the same change in nbTreeLocate if it proves helpful
+    if(right==((NB_Cond *)node->key)->right) break;
+    if(node->balance!=0) path->balanceP=nodeP, path->balanceDepth=depth;
+    path->node[depth]=node;
+    if((path->step[depth++]=(right>((NB_Cond *)node->key)->right))) nodeP=&node->right;
     else nodeP=&node->left;
     }
   path->nodeP=nodeP;

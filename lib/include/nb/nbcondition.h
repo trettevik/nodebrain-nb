@@ -97,6 +97,7 @@ void initCondition(NB_Stem *stem);
 struct COND *useCondition(int not,struct TYPE *type,void *left,void *right);
 void *hashCond(struct HASH *hash,struct TYPE *type,void *left,void *right);
 void destroyCondition(struct COND *cond);
+void freeCondition(struct COND *cond);
 
 void condSchedule(struct COND *cond,NB_Object *value);
 void condUnschedule(struct COND *cond);
