@@ -64,6 +64,7 @@
 #include <nb/nbspine.h>       // Spinal API
 #include <nb/nbmedulla.h>     // Medulla API
 #include <nb/nbtree.h>        // binary tree functions 
+#include <nb/nbset.h>         // set binary tree functions 
 #include <nb/nbip.h>          // ip related function
 
 // Interpreter related includes

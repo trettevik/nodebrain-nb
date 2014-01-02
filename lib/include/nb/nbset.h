@@ -49,16 +49,26 @@ typedef struct NB_SET_NODE{    // Balanced binary tree node - object header
   } NB_SetNode;
 
 typedef struct{                // structure used to point to set elements
-  NB_SetNode node;
+  NB_SetNode setnode;
   void       *member;
   } NB_SetMember;
 
-#define NB_SET_FIND(KEY,NODE) \
+#define NB_SET_FIND_MEMBER(MEMBER,NODE) \
   while(NODE!=NULL){ \
-    if(KEY<NODE->member) NODE=NODE->left; \
-    else if(KEY>NODE->member) NODE=NODE->right; \
+    if(MEMBER<NODE->member) NODE=(NB_SetMember *)NODE->setnode.left; \
+    else if(MEMBER>NODE->member) NODE=(NB_SetMember *)NODE->setnode.right; \
     else break; \
     }
+
+#define NB_SET_LOCATE_MEMBER(MEMBER,NODE,PARENT,NODEP) \
+  PARENT=(NB_SetMember *)NODEP; \
+  for(NODE=*NODEP;NODE!=NULL;NODE=*NODEP){ \
+    PARENT=NODE; \
+    if(MEMBER<NODE->member) NODEP=(NB_SetMember **)&NODE->setnode.left; \
+    else if(MEMBER>NODE->member) NODEP=(NB_SetMember **)&NODE->setnode.right; \
+    else break; \
+    }
+
 
 typedef struct NB_SET_ITERATOR{
   NB_SetNode *right[32];

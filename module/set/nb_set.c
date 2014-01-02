@@ -102,20 +102,13 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL,DWORD fdwReason,LPVOID lpvReserved){
 //===================================================================================================
 
 /* Tree skill and node structures */
-/*
-typedef struct BTREE_NODE{
-  NB_TreeNode bnode;           // binary tree node
-  nbCELL value;                // assigned value
-  struct BTREE_NODE *root ;    // root node for next column
-  } BTreeNode;
-*/
 
 typedef struct{
-  int    options;              // option flags
-  struct NB_SET_NODE *root;    // root pointer for the set
+  int    options;        // option flags
+  NB_SetMember *root;    // root pointer for the set
   } Set;
 
-#define BTREE_OPTION_TRACE       1  // use closed world assumption
+#define SET_OPTION_TRACE       1  // use closed world assumption
 
 typedef struct{
   char trace;                    /* trace option */
@@ -150,7 +143,7 @@ static void *setConstruct(nbCELL context,SetSkill *skillHandle,nbCELL arglist,ch
     *(ident+len)=0;
     cursor=delim; 
     while(*cursor==' ') cursor++;
-    if(strcmp(ident,"trace")==0) options|=BTREE_OPTION_TRACE;
+    if(strcmp(ident,"trace")==0) options|=SET_OPTION_TRACE;
     else if(strcmp(ident,"found")==0 || strcmp(ident,"notfound")==0){
       if(*cursor!='='){
         nbLogMsg(context,0,'E',"Expecting '=' at \"%s\".",cursor);
@@ -200,32 +193,41 @@ static void *setConstruct(nbCELL context,SetSkill *skillHandle,nbCELL arglist,ch
 *
 */
 static int setAssert(nbCELL context,void *skillHandle,Set *set,nbCELL arglist,nbCELL value){
-  NB_SetNode *node=NULL,**nodeP=&set->root;
+  NB_SetMember *node=NULL,*parent,**nodeP;
   nbCELL argCell;
   nbSET  argSet;
 
-  if(arglist==NULL) return(0); // perhaps we should set the value of the tree itself
+  if(arglist==NULL) return(0); // perhaps we should return the value of the set itself
   argSet=nbListOpen(context,arglist);
+/* Implement set empty first 
   if(value==NB_CELL_UNKNOWN || value==NB_CELL_FALSE){
-    if(argSet==NULL && set->root!=NULL) set->root=nbSetEmpty(set->root);
-    else{
-      } removeNode(context,tree,&tree->root,&argSet);
+    if(argSet==NULL && set->root!=NULL) set->root=setEmpty(set->root);
     return(0);
     }
+*/
   if(argSet==NULL) return(0);
   while((argCell=nbListGetCellValue(context,&argSet))!=NULL){
-    nodeP=&tree
-    node=nbTreeLocate(&path,argCell,(NB_TreeNode **)nodeP);
-    if(node==NULL){
-      node=nbAlloc(sizeof(NB_SetNode));
-      memset(node,0,sizeof(NB_SetNode));
-      nbSetInsert(tree->root,&path,node,argCell);
-      //node->bnode.key=(void *)argCell;
-      //node->value=NB_CELL_TRUE;
+    nodeP=&set->root;
+    NB_SET_LOCATE_MEMBER(argCell,node,parent,nodeP)
+    if(value==NB_CELL_UNKNOWN || value==NB_CELL_FALSE){
+      nbCellDrop(context,argCell);
+      if(node!=NULL){
+        nbCellDrop(context,node->member);
+        nbSetRemove((NB_SetNode *)&set->root,(NB_SetNode *)node);
+        nbFree(node,sizeof(NB_SetMember));
+        }
       }
-    else nbCellDrop(context,argCell);
-//    argCell=nbListGetCellValue(context,&argSet);
+    else{
+      if(node==NULL){
+        node=nbAlloc(sizeof(NB_SetMember));
+        memset(node,0,sizeof(NB_SetMember));
+        nbSetInsert((NB_SetNode *)&set->root,(NB_SetNode *)parent,(NB_SetNode **)nodeP,(NB_SetNode *)node);
+        node->member=(void *)argCell;
+        }
+      else nbCellDrop(context,argCell);
+      }
     }
+  nbLogFlush(context);
   return(0);
   }
 
@@ -240,9 +242,9 @@ static int setAssert(nbCELL context,void *skillHandle,Set *set,nbCELL arglist,nb
 static nbCELL setEvaluate(nbCELL context,SetSkill *skillHandle,Set *set,nbCELL arglist){
   nbCELL    argCell;
   nbSET     argSet;
-  NB_SetNode *node=NULL,*root=set->root;
+  NB_SetMember  *node=NULL;
 
-  if(skillHandle->trace || set->options&BTREE_OPTION_TRACE){
+  if(skillHandle->trace || set->options&SET_OPTION_TRACE){
     nbLogMsg(context,0,'T',"nb_set::setEvaluate()");
     nbLogPut(context,"set");
     if(arglist!=NULL) nbCellShow(context,arglist);
@@ -255,7 +257,8 @@ static nbCELL setEvaluate(nbCELL context,SetSkill *skillHandle,Set *set,nbCELL a
   if(argSet==NULL) return(NB_CELL_FALSE); // set() returns default value
   argCell=nbListGetCellValue(context,&argSet);
   while(argCell!=NULL && argSet!=NULL){
-    node=nbTreeFind(argCell,(NB_TreeNode *)root);
+    node=set->root;
+    NB_SET_FIND_MEMBER(argCell,node)
     if(node==NULL){
       nbCellDrop(context,argCell);
       return(NB_CELL_FALSE);
@@ -267,221 +270,25 @@ static nbCELL setEvaluate(nbCELL context,SetSkill *skillHandle,Set *set,nbCELL a
   }
 
 /*
-*  Internal function to show a node in the tree (row in the table)
-*
-*    This is used by the show() method
-*/
-static void setShowNode(nbCELL context,int depth,int column,BTreeNode *node){
-  int i;
-
-  if(node->bnode.left!=NULL) setShowNode(context,depth+1,column,(BTreeNode *)node->bnode.left);
-  for(i=column;i>=0;i--) nbLogPut(context,"  ");
-  nbCellShow(context,(nbCELL)node->bnode.key);
-  //nbLogPut(context,"[%d]",depth);
-  if(node->value!=NULL){
-    nbLogPut(context,"=");
-    nbCellShow(context,node->value);
-    }  
-  nbLogPut(context,"\n");
-  if(node->root!=NULL) setShowNode(context,0,column+1,node->root);
-  if(node->bnode.right!=NULL) setShowNode(context,depth+1,column,(BTreeNode *)node->bnode.right);
-  }
-
-/*
 *  show() method
 *
 *    show <node>;
 *
 *    show table;
 */
-static int setShow(nbCELL context,void *skillHandle,Set *tree,int option){
+static int setShow(nbCELL context,void *skillHandle,Set *set,int option){
+  NB_SetIterator iterator;
+  NB_SetNode *setNode;
+  NB_SetMember *setMember;
+
   if(option!=NB_SHOW_REPORT) return(0);
-  //nbLogPut(context,"\n");
-  if(tree->root!=NULL) setShowNode(context,0,0,tree->root);
+  NB_SET_ITERATE(iterator,setNode,set->root){
+    setMember=(NB_SetMember *)setNode;
+    nbCellShow(context,(nbCELL)setMember->member);
+    nbLogPut(context,"\n");
+    NB_SET_ITERATE_NEXT(iterator,setNode) 
+    }
   return(0);
-  }
-
-static void treeFlatten(nbCELL context,SetSkill *skillHandle,Set *tree){
-  if(tree->options&BTREE_OPTION_TRACE) nbLogMsg(context,0,'T',"treeFlatten called");
-  //if(tree->root!=NULL) treeFlattenNode(context,&tree->root,tree->root);  
-  if(tree->root!=NULL) nbTreeFlatten((NB_TreeNode **)&tree->root,(NB_TreeNode *)tree->root);  
-  if(tree->options&BTREE_OPTION_TRACE) nbLogMsg(context,0,'T',"treeFlatten returning");
-  }
-
-static void treeBalance(nbCELL context,SetSkill *skillHandle,Set *tree){
-  NB_SetNode *node;
-  int n=0;
-
-  if(tree->options&BTREE_OPTION_TRACE) nbLogMsg(context,0,'T',"treeBalance called");
-  if(tree->root!=NULL){
-    treeFlatten(context,skillHandle,tree);               // make the tree a list
-    for(node=tree->root;node!=NULL;node=(BTreeNode *)node->bnode.right) n++; // count the nodes
-    if(n>2) tree->root=(BTreeNode *)nbTreeBalance((NB_TreeNode *)tree->root,n,(NB_TreeNode **)&node);    // balance the tree
-    }
-  if(tree->options&BTREE_OPTION_TRACE) nbLogMsg(context,0,'T',"treeBalance returning");
-  }
-
-/*
-*  Convert cell value to cell expression
-*    NOTE: This should be a part of the NodeBrain API
-*/
-static int treeStoreValue(nbCELL context,nbCELL cell,char *cursor,int len){
-  int cellType,n=-1;
-  double real;
-  char *string,number[256];
-
-  if(cell==NB_CELL_UNKNOWN){
-    n=1;
-    if(n>len) return(-1);
-    strcpy(cursor,"?");
-    }
-  else{
-    cellType=nbCellGetType(context,cell);
-    if(cellType==NB_TYPE_STRING){
-      string=nbCellGetString(context,cell);
-      n=strlen(string)+2;
-      if(n>len) return(-1);
-      sprintf(cursor,"\"%s\"",string);
-      }
-    else if(cellType==NB_TYPE_REAL){
-      real=nbCellGetReal(context,cell);
-      sprintf(number,"%.10g",real);
-      n=strlen(number);
-      if(n>len) return(-1);
-      strcpy(cursor,number);
-      }
-    }
-  return(n);
-  }
-
-static int treeStoreNode(nbCELL context,SetSkill *skillHandle,BTreeNode *node,FILE *file,char *buffer,char *cursor,char *bufend){
-  char *append,*curCol=cursor;
-  int n;
-
-  n=treeStoreValue(context,node->bnode.key,cursor,bufend-cursor);
-  if(n<0){
-    nbLogMsg(context,0,'L',"Row is too large for buffer or cell type unrecognized: %s\n",buffer);
-    return(-1);
-    }
-  cursor+=n;
-  if(node->value!=NULL){
-    append=cursor;
-    if(node->value==NB_CELL_TRUE){
-      strcpy(append,");");  // should make sure we have room for this
-      }
-    else{
-      strcpy(append,")=");  // should make sure we have room for this
-      append+=2;
-      n=treeStoreValue(context,node->value,append,bufend-append);
-      if(n<0){
-        nbLogMsg(context,0,'L',"Row is too large for buffer or cell type unrecognized: %s\n",buffer);
-        return(-1);
-        }
-      append+=n;
-      strcpy(append,";");  // should make sure we have room for this
-      }
-    fprintf(file,"%s\n",buffer);
-    }
-  if(node->root !=NULL){
-    strcpy(cursor,",");  // should make sure we have room for this
-    cursor++;
-    treeStoreNode(context,skillHandle,node->root,file,buffer,cursor,bufend);
-    }
-  if(node->bnode.left!=NULL) treeStoreNode(context,skillHandle,(BTreeNode *)node->bnode.left,file,buffer,curCol,bufend);
-  if(node->bnode.right!=NULL) treeStoreNode(context,skillHandle,(BTreeNode *)node->bnode.right,file,buffer,curCol,bufend);
-  return(0);
-  }
-
-static void setStore(nbCELL context,SetSkill *skillHandle,BTree *tree,nbCELL arglist,char *text){
-  char buffer[NB_BUFSIZE],*bufend=buffer+sizeof(buffer),*cursor=text,filename[512];
-  FILE *file;
-  int len;
-  BTreeNode *node=NULL;
-  nbSET argSet;
-  nbCELL argCell;
-  void *ptr;
-
-
-  while(*cursor!=0 && strchr(" ;",*cursor)==NULL) cursor++;
-  len=cursor-text;
-  if(len>sizeof(filename)-1){
-    nbLogMsg(context,0,'E',"File name too large for buffer.");
-    return;
-    }
-  strncpy(filename,text,len);
-  *(filename+len)=0;
-  if((file=fopen(filename,"w"))==NULL){
-    nbLogMsg(context,0,'E',"Unable to open %s",filename);
-    return;
-    }
-  strcpy(buffer,"assert (");
-  cursor=buffer+strlen(buffer);
-
-  argSet=nbListOpen(context,arglist);
-  if(argSet==NULL){
-    if(tree->root!=NULL) treeStoreNode(context,skillHandle,tree->root,file,buffer,cursor,buffer+sizeof(buffer));
-    }
-  else{
-    ptr=&tree->root;
-    if(argSet!=NULL){
-      while((argCell=nbListGetCellValue(context,&argSet))!=NULL && (node=nbSetFind(argCell,tree))!=NULL){ 
-        len=treeStoreValue(context,node->bnode.key,cursor,bufend-cursor);
-        if(len<0){
-          nbLogMsg(context,0,'L',"Row is too large for buffer or cell type unrecognized: %s\n",buffer);
-          fclose(file);  // 2012-12-18 eat - CID 751618
-          return;
-          }
-        cursor+=len;
-        if(argSet!=NULL){
-          strcpy(cursor,",");
-          cursor++;
-          } 
-        nbCellDrop(context,argCell);
-        ptr=&node->root;   
-        }
-      if(argCell!=NULL){
-        nbLogMsg(context,0,'E',"Entry not found.");
-        fclose(file);  // 2012-12-18 eat - CID 751618
-        return;
-        }
-      if(node->root!=NULL) treeStoreNode(context,skillHandle,node->root,file,buffer,cursor,buffer+sizeof(buffer));
-      }
-    }
-  fclose(file);
-  }
-
-// Prune a tree at the selected node without removing the selected node
-//
-static void treePrune(nbCELL context,SetSkill *skillHandle,BTree *tree,nbCELL arglist,char *text){
-  BTreeNode *node=NULL;
-  nbSET argSet;
-  nbCELL argCell;
-  void *ptr;
-
-  argSet=nbListOpen(context,arglist);
-  if(argSet==NULL){
-    if(tree->root!=NULL){
-      removeTree(context,tree,tree->root);
-      tree->root=NULL;
-      }
-    }
-  else{
-    ptr=&tree->root;
-    if(argSet!=NULL){
-      while((argCell=nbListGetCellValue(context,&argSet))!=NULL && (node=nbSetFind(argCell,tree))!=NULL){ 
-        nbCellDrop(context,argCell);
-        ptr=&node->root;   
-        }
-      if(argCell!=NULL){
-        nbLogMsg(context,0,'E',"Entry not found.");
-        return;
-        }
-      if(node->root!=NULL){
-        removeTree(context,tree,node->root);
-        node->root=NULL;
-        }
-      }
-    }
   }
 
 static int setGetIdent(char **cursorP,char *ident,int size){
@@ -508,8 +315,8 @@ static int *setCommand(nbCELL context,SetSkill *skillHandle,Set *set,nbCELL argl
   char *cursor=text,ident[512];
   int len;
 
-  if(skillHandle->trace || set->options&BTREE_OPTION_TRACE){
-    nbLogMsg(context,0,'T',"nb_tree:setCommand() text=[%s]\n",text);
+  if(skillHandle->trace || set->options&SET_OPTION_TRACE){
+    nbLogMsg(context,0,'T',"nb_set:setCommand() text=[%s]\n",text);
     }
   len=setGetIdent(&cursor,ident,sizeof(ident));
   if(len<0){
@@ -519,57 +326,10 @@ static int *setCommand(nbCELL context,SetSkill *skillHandle,Set *set,nbCELL argl
   while(*cursor==' ') cursor++;
   if(strcmp(ident,"trace")==0){
     len=setGetIdent(&cursor,ident,sizeof(ident));
-    if(len==0 || strcmp(ident,"on")) tree->options|=BTREE_OPTION_TRACE;
-    else if(strcmp(ident,"off")) tree->options&=0xffffffff-BTREE_OPTION_TRACE;
+    if(len==0 || strcmp(ident,"on")) set->options|=SET_OPTION_TRACE;
+    else if(strcmp(ident,"off")) set->options&=0xffffffff-SET_OPTION_TRACE;
     }
-  else if(strcmp(ident,"flatten")==0) treeFlatten(context,skillHandle,set);
-  else if(strcmp(ident,"balance")==0) treeBalance(context,skillHandle,set);
-  else if(strcmp(ident,"store")==0) setStore(context,skillHandle,set,arglist,cursor);
-  else if(strcmp(ident,"prune")==0) treePrune(context,skillHandle,set,arglist,cursor);
   else nbLogMsg(context,0,'E',"Verb \"%s\" not recognized.",ident);
-  return(0);
-  }
-
-/*
-*  _prune evaluate() method
-*
-*  2013-12-07 eat - experimenting with facets
-*             define fred node tree;
-*             fred. assert ("abc","def","xyz");
-*             fred. assert ("abc","def","abc");
-*             define r1 on(b && x_prune("abc",def");
-*             assert b;
-*/
-static nbCELL setPruneEvaluate(nbCELL context,SetSkill *skillHandle,Set *tree,nbCELL arglist){
-  treePrune(context,skillHandle,tree,arglist,"");
-  return(tree->notfound);
-  }
-
-/*
-*  _prune assert() method
-*
-*  2013-12-07 eat - experimenting with facets
-*             define fred node tree;
-*             fred. assert ("abc","def","xyz");
-*             fred. assert ("abc","def","abc");
-*             assert fred_prune("abc","def");
-*/
-static int setPruneAssert(nbCELL context,void *skillHandle,Set *tree,nbCELL arglist,nbCELL value){
-  treePrune(context,skillHandle,tree,arglist,"");
-  return(0);
-  }
-
-/*
-*  _prune command() method
-*
-*  2013-12-07 eat - experimenting with facets
-*             define fred node tree;
-*             fred. assert ("abc","def","xyz");
-*             fred. assert ("abc","def","abc");
-*             fred_prune("abc","def");
-*/
-static int *setPruneCommand(nbCELL context,SetSkill *skillHandle,Set *tree,nbCELL arglist,char *text){
-  treePrune(context,skillHandle,tree,arglist,text);
   return(0);
   }
 
@@ -586,7 +346,7 @@ _declspec (dllexport)
 extern void *setBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
   SetSkill *skillHandle;
   char *cursor=text;
-  nbCELL facet; // 2013-12-07 eat - experimenting with facets
+  //nbCELL facet; // 2013-12-07 eat - experimenting with facets
 
   skillHandle=(SetSkill *)nbAlloc(sizeof(SetSkill));
   skillHandle->trace=0;
@@ -609,10 +369,5 @@ extern void *setBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL argli
   nbSkillSetMethod(context,skill,NB_NODE_SHOW,setShow);
   nbSkillSetMethod(context,skill,NB_NODE_COMMAND,setCommand);
 
-  // 2013-12-07 eat - experimenting with facets
-  facet=nbSkillFacet(context,skill,"prune");
-  nbSkillMethod(context,facet,NB_NODE_ASSERT,setPruneAssert);
-  nbSkillMethod(context,facet,NB_NODE_EVALUATE,setPruneEvaluate);
-  nbSkillMethod(context,facet,NB_NODE_COMMAND,setPruneCommand);
   return(skillHandle);
   }
