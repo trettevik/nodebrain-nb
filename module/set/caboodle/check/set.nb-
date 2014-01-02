@@ -1,0 +1,14 @@
+declare set module {"../.libs"};
+define x node set;
+define r1 on(x("abc"));
+define r2 on(x(23));
+x. assert ("abc","def","xyz");
+x. assert ("abc","def","abc");
+x. assert ("abc","def",23);
+show x
+x. assert !("abc");
+show x
+define r3 on(x(1,2,3));
+x. assert (3);
+x. assert (1);
+x. assert (2);

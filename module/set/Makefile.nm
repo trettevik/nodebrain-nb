@@ -1,0 +1,15 @@
+## This file, Makefile.nm, provides module specific make rules.  It
+## is included by Makefile.am, which you should reference for more
+## information.
+     
+nblib_LTLIBRARIES = nb_set.la
+nb_set_la_SOURCES = nb_set.c
+nb_set_la_CFLAGS  = $(NB_MOD_CFLAGS)
+#nb_set_la_LDFLAGS = -module -version-info 0:4
+nb_set_la_LDFLAGS = -module -avoid-version
+
+EXTRA_DIST = \
+  caboodle/check/set.nb~ \
+  doc/nb_set.texi \
+  doc/nb_set_tutorial.texi \
+  doc/version.texi

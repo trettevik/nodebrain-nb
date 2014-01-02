@@ -1,0 +1,6 @@
+makeinfo --html --no-split --number-sections --css-include=../../model/doc/style.css nb_set.texi
+makeinfo --plaintext --no-split --number-sections --output=nb_set.txt nb_set.texi
+makeinfo --docbook --no-split --number-sections --output=nb_set_DocBook.xml nb_set.texi
+makeinfo --xml --no-split --number-sections nb_set.texi
+makeinfo --no-split --number-sections nb_set.texi
+texi2pdf -D -V -o nb_set.pdf nb_set.texi
