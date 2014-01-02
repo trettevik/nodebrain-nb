@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 ## =============================================================================
 ##
-## Copyright (C) 1998-2012 The Boeing Company
+## Copyright (C) 1998-2014 The Boeing Company
 ##                         Ed Trettevik <eat@nodebrain.org>
 ##
 ## NodeBrain is free software; you can redistribute it and/or modify
@@ -44,6 +44,7 @@
 ## ---------- -----------------------------------------------------------------
 ## 2008-10-27 Ed Trettevik (version 0.7.3 - split out from nb package)
 ## 2011-11-05 eat - included nbmail.c and nbtext.c
+## 2013-12-30 eat - included nbset.c and nbset.h
 ##=============================================================================
      
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
@@ -81,6 +82,7 @@ libnb_a_HEADERS = \
   include/nb/nbrule.h \
   include/nb/nbsentence.h \
   include/nb/nbservice.h \
+  include/nb/nbset.h \
   include/nb/nbsource.h \
   include/nb/nbspine.h \
   include/nb/nbstd.h \
@@ -140,6 +142,7 @@ libnb_la_SOURCES = \
   nbsched.c \
   nbsentence.c \
   nbservice.c \
+  nbset.c \
   nbsource.c \
   nbspawn.c \
   nbspine.c \
@@ -192,6 +195,7 @@ libnb_la_SOURCES = \
   include/nb/nbsched.h \
   include/nb/nbsentence.h \
   include/nb/nbservice.h \
+  include/nb/nbset.h \
   include/nb/nbsource.h \
   include/nb/nbspawn.h \
   include/nb/nbspine.h \

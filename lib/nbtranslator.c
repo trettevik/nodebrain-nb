@@ -493,7 +493,7 @@ void nbProjectionShowAll(void){
   objectP=(NB_Object **)&(nb_ProjectionType->hash->vect);
   for(v=0;v<nb_ProjectionType->hash->modulo;v++){
     i=0;
-    for(object=*objectP;object!=NULL;object=object->next){
+    for(object=*objectP;object!=NULL;object=(NB_Object *)object->next){
       outPut("[%u,%d]",v,i);
       printObject(object);
       outPut("\n");

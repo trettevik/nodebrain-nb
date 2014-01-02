@@ -59,14 +59,13 @@ extern NB_Object *NB_OBJECT_TRUE;
 extern NB_Link *regfun;
 extern NB_Link *change;
 
-struct NB_CELL{            /* Function object header */
+typedef struct NB_CELL{            /* Function object header */
   NB_Object object;        /* object header */
   //struct NB_LINK  *sub;    /* subscribers to change */
   struct NB_TREE_NODE  *sub;    /* subscribers to change */
   unsigned short  level;   /* subscription level */
-  };
+  } NB_Cell;
 
-typedef struct NB_CELL NB_Cell;
 typedef NB_Cell *nbCELL;
 
 void nbCellInit(struct NB_STEM *stem);

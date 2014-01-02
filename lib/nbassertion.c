@@ -81,8 +81,6 @@ void printAssertion(struct ASSERTION *assertion){
 *    This is a copy
 */
 void destroyAssertion(struct COND *cond){
-  //struct COND *lcond,**condP;
-
   if(trace) outMsg(0,'T',"destroyAssertion() called");
   dropObject(cond->left);
   nbCellDisable(cond->right,(NB_Cell *)cond);
@@ -200,9 +198,9 @@ void printAssertedValues(NB_Link *member){
   }
 
 void initAssertion(NB_Stem *stem){
-  assertTypeDef=newType(stem,"==",NULL,0,printAssertion,destroyAssertion);
-  assertTypeVal=newType(stem,"=",NULL,0,printAssertion,destroyAssertion);
-  assertTypeRef=newType(stem,"=.=",NULL,0,printAssertion,destroyAssertion);
+  assertTypeDef=newType(stem,"==",condH,TYPE_IS_ASSERT,printAssertion,destroyAssertion);
+  assertTypeVal=newType(stem,"=",condH,TYPE_IS_ASSERT,printAssertion,destroyAssertion);
+  assertTypeRef=newType(stem,"=.=",condH,TYPE_IS_ASSERT,printAssertion,destroyAssertion);
   }
 
 /*
@@ -215,7 +213,7 @@ void initAssertion(NB_Stem *stem){
 int nbAssertionAddTermValue(nbCELL context,nbSET *set,nbCELL term,nbCELL cell){
   NB_Link   *entry;
   NB_Object *object;                  
-  object=(NB_Object *)useCondition(0,assertTypeVal,term,cell);
+  object=(NB_Object *)useCondition(assertTypeVal,term,cell);
   if((entry=nb_LinkFree)==NULL) entry=(NB_Link *)nbAlloc(sizeof(NB_Link));
   else nb_LinkFree=entry->next;                  
   entry->object=(NB_Object *)grabObject(object);

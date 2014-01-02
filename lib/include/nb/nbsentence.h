@@ -55,6 +55,7 @@ typedef struct NB_SENTENCE{// sentence cell structure
   void *receptor;          // receptor - see axons - an evaluation accelerator concept
   } NB_Sentence;
 
+void nbSentenceInit(NB_Stem *stem);
 struct NB_SENTENCE *nbSentenceNew(NB_Facet *facet,NB_Term *term,NB_List *list);
 
 #endif // NB_INTERNAL

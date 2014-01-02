@@ -48,7 +48,7 @@
 ##===================================o==========================================
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = audit baseline cache console mail message netflow peer pipe servant snmptrap string syslog toy translator tree udp webster
+SUBDIRS = audit baseline cache console mail message netflow peer pipe servant set snmptrap string syslog toy translator tree udp webster
 
 EXTRA_DIST = \
   README

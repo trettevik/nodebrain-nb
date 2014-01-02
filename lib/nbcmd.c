@@ -629,6 +629,7 @@ int nbCmdShow(nbCELL context,void *handle,char *verb,char *cursor){
     }
   else if(symid=='='){  /* cell expression */   
     if(strncmp(ident,"conditions",len)==0) condPrintAll(0);
+    else if(strncmp(ident,"assertion",len)==0) condPrintAll(4);
     else if(strncmp(ident,"boolean",len)==0) condPrintAll(2);
     else if(strncmp(ident,"relations",len)==0) condPrintAll(1);
     else if(strncmp(ident,"math",len)==0)  printMathAll();
@@ -645,6 +646,7 @@ int nbCmdShow(nbCELL context,void *handle,char *verb,char *cursor){
       outPut("\nTo show all cells of a given type:\n\n");
       outPut("  show =<cell_type>\n\n");
       outPut("You may specify the <cell_type> option with a single character:\n\n");
+      outPut("  (a)ssertion - assertion cells\n");
       outPut("  (b)oolean   - boolean condition cells\n");
       outPut("  (c)ondition - all condition cells\n");
       outPut("  (l)ist      - list cells\n");
@@ -1639,7 +1641,7 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     else action->command=grabObject(useString(strtok(cursor,"\n"))); /* action is rest of line */
     action->cmdopt=NB_CMDOPT_RULE;     /* do not suppress symbolic substitution */
     action->status='R';   /* ready */
-    ruleCond=useCondition(0,rule_type,object,action);
+    ruleCond=useCondition(rule_type,object,action);
     action->cond=ruleCond; /* plug the condition pointer into the action */
     if(term) nbTermAssign(term,(NB_Object *)ruleCond);
     else term=nbTermNew((NB_Term *)context,ident,ruleCond);
@@ -1664,7 +1666,7 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
       return(1);
       }
     
-    ruleCond=useCondition(0,condTypeNerve,object,useString(ident));
+    ruleCond=useCondition(condTypeNerve,object,useString(ident));
     //term=nbTermNew((NB_Term *)context,ident,nb_Unknown);
     //term->def=(NB_Object *)ruleCond;
     if(term) nbTermAssign(term,(NB_Object *)ruleCond);

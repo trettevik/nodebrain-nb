@@ -293,24 +293,35 @@ void *nbTreeLocateCondRight(NB_TreePath *path,void *right,NB_TreeNode **rootP){
   NB_TreeNode **nodeP;   // Address of node pointer
   int depth=0;     // index into path
 
+  //outMsg(0,'T',"nbTreeLocateCondRight: called");
   path->key=NULL;  // caller will fill this in later
   path->rootP=nodeP=path->balanceP=rootP;
   path->balanceDepth=1;
   path->node[depth]=(NB_TreeNode *)rootP; // this is a trick that depend on the left pointer
   path->step[depth++]=0;                  // being the first element of the node structure
-  for(node=*rootP;node!=NULL;node=*nodeP){
-    // NOTE: we are testing for the least likely condition here first
-    // which increases the probability that we'll do two comparisons.
-    // After testing, revise this to check for < and then > leaving == to the otherwise
-    // Make the same change in nbTreeLocate if it proves helpful
+  for(node=*rootP;node!=NULL;node=*nodeP,depth++){
+/*
     if(right==((NB_Cond *)node->key)->right) break;
     if(node->balance!=0) path->balanceP=nodeP, path->balanceDepth=depth;
     path->node[depth]=node;
     if((path->step[depth++]=(right>((NB_Cond *)node->key)->right))) nodeP=&node->right;
     else nodeP=&node->left;
+*/
+    if((path->step[depth]=(right>((NB_Cond *)node->key)->right))){
+      if(node->balance!=0) path->balanceP=nodeP, path->balanceDepth=depth;
+      path->node[depth]=node;
+      nodeP=&node->right;
+      }
+    else if(right<((NB_Cond *)node->key)->right){
+      if(node->balance!=0) path->balanceP=nodeP, path->balanceDepth=depth;
+      path->node[depth]=node;
+      nodeP=&node->left;
+      }
+    else break;
     }
   path->nodeP=nodeP;
   path->depth=depth;
+  //outMsg(0,'T',"nbTreeLocateCondRight: returning");
   return(node);
   }
 
@@ -513,7 +524,6 @@ void nbTreeInsert(NB_TreePath *path,NB_TreeNode *newNode){
   *path->balanceP=w;            // replace root node
   }
 
-
 // nbTreeRemove()  - AVL tree node removal routine
 //
 //   path      - pointer to path structure returned by nbTreeLocate() or nbTreeLocateValue()    
@@ -546,7 +556,7 @@ void *nbTreeRemove(NB_TreePath *path){
     path->step[depth]=1;
     path->node[depth++]=r;
     }
-  else{                        // Case 3: Replace with leftmost or right 
+  else{                        // Case 3: Replace with leftmost of right 
     j=depth++;
     for(;;){
       path->step[depth]=0;    // moving left

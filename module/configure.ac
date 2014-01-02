@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 #=============================================================================
 #
-# Copyright (C) 1998-2013 The Boeing Company
+# Copyright (C) 1998-2014 The Boeing Company
 #                         Ed Trettevik <eat@nodebrain.org>
 #
 # NodeBrain is free software; you can redistribute it and/or modify
@@ -131,5 +131,5 @@ AC_TYPE_UID_T
 #=====================================
 # Create the Makefile
 
-AC_CONFIG_FILES([Makefile audit/Makefile baseline/Makefile cache/Makefile console/Makefile mail/Makefile message/Makefile netflow/Makefile peer/Makefile pipe/Makefile servant/Makefile snmptrap/Makefile string/Makefile syslog/Makefile toy/Makefile translator/Makefile tree/Makefile udp/Makefile webster/Makefile])
+AC_CONFIG_FILES([Makefile audit/Makefile baseline/Makefile cache/Makefile console/Makefile mail/Makefile message/Makefile netflow/Makefile peer/Makefile pipe/Makefile servant/Makefile set/Makefile snmptrap/Makefile string/Makefile syslog/Makefile toy/Makefile translator/Makefile tree/Makefile udp/Makefile webster/Makefile])
 AC_OUTPUT

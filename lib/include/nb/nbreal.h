@@ -49,14 +49,14 @@ typedef struct REAL{
 extern struct HASH *realH;
 extern struct TYPE *realType;
 
-void *hashReal(struct HASH *hash,double n);
+//void *hashReal(struct HASH *hash,double n);
 void initReal(NB_Stem *stem);
 void printReal(struct REAL *real);
 void printRealAll(void);
-void destroyReal(struct REAL *real);
+//void destroyReal(struct REAL *real);
 struct REAL *parseReal(char *source);
 
 extern struct REAL *useReal(double value);
-struct REAL *newReal(double value);
+//struct REAL *newReal(double value);
 
 #endif

@@ -343,6 +343,7 @@ void *newObject(struct TYPE *type,void **pool,int size){
     else *freeItemP=object->next;
     }
   else *pool=object->next;
+  memset(&object->node,0,sizeof(NB_SetNode));
   object->type=type;
   object->value=object;
   object->refcnt=0;
@@ -625,8 +626,8 @@ struct TYPE *newType(NB_Stem *stem,char *name,struct HASH *hash,int  attributes,
   type->object.refcnt=1;
   type->stem=stem;           
   type->name=name;
-  type->tree=NULL; // 2013-12-21 eat - tree is an alternative to hash
   type->hash=hash;
+  type->set=NULL;
   type->attributes=attributes;
   type->apicelltype=0;
   if(showExpr==NULL) type->showExpr=&nullVoid;

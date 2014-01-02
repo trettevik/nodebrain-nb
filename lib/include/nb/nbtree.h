@@ -46,8 +46,10 @@
 typedef struct NB_TREE_NODE{   // Balanced binary tree node 
   struct NB_TREE_NODE *left;   // left node  (lower keys for binary search tree)
   struct NB_TREE_NODE *right;  // right node (higher keys for binary search tree)
-  signed int balance;          // AVL balance code (-1 left tall, 0 - balanced, +1 right tall)
-  void   *key;                 // key pointer 
+  //signed int balance;        // AVL balance code (-1 left tall, 0 - balanced, +1 right tall)
+  signed char balance;         // AVL balance code (-1 left tall, 0 - balanced, +1 right tall)
+  unsigned char reserved[7];  
+  void   *key;                 // key pointer - or parent pointer if using object tree routines
   } NB_TreeNode;
 
 typedef struct NB_TREE_PATH{
@@ -258,5 +260,10 @@ extern NB_TreeNode *nbTreeFlatten(NB_TreeNode **nodeP,NB_TreeNode *node);
 _declspec (dllexport)
 #endif
 extern NB_TreeNode *nbTreeBalance(NB_TreeNode *node,int n,NB_TreeNode **nextP);
+
+#if defined(WIN32)
+_declspec (dllexport)
+#endif
+extern void nbTreeInsertBalance(NB_TreeNode *root,NB_TreeNode *node);
 
 #endif

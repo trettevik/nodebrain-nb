@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -77,7 +77,10 @@ extern int showlevel;
 extern int showcount;
 
 struct NB_OBJECT{             /* object header */
+  union{
   struct   NB_OBJECT *next;   /* link to next object in hash list */
+  struct   NB_SET_NODE node;
+  };
   struct   TYPE      *type;   /* object type */
   struct   NB_OBJECT *value;  /* value pointer - may point to self */
   unsigned int       refcnt;  /* number of references */
@@ -116,13 +119,14 @@ extern NB_Object *nb_Placeholder;
                            /* - an explicit undefine is required */
 #define TYPE_IS_FACT 0x0800   /* facts */
 #define TYPE_NOT_TRUE 0x1000   // Objects like zero, unknown, and disabled that are not true
+#define TYPE_IS_ASSERT 0x2000   /* assertions */
 
 typedef struct TYPE{
   struct NB_OBJECT object;     /* object header */
   struct NB_STEM   *stem;      /* brain stem cell */ 
   char *name;                  /* symbolic name */
-  struct NB_TREE_NODE *tree;   // Tree of all objects of this type
   struct HASH *hash;           /* hashing table for object lookup */
+  struct NB_Set *set;          // set of all objects of this type
   int  attributes;             /* see object type attributes above */
   int  apicelltype;            /* cell type code for API */
   void (*showExpr)();          /* show as expression */

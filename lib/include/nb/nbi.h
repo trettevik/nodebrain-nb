@@ -60,6 +60,8 @@
 #endif
 
 #include <nb/nbstd.h>      // define some standard system stuff
+#include <nb/nbtree.h>        /* tree of objects */
+#include <nb/nbset.h>         /* set of objects */
 #include <nb/nbhash.h>        /* hash table of objects */
 //#include <nb/nbverb.h>        /* verb structure */
 #include <nb/nbstring.h>      /* string object */

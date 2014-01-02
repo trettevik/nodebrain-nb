@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -598,7 +598,7 @@ NB_Term *makeTerm(NB_Term *context,NB_String *word){
 void nbTermAssign(NB_Term *term,NB_Object *new){
   NB_Object *old;
 
-  if(trace) outMsg(0,'T',"nbTermAssign called.");
+  if(trace) outMsg(0,'T',"nbTermAssign: called");
   /* make sure clientIdentity is the owner of the term's context */
 /* Need to test this and get it working - had a problem with logfile listener
   if(((NB_Node *)term->context->def)->owner!=clientIdentity){
@@ -634,7 +634,7 @@ void nbTermAssign(NB_Term *term,NB_Object *new){
   else term->cell.level=0;
   term->cell.object.value=grabObject(new->value);
   if(term->cell.object.value!=old) nbCellPublish((NB_Cell *)term);
-  if(trace) outMsg(0,'T',"nbTermAssign returning.");
+  if(trace) outMsg(0,'T',"nbTermAssign: returning");
   }
 
 /*

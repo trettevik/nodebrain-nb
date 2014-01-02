@@ -194,8 +194,8 @@ void destroyString(struct STRING *str){
 void initString(NB_Stem *stem){
   nb_StringPool=(struct NB_STRING_POOL *)nbAlloc(sizeof(struct NB_STRING_POOL));
   memset(nb_StringPool,0,sizeof(struct NB_STRING_POOL));
-  //strH=newHash(100003);
-  strH=newHash(1000031); // 2013-12-19 eat - debug
+  strH=newHash(100003);
+  //strH=newHash(2000031); // 2013-12-19 eat - debug
   strType=newType(stem,"string",strH,0,printString,destroyString);
   strType->apicelltype=NB_TYPE_STRING;
   }

@@ -772,37 +772,37 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
       if(object==nb_Unknown) return(nb_Unknown);
       if(object==NB_OBJECT_FALSE) return(NB_OBJECT_TRUE);
       if(object->value==object) return(NB_OBJECT_FALSE);
-      return((NB_Object *)useCondition(0,condTypeNot,object,nb_Unknown));
+      return((NB_Object *)useCondition(condTypeNot,object,nb_Unknown));
     case '1': // !! true
       if((object=nbParseRel(context,cursor))==NULL) return(NULL);
       //if((object=nbParseRel(context,cursor))==NULL) return(NB_OBJECT_TRUE);
       if(object==nb_Unknown || object==NB_OBJECT_FALSE) return(NB_OBJECT_FALSE); // false constant
       if(object->value==object) return(NB_OBJECT_TRUE);  // true constant
-      return((NB_Object *)useCondition(0,condTypeTrue,object,nb_Unknown));
+      return((NB_Object *)useCondition(condTypeTrue,object,nb_Unknown));
     case 'k': // !? known
       //if((object=nbParseRel(context,cursor))==NULL) return(NULL);
       if((object=nbParseRel(context,cursor))==NULL) return(nb_Unknown);
       if(object==nb_Unknown) return(NB_OBJECT_FALSE);   // unknown constant
       if(object->value==object) return(NB_OBJECT_TRUE); // known constant
       if(object->type==condTypeUnknown || object->type==condTypeKnown) return(NB_OBJECT_TRUE);
-      return((NB_Object *)useCondition(0,condTypeKnown,object,nb_Unknown));
+      return((NB_Object *)useCondition(condTypeKnown,object,nb_Unknown));
     case '?': // ? unknown
       //if((object=nbParseRel(context,cursor))==NULL) return(NULL);
       if((object=nbParseRel(context,cursor))==NULL) return(nb_Unknown);
       if(object==nb_Unknown) return(NB_OBJECT_TRUE);     // we know unknown is unknown
       if(object->value==object) return(NB_OBJECT_FALSE); // other constants are known
       if(object->type==condTypeUnknown || object->type==condTypeKnown) return(NB_OBJECT_FALSE);
-      return((NB_Object *)useCondition(0,condTypeUnknown,object,nb_Unknown));
+      return((NB_Object *)useCondition(condTypeUnknown,object,nb_Unknown));
     case 'w': // [] closed world
       if((object=nbParseRel(context,cursor))==NULL) return(NULL);
       if(object==nb_Unknown) return(NB_OBJECT_FALSE);      // unknown if false in closed world
       if(object==NB_OBJECT_FALSE) return(NB_OBJECT_FALSE); // false is false
       if(object->value==object) return(NB_OBJECT_TRUE);     // other constants are true
-      return((NB_Object *)useCondition(0,condTypeClosedWorld,object,nb_Unknown));
+      return((NB_Object *)useCondition(condTypeClosedWorld,object,nb_Unknown));
     case 'c':
       object=nbParseObject(context,cursor);
       if(object==NULL) return(NULL);
-      return((NB_Object *)useCondition(0,condTypeChange,object,nb_Unknown));
+      return((NB_Object *)useCondition(condTypeChange,object,nb_Unknown));
     case '(': // parenthetical expression
       if((object=nbParseCell(context,cursor,0))==NULL) return(NULL);
       if(**cursor!=')'){
@@ -850,7 +850,7 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
         return(NULL);
         }
       if(parseTrace) outMsg(0,'T',"Schedule structure generated.");
-      return((NB_Object *)useCondition(0,condTypeTime,nb_Unknown,object));
+      return((NB_Object *)useCondition(condTypeTime,nb_Unknown,object));
     case '-':
     case '+': // number 
       savecursor=*cursor;
@@ -863,7 +863,7 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
       *cursor=savecursor;
       if(*token=='+') return(nbParseObject(context,cursor));
       object=nbParseObject(context,cursor);
-      if(object!=NULL) return((NB_Object *)useCondition(0,mathTypeInv,nb_Unknown,object));
+      if(object!=NULL) return((NB_Object *)useCondition(mathTypeInv,nb_Unknown,object));
       *cursor=savecursor;
       return(NULL);
     case 'u': // unknown
@@ -918,7 +918,7 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
       (*cursor)++;
       if(strcmp(ident,"_mod")==0){
         type=callTypeMod;
-        return((NB_Object *)useCondition(0,type,useReal(0),right));
+        return((NB_Object *)useCondition(type,useReal(0),right));
         }
       if(term==NULL){  /* included logic to lookup builtin function names */
         NB_Link *member;
@@ -959,7 +959,7 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
 */
 NB_Object *nbParseRel(NB_Term *context,char **cursor){
   char symid,operator[256];
-  NB_Object *lobject,*robject;
+  NB_Object *lobject,*robject,*object;
   char *savecursor;
   struct TYPE *type;
   int not=0;
@@ -1008,14 +1008,27 @@ NB_Object *nbParseRel(NB_Term *context,char **cursor){
     *  should return a message and offset. */
     if(re==NULL) return(NULL);
     if(parseTrace) outMsg(0,'T',"Encountered regular expression.");
-    return((NB_Object *)useCondition(not,type,lobject,re));
+    if(not){
+      lobject=(NB_Object *)useCondition(type,lobject,re);
+      return((NB_Object *)useCondition(condTypeNot,lobject,nb_Unknown));
+      }
+    return((NB_Object *)useCondition(type,lobject,re));
     }
   if((robject=nbParseCell(context,cursor,5))==NULL){
     outMsg(0,'E',"Expecting right operand to relational operator at [%s]",cursor);
     /* dropObject(lobject); add this later */
     return(NULL);
     }
-  return((NB_Object *)useCondition(not,type,lobject,robject));
+  if(type==condTypeRelEQ && lobject->value==lobject && robject->value!=robject){
+    object=lobject;  // make sure the constant is on the right to simplify use of trick in enable method
+    lobject=robject;
+    robject=object;
+    }
+  if(not){
+    lobject=(NB_Object *)useCondition(type,lobject,robject);
+    return((NB_Object *)useCondition(condTypeNot,lobject,nb_Unknown));
+    }
+  return((NB_Object *)useCondition(type,lobject,robject));
   }
 
 
@@ -1064,9 +1077,9 @@ NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
         if((robject=nbParseCell(context,cursor,0))!=NULL){
           //if(type==condTypeOr || type==condTypeLazyOr)
           //  if((sobject=reduceOr(lobject,robject))!=NULL) lobject=sobject;
-          //else lobject=(NB_Object *)useCondition(0,type,lobject,robject);
+          //else lobject=(NB_Object *)useCondition(type,lobject,robject);
           if((type==condTypeOr || type==condTypeLazyOr) && (sobject=reduceOr(lobject,robject))!=NULL) lobject=sobject;
-          else lobject=(NB_Object *)useCondition(0,type,lobject,robject);
+          else lobject=(NB_Object *)useCondition(type,lobject,robject);
           }
         break;
       case 1:
@@ -1079,11 +1092,11 @@ NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
           if(type==condTypeDefault){
             if(lobject==nb_Unknown) lobject=robject;        // use right if left is unknown
             else if(lobject->value==lobject || robject==nb_Unknown); // use left if constant left or unknown right
-            else lobject=(NB_Object *)useCondition(0,type,lobject,robject);
+            else lobject=(NB_Object *)useCondition(type,lobject,robject);
             }
           else if((type==condTypeAnd || type==condTypeLazyAnd) && 
             (sobject=reduceAnd(lobject,robject))!=NULL) lobject=sobject;
-          else lobject=(NB_Object *)useCondition(0,type,lobject,robject);
+          else lobject=(NB_Object *)useCondition(type,lobject,robject);
           }
         break;
       case 2:
@@ -1093,7 +1106,7 @@ NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
         else if(symid=='E') type=condTypeAndMonitor;
         else if(symid=='e') type=condTypeOrMonitor;
         else{*cursor=cursave; return(lobject);}
-        if((robject=nbParseCell(context,cursor,3))!=NULL) lobject=(NB_Object *)useCondition(0,type,lobject,robject);
+        if((robject=nbParseCell(context,cursor,3))!=NULL) lobject=(NB_Object *)useCondition(type,lobject,robject);
         break;
       case 3:
         if(symid=='T') type=condTypeDelayTrue;
@@ -1105,7 +1118,8 @@ NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
           outPut("%s\n",msg);
           return(NULL);
           }
-        lobject=(NB_Object *)useCondition(0,type,lobject,robject);
+        robject=(NB_Object *)useCondition(condTypeTimeDelay,lobject,robject); // insert time delay
+        lobject=(NB_Object *)useCondition(type,lobject,robject);
         break;
       /* level 4 is handled by nbParseRel */
       case 5:
@@ -1273,10 +1287,10 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
         return(NULL);
         }
       objectL=(NB_Object *)nbSentenceNew(facet,term,list);
-      object=(NB_Object *)useCondition(0,type,objectL,object);
+      object=(NB_Object *)useCondition(type,objectL,object);
       list=NULL;
       }
-    else object=(NB_Object *)useCondition(0,type,term,object);
+    else object=(NB_Object *)useCondition(type,term,object);
     // 2012-10-13 eat - replaced malloc
     if((entry=nb_LinkFree)==NULL) entry=nbAlloc(sizeof(NB_Link));
     else nb_LinkFree=entry->next;
@@ -1298,7 +1312,7 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
 int nbAssertionListAddTermValue(nbCELL context,nbSET *set,nbCELL term,nbCELL cell){
   NB_Link   *entry;
   NB_Object *object;
-  object=(NB_Object *)useCondition(0,assertTypeVal,term,cell);
+  object=(NB_Object *)useCondition(assertTypeVal,term,cell);
   // 2012-10-13 eat - replace malloc
   if((entry=nb_LinkFree)==NULL) entry=nbAlloc(sizeof(NB_Link));
   else nb_LinkFree=entry->next;
