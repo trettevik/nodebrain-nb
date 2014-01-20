@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -36,6 +36,7 @@
 * ---------- -----------------------------------------------------------------
 * 2002-09-14 Ed Trettevik (original prototype)
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2014-01-12 eat 0.9.00 nbAssertionInit replaces initAssertion
 *=============================================================================
 */
 #ifndef _NB_ASSERTION_H_
@@ -69,7 +70,7 @@ extern struct TYPE *assertTypeDef;
 extern struct TYPE *assertTypeVal;
 extern struct TYPE *assertTypeRef;
 
-void initAssertion(NB_Stem *stem);
+void nbAssertionInit(NB_Stem *stem);
 void printAssertions(NB_Link *link);
 void printAssertedValues(NB_Link *member);
 void assert(NB_Link *member,int alert);

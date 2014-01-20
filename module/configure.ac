@@ -55,17 +55,18 @@
 # 2011/02/19 eat 0.8.5 - set optimization level
 # 2011/05/31 eat 0.8.6 - Webster API and Proxy API included in Webster Module
 # 2012/06/02 eat 0.8.10- Webster API and Proxy API included in Webster Module
+# 2014-01-11 eat 0.9.00 
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([nb_module],[0.8.15],[bugs@nodebrain.org])
+AC_INIT([nb_module],[0.9.00],[bugs@nodebrain.org])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
 
 # Set module subdirectory by minor version - ${libdir}/nb/${NB_MOD_DIR}/
-AC_SUBST([NB_MOD_DIR],[0.8.15])
+AC_SUBST([NB_MOD_DIR],[0.9.00])
 
 #=====================================
 # LIBTOOL stuff

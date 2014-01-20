@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -183,7 +183,7 @@
 * 2012-10-13 eat 0.8.12 Replaced other uses malloc with nbAlloc
 * 2012-10-13 eat 0.8.12 Added nbHeap function (was first part of nbObjectInit)
 * 2012-12-27 eat 0.8.13 Checker updates
-* 2013-12-05 eat 0.9.0  Included TYPE_NOT_TRUE attribute on types not true
+* 2013-12-05 eat 0.9.00 Included TYPE_NOT_TRUE attribute on types not true
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -195,6 +195,7 @@ int showcount=0;         /* show object usage count */
 
 
 NB_Object *nb_Disabled=NULL;
+NB_Object *nb_True=NULL;        // set by nbcell.c
 NB_Object *nb_False=NULL;
 NB_Object *nb_Unknown=NULL;
 NB_Object *nb_Undefined=NULL;
@@ -343,7 +344,7 @@ void *newObject(struct TYPE *type,void **pool,int size){
     else *freeItemP=object->next;
     }
   else *pool=object->next;
-  memset(&object->node,0,sizeof(NB_SetNode));
+  //memset(&object->node,0,sizeof(NB_SetNode));
   object->type=type;
   object->value=object;
   object->refcnt=0;
@@ -626,8 +627,8 @@ struct TYPE *newType(NB_Stem *stem,char *name,struct HASH *hash,int  attributes,
   type->object.refcnt=1;
   type->stem=stem;           
   type->name=name;
-  type->hash=hash;
-  type->set=NULL;
+  if(hash==NULL) type->hash=newHash(8);  // every type get's a hash - if this works the hash parameter will be dropped
+  else type->hash=hash;
   type->attributes=attributes;
   type->apicelltype=0;
   if(showExpr==NULL) type->showExpr=&nullVoid;

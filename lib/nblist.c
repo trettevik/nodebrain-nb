@@ -92,7 +92,6 @@ NB_Link *nb_LinkFree=NULL; /* free link list */
 NB_List *nb_ListFree=NULL; /* free list list */
 NB_List *nb_ListNull=NULL; /* null list pointer */
 
-struct HASH   *listH;           /* hash of known lists */
 struct TYPE   *nb_ListType;
 
 void listInsert(NB_Link **memberP,void *object){
@@ -222,23 +221,23 @@ void *dropMember(NB_Link *member){
   return(NULL);
   }
 
-void *hashList(hash,member)
-  struct HASH *hash;
-  NB_Link *member; {
-  /*
-  *  Hash a string and return a pointer to a pointer in the hashing vector.
-  *
-  *  Note: The hashing algorithm can be improved for long strings
-  *
-  */
+/*
+*  Hash a string and return a pointer to a pointer in the hashing vector.
+*
+*  Note: The hashing algorithm can be improved for long strings
+*
+*/
+uint32_t hashList(NB_Link *member){
   unsigned long h=0;
   unsigned long *m;
+  uint32_t key;
 
   for(;member!=NULL;member=member->next){
     m=(unsigned long *)&(member->object);
     h=((h<<3)+*m);
     }
-  return(&(hash->vect[h%hash->modulo]));
+  key=h;
+  return(key);
   }
 
 /*
@@ -247,10 +246,14 @@ void *hashList(hash,member)
 NB_List *useList(NB_Link *member){
   NB_Link *mbr1,*mbr2;
   NB_List *list,**listP;
+  NB_Hash *hash=nb_ListType->hash;
   int level,maxlevel=0;
+  uint32_t key;
  
   if(member==NULL) return(nb_ListNull);
-  for(listP=hashList(listH,member);*listP!=NULL && (*listP)->link->object<member->object;listP=(NB_List **)&((*listP)->cell.object.next));
+  key=hashList(member);
+  listP=(NB_List **)&(hash->vect[key%hash->modulo]);
+  for(;*listP!=NULL && (*listP)->link->object<member->object;listP=(NB_List **)&((*listP)->cell.object.next));
   for(;*listP!=NULL && (*listP)->link->object==member->object;listP=(NB_List **)&((*listP)->cell.object.next)){
     mbr1=(*listP)->link->next;
     mbr2=member->next;
@@ -270,10 +273,13 @@ NB_List *useList(NB_Link *member){
     }
   /* didn't find it, get a new one */
   list=nbCellNew(nb_ListType,(void **)&nb_ListFree,sizeof(NB_List));
+  list->cell.object.key=key;
   list->cell.object.value=nb_Disabled;
   list->link=member; 
   list->cell.object.next=(NB_Object *)*listP;  /* insert in hash list */
   *listP=list;
+  hash->objects++;
+  if(hash->objects>=hash->modulo) nbHashGrow(&nb_ListType->hash);
   /* set function level */
   for(;member!=NULL;member=member->next){
     if(member->object->value!=member->object &&
@@ -310,7 +316,12 @@ NB_List *parseList(NB_Term *context,char **cursorP){
 
 void destroyList(NB_List *list){
   NB_List **listP;
-  for(listP=hashList(listH,list->link);*listP!=NULL && *listP!=list;listP=(NB_List **)&((*listP)->cell.object.next));
+  NB_Hash *hash=nb_ListType->hash;
+  uint32_t key;
+
+  key=hashList(list->link);
+  listP=(NB_List **)&(hash->vect[key%hash->modulo]);
+  for(;*listP!=NULL && *listP!=list;listP=(NB_List **)&((*listP)->cell.object.next));
   if(*listP!=NULL)
     *listP=(NB_List *)list->cell.object.next;    /* remove from hash list */
   list->link=dropMember(list->link);
@@ -407,10 +418,9 @@ void disableList(NB_List *list){
 *  Initialize the list hash
 *    Must be called before parseList
 */
-void listInit(NB_Stem *stem,size_t n){    // 2012-12-31 eat - int to size_t
+void nbListInit(NB_Stem *stem){
   if(trace) outMsg(0,'T',"listInit: called");
-  listH=newHash(n);
-  nb_ListType=newType(stem,"list",listH,0,printList,destroyList);
+  nb_ListType=newType(stem,"list",NULL,0,printList,destroyList);
   nb_ListType->apicelltype=NB_TYPE_LIST;
   nbCellType(nb_ListType,solveList,evalList,enableList,disableList);
   nb_ListNull=nbCellNew(nb_ListType,(void **)&nb_ListFree,sizeof(NB_List));

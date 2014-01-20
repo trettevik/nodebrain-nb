@@ -566,6 +566,9 @@ NB_Term *nbTermFindDown(NB_Term *term,char *identifier){
   while(*cursor!=0 && *cursor!='}'){
     if((cursor=nbParseQualifier(qualifier,sizeof(qualifier),cursor))==NULL) return(NULL);
     word=grabObject(useString(qualifier));
+    //if(strcmp(qualifier,"define")==0){
+    //  outMsg(0,'T',"nbTermFindDown: %s - word=%p",qualifier,word);  
+    //  }
     term=nbTermFindHere(term,word);
     dropObject(word);
     if(term==NULL) return(NULL);
@@ -581,6 +584,7 @@ NB_Term *makeTerm(NB_Term *context,NB_String *word){
 
   if(trace) outMsg(0,'T',"makeTerm calling nbCellNew");
   term=nbCellNew(termType,(void **)&termFree,sizeof(NB_Term));
+  term->cell.object.key=word->object.key; // inherit key from name
   term->context=context; 
   term->terms=NULL;                       /* change to term->gloss */
   term->def=nb_Undefined;  
@@ -851,6 +855,10 @@ void nbTermShowItem(NB_Term *term){
   outPut(" ");
   outPut("= ");
   printObject(term->cell.object.value);
+  if(term->cell.object.value==nb_Disabled && term->def!=NULL && term->def->value!=nb_Disabled){
+    outPut(" ");
+    printObject(term->def->value);
+    }
   if(term->def!=NULL && term->def!=term->cell.object.value){
     outPut(" == ");
     if(term->def==NULL) outPut("???");

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -32,7 +32,7 @@
 *
 *   #include "nb.h"
 *
-*   void initReal();
+*   void nbRealInit();
 *   struct STRING *useReal(char *string);
 *   void printReal();
 *   void printRealAll();
@@ -83,7 +83,6 @@
 */
 #include <nb/nbi.h>
 
-struct HASH *realH;
 struct TYPE *realType;
 struct REAL *realFree=NULL;
 
@@ -122,9 +121,11 @@ void printRealAll(void){
   }
 
 void destroyReal(struct REAL *real){
+  struct HASH *hash=realType->hash;
   struct REAL **realP;
-  
-  realP=locateReal(real->value);
+
+  realP=(NB_Real **)&(hash->vect[real->object.key%hash->modulo]);
+  for(;*realP!=NULL && *realP!=real;realP=(struct REAL **)&((*realP)->object.next));
   if(*realP!=real){
     outMsg(0,'L',"destroyReal: unable to locate real object.");
     outPut("value: ");
@@ -136,16 +137,14 @@ void destroyReal(struct REAL *real){
   *realP=(struct REAL *)real->object.next;
   real->object.next=(NB_Object *)realFree;
   realFree=real;
+  hash->objects--;
   }
 
 /**********************************************************************
 * Public Methods
 **********************************************************************/
-void initReal(NB_Stem *stem){
-  realH=newHash(7919);
-  //realH=newHash(100003);
-  //realH=newHash(2000031); //2013-12-11 eat - performance testing
-  realType=newType(stem,"real",realH,0,printReal,destroyReal);
+void nbRealInit(NB_Stem *stem){
+  realType=newType(stem,"real",NULL,0,printReal,destroyReal);
   realType->apicelltype=NB_TYPE_REAL;
   }
 
@@ -159,13 +158,30 @@ struct REAL *newReal(double value){
   }
 
 struct REAL *useReal(double value){
-  struct REAL *real,**realP;
+  NB_Real *real,**realP;
+  //unsigned long *l,h;
+  unsigned long h;
+  struct HASH *hash=realType->hash;
 
-  realP=locateReal(value);
+  //if(trace) outMsg(0,'T',"useReal: called");
+
+  //l=(unsigned long *)&value;
+  //outMsg(0,'T',"useReal: l=%ld",*l);
+  //h=*l;
+  h=value;
+  //i=h%hash->modulo;
+  //outMsg(0,'T',"useReal: value=%f h=%ld modulo=%ld index=%lu",value,h,hash->modulo,i);
+  realP=(NB_Real **)&(hash->vect[h%hash->modulo]);
+  for(;*realP!=NULL && (*realP)->value<value;realP=(struct REAL **)&((*realP)->object.next));
   if(*realP!=NULL && (*realP)->value==value) return(*realP);
-  real=newReal(value);
+  real=(struct REAL *)newObject(realType,(void **)&realFree,sizeof(struct REAL));
+  real->object.key=h;
+  //outMsg(0,'T',"useReal: key=%u",real->object.key);
+  real->value=value;
   real->object.next=(NB_Object *)*realP;
   *realP=real;
+  hash->objects++;
+  if(hash->objects>=hash->modulo) nbHashGrow(&realType->hash);
   return(real);
   }
 

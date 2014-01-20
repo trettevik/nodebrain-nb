@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -41,6 +41,8 @@
 * 2003-11-03 eat 0.5.5  Renamed a lot of functions and variables.
 * 2005-04-09 eat 0.6.2  API function definitions moved to nbapi.h
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2014-01-12 eat 0.9.00 Introduced axon enable and disable routines
+* 2014-01-19 eat 0.9.00 Added mode to cell and change level from 2 to 1 byte
 *=============================================================================
 */
 #ifndef _NB_CELL_H_
@@ -51,6 +53,7 @@
 /* condition function values
 */
 extern NB_Object *nb_Disabled;
+extern NB_Object *nb_True;
 extern NB_Object *nb_False;
 extern NB_Object *nb_Unknown;
 extern NB_Object *NB_OBJECT_FALSE;
@@ -59,14 +62,16 @@ extern NB_Object *NB_OBJECT_TRUE;
 extern NB_Link *regfun;
 extern NB_Link *change;
 
-typedef struct NB_CELL{            /* Function object header */
-  NB_Object object;        /* object header */
-  //struct NB_LINK  *sub;    /* subscribers to change */
-  struct NB_TREE_NODE  *sub;    /* subscribers to change */
-  unsigned short  level;   /* subscription level */
+typedef struct NB_CELL{      // cell object header
+  NB_Object object;          // object header
+  struct NB_TREE_NODE  *sub; // subscribers to change
+  unsigned char mode;        // mode flags
+  unsigned char level;       // subscription level
   } NB_Cell;
 
 typedef NB_Cell *nbCELL;
+
+#define NB_CELL_MODE_AXON_REL 1  // use axon for relational operators
 
 void nbCellInit(struct NB_STEM *stem);
 void nbCellType(
@@ -170,7 +175,7 @@ extern void nbCellEnable(nbCELL pub,nbCELL sub);
 #if defined(WIN32)
 __declspec(dllexport)
 #endif
-extern void nbCellEnableTrick(nbCELL pub,nbCELL sub);
+extern void nbCellEnableAxon(nbCELL pub,nbCELL sub);
 
 #if defined(WIN32)
 __declspec(dllexport)
@@ -180,7 +185,7 @@ extern void nbCellDisable(nbCELL pub,nbCELL sub);
 #if defined(WIN32)
 __declspec(dllexport)
 #endif
-void nbCellDisableTrick(nbCELL pub,nbCELL sub);
+void nbCellDisableAxon(nbCELL pub,nbCELL sub);
 
 #if defined(WIN32)
 __declspec(dllexport)

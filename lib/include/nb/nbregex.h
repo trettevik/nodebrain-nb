@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -41,6 +41,7 @@
 * 2008-10-06 eat 0.7.2  Included flags to support different compile options
 * 2008-11-06 eat 0.7.3  Converting to PCRE's native API
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2014-01-12 eat 0.9.00 Dropped hash pointer - access via type
 *===============================================================================
 */
 #ifndef _NB_REGEX_H_
@@ -48,7 +49,6 @@
 
 #include <pcre.h>           // Perl Compatible Regular Expression (PCRE) Library
 
-extern struct HASH *regexpH;      /* regular expression hash */
 extern struct TYPE *regexpType;   /* regular expression object type */
 extern struct REGEXP *freeRegexp; /* free structure pool */
 

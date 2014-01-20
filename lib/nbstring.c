@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -97,8 +97,6 @@
 */
 #include <nb/nbi.h>
 
-struct HASH *strH;
-
 struct TYPE *strType;
 
 struct NB_STRING_POOL{
@@ -107,13 +105,13 @@ struct NB_STRING_POOL{
 
 struct NB_STRING_POOL *nb_StringPool;  // free string pool vector by length
 
+/*
+*  Hash a string and return a pointer to a pointer in the hashing vector.
+*
+*  Note: The hashing algorithm can be improved for long strings
+*
+*/
 void *hashStr(struct HASH *hash,char *cursor){
-  /*
-  *  Hash a string and return a pointer to a pointer in the hashing vector.
-  *
-  *  Note: The hashing algorithm can be improved for long strings
-  *
-  */
   unsigned int h=0;
   while(*cursor){
     h=((h<<3)+*cursor);
@@ -121,7 +119,6 @@ void *hashStr(struct HASH *hash,char *cursor){
     }
   return(&(hash->vect[h%hash->modulo]));
   }
-
 
 /**********************************************************************
 * Object Management Methods
@@ -139,14 +136,15 @@ void printStringAll(void){
   struct STRING *string,**stringP;
   long v;
   int i,saveshowcount=showcount;
+  NB_Hash *hash=strType->hash;
   
   showcount=1;
-  outPut("String Table:\n");
-  stringP=(struct STRING **)&(strType->hash->vect);
-  for(v=0;v<strType->hash->modulo;v++){
+  outPut("String Table: Modulo=%u Objects=%u\n",hash->modulo,hash->objects);
+  stringP=(struct STRING **)&(hash->vect);
+  for(v=0;v<hash->modulo;v++){
     i=0;
     for(string=*stringP;string!=NULL;string=(struct STRING *)string->object.next){
-      outPut("[%u,%d]",v,i);
+      outPut("Slot=%8.8x.%2.2x Key=%8.8x ",v,i,string->object.key);
       printObject((NB_Object *)string);
       outPut("\n");
       i++;
@@ -156,24 +154,19 @@ void printStringAll(void){
   showcount=saveshowcount;  
   }
 
-void destroyString(struct STRING *str){
+void destroyString(NB_String *str){
   struct STRING *string,**stringP,**freeStringP;
-  char *cursor,*value;
   int r=1;  /* temp relation <0, 0, >0 */
   int size;
-  unsigned long h=0;
-  unsigned char c;
+  NB_Hash *hash=strType->hash;
 
-  value=str->value;
-  for(cursor=value;*cursor!=0;cursor++){
-    c=*cursor;
-    h=((h<<3)+c);
-    }  
-  stringP=(struct STRING **)&(strType->hash->vect[h%strType->hash->modulo]);
-  for(string=*stringP;string!=NULL && (r=strcmp(string->value,value))>0;string=*stringP)
-    stringP=(struct STRING **)&(string->object.next);
+  //outMsg(0,'T',"destroyString: called for %s refcnt=%d",str->value,str->object.refcnt);
+  stringP=(NB_String **)&(hash->vect[str->object.key%hash->modulo]);
+  for(string=*stringP;string!=NULL && (r=strcmp(str->value,string->value))>0;string=*stringP)
+    stringP=(NB_String **)&(string->object.next);
   if(string==NULL || r!=0){
-    outMsg(0,'L',"destroyString() unable to locate string object.");
+    outMsg(0,'L',"destroyString: unable to locate string object.");
+    outMsg(0,'L',"destroyString: key=%u modulo=%u value='%s'",str->object.key,hash->modulo,str->value);
     return;
     }
   *stringP=(struct STRING *)string->object.next;    // remove from hash list
@@ -186,6 +179,7 @@ void destroyString(struct STRING *str){
     string->object.next=(void *)*freeStringP; 
     *freeStringP=string;
     }
+  hash->objects--;
   }
 
 /**********************************************************************
@@ -194,27 +188,33 @@ void destroyString(struct STRING *str){
 void initString(NB_Stem *stem){
   nb_StringPool=(struct NB_STRING_POOL *)nbAlloc(sizeof(struct NB_STRING_POOL));
   memset(nb_StringPool,0,sizeof(struct NB_STRING_POOL));
-  strH=newHash(100003);
-  //strH=newHash(2000031); // 2013-12-19 eat - debug
-  strType=newType(stem,"string",strH,0,printString,destroyString);
+  //strH=newHash(nb_perf_str_hash);   // create string hash
+  //strH=newHash(1024);
+  strType=newType(stem,"string",NULL,0,printString,destroyString);
   strType->apicelltype=NB_TYPE_STRING;
   }
 
 struct STRING *useString(char *value){
   struct STRING *string,**stringP,**freeStringP;
   size_t size,len;
-  char *cursor;
+  //char *cursor;
   int r=1;  /* temp relation <0, 0, >0 */
-  unsigned long h=0;
-  unsigned char c;
+  //unsigned long h=0;
+  //unsigned char c;
+  NB_Hash *hash=strType->hash;
+  uint32_t key=0;
   
   // NOTE: need to change hashing algorithm to just use last x bytes
-  for(cursor=value;*cursor!=0;cursor++){
-    c=*cursor;
-    h=((h<<3)+c);
-    }  
-  stringP=(struct STRING **)&(strType->hash->vect[h%strType->hash->modulo]);
-  for(string=*stringP;string!=NULL && (r=strcmp(string->value,value))>0;string=*stringP)
+  //for(cursor=value;*cursor!=0;cursor++){
+  //  c=*cursor;
+  //  h=((h<<3)+c);
+  //  }  
+  //key=h;
+  NB_HASH_STR(key,value)
+  //outMsg(0,'T',"useString: key=0x%8.8x modulo=0x%8.8x slot=0x%8.8x ->%s",key,hash->modulo,key%hash->modulo,value);
+  //if(strcmp(value,"r65511")==0 || strcmp(value,"define")==0 || strcmp(value,"assert")==0) outMsg(0,'T',"useString: key=0x%8.8x modulo=0x%x slot=0x%8.8x ->%s",key,hash->modulo,key%hash->modulo,value);
+  stringP=(struct STRING **)&(hash->vect[key%hash->modulo]);
+  for(string=*stringP;string!=NULL && (r=strcmp(value,string->value))>0;string=*stringP)
     stringP=(struct STRING **)&(string->object.next);
   if(string!=NULL && r==0) return(string);
   len=strlen(value);
@@ -223,9 +223,14 @@ struct STRING *useString(char *value){
   if(size>=NB_OBJECT_MANAGED_SIZE) freeStringP=NULL;
   else freeStringP=&nb_StringPool->vector[(size-1)>>3]; // 2013-01-04 eat - changed index calc
   string=(struct STRING *)newObject(strType,(void **)freeStringP,size);
-  string->object.next=(NB_Object *)*stringP;     
-  *stringP=string;  
   len++; // 2013-01-14 eat - this is completely unnecessary, but replaced strcpy with strncpy to see if the checker is ok with that.
   strncpy((char *)string->value,value,len);  // 2013-01-01 eat - VID 5538-0.8.13-01 FP - we allocated enough space with call to newObject
+  string->object.key=key;
+  string->object.next=(NB_Object *)*stringP;     
+  *stringP=string;  
+  hash->objects++;
+  //if(hash->objects>=hash->modulo/2) nbHashGrow(&strType->hash);
+  if(hash->objects>=hash->modulo) nbHashGrow(&strType->hash);
+  //outMsg(0,'T',"Returning new strings at %p ->%s",string,value);
   return(string);
   }

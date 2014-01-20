@@ -78,6 +78,7 @@ int nbVerbDeclare(nbCELL context,char *ident,int authmask,int flags,void *handle
   verb->syntax=syntax;
   verb->term=nbTermNew(context->object.type->stem->verbs,ident,verb);
   if(trace) outMsg(0,'T',"verb created - %s\n",ident);
+  //outMsg(0,'T',"verb created - [%d]%s\n",verb->term->word->object.refcnt,ident);
   return(0);
   }
 
@@ -105,11 +106,11 @@ struct NB_VERB *nbVerbFind(nbCELL context,char *ident){
   struct NB_TERM *term;
 
   term=nbTermFindDown(stem->verbs,ident);
-  if(!term){
+  if(!term && strchr(ident,'.')){
     nbVerbLoad(context,ident);
     term=nbTermFindDown(stem->verbs,ident);
-    if(!term) return(NULL);
     }
+  if(!term) return(NULL);
   return((struct NB_VERB *)term->def);
   }
 

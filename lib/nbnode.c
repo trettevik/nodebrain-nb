@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -91,7 +91,7 @@
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2010/02/28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2012-10-17 eat 0.8.12 Replaced termGetName with nbTermName
-* 2013-12-07 eat 0.9.0  Implementing node facets
+* 2013-12-07 eat 0.9.00 Implementing node facets
 *=============================================================================
 */
 #include <nb/nbi.h>

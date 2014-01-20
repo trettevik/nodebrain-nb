@@ -978,11 +978,7 @@ NB_Object *nbParseRel(NB_Term *context,char **cursor){
   else if(symid=='~'){symid='m'; type=condTypeMatch;}
   else if(symid=='='){
     if(strcmp(operator,"=")==0) type=condTypeRelEQ;
-    else if(strcmp(operator,"<>")==0){  // 2013-12-12 eat - experimenting with transformation
-      //type=condTypeRelNE;
-      not^=1;  // exclusive or to switch not
-      type=condTypeRelEQ;
-      }
+    else if(strcmp(operator,"<>")==0) type=condTypeRelNE;
     else if(strcmp(operator,"<")==0) type=condTypeRelLT;
     else if(strcmp(operator,"<=")==0) type=condTypeRelLE;
     else if(strcmp(operator,">")==0) type=condTypeRelGT;
@@ -1019,10 +1015,29 @@ NB_Object *nbParseRel(NB_Term *context,char **cursor){
     /* dropObject(lobject); add this later */
     return(NULL);
     }
-  if(type==condTypeRelEQ && lobject->value==lobject && robject->value!=robject){
-    object=lobject;  // make sure the constant is on the right to simplify use of trick in enable method
+  if(lobject->value==lobject && robject->value!=robject){
+    object=lobject;  // make sure the constant is on the right to simplify use of axon in enable method
     lobject=robject;
     robject=object;
+    if(type==condTypeRelEQ || type==condTypeRelNE);
+    else if(type==condTypeRelGT) type=condTypeRelLT;
+    else if(type==condTypeRelGE) type=condTypeRelLE;
+    else if(type==condTypeRelLT) type=condTypeRelGT;
+    else if(type==condTypeRelLE) type=condTypeRelGE;
+    }
+  if(robject->value==robject && nb_opt_axon){  // constant right operand and we are using axon cells
+    if(type==condTypeRelNE){
+      not^=1;  // exclusive or to switch not
+      type=condTypeRelEQ;
+      }
+    else if(type==condTypeRelLE){
+      not^=1;  // exclusive or to switch not
+      type=condTypeRelGT;
+      }
+    else if(type==condTypeRelGE){
+      not^=1;  // exclusive or to switch not
+      type=condTypeRelLT;
+      }
     }
   if(not){
     lobject=(NB_Object *)useCondition(type,lobject,robject);

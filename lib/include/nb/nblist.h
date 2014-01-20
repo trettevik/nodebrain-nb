@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -40,6 +40,7 @@
 *                MEMBER structure.
 * 2005-04-08 eat 0.6.2  API function definitions moved to nbapi.h
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2014-01-12 eat 0.9.00 nbListInit replaced listInit
 *=============================================================================
 */
 #ifndef _NB_LIST_H_
@@ -81,7 +82,7 @@ void enableList(NB_List *list);
 void printList(NB_List *list);
 void nbListShowAll(void);
 void printMembers(NB_Link *member);
-void listInit(NB_Stem *stem,size_t n); // 2012-12-31 eat - n from int to size_t
+void nbListInit(NB_Stem *stem);
 
 void nbListFree(struct NB_LINK *member);
 

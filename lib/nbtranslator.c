@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -319,6 +319,7 @@
 * 2012-12-27 eat 0.8.13 Checker updates
 * 2013-01-01 eat 0.8.13 Checker updates
 * 2013-03-16 eat 0.8.15 Fixed defect in search for named regular expressions
+* 2014-01-13 eat 0.9.00 Removed hash pointer - referenced via type
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -338,7 +339,7 @@ NB_Translator *nb_Translators=NULL;
 
 NB_Type       *nb_ProjectionType;
 NB_Projection *nb_ProjectionFree=NULL;
-struct HASH   *nb_ProjectionHash=NULL;
+//struct HASH   *nb_ProjectionHash=NULL;
 
 #define NB_TRANSLATOR_STACKSIZE 64  // Parse and execution stack size
 
@@ -506,12 +507,15 @@ void nbProjectionShowAll(void){
 
 void nbProjectionDestroy(NB_Projection *projection){
   NB_Projection **projectionP;
+  NB_Hash *hash=nb_ProjectionType->hash;
 
-  projectionP=(NB_Projection **)hashStr(nb_ProjectionHash,projection->code);
+  //projectionP=(NB_Projection **)hashStr(nb_ProjectionHash,projection->code);
+  projectionP=(NB_Projection **)&(hash->vect[projection->object.key%hash->modulo]);
   for(;*projectionP!=NULL && *projectionP!=projection;projectionP=(NB_Projection **)&((*projectionP)->object.next));
   if(*projectionP==NULL) outMsg(0,'L',"Destroying projection not on used list");
   else *projectionP=(NB_Projection *)projection->object.next;
   nbFree(projection,sizeof(NB_Projection)+projection->length);
+  hash->objects--;
   }  
 
 static char *nbProjectionEncodeLiteral(char *bufcur,char *cursor,uint32_t len){  // 2013-01-01 eat - VID 787-0.8.13-1 changed len to unsigned
@@ -648,19 +652,25 @@ int nbProjectionEncode(char *buffer,int buflen,struct REGEXP_STACK *reStackP,int
 NB_Projection *nbProjectionParse(char *projectionBuffer,int len,struct REGEXP_STACK *reStackP,int nsub[],int level,char *cursor){
   NB_Projection *projection,**projectionP;
   int plen,match=1;
-  //char *delim;
+  NB_Hash *hash=nb_ProjectionType->hash;
+  uint32_t key=0;
 
   if(strstr(cursor,"$[")==NULL) return((NB_Projection *)useString(cursor));
   plen=nbProjectionEncode(projectionBuffer,len,reStackP,nsub,level,cursor);
   if(plen<=0) return(NULL);
-  projectionP=(NB_Projection **)hashStr(nb_ProjectionHash,projectionBuffer);
+  //projectionP=(NB_Projection **)hashStr(nb_ProjectionHash,projectionBuffer);
+  NB_HASH_STR(key,projectionBuffer)
+  projectionP=(NB_Projection **)&(hash->vect[key%hash->modulo]);
   for(;*projectionP!=NULL && (match=strcmp(projectionBuffer,(*projectionP)->code))>0;projectionP=(NB_Projection **)&((*projectionP)->object.next));
   if(match==0) projection=*projectionP;  // reuse if we find it
   else{
     projection=newObject(nb_ProjectionType,NULL,sizeof(NB_Translator)+plen);
+    projection->object.key=key;
     projection->object.next=(NB_Object *)*projectionP;
     memcpy(&projection->code,projectionBuffer,plen);
     *projectionP=projection;
+    hash->objects++;
+    if(hash->objects>=hash->modulo) nbHashGrow(&nb_ProjectionType->hash);
     }
   return(projection);
   }
@@ -810,8 +820,9 @@ void nbTranslatorDestroy(NB_Translator *translator){
 */
 void nbTranslatorInit(NB_Stem *stem){
   nb_TranslatorType=newType(stem,"translator",NULL,0,nbTranslatorShow,nbTranslatorDestroy);
-  nb_ProjectionHash=newHash(10007);
-  nb_ProjectionType=newType(stem,"projection",nb_ProjectionHash,0,nbProjectionShow,nbProjectionDestroy);
+  //nb_ProjectionHash=newHash(10007);
+  //nb_ProjectionType=newType(stem,"projection",nb_ProjectionHash,0,nbProjectionShow,nbProjectionDestroy);
+  nb_ProjectionType=newType(stem,"projection",NULL,0,nbProjectionShow,nbProjectionDestroy);
   }
 
 /*

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -83,9 +83,6 @@
 */
 #include <nb/nbi.h>
 
-void *hashCond();
-
-struct HASH *mathH;
 struct MATH *mathFree=NULL;
 
 struct TYPE *mathTypeInv;
@@ -156,9 +153,12 @@ void printMathXY(struct MATH *math){
 */
 void destroyMath(struct MATH *math){
   struct MATH *lmath,**mathP;
+  NB_Hash *hash=math->cell.object.type->hash;
+  uint32_t key;
 
   if(trace) outMsg(0,'T',"destroyMath() called");
-  mathP=hashCond(mathH,math->cell.object.type,math->left,math->right);
+  key=hashCond(math->cell.object.type,math->left,math->right);
+  mathP=(struct MATH **)&(hash->vect[key%hash->modulo]);
   if(*mathP==math) *mathP=(struct MATH *)math->cell.object.next;
   else{
     for(lmath=*mathP;lmath!=NULL && lmath!=math;lmath=*mathP)
@@ -171,6 +171,7 @@ void destroyMath(struct MATH *math){
   dropObject(math->right);
   math->cell.object.next=(NB_Object *)mathFree;
   mathFree=math;
+  hash->objects--;
   if(trace) outMsg(0,'T',"destroyMath() returning");
   }
 
@@ -329,54 +330,53 @@ NB_Object *mathConXY(struct TYPE *type,NB_Link *member){
 * Public Methods
 **********************************************************************/
 void initMath(NB_Stem *stem){
-  mathH=newHash(2031);  /* initialize math hash */
-  mathTypeInv=newType(stem,"-",mathH,0,printMath,destroyMath);
+  mathTypeInv=newType(stem,"-",NULL,TYPE_IS_MATH,printMath,destroyMath);
   nbCellType(mathTypeInv,solveMath,evalMathInv,enableMath,disableMath);
-  mathTypeAdd=newType(stem,"+",mathH,0,printMath,destroyMath);
+  mathTypeAdd=newType(stem,"+",NULL,TYPE_IS_MATH,printMath,destroyMath);
   nbCellType(mathTypeAdd,solveMath,evalMathAdd,enableMath,disableMath);
-  mathTypeSub=newType(stem,"-",mathH,0,printMath,destroyMath);
+  mathTypeSub=newType(stem,"-",NULL,TYPE_IS_MATH,printMath,destroyMath);
   nbCellType(mathTypeSub,solveMath,evalMathSub,enableMath,disableMath);
-  mathTypeMul=newType(stem,"*",mathH,0,printMath,destroyMath);
+  mathTypeMul=newType(stem,"*",NULL,TYPE_IS_MATH,printMath,destroyMath);
   nbCellType(mathTypeMul,solveMath,evalMathMul,enableMath,disableMath);
-  mathTypeDiv=newType(stem,"/",mathH,0,printMath,destroyMath);
+  mathTypeDiv=newType(stem,"/",NULL,TYPE_IS_MATH,printMath,destroyMath);
   nbCellType(mathTypeDiv,solveMath,evalMathDiv,enableMath,disableMath);
 
-  mathTypeCeil=newType(stem,"ceil",mathH,0,printMathX,destroyMath);
+  mathTypeCeil=newType(stem,"ceil",NULL,TYPE_IS_MATH,printMathX,destroyMath);
   nbCellType(mathTypeCeil,solveMath,evalMathX,enableMath,disableMath);
   nbCellTypeSub(mathTypeCeil,1,NULL,mathConX,ceil,NULL);
-  mathTypeFloor=newType(stem,"floor",mathH,0,printMathX,destroyMath);
+  mathTypeFloor=newType(stem,"floor",NULL,TYPE_IS_MATH,printMathX,destroyMath);
   nbCellType(mathTypeFloor,solveMath,evalMathX,enableMath,disableMath);
   nbCellTypeSub(mathTypeFloor,1,NULL,mathConX,floor,NULL);
-  mathTypeAbs=newType(stem,"abs",mathH,0,printMathX,destroyMath);
+  mathTypeAbs=newType(stem,"abs",NULL,TYPE_IS_MATH,printMathX,destroyMath);
   nbCellType(mathTypeAbs,solveMath,evalMathX,enableMath,disableMath);
   nbCellTypeSub(mathTypeAbs,1,NULL,mathConX,fabs,NULL);
 /*
-  mathTypeRint=newType(stem,"rint",mathH,0,printMathX,destroyMath);
+  mathTypeRint=newType(stem,"rint",NULL,0,printMathX,destroyMath);
   nbCellType(mathTypeRint,solveMath,evalMathX,enableMath,disableMath);
   nbCellTypeSub(mathTypeRint,1,NULL,mathConX,rint,NULL);
 */
-  mathTypeExp=newType(stem,"exp",mathH,0,printMathX,destroyMath);
+  mathTypeExp=newType(stem,"exp",NULL,TYPE_IS_MATH,printMathX,destroyMath);
   nbCellType(mathTypeExp,solveMath,evalMathX,enableMath,disableMath);
   nbCellTypeSub(mathTypeExp,1,NULL,mathConX,exp,NULL);
-  mathTypeLog=newType(stem,"log",mathH,0,printMathX,destroyMath);
+  mathTypeLog=newType(stem,"log",NULL,TYPE_IS_MATH,printMathX,destroyMath);
   nbCellType(mathTypeLog,solveMath,evalMathX,enableMath,disableMath);
   nbCellTypeSub(mathTypeLog,1,NULL,mathConX,log,NULL);
-  mathTypeLog10=newType(stem,"log10",mathH,0,printMathX,destroyMath);
+  mathTypeLog10=newType(stem,"log10",NULL,TYPE_IS_MATH,printMathX,destroyMath);
   nbCellType(mathTypeLog10,solveMath,evalMathX,enableMath,disableMath);
   nbCellTypeSub(mathTypeLog10,1,NULL,mathConX,log10,NULL);
-  mathTypeSqrt=newType(stem,"sqrt",mathH,0,printMathX,destroyMath);
+  mathTypeSqrt=newType(stem,"sqrt",NULL,TYPE_IS_MATH,printMathX,destroyMath);
   nbCellType(mathTypeSqrt,solveMath,evalMathX,enableMath,disableMath);
   nbCellTypeSub(mathTypeSqrt,1,NULL,mathConX,sqrt,NULL);
 
 #if !defined mpe
-  mathTypeHypot=newType(stem,"hypot",mathH,0,printMathXY,destroyMath);
+  mathTypeHypot=newType(stem,"hypot",NULL,TYPE_IS_MATH,printMathXY,destroyMath);
   nbCellType(mathTypeHypot,solveMath,evalMathXY,enableMath,disableMath);
   nbCellTypeSub(mathTypeHypot,1,NULL,mathConXY,hypot,NULL);
 #endif
-  mathTypeMod=newType(stem,"mod",mathH,0,printMathXY,destroyMath);
+  mathTypeMod=newType(stem,"mod",NULL,TYPE_IS_MATH,printMathXY,destroyMath);
   nbCellType(mathTypeMod,solveMath,evalMathXY,enableMath,disableMath);
   nbCellTypeSub(mathTypeMod,1,NULL,mathConXY,fmod,NULL);
-  mathTypePow=newType(stem,"pow",mathH,0,printMathXY,destroyMath);
+  mathTypePow=newType(stem,"pow",NULL,TYPE_IS_MATH,printMathXY,destroyMath);
   nbCellType(mathTypePow,solveMath,evalMathXY,enableMath,disableMath);
   nbCellTypeSub(mathTypePow,1,NULL,mathConXY,pow,NULL);
   }
@@ -398,19 +398,29 @@ struct MATH * useMath(int inverse,struct TYPE *type,NB_Object *left,NB_Object *r
   *
   */
   struct MATH *math,*lmath,**mathP;
+  NB_Hash *hash=type->hash;
+  uint32_t key;
+
   if(trace) outMsg(0,'T',"useMath called");
   if(inverse){
     lmath=useMath(0,type,left,right);
     return(useMath(0,mathTypeInv,(NB_Object *)lmath,NULL));
     }
-  mathP=hashCond(mathH,type,left,right);
+
+  if(trace) outMsg(0,'T',"destroyMath() called");
+
+  key=hashCond(type,left,right);
+  mathP=(struct MATH **)&(hash->vect[key%hash->modulo]);
   for(math=*mathP;math!=NULL;math=*mathP){
     if(math->left==left && math->right==right && math->cell.object.type==type) return(math);
     mathP=(struct MATH **)&math->cell.object.next;
     }
   math=nbCellNew(type,(void **)&mathFree,sizeof(struct MATH));
+  math->cell.object.key=key;
   math->cell.object.next=(NB_Object *)*mathP;
   *mathP=math;
+  hash->objects++;
+  if(hash->objects>=hash->modulo) nbHashGrow(&type->hash);
   math->left=grabObject(left);
   math->right=grabObject(right);
   if((lmath=(struct MATH *)left)!=(struct MATH *)nb_Unknown && lmath->cell.object.value!=(NB_Object *)lmath)
@@ -423,5 +433,9 @@ struct MATH * useMath(int inverse,struct TYPE *type,NB_Object *left,NB_Object *r
   }
 
 void printMathAll(void){
-  printHash(mathH,"Math Table",NULL);
+  NB_Type *type;
+
+  for(type=nb_TypeList;type!=NULL;type=(NB_Type *)type->object.next){
+    if(type->attributes&TYPE_IS_MATH) printHash(type->hash,"Math Table",type); 
+    }
   }

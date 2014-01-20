@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -33,7 +33,8 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2002/08/31 Ed Trettevik (original prototype)
+* 2002-08-31 Ed Trettevik (original prototype)
+* 2014-01-12 eat 0.9.00 Removed has pointer - referencing via type
 *=============================================================================
 */
 #ifndef _NBREAL_H_
@@ -46,11 +47,10 @@ typedef struct REAL{
   double value;              /* real number value */
   } NB_Real;
 
-extern struct HASH *realH;
 extern struct TYPE *realType;
 
 //void *hashReal(struct HASH *hash,double n);
-void initReal(NB_Stem *stem);
+void nbRealInit(NB_Stem *stem);
 void printReal(struct REAL *real);
 void printRealAll(void);
 //void destroyReal(struct REAL *real);

@@ -128,9 +128,11 @@
 * 2012-10-17 eat 0.8.12 Replaced termGetName with nbTermName
 * 2012-12-27 eat 0.8.13 Checker updates
 * 2013-01-11 eat 0.8.13 Checker updates
-* 2013-12-09 eat 0.9.0  Replaced condTypeNode with nb_SentenceType objects
+* 2013-12-09 eat 0.9.00 Replaced condTypeNode with nb_SentenceType objects
 *            This was necessary to add more fields to a sentence (previously
 *            called a node condition.
+* 2014-01-12 eat 0.9.00 Removed hash pointer - referenced via types
+* 2014-01-18 eat 0.9.00 Implementing LT and GT axon
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -139,7 +141,6 @@ struct ACTION *actList;  /* action list (proactive or reactive THEN) */
 struct ACTION *ashList;  /* list of rules that fired */
 
 struct COND *condFree=NULL;
-struct HASH *condH;
 
 struct TYPE *condTypeNerve;    /* nerve() - nerve cells simply report new values */
 struct TYPE *condTypeOnRule;   /* on()    - on(cond,action) - asserts and alerts */
@@ -164,7 +165,7 @@ struct TYPE *condTypeAndCapture;  /* c &^& d  - andCapture(cond,cond)*/
 struct TYPE *condTypeOrCapture;   /* c |^| d  - andCapture(cond,cond)*/
 struct TYPE *condTypeFlipFlop;    /* c ^ d    - flipflop(cond,cond)*/
 struct TYPE *condTypeRelEQ;       /* a=b     - compare(object,object) */
-//struct TYPE *condTypeRelNE;       /* a<>b    - compare(object,object) */
+struct TYPE *condTypeRelNE;       /* a<>b    - compare(object,object) */
 struct TYPE *condTypeRelLT;       /* a<b     - compare(object,object) */
 struct TYPE *condTypeRelLE;       /* a<=b    - compare(object,object) */
 struct TYPE *condTypeRelGT;       /* a>b     - compare(object,object) */
@@ -188,28 +189,64 @@ void condUnschedule();
 /*
 *  Hash a condition and return a pointer to a pointer in the hashing vector.
 */
-void *hashCond(struct HASH *hash,struct TYPE *type,void *left,void *right){
-  unsigned long h,*t,*l,*r;
-  //unsigned long h,*l,*r;
-  //int i,j;
-  //printf("hashCond: sizeof(long)=%d sizeof(void *)=%d\n",sizeof(h),sizeof(void *));
-  //if(hash==condH)  hash=type->hash; // experiment
-  t=(unsigned long *)&type;
+uint32_t hashCondOld(struct TYPE *type,void *left,void *right){
+  //unsigned long h,*t,*l,*r;
+  unsigned long h,*l,*r;
+  //t=(unsigned long *)&type;
   l=(unsigned long *)&left;
   r=(unsigned long *)&right;
-  //h=(*l & 0x0fffffff) + (*r & 0x0fffffff) + (*t & 0x0fffffff);
-  h=(*l>>6)+(*r>>6)+(*t>>6);
-  //i=h%hash->modulo;
-  //if(hash->vect[i]==NULL){
-    //outMsg(0,'T',"hashCond: creating subordinate hash for index %p[%d]",hash,i);
-  //  hash->vect[i]=newHash(hash->modulo);
-  //  } 
-  //h*=13;
-  //hash=hash->vect[i];
-  //j=h%hash->modulo;
-  //printf("hashCond: n=%lu modulo=%ld index[%d,%d]\n",h,hash->modulo,i,j);
-  //return(&(hash->vect[j]));
-  return(&(hash->vect[h%hash->modulo]));
+  //h=(*l>>3)+(*r>>3)+(*t>>3);
+  h=((*l>>3)+(*r>>3));
+  h+=(h>>3);
+  //h^=(h>>8);
+  return((uint32_t)h);
+  }
+
+uint32_t hashCond(struct TYPE *type,void *left,void *right){
+  unsigned long h,*l,*r;
+  uint32_t key,*k1,*k2;
+  l=(unsigned long *)&left;
+  r=(unsigned long *)&right;
+  h=(*l>>3);
+  h+=(h<<10);
+  h^=(h>>6);
+  h+=(*r>>3);
+  h+=(h<<10);
+  h^=(h>>6);
+  k1=(uint32_t *)&h;
+  k2=k1+1;
+  key=*k1+*k2;
+  //key+=(key<<10);
+  //key^=(key>>6);
+  //key+=*k2;
+  //key+=(key<<10);
+  //key^=(key>>6);
+  return(key);
+  }
+
+
+// This algorithm is based on Perl.
+// It is the "One-at-a-time" algorithm by Bob Jenkins (http://burtleburtle.net/bob/hash/doobs.html)
+#define NB_HASH_PTR(hash,ptr,len){ \
+  register const char * const s_PeRlHaSh_tmp = (char *)&ptr; \
+  register const unsigned char *s_PeRlHaSh = (const unsigned char *)s_PeRlHaSh_tmp; \
+  register int32_t i_PeRlHaSh = len; \
+  register uint32_t hash_PeRlHaSh = hash; \
+  while(i_PeRlHaSh--) { \
+    hash_PeRlHaSh += *s_PeRlHaSh++; \
+    hash_PeRlHaSh += (hash_PeRlHaSh << 10); \
+    hash_PeRlHaSh ^= (hash_PeRlHaSh >> 6); \
+    } \
+  hash_PeRlHaSh += (hash_PeRlHaSh << 3); \
+  hash_PeRlHaSh ^= (hash_PeRlHaSh >> 11); \
+  (hash) = (hash_PeRlHaSh + (hash_PeRlHaSh << 15)); \
+  }
+
+uint32_t hashCondNew(struct TYPE *type,void *left,void *right){
+  uint32_t key=0;
+  NB_HASH_PTR(key,left,sizeof(left))
+  NB_HASH_PTR(key,right,sizeof(right))   
+  return(key);
   }
 
 /**********************************************************************
@@ -298,103 +335,46 @@ void condPrintChange(struct COND *cond){
   outPut(")");
   }
     
-  /*
-  *  Print selected conditions
-  *    0 - all conditions except rules
-  *    1 - relational conditions
-  *    2 - boolean conditions
-  *    3 - time conditions
-  *    4 - assertions
-  */
 /*
+*  Print selected conditions
+*    0 - all conditions except rules
+*    1 - relational conditions
+*    2 - boolean conditions
+*    3 - time conditions
+*    4 - assertions
+*/
 void condPrintAll(int sel){
   struct COND *cond,**condP;
   long v;
   long i;
-  condP=(struct COND **)&(condH->vect);
-  for(v=0;v<condH->modulo;v++){
-    i=0;
-    for(cond=*condP;cond!=NULL;cond=(struct COND *)cond->cell.object.next){
-      if((sel==0 && !(cond->cell.object.type->attributes&TYPE_IS_RULE)) ||
-        (sel==1 && cond->cell.object.type->attributes&TYPE_IS_REL) ||
-        (sel==2 && cond->cell.object.type->attributes&TYPE_IS_BOOL) ||
-        (sel==3 && cond->cell.object.type->attributes&TYPE_IS_TIME) ||
-        (sel==4 && cond->cell.object.type->attributes&TYPE_IS_ASSERT)) {
-        outPut("H[%u,%ld]",v,i);
-        outPut("R[%u]",cond->cell.object.refcnt);
-        outPut("L(%d)",cond->cell.level);
-        outPut(" = ");
-        printObject(cond->cell.object.value);
-        outPut(" == ");
-        printObject((NB_Object *)cond);
-        outPut("\n");
-        }
-      if(i<LONG_MAX) i++;  // 2013-01-13 eat - VID 7045
-      }
-    condP++;
-    }
-  }
-*/
-
-/*
-*  Print all the objects in a tree for a given type
-*
-*  NOTE: This can be turned into a object function instead of a
-*        condition function if we use printObject to do the printing.
-*/
-void condPrintType(NB_Type *type){
-  NB_TreeIterator treeIterator;
-  NB_TreeNode *treeNode;
-  NB_Cond *cond;
-
-  //outMsg(0,'T',"condPrintType: called for type=%p %s set=%p",type,type->name,type->set);
-  NB_TREE_ITERATE_ORDER(treeIterator,treeNode,type->set){
-    // might we just call the objects print routine here?
-    //outMsg(0,'T',"cond=%p",treeNode);
-    cond=(NB_Cond *)treeNode;
-    outPut("sn[%p]",cond);
-    outPut("sp[%p]",cond->cell.object.node.parent);
-    outPut("sb[%2d]",cond->cell.object.node.balance);
-    outPut("sl[%10p]",cond->cell.object.node.left);
-    outPut("sr[%10p]",cond->cell.object.node.right);
-    outPut("\tT[%p]",cond->cell.object.type);
-    outPut("R[%d]",cond->cell.object.refcnt);
-    outPut("L(%d)",cond->cell.level);
-    outPut("l[%p]",cond->left);
-    outPut("r[%p]",cond->right);
-    outFlush();
-    if(cond->cell.object.value){
-      outPut(" = ");
-      printObject(cond->cell.object.value);
-      outPut(" == ");
-      printObject((NB_Object *)cond);
-      }
-    outPut("\n");
-    NB_TREE_ITERATE_ORDER_NEXT(treeIterator,treeNode)
-    }
-  //outMsg(0,'T',"condPrintType: returning");
-  }
-
-/*
-*  Print selected conditions
-*    0 - all conditions
-*    1 - relational conditions
-*    2 - boolean conditions
-*    3 - time conditions
-*/
-void condPrintAll(int sel){
   NB_Type *type;
-  //outMsg(0,'T',"condPrintAll: called");
-  for(type=nb_TypeList;type!=NULL;type=(NB_Type *)type->object.node.left){
-    if((sel==0 && type->attributes&(TYPE_IS_RULE|TYPE_IS_BOOL|TYPE_IS_TIME)) ||
+  
+  for(type=nb_TypeList;type!=NULL;type=(NB_Type *)type->object.next){
+    //if((sel==0 && type->attributes&(TYPE_IS_RULE|TYPE_IS_REL|TYPE_IS_BOOL|TYPE_IS_TIME|TYPE_IS_ASSERT)) ||
+    if((sel==0) ||
        (sel==1 && type->attributes&TYPE_IS_REL) ||
        (sel==2 && type->attributes&TYPE_IS_BOOL) ||
        (sel==3 && type->attributes&TYPE_IS_TIME) ||
-       (sel==4 && type->attributes&TYPE_IS_ASSERT)) condPrintType(type);
+       (sel==4 && type->attributes&TYPE_IS_ASSERT)){
+      condP=(struct COND **)&(type->hash->vect);
+      for(v=0;v<type->hash->modulo;v++){
+        i=0;
+        for(cond=*condP;cond!=NULL;cond=(struct COND *)cond->cell.object.next){
+          outPut("H[%u,%ld]",v,i);
+          outPut("R[%u]",cond->cell.object.refcnt);
+          outPut("L(%d)",cond->cell.level);
+          outPut(" = ");
+          printObject(cond->cell.object.value);
+          outPut(" == ");
+          printObject((NB_Object *)cond);
+          outPut("\n");
+          }
+        if(i<LONG_MAX) i++;  // 2013-01-13 eat - VID 7045
+        condP++;
+        }
+      }
     }
-  //outMsg(0,'T',"condPrintAll: returning");
   }
-
 
 /*************************************************************************
 *  Condition Solve Methods
@@ -732,7 +712,7 @@ NB_Object *evalTime(struct COND *cond){
   return(NB_OBJECT_TRUE);
   }
     
-NB_Object *evalRelEQ(struct COND *cond){
+static NB_Object *evalRelEQ(struct COND *cond){
   NB_Object *left=((NB_Object *)cond->left)->value;
   NB_Object *right=((NB_Object *)cond->right)->value;
   if(left==nb_Unknown || right==nb_Unknown) return(nb_Unknown);
@@ -742,8 +722,7 @@ NB_Object *evalRelEQ(struct COND *cond){
   return(NB_OBJECT_FALSE);
   }
 
-/*
-NB_Object *evalRelNE(struct COND *cond){
+static NB_Object *evalRelNE(struct COND *cond){
   NB_Object *left=((NB_Object *)cond->left)->value;
   NB_Object *right=((NB_Object *)cond->right)->value;
   if(left==nb_Unknown || right==nb_Unknown) return(nb_Unknown);
@@ -752,9 +731,8 @@ NB_Object *evalRelNE(struct COND *cond){
     ((struct REAL *)left)->value==((struct REAL *)right)->value) return(NB_OBJECT_FALSE);
   return(NB_OBJECT_TRUE);
   }
-*/
   
-NB_Object *evalRelLT(struct COND *cond){
+static NB_Object *evalRelLT(struct COND *cond){
   NB_Object *left=((NB_Object *)cond->left)->value;
   NB_Object *right=((NB_Object *)cond->right)->value;
   if(left==nb_Unknown || right==nb_Unknown) return(nb_Unknown);
@@ -766,7 +744,7 @@ NB_Object *evalRelLT(struct COND *cond){
   return(NB_OBJECT_FALSE);
   }
 
-NB_Object *evalRelLE(struct COND *cond){
+static NB_Object *evalRelLE(struct COND *cond){
   NB_Object *left=((NB_Object *)cond->left)->value;
   NB_Object *right=((NB_Object *)cond->right)->value;
   if(left==nb_Unknown || right==nb_Unknown) return(nb_Unknown);
@@ -778,7 +756,7 @@ NB_Object *evalRelLE(struct COND *cond){
   return(NB_OBJECT_FALSE);
   }
 
-NB_Object *evalRelGT(struct COND *cond){
+static NB_Object *evalRelGT(struct COND *cond){
   NB_Object *left=((NB_Object *)cond->left)->value;
   NB_Object *right=((NB_Object *)cond->right)->value;
   if(left==nb_Unknown || right==nb_Unknown) return(nb_Unknown);
@@ -790,7 +768,7 @@ NB_Object *evalRelGT(struct COND *cond){
   return(NB_OBJECT_FALSE);
   }
 
-NB_Object *evalRelGE(struct COND *cond){
+static NB_Object *evalRelGE(struct COND *cond){
   NB_Object *left=((NB_Object *)cond->left)->value;
   NB_Object *right=((NB_Object *)cond->right)->value;
   if(left==nb_Unknown || right==nb_Unknown) return(nb_Unknown);
@@ -802,7 +780,7 @@ NB_Object *evalRelGE(struct COND *cond){
   return(NB_OBJECT_FALSE);
   }
 
-NB_Object *evalMatch(struct COND *cond){
+static NB_Object *evalMatch(struct COND *cond){
   struct STRING *str=(struct STRING *)((NB_Term *)cond->left)->cell.object.value;
   struct REGEXP *regexp;
   int rc;
@@ -823,7 +801,7 @@ NB_Object *evalMatch(struct COND *cond){
   return(NB_OBJECT_FALSE);
   }
 
-NB_Object *evalChange(struct COND *cond){
+static NB_Object *evalChange(struct COND *cond){
   listInsert(&change,cond);
   return(NB_OBJECT_TRUE);
   }
@@ -843,21 +821,39 @@ void condChangeReset(void){
   nbCellReact();
   }
 
-// 2013-12-09 eat - Experimenting with a trick cell for RelEQ evaluation acceleration
-// RelEQ uses a trick cell when the right operand is a constant
+// 2013-12-09 eat - Introducing axon cell for RelEQ evaluation acceleration
+// RelEQ uses a axon cell when the right operand is a constant
 
-void enableRelEQ(struct COND *cond){
-  if(((NB_Cell*)cond->right)->object.value==cond->right){
-    nbTrickRelEqEnable((NB_Cell *)cond->left,cond);
+static void enableRelEQ(struct COND *cond){
+  if(nb_opt_axon && ((NB_Cell*)cond->right)->object.value==cond->right){
+    nbAxonRelEqEnable((NB_Cell *)cond->left,cond);
     return;
     } 
   nbCellEnable((NB_Cell *)cond->left,(NB_Cell *)cond);
   if(cond->right!=cond->left) nbCellEnable((NB_Cell *)cond->right,(NB_Cell *)cond);
   }
 
-void disableRelEQ(struct COND *cond){
-  if(((NB_Cell*)cond->right)->object.value==cond->right){
-    nbTrickRelEqDisable((NB_Cell *)cond->left,cond);
+static void disableRelEQ(struct COND *cond){
+  if(nb_opt_axon && ((NB_Cell*)cond->right)->object.value==cond->right){
+    nbAxonRelEqDisable((NB_Cell *)cond->left,cond);
+    return;
+    }
+  nbCellDisable((NB_Cell *)cond->left,(NB_Cell *)cond);
+  if(cond->right!=cond->left) nbCellDisable((NB_Cell *)cond->right,(NB_Cell *)cond);
+  }
+
+static void enableRelRange(struct COND *cond){
+  if(nb_opt_axon && ((NB_Cell*)cond->right)->object.value==cond->right){
+    nbAxonRelRangeEnable((NB_Cell *)cond->left,cond);
+    return;
+    }
+  nbCellEnable((NB_Cell *)cond->left,(NB_Cell *)cond);
+  if(cond->right!=cond->left) nbCellEnable((NB_Cell *)cond->right,(NB_Cell *)cond);
+  }
+
+static void disableRelRange(struct COND *cond){
+  if(nb_opt_axon && ((NB_Cell*)cond->right)->object.value==cond->right){
+    nbAxonRelRangeDisable((NB_Cell *)cond->left,cond);
     return;
     }
   nbCellDisable((NB_Cell *)cond->left,(NB_Cell *)cond);
@@ -926,34 +922,19 @@ void disableTime(struct COND *cond){
 *    will be merged with the ACTION object.     
 */
 void freeCondition(struct COND *cond){
-  //struct COND *lcond,**condP;
+  NB_Cond *lcond,**condP;
+  NB_Hash *hash=cond->cell.object.type->hash;
 
-/*
-  condP=hashCond(condH,cond->cell.object.type,cond->left,cond->right);
-  if(*condP==cond) *condP=(struct COND *)cond->cell.object.next;
-  else{
-    for(lcond=*condP;lcond!=NULL && lcond!=cond;lcond=*condP)
-      condP=(struct COND **)&lcond->cell.object.next;
-    if(lcond==cond) *condP=(struct COND *)cond->cell.object.next;
-    }
-*/
-  //outMsg(0,'T',"freeCondition: before nbSetRemove");
-  //condPrintAll(0);
-  //condPrintAll(1);
-  //condPrintAll(4);
-  nbSetRemove((NB_SetNode *)&cond->cell.object.type->set,(NB_SetNode *)cond);
-  //outMsg(0,'T',"freeCondition: after nbSetRemove");
-  //condPrintAll(0);
-  //condPrintAll(1);
-  //condPrintAll(4);
+  condP=(NB_Cond **)&(hash->vect[cond->cell.object.key%hash->modulo]);
+  for(lcond=*condP;lcond!=NULL && lcond!=cond;lcond=*condP)
+    condP=(struct COND **)&lcond->cell.object.next;
+  if(lcond==cond) *condP=(struct COND *)cond->cell.object.next;
   cond->cell.object.next=(NB_Object *)condFree;
   condFree=cond;
+  hash->objects--;
   }
 
 void destroyCondition(struct COND *cond){
-  //outMsg(0,'T',"destroyCondition: called");
-  //printObject((NB_Object *)cond);
-  //outPut("\n");
   nbCellDisable(cond->left,(NB_Cell *)cond);  
   dropObject(cond->left);
   nbCellDisable(cond->right,(NB_Cell *)cond);
@@ -985,87 +966,86 @@ void destroyRule(struct COND *cond){
 * Public Methods
 **********************************************************************/
 void initCondition(NB_Stem *stem){
-  //condH=newHash(100003);  /* initialize condition hash */
-  //condH=newHash(2000031);  // 2013-12-19 eat - debug
-  condTypeNerve=newType(stem,"nerve",condH,TYPE_RULE,condPrintNerve,destroyNerve);
+  condTypeNerve=newType(stem,"nerve",NULL,TYPE_RULE,condPrintNerve,destroyNerve);
   nbCellType(condTypeNerve,solvePrefix,evalNerve,enableRule,disableRule);
 
-  condTypeOnRule=newType(stem,"on",condH,TYPE_RULE,condPrintRule,destroyRule);
+  condTypeOnRule=newType(stem,"on",NULL,TYPE_RULE,condPrintRule,destroyRule);
   nbCellType(condTypeOnRule,solvePrefix,evalRule,enableRule,disableRule);
   condTypeOnRule->alert=alertRule;
-  condTypeWhenRule=newType(stem,"when",condH,TYPE_RULE,condPrintRule,destroyRule);
+  condTypeWhenRule=newType(stem,"when",NULL,TYPE_RULE,condPrintRule,destroyRule);
   nbCellType(condTypeWhenRule,solvePrefix,evalRule,enableRule,disableRule);
   condTypeWhenRule->alert=alertRule;
-  condTypeIfRule=newType(stem,"if",condH,TYPE_RULE,condPrintRule,destroyRule);
+  condTypeIfRule=newType(stem,"if",NULL,TYPE_RULE,condPrintRule,destroyRule);
   nbCellType(condTypeIfRule,solvePrefix,evalRule,enableRule,disableRule);
 
-  condTypeNot=newType(stem,"!",condH,TYPE_BOOL,condPrintPrefix,destroyCondition);
+  condTypeNot=newType(stem,"!",NULL,TYPE_BOOL,condPrintPrefix,destroyCondition);
   nbCellType(condTypeNot,solvePrefix,evalNot,enablePrefix,disablePrefix);
-  condTypeTrue=newType(stem,"!!",condH,TYPE_BOOL,condPrintPrefix,destroyCondition);
+  condTypeTrue=newType(stem,"!!",NULL,TYPE_BOOL,condPrintPrefix,destroyCondition);
   nbCellType(condTypeTrue,solvePrefix,evalTrue,enablePrefix,disablePrefix);
-  condTypeUnknown=newType(stem,"?",condH,TYPE_BOOL,condPrintPrefix,destroyCondition);
+  condTypeUnknown=newType(stem,"?",NULL,TYPE_BOOL,condPrintPrefix,destroyCondition);
   nbCellType(condTypeUnknown,solvePrefix,evalUnknown,enablePrefix,disablePrefix);
-  condTypeKnown=newType(stem,"!?",condH,TYPE_BOOL,condPrintPrefix,destroyCondition);
+  condTypeKnown=newType(stem,"!?",NULL,TYPE_BOOL,condPrintPrefix,destroyCondition);
   nbCellType(condTypeKnown,solvePrefix,evalKnown,enablePrefix,disablePrefix);
-  condTypeClosedWorld=newType(stem,"[]",condH,TYPE_BOOL,condPrintPrefix,destroyCondition);
+  condTypeClosedWorld=newType(stem,"[]",NULL,TYPE_BOOL,condPrintPrefix,destroyCondition);
   nbCellType(condTypeClosedWorld,solvePrefix,evalClosedWorld,enablePrefix,disablePrefix);
 
-  condTypeDefault=newType(stem,"?",condH,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeDefault=newType(stem,"?",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeDefault,solveInfix1,evalDefault,enableInfix,disableInfix);
-  condTypeLazyAnd=newType(stem,"&&",condH,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeLazyAnd=newType(stem,"&&",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeLazyAnd,solveInfix1,evalLazyAnd,enablePrefix,disablePrefix); // prefix enabling is intentional
-  condTypeAnd=newType(stem,"&",condH,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeAnd=newType(stem,"&",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeAnd,solveInfix1,evalAnd,enableInfix,disableInfix);
-  condTypeNand=newType(stem,"!&",condH,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeNand=newType(stem,"!&",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeNand,solveInfix1,evalNand,enableInfix,disableInfix);
-  condTypeLazyOr=newType(stem,"||",condH,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeLazyOr=newType(stem,"||",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeLazyOr,solveInfix1,evalLazyOr,enablePrefix,disablePrefix);
-  condTypeOr=newType(stem,"|",condH,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeOr=newType(stem,"|",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeOr,solveInfix1,evalOr,enableInfix,disableInfix);
-  condTypeNor=newType(stem,"!|",condH,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeNor=newType(stem,"!|",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeNor,solveInfix1,evalNor,enableInfix,disableInfix);
-  condTypeXor=newType(stem,"|!&",condH,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeXor=newType(stem,"|!&",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeXor,solveInfix1,evalXor,enableInfix,disableInfix);
-  condTypeAndMonitor=newType(stem,"&~&",condH,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeAndMonitor=newType(stem,"&~&",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeAndMonitor,solveInfix2,evalAndMonitor,enableCapture,disableInfix);
-  condTypeOrMonitor=newType(stem,"|~|",condH,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeOrMonitor=newType(stem,"|~|",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeOrMonitor,solveInfix2,evalOrMonitor,enableCapture,disableInfix);
-  condTypeAndCapture=newType(stem,"&^&",condH,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeAndCapture=newType(stem,"&^&",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeAndCapture,solveInfix2,evalAndCapture,enableCapture,disableInfix);
-  condTypeOrCapture=newType(stem,"|^|",condH,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeOrCapture=newType(stem,"|^|",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeOrCapture,solveInfix2,evalOrCapture,enableCapture,disableInfix);
-  condTypeFlipFlop=newType(stem,"^",condH,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeFlipFlop=newType(stem,"^",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeFlipFlop,solveInfix2,evalFlipFlop,enableFlipFlop,disableInfix);
 
-  condTypeDelayTrue=newType(stem,"~^1",condH,TYPE_DELAY,condPrintInfix,destroyCondition);
+  condTypeDelayTrue=newType(stem,"~^1",NULL,TYPE_DELAY,condPrintInfix,destroyCondition);
   nbCellType(condTypeDelayTrue,solveKnown,evalDelay,enableInfix,disableInfix);
-  condTypeDelayFalse=newType(stem,"~^0",condH,TYPE_DELAY,condPrintInfix,destroyCondition);
+  condTypeDelayFalse=newType(stem,"~^0",NULL,TYPE_DELAY,condPrintInfix,destroyCondition);
   nbCellType(condTypeDelayFalse,solveKnown,evalDelay,enableInfix,disableInfix);
-  condTypeDelayUnknown=newType(stem,"~^?",condH,TYPE_DELAY,condPrintInfix,destroyCondition);
+  condTypeDelayUnknown=newType(stem,"~^?",NULL,TYPE_DELAY,condPrintInfix,destroyCondition);
   nbCellType(condTypeDelayUnknown,solveKnown,evalDelay,enableInfix,disableInfix);
 
-  condTypeTime=newType(stem,"~",condH,TYPE_TIME,condPrintTime,destroyCondition);
+  condTypeTime=newType(stem,"~",NULL,TYPE_TIME,condPrintTime,destroyCondition);
   nbCellType(condTypeTime,solveKnown,evalTime,enableTime,disableTime);
-  condTypeTimeDelay=newType(stem,"",condH,TYPE_TIME,condPrintTime,destroyCondition);
+  condTypeTimeDelay=newType(stem,"",NULL,TYPE_TIME,condPrintTime,destroyCondition);
   nbCellType(condTypeTimeDelay,solveKnown,evalTime,enableTime,disableTime);
 
-  condTypeRelEQ=newType(stem,"=",condH,TYPE_REL,condPrintInfix,destroyCondition);
+  condTypeRelEQ=newType(stem,"=",NULL,TYPE_REL,condPrintInfix,destroyCondition);
   nbCellType(condTypeRelEQ,solveInfix2,evalRelEQ,enableRelEQ,disableRelEQ);
   // 2013-12-12 eat - experimenting with transformation to replace A<>B with !(A=B)
-  //condTypeRelNE=newType(stem,"<>",condH,TYPE_REL,condPrintInfix,destroyCondition);
-  //nbCellType(condTypeRelNE,solveInfix2,evalRelNE,enableRelEQ,disableRelEQ); // share enable disable with RelEQ
-  condTypeRelLT=newType(stem,"<",condH,TYPE_REL,condPrintInfix,destroyCondition);
-  nbCellType(condTypeRelLT,solveInfix2,evalRelLT,enableInfix,disableInfix);
-  condTypeRelLE=newType(stem,"<=",condH,TYPE_REL,condPrintInfix,destroyCondition);
+  condTypeRelNE=newType(stem,"<>",NULL,TYPE_REL,condPrintInfix,destroyCondition);
+  nbCellType(condTypeRelNE,solveInfix2,evalRelNE,enableRelEQ,disableRelEQ); // share enable disable with RelEQ
+  condTypeRelLT=newType(stem,"<",NULL,TYPE_REL,condPrintInfix,destroyCondition);
+  nbCellType(condTypeRelLT,solveInfix2,evalRelLT,enableRelRange,disableRelRange);
+  //condTypeRelLE=newType(stem,"<=",NULL,TYPE_REL,condPrintInfix,destroyCondition);
+  condTypeRelLE=newType(stem,"<=",NULL,TYPE_REL,condPrintInfix,destroyCondition);
   nbCellType(condTypeRelLE,solveInfix2,evalRelLE,enableInfix,disableInfix);
-  condTypeRelGT=newType(stem,">",condH,TYPE_REL,condPrintInfix,destroyCondition);
-  nbCellType(condTypeRelGT,solveInfix2,evalRelGT,enableInfix,disableInfix);
-  condTypeRelGE=newType(stem,">=",condH,TYPE_REL,condPrintInfix,destroyCondition);
+  condTypeRelGT=newType(stem,">",NULL,TYPE_REL,condPrintInfix,destroyCondition);
+  nbCellType(condTypeRelGT,solveInfix2,evalRelGT,enableRelRange,disableInfix);
+  condTypeRelGE=newType(stem,">=",NULL,TYPE_REL,condPrintInfix,destroyCondition);
   nbCellType(condTypeRelGE,solveInfix2,evalRelGE,enableInfix,disableInfix);
 
-  condTypeMatch=newType(stem,"~",condH,0,condPrintMatch,destroyCondition);
+  condTypeMatch=newType(stem,"~",NULL,0,condPrintMatch,destroyCondition);
   nbCellType(condTypeMatch,solvePrefix,evalMatch,enableInfix,disableInfix);
-  condTypeChange=newType(stem,"~=",condH,0,condPrintChange,destroyCondition);
+  condTypeChange=newType(stem,"~=",NULL,0,condPrintChange,destroyCondition);
   nbCellType(condTypeChange,solveKnown,evalChange,enableInfix,disableInfix);
   }
 
@@ -1081,17 +1061,33 @@ void initCondition(NB_Stem *stem){
 *  rule.
 *
 */
-struct COND * useConditionOLD(struct TYPE *type,void *left,void *right){
-  struct COND *cond,*loper,*roper,**condP;
+struct COND * useCondition(struct TYPE *type,void *left,void *right){
+  NB_Cond *cond,*loper,*roper,**condP;
+  NB_Hash *hash=type->hash;
+  uint32_t key;
+  unsigned long h,*l,*r;
+
   if(trace) outMsg(0,'T',"useCondition: called");
-  condP=hashCond(condH,type,left,right);
+  //if(left) key=((NB_Object *)left)->key;
+  //else key=0;
+  //if(right) key+=((NB_Object *)right)->key;
+  l=(unsigned long *)&left;
+  r=(unsigned long *)&right;
+  h=((*l>>3)+(*r>>3));
+  h+=(h>>3);
+  key=h;
+  condP=(NB_Cond **)&(hash->vect[key%hash->modulo]);
   for(cond=*condP;cond!=NULL;cond=*condP){
-    if(cond->left==left && cond->right==right && cond->cell.object.type==type) return(cond);
+    if(cond->left==left && cond->right==right) return(cond);
     condP=(struct COND **)&cond->cell.object.next;
     }
   cond=nbCellNew(type,(void **)&condFree,sizeof(struct COND));
+  cond->cell.object.key=key;
   cond->cell.object.next=(NB_Object *)*condP;
   *condP=cond;
+  hash->objects++;
+  //if(hash->objects>=(hash->modulo/4)) nbHashGrow(&type->hash);
+  if(hash->objects>=hash->modulo) nbHashGrow(&type->hash);
   cond->left=grabObject(left);
   cond->right=grabObject(right);
   loper=left;
@@ -1115,61 +1111,6 @@ struct COND * useConditionOLD(struct TYPE *type,void *left,void *right){
       cond->cell.level=roper->cell.level+1;
     cond->cell.object.value=nb_Disabled;
     }
-  if(trace) outMsg(0,'T',"useCondition: returning");
-  return(cond);
-  }
-struct COND * useCondition(struct TYPE *type,void *left,void *right){
-  NB_Cond *cond=(NB_Cond *)(&type->set),*loper,*roper;
-  NB_SetNode *setNode;
-  NB_SetNode **nodeP;   // Address of node pointer
-
-  if(trace) outMsg(0,'T',"useCondition: called");
-  //outMsg(0,'T',"useCondition: called type=%p,left=%p,right=%p  root=%p,*root=%p",type,left,right,cond,cond->cell.object.node.left);
-  nodeP=(NB_SetNode **)cond;
-  for(setNode=*nodeP;setNode!=NULL;setNode=*nodeP){
-    cond=(NB_Cond *)setNode;
-    //outMsg(0,'T',"useCondtion: checking cond=%p",cond);
-    //printObject((NB_Object *)cond);
-    //outPut("\n");
-    //outFlush();
-    if(right<cond->right) nodeP=&setNode->left;
-    else if(right>cond->right) nodeP=&setNode->right;
-    else if(left<cond->left) nodeP=&setNode->left;
-    else if(left>cond->left) nodeP=&setNode->right;
-    else break;
-    }
-  if(setNode) return(cond);
-  setNode=(NB_SetNode *)cond;
-  cond=nbCellNew(type,(void **)&condFree,sizeof(struct COND));
-  //outMsg(0,'T',"useCondition: before nbSetInsert");
-  //condPrintAll(0);
-  //condPrintAll(4);
-  nbSetInsert((NB_SetNode *)&type->set,setNode,nodeP,(NB_SetNode *)cond);
-  //outMsg(0,'T',"useCondition: after nbSetInsert");
-  //condPrintAll(0);
-  //condPrintAll(4);
-  cond->left=grabObject(left);
-  cond->right=grabObject(right);
-  loper=left;
-  roper=right;
-  if(type->attributes&TYPE_IS_RULE){    /* rules */
-    if(loper->cell.object.value!=(NB_Object *)loper){
-      cond->cell.level=loper->cell.level+1;
-      nbCellEnable((NB_Cell *)left,(NB_Cell *)cond);
-      }
-    cond->cell.object.value=loper->cell.object.value;
-    }
-  else{                     /* other conditions */
-    if(loper->cell.object.value!=(NB_Object *)loper)
-      cond->cell.level=loper->cell.level+1;
-    if(roper->cell.object.value!=(NB_Object *)roper &&
-      cond->cell.level<=roper->cell.level)
-      cond->cell.level=roper->cell.level+1;
-    cond->cell.object.value=nb_Disabled;
-    }
-  //outMsg(0,'T',"useCondtion: inserted");
-  //printObject((NB_Object *)cond);
-  //outPut("\n");
   if(trace) outMsg(0,'T',"useCondition: returning");
   return(cond);
   }

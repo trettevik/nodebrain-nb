@@ -326,6 +326,7 @@
 * 2011-11-05 eat 0.8.6  Included nbCellGetText
 * 2012-10-13 eat 0.8.12 Replace remaining malloc with nbAlloc
 * 2013-01-11 eat 0.8.13 Checker updates
+* 2014-01-12 eat 0.9.00 Included nbCellEnableAxon and nbCellDisableAxon
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -374,6 +375,7 @@ NB_Object *NB_OBJECT_TRUE;
 void nbCellInit(NB_Stem *stem){
   NB_OBJECT_TRUE=(NB_Object *)useReal((double)1);
   NB_OBJECT_TRUE->refcnt=(unsigned int)-1;         /* flag as perminent object */
+  nb_True=NB_OBJECT_TRUE;
   //NB_OBJECT_FALSE=(NB_Object *)useReal((double)0);
   NB_OBJECT_FALSE=(NB_Object *)nb_False;           // 2013-12-05 eat - using special false object (not zero)
   //NB_OBJECT_FALSE->refcnt=(unsigned int)-1;        /* flag as perminent object */
@@ -604,11 +606,8 @@ void nbCellEnable(NB_Cell *pub,NB_Cell *sub){
       nbTreeInsert(&treePath,treeNode);
       }
     }
-  if(trace) outMsg(0,'T',"nbCellEnable() completed subscription");
   if(pub->object.value!=nb_Disabled) return; // already know the value
-  if(trace) outMsg(0,'T',"nbCellEnable() calling publisher's enable method.");
   pub->object.type->enable(pub); /* pub's enable method */
-  if(trace) outMsg(0,'T',"nbCellEnable() calling publisher's evaluate method.");
   pub->object.value=(NB_Object *)grabObject(pub->object.type->eval(pub));  /* pub's evaluation method */
   if(sub!=NULL && sub->object.value!=(NB_Object *)sub && sub->level<=pub->level){
     ((NB_Cell *)sub)->level=pub->level+1;
@@ -627,11 +626,11 @@ void nbCellEnable(NB_Cell *pub,NB_Cell *sub){
 *  This is an experiment with subscription trees organized by a provided
 *  comparison routine instead of by subscriber address.
 */
-void nbCellEnableTrick(NB_Cell *pub,NB_Cell *sub){
-  //outMsg(0,'T',"nbCellEnableTrick: called");
+void nbCellEnableAxon(NB_Cell *pub,NB_Cell *sub){
+  //outMsg(0,'T',"nbCellEnableAxon: called");
   if(pub->object.value==(NB_Object *)pub) return;  // simple object doesn't publish
   if(trace){
-    outMsg(0,'T',"nbCellEnableTrick() called - linking subscriber");
+    outMsg(0,'T',"nbCellEnableAxon: called - linking subscriber");
     outPut("subscriber: ");
     printObject((NB_Object *)sub);
     outPut("\n");
@@ -645,34 +644,49 @@ void nbCellEnableTrick(NB_Cell *pub,NB_Cell *sub){
   if(sub!=NULL){
     NB_TreePath treePath;
     NB_TreeNode *treeNode;
-    //outMsg(0,'T',"nbCellEnableTrick: calling nbTreeLocateValue");
-    treeNode=(NB_TreeNode *)nbTreeLocateCondRight(&treePath,((NB_Cond *)sub)->right,(NB_TreeNode **)&pub->sub);
-    //outMsg(0,'T',"nbCellEnableTrick: nbTreeLocateValue returned %p",treeNode);
+    //outMsg(0,'T',"nbCellEnableAxon: calling nbTreeLocateValue");
+    if(sub->object.type==condTypeRelEQ)
+      treeNode=(NB_TreeNode *)nbTreeLocateCondRight(&treePath,((NB_Cond *)sub)->right,(NB_TreeNode **)&pub->sub);
+    else if(sub->object.type->attributes&TYPE_IS_REL){
+      if(((NB_Object *)((NB_Cond *)sub)->right)->type==strType) 
+        treeNode=(NB_TreeNode *)nbTreeLocateCondRightString(&treePath,((NB_String *)((NB_Cond *)sub)->right)->value,(NB_TreeNode **)&pub->sub);
+      else if(((NB_Object *)((NB_Cond *)sub)->right)->type==realType)
+        treeNode=(NB_TreeNode *)nbTreeLocateCondRightReal(&treePath,((NB_Real *)((NB_Cond *)sub)->right)->value,(NB_TreeNode **)&pub->sub);
+      else{
+        outMsg(0,'L',"nbCellEnableAxon: called with unsupported subscriber type - expecting string or real constant on right");
+        return;
+        }
+      }
+    else{
+      outMsg(0,'L',"nbCellEnableAxon: called with unsupported subscriber type - expecting relational operator");
+      return;
+      }
+    //outMsg(0,'T',"nbCellEnableAxon: nbTreeLocateValue returned %p",treeNode);
     if(treeNode==NULL){  // if not already a subscriber, then subscribe
       treeNode=(NB_TreeNode *)nbAlloc(sizeof(NB_TreeNode));
       treePath.key=sub;
       nbTreeInsert(&treePath,treeNode);
-      //outMsg(0,'T',"nbCellEnableTrick: nbTreeInsert returned");
+      //outMsg(0,'T',"nbCellEnableAxon: nbTreeInsert returned");
       }
     }
-  if(trace) outMsg(0,'T',"nbCellEnableTrick: completed subscription");
+  if(trace) outMsg(0,'T',"nbCellEnableAxon: completed subscription");
   //if(pub->object.value!=nb_Disabled) return; // already know the value
-  //if(trace) outMsg(0,'T',"nbCellEnableTrick: calling publisher's enable method.");
+  //if(trace) outMsg(0,'T',"nbCellEnableAxon: calling publisher's enable method.");
   //pub->object.type->enable(pub); /* pub's enable method */
-  //if(trace) outMsg(0,'T',"nbCellEnableTrick: calling publisher's evaluate method.");
+  //if(trace) outMsg(0,'T',"nbCellEnableAxon: calling publisher's evaluate method.");
   //pub->object.value=(NB_Object *)grabObject(pub->object.type->eval(pub));  /* pub's evaluation method */
-  pub->object.value=nb_Unknown; // don't call trick cell eval method when enabling
-  //outMsg(0,'T',"nbCellEnableTrick: checking to see if we want to level - sub=%p",sub);
+  pub->object.value=nb_Unknown; // don't call axon cell eval method when enabling
+  //outMsg(0,'T',"nbCellEnableAxon: checking to see if we want to level - sub=%p",sub);
   //if(sub){
-  //  outMsg(0,'T',"nbCellEnableTrick: sub->value=%p sub->level=%d pub->level=%d",sub->object.value,sub->level,pub->level);
+  //  outMsg(0,'T',"nbCellEnableAxon: sub->value=%p sub->level=%d pub->level=%d",sub->object.value,sub->level,pub->level);
   //  }
   if(sub!=NULL && sub->object.value!=(NB_Object *)sub && sub->level<=pub->level){
-    //outMsg(0,'T',"nbCellEnableTrick: leveling");
+    //outMsg(0,'T',"nbCellEnableAxon: leveling");
     ((NB_Cell *)sub)->level=pub->level+1;
     nbCellLevel((NB_Cell *)sub);
     }
   if(trace){
-    outMsg(0,'T',"nbCellEnableTrick: returning");
+    outMsg(0,'T',"nbCellEnableAxon: returning");
     outPut("Function: ");
     printObject((NB_Object *)pub);
     outPut("\nResult:");
@@ -718,7 +732,7 @@ void nbCellDisable(NB_Cell *pub,NB_Cell *sub){
     }
   if(trace) outMsg(0,'T',"nbCellDisable() returning");
   }
-void nbCellDisableTrick(NB_Cell *pub,NB_Cell *sub){
+void nbCellDisableAxon(NB_Cell *pub,NB_Cell *sub){
   if(trace){
     outMsg(0,'T',"nbCellDisable() called");
     printObject((NB_Object *)pub);

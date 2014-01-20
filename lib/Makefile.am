@@ -44,7 +44,7 @@
 ## ---------- -----------------------------------------------------------------
 ## 2008-10-27 Ed Trettevik (version 0.7.3 - split out from nb package)
 ## 2011-11-05 eat - included nbmail.c and nbtext.c
-## 2013-12-30 eat - included nbset.c and nbset.h
+## 2013-12-30 eat 0.9.00 included nbset.c and nbset.h
 ##=============================================================================
      
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
@@ -60,6 +60,7 @@ libnb_adir = @includedir@/nb
 libnb_a_HEADERS = \
   include/nb/nb.h \
   include/nb/nbassertion.h \
+  include/nb/nbaxon.h \
   include/nb/nbcell.h \
   include/nb/nbclock.h \
   include/nb/nbcmd.h \
@@ -94,7 +95,6 @@ libnb_a_HEADERS = \
   include/nb/nbtls.h \
   include/nb/nbtranslator.h \
   include/nb/nbtree.h \
-  include/nb/nbtrick.h \
   include/nb/nbverb.h \
   include/nb/nbwebster.h
 
@@ -107,6 +107,7 @@ libnb_la_LDFLAGS = -release ${PACKAGE_VERSION}
 
 libnb_la_SOURCES = \
   nbassertion.c \
+  nbaxon.c \
   nbbfi.c \
   nbbind.c \
   nbcall.c \
@@ -157,12 +158,12 @@ libnb_la_SOURCES = \
   nbtls.c \
   nbtranslator.c \
   nbtree.c \
-  nbtrick.c \
   nbverb.c \
   nbwebster.c \
   include/nb/nb.h \
   include/nb/nbi.h \
   include/nb/nbassertion.h \
+  include/nb/nbaxon.h \
   include/nb/nbbfi.h \
   include/nb/nbcall.h \
   include/nb/nbcell.h \
@@ -209,8 +210,7 @@ libnb_la_SOURCES = \
   include/nb/nbtime.h \
   include/nb/nbtls.h \
   include/nb/nbtranslator.h \
-  include/nb/nbtree.h \
-  include/nb/nbtrick.h
+  include/nb/nbtree.h
 
 # pcre.h \
 # readline/chardefs.h \

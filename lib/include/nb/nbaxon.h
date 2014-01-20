@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -19,44 +19,49 @@
 *=============================================================================
 * Program:  NodeBrain
 *
-* File:     nbtrick.h
+* File:     nbaxon.h
 *
-* Title:    Trick Cell Header
+* Title:    Axon Cell Header
 *
 * Function:
 *
-*   This header defines routines that manage nodebrain trick cells.
+*   This header defines routines that manage nodebrain axon cells.
 *
-* See nbtrick.c for more information.
+* See nbaxon.c for more information.
 *============================================================================
 * Change History:
 *
 *    Date    Name/Change
 * ---------- ---------------------------------------------------------------
-* 2013-12-09 Ed Trettevik (original prototype introduced in 0.9.0)
+* 2013-12-09 Ed Trettevik (original prototype introduced in 0.9.00)
 *============================================================================
 */
-#ifndef _NB_TRICK_H_
-#define _NB_TRICK_H_
+#ifndef _NB_AXON_H_
+#define _NB_AXON_H_
 
 #include <nb/nbstem.h>
 
 /* 
-* Relational Equal Operator Trick Object 
+* Relational Equal Operator Axon Object 
 */
-typedef struct NB_TRICK_REL_EQ{ // trick object
-  struct NB_CELL cell;          // object header
-  struct NB_TREE_NODE *sub;     // subscriber tree
-  struct NB_CELL   *pub;        // publishing cell
-  struct NB_CELL   *trueCell;   // NULL or the one true RelEq cell with matching constant
-                                // or nb_Unknown which means all subscribers have Unknown value
-  } NB_TrickRelEq;
+typedef struct NB_AXON_REL{  // axon object for relational equality
+  NB_Cell     cell;          // object header
+  NB_Cell     *pub;          // publishing cell
+  union{
+    NB_Cell   *trueCell;     // NULL, nb_Unknown, or the one true RelEq cell with matching constant (EQ)
+    NB_Object *value;        // nb_Unknown, or current object value  (LT or GT)
+    NB_Real   *real;         // nb_Unknown, or current real value (LT or GT)
+    NB_String *string;       // nb_Unknown, or current real value (LT or GT)
+    };
+  } NB_AxonRel;
 
 // Functions
 
-void initTrick(NB_Stem *stem);
-struct TYPE *nb_TypeTrickRelEq;
-void nbTrickRelEqEnable(nbCELL pub,struct COND *cond);
-void nbTrickRelEqDisable(nbCELL pub,struct COND *cond);
+void nbAxonInit(NB_Stem *stem);
+struct TYPE *nb_TypeAxonRelEq;
+void nbAxonRelEqEnable(nbCELL pub,struct COND *cond);
+void nbAxonRelEqDisable(nbCELL pub,struct COND *cond);
+void nbAxonRelRangeEnable(nbCELL pub,struct COND *cond);
+void nbAxonRelRangeDisable(nbCELL pub,struct COND *cond);
 
 #endif

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -49,6 +49,7 @@
 * 2010-10-14 eat 0.8.4  Included servepid.
 * 2010-10-16 eat 0.8.4  Included servegroup.
 * 2012-12-25 eat 0.8.13 Included nb_charset.
+* 2014-01-06 eat 0.9.00 Included performance testing options.
 *============================================================================
 */
 #include <stdio.h> 
@@ -73,6 +74,9 @@ int  nb_opt_query=0;     /* automatically query at end of arguments */
 int  nb_opt_servant=0;   /* enter servant mode at end of arguments */
 int  nb_opt_shim=0;      /* shim object methods to enable tracing */
 int  nb_opt_user=1;      /* automatically load user profile */
+int  nb_opt_hush=0;      // suppress calls to log routines
+int  nb_opt_stats=0;     // print statistics when terminating
+int  nb_opt_axon=0;      // used axon for value rich rules
 
 int sourceTrace=0;       /* debugging trace flag for source input */
 int symbolicTrace=0;     /* debugging trace flag for symbolic substitution */

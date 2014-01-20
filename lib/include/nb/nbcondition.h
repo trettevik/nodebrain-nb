@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -34,8 +34,10 @@
 *
 *    Date    Name/Change
 * ---------- ----------------------------------------------------------------
-* 2002/09/07 Ed Trettevik (split out in 0.4.1)
+* 2002-09-07 Ed Trettevik (split out in 0.4.1)
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2014-01-12 eat 0.9.00 Eliminated hash pointer - access via types
+* 2014-01-12 eat 0.9.00 Modified hash to return key instead of hash vector entry
 *============================================================================
 */
 #ifndef _NB_CONDITION_H_
@@ -52,7 +54,6 @@ typedef struct COND {               /* Condition Object - one or two operands */
   } NB_Cond;
 
 extern struct COND *condFree;
-extern struct HASH *condH;
 
 extern struct TYPE *condTypeNerve;
 extern struct TYPE *condTypeOnRule;
@@ -95,7 +96,8 @@ extern struct TYPE *condTypeChange;
 */
 void initCondition(NB_Stem *stem);
 struct COND *useCondition(struct TYPE *type,void *left,void *right);
-void *hashCond(struct HASH *hash,struct TYPE *type,void *left,void *right);
+//void *hashCond(struct HASH *hash,struct TYPE *type,void *left,void *right);
+uint32_t hashCond(struct TYPE *type,void *left,void *right);
 void destroyCondition(struct COND *cond);
 void freeCondition(struct COND *cond);
 

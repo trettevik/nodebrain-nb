@@ -60,6 +60,7 @@
 *                expense of a little memory.
 * 2005-04-08 eat 0.6.2  API functions definitions move to nbapi.h
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2014-01-12 eat 0.9.00 Included more type flags
 *=============================================================================
 */
 #ifndef _NB_OBJECT_H_
@@ -77,13 +78,11 @@ extern int showlevel;
 extern int showcount;
 
 struct NB_OBJECT{             /* object header */
-  union{
   struct   NB_OBJECT *next;   /* link to next object in hash list */
-  struct   NB_SET_NODE node;
-  };
   struct   TYPE      *type;   /* object type */
   struct   NB_OBJECT *value;  /* value pointer - may point to self */
-  unsigned int       refcnt;  /* number of references */
+  int32_t  refcnt;            /* number of references */
+  uint32_t key;               /* hashing key */
   };
 
 typedef struct NB_OBJECT NB_Object;
@@ -117,16 +116,16 @@ extern NB_Object *nb_Placeholder;
 #define TYPE_REGEXP   512  /* regular expression */
 #define TYPE_WELDED  1024  /* terms should not release these objects easily */
                            /* - an explicit undefine is required */
-#define TYPE_IS_FACT 0x0800   /* facts */
-#define TYPE_NOT_TRUE 0x1000   // Objects like zero, unknown, and disabled that are not true
+#define TYPE_IS_FACT   0x0800   /* facts */
+#define TYPE_NOT_TRUE  0x1000   // Objects like zero, unknown, and disabled that are not true
 #define TYPE_IS_ASSERT 0x2000   /* assertions */
+#define TYPE_IS_MATH   0x4000   // Math functions
 
 typedef struct TYPE{
   struct NB_OBJECT object;     /* object header */
   struct NB_STEM   *stem;      /* brain stem cell */ 
   char *name;                  /* symbolic name */
   struct HASH *hash;           /* hashing table for object lookup */
-  struct NB_Set *set;          // set of all objects of this type
   int  attributes;             /* see object type attributes above */
   int  apicelltype;            /* cell type code for API */
   void (*showExpr)();          /* show as expression */

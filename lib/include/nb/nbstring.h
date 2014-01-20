@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -42,14 +42,11 @@
 
 #include <nb/nbstem.h>
 
-struct STRING{
+typedef struct STRING{
   struct NB_OBJECT object;    /* object header */
   char value[1];              /* length determined when created */
-  };
+  } NB_String;
 
-typedef struct STRING NB_String;
-
-extern struct HASH *strH;
 extern NB_Type *strType;
 extern struct STRING *stringFree;  /* this pointer should remain null */
 

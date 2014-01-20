@@ -9,7 +9,7 @@ nb_set_la_CFLAGS  = $(NB_MOD_CFLAGS)
 nb_set_la_LDFLAGS = -module -avoid-version
 
 EXTRA_DIST = \
-  caboodle/check/set.nb~ \
+  caboodle/check/set.nb- \
   doc/nb_set.texi \
   doc/nb_set_tutorial.texi \
   doc/version.texi

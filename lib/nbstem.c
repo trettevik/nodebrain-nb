@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -80,8 +80,8 @@ void nbStemInit(NB_Stem *stem){
   strcpy(nb_cmd_prompt,"> ");
   nbObjectInit(stem);
   nbParseInit();
-  initHash(stem);
-  initReal(stem);
+  nbHashInit(stem);
+  nbRealInit(stem);
   initString(stem);
   initText(stem);
   nbCellInit(stem);
@@ -90,8 +90,8 @@ void nbStemInit(NB_Stem *stem){
   initRegexp(stem);
   initTerm(stem);
   initCondition(stem);
-  initTrick(stem);
-  initAssertion(stem);
+  nbAxonInit(stem);
+  nbAssertionInit(stem);
   initCall(stem);              /* must follow initCondition */
   nbNodeInit(stem);
   nbSentenceInit(stem);
@@ -108,7 +108,7 @@ void nbStartParseArgs(nbCELL context,struct NB_STEM *stem,int argc,char *argv[])
   int i;
 
   for(i=1;i<argc;i++){
-    if(*argv[i]=='+'){
+    if(*argv[i]=='+' && *(argv[i]+1)!='+'){
       outMsg(0,'I',"Argument [%u] %s",i,argv[i]);
       nbCmdSet(context,stem,"set",argv[i]);
       }
@@ -402,12 +402,24 @@ nbCELL nbStart(int argc,char *argv[]){
     strcat(mycommand," ");
     }
 
-  showHeading();
-  srandom(time(NULL));    /* seed the random number generator */
-
   /* initialize nodebrain logic structures */
   /* first set the trace shim */  
-  if(argc>1 && strcmp(argv[1],"-shim")==0) nb_opt_shim=1;
+  if(argc>1 && strcmp(argv[1],"++shim")==0){
+    fprintf(stderr,"NB000T Setting shim option\n");
+    nb_opt_shim=1;
+    }
+  for(i=1;i<argc;i++){
+    if(strncmp(argv[i],"++",2)==0){
+      if(strcmp(argv[i],"++shim")==0)  nb_opt_shim=1;
+      else if(strcmp(argv[i],"++hush")==0) nb_opt_hush=1;
+      else if(strcmp(argv[i],"++stats")==0) nb_opt_stats=1;
+      else if(strcmp(argv[i],"++axon")==0) nb_opt_axon=1;
+      else fprintf(stderr,"Startup setting %s not recognized.\n",argv[i]);
+      }
+    }
+
+  showHeading();
+  srandom(time(NULL));    /* seed the random number generator */
 
   nbStemInit(stem); 
 
@@ -419,8 +431,8 @@ nbCELL nbStart(int argc,char *argv[]){
   nbTimeInit(stem);
   nbRuleInit(stem);
     
-  listInit(stem,100003);        /* initialize list hash */
-  schedInit(stem,579);       /* initialize schedule hash */
+  nbListInit(stem);        /* initialize list hash */
+  nbSchedInit(stem);       /* initialize schedule hash */
   nbTranslatorInit(stem);
   
   /* initialize root context (gloss) verbs and types */
@@ -442,7 +454,7 @@ nbCELL nbStart(int argc,char *argv[]){
   addrContext=locGloss;
   symContext=symGloss;
   /* 
-  *  Get startup options options  
+  *  Get startup options  
   */
   nbStartParseArgs((nbCELL)locGloss,stem,argc,argv);
 
@@ -564,6 +576,8 @@ int nbServe(nbCELL context,int argc,char *argv[]){
 void nbMedullaExit(void);
 
 int nbStop(nbCELL context){
+  if(nb_opt_stats) nbHashStats(); // display hash metrics
+
   NB_Stem *stem=context->object.type->stem;
   nbMedullaExit();             // clean up processes
 #if !defined(WIN32)

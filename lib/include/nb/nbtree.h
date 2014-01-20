@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2006-2013 The Boeing Company
+* Copyright (C) 2006-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 * 
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -38,6 +38,7 @@
 * 2007/05/22 eat 0.6.8 - split out header and made part of API
 * 2008/02/08 eat 0.6.9 - included iterator macros
 * 2011-07-09 eat 0.8.6 - included NB_TREE_ITERATE_ORDER_STRING_CASE_AFTER macro
+* 2013-12-20 eat 0.9.00 Changed balance from int to char
 *=============================================================================
 */
 #ifndef _NB_TREE_H_
@@ -46,7 +47,6 @@
 typedef struct NB_TREE_NODE{   // Balanced binary tree node 
   struct NB_TREE_NODE *left;   // left node  (lower keys for binary search tree)
   struct NB_TREE_NODE *right;  // right node (higher keys for binary search tree)
-  //signed int balance;        // AVL balance code (-1 left tall, 0 - balanced, +1 right tall)
   signed char balance;         // AVL balance code (-1 left tall, 0 - balanced, +1 right tall)
   unsigned char reserved[7];  
   void   *key;                 // key pointer - or parent pointer if using object tree routines
@@ -180,6 +180,8 @@ typedef struct NB_TREE_ITERATOR{
 
 void *nbTreeFindCondRight(void *right,NB_TreeNode *node);
 void *nbTreeLocateCondRight(NB_TreePath *path,void *right,NB_TreeNode **rootP);
+void *nbTreeLocateCondRightString(NB_TreePath *path,char *right,NB_TreeNode **rootP);
+void *nbTreeLocateCondRightReal(NB_TreePath *path,double right,NB_TreeNode **rootP);
 
 #if defined(WIN32)
 _declspec (dllexport)

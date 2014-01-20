@@ -42,8 +42,9 @@
 *
 *    Date    Name/Change
 * ---------- ---------------------------------------------------------------
-* 2008/10/23 Ed Trettevik (version 0.7.3 - extracted from old nb.h)
+* 2008-10-23 Ed Trettevik (version 0.7.3 - extracted from old nb.h)
 *            nbi.h replaces old nb.h and new nb.h replaces old nbapi.h
+* 2014-01-12 eat 0.9.00 Included nbsentence and nbaxon headers
 *============================================================================
 */
 #ifndef _NB_I_H_
@@ -88,7 +89,7 @@
 #include <nb/nbmacro.h>       /* string macro object */
 
 #include <nb/nbsentence.h>
-#include <nb/nbtrick.h>
+#include <nb/nbaxon.h>
 
 #include <nb/nb.h>
 

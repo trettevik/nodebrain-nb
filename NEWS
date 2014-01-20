@@ -1,4 +1,12 @@
-NodeBrain 0.9.0 (Columbo) Change Summary
+ _   _           _      ____
+| \ | |         | |    |    \          ( )
+|  \| | ___   __| | ___| | ) |_ _  __ _ _ _ __
+|     |/   \ /    |/ _ \    <|  _|/    | |  _ \
+| |\  | ( ) | ( | |  __/ | ) | |   ( | | | | | |
+|_| \_|\___/ \__ _|\___|____/|_|  \__ _|_|_| |_|
+
+
+NodeBrain 0.9.00 (Columbo) Change Summary
 
 * Released TBD
 
@@ -7,26 +15,28 @@ NodeBrain 0.9.0 (Columbo) Change Summary
      The primary goal of this version of NodeBrain is to
      improve performance for large rule sets with some
      characteristics causing prior versions of NodeBrain
-     to perform poorly.  This is based more on theoretical
-     rules sets than known applications, but the improvements
-     are real.
+     to perform poorly.  This is based on theoretical rule
+     sets, not rule sets of known applications, but the
+     improvements are real.
 
 * Documentation:
 
-  o  Special value symbols have changed.
+  o  False and Disabled special value symbols have changed.
 
        ! - Replaces 0 for "false"
        # - Replaces ! for "disabled"
 
+  o  Updates have been made to examples of show command
+     to reflect the minor display changes. (See feataures
+     and Incompatibilities below.)
+
   o  "Redefine" command introduced.
 
-  o  Included new data types of "set" and "list".
+  o  Included new data types of "set" and "tuple".
 
   o  Introducing the term "sentence" for the construct
      node(args) used as a node condition, assertion, or
      command. 
-
-  o  Introduced stem cells.
 
   o  Introduced node facets.
 
@@ -45,43 +55,37 @@ NodeBrain 0.9.0 (Columbo) Change Summary
        define r2 on(r1=1 or c);  --> change this
        define r2 on(r1 or c);    <-- to this 
 
-  o  Zero is no longer treated as "false" in logical
+  o  A zero, "0", is no longer treated as False in logical
      operations.  Instead, a special symbol "!", is
-     used to represet "false".  This means every reference
+     used to represet False.  This means every reference
      to "0" in rule files and check scripts must be
      replaced with "!".  References to "0" as a number,
      where there is no expectation that it be interpretted
-     as "false", need not change. This change, while
-     disruptive, is based on two assumptions:
+     as False, need not change. This change, while
+     disruptive, has a logical purpose which is described
+     in the Features section below.
 
-       1) There is no significant advantage to being able
-          to perform arithmetic on the result of logical
-          operations.  And if there were, we already
-          disrupt this concept by supporting logical
-          operations that produce values other than 0
-          and 1.
+  o  When disabled terms are displayed using the show
+     command, there are differences in the display
+     (see Features below) that will cause check scripts
+     prepared for prior releases to fail when using
+     show commands on disabled terms.  You will need
+     to modify these check scripts for use with 0.9.00
+     and beyond.
 
-       2) By not using 0 to represent "false", we enable
-          logical operations to produce a "true" value
-          of 0.  Otherwise, we discriminate against zero.
-         
-  o  When a cell is "disabled" (the value not maitained
-     and not subscribing to referenced cell values) the
-     show command displays a special symbol where the value
-     of an enabled cell would be displayed. Because this
-     symbol is changing from "!" to "#", check scripts
-     created under prior version of NodeBrain will fail
-     unless you replace the "!" with "#" or regenerate the
-     script under this version.  Replacing the difference
-     is the better way to adapt, since it allows for the
-     detection of unintended incompatibilities.
-
-  o  When a relational operator "=" has a constant on the
+  o  When a relational operator has a constant on the
      left and variable on the right the operands are
      reversed. This will cause check scripts using a
      show command for the condition to fail.  The solution
      is to update the check line starting with "~" to
-     show the operands reversed:  "a"=a becomes a="a"
+     show the operands reversed:
+
+       "a"=a   ==>   a="a"
+       "a"<>a  ==>   a<>"a"
+       "a"<a   ==>   a>"a"
+       "a"<=a  ==>   a>="a"
+       "a">a   ==>   a<"a"
+       "a">=a  ==>   a<="a"
 
 * New Features: 
 
@@ -101,6 +105,56 @@ NodeBrain 0.9.0 (Columbo) Change Summary
        define x cell a or b;
        define r1 on(x or y) c=2;
        define r2 on(r1); # reference to value of (x or y)
+
+  o  A zero, 0, has joined with every other number and
+     character string as a True value.  A "!" symbol is
+     now used to represent False, just as "?" is used to
+     represent Unknown.  While this is a break from the
+     tradition of using 0 for false, it enables a value
+     of zero to be handled constently with other values
+     in logical expressions with handy side effects.  For
+     example, we can define X to be A, or default to 10
+     if A is False or Unknown.
+
+       define X cell A | 10;
+
+     If 0 is used to represent False, then X can never
+     take on a value of 0.  By using a special False
+     value represented by !, all numbers and character
+     strings can pass through A to X.  Only A values
+     of False (!) and Unknown (?) will cause X to default
+     to 10.
+      
+     This applies to other logical operators the produce
+     various True values.  In the following example, Y
+     is 10 as long as A is True.  Now a value of 0 is
+     just as True as every other number or string.  The
+     value of Y only takes on the value of A when A is
+     False (!), or Unknown (?). 
+
+       define Y cell A & 10; 
+
+     It feels strange to break from the tradition of
+     using 0 to represent false, but within the context
+     of NodeBrain logical operators, it would be less
+     logical to maintain the tradition. 
+         
+  o  When disabled terms are displayed using the show
+     command, the value of an enabled formula will now
+     display.
+
+       x = 5 == a+b           [x is enabled with value 5]
+       x = # 5 == a+b   <<--- [x is disabled but a+b is 5]
+       x = # == a+b           [x and a+b are both disabled]
+
+     The last two examples above would display as follows
+     under prior versions, indicating x is disabled without
+     revealing the state or value of a+b.  Notice there is
+     also a change from "!" to "#" as the indicator that the
+     term is disabled.  This is because "!" is now the
+     symbol for False.
+
+       x = ! == a+b
 
   o  A new data type of "set" has been included.  This is
      an internal feature with some similarity to the Tree
@@ -122,7 +176,14 @@ NodeBrain 0.9.0 (Columbo) Change Summary
      evaluation to determine if a value is in a set,
      and removal of values from sets.
 
-* Deprecated Syntax: (none)
+* Deprecated Syntax:
+
+  o  The previously obsolete "address" command is no
+     longer recognized to produce a hint to use ">"
+     for interactive command prefix.
+
+  o  The previously obsolete single quote for defining
+     command prefixes no longer produces a warning.
 
 * Bug Fixes:
 
@@ -138,6 +199,7 @@ NodeBrain 0.9.0 (Columbo) Change Summary
      This bug has been resolved by requiring a node to
      be defined before it is used in a sentence.  This
      seems not to create any hardship.
+
 
 NodeBrain 0.8.15 Change Summary
 

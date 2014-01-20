@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -122,6 +122,7 @@
 * 2003/03/15 eat 0.5.1  Split out nbsched.h and nbsched.c for make file
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2012-12-31 eat 0.8.13 schedInit n from int to size_t
+* 2014-01-12 eat 0.9.00 nbSchedInit replaces schedInit
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -143,8 +144,6 @@ struct PERIOD eternity;    /* 0 - maximum value */
 *       which is common to all references. The period
 *       structure contains state information, for example.
 */  
-
-struct HASH *schedH;      /* hash of schedule entries */
 
 /*
 *  Schedule Functions
@@ -172,13 +171,12 @@ void destroySched(struct SCHED *sched){
 *  Initialize the schedule hash
 *    Must be called before newSched
 */
-void schedInit(NB_Stem *stem,size_t n){  // 2012-12-31 eat - n from int to size_t
-  schedH=newHash(n);
+void nbSchedInit(NB_Stem *stem){
   time(&eternity.start);
   eternity.end=0x7fffffff;  /* up to implementation limit */
-  schedTypeTime=newType(stem,"~",schedH,0,schedPrint,destroySched);
-  schedTypePulse=newType(stem,"~",schedH,0,schedPrint,destroySched);
-  schedTypeDelay=newType(stem,"",schedH,0,schedPrint,destroySched);
+  schedTypeTime=newType(stem,"~",NULL,0,schedPrint,destroySched);
+  schedTypePulse=newType(stem,"~",NULL,0,schedPrint,destroySched);
+  schedTypeDelay=newType(stem,"",NULL,0,schedPrint,destroySched);
   }
 
 /*
@@ -213,7 +211,7 @@ struct SCHED *newSched(nbCELL context,char symid,char *source,char **delim,char 
 
   /* see if we already have this schedule */
   if(reuse){
-    schedP=hashStr(schedH,source);
+    schedP=hashStr(schedType->hash,source);
     for(sched=*schedP;sched!=NULL && sched->cell.object.type==schedType && (r=strcmp(sched->symbol->value,source))>0;sched=(struct SCHED *)sched->cell.object.next){
       schedP=(struct SCHED **)&(sched->cell.object.next);
       }

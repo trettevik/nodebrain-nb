@@ -1,14 +1,14 @@
 Name: @PACKAGE_NAME@
 Version: @PACKAGE_VERSION@
-Release: 2%{?dist}
+Release: 1%{?dist}
 
 %define _disable_ld_no_undefined 1
 %define is_mandriva %(test -e /etc/mandriva-release && echo 1 || echo 0)
 
 Summary: A declarative rule-based language for state and event monitoring
 License: GPL-2.0+
-Group: Development/Languages/Other
-Source: @PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.gz
+Group: Development/Languages
+Source: http://sourceforge.net/projects/nodebrain/files/nb/0.9%20Columbo/%{name}-%{version}.tar.gz/download
 URL: http://www.nodebrain.org/
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
@@ -81,7 +81,7 @@ browser interface for administrators.
 #-- nodebrain-devel rpm --------------------------------------------------
 
 %package devel
-Group:          Development/Libraries/Other
+Group:          Development/Libraries
 Summary:        Development package for nodebrain
 Requires:       pkgconfig
 Requires:       nodebrain = %{version}-%{release}
@@ -106,7 +106,7 @@ This package contains development files for nodebrain.
 #-- nodebrain-static rpm --------------------------------------------------
 
 %package static
-Group:          Development/Libraries/Other
+Group:          Development/Libraries
 Summary:        Static libraries for nodebrain
 Requires:       nodebrain-devel = %{version}-%{release}
 
@@ -122,6 +122,9 @@ This package contains static libraies for nodebrain.
 #-------------------------------------------------------------------------
 
 %changelog
+* Mon Jan 13 2014 Ed Trettevik <eat@nodebrain.org> - 0.9.00-1
+- Update for 0.9.00
+
 * Sat Apr 27 2013 Ed Trettevik <eat@nodebrain.org> - 0.8.15-2
 - Changed to please rpmlint
 

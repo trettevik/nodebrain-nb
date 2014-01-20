@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -247,10 +247,16 @@
 * 2013-01-01 eat 0.8.13 Checker updates
 * 2013-01-16 eat 0.8.13 Checker updates
 * 2013-04-27 eat 0.8.15 Included option parameter in nbSource calls
-* 2013-12-17 eat 0.9.0  Implemented "redefine" command for all types except "node"
+* 2013-12-17 eat 0.9.00 Implemented "redefine" command for all types except "node"
 *            A "redefine" commands works just like a "define", except it also
 *            works when the term is already defined and the redefinition is 
 *            compatible with the existing object type.
+* 2014-01-12 eat 0.9.00 Included startup settings of ++hush and ++stats
+* 2014-01-12 eat 0.9.00 Removed warning when command starts with ' 
+*            A coupld versions back, a ' was used to set an interactive command
+*            prefix, but that confliced with directing commands to nodes with
+*            a single quoted term.  A warning was included to help users
+*            transition to >, but that warning has not been removed. 
 *==============================================================================
 */
 #include <nb/nbi.h>
@@ -308,10 +314,7 @@ static int nbGetCmdInteractive(char *cmd,size_t cmdlen){  // 2012-12-31 eat - VI
     userInput=readline(nb_cmd_prompt);  // get a line from the user
     if(!userInput) return(0);
 #endif
-    if(*userInput=='\''){      // 2012-10-26 eat - no longer supporting - remove this message after a couple releases
-      outMsg(0,'W',"Use > to set interactive command prefix. Assuming single quoted term.");
-      }
-    else if(*userInput=='>'){  // 2012-10-26 eat - switched to >
+    if(*userInput=='>'){  // 2012-10-26 eat - switched to >
       cursor=userInput+1;
       while(*cursor==' ') cursor++;
       if(strlen(cursor)>NB_CMD_PROMPT_LEN-3){
@@ -349,7 +352,7 @@ static int nbGetCmdInteractive(char *cmd,size_t cmdlen){  // 2012-12-31 eat - VI
 void printVersion(void){
   printf("nb %s\n\n",PACKAGE_VERSION);
   printf("N o d e B r a i n\n");
-  printf("Copyright (C) 1998-2013 The Boeing Company\n");
+  printf("Copyright (C) 1998-2014 The Boeing Company\n");
   printf("GNU General Public License\n\n");
   }
 
@@ -411,7 +414,7 @@ void showVersion(void){
 
 void showCopyright(void){
   showVersion();
-  outPut("Copyright (C) 1998-2013 The Boeing Company\n");
+  outPut("Copyright (C) 1998-2014 The Boeing Company\n");
   outPut("GNU General Public License\n");
   outPut("----------------------------------------------------------------\n\n");
   }
@@ -454,6 +457,12 @@ void showSet(){
   outPut("chdir:  \t%s\n",servedir);
   outPut("user:   \t%s\n",serveuser);
   outPut("group:  \t%s\n",servegroup);
+
+  outPut("\nPerformance Options:\n");
+  outPut("  ++shim=%d\n",nb_opt_shim);
+  outPut("  ++hush=%d\n",nb_opt_hush);
+  outPut("  ++stats=%d\n",nb_opt_stats);
+  outPut("  ++axon=%d\n",nb_opt_axon);
   }
 
 // Show process list
@@ -2282,9 +2291,6 @@ void nbCmd(nbCELL context,char *cursor,unsigned char cmdopt){
         // 2010-06-20 eat 0.8.2 - included handle - but we should also get the return code
         // we need to modify nbCmd to provide a return code
         (*verbObject->parse)(context,verbObject->handle,verb,cursor);
-        }
-      else if(strcmp(verb,"address")==0){
-        outMsg(0,'E',"The ADDRESS command is obsolete. Use single quote (') to establish command prefix.");
         }
       else outMsg(0,'E',"Verb \"%s\" not recognized.",verb);
       break;

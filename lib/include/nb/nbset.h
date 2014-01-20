@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2006-2013 The Boeing Company
+* Copyright (C) 2006-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 * 
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -34,7 +34,7 @@
 *
 * Date       Name/Change
 * ---------- -----------------------------------------------------------------
-* 2013-12-30 Ed Trettevik - first prototype
+* 2013-12-30 Ed Trettevik - first prototype introdeced in 0.9.00
 *=============================================================================
 */
 #ifndef _NB_SET_H_

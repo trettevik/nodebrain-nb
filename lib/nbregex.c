@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -70,20 +70,8 @@
 */
 #include <nb/nbi.h>
 
-struct HASH *regexpH;      /* regular expression hash */
 struct TYPE *regexpType;   /* regular expression object type */
 struct REGEXP *freeRegexp; /* free structure pool */
-
-/*
-*  Hash a regular expression and return a pointer to a pointer in the vector.
-*/
-static void *hashRegexp(struct HASH *hash,struct STRING *value,int flags){ 
-  unsigned long *h,k;
-  h=(unsigned long *)&value;
-  k=*h;
-  k+=flags;
-  return(&(hash->vect[k%hash->modulo]));
-  }
 
 /*******************************************************************************
 *  Regular Expression Methods
@@ -104,10 +92,13 @@ struct REGEXP *newRegexp(char *expression,int flags){
   pcre *preg;
   const char *msg=NULL;
   int offset;
-  //int parens;
+  NB_Hash *hash=regexpType->hash;
+  uint32_t key;
 
   string=useString(expression);
-  reP=hashRegexp(regexpH,string,flags);  /* do we already have this regexp? */
+  key=string->object.key;
+  //reP=hashRegexp(regexpH,string,flags);  /* do we already have this regexp? */
+  reP=(struct REGEXP **)&(hash->vect[key%hash->modulo]);
   for(re=*reP;re!=NULL && (re->flags<flags || (re->flags==flags && re->string<string));re=*reP)
     reP=(struct REGEXP **)&re->object.next;  
   if(re!=NULL && re->flags==flags && re->string==string) return(re); // reuse if found
@@ -118,6 +109,7 @@ struct REGEXP *newRegexp(char *expression,int flags){
     return(NULL);
     }
   re=newObject(regexpType,(void **)&freeRegexp,sizeof(struct REGEXP));
+  re->object.key=key;
   re->string=grabObject(string);
   re->flags=flags;
   re->re=preg;
@@ -129,6 +121,8 @@ struct REGEXP *newRegexp(char *expression,int flags){
     return(NULL);
     }
   *reP=re;
+  hash->objects++;
+  if(hash->objects>=hash->modulo) nbHashGrow(&regexpType->hash);
   return(re);
   }
 
@@ -144,8 +138,10 @@ void printRegexp(struct REGEXP *regexp){
 */
 void destroyRegexp(struct REGEXP *regexp){
   struct REGEXP *re,**reP;
+  NB_Hash *hash=regexpType->hash;
 
-  reP=hashRegexp(regexpH,regexp->string,regexp->flags);  /* find it */
+  reP=(struct REGEXP **)&(hash->vect[regexp->object.key%hash->modulo]);
+  //reP=hashRegexp(regexpH,regexp->string,regexp->flags);  /* find it */
   for(re=*reP;re!=NULL && re->string<regexp->string;re=*reP)
     reP=(struct REGEXP **)&re->object.next;
   /* if yes, use it */   
@@ -158,12 +154,13 @@ void destroyRegexp(struct REGEXP *regexp){
   *reP=(struct REGEXP *)regexp->object.next;
   regexp->object.next=(NB_Object *)freeRegexp;
   freeRegexp=regexp;
+  hash->objects--;
   }
 
 /*
 *  Context object type initialization
 */
 void initRegexp(NB_Stem *stem){
-  regexpH=newHash(137); /* initialize regular expression hash */
-  regexpType=newType(stem,"~",regexpH,TYPE_REGEXP,printRegexp,destroyRegexp);
+  //regexpH=newHash(137); /* initialize regular expression hash */
+  regexpType=newType(stem,"~",NULL,TYPE_REGEXP,printRegexp,destroyRegexp);
   }

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2006-2013 The Boeing Company
+* Copyright (C) 2006-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 * 
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -143,7 +143,8 @@
 * ---------- -----------------------------------------------------------------
 * 2006-09-02 Ed Trettevik - first prototype
 * 2007-05-22 eat 0.6.8 - removed from nb_mod_tree.c and made part of the API
-* 2013-12-09 eat 0.9.0 - Included nbTreeLocateBinary function - alternative to hashing
+* 2013-12-09 eat 0.9.00 Included nbTreeLocateBinary function - alternative to hashing
+* 2014-01-18 eat 0.9.00 Included nbTreeLocateCondRightString and nbTreeLocateCondRightReal
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -271,7 +272,7 @@ void *nbTreeLocate(NB_TreePath *path,void *key,NB_TreeNode **rootP){
   path->key=key;
   path->rootP=nodeP=path->balanceP=rootP; 
   path->balanceDepth=1;
-  path->node[depth]=(NB_TreeNode *)rootP; // this is a trick that depend on the left pointer
+  path->node[depth]=(NB_TreeNode *)rootP; // this depends on the left pointer being first
   path->step[depth++]=0;                  // being the first element of the node structure
   for(node=*rootP;node!=NULL;node=*nodeP){
     if(key==node->key) break;
@@ -286,7 +287,7 @@ void *nbTreeLocate(NB_TreePath *path,void *key,NB_TreeNode **rootP){
   }
 
 /* 
-*  Locate a noda where the keys point to COND and we are looking for a specific right pointer
+*  Locate a node where the keys point to COND and we are looking for a specific right pointer
 */
 void *nbTreeLocateCondRight(NB_TreePath *path,void *right,NB_TreeNode **rootP){
   NB_TreeNode *node;     // Node pointer
@@ -297,16 +298,9 @@ void *nbTreeLocateCondRight(NB_TreePath *path,void *right,NB_TreeNode **rootP){
   path->key=NULL;  // caller will fill this in later
   path->rootP=nodeP=path->balanceP=rootP;
   path->balanceDepth=1;
-  path->node[depth]=(NB_TreeNode *)rootP; // this is a trick that depend on the left pointer
+  path->node[depth]=(NB_TreeNode *)rootP; // this depends on the left pointer being first
   path->step[depth++]=0;                  // being the first element of the node structure
   for(node=*rootP;node!=NULL;node=*nodeP,depth++){
-/*
-    if(right==((NB_Cond *)node->key)->right) break;
-    if(node->balance!=0) path->balanceP=nodeP, path->balanceDepth=depth;
-    path->node[depth]=node;
-    if((path->step[depth++]=(right>((NB_Cond *)node->key)->right))) nodeP=&node->right;
-    else nodeP=&node->left;
-*/
     if((path->step[depth]=(right>((NB_Cond *)node->key)->right))){
       if(node->balance!=0) path->balanceP=nodeP, path->balanceDepth=depth;
       path->node[depth]=node;
@@ -318,6 +312,65 @@ void *nbTreeLocateCondRight(NB_TreePath *path,void *right,NB_TreeNode **rootP){
       nodeP=&node->left;
       }
     else break;
+    }
+  path->nodeP=nodeP;
+  path->depth=depth;
+  //outMsg(0,'T',"nbTreeLocateCondRight: returning");
+  return(node);
+  }
+
+/*
+*  Locate a node where the keys point to COND and we are looking for a specific right string
+*/
+void *nbTreeLocateCondRightString(NB_TreePath *path,char *key,NB_TreeNode **rootP){
+  NB_TreeNode *node;     // Node pointer
+  NB_TreeNode **nodeP;   // Address of node pointer
+  int depth=0;     // index into path
+  int cmp;         // comparison result
+
+  //outMsg(0,'T',"nbTreeLocateCondRight: called");
+  path->key=NULL;  // caller will fill this in later
+  path->rootP=nodeP=path->balanceP=rootP;
+  path->balanceDepth=1;
+  path->node[depth]=(NB_TreeNode *)rootP; // this depends on the left pointer being first
+  path->step[depth++]=0;                  // being the first element of the node structure
+  for(node=*rootP;node!=NULL;node=*nodeP,depth++){
+    if((cmp=strcmp(key,((NB_String *)((NB_Cond *)node->key)->right)->value))==0) break;
+    cmp=cmp>0;          // 0 left, 1 right
+    if(node->balance!=0) path->balanceP=nodeP, path->balanceDepth=depth;
+    path->node[depth]=node;
+    if((path->step[depth++]=cmp)) nodeP=&node->right;
+    else nodeP=&node->left;
+    }
+  path->nodeP=nodeP;
+  path->depth=depth;
+  //outMsg(0,'T',"nbTreeLocateCondRight: returning");
+  return(node);
+  }
+
+/*
+*  Locate a node where the keys point to COND and we are looking for a specific right real
+*/
+void *nbTreeLocateCondRightReal(NB_TreePath *path,double key,NB_TreeNode **rootP){
+  NB_TreeNode *node;     // Node pointer
+  NB_TreeNode **nodeP;   // Address of node pointer
+  int depth=0;     // index into path
+  int cmp;         // comparison result
+
+  //outMsg(0,'T',"nbTreeLocateCondRight: called");
+  path->key=NULL;  // caller will fill this in later
+  path->rootP=nodeP=path->balanceP=rootP;
+  path->balanceDepth=1;
+  path->node[depth]=(NB_TreeNode *)rootP; // this depends on the left pointer being first
+  path->step[depth++]=0;                  // being the first element of the node structure
+  for(node=*rootP;node!=NULL;node=*nodeP,depth++){
+    if(key<((NB_Real *)((NB_Cond *)node->key)->right)->value) cmp=0;      // go left
+    else if(key>((NB_Real *)((NB_Cond *)node->key)->right)->value) cmp=1; // go right
+    else break;
+    if(node->balance!=0) path->balanceP=nodeP, path->balanceDepth=depth;
+    path->node[depth]=node;
+    if((path->step[depth++]=cmp)) nodeP=&node->right;
+    else nodeP=&node->left;
     }
   path->nodeP=nodeP;
   path->depth=depth;
@@ -340,7 +393,7 @@ void *nbTreeLocateValue(NB_TreePath *path,void *key,NB_TreeNode **rootP,
   path->key=key;   // save key for insertions
   path->rootP=nodeP=path->balanceP=rootP; 
   path->balanceDepth=1;
-  path->node[depth]=(NB_TreeNode *)rootP; // this is a trick that depend on the left pointer
+  path->node[depth]=(NB_TreeNode *)rootP; // this depends on the left pointer being first
   path->step[depth++]=0;            // being the first element of the node structure
   for(node=*rootP;node!=NULL;node=*nodeP){
     if((cmp=compare(handle,key,node->key))==0) break;
@@ -368,7 +421,7 @@ void *nbTreeLocateString(NB_TreePath *path,char *key,NB_TreeNode **rootP){
   path->key=key;   // save key for insertions
   path->rootP=nodeP=path->balanceP=rootP;
   path->balanceDepth=1;
-  path->node[depth]=(NB_TreeNode *)rootP; // this is a trick that depend on the left pointer
+  path->node[depth]=(NB_TreeNode *)rootP; // this depends on the left pointer being first
   path->step[depth++]=0;            // being the first element of the node structure
   for(node=*rootP;node!=NULL;node=*nodeP){
     //fprintf(stderr,"nbTreeLocateString: key=%s node->keyat=%x node->key=%s\n",key,&node->key,(char *)node->key);
@@ -399,7 +452,7 @@ void *nbTreeLocateStringCase(NB_TreePath *path,char *key,NB_TreeNode **rootP){
   path->key=key;   // save key for insertions
   path->rootP=nodeP=path->balanceP=rootP;
   path->balanceDepth=1;
-  path->node[depth]=(NB_TreeNode *)rootP; // this is a trick that depend on the left pointer
+  path->node[depth]=(NB_TreeNode *)rootP; // this depends on the left pointer being first
   path->step[depth++]=0;            // being the first element of the node structure
   for(node=*rootP;node!=NULL;node=*nodeP){
     //fprintf(stderr,"nbTreeLocateString: key=%s node->keyat=%x node->key=%s\n",key,&node->key,(char *)node->key);
@@ -428,7 +481,7 @@ void *nbTreeLocateBinary(NB_TreePath *path,void *key,size_t size,NB_TreeNode **r
   path->key=key;   // save key for insertions
   path->rootP=nodeP=path->balanceP=rootP;
   path->balanceDepth=1;
-  path->node[depth]=(NB_TreeNode *)rootP; // this is a trick that depend on the left pointer
+  path->node[depth]=(NB_TreeNode *)rootP; // this depends on the left pointer being first
   path->step[depth++]=0;            // being the first element of the node structure
   for(node=*rootP;node!=NULL;node=*nodeP){
     if((cmp=memcmp(key,node->key,size))==0) break;

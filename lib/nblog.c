@@ -431,6 +431,7 @@ void outData(char *data,size_t len){   // 2013-01-11 eat VID 6288,6696-0.8.13-2 
 void outPut(const char * format,...){
   va_list args;
   int len;
+  if(nb_opt_hush) return;
   va_start(args,format);
   len=vsnprintf(nb_OutLine,NB_BUFSIZE,format,args);
   if(len>=NB_BUFSIZE) strcpy(nb_OutLine+NB_BUFSIZE-4,"...");
@@ -477,6 +478,7 @@ void outHex(unsigned int l,void *buf){
 void outMsgHdr(int msgid,char msgclass,char *format,...){
   va_list args;
   int len;
+  if(nb_opt_hush) return;
   va_start(args,format);
   len=vsnprintf(nb_OutLine,NB_BUFSIZE,format,args);
   if(len>=NB_BUFSIZE) strcpy(nb_OutLine+NB_BUFSIZE-4,"...");
@@ -520,7 +522,7 @@ void nbExit(char *format,...){
 /*
 *  Print message to output streams and abort
 *
-*    outMsg(msgid,msgclass,format,arg1,arg2,...);
+*    nbAbort(msgid,msgclass,format,arg1,arg2,...);
 *
 */
 void nbAbort(char *format,...){
@@ -553,6 +555,7 @@ void nbAbort(char *format,...){
 void outMsg(int msgid,char msgclass,char *format,...){
   va_list args;
   int len;
+  if(nb_opt_hush) return;
   va_start(args,format);
   len=vsnprintf(nb_OutLine,NB_BUFSIZE,format,args);
   if(len>=NB_BUFSIZE) strcpy(nb_OutLine+NB_BUFSIZE-4,"...");
@@ -686,7 +689,7 @@ int nbLogMsg(nbCELL context,int msgNumber,char msgType,char *format,...){
 /*
 *  Print to output streams - like printf()
 *
-*    outPut(format,arg1,arg2,...)
+*    nbLogPut(format,arg1,arg2,...)
 */
 int nbLogPut(nbCELL context,char *format,...){
   va_list args;

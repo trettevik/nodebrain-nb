@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -55,6 +55,8 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 * 2012-12-27 eat 0.8.13 Checker updates
 * 2013-01-01 eat 0.8.13 Checker updates
+* 2014-01-13 eat 0.9.00 Removed hash pointer - referenced via type
+*            Rule objects are not assigned keys currently
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -70,7 +72,7 @@ NB_Rule *nb_RuleReady=NULL;  /* Ready rule list - ready to take action */
 
 NB_Type *nb_RuleTypeDeaf;  /* Type used when rule should not respond to alerts */
 NB_Type *nb_RuleType;
-NB_Hash *nb_RuleHash;   
+//NB_Hash *nb_RuleHash;   
 
 
 /* Step rule to next plan value */
@@ -938,8 +940,8 @@ void nbRuleShowAll(void){
   NB_Rule *rule,**ruleP;
   long v;
   long i;
-  ruleP=(NB_Rule **)&(nb_RuleHash->vect);
-  for(v=0;v<nb_RuleHash->modulo;v++){
+  ruleP=(NB_Rule **)&(nb_RuleType->hash->vect);
+  for(v=0;v<nb_RuleType->hash->modulo;v++){
     i=0;
     for(rule=*ruleP;rule!=NULL;rule=(NB_Rule *)rule->cell.object.next){
       outPut("H[%u,%ld]",v,i);
@@ -1075,9 +1077,9 @@ void nbRuleDisable(NB_Rule *rule){
   }
 
 void nbRuleInit(NB_Stem *stem){
-  nb_RuleHash=newHash(2031);
+  //nb_RuleHash=newHash(2031);
   nb_PlanType=newType(stem,"plan",NULL,0,nbPlanPrint,destroyPlan);
-  nb_RuleType=newType(stem,"rule",nb_RuleHash,0,nbRuleShowExpr,nbRuleDestroy);
+  nb_RuleType=newType(stem,"rule",NULL,0,nbRuleShowExpr,nbRuleDestroy);
   nb_RuleType->showItem=&nbRuleShowItem;
   nbCellType(nb_RuleType,NULL,nbRuleEval,nbRuleEnable,nbRuleDisable);
   nb_RuleType->alarm=&nbRuleAlarm;

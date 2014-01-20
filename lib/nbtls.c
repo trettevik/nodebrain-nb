@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -177,6 +177,7 @@
 * 2012-12-27 eat 0.8.13 Checker updates
 * 2012-12-30 eat 0.8.13 Modified nbLoadListener to only load context for secure protocols
 * 2013-01-01 eat 0.8.13 Checker updates
+* 2014-01-12 eat 0.9.00 added const to SSL_METHOD pointer
 *==================================================================================
 */
 #include <nb/nb.h>
@@ -314,7 +315,7 @@ static int nbTlsVerify(int preverify_ok,X509_STORE_CTX *ctx){
 */
 nbTLSX *nbTlsCreateContext(int option,void *handle,int timeout,char *keyFile,char *certFile,char *trustedCertsFile){
   nbTLSX *tlsx;
-  SSL_METHOD *method;
+  const SSL_METHOD *method;
   SSL_CTX    *ctx=NULL;
   char *ctxContext="nbTls";
   static int initialize=1; // changed to 0 after we initialize

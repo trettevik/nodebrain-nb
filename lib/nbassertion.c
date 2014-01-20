@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -32,7 +32,7 @@
 *
 *   #include "nb.h"
 *
-*   void initAssertion();
+*   void nbAssertionInit();
 * 
 * Description
 *
@@ -56,6 +56,8 @@
 * 2007-06-26 eat 0.6.8  Changed "expert" terminology to "node".
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2012-10-12 eat 0.8.12 Replaced malloc with nbAlloc
+* 2014-01-12 eat 0.9.00 Removed hash pointer - referenced via type
+* 2014-01-12 eat 0.9.00 nbAssertionInit replaces initAssertion
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -197,10 +199,10 @@ void printAssertedValues(NB_Link *member){
   outPut(")");
   }
 
-void initAssertion(NB_Stem *stem){
-  assertTypeDef=newType(stem,"==",condH,TYPE_IS_ASSERT,printAssertion,destroyAssertion);
-  assertTypeVal=newType(stem,"=",condH,TYPE_IS_ASSERT,printAssertion,destroyAssertion);
-  assertTypeRef=newType(stem,"=.=",condH,TYPE_IS_ASSERT,printAssertion,destroyAssertion);
+void nbAssertionInit(NB_Stem *stem){
+  assertTypeDef=newType(stem,"==",NULL,TYPE_IS_ASSERT,printAssertion,destroyAssertion);
+  assertTypeVal=newType(stem,"=",NULL,TYPE_IS_ASSERT,printAssertion,destroyAssertion);
+  assertTypeRef=newType(stem,"=.=",NULL,TYPE_IS_ASSERT,printAssertion,destroyAssertion);
   }
 
 /*

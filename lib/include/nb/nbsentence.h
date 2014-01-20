@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -19,17 +19,17 @@
 *=============================================================================
 * Program:  NodeBrain
 *
-* File:     nbnode.h
+* File:     nbsentence.h
 *
-* Title:    Header for Node Cell Management Routines
+* Title:    Header for Sentence Cell Management Routines
 *
-* See nbnode.c for more information.
+* See nbsentence.c for more information.
 *=============================================================================
 * Change History:
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2002/08/25 Ed Trettevik (original split from nbcache.c)
+* 2014-12-20 Ed Trettevik - original prototype introduced in 0.9.00
 *=============================================================================
 */
 #ifndef _NB_SENTENCE_H_
