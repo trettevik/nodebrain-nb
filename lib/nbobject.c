@@ -163,7 +163,7 @@
 *                dropObject().  
 *             2) Removed free() from dropObject.  This is now the responsibility
 *                of an objects destroy function, including removing the object
-*                from hashing tables or other references that don't hold a
+*                from hash tables or other references that don't hold a
 *                reservation on the object.
 *             3) Created grabObject() as a replacement for objRef().
 * 2002/08/20 eat - version 0.4.0

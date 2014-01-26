@@ -106,9 +106,7 @@ struct NB_STRING_POOL{
 struct NB_STRING_POOL *nb_StringPool;  // free string pool vector by length
 
 /*
-*  Hash a string and return a pointer to a pointer in the hashing vector.
-*
-*  Note: The hashing algorithm can be improved for long strings
+*  Hash a string and return a pointer to a pointer in the hash vector.
 *
 */
 void *hashStr(struct HASH *hash,char *cursor){

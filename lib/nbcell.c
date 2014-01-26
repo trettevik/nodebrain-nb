@@ -326,6 +326,9 @@
 * 2011-11-05 eat 0.8.6  Included nbCellGetText
 * 2012-10-13 eat 0.8.12 Replace remaining malloc with nbAlloc
 * 2013-01-11 eat 0.8.13 Checker updates
+* 2014-01-25 eat 0.9.00 Switched evaluation schedule back to array of lists
+*            The cell->mode NB_CELL_MODE_SCHEDULED flag was added to enable
+*            inserting cells once only without having to look them up first.
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -341,8 +344,9 @@
 
 NB_Link   *regfun;          /* registered functions - fun(list) */
 NB_Link   *change=NULL;     /* change condition list */
-NB_TreeNode **evalVector;      /* function evaluation tree */
-NB_TreeNode **evalVectorTop;   /* top level tree */
+NB_Link **evalVector;      /* function evaluation tree */
+NB_Link **evalVectorTop;   /* top level tree */
+static NB_Link *nb_EvalFreeLink=NULL;   // list of free evaluation links
 
 /* condition function values
 */
@@ -372,6 +376,8 @@ NB_Object *NB_OBJECT_TRUE;
 *  Initialization Cells 
 */
 void nbCellInit(NB_Stem *stem){
+  NB_Link *link;
+  int i;
   NB_OBJECT_TRUE=(NB_Object *)useReal((double)1);
   NB_OBJECT_TRUE->refcnt=(unsigned int)-1;         /* flag as perminent object */
   nb_True=NB_OBJECT_TRUE;
@@ -383,9 +389,18 @@ void nbCellInit(NB_Stem *stem){
   NB_CELL_PLACEHOLDER=(NB_Cell *)nb_Placeholder;
   NB_CELL_FALSE=(NB_Cell *)NB_OBJECT_FALSE;
   NB_CELL_TRUE=(NB_Cell *)NB_OBJECT_TRUE;
-  evalVector=(NB_TreeNode **)calloc(maxLevel,sizeof(void *));
+  //evalVector=(NB_TreeNode **)calloc(maxLevel,sizeof(void *));
+  evalVector=(NB_Link **)calloc(maxLevel,sizeof(void *));
   if(!evalVector) nbExit("nbCellInit: out of memory"); // 2013-01-11 eat - VID 6469 
   evalVectorTop=evalVector;
+  // Initialize 256 free links so they are grouped in memory to improve processor case performance
+  nb_EvalFreeLink=(NB_Link *)calloc(256,sizeof(NB_Link));
+  link=nb_EvalFreeLink;
+  for(i=0;i<255;i++){
+    link->next=link+1;
+    link=link->next;
+    }
+  link->next=NULL;
   }
 
 #if !defined(WIN32)
@@ -741,21 +756,21 @@ void nbCellShowImpact(NB_Cell *cell){
 *  by nbCellPublish() via the object alert method pointer.
 */
 void nbCellAlert(NB_Cell *sub){
-  NB_TreePath treePath;
-  NB_TreeNode *treeNode,**treeNodeP;
-  //outMsg(0,'T',"nbCellAlert() called");
-  if(sub->object.value==(NB_Object *)sub) return; /* static object */
-  //outMsg(0,'T',"nbCellAlert() inserting object in eval list level(%d).",sub->level);
-  treeNodeP=evalVector+sub->level;
-  if(treeNodeP>evalVectorTop) evalVectorTop=treeNodeP;
-  treeNode=(NB_TreeNode *)nbTreeLocate(&treePath,sub,treeNodeP);
-  if(treeNode==NULL){
-    treeNode=(NB_TreeNode *)nbAlloc(sizeof(NB_TreeNode));
-    treeNode->key=sub;
-    nbTreeInsert(&treePath,treeNode);
-    }
-  }
+  NB_Link *link,**linkP;
 
+  if(sub->object.value==(NB_Object *)sub) return;  // constant
+  if(sub->mode&NB_CELL_MODE_SCHEDULED) return;     // already scheduled
+  linkP=evalVector+sub->level;
+  if(linkP>evalVectorTop) evalVectorTop=linkP;
+  // we can maintain a list of links to improve perforance
+  if((link=nb_EvalFreeLink)) nb_EvalFreeLink=link->next;
+  else link=(NB_Link *)nbAlloc(sizeof(NB_Link));
+  link->object=(NB_Object *)sub;
+  sub->mode|=NB_CELL_MODE_SCHEDULED;  // set scheduled flag
+  link->next=*linkP;
+  *linkP=link;
+  } 
+   
 /*
 *  React to cell changes
 *
@@ -777,31 +792,22 @@ void nbCellAlert(NB_Cell *sub){
 * changes to objects that do not use the nbCellAlert() method, and
 * are not placed in the evalVector used here.
 * 
-* Note: Think about how subscription lists might be organized to
-* reduce re-evaluation.  For example, if 1000 test conditions are
-* established for a single variable, and they are all testing for
-* something like X>"something", if we ordered the subscription list
-* by the values of "something" we wouldn't have to test them all.
-* Some method of bounding the change may be appropriate.
 */
 void nbCellReact(void){
-  NB_TreeIterator treeIterator;
-  NB_TreeNode *treeNode,**treeNodeP,*freeNode;
+  NB_Link *link,**linkP;
   NB_Cell *cell;
   NB_Object *value;
-  for(treeNodeP=evalVector;treeNodeP<=evalVectorTop;treeNodeP++){
-    //outMsg(0,'T',"nbCellReact: before evalVector=%x rootP=%x root=%x",evalVector,treeNodeP,*treeNodeP);
-    treeNode=*treeNodeP;
-    *treeNodeP=NULL;
-    NB_TREE_ITERATE2(treeIterator,treeNode,treeNode){
-      cell=(NB_Cell *)treeNode->key;
+  for(linkP=evalVector;linkP<=evalVectorTop;linkP++){
+    for(link=*linkP;link!=NULL;link=*linkP){
+      cell=(NB_Cell *)link->object;
       if(trace){
-        outMsg(0,'T',"nbCellReact() calling object's eval method."); 
+        outMsg(0,'T',"nbCellReact() calling object's eval method.");
         outPut("Function:");
         printObject((NB_Object *)cell);
         outPut("\n");
         }
       value=cell->object.type->eval(cell);
+      cell->mode&=~NB_CELL_MODE_SCHEDULED;  // turn off scheduled flag
       if(trace){
         outPut("Returned:");
         printObject(value);
@@ -813,13 +819,14 @@ void nbCellReact(void){
         nbCellPublish(cell);
         if(trace) outMsg(0,'T',"nbCellReact() published change.");
         }
-      freeNode=treeNode;
-      NB_TREE_ITERATE_NEXT2(treeIterator,treeNode)
-      nbFree((NB_Object *)freeNode,sizeof(NB_TreeNode));
+      *linkP=link->next;
+      link->next=nb_EvalFreeLink;
+      nb_EvalFreeLink=link;
       }
     }
-  evalVectorTop=evalVector;  /* set top level */ 
+  evalVectorTop=evalVector;  /* set top level */
   }
+
 
 //******************************
 // External API

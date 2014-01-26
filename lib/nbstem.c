@@ -423,7 +423,7 @@ nbCELL nbStart(int argc,char *argv[]){
 
   nbStemInit(stem); 
 
-  /* initialize lists and hashing tables*/
+  /* initialize lists and hash tables*/
 
   actList=NULL;
   ashList=NULL;

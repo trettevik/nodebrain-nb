@@ -187,7 +187,7 @@ void condUnschedule();
 * Support Routines
 */
 /*
-*  Hash a condition and return a pointer to a pointer in the hashing vector.
+*  Hash a condition and return a pointer to a pointer in the hash table.
 */
 uint32_t hashCondOld(struct TYPE *type,void *left,void *right){
   //unsigned long h,*t,*l,*r;

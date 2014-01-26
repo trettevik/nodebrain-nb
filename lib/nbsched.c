@@ -131,7 +131,7 @@ struct TYPE *schedTypeTime;
 struct TYPE *schedTypePulse;
 struct TYPE *schedTypeDelay;
 
-void *hashStr();
+//void *hashStr();
 //struct HASH *newHash();
 struct STRING *useString();
 
@@ -211,7 +211,10 @@ struct SCHED *newSched(nbCELL context,char symid,char *source,char **delim,char 
 
   /* see if we already have this schedule */
   if(reuse){
-    schedP=hashStr(schedType->hash,source);
+    uint32_t hashcode=0;
+    NB_HASH_STR(hashcode,source)
+    schedP=(NB_Sched **)&schedType->hash[hashcode&schedType->hash->mask];
+    //schedP=hashStr(schedType->hash,source);
     for(sched=*schedP;sched!=NULL && sched->cell.object.type==schedType && (r=strcmp(sched->symbol->value,source))>0;sched=(struct SCHED *)sched->cell.object.next){
       schedP=(struct SCHED **)&(sched->cell.object.next);
       }

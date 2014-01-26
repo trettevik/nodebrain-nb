@@ -87,7 +87,7 @@ struct TYPE *realType;
 struct REAL *realFree=NULL;
 
 /*
-*  Hash a real and return a pointer to a pointer in the hashing vector.
+*  Hash a real and return a pointer to a pointer in the hash table.
 */
 void *hashReal(struct HASH *hash,double n){
   unsigned long h,*l;

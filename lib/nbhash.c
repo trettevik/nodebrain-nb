@@ -116,7 +116,7 @@ void nbHashStats(void){
         }
       if(slotsUsed) aveList=(double)hash->objects/slotsUsed;
       else aveList=0;
-      outPut("%20s %10u %10u %10u %10d %8.2f\n",type->name,hash->mask,slotsUsed,hash->objects,maxList,aveList);
+      outPut("%20s %10u %10u %10u %10d %8.2f\n",type->name,hash->mask+1,slotsUsed,hash->objects,maxList,aveList);
       totalSlots+=hash->mask+1;
       totalSlotsUsed+=slotsUsed;
       if(maxList>totalMaxList) totalMaxList=maxList;

@@ -59,14 +59,14 @@ extern struct HASH *schedH;      /* hash of schedule entries */
 /*
 *  Schedule Cell
 */    
-struct SCHED{
+typedef struct SCHED{
   struct NB_CELL cell;     /* schedule cell */
   struct STRING *symbol;   /* symbolic name */
   struct PERIOD period;    /* start and end times */
   time_t interval;         /* Fixed interval - w,d,h,m,s */
   time_t duration;         /* Fixed duration - w,d,h,m,s */
   struct tcQueue *queue;   /* Time queue */
-  };
+  } NB_Sched;
   
 void schedPrintDump(struct SCHED *sched);
 void schedPrint(struct SCHED *sched);

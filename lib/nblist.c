@@ -223,9 +223,7 @@ void *dropMember(NB_Link *member){
   }
 
 /*
-*  Hash a string and return a pointer to a pointer in the hashing vector.
-*
-*  Note: The hashing algorithm can be improved for long strings
+*  Hash a list and return a pointer to a pointer in the hash table.
 *
 */
 uint32_t hashList(NB_Link *member){
