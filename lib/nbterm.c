@@ -299,7 +299,7 @@ void termResolve(NB_Term *term){
   if(object==NULL) object=nb_Unknown;
   term->def=grabObject(object);
   if(object->value!=object){
-    nbCellEnable((NB_Cell *)object,(NB_Cell *)term);
+    nbAxonEnable((NB_Cell *)object,(NB_Cell *)term);
     term->cell.object.value=grabObject(nbCellSolve_((NB_Cell *)object));
     }
   else term->cell.object.value=grabObject(term->def);
@@ -349,22 +349,22 @@ NB_Object *evalTerm(NB_Term *term){
 
 /*
 *  Enable a term function by enabling the assigned function.
-*    Don't worry, nbCellEnable accepts NULL and non-function objects.
+*    Don't worry, nbAxonEnable accepts NULL and non-function objects.
 *    Calls to "enable" methods are followed by calls to "eval" methods
 *    so we don't need to set a value here. 
 */
 void enableTerm(NB_Term *term){
-  nbCellEnable((NB_Cell *)term->def,(NB_Cell *)term);
+  nbAxonEnable((NB_Cell *)term->def,(NB_Cell *)term);
   }
 
 /*
 *  Disable a term function by disabling the assigned function.
-*    Don't worry, nbCellDisable accepts NULL and non-function objects.
+*    Don't worry, nbAxonDisable accepts NULL and non-function objects.
 */
 void disableTerm(NB_Term *term){
   if(term->cell.object.value==nb_Disabled) return;
   if(term->cell.object.value==term->def) return; /* static value */
-  nbCellDisable((NB_Cell *)term->def,(NB_Cell *)term);
+  nbAxonDisable((NB_Cell *)term->def,(NB_Cell *)term);
   dropObject(term->cell.object.value); /* 2004/08/28 eat */
   term->cell.object.value=nb_Disabled;
   }
@@ -584,7 +584,7 @@ NB_Term *makeTerm(NB_Term *context,NB_String *word){
 
   if(trace) outMsg(0,'T',"makeTerm calling nbCellNew");
   term=nbCellNew(termType,(void **)&termFree,sizeof(NB_Term));
-  term->cell.object.key=word->object.key; // inherit key from name
+  term->cell.object.hashcode=word->object.hashcode; // inherit hashcode from name
   term->context=context; 
   term->terms=NULL;                       /* change to term->gloss */
   term->def=nb_Undefined;  
@@ -613,7 +613,7 @@ void nbTermAssign(NB_Term *term,NB_Object *new){
   if(new==NULL) new=nb_Unknown; /* we could make sure this doesn't happen */
   if(term->def==new) return;
   if(term->def!=nb_Unknown && term->def!=nb_Disabled){
-    nbCellDisable((NB_Cell *)term->def,(NB_Cell *)term);  
+    nbAxonDisable((NB_Cell *)term->def,(NB_Cell *)term);  
     dropObject(term->def); 
     }
   term->def=grabObject(new);
@@ -633,7 +633,7 @@ void nbTermAssign(NB_Term *term,NB_Object *new){
       term->cell.object.value=nb_Disabled;
       return;
       }
-    nbCellEnable((NB_Cell *)new,(NB_Cell *)term);
+    nbAxonEnable((NB_Cell *)new,(NB_Cell *)term);
     }
   else term->cell.level=0;
   term->cell.object.value=grabObject(new->value);
@@ -716,7 +716,7 @@ NB_Term *nbTermNew(NB_Term *context,char *ident,void *def){
       //  nbCellLevel(term);       /* adjust level */
       //  }
       // 2006-12-22 eat - when ready, investigate the following condition
-      if(term->cell.object.value!=nb_Disabled) nbCellEnable(def,(NB_Cell *)term);
+      if(term->cell.object.value!=nb_Disabled) nbAxonEnable(def,(NB_Cell *)term);
       }
     else{
       outMsg(0,'L',"Term \"%s\" may not be redefined.",ident);

@@ -492,7 +492,7 @@ void nbProjectionShowAll(void){
   showcount=1;
   outPut("Projection Table:\n");
   objectP=(NB_Object **)&(nb_ProjectionType->hash->vect);
-  for(v=0;v<nb_ProjectionType->hash->modulo;v++){
+  for(v=0;v<=nb_ProjectionType->hash->mask;v++){
     i=0;
     for(object=*objectP;object!=NULL;object=(NB_Object *)object->next){
       outPut("[%u,%d]",v,i);
@@ -510,7 +510,7 @@ void nbProjectionDestroy(NB_Projection *projection){
   NB_Hash *hash=nb_ProjectionType->hash;
 
   //projectionP=(NB_Projection **)hashStr(nb_ProjectionHash,projection->code);
-  projectionP=(NB_Projection **)&(hash->vect[projection->object.key%hash->modulo]);
+  projectionP=(NB_Projection **)&(hash->vect[projection->object.hashcode&hash->mask]);
   for(;*projectionP!=NULL && *projectionP!=projection;projectionP=(NB_Projection **)&((*projectionP)->object.next));
   if(*projectionP==NULL) outMsg(0,'L',"Destroying projection not on used list");
   else *projectionP=(NB_Projection *)projection->object.next;
@@ -653,24 +653,24 @@ NB_Projection *nbProjectionParse(char *projectionBuffer,int len,struct REGEXP_ST
   NB_Projection *projection,**projectionP;
   int plen,match=1;
   NB_Hash *hash=nb_ProjectionType->hash;
-  uint32_t key=0;
+  uint32_t hashcode=0;
 
   if(strstr(cursor,"$[")==NULL) return((NB_Projection *)useString(cursor));
   plen=nbProjectionEncode(projectionBuffer,len,reStackP,nsub,level,cursor);
   if(plen<=0) return(NULL);
   //projectionP=(NB_Projection **)hashStr(nb_ProjectionHash,projectionBuffer);
-  NB_HASH_STR(key,projectionBuffer)
-  projectionP=(NB_Projection **)&(hash->vect[key%hash->modulo]);
+  NB_HASH_STR(hashcode,projectionBuffer)
+  projectionP=(NB_Projection **)&(hash->vect[hashcode&hash->mask]);
   for(;*projectionP!=NULL && (match=strcmp(projectionBuffer,(*projectionP)->code))>0;projectionP=(NB_Projection **)&((*projectionP)->object.next));
   if(match==0) projection=*projectionP;  // reuse if we find it
   else{
     projection=newObject(nb_ProjectionType,NULL,sizeof(NB_Translator)+plen);
-    projection->object.key=key;
+    projection->object.hashcode=hashcode;
     projection->object.next=(NB_Object *)*projectionP;
     memcpy(&projection->code,projectionBuffer,plen);
     *projectionP=projection;
     hash->objects++;
-    if(hash->objects>=hash->modulo) nbHashGrow(&nb_ProjectionType->hash);
+    if(hash->objects>=hash->limit) nbHashGrow(&nb_ProjectionType->hash);
     }
   return(projection);
   }

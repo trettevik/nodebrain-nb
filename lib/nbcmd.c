@@ -257,6 +257,7 @@
 *            prefix, but that confliced with directing commands to nodes with
 *            a single quoted term.  A warning was included to help users
 *            transition to >, but that warning has not been removed. 
+* 2014-01-25 eat 0.9.00 Checker updates
 *==============================================================================
 */
 #include <nb/nbi.h>
@@ -462,7 +463,7 @@ void showSet(){
   outPut("  ++shim=%d\n",nb_opt_shim);
   outPut("  ++hush=%d\n",nb_opt_hush);
   outPut("  ++stats=%d\n",nb_opt_stats);
-  outPut("  ++axon=%d\n",nb_opt_axon);
+  outPut("  ++bnr=%d\n",nb_opt_boolnotrel);
   }
 
 // Show process list
@@ -489,7 +490,7 @@ int nbCmdShow(nbCELL context,void *handle,char *verb,char *cursor){
 
   cursave=cursor;
   while(*cursor==' ') cursor++;
-  if(*cursor==0 || strchr("+-=/%*",*cursor)==NULL){
+  if(*cursor==0 || strchr("+-=/%*$",*cursor)==NULL){
     symid=nbParseSymbol(ident,sizeof(ident),&cursor);
     if(symid=='t' || symid=='('){
       if(symid=='('){ /* compute a cell expression */
@@ -720,6 +721,14 @@ int nbCmdShow(nbCELL context,void *handle,char *verb,char *cursor){
       outPut("More topics will be added in the future.\n");
       outPut("\n");
       }
+    }
+  else if(symid=='$'){  /* Size of structures */   
+    outPut("\nStructure Sizes:\n");
+    outPut("  Tree Node:     %d\n",sizeof(NB_TreeNode));
+    outPut("  Object Header: %d\n",sizeof(NB_Object));
+    outPut("  Cell Header:   %d\n",sizeof(NB_Cell));
+    outPut("  Condition:     %d\n",sizeof(NB_Cond));
+    outPut("  Term:          %d\n",sizeof(NB_Term));
     }
   return(0);
   }
@@ -1659,7 +1668,7 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     action->type='R';
     /* If a reused term already has subscribers, enable term and adjust levels */
     if(term->cell.sub!=NULL){
-      nbCellEnable((NB_Cell *)ruleCond,(NB_Cell *)term);
+      nbAxonEnable((NB_Cell *)ruleCond,(NB_Cell *)term);
       nbCellLevel((NB_Cell *)term);
       }
     if(rule_type==condTypeIfRule){
@@ -2037,7 +2046,7 @@ void nbCmdTranslate(nbCELL context,char *verb,char *cursor){
     outMsg(0,'E',"Translator name may not be greater than %d characters.",sizeof(xtrname)-1);
     return;
     }
-  strncpy(xtrname,my_strtok_r(cursor," ",&cursor),sizeof(xtrname));  // 2012-12-15 eat - CID 751635
+  strncpy(xtrname,my_strtok_r(cursor," ",&cursor),sizeof(xtrname)-1); // 2014-01-25 eat - CID 1164441 2012-12-15 eat - CID 751635
   *(xtrname+sizeof(xtrname)-1)=0;
   if((xtrTerm=nbTermFind((NB_Term *)context,xtrname))==NULL){
     outMsg(0,'E',"Translator \"%s\" not defined.",xtrname);

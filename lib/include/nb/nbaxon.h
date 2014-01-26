@@ -41,6 +41,8 @@
 
 #include <nb/nbstem.h>
 
+struct TYPE *nb_TypeAxonRelEq;
+
 /* 
 * Relational Equal Operator Axon Object 
 */
@@ -48,7 +50,8 @@ typedef struct NB_AXON_REL{  // axon object for relational equality
   NB_Cell     cell;          // object header
   NB_Cell     *pub;          // publishing cell
   union{
-    NB_Cell   *trueCell;     // NULL, nb_Unknown, or the one true RelEq cell with matching constant (EQ)
+    NB_Cell   *trueCell;     // NULL, nb_Unknown, or the one true RelEq cell with matching constant
+    NB_Cell   *falseCell;    // NULL, nb_Unknown, or the one false RelNe cell with matching constant
     NB_Object *value;        // nb_Unknown, or current object value  (LT or GT)
     NB_Real   *real;         // nb_Unknown, or current real value (LT or GT)
     NB_String *string;       // nb_Unknown, or current real value (LT or GT)
@@ -58,10 +61,21 @@ typedef struct NB_AXON_REL{  // axon object for relational equality
 // Functions
 
 void nbAxonInit(NB_Stem *stem);
-struct TYPE *nb_TypeAxonRelEq;
-void nbAxonRelEqEnable(nbCELL pub,struct COND *cond);
-void nbAxonRelEqDisable(nbCELL pub,struct COND *cond);
-void nbAxonRelRangeEnable(nbCELL pub,struct COND *cond);
-void nbAxonRelRangeDisable(nbCELL pub,struct COND *cond);
+void nbAxonEnableRelEq(nbCELL pub,struct COND *cond);
+void nbAxonDisableRelEq(nbCELL pub,struct COND *cond);
+void nbAxonEnableRelNe(nbCELL pub,struct COND *cond);
+void nbAxonDisableRelNe(nbCELL pub,struct COND *cond);
+void nbAxonEnableRelRange(nbCELL pub,struct COND *cond);
+void nbAxonDisableRelRange(nbCELL pub,struct COND *cond);
+
+#if defined(WIN32)
+__declspec(dllexport)
+#endif
+extern void nbAxonEnable(nbCELL pub,nbCELL sub);
+
+#if defined(WIN32)
+__declspec(dllexport)
+#endif
+extern void nbAxonDisable(nbCELL pub,nbCELL sub);
 
 #endif

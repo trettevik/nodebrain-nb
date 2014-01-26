@@ -76,7 +76,7 @@ int  nb_opt_shim=0;      /* shim object methods to enable tracing */
 int  nb_opt_user=1;      /* automatically load user profile */
 int  nb_opt_hush=0;      // suppress calls to log routines
 int  nb_opt_stats=0;     // print statistics when terminating
-int  nb_opt_axon=0;      // used axon for value rich rules
+int  nb_opt_boolnotrel=0;// boolean not relational - a<>1 ==> !(a=1), a<=1 ==> !(a>1), a>=1 ==> !(a<1)
 
 int sourceTrace=0;       /* debugging trace flag for source input */
 int symbolicTrace=0;     /* debugging trace flag for symbolic substitution */

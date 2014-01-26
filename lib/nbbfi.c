@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -194,6 +194,7 @@
 * 2013-01-13 eat 0.8.13 Checker updates - rosecheckers
 * 2013-01-23 eat 0.8.13 Checker updates
 * 2013-02-03 eat 0.8.13 Checker updates - CID 971426
+* 2014-01-25 eat 0.9.00 Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -275,7 +276,7 @@ struct bfiindex *bfiIndexParse(char *s,char *msg,size_t msglen){ // 2012-12-31 e
         bfiIndexFree(top);
         return(NULL);
         }
-      strncpy(sto,cursor,sizeof(sto));  // strcpy would be fine, but help the checker
+      strncpy(sto,cursor,sizeof(sto)-1);// 2014-01-25 eat - CID 1164442
       *(sto+sizeof(sto)-1)=0;           // 2013-01-23 eat - VID 6827 FP in other application but help the checker more
       }
     else if((cursor=strstr(element,".."))!=NULL){ //if ".." found
@@ -288,7 +289,7 @@ struct bfiindex *bfiIndexParse(char *s,char *msg,size_t msglen){ // 2012-12-31 e
         bfiIndexFree(top);
         return(NULL);
        }
-      strncpy(sto,cursor,sizeof(sto));  // strcpy would be fine, but help the checker
+      strncpy(sto,cursor,sizeof(sto)-1);  // 2014-01-25 eat - CID 1164442
       *(sto+sizeof(sto)-1)=0;             // 2013-01-23 eat - VID 6829 FP in other application but help the checker more
       }
     else{

@@ -344,34 +344,15 @@ void condPrintChange(struct COND *cond){
 *    4 - assertions
 */
 void condPrintAll(int sel){
-  struct COND *cond,**condP;
-  long v;
-  long i;
   NB_Type *type;
   
   for(type=nb_TypeList;type!=NULL;type=(NB_Type *)type->object.next){
-    //if((sel==0 && type->attributes&(TYPE_IS_RULE|TYPE_IS_REL|TYPE_IS_BOOL|TYPE_IS_TIME|TYPE_IS_ASSERT)) ||
-    if((sel==0) ||
+    if((sel==0 && type->attributes&(TYPE_IS_RULE|TYPE_IS_REL|TYPE_IS_BOOL|TYPE_IS_TIME|TYPE_IS_ASSERT)) ||
        (sel==1 && type->attributes&TYPE_IS_REL) ||
        (sel==2 && type->attributes&TYPE_IS_BOOL) ||
        (sel==3 && type->attributes&TYPE_IS_TIME) ||
        (sel==4 && type->attributes&TYPE_IS_ASSERT)){
-      condP=(struct COND **)&(type->hash->vect);
-      for(v=0;v<type->hash->modulo;v++){
-        i=0;
-        for(cond=*condP;cond!=NULL;cond=(struct COND *)cond->cell.object.next){
-          outPut("H[%u,%ld]",v,i);
-          outPut("R[%u]",cond->cell.object.refcnt);
-          outPut("L(%d)",cond->cell.level);
-          outPut(" = ");
-          printObject(cond->cell.object.value);
-          outPut(" == ");
-          printObject((NB_Object *)cond);
-          outPut("\n");
-          }
-        if(i<LONG_MAX) i++;  // 2013-01-13 eat - VID 7045
-        condP++;
-        }
+      nbHashShow(type->hash,type->name,NULL);
       }
     }
   }
@@ -539,10 +520,10 @@ NB_Object *evalDefault(struct COND *cond){
 NB_Object *evalAndMonitor(struct COND *cond){
   NB_Object *lobject=((NB_Object *)cond->left)->value;
   if(lobject==NB_OBJECT_FALSE || lobject==nb_Unknown){
-    nbCellDisable((NB_Cell *)cond->right,(NB_Cell *)cond);
+    nbAxonDisable((NB_Cell *)cond->right,(NB_Cell *)cond);
     return(nb_Unknown);
     }
-  nbCellEnable((NB_Cell *)cond->right,(NB_Cell *)cond);
+  nbAxonEnable((NB_Cell *)cond->right,(NB_Cell *)cond);
   return(((NB_Object *)cond->right)->value);
   }
 
@@ -550,10 +531,10 @@ NB_Object *evalLazyAnd(struct COND *cond){
   NB_Object *lobject=((NB_Object *)cond->left)->value;
   NB_Object *robject=((NB_Object *)cond->right)->value;
   if(lobject==NB_OBJECT_FALSE){
-    nbCellDisable((NB_Cell *)cond->right,(NB_Cell *)cond);
+    nbAxonDisable((NB_Cell *)cond->right,(NB_Cell *)cond);
     return(lobject);
     }
-  nbCellEnable((NB_Cell *)cond->right,(NB_Cell *)cond);
+  nbAxonEnable((NB_Cell *)cond->right,(NB_Cell *)cond);
   robject=((NB_Object *)cond->right)->value;
   if(lobject==nb_Unknown && robject!=NB_OBJECT_FALSE) return(lobject);
   return(robject);
@@ -584,10 +565,10 @@ NB_Object *evalNand(struct COND *cond){
 NB_Object *evalOrMonitor(struct COND *cond){
   NB_Object *lobject=((NB_Object *)cond->left)->value;
   if(lobject!=NB_OBJECT_FALSE){
-    nbCellDisable((NB_Cell *)cond->right,(NB_Cell *)cond);
+    nbAxonDisable((NB_Cell *)cond->right,(NB_Cell *)cond);
     return(nb_Unknown);
     }
-  nbCellEnable((NB_Cell *)cond->right,(NB_Cell *)cond);
+  nbAxonEnable((NB_Cell *)cond->right,(NB_Cell *)cond);
   return(((NB_Object *)cond->right)->value);
   }
 
@@ -595,10 +576,10 @@ NB_Object *evalLazyOr(struct COND *cond){
   NB_Object *lobject=((NB_Object *)cond->left)->value;
   NB_Object *robject=((NB_Object *)cond->right)->value;
   if(lobject!=NB_OBJECT_FALSE && lobject!=nb_Unknown){
-    nbCellDisable((NB_Cell *)cond->right,(NB_Cell *)cond);
+    nbAxonDisable((NB_Cell *)cond->right,(NB_Cell *)cond);
     return(lobject);
     }
-  nbCellEnable((NB_Cell *)cond->right,(NB_Cell *)cond);
+  nbAxonEnable((NB_Cell *)cond->right,(NB_Cell *)cond);
   robject=((NB_Object *)cond->right)->value;
   if(lobject==nb_Unknown && robject==NB_OBJECT_FALSE) return(lobject);
   return(robject);
@@ -825,39 +806,75 @@ void condChangeReset(void){
 // RelEQ uses a axon cell when the right operand is a constant
 
 static void enableRelEQ(struct COND *cond){
-  if(nb_opt_axon && ((NB_Cell*)cond->right)->object.value==cond->right){
-    nbAxonRelEqEnable((NB_Cell *)cond->left,cond);
+  if(((NB_Cell*)cond->right)->object.value==cond->right){    // constant right
+    if(((NB_Cell*)cond->left)->object.value!=cond->left){    // not constant left
+      if(((NB_Cell*)cond->right)->object.value!=nb_Unknown)  // right not unknown, which would make cell value constant ?
+        nbAxonEnableRelEq((NB_Cell *)cond->left,cond);
+      }
     return;
     } 
-  nbCellEnable((NB_Cell *)cond->left,(NB_Cell *)cond);
-  if(cond->right!=cond->left) nbCellEnable((NB_Cell *)cond->right,(NB_Cell *)cond);
+  nbAxonEnable((NB_Cell *)cond->left,(NB_Cell *)cond);
+  if(cond->right!=cond->left) nbAxonEnable((NB_Cell *)cond->right,(NB_Cell *)cond);
   }
 
 static void disableRelEQ(struct COND *cond){
-  if(nb_opt_axon && ((NB_Cell*)cond->right)->object.value==cond->right){
-    nbAxonRelEqDisable((NB_Cell *)cond->left,cond);
+  if(((NB_Cell*)cond->right)->object.value==cond->right){    // constant right
+    if(((NB_Cell*)cond->left)->object.value!=cond->left){    // not constant left
+      if(((NB_Cell*)cond->right)->object.value!=nb_Unknown)  // right not unknown, which would make cell value constant ?
+        nbAxonDisableRelEq((NB_Cell *)cond->left,cond);
+      }
     return;
     }
-  nbCellDisable((NB_Cell *)cond->left,(NB_Cell *)cond);
-  if(cond->right!=cond->left) nbCellDisable((NB_Cell *)cond->right,(NB_Cell *)cond);
+  nbAxonDisable((NB_Cell *)cond->left,(NB_Cell *)cond);
+  if(cond->right!=cond->left) nbAxonDisable((NB_Cell *)cond->right,(NB_Cell *)cond);
   }
 
-static void enableRelRange(struct COND *cond){
-  if(nb_opt_axon && ((NB_Cell*)cond->right)->object.value==cond->right){
-    nbAxonRelRangeEnable((NB_Cell *)cond->left,cond);
+static void enableRelNE(NB_Cond *cond){
+  if(((NB_Cell*)cond->right)->object.value==cond->right){    // constant right
+    if(((NB_Cell*)cond->left)->object.value!=cond->left){    // not constant left
+      if(((NB_Cell*)cond->right)->object.value!=nb_Unknown)  // right not unknown, which would make cell value constant ?
+        nbAxonEnableRelNe((NB_Cell *)cond->left,cond);
+      }
     return;
     }
-  nbCellEnable((NB_Cell *)cond->left,(NB_Cell *)cond);
-  if(cond->right!=cond->left) nbCellEnable((NB_Cell *)cond->right,(NB_Cell *)cond);
+  nbAxonEnable((NB_Cell *)cond->left,(NB_Cell *)cond);
+  if(cond->right!=cond->left) nbAxonEnable((NB_Cell *)cond->right,(NB_Cell *)cond);
   }
 
-static void disableRelRange(struct COND *cond){
-  if(nb_opt_axon && ((NB_Cell*)cond->right)->object.value==cond->right){
-    nbAxonRelRangeDisable((NB_Cell *)cond->left,cond);
+static void disableRelNE(NB_Cond *cond){
+  if(((NB_Cell*)cond->right)->object.value==cond->right){    // constant right
+    if(((NB_Cell*)cond->left)->object.value!=cond->left){    // not constant left
+      if(((NB_Cell*)cond->right)->object.value!=nb_Unknown)  // right not unknown, which would make cell value constant ?
+        nbAxonDisableRelNe((NB_Cell *)cond->left,cond);
+      }
     return;
     }
-  nbCellDisable((NB_Cell *)cond->left,(NB_Cell *)cond);
-  if(cond->right!=cond->left) nbCellDisable((NB_Cell *)cond->right,(NB_Cell *)cond);
+  nbAxonDisable((NB_Cell *)cond->left,(NB_Cell *)cond);
+  if(cond->right!=cond->left) nbAxonDisable((NB_Cell *)cond->right,(NB_Cell *)cond);
+  }
+
+static void enableRelRange(NB_Cond *cond){
+  if(((NB_Cell*)cond->right)->object.value==cond->right){    // constant right
+    if(((NB_Cell*)cond->left)->object.value!=cond->left){    // not constant left
+      if(((NB_Cell*)cond->right)->object.value!=nb_Unknown)  // right not unknown, which would make cell value constant ?
+        nbAxonEnableRelRange((NB_Cell *)cond->left,cond);
+      }
+    return;
+    }
+  nbAxonEnable((NB_Cell *)cond->left,(NB_Cell *)cond);
+  if(cond->right!=cond->left) nbAxonEnable((NB_Cell *)cond->right,(NB_Cell *)cond);
+  }
+
+static void disableRelRange(NB_Cond *cond){
+  if(((NB_Cell*)cond->right)->object.value==cond->right){    // constant right
+    if(((NB_Cell*)cond->left)->object.value!=cond->left){    // not constant left
+      if(((NB_Cell*)cond->right)->object.value!=nb_Unknown)  // right not unknown, which would make cell value constant ?
+        nbAxonDisableRelRange((NB_Cell *)cond->left,cond);
+      }
+    return;
+    }
+  nbAxonDisable((NB_Cell *)cond->left,(NB_Cell *)cond);
+  if(cond->right!=cond->left) nbAxonDisable((NB_Cell *)cond->right,(NB_Cell *)cond);
   }
 
 //
@@ -865,30 +882,30 @@ static void disableRelRange(struct COND *cond){
 void enableRule(struct COND *cond){
   if(trace) outMsg(0,'T',"enableRule() called");
   if(cond->cell.object.value==nb_Disabled) {
-    nbCellEnable((NB_Cell *)cond->left,(NB_Cell *)cond);
+    nbAxonEnable((NB_Cell *)cond->left,(NB_Cell *)cond);
     }
   }
 
 void disableRule(struct COND *cond){
-  nbCellDisable((NB_Cell *)cond->left,(NB_Cell *)cond);
+  nbAxonDisable((NB_Cell *)cond->left,(NB_Cell *)cond);
   }
 
 void enablePrefix(struct COND *cond){
-  nbCellEnable((NB_Cell *)cond->left,(NB_Cell *)cond);
+  nbAxonEnable((NB_Cell *)cond->left,(NB_Cell *)cond);
   }
 
 void disablePrefix(struct COND *cond){
-  nbCellDisable((NB_Cell *)cond->left,(NB_Cell *)cond);
+  nbAxonDisable((NB_Cell *)cond->left,(NB_Cell *)cond);
   }
 
 void enableInfix(struct COND *cond){
-  nbCellEnable((NB_Cell *)cond->left,(NB_Cell *)cond);
-  if(cond->right!=cond->left) nbCellEnable((NB_Cell *)cond->right,(NB_Cell *)cond);
+  nbAxonEnable((NB_Cell *)cond->left,(NB_Cell *)cond);
+  if(cond->right!=cond->left) nbAxonEnable((NB_Cell *)cond->right,(NB_Cell *)cond);
   }
 
 void disableInfix(struct COND *cond){
-  nbCellDisable((NB_Cell *)cond->left,(NB_Cell *)cond);
-  if(cond->right!=cond->left) nbCellDisable((NB_Cell *)cond->right,(NB_Cell *)cond);
+  nbAxonDisable((NB_Cell *)cond->left,(NB_Cell *)cond);
+  if(cond->right!=cond->left) nbAxonDisable((NB_Cell *)cond->right,(NB_Cell *)cond);
   }
 
 void enableCapture(struct COND *cond){
@@ -925,7 +942,7 @@ void freeCondition(struct COND *cond){
   NB_Cond *lcond,**condP;
   NB_Hash *hash=cond->cell.object.type->hash;
 
-  condP=(NB_Cond **)&(hash->vect[cond->cell.object.key%hash->modulo]);
+  condP=(NB_Cond **)&(hash->vect[cond->cell.object.hashcode&hash->mask]);
   for(lcond=*condP;lcond!=NULL && lcond!=cond;lcond=*condP)
     condP=(struct COND **)&lcond->cell.object.next;
   if(lcond==cond) *condP=(struct COND *)cond->cell.object.next;
@@ -935,15 +952,15 @@ void freeCondition(struct COND *cond){
   }
 
 void destroyCondition(struct COND *cond){
-  nbCellDisable(cond->left,(NB_Cell *)cond);  
+  nbAxonDisable(cond->left,(NB_Cell *)cond);  
   dropObject(cond->left);
-  nbCellDisable(cond->right,(NB_Cell *)cond);
+  nbAxonDisable(cond->right,(NB_Cell *)cond);
   dropObject(cond->right);
   freeCondition(cond);
   }
 
 void destroyNerve(struct COND *cond){
-  nbCellDisable(cond->left,(NB_Cell *)cond);  
+  nbAxonDisable(cond->left,(NB_Cell *)cond);  
   dropObject(cond->left);
   dropObject(cond->right);
   freeCondition(cond);
@@ -951,7 +968,7 @@ void destroyNerve(struct COND *cond){
 
 void destroyRule(struct COND *cond){
   struct ACTION *action=cond->right;
-  nbCellDisable(cond->left,(NB_Cell *)cond);
+  nbAxonDisable(cond->left,(NB_Cell *)cond);
   dropObject(cond->left);
   action->cond=NULL;            /* flag for deletion */
   if(action->status=='R'){
@@ -1030,18 +1047,16 @@ void initCondition(NB_Stem *stem){
 
   condTypeRelEQ=newType(stem,"=",NULL,TYPE_REL,condPrintInfix,destroyCondition);
   nbCellType(condTypeRelEQ,solveInfix2,evalRelEQ,enableRelEQ,disableRelEQ);
-  // 2013-12-12 eat - experimenting with transformation to replace A<>B with !(A=B)
   condTypeRelNE=newType(stem,"<>",NULL,TYPE_REL,condPrintInfix,destroyCondition);
-  nbCellType(condTypeRelNE,solveInfix2,evalRelNE,enableRelEQ,disableRelEQ); // share enable disable with RelEQ
+  nbCellType(condTypeRelNE,solveInfix2,evalRelNE,enableRelNE,disableRelNE);
   condTypeRelLT=newType(stem,"<",NULL,TYPE_REL,condPrintInfix,destroyCondition);
   nbCellType(condTypeRelLT,solveInfix2,evalRelLT,enableRelRange,disableRelRange);
-  //condTypeRelLE=newType(stem,"<=",NULL,TYPE_REL,condPrintInfix,destroyCondition);
   condTypeRelLE=newType(stem,"<=",NULL,TYPE_REL,condPrintInfix,destroyCondition);
-  nbCellType(condTypeRelLE,solveInfix2,evalRelLE,enableInfix,disableInfix);
+  nbCellType(condTypeRelLE,solveInfix2,evalRelLE,enableRelRange,disableRelRange);
   condTypeRelGT=newType(stem,">",NULL,TYPE_REL,condPrintInfix,destroyCondition);
-  nbCellType(condTypeRelGT,solveInfix2,evalRelGT,enableRelRange,disableInfix);
+  nbCellType(condTypeRelGT,solveInfix2,evalRelGT,enableRelRange,disableRelRange);
   condTypeRelGE=newType(stem,">=",NULL,TYPE_REL,condPrintInfix,destroyCondition);
-  nbCellType(condTypeRelGE,solveInfix2,evalRelGE,enableInfix,disableInfix);
+  nbCellType(condTypeRelGE,solveInfix2,evalRelGE,enableRelRange,disableRelRange);
 
   condTypeMatch=newType(stem,"~",NULL,0,condPrintMatch,destroyCondition);
   nbCellType(condTypeMatch,solvePrefix,evalMatch,enableInfix,disableInfix);
@@ -1055,7 +1070,7 @@ void initCondition(NB_Stem *stem){
 *  Otherwise a new condition object is constructed.
 *
 *  Conditions are "disabled" until they are referenced by a rule.  Such
-*  a reference is reported by nbCellEnable which builds the back link list
+*  a reference is reported by nbAxonEnable which builds the back link list
 *  to dependent conditions referenced by a rule.  This prevents the
 *  eval routine from evaluating conditions not referenced by any
 *  rule.
@@ -1064,30 +1079,26 @@ void initCondition(NB_Stem *stem){
 struct COND * useCondition(struct TYPE *type,void *left,void *right){
   NB_Cond *cond,*loper,*roper,**condP;
   NB_Hash *hash=type->hash;
-  uint32_t key;
+  uint32_t hashcode;
   unsigned long h,*l,*r;
 
   if(trace) outMsg(0,'T',"useCondition: called");
-  //if(left) key=((NB_Object *)left)->key;
-  //else key=0;
-  //if(right) key+=((NB_Object *)right)->key;
   l=(unsigned long *)&left;
   r=(unsigned long *)&right;
   h=((*l>>3)+(*r>>3));
   h+=(h>>3);
-  key=h;
-  condP=(NB_Cond **)&(hash->vect[key%hash->modulo]);
+  hashcode=h;
+  condP=(NB_Cond **)&(hash->vect[hashcode&hash->mask]);
   for(cond=*condP;cond!=NULL;cond=*condP){
     if(cond->left==left && cond->right==right) return(cond);
     condP=(struct COND **)&cond->cell.object.next;
     }
   cond=nbCellNew(type,(void **)&condFree,sizeof(struct COND));
-  cond->cell.object.key=key;
+  cond->cell.object.hashcode=hashcode;
   cond->cell.object.next=(NB_Object *)*condP;
   *condP=cond;
   hash->objects++;
-  //if(hash->objects>=(hash->modulo/4)) nbHashGrow(&type->hash);
-  if(hash->objects>=hash->modulo) nbHashGrow(&type->hash);
+  if(hash->objects>=hash->limit) nbHashGrow(&type->hash);
   cond->left=grabObject(left);
   cond->right=grabObject(right);
   loper=left;
@@ -1095,7 +1106,7 @@ struct COND * useCondition(struct TYPE *type,void *left,void *right){
   if(type->attributes&TYPE_IS_RULE){    /* rules */
     if(loper->cell.object.value!=(NB_Object *)loper){
       cond->cell.level=loper->cell.level+1;
-      nbCellEnable((NB_Cell *)left,(NB_Cell *)cond);
+      nbAxonEnable((NB_Cell *)left,(NB_Cell *)cond);
       left=loper->cell.object.value;
       }
     // 2013-09-29 - Set the value of a rule term to the value of the condition

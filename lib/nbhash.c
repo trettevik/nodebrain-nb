@@ -76,6 +76,7 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 * 2012-12-31 eat 0.8.13 Checker updates
 * 2014-01-12 eat 0.9.00 Included nbHashGrow function
+* 2014-01-25 eat 0.9.00 Switch from storing modulo to storing mask (modulo-1)
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -105,7 +106,7 @@ void nbHashStats(void){
       slotsUsed=0;
       maxList=0;
       objectP=(NB_Object **)&(hash->vect);
-      for(v=0;v<hash->modulo;v++){
+      for(v=0;v<=hash->mask;v++){
         if(*objectP){
           slotsUsed++;
           for(n=0,object=*objectP;object!=NULL;n++,object=object->next);
@@ -115,16 +116,13 @@ void nbHashStats(void){
         }
       if(slotsUsed) aveList=(double)hash->objects/slotsUsed;
       else aveList=0;
-      outPut("%20s %10u %10u %10u %10d %8.2f\n",type->name,hash->modulo,slotsUsed,hash->objects,maxList,aveList);
-      totalSlots+=hash->modulo;
+      outPut("%20s %10u %10u %10u %10d %8.2f\n",type->name,hash->mask,slotsUsed,hash->objects,maxList,aveList);
+      totalSlots+=hash->mask+1;
       totalSlotsUsed+=slotsUsed;
       if(maxList>totalMaxList) totalMaxList=maxList;
       totalObjects+=hash->objects;
       }
-    else{
-      otherSlots+=hash->modulo;
-      //outPut("%20s %10u %10u\n",type->name,hash->modulo,0);
-      }
+    else otherSlots+=hash->mask+1;
     }
   outPut("\n%20s %10ld %10ld %10ld %10ld %8.2f\n","Other",otherSlots,0,0,0,0.0);
   totalSlots+=otherSlots;
@@ -134,24 +132,24 @@ void nbHashStats(void){
   }
 /* 
 *  Hash constructor 
+*
+*  NOTE: The module must be a power of 2, we depend on the caller to enforce this
 */
 struct HASH *newHash(size_t modulo){  // 2012-12-31 eat - VID 4547 - long to size_t, vectsize int to long
-  /*
-  *  Create a new hashing vector
-  */
   struct HASH *hash;
   size_t vectsize;
 
-  if(modulo>UINT32_MAX) nbExit("newHash: Logic error - modulo %ld exceeds limit of %u - terminating",modulo,UINT32_MAX);
+  if(modulo==0) modulo=8;
+  else if(modulo>UINT32_MAX) nbExit("newHash: Logic error - modulo %ld exceeds limit of %u - terminating",modulo,UINT32_MAX);
   vectsize=modulo*sizeof(void *);
   hash=nbAlloc(offsetof(struct HASH,vect)+vectsize);
   hash->object.next=NULL;
   hash->object.type=typeHash;
   hash->object.refcnt=0;
-  hash->modulo=modulo;
+  hash->mask=modulo-1;
   hash->objects=0;
+  hash->limit=modulo*.75;  // Grow when the hash is 75 percent full - this may be ++option
   memset(hash->vect,0,vectsize);
-  //outMsg(0,'T',"newHash: created hash at %p - modulo=%u size is %ld + %ld",hash,hash->modulo,offsetof(struct HASH,vect),vectsize);
   return(hash);  
   }
 
@@ -160,21 +158,21 @@ void nbHashGrow(struct HASH **hashP){
   struct NB_OBJECT *object,*objectNext,**objectP,**objectPa,**objectPb;
   int v;
   size_t vectsize;
-  size_t size=(*hashP)->modulo*2;
-  uint32_t mask=0xffffffff%size;
+  uint32_t modulo=(*hashP)->mask+1;
+  size_t size=modulo*2;
+  uint32_t mask=size-1;
 
-  //outMsg(0,'T',"nbHashGrow: called - new size=%u mask=%x",size,mask);
   if(size>UINT32_MAX) nbExit("nbHashGrow: Logic error - modulo %ld exceeds limit of %u - terminating",size,UINT32_MAX);
   hash=newHash(size);
   hash->objects=(*hashP)->objects;
   objectP=(NB_Object **)&((*hashP)->vect);
-  for(v=0;v<(*hashP)->modulo;v++){
+  for(v=0;v<=(*hashP)->mask;v++){
     if(*objectP){
       objectPa=(NB_Object **)&(hash->vect[v]);
-      objectPb=(NB_Object **)&(hash->vect[v+(*hashP)->modulo]);
+      objectPb=(NB_Object **)&(hash->vect[v+modulo]);
       for(object=*objectP;object!=NULL;object=objectNext){
         objectNext=object->next;
-        if((object->key&mask)==v){
+        if((object->hashcode&mask)==v){
           *objectPa=object;
           objectPa=&object->next;
           }
@@ -188,41 +186,40 @@ void nbHashGrow(struct HASH **hashP){
       }
     objectP++;
     }
-  vectsize=(*hashP)->modulo*sizeof(void *);
-  //outMsg(0,'T',"nbHashGrow: hash %p replaces hash at %p - modulo=%u size is %ld + %ld",hash,*hashP,(*hashP)->modulo,offsetof(struct HASH,vect),vectsize);
+  vectsize=modulo*sizeof(void *);
   nbFree(*hashP,offsetof(struct HASH,vect)+vectsize); 
   *hashP=hash;
-  //printHash(hash,"debug",NULL);
   }
 
 /*
 *  Print all or selected objects in a hash
 */
-void printHash(struct HASH *hash,char *label,NB_Type *type){
+void nbHashShow(struct HASH *hash,char *label,NB_Type *type){
   NB_Object *object,**objectP;
   long v;
-  int i,saveshowcount=showcount;
+  int i;
+  int32_t level;
 
-  showcount=1;
-  outPut("%s:\n",label);
+  outPut("Hash: Modulo=%8.8x Objects=%8.8x %s\n",hash->mask+1,hash->objects,label);
   objectP=(NB_Object **)&(hash->vect);
-  for(v=0;v<hash->modulo;v++){
+  for(v=0;v<=hash->mask;v++){
     i=0;
     for(object=*objectP;object!=NULL;object=object->next){
       if(type==NULL || object->type==type){
-        outPut("[%u,%d] = ",v,i);
+        if(object==object->value) level=0;
+        else level=((NB_Cell *)object)->level;
+        outPut("Slot=%8.8x.%2.2x Code=%8.8x Ref=%8.8x Level=%8.8x = ",v,i,object->hashcode,object->refcnt,level);
         printObject(object->value);
         if(object!=object->value){
           outPut(" == "); 
           printObject(object);
           }
         outPut("\n");
-        i++;
+        if(i<INT_MAX) i++;
         }
       }
     objectP++;
     }
-  showcount=saveshowcount;
   }
 
 /*
@@ -236,5 +233,5 @@ void destroyHash(NB_Object object){
 *  Initialize types provided by this header
 */
 void nbHashInit(NB_Stem *stem){
-  typeHash=newType(stem,"hash",NULL,0,printHash,destroyHash);
+  typeHash=newType(stem,"hash",NULL,0,nbHashShow,destroyHash);
   }

@@ -112,12 +112,12 @@ struct NB_STRING_POOL *nb_StringPool;  // free string pool vector by length
 *
 */
 void *hashStr(struct HASH *hash,char *cursor){
-  unsigned int h=0;
+  uint32_t h=0;
   while(*cursor){
     h=((h<<3)+*cursor);
     cursor++;
     }
-  return(&(hash->vect[h%hash->modulo]));
+  return(&(hash->vect[h&hash->mask]));
   }
 
 /**********************************************************************
@@ -133,25 +133,7 @@ void printString(struct STRING *string){
   }
 
 void printStringAll(void){
-  struct STRING *string,**stringP;
-  long v;
-  int i,saveshowcount=showcount;
-  NB_Hash *hash=strType->hash;
-  
-  showcount=1;
-  outPut("String Table: Modulo=%u Objects=%u\n",hash->modulo,hash->objects);
-  stringP=(struct STRING **)&(hash->vect);
-  for(v=0;v<hash->modulo;v++){
-    i=0;
-    for(string=*stringP;string!=NULL;string=(struct STRING *)string->object.next){
-      outPut("Slot=%8.8x.%2.2x Key=%8.8x ",v,i,string->object.key);
-      printObject((NB_Object *)string);
-      outPut("\n");
-      i++;
-      }
-    stringP++;  
-    }
-  showcount=saveshowcount;  
+  nbHashShow(strType->hash,"Strings",NULL);
   }
 
 void destroyString(NB_String *str){
@@ -161,12 +143,12 @@ void destroyString(NB_String *str){
   NB_Hash *hash=strType->hash;
 
   //outMsg(0,'T',"destroyString: called for %s refcnt=%d",str->value,str->object.refcnt);
-  stringP=(NB_String **)&(hash->vect[str->object.key%hash->modulo]);
+  stringP=(NB_String **)&(hash->vect[str->object.hashcode&hash->mask]);
   for(string=*stringP;string!=NULL && (r=strcmp(str->value,string->value))>0;string=*stringP)
     stringP=(NB_String **)&(string->object.next);
   if(string==NULL || r!=0){
     outMsg(0,'L',"destroyString: unable to locate string object.");
-    outMsg(0,'L',"destroyString: key=%u modulo=%u value='%s'",str->object.key,hash->modulo,str->value);
+    outMsg(0,'L',"destroyString: hashcode=%u modulo=%u value='%s'",str->object.hashcode,hash->mask+1,str->value);
     return;
     }
   *stringP=(struct STRING *)string->object.next;    // remove from hash list
@@ -197,23 +179,12 @@ void initString(NB_Stem *stem){
 struct STRING *useString(char *value){
   struct STRING *string,**stringP,**freeStringP;
   size_t size,len;
-  //char *cursor;
   int r=1;  /* temp relation <0, 0, >0 */
-  //unsigned long h=0;
-  //unsigned char c;
   NB_Hash *hash=strType->hash;
-  uint32_t key=0;
+  uint32_t hashcode=0;
   
-  // NOTE: need to change hashing algorithm to just use last x bytes
-  //for(cursor=value;*cursor!=0;cursor++){
-  //  c=*cursor;
-  //  h=((h<<3)+c);
-  //  }  
-  //key=h;
-  NB_HASH_STR(key,value)
-  //outMsg(0,'T',"useString: key=0x%8.8x modulo=0x%8.8x slot=0x%8.8x ->%s",key,hash->modulo,key%hash->modulo,value);
-  //if(strcmp(value,"r65511")==0 || strcmp(value,"define")==0 || strcmp(value,"assert")==0) outMsg(0,'T',"useString: key=0x%8.8x modulo=0x%x slot=0x%8.8x ->%s",key,hash->modulo,key%hash->modulo,value);
-  stringP=(struct STRING **)&(hash->vect[key%hash->modulo]);
+  NB_HASH_STR(hashcode,value)
+  stringP=(NB_String **)&(hash->vect[hashcode&hash->mask]);
   for(string=*stringP;string!=NULL && (r=strcmp(value,string->value))>0;string=*stringP)
     stringP=(struct STRING **)&(string->object.next);
   if(string!=NULL && r==0) return(string);
@@ -225,12 +196,10 @@ struct STRING *useString(char *value){
   string=(struct STRING *)newObject(strType,(void **)freeStringP,size);
   len++; // 2013-01-14 eat - this is completely unnecessary, but replaced strcpy with strncpy to see if the checker is ok with that.
   strncpy((char *)string->value,value,len);  // 2013-01-01 eat - VID 5538-0.8.13-01 FP - we allocated enough space with call to newObject
-  string->object.key=key;
+  string->object.hashcode=hashcode;
   string->object.next=(NB_Object *)*stringP;     
   *stringP=string;  
   hash->objects++;
-  //if(hash->objects>=hash->modulo/2) nbHashGrow(&strType->hash);
-  if(hash->objects>=hash->modulo) nbHashGrow(&strType->hash);
-  //outMsg(0,'T',"Returning new strings at %p ->%s",string,value);
+  if(hash->objects>=hash->limit) nbHashGrow(&strType->hash);
   return(string);
   }

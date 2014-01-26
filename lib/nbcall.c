@@ -108,11 +108,11 @@ void solveCall(struct CALL *call){
 * Private Function Management Methods
 **********************************************************************/
 void enableCall(struct CALL *call){
-  nbCellEnable((NB_Cell *)call->list,(NB_Cell *)call);
+  nbAxonEnable((NB_Cell *)call->list,(NB_Cell *)call);
   }
 
 void disableCall(struct CALL *call){
-  nbCellDisable((NB_Cell *)call->list,(NB_Cell *)call);
+  nbAxonDisable((NB_Cell *)call->list,(NB_Cell *)call);
   }
 
 /**********************************************************************

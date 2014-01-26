@@ -65,13 +65,14 @@ extern NB_Link *change;
 typedef struct NB_CELL{      // cell object header
   NB_Object object;          // object header
   struct NB_TREE_NODE  *sub; // subscribers to change
-  unsigned char mode;        // mode flags
+  unsigned char mode;        // mode flags - see NB_CELL_MODE_* below
   unsigned char level;       // subscription level
   } NB_Cell;
 
 typedef NB_Cell *nbCELL;
 
-#define NB_CELL_MODE_AXON_REL 1  // use axon for relational operators
+#define NB_CELL_MODE_SCHEDULED  1  // cell is scheduled for evaluation - avoids scheduling multiple times
+#define NB_CELL_MODE_AXON_BOOST 2  // use axon accelerator cell for relational operators
 
 void nbCellInit(struct NB_STEM *stem);
 void nbCellType(
@@ -175,17 +176,7 @@ extern void nbCellEnable(nbCELL pub,nbCELL sub);
 #if defined(WIN32)
 __declspec(dllexport)
 #endif
-extern void nbCellEnableAxon(nbCELL pub,nbCELL sub);
-
-#if defined(WIN32)
-__declspec(dllexport)
-#endif
 extern void nbCellDisable(nbCELL pub,nbCELL sub);
-
-#if defined(WIN32)
-__declspec(dllexport)
-#endif
-void nbCellDisableAxon(nbCELL pub,nbCELL sub);
 
 #if defined(WIN32)
 __declspec(dllexport)

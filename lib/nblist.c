@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -84,6 +84,7 @@
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2010-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 * 2012-12-31 eat 0.8.13 Change hash size from int to size_t
+* 2014-01-25 eat 0.9.00 Updated for changes to hash structure
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -230,14 +231,14 @@ void *dropMember(NB_Link *member){
 uint32_t hashList(NB_Link *member){
   unsigned long h=0;
   unsigned long *m;
-  uint32_t key;
+  uint32_t hashcode;
 
   for(;member!=NULL;member=member->next){
     m=(unsigned long *)&(member->object);
     h=((h<<3)+*m);
     }
-  key=h;
-  return(key);
+  hashcode=h;
+  return(hashcode);
   }
 
 /*
@@ -248,11 +249,11 @@ NB_List *useList(NB_Link *member){
   NB_List *list,**listP;
   NB_Hash *hash=nb_ListType->hash;
   int level,maxlevel=0;
-  uint32_t key;
+  uint32_t hashcode;
  
   if(member==NULL) return(nb_ListNull);
-  key=hashList(member);
-  listP=(NB_List **)&(hash->vect[key%hash->modulo]);
+  hashcode=hashList(member);
+  listP=(NB_List **)&(hash->vect[hashcode&hash->mask]);
   for(;*listP!=NULL && (*listP)->link->object<member->object;listP=(NB_List **)&((*listP)->cell.object.next));
   for(;*listP!=NULL && (*listP)->link->object==member->object;listP=(NB_List **)&((*listP)->cell.object.next)){
     mbr1=(*listP)->link->next;
@@ -273,13 +274,13 @@ NB_List *useList(NB_Link *member){
     }
   /* didn't find it, get a new one */
   list=nbCellNew(nb_ListType,(void **)&nb_ListFree,sizeof(NB_List));
-  list->cell.object.key=key;
+  list->cell.object.hashcode=hashcode;
   list->cell.object.value=nb_Disabled;
   list->link=member; 
   list->cell.object.next=(NB_Object *)*listP;  /* insert in hash list */
   *listP=list;
   hash->objects++;
-  if(hash->objects>=hash->modulo) nbHashGrow(&nb_ListType->hash);
+  if(hash->objects>=hash->limit) nbHashGrow(&nb_ListType->hash);
   /* set function level */
   for(;member!=NULL;member=member->next){
     if(member->object->value!=member->object &&
@@ -317,10 +318,11 @@ NB_List *parseList(NB_Term *context,char **cursorP){
 void destroyList(NB_List *list){
   NB_List **listP;
   NB_Hash *hash=nb_ListType->hash;
-  uint32_t key;
+  uint32_t hashcode;
 
-  key=hashList(list->link);
-  listP=(NB_List **)&(hash->vect[key%hash->modulo]);
+  //hashcode=hashList(list->link);
+  hashcode=list->cell.object.hashcode;
+  listP=(NB_List **)&(hash->vect[hashcode&hash->mask]);
   for(;*listP!=NULL && *listP!=list;listP=(NB_List **)&((*listP)->cell.object.next));
   if(*listP!=NULL)
     *listP=(NB_List *)list->cell.object.next;    /* remove from hash list */
@@ -350,7 +352,7 @@ void printList(NB_List *list){
   }
 
 void nbListShowAll(void){
-  printHash(nb_ListType->hash,"Lists",NULL);
+  nbHashShow(nb_ListType->hash,"Lists",NULL);
   }
 
 /*
@@ -400,7 +402,7 @@ void enableList(NB_List *list){
 
   if(trace) outMsg(0,'T',"enableList: called");
   for(member=list->link;member!=NULL;member=member->next){
-    nbCellEnable((NB_Cell *)member->object,(NB_Cell *)list);
+    nbAxonEnable((NB_Cell *)member->object,(NB_Cell *)list);
     }
   }
 
@@ -409,7 +411,7 @@ void disableList(NB_List *list){
 
   if(trace) outMsg(0,'T',"disableList() called");
   for(member=list->link;member!=NULL;member=member->next){
-    nbCellDisable((NB_Cell *)member->object,(NB_Cell *)list);
+    nbAxonDisable((NB_Cell *)member->object,(NB_Cell *)list);
     }
   if(trace) outMsg(0,'T',"disableList() returning");
   }

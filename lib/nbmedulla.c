@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -111,6 +111,7 @@
 *            to stdout to fill buffers and block waiting for the medulla to read
 *            it we had a deadly embrace.  Now stdout and stderr are read concurrently
 *            and the problem is resolved.
+* 2014-01-25 eat 0.9.00 Checker updates
 *=============================================================================
 */
 #define NB_INTERNAL
@@ -1918,8 +1919,9 @@ nbPROCESS nbMedullaProcessAdd(int pid,char *cmd){
   process->putfile=-1;
   process->getfile=-1;
 #endif
-  strncpy(process->cmd,cmd,sizeof(process->cmd));
-  if(strlen(cmd)>=sizeof(process->cmd)) *(process->cmd+sizeof(process->cmd)-1)=0;
+  strncpy(process->cmd,cmd,sizeof(process->cmd)-1); // 2014-01-25 eat - CID 1164430
+  //if(strlen(cmd)>=sizeof(process->cmd)) *(process->cmd+sizeof(process->cmd)-1)=0;
+  *(process->cmd+sizeof(process->cmd)-1)=0;
   process->next=nb_process->next;    // insert in list
   process->prior=nb_process;
   nb_process->next=process;

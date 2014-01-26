@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -159,6 +159,7 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 * 2012-12-27 eat 0.8.13 Checker updates
 * 2012-12-31 eat 0.8.13 Checker updates
+* 2014-01-25 eat 0.9.00 Checker updates
 *==============================================================================
 */
 #include <ctype.h>
@@ -1127,14 +1128,14 @@ nbMsgLog *nbMsgLogOpen(nbCELL context,char *cabal,char *nodeName,unsigned char n
   // create a msglog structure
   msglog=(nbMsgLog *)nbAlloc(sizeof(nbMsgLog));
   memset(msglog,0,sizeof(nbMsgLog));
-  strncpy(msglog->cabal,cabal,sizeof(msglog->cabal));             // 2012-12-31 eat - VID 4733-0.8.13-1 FP checked above, but changed anyway
+  strncpy(msglog->cabal,cabal,sizeof(msglog->cabal)-1);           // 2014-01-25 eat - CID 1164439 2012-12-31 eat - VID 4733-0.8.13-1 FP checked above, but changed anyway
   *(msglog->cabal+sizeof(msglog->cabal)-1)=0;
-  strncpy(msglog->nodeName,nodeName,sizeof(msglog->nodeName));    // 2012-12-31 eat - VID 5324-0.8.13-1 FP checked above, but changed anyway
+  strncpy(msglog->nodeName,nodeName,sizeof(msglog->nodeName)-1);  // 2014-01-25 eat - CID 1164439 2012-12-31 eat - VID 5324-0.8.13-1 FP checked above, but changed anyway
   *(msglog->nodeName+sizeof(msglog->nodeName)-1)=0;
   msglog->node=node;
   strcpy(msglog->filename,linkedname);
-  if(basename && *basename) strncpy(msglog->consumerName,basename,sizeof(msglog->consumerName));  
-  else strncpy(msglog->consumerName,nodeName,sizeof(msglog->consumerName));   // 2012-12-31 eat - VID 5273-0.8.13-1 FP but changed
+  if(basename && *basename) strncpy(msglog->consumerName,basename,sizeof(msglog->consumerName)-1); // 2014-01-25 eat - CID 1164439 
+  else strncpy(msglog->consumerName,nodeName,sizeof(msglog->consumerName)-1);   // 2014-01-25 eat - CID 1164439 // 2012-12-31 eat - VID 5273-0.8.13-1 FP but changed
   *(msglog->consumerName+sizeof(msglog->consumerName)-1)=0;
   msglog->option=option;
   msglog->mode=mode;

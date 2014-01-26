@@ -151,23 +151,24 @@ void printMathXY(struct MATH *math){
 /*
 *  Math destructor
 */
-void destroyMath(struct MATH *math){
+void destroyMath(NB_Math *math){
   struct MATH *lmath,**mathP;
   NB_Hash *hash=math->cell.object.type->hash;
-  uint32_t key;
+  uint32_t hashcode;
 
   if(trace) outMsg(0,'T',"destroyMath() called");
-  key=hashCond(math->cell.object.type,math->left,math->right);
-  mathP=(struct MATH **)&(hash->vect[key%hash->modulo]);
+  //hashcode=hashCond(math->cell.object.type,math->left,math->right);
+  hashcode=math->cell.object.hashcode;
+  mathP=(struct MATH **)&(hash->vect[hashcode&hash->mask]);
   if(*mathP==math) *mathP=(struct MATH *)math->cell.object.next;
   else{
     for(lmath=*mathP;lmath!=NULL && lmath!=math;lmath=*mathP)
       mathP=(struct MATH **)&lmath->cell.object.next;
     if(lmath==math) *mathP=(struct MATH *)math->cell.object.next;
     }
-  nbCellDisable((NB_Cell *)math->left,(NB_Cell *)math);
+  nbAxonDisable((NB_Cell *)math->left,(NB_Cell *)math);
   dropObject(math->left);
-  nbCellDisable((NB_Cell *)math->right,(NB_Cell *)math);
+  nbAxonDisable((NB_Cell *)math->right,(NB_Cell *)math);
   dropObject(math->right);
   math->cell.object.next=(NB_Object *)mathFree;
   mathFree=math;
@@ -298,13 +299,13 @@ void solveMath(struct MATH *math){
 * Private Function Management Methods
 **********************************************************************/
 void enableMath(struct MATH *math){
-  nbCellEnable((NB_Cell *)math->left,(NB_Cell *)math);
-  nbCellEnable((NB_Cell *)math->right,(NB_Cell *)math);
+  nbAxonEnable((NB_Cell *)math->left,(NB_Cell *)math);
+  nbAxonEnable((NB_Cell *)math->right,(NB_Cell *)math);
   }
 
 void disableMath(struct MATH *math){
-  nbCellDisable((NB_Cell *)math->left,(NB_Cell *)math);
-  nbCellDisable((NB_Cell *)math->right,(NB_Cell *)math);
+  nbAxonDisable((NB_Cell *)math->left,(NB_Cell *)math);
+  nbAxonDisable((NB_Cell *)math->right,(NB_Cell *)math);
   }
 
 /*
@@ -391,7 +392,7 @@ struct MATH * useMath(int inverse,struct TYPE *type,NB_Object *left,NB_Object *r
   *  Otherwise a new math object is constructed.
   *
   *  Expressions are "disabled" until they are referenced by a rule.  Such
-  *  a reference is reported by nbCellEnable which builds the back link list
+  *  a reference is reported by nbAxonEnable which builds the back link list
   *  to dependent expressions referenced by a rule.  This prevents the
   *  eval routine from evaluating conditions not referenced by any
   *  rule.
@@ -399,7 +400,7 @@ struct MATH * useMath(int inverse,struct TYPE *type,NB_Object *left,NB_Object *r
   */
   struct MATH *math,*lmath,**mathP;
   NB_Hash *hash=type->hash;
-  uint32_t key;
+  uint32_t hashcode;
 
   if(trace) outMsg(0,'T',"useMath called");
   if(inverse){
@@ -409,18 +410,18 @@ struct MATH * useMath(int inverse,struct TYPE *type,NB_Object *left,NB_Object *r
 
   if(trace) outMsg(0,'T',"destroyMath() called");
 
-  key=hashCond(type,left,right);
-  mathP=(struct MATH **)&(hash->vect[key%hash->modulo]);
+  hashcode=hashCond(type,left,right);
+  mathP=(struct MATH **)&(hash->vect[hashcode&hash->mask]);
   for(math=*mathP;math!=NULL;math=*mathP){
     if(math->left==left && math->right==right && math->cell.object.type==type) return(math);
     mathP=(struct MATH **)&math->cell.object.next;
     }
   math=nbCellNew(type,(void **)&mathFree,sizeof(struct MATH));
-  math->cell.object.key=key;
+  math->cell.object.hashcode=hashcode;
   math->cell.object.next=(NB_Object *)*mathP;
   *mathP=math;
   hash->objects++;
-  if(hash->objects>=hash->modulo) nbHashGrow(&type->hash);
+  if(hash->objects>=hash->limit) nbHashGrow(&type->hash);
   math->left=grabObject(left);
   math->right=grabObject(right);
   if((lmath=(struct MATH *)left)!=(struct MATH *)nb_Unknown && lmath->cell.object.value!=(NB_Object *)lmath)
@@ -436,6 +437,6 @@ void printMathAll(void){
   NB_Type *type;
 
   for(type=nb_TypeList;type!=NULL;type=(NB_Type *)type->object.next){
-    if(type->attributes&TYPE_IS_MATH) printHash(type->hash,"Math Table",type); 
+    if(type->attributes&TYPE_IS_MATH) nbHashShow(type->hash,type->name,type); 
     }
   }

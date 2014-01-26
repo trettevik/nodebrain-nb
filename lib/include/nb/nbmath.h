@@ -42,11 +42,11 @@
 #define _NB_MATH_H_
 
 /* NOTE: we depend on MATH conforming to COND */
-struct MATH{                 /* Math Function Object - one or two operands */
+typedef struct MATH{         /* Math Function Object - one or two operands */
   struct NB_CELL   cell;     /* cell header */
   struct NB_OBJECT *left;    /* Left Operand     */
   struct NB_OBJECT *right;   /* Right Operand    */
-  };
+  } NB_Math;
 
 extern struct HASH *mathH;
 extern struct MATH *mathFree;

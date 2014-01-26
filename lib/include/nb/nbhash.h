@@ -52,15 +52,16 @@ extern struct TYPE *typeHash;
 
 typedef struct HASH{       // Hashing table
   struct NB_OBJECT object; // Special type to distinquish HASH from TERM
-  uint32_t   modulo;       // Size of hashing table
+  uint32_t   mask;         // one less than size of hash table - modulo=mask+1
   uint32_t   objects;      // Number of objects in the hash
+  uint32_t   limit;        // Number of objects that trigger a doubling of the hash table
   void *vect[1];           // Colision pointers - ptr to first object in list
   } NB_Hash;
 
 void nbHashInit(NB_Stem *stem);
-struct HASH *newHash(size_t modulo);  // 2012-12-31 eat - VID 4947
+NB_Hash *newHash(size_t modulo);  // 2012-12-31 eat - VID 4947
 void destroyHash(NB_Object object);
-void printHash(struct HASH *hash,char *label,NB_Type *type);
+void nbHashShow(struct HASH *hash,char *label,NB_Type *type);
 void nbHashStats(void);
 void nbHashGrow(NB_Hash **hashP);
 

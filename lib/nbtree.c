@@ -339,7 +339,7 @@ void *nbTreeLocateCondRightString(NB_TreePath *path,char *key,NB_TreeNode **root
     cmp=cmp>0;          // 0 left, 1 right
     if(node->balance!=0) path->balanceP=nodeP, path->balanceDepth=depth;
     path->node[depth]=node;
-    if((path->step[depth++]=cmp)) nodeP=&node->right;
+    if((path->step[depth]=cmp)) nodeP=&node->right;
     else nodeP=&node->left;
     }
   path->nodeP=nodeP;
@@ -369,7 +369,7 @@ void *nbTreeLocateCondRightReal(NB_TreePath *path,double key,NB_TreeNode **rootP
     else break;
     if(node->balance!=0) path->balanceP=nodeP, path->balanceDepth=depth;
     path->node[depth]=node;
-    if((path->step[depth++]=cmp)) nodeP=&node->right;
+    if((path->step[depth]=cmp)) nodeP=&node->right;
     else nodeP=&node->left;
     }
   path->nodeP=nodeP;

@@ -93,7 +93,7 @@ void *hashReal(struct HASH *hash,double n){
   unsigned long h,*l;
   l=(unsigned long *)&n;
   h=*l;
-  return(&(hash->vect[h%hash->modulo]));
+  return(&(hash->vect[h&hash->mask]));
   }
 
 struct REAL **locateReal(n) double n; {
@@ -117,14 +117,14 @@ void printReal(struct REAL *real){
 *  Print all real constants
 */
 void printRealAll(void){
-  printHash(realType->hash,"Numbers",NULL);
+  nbHashShow(realType->hash,"Numbers",NULL);
   }
 
 void destroyReal(struct REAL *real){
   struct HASH *hash=realType->hash;
   struct REAL **realP;
 
-  realP=(NB_Real **)&(hash->vect[real->object.key%hash->modulo]);
+  realP=(NB_Real **)&(hash->vect[real->object.hashcode&hash->mask]);
   for(;*realP!=NULL && *realP!=real;realP=(struct REAL **)&((*realP)->object.next));
   if(*realP!=real){
     outMsg(0,'L',"destroyReal: unable to locate real object.");
@@ -159,29 +159,20 @@ struct REAL *newReal(double value){
 
 struct REAL *useReal(double value){
   NB_Real *real,**realP;
-  //unsigned long *l,h;
   unsigned long h;
   struct HASH *hash=realType->hash;
 
-  //if(trace) outMsg(0,'T',"useReal: called");
-
-  //l=(unsigned long *)&value;
-  //outMsg(0,'T',"useReal: l=%ld",*l);
-  //h=*l;
-  h=value;
-  //i=h%hash->modulo;
-  //outMsg(0,'T',"useReal: value=%f h=%ld modulo=%ld index=%lu",value,h,hash->modulo,i);
-  realP=(NB_Real **)&(hash->vect[h%hash->modulo]);
+  h=value;  // change this so all fractions don't collide
+  realP=(NB_Real **)&(hash->vect[h&hash->mask]);
   for(;*realP!=NULL && (*realP)->value<value;realP=(struct REAL **)&((*realP)->object.next));
   if(*realP!=NULL && (*realP)->value==value) return(*realP);
   real=(struct REAL *)newObject(realType,(void **)&realFree,sizeof(struct REAL));
-  real->object.key=h;
-  //outMsg(0,'T',"useReal: key=%u",real->object.key);
+  real->object.hashcode=h;
   real->value=value;
   real->object.next=(NB_Object *)*realP;
   *realP=real;
   hash->objects++;
-  if(hash->objects>=hash->modulo) nbHashGrow(&realType->hash);
+  if(hash->objects>=hash->limit) nbHashGrow(&realType->hash);
   return(real);
   }
 

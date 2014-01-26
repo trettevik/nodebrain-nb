@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -130,6 +130,7 @@
 * 2013-04-06 eat 0.8.15 Renamed getQualifier to nbParseQualifier
 * 2013-04-06 eat 0.8.15 Added size parameter to nbParseSymbol and nbParseQualifier
 * 2013-04-06 eat 0.8.15 Added size parameter to nbParseTerm and nbParseTimeSymbol
+* 2014-01-25 eat 0.9.00 Checker updates
 *==============================================================================
 */
 #include <nb/nbi.h>
@@ -823,7 +824,7 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
       *  The use of enable and disable is a bit inefficient because
       *  it unnecessarily registers objects for alerts and then
       *  unregisters them.  It would be better to set a mode flag so
-      *  nbCellEnable only calls the eval method when called by
+      *  nbAxonEnable only calls the eval method when called by
       *  the eval methods, and doesn't do change registration.
       *  We can make that change if this code produces the desired
       *  results.
@@ -1004,10 +1005,11 @@ NB_Object *nbParseRel(NB_Term *context,char **cursor){
     *  should return a message and offset. */
     if(re==NULL) return(NULL);
     if(parseTrace) outMsg(0,'T',"Encountered regular expression.");
-    if(not){
-      lobject=(NB_Object *)useCondition(type,lobject,re);
-      return((NB_Object *)useCondition(condTypeNot,lobject,nb_Unknown));
-      }
+    // 2014-01-25 eat - CID 1164443 code was changed above so not is always 0
+    //if(not){
+    //  lobject=(NB_Object *)useCondition(type,lobject,re);
+    //  return((NB_Object *)useCondition(condTypeNot,lobject,nb_Unknown));
+    //  }
     return((NB_Object *)useCondition(type,lobject,re));
     }
   if((robject=nbParseCell(context,cursor,5))==NULL){
@@ -1024,19 +1026,19 @@ NB_Object *nbParseRel(NB_Term *context,char **cursor){
     else if(type==condTypeRelGE) type=condTypeRelLE;
     else if(type==condTypeRelLT) type=condTypeRelGT;
     else if(type==condTypeRelLE) type=condTypeRelGE;
-    }
-  if(robject->value==robject && nb_opt_axon){  // constant right operand and we are using axon cells
-    if(type==condTypeRelNE){
-      not^=1;  // exclusive or to switch not
-      type=condTypeRelEQ;
-      }
-    else if(type==condTypeRelLE){
-      not^=1;  // exclusive or to switch not
-      type=condTypeRelGT;
-      }
-    else if(type==condTypeRelGE){
-      not^=1;  // exclusive or to switch not
-      type=condTypeRelLT;
+    if(nb_opt_boolnotrel){  // option to transform relational not to boolean not
+      if(type==condTypeRelNE){
+        not^=1;  // exclusive or to switch not
+        type=condTypeRelEQ;
+        }
+      if(type==condTypeRelLE){
+        not^=1;  // exclusive or to switch not
+        type=condTypeRelGT;
+        }
+      else if(type==condTypeRelGE){
+        not^=1;  // exclusive or to switch not
+        type=condTypeRelLT;
+        }
       }
     }
   if(not){

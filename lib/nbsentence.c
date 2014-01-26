@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -44,7 +44,8 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2001/07/05 Ed Trettevik (original prototype version 0.2.8)
+* 2014-12-20 Ed Trettevik - original prototype introduced in 0.9.00
+* 2014-01-25 eat 0.9.00 - Checker updates
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -55,7 +56,7 @@ NB_Type *nb_SentenceType=NULL;
 * Private Object Methods
 **********************************************************************/
 
-static void nbSentenceShow(struct NB_SENTENCE *cell){
+static void nbSentenceShow(NB_Sentence *cell){
   if(cell==NULL) outPut("(?)");
   else{
     printObject((NB_Object *)cell->term);
@@ -64,24 +65,24 @@ static void nbSentenceShow(struct NB_SENTENCE *cell){
     }
   }
 
-static void nbSentenceDestroy(struct NB_SENTENCE *cell){
+static void nbSentenceDestroy(NB_Sentence *cell){
   dropObject((NB_Object *)cell->term);
   dropObject((NB_Object *)cell->args);
-  nbFree(cell,sizeof(cell));
+  nbFree(cell,sizeof(NB_Sentence));
   }
 
 /**********************************************************************
 * Private Cell Calculation Methods
 **********************************************************************/
 
-static NB_Object *evalSentence(struct NB_SENTENCE *cell){
+static NB_Object *evalSentence(NB_Sentence *cell){
   NB_Node *node=(NB_Node *)cell->term->def;
   if(node->cell.object.type!=nb_NodeType) return(nb_Unknown);
   if(cell->facet==NULL) return(nb_Unknown);
   return((*cell->facet->eval)(node->context,node->skill->handle,node->knowledge,cell->args));
   }
 
-static void solveSentence(struct NB_SENTENCE *cell){
+static void solveSentence(NB_Sentence *cell){
   nbCellSolve_((NB_Cell *)cell->args);
   return;
   }
@@ -90,13 +91,13 @@ static void solveSentence(struct NB_SENTENCE *cell){
 * Private Cell Management Methods
 **********************************************************************/
 
-static void enableSentence(struct NB_SENTENCE *cell){
-  nbCellEnable((NB_Cell *)cell->term,(NB_Cell *)cell);
-  nbCellEnable((NB_Cell *)cell->args,(NB_Cell *)cell);
+static void enableSentence(NB_Sentence *cell){
+  nbAxonEnable((NB_Cell *)cell->term,(NB_Cell *)cell);
+  nbAxonEnable((NB_Cell *)cell->args,(NB_Cell *)cell);
   }
-static void disableSentence(struct NB_SENTENCE *cell){
-  nbCellDisable((NB_Cell *)cell->term,(NB_Cell *)cell);
-  nbCellDisable((NB_Cell *)cell->args,(NB_Cell *)cell);
+static void disableSentence(NB_Sentence *cell){
+  nbAxonDisable((NB_Cell *)cell->term,(NB_Cell *)cell);
+  nbAxonDisable((NB_Cell *)cell->args,(NB_Cell *)cell);
   }
 
 /**********************************************************************

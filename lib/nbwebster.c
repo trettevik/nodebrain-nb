@@ -148,6 +148,7 @@
 * 2012-12-27 eat 0.8.13 - Checker updates
 * 2013-01-01 eat 0.8.13 - Checker updates
 * 2014-01-12 eat 0.9.00 - Added checks for chdir and getcwd return codes
+* 2014-01-25 eat 0.9.00 - Checker updates
 *==============================================================================
 */
 #include <nb/nbi.h>
@@ -498,8 +499,8 @@ static void nbWebsterError(nbCELL context,nbWebSession *session,char *text){
   time_t currentTime;
   char ctimeCurrent[32];
   time(&currentTime);
-  strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent));
-  *(ctimeCurrent+strlen(ctimeCurrent)-1)=0;
+  strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent)-1); // 2014-01-25 eat - CID 1164437
+  *(ctimeCurrent+sizeof(ctimeCurrent)-1)=0;
   page=nbProxyPageOpen(context,&data,&size);
   nbLogMsg(context,0,'T',"Internal server error");
   len=snprintf(content,sizeof(content),html,text);
@@ -540,8 +541,8 @@ static void nbWebsterBadRequest(nbCELL context,nbWebSession *session,char *text)
   time_t currentTime;
   char ctimeCurrent[32];
   time(&currentTime);
-  strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent));
-  *(ctimeCurrent+strlen(ctimeCurrent)-1)=0;
+  strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent)-1); // 2014-01-25 eat - CID 1164431
+  *(ctimeCurrent+sizeof(ctimeCurrent)-1)=0;
   page=nbProxyPageOpen(context,&data,&size);
   nbLogMsg(context,0,'T',"Internal server error");
   len=snprintf((char *)data,size,response,ctimeCurrent,session->reqhost,session->resource,strlen(html),nb_charset,html); // 2012-12-27 eat CID 761997
@@ -563,11 +564,11 @@ static void webContentHeading(nbCELL context,nbWebSession *session,char *code,ch
 
   if(session->close) connection="close";
   time(&currentTime);
-  strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent));
-  *(ctimeCurrent+strlen(ctimeCurrent)-1)=0;
+  strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent)-1); // 2014-01-25 eat - CID 1164434
+  *(ctimeCurrent+sizeof(ctimeCurrent)-1)=0;
   currentTime+=24*60*60; // add one day
-  strncpy(ctimeExpires,asctime(gmtime(&currentTime)),sizeof(ctimeExpires));
-  *(ctimeExpires+strlen(ctimeExpires)-1)=0;
+  strncpy(ctimeExpires,asctime(gmtime(&currentTime)),sizeof(ctimeExpires)-1); // 2014-01-25 eat - CID 1164434
+  *(ctimeExpires+sizeof(ctimeExpires)-1)=0;
 
   page=nbProxyPageOpen(context,&data,&size);
   len=snprintf(data,size,
@@ -607,8 +608,8 @@ static int nbWebsterCgiCloser(nbPROCESS process,int pid,void *processSession){
   session->process=NULL;  // 2012-05-12 eat - remove the process from the session
   if(session->close) connection="close";
   time(&currentTime);
-  strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent));
-  *(ctimeCurrent+strlen(ctimeCurrent)-1)=0;
+  strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent)-1); // 2014-01-25 eat - CID 1164438
+  *(ctimeCurrent+sizeof(ctimeCurrent)-1)=0;
 
   // we're taking a bad approach here to prototype 
   for(page=session->book.readPage;page;page=page->next){
@@ -839,8 +840,8 @@ static void nbWebsterResourceNotFound(nbCELL context,nbWebServer *webster,nbWebS
   time_t currentTime;
   char ctimeCurrent[32];
   time(&currentTime);
-  strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent));
-  *(ctimeCurrent+strlen(ctimeCurrent)-1)=0;
+  strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent)-1); // 2014-01-25 eat - CID 1164432
+  *(ctimeCurrent+sizeof(ctimeCurrent)-1)=0;
   page=nbProxyPageOpen(context,&data,&size);
   len=snprintf((char *)data,size,response,ctimeCurrent,session->reqhost,session->resource,strlen(html),nb_charset,html); // 2012-12-27 eat CID 761999
   if(len>=size) sprintf((char *)data,response,ctimeCurrent,"","",strlen(html),nb_charset,html);  // 2012-12-25 eat - AST 33  // 2012-12-27 eat CID 762000
@@ -940,8 +941,8 @@ static void nbWebsterServe(nbCELL context,nbWebServer *webster,nbWebSession *ses
       time_t currentTime;
       char ctimeCurrent[32];
       time(&currentTime);
-      strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent));
-      *(ctimeCurrent+strlen(ctimeCurrent)-1)=0;
+      strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent)-1); // 2014-01-25 eat - CID 1164435
+      *(ctimeCurrent+sizeof(ctimeCurrent)-1)=0;
       nbLogMsg(context,0,'T',"Error returned by webCgi");
       page=nbProxyPageOpen(context,&data,&size);
       len=snprintf((char *)data,size,response,ctimeCurrent,session->reqhost,filename,strlen(html),nb_charset,html); // 2012-12-27 eat - CID 762002
@@ -979,8 +980,8 @@ static void nbWebsterServe(nbCELL context,nbWebServer *webster,nbWebSession *ses
     time_t currentTime;
     char ctimeCurrent[32];
     time(&currentTime);
-    strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent));
-    *(ctimeCurrent+strlen(ctimeCurrent)-1)=0;
+    strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent)-1); // 2014-01-25 eat - CID 1164435
+    *(ctimeCurrent+sizeof(ctimeCurrent)-1)=0;
     page=nbProxyPageOpen(context,&data,&size);
     len=snprintf(content,sizeof(content),html,session->reqhost,filename);
     if(len>=sizeof(content)) sprintf(content,html,"","");
@@ -1018,8 +1019,8 @@ static void nbWebsterServe(nbCELL context,nbWebServer *webster,nbWebSession *ses
     time_t currentTime;
     char ctimeCurrent[32];
     time(&currentTime);
-    strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent));
-    *(ctimeCurrent+strlen(ctimeCurrent)-1)=0;
+    strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent)-1); // 2014-01-25 eat - CID 1164435
+    *(ctimeCurrent+sizeof(ctimeCurrent)-1)=0;
     page=nbProxyPageOpen(context,&data,&size);
     len=snprintf((char *)data,size,response,ctimeCurrent,session->reqhost,filename,strlen(html),nb_charset,html); // 2012-12-27 eat - CID 762001
     if(len>=size) sprintf((char *)data,response,ctimeCurrent,"","",strlen(html),nb_charset,html); // 2012-12-27 eat - fixed 
@@ -1090,8 +1091,8 @@ static void webRequirePassword(nbCELL context,nbWebSession *session){
   time_t currentTime;
   char ctimeCurrent[32];
   time(&currentTime);
-  strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent));
-  *(ctimeCurrent+strlen(ctimeCurrent)-1)=0;
+  strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent)-1); // 2014-01-25 eat - CID 1164436
+  *(ctimeCurrent+sizeof(ctimeCurrent)-1)=0;
   page=nbProxyPageOpen(context,&data,&size);
   len=snprintf((char *)data,size,response,ctimeCurrent,strlen(html),nb_charset,html);
   if(len>=size) nbExit("Logic error in webRequirePassword - static content exceeds page size");
@@ -1803,11 +1804,12 @@ int *nbWebsterReply(nbCELL context,nbWebSession *session){
   if(strcmp(session->type,"text")) charsetlabel="",charset="";
   if(session->close) connection="close";
   time(&currentTime);
-  strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent));
-  *(ctimeCurrent+strlen(ctimeCurrent)-1)=0;
+  strncpy(ctimeCurrent,asctime(gmtime(&currentTime)),sizeof(ctimeCurrent)-1); // 2014-01-25 eat - CID 1164433
+  *(ctimeCurrent+sizeof(ctimeCurrent)-1)=0;
   if(session->expires){
     expiresTime=currentTime+session->expires;
-    strncpy(ctimeExpires,asctime(gmtime(&expiresTime)),sizeof(ctimeExpires));
+    strncpy(ctimeExpires,asctime(gmtime(&expiresTime)),sizeof(ctimeExpires)-1); // 2014-01-25 eat - CID 1164433
+    *(ctimeExpires+sizeof(ctimeExpires)-1)=0;
     expires=ctimeExpires;
     }
   // get content length

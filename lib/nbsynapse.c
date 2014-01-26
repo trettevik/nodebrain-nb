@@ -112,8 +112,8 @@ NB_Cell *nbSynapseOpen(NB_Cell *context,void *skillHandle,void *nodeHandle,NB_Ce
   synapse->nodeHandle=nodeHandle;
   synapse->cell=cell;
   synapse->handler=handler;
-  if(trace) nbLogMsg(context,0,'T',"nbSynapseOpen: calling nbCellEnable");
-  if(cell) nbCellEnable(cell,(NB_Cell *)synapse); /* subscribe to cell */
+  if(trace) nbLogMsg(context,0,'T',"nbSynapseOpen: calling nbAxonEnable");
+  if(cell) nbAxonEnable(cell,(NB_Cell *)synapse); /* subscribe to cell */
   return((NB_Cell *)synapse);
   }
 
@@ -143,7 +143,7 @@ void nbSynapseSetTimer(nbCELL context,nbCELL synapse,int seconds){
 *  Returns: handle pointer  
 */
 void *nbSynapseClose(NB_Cell *context,NB_Cell *synapse){
-  if(((NB_Synapse *)synapse)->cell) nbCellDisable(((NB_Synapse *)synapse)->cell,(NB_Cell *)synapse);
+  if(((NB_Synapse *)synapse)->cell) nbAxonDisable(((NB_Synapse *)synapse)->cell,(NB_Cell *)synapse);
   synapse->object.next=(NB_Object *)nb_SynapsePool;
   nb_SynapsePool=(NB_Synapse *)synapse;
   return(NULL);

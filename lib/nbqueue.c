@@ -923,7 +923,7 @@ static int nbqThread(void *session){
 
   qEntry=qHandle->entry;
   if(qEntry==NULL){
-    if(qHandle->pollSynapse) nbCellEnable(qHandle->pollSynapse,NULL);
+    if(qHandle->pollSynapse) nbAxonEnable(qHandle->pollSynapse,NULL);
     nbQueueCloseDir(qHandle);
     return(1); // end thread
     }
@@ -955,7 +955,7 @@ void nbQueueProcess(nbCELL context,char *dirname,nbCELL synapse){
     }
   qHandle->context=context;
   qHandle->pollSynapse=synapse;
-  if(synapse) nbCellDisable(synapse,NULL);
+  if(synapse) nbAxonDisable(synapse,NULL);
   //qHandle->yieldSynapse=nbSynapseOpen(context,NULL,qHandle,NULL,nbqAlarm);
   //nbSynapseSetTimer(context,qHandle->yieldSynapse,0);
   nbMedullaThreadCreate(nbqThread,qHandle);

@@ -178,6 +178,7 @@
 * 2012-12-30 eat 0.8.13 Modified nbLoadListener to only load context for secure protocols
 * 2013-01-01 eat 0.8.13 Checker updates
 * 2014-01-12 eat 0.9.00 added const to SSL_METHOD pointer
+* 2014-01-25 eat 0.9.00 Checker updates
 *==================================================================================
 */
 #include <nb/nb.h>
@@ -1033,7 +1034,7 @@ nbTLS *nbTlsAccept(nbTLS *tlsListener){
 #if defined(mpe)
     strcpy(tls->uriMap[0].addr,(char *)inet_ntoa(client.sin_addr));
 #else
-    strncpy(tls->uriMap[0].addr,inet_ntoa(client.sin_addr),sizeof(tls->uriMap[0].addr));
+    strncpy(tls->uriMap[0].addr,inet_ntoa(client.sin_addr),sizeof(tls->uriMap[0].addr)-1); // 2014-01-25 eat - CID 1164440
     *(tls->uriMap[0].addr+sizeof(tls->uriMap[0].addr)-1)=0;
 #endif
     tls->uriMap[0].port=ntohs(client.sin_port);

@@ -115,7 +115,7 @@ NB_PlanInstrP nbPlanIf(NB_Rule *rule,struct NB_PLAN_IF *ip){
 *  Wait for a condition to be true
 */ 
 NB_PlanInstrP nbPlanOnEnable(NB_Rule *rule,struct NB_PLAN_COND *ip){
-  nbCellEnable((NB_Cell *)ip->cond,(NB_Cell *)rule); /* subscribe to conditon */
+  nbAxonEnable((NB_Cell *)ip->cond,(NB_Cell *)rule); /* subscribe to conditon */
   rule->cond=ip->cond;
   rule->cell.level=ip->cond->level+1;
   rule->ip=(NB_PlanInstrP)((char *)ip+sizeof(struct NB_PLAN_COND));
@@ -123,7 +123,7 @@ NB_PlanInstrP nbPlanOnEnable(NB_Rule *rule,struct NB_PLAN_COND *ip){
   }
 
 NB_PlanInstrP nbPlanWhenEnable(NB_Rule *rule,struct NB_PLAN_COND *ip){
-  nbCellEnable(ip->cond,(NB_Cell *)rule); /* subscribe to conditon */
+  nbAxonEnable(ip->cond,(NB_Cell *)rule); /* subscribe to conditon */
   rule->cond=ip->cond;
   rule->cell.level=ip->cond->level+1;
   return((NB_PlanInstrP)((char *)ip+sizeof(struct NB_PLAN_COND)));
@@ -135,7 +135,7 @@ NB_PlanInstrP nbPlanWhenTest(NB_Rule *rule,struct NB_PLAN_COND *ip){
     rule->ip=(NB_PlanInstrP)ip;  /* wait for true condition */
     return(NULL);
     }
-  nbCellDisable((NB_Cell *)ip->cond,(NB_Cell *)rule); /* unsubscribe */
+  nbAxonDisable((NB_Cell *)ip->cond,(NB_Cell *)rule); /* unsubscribe */
   rule->cond=NULL;
   rule->time=nb_ClockTime;  /* continue from current time */
   return((NB_PlanInstrP)((char *)ip+sizeof(struct NB_PLAN_COND)));
@@ -209,9 +209,9 @@ NB_PlanInstrP nbPlanWaitTime(NB_Rule *rule,struct NB_PLAN_WAIT *ip){
 NB_PlanInstrP nbPlanDefine(NB_Rule *rule,struct NB_PLAN_VALUE *ip){
   NB_Object *value=ip->value;
   if(rule->valDef!=value){
-    nbCellDisable((NB_Cell *)rule->valDef,(NB_Cell *)rule);
+    nbAxonDisable((NB_Cell *)rule->valDef,(NB_Cell *)rule);
     rule->valDef=value;
-    nbCellEnable((NB_Cell *)rule->valDef,(NB_Cell *)rule);
+    nbAxonEnable((NB_Cell *)rule->valDef,(NB_Cell *)rule);
     }
   value=value->value;
   if(rule->cell.object.value!=value){
@@ -906,7 +906,7 @@ void nbRuleSolve(NB_Term *term){
   else{
     hash=(struct HASH *)term->terms;
     termP=(NB_Term **)hash->vect;
-    for(v=0;v<hash->modulo;v++){
+    for(v=0;v<=hash->mask;v++){
       if(*termP!=NULL){
         for(term=*termP;term!=NULL;term=(NB_Term *)term->cell.object.next) nbRuleSolve(term);
         }  
@@ -924,7 +924,7 @@ void *nbRuleHash(struct HASH *hash,NB_Rule *rule){
   unsigned long h,*l;
   l=(unsigned long *)&rule;
   h=*l;
-  return(&(hash->vect[h%hash->modulo]));
+  return(&(hash->vect[h&hash->mask]));
   }
 
 NB_Rule **nbRuleFind(NB_Rule *rule){
@@ -941,7 +941,7 @@ void nbRuleShowAll(void){
   long v;
   long i;
   ruleP=(NB_Rule **)&(nb_RuleType->hash->vect);
-  for(v=0;v<nb_RuleType->hash->modulo;v++){
+  for(v=0;v<=nb_RuleType->hash->mask;v++){
     i=0;
     for(rule=*ruleP;rule!=NULL;rule=(NB_Rule *)rule->cell.object.next){
       outPut("H[%u,%ld]",v,i);
@@ -1062,8 +1062,8 @@ void nbRuleAlarm(NB_Rule *rule){
 void nbRuleEnable(NB_Rule *rule){
   //outMsg(0,'T',"nbRuleEnable() called");
   rule->state=NB_RuleStateRunning;
-  nbCellEnable((NB_Cell *)rule->valDef,(NB_Cell *)rule);
-  if(rule->cond!=NULL) nbCellEnable((NB_Cell *)rule->cond,(NB_Cell *)rule);
+  nbAxonEnable((NB_Cell *)rule->valDef,(NB_Cell *)rule);
+  if(rule->cond!=NULL) nbAxonEnable((NB_Cell *)rule->cond,(NB_Cell *)rule);
   if(rule->time>nb_ClockTime) nbClockSetTimer(rule->time,(NB_Cell *)rule);
   else nbRuleEval(rule);
   }
@@ -1071,8 +1071,8 @@ void nbRuleEnable(NB_Rule *rule){
 void nbRuleDisable(NB_Rule *rule){
   //outMsg(0,'T',"nbRuleDisable() called");
   rule->state=NB_RuleStateStopped;
-  nbCellDisable((NB_Cell *)rule->valDef,(NB_Cell *)rule);
-  if(rule->cond!=NULL) nbCellDisable((NB_Cell *)rule->cond,(NB_Cell *)rule);
+  nbAxonDisable((NB_Cell *)rule->valDef,(NB_Cell *)rule);
+  if(rule->cond!=NULL) nbAxonDisable((NB_Cell *)rule->cond,(NB_Cell *)rule);
   else if(rule->time>nb_ClockTime) nbClockSetTimer(0,(NB_Cell *)rule);
   }
 

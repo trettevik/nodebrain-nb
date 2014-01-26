@@ -413,7 +413,7 @@ nbCELL nbStart(int argc,char *argv[]){
       if(strcmp(argv[i],"++shim")==0)  nb_opt_shim=1;
       else if(strcmp(argv[i],"++hush")==0) nb_opt_hush=1;
       else if(strcmp(argv[i],"++stats")==0) nb_opt_stats=1;
-      else if(strcmp(argv[i],"++axon")==0) nb_opt_axon=1;
+      else if(strcmp(argv[i],"++bnr")==0) nb_opt_boolnotrel=1;
       else fprintf(stderr,"Startup setting %s not recognized.\n",argv[i]);
       }
     }

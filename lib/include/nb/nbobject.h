@@ -77,22 +77,18 @@ extern int showstate;
 extern int showlevel;
 extern int showcount;
 
-struct NB_OBJECT{             /* object header */
-  struct   NB_OBJECT *next;   /* link to next object in hash list */
-  struct   TYPE      *type;   /* object type */
-  struct   NB_OBJECT *value;  /* value pointer - may point to self */
-  int32_t  refcnt;            /* number of references */
-  uint32_t key;               /* hashing key */
-  };
+typedef struct NB_OBJECT{     // object header
+  struct   NB_OBJECT *next;   // link to next object in hash list
+  struct   TYPE      *type;   // object type
+  struct   NB_OBJECT *value;  // value pointer - may point to self
+  int32_t  refcnt;            // number of references
+  uint32_t hashcode;          // hashing code
+  } NB_Object;
 
-typedef struct NB_OBJECT NB_Object;
-
-struct NB_LINK{                 /* object list link */
-  struct NB_LINK *next;         /* next link */
-  struct NB_OBJECT *object;     /* member object */  
-  };
-
-typedef struct NB_LINK NB_Link;
+typedef struct NB_LINK{       // object list link
+  struct NB_LINK *next;       // next link 
+  struct NB_OBJECT *object;   // member object
+  } NB_Link;
 
 //extern NB_Object *nb_Unknown;
 extern NB_Object *nb_Undefined;

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2011-2013 The Boeing Company
+* Copyright (C) 2011-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -40,6 +40,7 @@
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
 * 2013-02-03 Ed Trettevik (original prototype version introduced in 0.8.14)
+* 2014-01-25 eat 0.9.00 - Checker updates
 *=============================================================================
 */
 #include <stdio.h>
@@ -309,11 +310,11 @@ int nbKit(int argc,char *argv[]){
   if(strcmp(argv[2],"link")==0){
     if(argc>4){
       printf("Link command passed too many parameters - only three allowed\n");
-      printf("nbkit <caboodle> link [<directory>]\n");
+      printf("nbkit <caboodle> link <directory>\n");
       return(1);
       }
-    if(argc==0){
-      printf("Link command does not support optional directory - three parameters required\n");
+    if(argc<4){  // 2014-01-25 eat - CID 971425
+      printf("Link command requires a directory - three parameters required\n");
       printf("nbkit <caboodle> link <directory>\n");
       return(1);
       }

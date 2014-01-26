@@ -93,12 +93,11 @@ struct REGEXP *newRegexp(char *expression,int flags){
   const char *msg=NULL;
   int offset;
   NB_Hash *hash=regexpType->hash;
-  uint32_t key;
+  uint32_t hashcode;
 
   string=useString(expression);
-  key=string->object.key;
-  //reP=hashRegexp(regexpH,string,flags);  /* do we already have this regexp? */
-  reP=(struct REGEXP **)&(hash->vect[key%hash->modulo]);
+  hashcode=string->object.hashcode;
+  reP=(struct REGEXP **)&(hash->vect[hashcode&hash->mask]);
   for(re=*reP;re!=NULL && (re->flags<flags || (re->flags==flags && re->string<string));re=*reP)
     reP=(struct REGEXP **)&re->object.next;  
   if(re!=NULL && re->flags==flags && re->string==string) return(re); // reuse if found
@@ -109,7 +108,7 @@ struct REGEXP *newRegexp(char *expression,int flags){
     return(NULL);
     }
   re=newObject(regexpType,(void **)&freeRegexp,sizeof(struct REGEXP));
-  re->object.key=key;
+  re->object.hashcode=hashcode;
   re->string=grabObject(string);
   re->flags=flags;
   re->re=preg;
@@ -122,7 +121,7 @@ struct REGEXP *newRegexp(char *expression,int flags){
     }
   *reP=re;
   hash->objects++;
-  if(hash->objects>=hash->modulo) nbHashGrow(&regexpType->hash);
+  if(hash->objects>=hash->limit) nbHashGrow(&regexpType->hash);
   return(re);
   }
 
@@ -140,7 +139,7 @@ void destroyRegexp(struct REGEXP *regexp){
   struct REGEXP *re,**reP;
   NB_Hash *hash=regexpType->hash;
 
-  reP=(struct REGEXP **)&(hash->vect[regexp->object.key%hash->modulo]);
+  reP=(struct REGEXP **)&(hash->vect[regexp->object.hashcode&hash->mask]);
   //reP=hashRegexp(regexpH,regexp->string,regexp->flags);  /* find it */
   for(re=*reP;re!=NULL && re->string<regexp->string;re=*reP)
     reP=(struct REGEXP **)&re->object.next;
