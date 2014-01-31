@@ -86,18 +86,36 @@
 struct TYPE *realType;
 struct REAL *realFree=NULL;
 
+// we need two version of this depending on the endian of the architecture
+#define NB_HASH_REAL(HASHCODE,DOUBLE){ \
+  double fraction; \
+  HASHCODE=DOUBLE; \
+  fraction=DOUBLE-HASHCODE; \
+  fraction*=0x100000000; \
+  HASHCODE^=(uint32_t)fraction; \
+  }
+
 /*
 *  Hash a real and return a pointer to a pointer in the hash table.
 */
-void *hashReal(struct HASH *hash,double n){
+void *hashReal(NB_Hash *hash,double n){
+  uint32_t hashcode;
+  NB_HASH_REAL(hashcode,n)
+  return(&(hash->vect[hashcode&hash->mask]));
+  }
+
+/*
+void *hashReal(NB_Hash *hash,double n){
   unsigned long h,*l;
   l=(unsigned long *)&n;
   h=*l;
   return(&(hash->vect[h&hash->mask]));
   }
+*/
 
-struct REAL **locateReal(n) double n; {
-  struct REAL **realP;
+
+NB_Real **locateReal(double n){
+  NB_Real **realP;
  
   realP=hashReal(realType->hash,n);
   for(;*realP!=NULL && (*realP)->value<n;realP=(struct REAL **)&((*realP)->object.next));
@@ -107,7 +125,7 @@ struct REAL **locateReal(n) double n; {
 /**********************************************************************
 * Object Management Methods
 **********************************************************************/
-void printReal(struct REAL *real){
+void printReal(NB_Real *real){
   if(real==NULL) outPut("???");
   else outPut("%.10g",real->value);
   }
@@ -159,15 +177,16 @@ struct REAL *newReal(double value){
 
 struct REAL *useReal(double value){
   NB_Real *real,**realP;
-  unsigned long h;
+  uint32_t hashcode;
   struct HASH *hash=realType->hash;
 
-  h=value;  // change this so all fractions don't collide
-  realP=(NB_Real **)&(hash->vect[h&hash->mask]);
+  NB_HASH_REAL(hashcode,value)
+  //outMsg(0,'T',"useReal: hashcode=%8.8x value=%f\n",hashcode,value);
+  realP=(NB_Real **)&(hash->vect[hashcode&hash->mask]);
   for(;*realP!=NULL && (*realP)->value<value;realP=(struct REAL **)&((*realP)->object.next));
   if(*realP!=NULL && (*realP)->value==value) return(*realP);
   real=(struct REAL *)newObject(realType,(void **)&realFree,sizeof(struct REAL));
-  real->object.hashcode=h;
+  real->object.hashcode=hashcode;
   real->value=value;
   real->object.next=(NB_Object *)*realP;
   *realP=real;

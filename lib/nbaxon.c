@@ -142,7 +142,8 @@ static NB_Object *evalAxonRelEq(NB_AxonRel *axon){
     if(treeNode){
       trueCell=(NB_Cell *)treeNode->key;
       if(trueCell!=axon->trueCell){ // This should always be true
-        trueCell->object.value=NB_OBJECT_TRUE;
+        //trueCell->object.value=NB_OBJECT_TRUE;
+        trueCell->object.value=nb_True;
         nbCellPublish(trueCell);
         if(axon->trueCell){
           axon->trueCell->object.value=nb_False;
@@ -497,11 +498,11 @@ static void solveAxon(struct CALL *call){
 * Private Function Management Methods
 **********************************************************************/
 static void enableAxonRel(NB_AxonRel *axon){   
-  //outMsg(0,'T',"enableAxonRelEq: called");
+  //outMsg(0,'T',"enableAxonRelEq: called axon=%p",axon);
   }
 
 static void disableAxonRel(NB_AxonRel *axon){
-  //outMsg(0,'T',"disableAxonRelEq: called");
+  //outMsg(0,'T',"disableAxonRelEq: called axon=%p",axon);
   }
 
 static void destroyAxonRel(NB_AxonRel *axon){
@@ -509,8 +510,9 @@ static void destroyAxonRel(NB_AxonRel *axon){
   NB_Hash *hash=axon->cell.object.type->hash;
   uint32_t hashcode;
 
+  //outMsg(0,'T',"destroyAxonRel: called axon=%p",axon);
   nbAxonDisable((NB_Cell *)axon->pub,(NB_Cell *)axon); // should we check first
-  dropObject(axon->pub);
+  //dropObject(axon->pub);
   hashcode=axon->cell.object.hashcode;
   axonP=(NB_AxonRel **)&(hash->vect[hashcode&hash->mask]);
   for(laxon=*axonP;laxon!=NULL && laxon!=axon;laxon=*axonP)
@@ -637,7 +639,7 @@ void nbAxonDisable(NB_Cell *pub,NB_Cell *sub){
   }
 
 /*
-*  Enable an axon cell
+*  Enable an axon cell - in this case the pub is the axon
 *  The axon subscription tree is organized by constant value instead of by subscriber address.
 */
 static void nbAxonEnableBoost(NB_Cell *pub,NB_Cell *sub){
@@ -675,7 +677,7 @@ static void nbAxonEnableBoost(NB_Cell *pub,NB_Cell *sub){
 
 static void nbAxonDisableBoost(NB_Cell *pub,NB_Cell *sub){
   if(trace){
-    outMsg(0,'T',"nbAxonDisable() called");
+    outMsg(0,'T',"nbAxonDisableBoost() called");
     printObject((NB_Object *)pub);
     outPut("\n");
     }
@@ -706,7 +708,7 @@ static void nbAxonDisableBoost(NB_Cell *pub,NB_Cell *sub){
       }
     }
   if(pub->sub==NULL){
-    pub->object.type->disable(pub);
+    //pub->object.type->disable(pub);
     /* We make an exception for terms who stay enabled when their defined
     *  to have the value of a static object (not variable).  Perhaps we
     *  should leave it up to the disable functions, but all except NB_Term
@@ -716,8 +718,9 @@ static void nbAxonDisableBoost(NB_Cell *pub,NB_Cell *sub){
       dropObject(pub->object.value);
       pub->object.value=nb_Disabled;
       }
+    //destroyAxonRel((NB_AxonRel *)pub);  // axon cell can go away when no longer needed
     }
-  if(trace) outMsg(0,'T',"nbAxonDisable() returning");
+  if(trace) outMsg(0,'T',"nbAxonDisableBoost() returning");
   }
 
 /*
@@ -935,9 +938,9 @@ void nbAxonEnableRelRange(NB_Cell *pub,NB_Cond *cond){
     }
   if(axon){
     //cond->cell.object.value=cond->cell.object.type->eval(cond);  // evaluate when enabling
-    outMsg(0,'T',"nbAxonEnableRelRange: pub %p",pub);
-    outMsg(0,'T',"nbAxonEnableRelRange: pub %p pub->object.value %p",pub,pub->object.value);
-    outMsg(0,'T',"nbAxonEnableRelRange: pub %p pub->object.value %p pub->object.value->type %p",pub,pub->object.value,pub->object.value->type);
+    //outMsg(0,'T',"nbAxonEnableRelRange: pub %p",pub);
+    //outMsg(0,'T',"nbAxonEnableRelRange: pub %p pub->object.value %p",pub,pub->object.value);
+    //outMsg(0,'T',"nbAxonEnableRelRange: pub %p pub->object.value %p pub->object.value->type %p",pub,pub->object.value,pub->object.value->type);
     if(pub->object.value->type==valType)  
       axon->value=grabObject(pub->object.value);
     else axon->value=NULL;

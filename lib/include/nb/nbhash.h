@@ -59,28 +59,20 @@ typedef struct HASH{       // Hashing table
   } NB_Hash;
 
 void nbHashInit(NB_Stem *stem);
-NB_Hash *newHash(size_t modulo);  // 2012-12-31 eat - VID 4947
-void destroyHash(NB_Object object);
+NB_Hash *nbHashNew(size_t modulo);  // 2012-12-31 eat - VID 4947
+//void destroyHash(NB_Object object);
 void nbHashShow(struct HASH *hash,char *label,NB_Type *type);
 void nbHashStats(void);
 void nbHashGrow(NB_Hash **hashP);
 
-// This algorithm is based on Perl.
-// It is the "One-at-a-time" algorithm by Bob Jenkins (http://burtleburtle.net/bob/hash/doobs.html)
-#define NB_HASH_STR(hash,str){ \
-  register const char * const s_PeRlHaSh_tmp = str; \
-  register const unsigned char *s_PeRlHaSh = (const unsigned char *)s_PeRlHaSh_tmp; \
-  register int32_t i_PeRlHaSh = strlen(str); \
-  register uint32_t hash_PeRlHaSh = hash; \
-  while(i_PeRlHaSh--) { \
-    hash_PeRlHaSh += *s_PeRlHaSh++; \
-    hash_PeRlHaSh += (hash_PeRlHaSh << 10); \
-    hash_PeRlHaSh ^= (hash_PeRlHaSh >> 6); \
-    } \
-  hash_PeRlHaSh += (hash_PeRlHaSh << 3); \
-  hash_PeRlHaSh ^= (hash_PeRlHaSh >> 11); \
-  (hash) = (hash_PeRlHaSh + (hash_PeRlHaSh << 15)); \
-  }
+// This hashing algorithm is known as djb2 - credited to Daniel J. Bernstein
+// The constant of 5381 is sometimes used instead of 261
+#define NB_HASH_STR(HASHCODE,STR){ \
+  int c; \
+  const unsigned char *s=(const unsigned char *)STR; \
+  HASHCODE=261; \
+  while((c=*s++)) HASHCODE=((HASHCODE<<5)+HASHCODE)^c; \
+  } 
 
 #endif // NB_INTERNAL
 

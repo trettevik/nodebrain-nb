@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -351,13 +351,13 @@ void nbSource(nbCELL context,int option,char *cursor){
     fcursor=strchr(cursor,'"');
     if(fcursor==NULL){
       outMsg(0,'E',"Unbalanced quote in file name");
-      termUndef(symContext);      // undefine symbolic context
+      nbTermUndefine(symContext);      // undefine symbolic context
       symContext=symContextSave;
       return;
       }
     if(sizeof(filename)-1<fcursor-cursor){
       outMsg(0,'E',"File name too long - %d bytes supported",sizeof(filename)-1);
-      termUndef(symContext);      // undefine symbolic context
+      nbTermUndefine(symContext);      // undefine symbolic context
       symContext=symContextSave;
       return;
       }
@@ -386,12 +386,12 @@ void nbSource(nbCELL context,int option,char *cursor){
   while(*cursor==' ') cursor++;
   if(option==1 && *cursor!=0 && *cursor!=';'){
     outMsg(0,'E',"Unexpected character at --> %s",cursor);
-    termUndef(symContext);      // undefine symbolic context
+    nbTermUndefine(symContext);      // undefine symbolic context
     symContext=symContextSave;
     return;
     }
   if(*cursor==',' && nbLet(cursor+1,symContext,0)!=0){
-    termUndef(symContext);      // undefine symbolic context
+    nbTermUndefine(symContext);      // undefine symbolic context
     symContext=symContextSave;
     return;
     }
@@ -415,6 +415,6 @@ void nbSource(nbCELL context,int option,char *cursor){
       fclose(file);
       }
     }
-  termUndef(symContext);      // undefine symbolic context
+  nbTermUndefine(symContext);      // undefine symbolic context
   symContext=symContextSave;  // restore symbolic context
   }

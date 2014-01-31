@@ -46,18 +46,18 @@ assert eB==(? ^ ?);
 show -cells;
 ~ > show -cells;
 ~ @ = # == node 
-~ r1 = # ? == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&(e9&(eA&eB))))))))));
-~ eB = ? == (?^?)
-~ eA = ? == (1^?)
-~ e9 = ? == (?^1)
-~ e8 = ? == (!^?)
-~ e7 = ? == (?^!)
-~ e6 = ?
-~ e5 = ?
-~ e4 = ?
-~ e3 = ?
-~ e2 = ?
 ~ e1 = ?
+~ e2 = ?
+~ e3 = ?
+~ e4 = ?
+~ e5 = ?
+~ e6 = ?
+~ e7 = ? == (?^!)
+~ e8 = ? == (!^?)
+~ e9 = ? == (?^1)
+~ eA = ? == (1^?)
+~ eB = ? == (?^?)
+~ r1 = # ? == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&(e9&(eA&eB))))))))));
 
 # Test with variable numbers
 ~ > # Test with variable numbers
@@ -95,21 +95,21 @@ assert eB==(u ^ u);
 show -cells;
 ~ > show -cells;
 ~ @ = # == node 
-~ u = ?
-~ f = !
-~ t = 1
-~ r1 = # ? == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&(e9&(eA&eB))))))))));
-~ eB = ? == (u^u)
-~ eA = ? == (t^u)
-~ e9 = ? == (u^t)
-~ e8 = ? == (f^u)
-~ e7 = ? == (u^f)
-~ e6 = ? == (u|u)
-~ e5 = ? == (u&u)
-~ e4 = ? == (u&t)
-~ e3 = ? == (t&u)
-~ e2 = ? == (!u)
 ~ e1 = ? == u
+~ e2 = ? == (!u)
+~ e3 = ? == (t&u)
+~ e4 = ? == (u&t)
+~ e5 = ? == (u&u)
+~ e6 = ? == (u|u)
+~ e7 = ? == (u^f)
+~ e8 = ? == (f^u)
+~ e9 = ? == (u^t)
+~ eA = ? == (t^u)
+~ eB = ? == (u^u)
+~ f = !
+~ r1 = # ? == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&(e9&(eA&eB))))))))));
+~ t = 1
+~ u = ?
 
 # Test with literal string (can only represent True)
 ~ > # Test with literal string (can only represent True)
@@ -140,21 +140,21 @@ assert eB==( u  ^  u );
 show -cells;
 ~ > show -cells;
 ~ @ = # == node 
-~ u = ?
-~ f = !
-~ t = 1
-~ r1 = # ? == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&(e9&(eA&eB))))))))));
-~ eB = ? == (u^u)
-~ eA = ? == ("a"^u)
-~ e9 = ? == (u^"a")
-~ e8 = ? == (f^u)
-~ e7 = ? == (u^f)
-~ e6 = ? == (u|u)
-~ e5 = ? == (u&u)
-~ e4 = ? == (u&"a")
-~ e3 = ? == u
-~ e2 = ? == (!u)
 ~ e1 = ? == u
+~ e2 = ? == (!u)
+~ e3 = ? == u
+~ e4 = ? == (u&"a")
+~ e5 = ? == (u&u)
+~ e6 = ? == (u|u)
+~ e7 = ? == (u^f)
+~ e8 = ? == (f^u)
+~ e9 = ? == (u^"a")
+~ eA = ? == ("a"^u)
+~ eB = ? == (u^u)
+~ f = !
+~ r1 = # ? == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&(e9&(eA&eB))))))))));
+~ t = 1
+~ u = ?
 
 # Test with variable string
 ~ > # Test with variable string
@@ -189,21 +189,21 @@ show -cells;
 ~ > show -cells;
 ~ @ = # == node 
 ~ a = "a"
-~ u = ?
-~ f = !
-~ t = 1
-~ r1 = # ? == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&(e9&(eA&eB))))))))));
-~ eB = ? == (u^u)
-~ eA = ? == (a^u)
-~ e9 = ? == (u^a)
-~ e8 = ? == (f^u)
-~ e7 = ? == (u^f)
-~ e6 = ? == (u|u)
-~ e5 = ? == (u&u)
-~ e4 = ? == (u&a)
-~ e3 = ? == (a&u)
-~ e2 = ? == (!u)
 ~ e1 = ? == u
+~ e2 = ? == (!u)
+~ e3 = ? == (a&u)
+~ e4 = ? == (u&a)
+~ e5 = ? == (u&u)
+~ e6 = ? == (u|u)
+~ e7 = ? == (u^f)
+~ e8 = ? == (f^u)
+~ e9 = ? == (u^a)
+~ eA = ? == (a^u)
+~ eB = ? == (u^u)
+~ f = !
+~ r1 = # ? == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&(e9&(eA&eB))))))))));
+~ t = 1
+~ u = ?
 
 # Verify that all e1-eB cells above have a value of "?"
 ~ > # Verify that all e1-eB cells above have a value of "?"

@@ -131,8 +131,6 @@ struct TYPE *schedTypeTime;
 struct TYPE *schedTypePulse;
 struct TYPE *schedTypeDelay;
 
-//void *hashStr();
-//struct HASH *newHash();
 struct STRING *useString();
 
 struct PERIOD eternity;    /* 0 - maximum value */

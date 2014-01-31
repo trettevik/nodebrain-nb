@@ -92,6 +92,7 @@
 * 2010/02/28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
 * 2012-10-17 eat 0.8.12 Replaced termGetName with nbTermName
 * 2013-12-07 eat 0.9.00 Implementing node facets
+* 2014-01-27 eat 0.9.00 Changed node.ifrule list to only haved True IF rules
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -125,7 +126,8 @@ NB_Node *nbNodeNew(void){
   }
 
 void contextAlert(NB_Term *term){
-  struct ACTION *action;
+  NB_Action *action;
+  int rulesScheduled=0;
   NB_Node *node=(NB_Node *)term->def;
   if(trace) outMsg(0,'T',"contextAlert() called.");
   if(node->cell.object.type!=nb_NodeType){
@@ -136,17 +138,11 @@ void contextAlert(NB_Term *term){
     }
   node->alertCount++;
   for(action=((NB_Node *)term->def)->ifrule;action!=NULL;action=(struct ACTION *)action->cell.object.next){
-    // 2013-11-03 eat - experimenting with rules having the full range of values found in any cell - multiple true
-    //if(action->cond!=NULL && ((NB_Object *)action->cond)->value==NB_OBJECT_TRUE){ /* if true put on action list */
-    // 2013-12-05 eat - switched to using an object type attribute to exclude untrue values - can the value ever be NULL?
-    if(action->cond!=NULL && !(((NB_Object *)action->cond)->value->type->attributes&TYPE_NOT_TRUE)){ /* if true put on action list */
-    //if(action->cond!=NULL &&
-    //  ((NB_Object *)action->cond)->value!=NB_OBJECT_FALSE &&
-    //  ((NB_Object *)action->cond)->value!=nb_Unknown &&
-    //  ((NB_Object *)action->cond)->value!=nb_Disabled){ /* if true put on action list */
+    //if(action->cond!=NULL && !(((NB_Object *)action->cond)->value->type->attributes&TYPE_NOT_TRUE)){ /* if true put on action list */
       if(action->status=='R') scheduleAction(action);  /* put ready rule on scheduled list */
-      }
+      //}
     }
+  //outMsg(0,'T',"contextAlert: %d IF rules on list",rulesScheduled);
   if(actList!=NULL || nb_RuleReady!=NULL) nbRuleReact();
   }
 
@@ -511,7 +507,7 @@ NB_Term *nbNodeParse(NB_Term *context,char *ident,char *cursor){
     symid=nbParseSymbol(token,sizeof(token),&cursor);
     if(symid!='t'){
       outMsg(0,'E',"Expecting node term at: %s",cursave);
-      termUndef(term);
+      nbTermUndefine(term);
       return(NULL);
       }
     }
@@ -519,14 +515,14 @@ NB_Term *nbNodeParse(NB_Term *context,char *ident,char *cursor){
   if(symid==';') return(NULL);
   if(symid!='t'){
     outMsg(0,'E',"Expecting skill name or end of line at: %s",cursave);
-    termUndef(term);
+    nbTermUndefine(term);
     return(NULL);
     }
   if(NULL==(skillTerm=nbTermFind(nb_SkillGloss,token)) || skillTerm->def==nb_Undefined){
     /* implicitly declare the skill if necessary */
     if((node->skill=nbSkillParse(context,tokenP))==NULL){
       outMsg(0,'E',"Skill \"%s\" not declared",token);
-      termUndef(term);
+      nbTermUndefine(term);
       return(NULL);
       }
     else node->skill->term=nbTermNew(nb_SkillGloss,token,node->skill);
@@ -537,7 +533,7 @@ NB_Term *nbNodeParse(NB_Term *context,char *ident,char *cursor){
   else if(*cursor!=0 && *cursor!=';'){
     outMsg(0,'E',"Expecting colon ':' or end of command at:%s",cursor);
     dropObject(args);
-    termUndef(term);
+    nbTermUndefine(term);
     return(NULL);
     }
   skill=node->skill;
@@ -546,7 +542,7 @@ NB_Term *nbNodeParse(NB_Term *context,char *ident,char *cursor){
       //outPut("%s\n",msg);
       outMsg(0,'E',"%s",msg);
       dropObject(args);
-      termUndef(term);
+      nbTermUndefine(term);
       return(NULL);
       }
     skill->handle=(*skillBind)(term,moduleHandle,skill,skill->args,skill->text->value);
@@ -557,7 +553,7 @@ NB_Term *nbNodeParse(NB_Term *context,char *ident,char *cursor){
   node->knowledge=(*facet->construct)(term,skill->handle,(NB_Cell *)args,cursor);
   if(node->knowledge==NULL){
     dropObject(args);
-    termUndef(term);
+    nbTermUndefine(term);
     return(NULL);
     }
   dropObject(args);

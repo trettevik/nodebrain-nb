@@ -448,6 +448,41 @@ void alertRule(NB_Cell *rule){
   if(trace) outMsg(0,'T',"alertRule returning");
   }
 
+void alertRuleIf(NB_Cell *rule){
+  NB_Action *action;
+  NB_Object *object=((NB_Object *)((struct COND *)rule)->left)->value;
+
+  if(trace){
+    outMsg(0,'T',"alertRuleIf:  called %p",rule);
+    printObject((NB_Object *)rule);
+    outPut("\n");
+    }
+  action=((struct COND *)rule)->right;
+  if(object==nb_Unknown || object==nb_False){
+    if(action->cell.mode&NB_CELL_MODE_SCHEDULED){    // remove from scheduled IF rule list
+      //outMsg(0,'T',"alertRuleIf: removing IF rule from node's true IF rule list");
+      if(action->cell.object.next) ((NB_Action *)action->cell.object.next)->priorIf=action->priorIf;
+      if(action->priorIf) action->priorIf->cell.object.next=action->cell.object.next;
+      else ((NB_Node *)action->context->def)->ifrule=(NB_Action *)action->cell.object.next;
+      action->cell.object.next=NULL;
+      action->priorIf=NULL;
+      action->cell.mode&=~NB_CELL_MODE_SCHEDULED;
+      }
+    }
+  else if(!(action->cell.mode&NB_CELL_MODE_SCHEDULED)){  // schedule IF rule for response on any alert
+    //outMsg(0,'T',"alertRuleIf: adding IF rule to node's true IF rule list");
+    action->cell.object.next=(NB_Object *)((NB_Node *)action->context->def)->ifrule;
+    if(action->cell.object.next) ((NB_Action *)action->cell.object.next)->priorIf=action;
+    ((NB_Node *)action->context->def)->ifrule=action;
+    action->priorIf=NULL;
+    action->cell.mode|=NB_CELL_MODE_SCHEDULED;
+    }
+  rule->object.value=object; // 2013-12-05 eat - pass the condition value thru
+  nbCellPublish(rule);
+  if(trace) outMsg(0,'T',"alertRuleIf: returning");
+  }
+
+
 /*
 *  This evaluation function converts all true values to True.  We may want to change
 *  this to allow any value to pass through.  This would hold for the alertRule() function
@@ -994,6 +1029,7 @@ void initCondition(NB_Stem *stem){
   condTypeWhenRule->alert=alertRule;
   condTypeIfRule=newType(stem,"if",NULL,TYPE_RULE,condPrintRule,destroyRule);
   nbCellType(condTypeIfRule,solvePrefix,evalRule,enableRule,disableRule);
+  condTypeIfRule->alert=alertRuleIf;
 
   condTypeNot=newType(stem,"!",NULL,TYPE_BOOL,condPrintPrefix,destroyCondition);
   nbCellType(condTypeNot,solvePrefix,evalNot,enablePrefix,disablePrefix);

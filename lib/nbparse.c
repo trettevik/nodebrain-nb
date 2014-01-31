@@ -1026,19 +1026,19 @@ NB_Object *nbParseRel(NB_Term *context,char **cursor){
     else if(type==condTypeRelGE) type=condTypeRelLE;
     else if(type==condTypeRelLT) type=condTypeRelGT;
     else if(type==condTypeRelLE) type=condTypeRelGE;
-    if(nb_opt_boolnotrel){  // option to transform relational not to boolean not
-      if(type==condTypeRelNE){
-        not^=1;  // exclusive or to switch not
-        type=condTypeRelEQ;
-        }
-      if(type==condTypeRelLE){
-        not^=1;  // exclusive or to switch not
-        type=condTypeRelGT;
-        }
-      else if(type==condTypeRelGE){
-        not^=1;  // exclusive or to switch not
-        type=condTypeRelLT;
-        }
+    }
+  if(nb_opt_boolnotrel){  // option to transform relational not to boolean not
+    if(type==condTypeRelNE){
+      not^=1;  // exclusive or to switch not
+      type=condTypeRelEQ;
+      }
+    if(type==condTypeRelLE){
+      not^=1;  // exclusive or to switch not
+      type=condTypeRelGT;
+      }
+    else if(type==condTypeRelGE){
+      not^=1;  // exclusive or to switch not
+      type=condTypeRelLT;
       }
     }
   if(not){

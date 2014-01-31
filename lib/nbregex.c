@@ -160,6 +160,5 @@ void destroyRegexp(struct REGEXP *regexp){
 *  Context object type initialization
 */
 void initRegexp(NB_Stem *stem){
-  //regexpH=newHash(137); /* initialize regular expression hash */
   regexpType=newType(stem,"~",NULL,TYPE_REGEXP,printRegexp,destroyRegexp);
   }

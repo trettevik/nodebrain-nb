@@ -258,6 +258,7 @@
 *            a single quoted term.  A warning was included to help users
 *            transition to >, but that warning has not been removed. 
 * 2014-01-25 eat 0.9.00 Checker updates
+* 2014-01-27 eat 0.9.00 Double linked IF rules into on and off lists
 *==============================================================================
 */
 #include <nb/nbi.h>
@@ -1671,10 +1672,16 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
       nbAxonEnable((NB_Cell *)ruleCond,(NB_Cell *)term);
       nbCellLevel((NB_Cell *)term);
       }
+    action->priorIf=NULL;
     if(rule_type==condTypeIfRule){
-      if(trace) outMsg(0,'T',"nbCmdDefine() linking if rule to context list");
-      action->cell.object.next=(NB_Object *)((NB_Node *)((NB_Term *)context)->def)->ifrule;
-      ((NB_Node *)((NB_Term *)context)->def)->ifrule=action;
+      NB_Object *condState=action->cond->cell.object.type->compute(action->cond);
+      if(!(condState->value->type->attributes&TYPE_NOT_TRUE)){
+        action->cell.object.next=(NB_Object *)((NB_Node *)((NB_Term *)context)->def)->ifrule;
+        if(action->cell.object.next) ((NB_Action *)action->cell.object.next)->priorIf=action;
+        ((NB_Node *)((NB_Term *)context)->def)->ifrule=action;
+        action->cell.mode|=NB_CELL_MODE_SCHEDULED;
+        }
+      dropObject(condState->value);
       }
     }
   else if(strcmp(type,"nerve")==0){
@@ -1774,7 +1781,7 @@ int nbCmdUndefine(nbCELL context,void *handle,char *verb,char *cursor){
       outMsg(0,'E',"Term \"%s\" not defined in active context.",ident);
       return(1);
       }
-    else termUndef(term);
+    else nbTermUndefine(term);
     }
   return(0);
   }

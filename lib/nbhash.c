@@ -38,14 +38,14 @@
 *   #include "nbhash.h"
 *
 *   void *nbHashInit();
-*   struct HASH *newHash(int modulo);
+*   NB_Hash *nbHashNew(int modulo);
 *   void destroyHash(struct HASH *hash);
 *
 * Description
 *
 *   nbHashInit() is called once to define the hash object type.
 *
-*   newHash(modulo) is called to allocate a hash with modulo entries
+*   nbHashNew(modulo) is called to allocate a hash with modulo entries
 *
 *   destroyHash(hash) is called when a hash is no longer needed.  This
 *   function is currently a stub that does nothing.  It should destroy
@@ -135,12 +135,12 @@ void nbHashStats(void){
 *
 *  NOTE: The module must be a power of 2, we depend on the caller to enforce this
 */
-struct HASH *newHash(size_t modulo){  // 2012-12-31 eat - VID 4547 - long to size_t, vectsize int to long
-  struct HASH *hash;
+NB_Hash *nbHashNew(size_t modulo){  // 2012-12-31 eat - VID 4547 - long to size_t, vectsize int to long
+  NB_Hash *hash;
   size_t vectsize;
 
   if(modulo==0) modulo=8;
-  else if(modulo>UINT32_MAX) nbExit("newHash: Logic error - modulo %ld exceeds limit of %u - terminating",modulo,UINT32_MAX);
+  else if(modulo>UINT32_MAX) nbExit("nbHashNew: Logic error - modulo %ld exceeds limit of %u - terminating",modulo,UINT32_MAX);
   vectsize=modulo*sizeof(void *);
   hash=nbAlloc(offsetof(struct HASH,vect)+vectsize);
   hash->object.next=NULL;
@@ -163,7 +163,7 @@ void nbHashGrow(struct HASH **hashP){
   uint32_t mask=size-1;
 
   if(size>UINT32_MAX) nbExit("nbHashGrow: Logic error - modulo %ld exceeds limit of %u - terminating",size,UINT32_MAX);
-  hash=newHash(size);
+  hash=nbHashNew(size);
   hash->objects=(*hashP)->objects;
   objectP=(NB_Object **)&((*hashP)->vect);
   for(v=0;v<=(*hashP)->mask;v++){
@@ -225,7 +225,7 @@ void nbHashShow(struct HASH *hash,char *label,NB_Type *type){
 /*
 *  Hash destructor
 */
-void destroyHash(NB_Object object){
+static void destroyHash(NB_Object object){
   /* call dropObject for every object in the hash */
   }
  

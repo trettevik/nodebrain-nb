@@ -42,16 +42,16 @@ assert e9==(1 ^ !);
 show -cells;
 ~ > show -cells;
 ~ @ = # == node 
-~ r1 = # 1 == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
-~ e9 = 1 == (1^!)
-~ e8 = 1
-~ e7 = 1
-~ e6 = 1
-~ e5 = 1
-~ e4 = 1
-~ e3 = 1
-~ e2 = 1
 ~ e1 = 1
+~ e2 = 1
+~ e3 = 1
+~ e4 = 1
+~ e5 = 1
+~ e6 = 1
+~ e7 = 1
+~ e8 = 1
+~ e9 = 1 == (1^!)
+~ r1 = # 1 == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
 
 # Test with variable numbers
 ~ > # Test with variable numbers
@@ -83,18 +83,18 @@ assert e9==(t ^ f);
 show -cells;
 ~ > show -cells;
 ~ @ = # == node 
-~ f = !
-~ t = 1
-~ r1 = # 1 == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
-~ e9 = 1 == (t^f)
-~ e8 = 1 == (t|t)
-~ e7 = 1 == (?|t)
-~ e6 = 1 == (f|t)
-~ e5 = 1 == (t|?)
-~ e4 = 1 == (t|f)
-~ e3 = 1 == (t&t)
-~ e2 = 1 == (!f)
 ~ e1 = 1 == t
+~ e2 = 1 == (!f)
+~ e3 = 1 == (t&t)
+~ e4 = 1 == (t|f)
+~ e5 = 1 == (t|?)
+~ e6 = 1 == (f|t)
+~ e7 = 1 == (?|t)
+~ e8 = 1 == (t|t)
+~ e9 = 1 == (t^f)
+~ f = !
+~ r1 = # 1 == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
+~ t = 1
 
 # Test with literal string
 ~ > # Test with literal string
@@ -125,18 +125,18 @@ show -cells;
 ~ > show -cells;
 ~ @ = # == node 
 ~ a = "a"
-~ f = !
-~ t = 1
-~ r1 = # 1 == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
-~ e9 = 1 == ("a"^!)
-~ e8 = 1 == (a="a")
-~ e7 = 1 == (a="a")
-~ e6 = 1 == (a="a")
-~ e5 = 1 == (a="a")
-~ e4 = 1 == (a="a")
-~ e3 = 1 == (a="a")
-~ e2 = 1
 ~ e1 = 1 == (a="a")
+~ e2 = 1
+~ e3 = 1 == (a="a")
+~ e4 = 1 == (a="a")
+~ e5 = 1 == (a="a")
+~ e6 = 1 == (a="a")
+~ e7 = 1 == (a="a")
+~ e8 = 1 == (a="a")
+~ e9 = 1 == ("a"^!)
+~ f = !
+~ r1 = # 1 == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
+~ t = 1
 
 # Test with variable string
 ~ > # Test with variable string
@@ -164,18 +164,18 @@ show -cells;
 ~ > show -cells;
 ~ @ = # == node 
 ~ a = "a"
-~ f = !
-~ t = 1
-~ r1 = # 1 == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
-~ e9 = 1 == (a^f)
-~ e8 = 1 == (a=(a|a))
-~ e7 = 1 == (a=(?|a))
-~ e6 = 1 == (a=(f|a))
-~ e5 = 1 == (t|?)
-~ e4 = 1 == (t|f)
-~ e3 = 1 == (a=(a&a))
-~ e2 = 1 == (!f)
 ~ e1 = 1 == (a=a)
+~ e2 = 1 == (!f)
+~ e3 = 1 == (a=(a&a))
+~ e4 = 1 == (t|f)
+~ e5 = 1 == (t|?)
+~ e6 = 1 == (a=(f|a))
+~ e7 = 1 == (a=(?|a))
+~ e8 = 1 == (a=(a|a))
+~ e9 = 1 == (a^f)
+~ f = !
+~ r1 = # 1 == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
+~ t = 1
 
 # Verify that all e1-e9 cells above have a value of 1
 ~ > # Verify that all e1-e9 cells above have a value of 1

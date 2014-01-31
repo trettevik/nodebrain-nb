@@ -119,6 +119,17 @@ struct TYPE *termType;
 NB_Term *addrContext=NULL;   /* current context term (local)  */
 NB_Term *symContext=NULL;    /* symbolic context */
 
+/*
+*  Macro to locate term in a glossary
+*
+*  TERM  NB_Term **    Set to point to a pointer to where term is or can be inserted
+*  WORD  NB_String *   Name of the term
+*  GLOSS NB_Hash *     Glossary hash
+*/
+#define NB_TERM_LOCATE(TERM,WORD,GLOSS){ \
+  for(TERM=(NB_Term **)&GLOSS->vect[WORD->object.hashcode&GLOSS->mask];*TERM!=NULL && (*TERM)->word>WORD;TERM=(NB_Term **)&(*TERM)->cell.object.next); \
+  }
+
 /**********************************************************************
 *  String Maintenance Routines
 *
@@ -363,31 +374,37 @@ void enableTerm(NB_Term *term){
 */
 void disableTerm(NB_Term *term){
   if(term->cell.object.value==nb_Disabled) return;
-  if(term->cell.object.value==term->def) return; /* static value */
+  if(term->cell.object.value==term->def) return; /* constant value */
   nbAxonDisable((NB_Cell *)term->def,(NB_Cell *)term);
   dropObject(term->cell.object.value); /* 2004/08/28 eat */
   term->cell.object.value=nb_Disabled;
   }
 
 void destroyTerm(NB_Term *term){
-  //NB_Term *lterm,**termP;
+  NB_Term **termP;
   NB_Term *context;
+/*
   NB_TreePath treePath;
   NB_TreeNode *treeNode;
+*/
 
   if(trace) outMsg(0,'T',"destroyTerm() called for %s",term->word->value);
   if(term->def!=NULL) term->def=dropObject(term->def);
   if(term->cell.object.value!=NULL) term->cell.object.value=dropObject(term->cell.object.value);  // 2006-01-13
-  if(term->terms!=NULL){
-    //if(term->def!=NULL) dropObject(term->def);                // 2006-01-13
+  if(term->gloss!=NULL){
     term->cell.object.value=nb_Disabled;
     term->def=nb_Undefined;
     return;
     }
   if((context=term->context)!=NULL){ 
+    NB_TERM_LOCATE(termP,term->word,context->gloss)
+    if(*termP==term) *termP=(NB_Term *)term->cell.object.next;
+    else outMsg(0,'L',"destroyTerm: Term \"%s\" not found in context.",term->word->value);
+/*
     treeNode=nbTreeLocate(&treePath,term->word,(NB_TreeNode **)&context->terms);
     if(treeNode==NULL) outMsg(0,'L',"destroyTerm() Term \"%s\" not found in context.",term->word->value);  
     else nbTreeRemove(&treePath);
+*/
     }
   term->word=dropObject(term->word);
   term->cell.object.next=(NB_Object *)termFree;
@@ -472,6 +489,7 @@ void initTerm(NB_Stem *stem){
 //       will be better to replace the calls to this with the
 //       three lines to reduce calls.
 
+/*
 NB_Term *nbTermFindHere(NB_Term *term,NB_String *word){
   NB_TreeNode *treeNode=term->terms;
 
@@ -479,6 +497,16 @@ NB_Term *nbTermFindHere(NB_Term *term,NB_String *word){
   if(treeNode==NULL) return(NULL);
   term=(NB_Term *)(((char *)treeNode)-offsetof(struct NB_TERM,left));
   return(term);
+  }
+*/
+
+NB_Term *nbTermFindHere(NB_Term *term,NB_String *word){
+  NB_Term **termP;
+  
+  if(!term->gloss) return(NULL);
+  NB_TERM_LOCATE(termP,word,term->gloss)
+  if(*termP && (*termP)->word==word) return(*termP);
+  return(NULL);
   }
 
 NB_Term *nbTermFindDot(NB_Term *term,char **qualifier){
@@ -586,7 +614,7 @@ NB_Term *makeTerm(NB_Term *context,NB_String *word){
   term=nbCellNew(termType,(void **)&termFree,sizeof(NB_Term));
   term->cell.object.hashcode=word->object.hashcode; // inherit hashcode from name
   term->context=context; 
-  term->terms=NULL;                       /* change to term->gloss */
+  term->gloss=NULL;                                 // glossary of subordinate terms
   term->def=nb_Undefined;  
   term->word=word;
   grabObject(term);
@@ -646,10 +674,12 @@ void nbTermAssign(NB_Term *term,NB_Object *new){
 */
 NB_Term *nbTermNew(NB_Term *context,char *ident,void *def){
   NB_Term *term=NULL;
-  //NB_Term **termP;
+  NB_Term **termP;
   NB_String *word=NULL;
+/*
   NB_TreePath treePath;
   NB_TreeNode *treeNode;
+*/
   char qualifier[256],*cursor;
   //int match;
 
@@ -696,6 +726,18 @@ NB_Term *nbTermNew(NB_Term *context,char *ident,void *def){
       if(strcmp("@",qualifier)==0 && *cursor!=0) term=locGloss;
       else{
         word=grabObject(useString(qualifier));
+        if(!context->gloss) context->gloss=nbHashNew(4);  // create glossary hash if necessary
+        NB_TERM_LOCATE(termP,word,context->gloss)
+        term=*termP;
+        if(term && term->word==word) dropObject(word);
+        else{
+          term=makeTerm(context,word);
+          term->cell.object.next=(NB_Object *)*termP;
+          *termP=term;
+          context->gloss->objects++;
+          if(context->gloss->objects>=context->gloss->limit) nbHashGrow(&context->gloss);
+          }
+/*
         if(NULL==(treeNode=nbTreeLocate(&treePath,word,&context->terms))){
           term=makeTerm(context,word);
           nbTreeInsert(&treePath,(NB_TreeNode *)&term->left);
@@ -704,6 +746,7 @@ NB_Term *nbTermNew(NB_Term *context,char *ident,void *def){
           term=(NB_Term *)(((char *)treeNode)-offsetof(struct NB_TERM,left));
           dropObject(word);
           }
+*/
         }
       context=term;
       }
@@ -732,6 +775,7 @@ NB_Term *nbTermNew(NB_Term *context,char *ident,void *def){
   return(term);
   }
   
+/*
 void termUndefTree(NB_TreeNode *treeNode){
   NB_Term *term;
   if(treeNode==NULL) return;
@@ -740,11 +784,13 @@ void termUndefTree(NB_TreeNode *treeNode){
   termUndefTree(term->right);  // undefine right branch
   termUndef(term);             // undefine root node
   }
+*/
 
+/*
+*  Undefine a term - remove it from a context.
+*/
+/*
 void termUndef(NB_Term *term){
-  /*
-  *  Undefine a term - remove it from a context.
-  */
   //NB_Term *lterm,*nterm;
   if(((NB_Object *)term)->refcnt>1){
     outMsg(0,'E',"Term \"%s\" still referenced.",term->word->value);
@@ -754,14 +800,55 @@ void termUndef(NB_Term *term){
     outMsg(0,'T',"termUndef called.");
     nbTermShowItem(term);
     }
-  /* undefine all subordinate terms first */
+  // undefine all subordinate terms first 
   if(trace) outMsg(0,'T',"undefining subordinate terms");
   termUndefTree((NB_TreeNode *)term->terms);
   if(trace) outMsg(0,'T',"done with subordinate terms");
-  dropObject(term); /* this should destroy anything we can destroy */
+  dropObject(term); // this should destroy anything we can destroy 
   if(trace) outMsg(0,'T',"termUndef returning");
   }
+*/
 
+static void nbTermUndefineGloss(NB_Hash **hashP){
+  NB_Hash *hash=*hashP;
+  NB_Term *term,**termP,**termV;
+  int v,freehash=1;
+
+  termV=(NB_Term **)&hash->vect;
+  for(v=0;v<=hash->mask;v++){
+    termP=termV;
+    while(*termP!=NULL){
+      term=*termP;
+      nbTermUndefine(term);
+      if(*termP==term){
+        termP=(NB_Term **)&(*termP)->cell.object.next;
+        freehash=0;
+        }
+      }
+    termV++;
+    }
+  if(freehash){
+    nbFree(hash,sizeof(NB_Hash)+hash->mask*sizeof(void *)); 
+    *hashP=NULL;
+    }
+  }
+
+void nbTermUndefine(NB_Term *term){
+  if(((NB_Object *)term)->refcnt>1){
+    outMsg(0,'E',"Term \"%s\" still referenced.",term->word->value);
+    return;
+    }
+  if(trace){
+    outMsg(0,'T',"nbTermUndefine: called.");
+    nbTermShowItem(term);
+    }
+  /* undefine all subordinate terms first */
+  if(trace) outMsg(0,'T',"undefining subordinate terms");
+  if(term->gloss) nbTermUndefineGloss(&term->gloss);
+  if(trace) outMsg(0,'T',"done with subordinate terms");
+  if(term->gloss==NULL) dropObject(term); /* this should destroy anything we can destroy */
+  if(trace) outMsg(0,'T',"nbTermUndefine returning");
+  }
 
 void termUndefAll(void){
   /*
@@ -868,44 +955,107 @@ void nbTermShowItem(NB_Term *term){
   }
 
 void nbTermShowGlossTree(NB_TreeNode *treeNode){
-  NB_Term *term;
-  if(treeNode==NULL) return;
-  term=(NB_Term *)(((char *)treeNode)-offsetof(struct NB_TERM,left));
-  nbTermShowGlossTree(term->left);
-  nbTermShowItem(term);
-  nbTermShowGlossTree(term->right);
+  if(treeNode->left) nbTermShowGlossTree(treeNode->left);
+  nbTermShowItem((NB_Term *)treeNode->key);
+  if(treeNode->right) nbTermShowGlossTree(treeNode->right);
   }
 
+void nbTermFreeTree(NB_TreeNode *treeNode){
+  if(treeNode->left) nbTermFreeTree(treeNode->left);
+  if(treeNode->right) nbTermFreeTree(treeNode->right);
+  nbFree(treeNode,sizeof(NB_TreeNode));
+  }
+ 
+/*
 void nbTermShowGloss(NB_Term *term){
   if(trace) outMsg(0,'T',"nbTermShowGloss called");
   nbTermShowGlossTree((NB_TreeNode *)term->terms);
   }
+*/
+
+void nbTermShowGloss(NB_Term *context){
+  NB_Hash *hash=context->gloss;
+  NB_Term *term,**termP;
+  int v;
+  NB_TreePath treePath;
+  NB_TreeNode *treeNode,*treeRoot=NULL;
+
+  termP=(NB_Term **)&hash->vect;
+  for(v=0;v<=hash->mask;v++){
+    for(term=*termP;term!=NULL;term=(NB_Term *)term->cell.object.next){
+      treeNode=(NB_TreeNode *)nbTreeLocateTerm(&treePath,term,(NB_TreeNode **)&treeRoot);
+      if(treeNode==NULL){  // if not already a subscriber, then subscribe
+        treeNode=(NB_TreeNode *)nbAlloc(sizeof(NB_TreeNode));
+        treeNode->key=term;
+        nbTreeInsert(&treePath,treeNode);
+        }
+      }
+    termP++;
+    }
+  if(treeRoot){
+    nbTermShowGlossTree(treeRoot);
+    nbTermFreeTree(treeRoot);
+    }
+  }
+
 
 void nbTermShowReport(NB_Term *term){
   nbTermShowItem(term);
   if(term->def!=NULL) printObjectReport(term->def);
-  if(term->terms!=NULL) nbTermShowGloss(term);
+  if(term->gloss!=NULL) nbTermShowGloss(term);
   }
 
 void termPrintGlossTree(NB_TreeNode *treeNode,NB_Type *type,int attr){
   NB_Term *term;
   if(treeNode==NULL) return;
-  term=(NB_Term *)(((char *)treeNode)-offsetof(struct NB_TERM,left));
+  term=(NB_Term *)treeNode->key;
   if(term->cell.object.type!=termType){
     outMsg(0,'L',"termPrintGlossTree: term address calculation error");
     exit(NB_EXITCODE_FAIL);
     }
-  termPrintGlossTree(term->left,type,attr);
-  termPrintGloss(term,type,attr);
-  termPrintGlossTree(term->right,type,attr);
+  termPrintGlossTree(treeNode->left,type,attr);
+  termPrintGloss((NB_Term *)treeNode->key,type,attr);
+  termPrintGlossTree(treeNode->right,type,attr);
   }
 
+/*
 void termPrintGloss(NB_Term *term,NB_Type *type,int attr){
-  /* we insist on term->def having a non-NULL and valid value */
+  // we insist on term->def having a non-NULL and valid value
   if((type==NULL || term->def->type==type) && (attr==0 || (term->def->type->attributes&attr)))
     nbTermShowItem(term);
   termPrintGlossTree((NB_TreeNode *)term->terms,type,attr);
   }
+*/
+
+/* we insist on term->def having a non-NULL and valid value */
+void termPrintGloss(NB_Term *term,NB_Type *type,int attr){
+  NB_Hash *hash=term->gloss;
+  NB_Term **termP;
+  int v;
+  NB_TreePath treePath;
+  NB_TreeNode *treeNode,*treeRoot=NULL;
+
+  if((type==NULL || term->def->type==type) && (attr==0 || (term->def->type->attributes&attr)))
+    nbTermShowItem(term);
+  if(!hash) return;
+  termP=(NB_Term **)&hash->vect;
+  for(v=0;v<=hash->mask;v++){
+    for(term=*termP;term!=NULL;term=(NB_Term *)term->cell.object.next){
+      treeNode=(NB_TreeNode *)nbTreeLocateTerm(&treePath,term,(NB_TreeNode **)&treeRoot);
+      if(treeNode==NULL){  // if not already a subscriber, then subscribe
+        treeNode=(NB_TreeNode *)nbAlloc(sizeof(NB_TreeNode));
+        treePath.key=term;
+        nbTreeInsert(&treePath,treeNode);
+        }
+      }
+    termP++;
+    }
+  if(treeRoot){
+    termPrintGlossTree(treeRoot,type,attr);
+    nbTermFreeTree(treeRoot);
+    }
+  }
+
 
 void termPrintGlossHome(NB_Term *term,NB_Type *type,int attr){
   NB_Term *addrContextSave=addrContext;

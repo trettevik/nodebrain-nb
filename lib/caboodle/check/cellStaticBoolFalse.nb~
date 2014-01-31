@@ -44,16 +44,16 @@ assert e9==(! ^ 1);
 show -cells;
 ~ > show -cells;
 ~ @ = # == node 
-~ r1 = # ! == on(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
-~ e9 = ! == (!^1)
-~ e8 = !
-~ e7 = !
-~ e6 = !
-~ e5 = !
-~ e4 = !
-~ e3 = !
-~ e2 = !
 ~ e1 = !
+~ e2 = !
+~ e3 = !
+~ e4 = !
+~ e5 = !
+~ e6 = !
+~ e7 = !
+~ e8 = !
+~ e9 = ! == (!^1)
+~ r1 = # ! == on(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
 
 # Test with variable numbers
 ~ > # Test with variable numbers
@@ -85,18 +85,18 @@ assert e9==(f ^ t);
 show -cells;
 ~ > show -cells;
 ~ @ = # == node 
-~ f = !
-~ t = 1
-~ r1 = # ! == on(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
-~ e9 = ! == (f^t)
-~ e8 = ! == (f|f)
-~ e7 = ! == (?&f)
-~ e6 = ! == (t&f)
-~ e5 = ! == (f&?)
-~ e4 = ! == (f&t)
-~ e3 = ! == (f&f)
-~ e2 = ! == (!t)
 ~ e1 = ! == f
+~ e2 = ! == (!t)
+~ e3 = ! == (f&f)
+~ e4 = ! == (f&t)
+~ e5 = ! == (f&?)
+~ e6 = ! == (t&f)
+~ e7 = ! == (?&f)
+~ e8 = ! == (f|f)
+~ e9 = ! == (f^t)
+~ f = !
+~ r1 = # ! == on(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
+~ t = 1
 
 # Test with literal string (Can only represent true conditions)
 ~ > # Test with literal string (Can only represent true conditions)
@@ -123,18 +123,18 @@ assert e9==( !  ^ "a");
 show -cells;
 ~ > show -cells;
 ~ @ = # == node 
-~ f = !
-~ t = 1
-~ r1 = # ! == on(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
-~ e9 = ! == (!^"a")
-~ e8 = !
-~ e7 = !
-~ e6 = !
-~ e5 = !
-~ e4 = !
-~ e3 = !
-~ e2 = !
 ~ e1 = !
+~ e2 = !
+~ e3 = !
+~ e4 = !
+~ e5 = !
+~ e6 = !
+~ e7 = !
+~ e8 = !
+~ e9 = ! == (!^"a")
+~ f = !
+~ r1 = # ! == on(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
+~ t = 1
 
 # Test with variable string
 ~ > # Test with variable string
@@ -165,18 +165,18 @@ show -cells
 ~ > show -cells
 ~ @ = # == node 
 ~ a = "a"
-~ f = !
-~ t = 1
-~ r1 = # ! == on(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
-~ e9 = ! == (f^a)
-~ e8 = ! == (f|f)
-~ e7 = ! == (?&f)
-~ e6 = ! == (a&f)
-~ e5 = ! == (f&?)
-~ e4 = ! == (f&a)
-~ e3 = ! == (f&f)
-~ e2 = ! == (!a)
 ~ e1 = ! == f
+~ e2 = ! == (!a)
+~ e3 = ! == (f&f)
+~ e4 = ! == (f&a)
+~ e5 = ! == (f&?)
+~ e6 = ! == (a&f)
+~ e7 = ! == (?&f)
+~ e8 = ! == (f|f)
+~ e9 = ! == (f^a)
+~ f = !
+~ r1 = # ! == on(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));
+~ t = 1
 
 # Verify that all e1-e9 cells above have a value of !
 ~ > # Verify that all e1-e9 cells above have a value of !

@@ -178,6 +178,7 @@ typedef struct NB_TREE_ITERATOR{
 
 //=============================================================================
 
+void *nbTreeLocateTerm(NB_TreePath *path,void *term,NB_TreeNode **rootP);
 void *nbTreeFindCondRight(void *right,NB_TreeNode *node);
 void *nbTreeLocateCondRight(NB_TreePath *path,void *right,NB_TreeNode **rootP);
 void *nbTreeLocateCondRightString(NB_TreePath *path,char *right,NB_TreeNode **rootP);

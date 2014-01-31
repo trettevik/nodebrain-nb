@@ -168,8 +168,6 @@ void destroyString(NB_String *str){
 void initString(NB_Stem *stem){
   nb_StringPool=(struct NB_STRING_POOL *)nbAlloc(sizeof(struct NB_STRING_POOL));
   memset(nb_StringPool,0,sizeof(struct NB_STRING_POOL));
-  //strH=newHash(nb_perf_str_hash);   // create string hash
-  //strH=newHash(1024);
   strType=newType(stem,"string",NULL,0,printString,destroyString);
   strType->apicelltype=NB_TYPE_STRING;
   }
@@ -182,6 +180,7 @@ struct STRING *useString(char *value){
   uint32_t hashcode=0;
   
   NB_HASH_STR(hashcode,value)
+  //outMsg(0,'T',"useString: hashcode=%8.8x value=%s\n",hashcode,value);
   stringP=(NB_String **)&(hash->vect[hashcode&hash->mask]);
   for(string=*stringP;string!=NULL && (r=strcmp(value,string->value))>0;string=*stringP)
     stringP=(struct STRING **)&(string->object.next);

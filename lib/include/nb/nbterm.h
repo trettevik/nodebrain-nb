@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -37,6 +37,7 @@
 * 2005/04/08 eat 0.6.2  API function definitions moved to nbapi.h
 * 2008/02/08 eat 0.6.9  Glossary of terms changed to a binary tree
 * 2010/02/28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2014-01-26 eat 0.9.00 Switched glossary from tree to hash
 *=============================================================================
 */
 #ifndef _NB_TERM_H_
@@ -53,17 +54,20 @@
 *  For inheritance, class has been replaced by NB_NODE.REF
 */
 typedef struct NB_TERM{
-  struct NB_CELL   cell;    /* cell object header */
+  NB_Cell cell;                  /* cell object header */
+  // 2014-01-26 eat - returning to a hash structure for glossaries
   // the next four entries are a tree node
   // if this experiment works, we need to replace with
   // struct NB_TreeNode   and reference word ast treeNode.key
-  void *left;
-  void *right;
-  signed int balance;
-  struct STRING    *word;   /* word defined within the context */
-  struct NB_TERM   *context;/* parent context term */
-  struct NB_TREE_NODE *terms;  /* subordinate glossary */
-  struct NB_OBJECT *def;    /* term definition */
+  //void *left;
+  //void *right;
+  //signed int balance;
+  NB_String *word;               /* word defined within the context */
+  // 2014-01-26 eat - after converting to a hash - consider moving ot NB_Node
+  struct NB_TERM   *context;     /* parent context term */
+  //struct NB_TREE_NODE *terms;  /* subordinate glossary */
+  NB_Hash *gloss;                // subordinate glossary of terms
+  NB_Object *def;                // term definition
   } NB_Term;
 
 extern NB_Term *termFree;
@@ -88,7 +92,7 @@ NB_Term *nbTermFindDot(NB_Term *term,char **qualifier);
 
 NB_Term *nbTermNew(NB_Term *context,char *ident,void *def);
 
-void termUndef(NB_Term *term);
+void nbTermUndefine(NB_Term *term);
 void termUndefAll(void);
 void termResolve(NB_Term *term);
 

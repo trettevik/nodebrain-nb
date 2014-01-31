@@ -799,7 +799,7 @@ void nbRuleAct(struct ACTION *action){
   else if(action->command!=NULL) nbCmdSid((nbCELL)action->context,action->command->value,cmdopt,((NB_Node *)action->context->def)->owner);
   /* undefine WHEN rules when they fire */
   cond=action->cond;
-  if(cond!=NULL && cond->cell.object.type==condTypeWhenRule) termUndef(action->term);
+  if(cond!=NULL && cond->cell.object.type==condTypeWhenRule) nbTermUndefine(action->term);
   trace=savetrace;
   action->status='A';
   }
@@ -872,13 +872,15 @@ void nbRuleReact(void){
 */
 void nbRuleSolve(NB_Term *term){
   NB_Type *type;
-  //NB_Term **termP;
-  //struct HASH *hash;
-  //long v;
+  NB_Term **termP;
+  NB_Hash *hash;
+  int v;
   struct ACTION *action;
   struct COND *cond;
+/* 2014-01-26 eat
   NB_TreeIterator treeIterator;
   NB_TreeNode *treeNode;
+*/
 
   /* we insist on term->def having a non-NULL and valid value */
   /* definitions can be Unknown, but they should not be NULL */
@@ -893,28 +895,23 @@ void nbRuleSolve(NB_Term *term){
       }
     nbCellSolve_(cond->left);
     }   
+/* 2014-01-26 eat
   NB_TREE_ITERATE(treeIterator,treeNode,term->terms){
     term=(NB_Term *)(((char *)treeNode)-offsetof(struct NB_TERM,left));
     nbRuleSolve(term);
     NB_TREE_ITERATE_NEXT(treeIterator,treeNode)
     }
-/*
-  if(term->terms==NULL) return;
-  if(term->terms->cell.object.type!=typeHash){
-    for(term=term->terms;term!=NULL;term=(NB_Term *)term->cell.object.next) nbRuleSolve(term);
-    }     
-  else{
-    hash=(struct HASH *)term->terms;
-    termP=(NB_Term **)hash->vect;
-    for(v=0;v<=hash->mask;v++){
-      if(*termP!=NULL){
-        for(term=*termP;term!=NULL;term=(NB_Term *)term->cell.object.next) nbRuleSolve(term);
-        }  
-      termP++;   
-      }
-    }
 */
-  }  
+  hash=(struct HASH *)term->gloss;
+  if(!hash) return;
+  termP=(NB_Term **)hash->vect;
+  for(v=0;v<=hash->mask;v++){
+    if(*termP!=NULL){
+      for(term=*termP;term!=NULL;term=(NB_Term *)term->cell.object.next) nbRuleSolve(term);
+      }  
+    termP++;   
+    }
+  }
 
 
 /*
@@ -1077,7 +1074,6 @@ void nbRuleDisable(NB_Rule *rule){
   }
 
 void nbRuleInit(NB_Stem *stem){
-  //nb_RuleHash=newHash(2031);
   nb_PlanType=newType(stem,"plan",NULL,0,nbPlanPrint,destroyPlan);
   nb_RuleType=newType(stem,"rule",NULL,0,nbRuleShowExpr,nbRuleDestroy);
   nb_RuleType->showItem=&nbRuleShowItem;

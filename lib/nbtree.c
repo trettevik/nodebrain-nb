@@ -145,6 +145,7 @@
 * 2007-05-22 eat 0.6.8 - removed from nb_mod_tree.c and made part of the API
 * 2013-12-09 eat 0.9.00 Included nbTreeLocateBinary function - alternative to hashing
 * 2014-01-18 eat 0.9.00 Included nbTreeLocateCondRightString and nbTreeLocateCondRightReal
+* 2014-01-29 eat 0.9.00 Inlcuded nbTreeLocateTerm
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -287,7 +288,36 @@ void *nbTreeLocate(NB_TreePath *path,void *key,NB_TreeNode **rootP){
   }
 
 /* 
-*  Locate a node where the keys point to COND and we are looking for a specific right pointer
+*  Locate a node where the keys point to NB_Term and we are looking for a specific right pointer
+*/
+void *nbTreeLocateTerm(NB_TreePath *path,void *t,NB_TreeNode **rootP){
+  NB_Term *term=(NB_Term *)t;
+  NB_TreeNode *node;     // Node pointer
+  NB_TreeNode **nodeP;   // Address of node pointer
+  int depth=0;     // index into path
+  int cmp;
+
+  path->key=NULL;  // caller will fill this in later
+  path->rootP=nodeP=path->balanceP=rootP;
+  path->balanceDepth=1;
+  path->node[depth]=(NB_TreeNode *)rootP; // this depends on the left pointer being first
+  path->step[depth++]=0;                  // being the first element of the node structure
+  for(node=*rootP;node!=NULL;node=*nodeP,depth++){
+    if((cmp=strcmp(term->word->value,((NB_Term *)node->key)->word->value))==0) break;
+    cmp=cmp>0;          // 0 left, 1 right
+    if(node->balance!=0) path->balanceP=nodeP, path->balanceDepth=depth;
+    path->node[depth]=node;
+    if((path->step[depth]=cmp)) nodeP=&node->right;
+    else nodeP=&node->left;
+    }
+  path->nodeP=nodeP;
+  path->depth=depth;
+  //outMsg(0,'T',"nbTreeLocateCondRight: returning");
+  return(node);
+  }
+
+/*
+*  Locate a node where the keys point to NB_Cond and we are looking for a specific right pointer
 */
 void *nbTreeLocateCondRight(NB_TreePath *path,void *right,NB_TreeNode **rootP){
   NB_TreeNode *node;     // Node pointer

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -38,6 +38,7 @@
 * 2004-09-25 eat 0.6.1  removed run list and added status
 * 2005-05-15 eat 0.6.3  changed priority to signed char - not default on some platforms
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2014-01-27 eat 0.9.00 Include action.priorIf
 *=============================================================================
 */
 #ifndef _NB_RULE_H_
@@ -49,9 +50,10 @@
 
 // the ACTION structure may be simplified by converting all rules to the NB_RULE structure 
 // We need to keep parts of it for the nbAction() API function
-struct ACTION{               /* rule function object */
+typedef struct ACTION{               /* rule function object */
   struct NB_CELL cell; 
-  struct ACTION  *nextAct;   /* next rule (reactive) */
+  struct ACTION  *priorIf;   // prior if rule    // 2014-01-27 eat - added for performance
+  struct ACTION  *nextAct;   // next rule (reactive) 
   struct NB_TERM *term;      /* rule term */
   struct COND    *cond;      /* rule condition */
   struct NB_LINK *assert;    /* rule assertion */
@@ -62,11 +64,11 @@ struct ACTION{               /* rule function object */
                              /* 'D' - delete, 'E' - error, 'P' - processing  */
   signed char    priority;   /* action priority */
   char           type;       /* 'R' - rule, 'A' - API */
-  };
+  } NB_Action;
 
-struct ACTION *newAction(NB_Cell *context,NB_Term *term,struct COND *cond,char prty,void *assertion,NB_String *cmd,char option);
-void destroyAction(struct ACTION *action);
-void scheduleAction(struct ACTION *action);
+NB_Action *newAction(NB_Cell *context,NB_Term *term,struct COND *cond,char prty,void *assertion,NB_String *cmd,char option);
+void destroyAction(NB_Action *action);
+void scheduleAction(NB_Action *action);
 
 /*
 *  A plan is the code executed by a rule (a rule is like a thread)

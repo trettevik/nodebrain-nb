@@ -820,8 +820,6 @@ void nbTranslatorDestroy(NB_Translator *translator){
 */
 void nbTranslatorInit(NB_Stem *stem){
   nb_TranslatorType=newType(stem,"translator",NULL,0,nbTranslatorShow,nbTranslatorDestroy);
-  //nb_ProjectionHash=newHash(10007);
-  //nb_ProjectionType=newType(stem,"projection",nb_ProjectionHash,0,nbProjectionShow,nbProjectionDestroy);
   nb_ProjectionType=newType(stem,"projection",NULL,0,nbProjectionShow,nbProjectionDestroy);
   }
 

@@ -627,7 +627,7 @@ struct TYPE *newType(NB_Stem *stem,char *name,struct HASH *hash,int  attributes,
   type->object.refcnt=1;
   type->stem=stem;           
   type->name=name;
-  if(hash==NULL) type->hash=newHash(8);  // every type get's a hash - if this works the hash parameter will be dropped
+  if(hash==NULL) type->hash=nbHashNew(8);  // every type get's a hash - if this works the hash parameter will be dropped
   else type->hash=hash;
   type->attributes=attributes;
   type->apicelltype=0;
