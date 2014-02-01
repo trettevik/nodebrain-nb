@@ -1,45 +1,191 @@
-------------------------------------------------------------------------
-r197 | trettevik | 2013-03-09 10:20:52 -0800 (Sat, 09 Mar 2013) | 1 line
-Changed paths:
-   A /nb/trunk/debian/copyright
+commit fdec89219790b78625b21df26666332ada197a00
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Fri Jan 31 14:11:58 2014 -0500
 
-added debian required file
-------------------------------------------------------------------------
-r199 | trettevik | 2013-03-09 13:30:03 -0800 (Sat, 09 Mar 2013) | 1 line
-Changed paths:
-   M /nb/trunk/debian/changelog
-   M /nb/trunk/debian/control
-   M /nb/trunk/debian/copyright
-   M /nb/trunk/debian/rules
+    example
 
-deb stuff
-------------------------------------------------------------------------
-r204 | trettevik | 2013-03-09 13:59:22 -0800 (Sat, 09 Mar 2013) | 1 line
-Changed paths:
-   M /nb/trunk/debian/changelog
-   M /nb/trunk/debian/control
-   M /nb/trunk/debian/copyright
-   M /nb/trunk/debian/rules
+commit 52516a1beff7887628e1e584004ab9e6d7748f9e
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Fri Jan 31 10:21:33 2014 -0500
 
-deb stuff
-------------------------------------------------------------------------
-r206 | trettevik | 2013-03-10 19:59:36 -0700 (Sun, 10 Mar 2013) | 1 line
-Changed paths:
-   M /nb/trunk/module/syslog/nb_syslog.c
+    glossary back to hash and double link IF rule list
 
-unnecessary change - experimenting with ChangeLog generation
-------------------------------------------------------------------------
-r207 | trettevik | 2013-03-10 20:47:34 -0700 (Sun, 10 Mar 2013) | 1 line
-Changed paths:
-   D /nb/trunk/module/audit/ChangeLog
-   M /nb/trunk/module/audit/Makefile.am
-   M /nb/trunk/module/audit/Makefile.nm
+commit 6713baa5fd7d073d9a9d8e7694b1139072c0af32
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sun Jan 26 03:36:45 2014 -0500
 
-ChangeLog
-------------------------------------------------------------------------
-r208 | trettevik | 2013-03-10 20:48:56 -0700 (Sun, 10 Mar 2013) | 1 line
-Changed paths:
-   A /nb/trunk/module/audit/ChangeLog
+    evaluation schedule tree to list
 
-fiddle
-------------------------------------------------------------------------
+commit 87ead4d9d46cc8678b6e0d041c3cda9a9054d10e
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sat Jan 25 21:49:49 2014 -0500
+
+    hash and checker changes
+
+commit 3d3413539a8ada9bea919da9b12e05540ba43a44
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Mon Jan 20 01:15:19 2014 -0500
+
+    growing hash size and axon for relational operator
+
+commit 8411686c8148582d49f70805f6e0e860df5cace6
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Thu Jan 2 18:23:31 2014 -0500
+
+    checker
+
+commit 04b8f3eb766dbf5917423b7a8ecafa678926df7c
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Thu Jan 2 18:16:59 2014 -0500
+
+    set node
+
+commit 42ab08c962f291758128f30f498eadc8a4d98f61
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Thu Jan 2 14:15:41 2014 -0500
+
+    set routines
+
+commit db28eb0e9c63f618e7b326ca168e9a6b012387d3
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Thu Jan 2 14:13:21 2014 -0500
+
+    set module
+
+commit a97a7bd16da2753a19c4054c642b8cd5908b520f
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Thu Jan 2 13:38:06 2014 -0500
+
+    switch cond cells from hash to tree
+
+commit e6f07d6ae9d644cbe0247bd6a68a81fe9e0653dd
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sun Dec 22 03:24:07 2013 -0500
+
+    hash with conflict tree
+
+commit 47b64bd7064fd3a40aad25105c5afe4faf4601de
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Fri Dec 20 22:08:28 2013 -0500
+
+    version change
+
+commit fced301d82ed6094e123b06f7b5f3938fedd269e
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Fri Dec 20 21:57:29 2013 -0500
+
+    dropping trunk directory
+
+commit 1646c8072b985b3366f5687515a3ba14f8be96fd
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Fri Dec 20 18:41:18 2013 -0500
+
+    removing svn tag directory
+
+commit e5107721e6033cc62cc7c80837b264c14dc76ea8
+Author: Ed Trettevik <ed.a.trettevik@boeing.com>
+Date:   Thu Dec 19 19:47:31 2013 -0700
+
+    quicker compare on eq
+
+commit 9d3b4b5d5404562e091d0c2af77ff7e475ff7e64
+Author: Ed Trettevik <ed.a.trettevik@boeing.com>
+Date:   Wed Dec 18 19:52:37 2013 -0700
+
+    fixed trick cell
+
+commit ab36d792b844a7c8e95f20c72432f3a839a9e664
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Wed Dec 18 20:54:14 2013 -0500
+
+    test
+
+commit 61c3643c1f437b8847366787498f34e8c50c1eb7
+Author: Ed Trettevik <ed.a.trettevik@boeing.com>
+Date:   Wed Dec 18 18:28:55 2013 -0700
+
+    test
+
+commit 3e622e60c577097ac521747548296a6b36705be6
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Wed Dec 18 13:03:39 2013 -0500
+
+    fix .gitignore for include/nb
+
+commit a3c00fe3fae3503e31493efb602b1f9456f5a0e3
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Wed Dec 18 12:54:36 2013 -0500
+
+    redefine
+
+commit 81c673ed2439108644ac92dd5912e6f5186bc632
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Wed Dec 18 12:06:39 2013 -0500
+
+    more
+
+commit 8a46425ee54ca206c9f554a5681573657acc3544
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Tue Dec 10 20:00:40 2013 -0500
+
+    removed debug stuff
+
+commit 1db09a25aaf1eb43fc05bbda7d27348fc601bdf5
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Tue Dec 10 19:47:52 2013 -0500
+
+    rel eq trick
+
+commit 40faa1a94e3761f7e998c0964b8c236f0bb04cde
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sat Dec 7 21:48:05 2013 -0500
+
+    facet cell evaluation added
+
+commit 14a578a256c0ce500532405ff930c2b574de7d1e
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sat Dec 7 20:55:47 2013 -0500
+
+    facet assertions
+
+commit daa5928f38341fed281efb15d2eb5612f5fbbd56
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sat Dec 7 16:25:10 2013 -0500
+
+    cleaning up status a bit
+
+commit 08a6c41d02c8623f9239c5a75772bf43ebf4aec2
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sat Dec 7 16:19:31 2013 -0500
+
+    facet command support added
+
+commit 666e8d40112677d9117b251fb10aa964def83d10
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sat Dec 7 12:36:12 2013 -0500
+
+    module check scripts modified for false disabled symbol change
+
+commit cb7a87f3478c628bd8b8e875eda46d06d5e6699e
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sat Dec 7 12:35:07 2013 -0500
+
+    added nbSkillMethod function
+
+commit 78f9bf2912c686529fa3fa3a428650c493407e5a
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sat Dec 7 11:42:12 2013 -0500
+
+    false not zero and rule true not mapped to one
+
+commit 54c6a91c4be37a7a9594b9c9111d447b68bbc0eb
+Author: eat <eat@vps-1109825-12005.manage.myhosting.com>
+Date:   Fri Dec 6 16:17:38 2013 -0500
+
+    removed commented code
+
+commit bd6d6c54a3ca4d700eb9095a9c420192618449e9
+Author: Trettevik <eat@nodebrain.org>
+Date:   Sat Jun 22 18:54:46 2013 -0400
+
+    adding readme because git does not like empty directory

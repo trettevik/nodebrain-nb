@@ -1,0 +1,176 @@
+#!/usr/bin/perl
+#
+# Purpose:
+#
+#   This script is used to generate rule and assertion files to get 
+#   NodeBrain performance measures.
+#  
+# Synopsis:
+#
+#   bin/genperf.pl   [Execute at top of NodeBrain build directory.]
+#
+#=========================================================================
+use strict;
+
+my $dir="performance";
+mkdir($dir) if(!(-d "$dir"));
+
+my $file;
+my $a=4000000; # number of assertions
+
+# Generate "term rich" rule set
+
+sub genTermRich{
+  my ($r)=@_;
+
+  $file="$dir/perfTermRichRule$r.nb";
+  open(NB,">$file")||die;
+  for(my $i=0;$i<$r;$i+=1){
+    print(NB "define rX$i on(a$i and b$i<>\"$i\"); # $i X\n");
+    print(NB "define rY$i on(a$i and b$i=\"$i\"); # $i Y\n");
+    }
+  close(NB);
+  print("$file generated\n");
+
+  $file="$dir/perfTermRichAssertHit$r.nb";
+  open(NB,">$file")||die;
+  for(my $i=0;$i<$a/2;$i+=1){
+    my $j=int(rand($r));
+    my $bj=$j+1;
+    print(NB "assert a$j,b$j=\"$bj\"; # $i\n");
+    print(NB "assert !a$j,b$j=\"$j\"; # $j\n");
+    }
+  close(NB);
+  print("$file generated\n");
+
+  $file="$dir/perfTermRichAssertMiss$r.nb";
+  open(NB,">$file")||die;
+  for(my $i=0;$i<$a;$i+=1){
+    my $j=int(rand($r));
+    print(NB "assert !a$j,b$j=\"$j\"; # $i\n");
+    }
+  close(NB);
+  print("$file generated\n");
+  }
+
+# Generate "value rich" rule set
+
+sub genTermRichDomino{
+  my ($r)=@_;
+
+  $file="$dir/perfTermRichDominoRule$r.nb";
+  open(NB,">$file")||die;
+  for(my $i=0;$i<$r;$i+=1){
+    my $j=$i+1;
+    my $k=$i+2;
+    print(NB "define r$i on(a$i and b$i<>\"$i\") a$j,b$j=\"$k\"; # $i\n");
+    }
+  close(NB);
+  print("$file generated\n");
+
+  $file="$dir/perfTermRichDominoAssert$r.nb";
+  open(NB,">$file")||die;
+  print(NB "source perfTermRichDominoRule$r.nb;\n");
+  print(NB "assert a0,b0=\"1\"; # 1\n");
+  print(NB "assert a0,b0=\"1\"; # 2\n");
+  print(NB "assert a0,b0=\"1\"; # 3\n");
+  print(NB "assert a0,b0=\"1\"; # 4\n");
+  close(NB);
+  print("$file generated\n");
+  }
+
+# Generate "value rich" rule set
+
+sub genValueRich{
+  my ($r)=@_;
+
+  $file="$dir/perfValueRichRule$r.nb";
+  open(NB,">$file")||die;
+  for(my $i=0;$i<$r;$i+=1){
+    print(NB "define r$i on(a=$i and b<>\"$i\"); # $i\n");
+    }
+  close(NB);
+  print("$file generated\n");
+
+  $file="$dir/perfValueRichAssertHit$r.nb";
+  open(NB,">$file")||die;
+  for(my $i=0;$i<$a;$i+=1){
+    my $j=int(rand($r));
+    my $bj=$j+1;
+    print(NB "assert a=$j,b=\"$bj\"; # $i\n");
+    }
+  close(NB);
+  print("$file generated\n");
+
+  $file="$dir/perfValueRichAssertMiss$r.nb";
+  open(NB,">$file")||die;
+  for(my $i=0;$i<$a;$i+=1){
+    my $j=int(rand($r));
+    print(NB "assert a=$j,b=\"$j\"; # $i\n");
+    }
+  close(NB);
+  print("$file generated\n");
+
+  $file="$dir/perfAssertStatic.nb";
+  open(NB,">$file")||die;
+  for(my $i=0;$i<$a;$i+=1){
+    print(NB "assert !a,b=\"0\"; # $i\n");
+    }
+  close(NB);
+  print("$file generated\n");
+  }
+
+# Generate "value rich" rule set
+
+sub genValueRichDomino{
+  my ($r)=@_;
+
+  $file="$dir/perfValueRichDominoRule$r.nb";
+  open(NB,">$file")||die;
+  for(my $i=0;$i<$r;$i+=1){
+    my $j=$i+1;
+    my $k=$i+2;
+    print(NB "define r$i on(a=$i and b<>\"$i\") a=$j,b=\"$k\"; # $i\n");
+    }
+  close(NB);
+  print("$file generated\n");
+
+  $file="$dir/perfValueRichDominoAssert$r.nb";
+  open(NB,">$file")||die;
+  print(NB "source perfValueRichDominoRule$r.nb;\n");
+  print(NB "assert a=0,b=\"1\"; # 1\n");
+  print(NB "assert a=0,b=\"1\"; # 2\n");
+  print(NB "assert a=0,b=\"1\"; # 3\n");
+  print(NB "assert a=0,b=\"1\"; # 4\n");
+  close(NB);
+  print("$file generated\n");
+  }
+
+sub genValueRichAlert{
+  my ($r)=@_;
+
+  $file="$dir/perfValueRichAlertRule$r.nb";
+  open(NB,">$file")||die;
+  for(my $i=0;$i<$r;$i+=1){
+    print(NB "define r$i if(a=\"abc$i\" and b=\"def$i\" and c=\"xyz$i\"); # $i\n");
+    }
+  close(NB);
+  print("$file generated\n");
+
+  $file="$dir/perfValueRichAlertAssert$r.nb";
+  open(NB,">$file")||die;
+  for(my $i=0;$i<$a;$i+=1){
+    my $j=int(rand($r));
+    print(NB "alert a=\"abc$j\",b=\"def$j\",c=\"xyz$j\"; # $i\n");
+    }
+  close(NB);
+  print("$file generated\n");
+  }
+
+foreach my $r (2,10,100,1000,10000,100000,1000000){
+  genTermRich($r);
+  genTermRichDomino($r);
+  genValueRich($r);
+  genValueRichDomino($r);
+  genValueRichAlert($r);
+  }

@@ -19,18 +19,16 @@ File        Function
 ----------  -------------------------------------------------
 README      This file
 
+nbchange    Update the change log for a new version
+
 nbcheck     A Perl script for running every check script in a
             directory. It reports the results for each check
             script, cleans up temporary files for successful
             check scripts and exits with the highest exit
             code returned.
 
-nbfarm      Execute nbpen on a set of compile farm machines
-            to verify the new source distribution configures,
-	    compiles, and executes properly on each platform.
+nbgenperf.pl
 
 nbman2ht    Builds html man pages from roff format man pages
 
-nbpen       Test ./configure, Makefile, and nb binary on a
-            single server ("pen") in a compile farm.
 ----------  -------------------------------------------------

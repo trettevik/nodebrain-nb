@@ -1,0 +1,16 @@
+#!/bin/sh
+#
+# Name:     nbchange
+#
+# Title:    ChangeLog update
+#
+# Purpose:
+#
+#   Update the ChangeLog for a new version
+#
+# Synopsis:  [execute from the build root directory]
+#   
+#   bin/nbchange
+#
+#====================================
+git log 0.8.15.. > ChangeLog

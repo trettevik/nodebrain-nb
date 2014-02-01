@@ -13,7 +13,7 @@ NodeBrain 0.9.00 (Columbo) Change Summary
 * Theme: Performance
 
      The primary goal of this version of NodeBrain is to
-     improve performance for large rule sets with some
+     improve performance for large rule sets with specific
      characteristics causing prior versions of NodeBrain
      to perform poorly.  This is based on theoretical rule
      sets, not rule sets of known applications, but the
@@ -27,7 +27,7 @@ NodeBrain 0.9.00 (Columbo) Change Summary
        # - Replaces ! for "disabled"
 
   o  Updates have been made to examples of show command
-     to reflect the minor display changes. (See feataures
+     to reflect the minor display changes. (See Features
      and Incompatibilities below.)
 
   o  "Redefine" command introduced.
@@ -86,6 +86,20 @@ NodeBrain 0.9.00 (Columbo) Change Summary
        "a"<=a  ==>   a>="a"
        "a">a   ==>   a<"a"
        "a">=a  ==>   a<="a"
+
+  o  Term glossaries are now displayed in alphabetical
+     order by the SHOW command.  This will cause check
+     scripts created for prior versions to fail.  This
+     can be resolved by reordering the check lines ("~")
+     in the scripts.  
+
+       > show -t
+
+     Prior versions displayed terms based on how the
+     glossary was organized.  By displaying them in
+     alphabetical order, the display is easier to read
+     and less likely to change in the future if the
+     glossary is reorganized.
 
 * New Features: 
 
