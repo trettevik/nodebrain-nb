@@ -8,7 +8,7 @@ Release: 1%{?dist}
 Summary: A declarative rule-based language for state and event monitoring
 License: GPL-2.0+
 Group: Development/Languages
-Source: http://sourceforge.net/projects/nodebrain/files/nb/0.9%20Columbo/%{name}-%{version}.tar.gz/download
+Source: @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
 URL: http://www.nodebrain.org/
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
