@@ -5,6 +5,7 @@
 | |\  | ( ) | ( | |  __/ | ) | |   ( | | | | | |
 |_| \_|\___/ \__ _|\___|____/|_|  \__ _|_|_| |_|
 
+============================================================
 
 NodeBrain 0.9.00 (Columbo) Change Summary
 
@@ -32,15 +33,13 @@ NodeBrain 0.9.00 (Columbo) Change Summary
 
   o  "Redefine" command introduced.
 
-  o  Included new data types of "set" and "tuple".
-
   o  Introducing the term "sentence" for the construct
      node(args) used as a node condition, assertion, or
      command. 
 
   o  Introduced node facets.
 
-  o  ./configure --without-openssl
+  o  ./configure --without-tls
 
 * Incompatibilities:
 
@@ -107,8 +106,8 @@ NodeBrain 0.9.00 (Columbo) Change Summary
 
   o  Cell evaluation in response to assertions has been
      accelerated in cases where a term is compared to 
-     a literal.  The benefit of this acceleration depends
-     on how many cells reference unique literals in
+     a constant.  The benefit of this acceleration depends
+     on how many cells reference unique constants in
      comparison to any given term and the frequency of
      assertions to the referenced term. 
 
@@ -216,6 +215,7 @@ NodeBrain 0.9.00 (Columbo) Change Summary
      be defined before it is used in a sentence.  This
      seems not to create any hardship.
 
+============================================================
 
 NodeBrain 0.8.15 Change Summary
 
@@ -314,6 +314,8 @@ NodeBrain 0.8.15 Change Summary
   o  A overlapping strcpy bug was fixed in function that
      handles line continuation.
      
+============================================================
+
 NodeBrain 0.8.14 Change Summary
 
 * Released February 11, 2013
@@ -382,7 +384,8 @@ NodeBrain 0.8.14 Change Summary
 
   o  Many security flaws were fixed.
 
-=========================================================
+============================================================
+
 NodeBrain 0.8.3 Change Summary
 
 * Released September 6, 2010
@@ -470,7 +473,8 @@ NodeBrain 0.8.3 Change Summary
      causing "![]a" to be reduced to "0" was fixed in
      0.7.9
 
-=========================================================
+============================================================
+
 NodeBrain 0.7.4 Change Summary
 
 * Released February 9, 2009 
@@ -587,7 +591,8 @@ NodeBrain 0.7.4 Change Summary
      were not recorded and tracked properly to enable
      listing here.
 
-=========================================================
+============================================================
+
 NodeBrain 0.6.9 Change Summary
 
 * Internal March 10, 2008
@@ -620,7 +625,8 @@ NodeBrain 0.6.9 Change Summary
 
 * Bug fixes:
 
-=========================================================
+============================================================
+
 NodeBrain 0.6.8 Change Summary
 
 * Internal August 5, 2007 
@@ -726,7 +732,8 @@ NodeBrain 0.6.8 Change Summary
 
 * Bug Fixes:
 
-=========================================================
+============================================================
+
 NodeBrain 0.6.5 Change Summary
 
 * Released April 20, 2006
@@ -798,7 +805,8 @@ NodeBrain 0.6.5 Change Summary
      reference to the current context, which has no
      impact.
 
-=========================================================
+============================================================
+
 NodeBrain 0.6.4 Change Summary
 
 * Released April 1, 2006
@@ -872,12 +880,15 @@ NodeBrain 0.6.4 Change Summary
   o  The "+" prefix for referencing skill module extended
      experts is now deprecated.
 
-=========================================================
+============================================================
+
 NodeBrain 0.6.3 
 
      We elected not to release the 0.6.3 version, a patch
      release applied to the author's applications.
-=========================================================
+
+============================================================
+
 NodeBrain 0.6.2 Change Summary
 
 * Released May 8, 2005
@@ -1149,7 +1160,7 @@ NodeBrain 0.6.2 Change Summary
   o  A Windows help file has been included in the Windows
      binary distribution.
 
-=========================================================
+============================================================
 
 NodeBrain 0.6.1 Change Summary
 
@@ -1456,9 +1467,9 @@ NodeBrain 0.6.1 Change Summary
 
   o  A "bin" directory was included with scripts that
      support the creation and testing of distributions.
-     
-=========================================================
- 
+
+============================================================
+
 NodeBrain 0.6.0 Change Summary
 
 * Released April 7, 2004
