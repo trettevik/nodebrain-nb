@@ -162,6 +162,9 @@
 * 2014-01-25 eat 0.9.00 Checker updates
 *==============================================================================
 */
+#include "../config.h"
+#ifdef HAVE_OPENSSL
+
 #include <ctype.h>
 #include <nb/nbi.h>
 #if !defined(WIN32)
@@ -3755,3 +3758,5 @@ int nbMsgCabalEnable(nbCELL context,nbMsgCabal *msgcabal){
   if(!preferred) nbSynapseSetTimer(context,msgcabal->synapse,30);
   return(0);
   }
+
+#endif

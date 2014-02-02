@@ -181,8 +181,10 @@
 * 2014-01-25 eat 0.9.00 Checker updates
 *==================================================================================
 */
-#include <nb/nb.h>
+#include "../config.h"
+#ifdef HAVE_OPENSSL
 
+#include <nb/nb.h>
 #include <openssl/crypto.h>
 #include <openssl/x509.h>
 #include <openssl/pem.h>
@@ -1285,3 +1287,5 @@ int nbTlsConnectNonBlockingAndSchedule(nbCELL context,nbTLS *tls,void *handle,vo
   else nbLogMsg(context,0,'T',"nbTlsConnectNonBlockingAndSchedule: connect failed - %s - %s",tls->uriMap[tls->uriIndex].uri,strerror(errno));
   return(rc);
   }
+
+#endif

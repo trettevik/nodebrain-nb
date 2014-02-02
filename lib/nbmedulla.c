@@ -118,7 +118,7 @@
 #if defined(WIN32)
 #include <nbcfgw.h>
 #else
-#include <config.h>
+#include "../config.h"
 #endif
 #include <nb/nbi.h>
 #include <nb/nbmedulla.h>

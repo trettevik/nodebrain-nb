@@ -935,7 +935,7 @@ void nbTermPrintLongName(NB_Term *term){
 */
 void nbTermShowItem(NB_Term *term){
   if(term->cell.object.type!=termType){
-    outMsg(0,'L',"termPrintGlossTree: term address calculation error");
+    outMsg(0,'L',"nbTermShowItem: term address calculation error");
     exit(NB_EXITCODE_FAIL);
     }
   printObject((NB_Object *)term);
@@ -946,15 +946,15 @@ void nbTermShowItem(NB_Term *term){
     outPut(" ");
     printObject(term->def->value);
     }
-  if(term->def!=NULL && term->def!=term->cell.object.value){
+  if(term->def && term->def!=term->cell.object.value){
     outPut(" == ");
-    if(term->def==NULL) outPut("???");
-    else printObjectItem(term->def);
+    printObjectItem(term->def);
     }
   outPut("\n");  
   }
 
 void nbTermShowGlossTree(NB_TreeNode *treeNode){
+  if(!treeNode) return;
   if(treeNode->left) nbTermShowGlossTree(treeNode->left);
   nbTermShowItem((NB_Term *)treeNode->key);
   if(treeNode->right) nbTermShowGlossTree(treeNode->right);
@@ -974,19 +974,22 @@ void nbTermShowGloss(NB_Term *term){
 */
 
 void nbTermShowGloss(NB_Term *context){
-  NB_Hash *hash=context->gloss;
+  NB_Hash *hash;
   NB_Term *term,**termP;
   int v;
   NB_TreePath treePath;
   NB_TreeNode *treeNode,*treeRoot=NULL;
 
+  if(!context) return;
+  hash=context->gloss;
+  if(!hash) return;
   termP=(NB_Term **)&hash->vect;
   for(v=0;v<=hash->mask;v++){
     for(term=*termP;term!=NULL;term=(NB_Term *)term->cell.object.next){
       treeNode=(NB_TreeNode *)nbTreeLocateTerm(&treePath,term,(NB_TreeNode **)&treeRoot);
-      if(treeNode==NULL){  // if not already a subscriber, then subscribe
+      if(treeNode==NULL){  // if not already in tree
         treeNode=(NB_TreeNode *)nbAlloc(sizeof(NB_TreeNode));
-        treeNode->key=term;
+        treePath.key=term;
         nbTreeInsert(&treePath,treeNode);
         }
       }
@@ -1001,8 +1004,8 @@ void nbTermShowGloss(NB_Term *context){
 
 void nbTermShowReport(NB_Term *term){
   nbTermShowItem(term);
-  if(term->def!=NULL) printObjectReport(term->def);
-  if(term->gloss!=NULL) nbTermShowGloss(term);
+  if(term->def) printObjectReport(term->def);
+  if(term->gloss) nbTermShowGloss(term);
   }
 
 void termPrintGlossTree(NB_TreeNode *treeNode,NB_Type *type,int attr){

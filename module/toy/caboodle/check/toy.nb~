@@ -54,14 +54,14 @@ assert a=2;
 show -t
 ~ > show -t
 ~ @ = # == node 
-~ r3 = # 1 == on(countAandB=3)[3];
-~ r2 = # 1 == on(a=sum(c,b))[2];
-~ r1 = # 1 == on(a=add(b,c))[1];
-~ c = 0
-~ countAandB = 3 == node toy.count((@.a&@.b))
-~ b = 2
 ~ a = 2
 ~ add = 0 == node toy.add
+~ b = 2
+~ c = 0
+~ countAandB = 3 == node toy.count((@.a&@.b))
+~ r1 = # 1 == on(a=add(b,c))[1];
+~ r2 = # 1 == on(a=sum(c,b))[2];
+~ r3 = # 1 == on(countAandB=3)[3];
 ~ sum = 0 == node toy.sum
 assert !a;
 ~ > assert !a;
@@ -70,12 +70,12 @@ assert a=1;
 show -t
 ~ > show -t
 ~ @ = # == node 
-~ r3 = # ! == on(countAandB=3)[3];
-~ r2 = # ! == on(a=sum(c,b))[2];
-~ r1 = # ! == on(a=add(b,c))[1];
-~ c = 0
-~ countAandB = 4 == node toy.count((@.a&@.b))
-~ b = 2
 ~ a = 1
 ~ add = 0 == node toy.add
+~ b = 2
+~ c = 0
+~ countAandB = 4 == node toy.count((@.a&@.b))
+~ r1 = # ! == on(a=add(b,c))[1];
+~ r2 = # ! == on(a=sum(c,b))[2];
+~ r3 = # ! == on(countAandB=3)[3];
 ~ sum = 0 == node toy.sum

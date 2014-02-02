@@ -151,6 +151,9 @@
 * 2014-01-25 eat 0.9.00 - Checker updates
 *==============================================================================
 */
+#include "../config.h"
+#ifdef HAVE_OPENSSL
+
 #include <nb/nbi.h>
 
 int nb_websterTrace;          // debugging trace flag for webster routines
@@ -1871,3 +1874,5 @@ nbWebServer *nbWebsterClose(nbCELL context,nbWebServer *webster){
   nbFree(webster,sizeof(nbWebServer));
   return(NULL);
   }
+
+#endif

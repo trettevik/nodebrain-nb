@@ -261,6 +261,7 @@
 * 2014-01-27 eat 0.9.00 Double linked IF rules into on and off lists
 *==============================================================================
 */
+#include "../config.h"
 #include <nb/nbi.h>
 
 #if !defined(WIN32)
@@ -1069,16 +1070,21 @@ int nbCmdSet(nbCELL context,void *handle,char *verb,char *cursor){
       else if(strcmp(ident,"shim")==0); /* this option is processed earlier */
       else if(strcmp(ident,"t")==0 || strcmp(ident,"trace")==0)   trace=1;
       else if(strcmp(ident,"T")==0 || strcmp(ident,"noTrace")==0) trace=0;
+#ifdef HAVE_OPENSSL
       else if(strcmp(ident,"traceMail")==0) mailTrace=1;
       else if(strcmp(ident,"notraceMail")==0) mailTrace=0;
+#endif
       else if(strcmp(ident,"traceParse")==0) parseTrace=1;
       else if(strcmp(ident,"notraceParse")==0) parseTrace=0;
+#ifdef HAVE_OPENSSL
       else if(strcmp(ident,"tracePeer")==0) peerTrace=1;
       else if(strcmp(ident,"notracePeer")==0) peerTrace=0;
       else if(strcmp(ident,"traceProxy")==0) proxyTrace=1;
       else if(strcmp(ident,"notraceProxy")==0) proxyTrace=0;
       else if(strcmp(ident,"traceWebster")==0) nb_websterTrace=1;
       else if(strcmp(ident,"notraceWebster")==0) nb_websterTrace=0;
+      else if(strcmp(ident,"notraceTls")==0) tlsTrace=0;
+#endif
       else if(strcmp(ident,"traceMessage")==0) msgTrace=1;
       else if(strcmp(ident,"notraceMessage")==0) msgTrace=0;
       else if(strcmp(ident,"traceQuery")==0) queryTrace=1;
@@ -1089,8 +1095,10 @@ int nbCmdSet(nbCELL context,void *handle,char *verb,char *cursor){
       else if(strcmp(ident,"notraceSource")==0) sourceTrace=0;
       else if(strcmp(ident,"traceSymbolic")==0) symbolicTrace=1;
       else if(strcmp(ident,"notraceSymbolic")==0) symbolicTrace=0;
+#ifdef HAVE_OPENSSL
       else if(strcmp(ident,"traceTls")==0) tlsTrace=1;
       else if(strcmp(ident,"notraceTls")==0) tlsTrace=0;
+#endif
       /* continue to support old option names for a few versions - now 0.5.1 */
       else if(strcmp(ident,"parseTrace")==0) parseTrace=1;
       else if(strcmp(ident,"noparseTrace")==0) parseTrace=0;
@@ -1102,8 +1110,10 @@ int nbCmdSet(nbCELL context,void *handle,char *verb,char *cursor){
       else if(strcmp(ident,"nosourceTrace")==0) sourceTrace=0;
       else if(strcmp(ident,"symbolicTrace")==0) symbolicTrace=1;
       else if(strcmp(ident,"nosymbolicTrace")==0) symbolicTrace=0;
+#ifdef HAVE_OPENSSL
       else if(strcmp(ident,"websterTrace")==0) nb_websterTrace=1;
       else if(strcmp(ident,"nowebsterTrace")==0) nb_websterTrace=0;
+#endif
       /* 
       *  Debugging options used by "show" command
       */

@@ -40,6 +40,8 @@ NodeBrain 0.9.00 (Columbo) Change Summary
 
   o  Introduced node facets.
 
+  o  ./configure --without-openssl
+
 * Incompatibilities:
 
   o  When a rule term is referenced in a cell expression,

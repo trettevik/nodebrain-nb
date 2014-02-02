@@ -31,7 +31,7 @@ See NEWS for a list of changes in this release.
 
 ======================================================================== 
 
-Installation Instructions for Linux/Unix Platforms
+Installation instructions for Linux/Unix Platforms
 
 a) From source code distribution - install to /usr/local directories
 
@@ -41,6 +41,34 @@ a) From source code distribution - install to /usr/local directories
      $ make
      $ make check
      $ make install
+
+   To exclude features and components that depend on openssl, add the
+   configure script parameter --without-tls.
+     
+     $ ./configure --without-openssl
+
+   This will exclude the following API's from the NodeBrain library:
+
+     nbTls      - Abstraction of SSL/TLS layer provided by OpenSSL or
+                  potentially other providers like GnuTLS.
+
+     nbPeer     - Non-blocking data transport between NodeBrain agents
+ 
+     nbProxy    - Message page forwarding for proxies.
+
+     nbMsg      - Decoupled event streams with reliable one-time delivery
+
+     nbWebster  - Interface for HTTPS communication
+
+   It also excludes the following modules that depend on one or more
+   of these excluded API's.
+
+     nb_mail    - SMTP send and receive
+
+     nb_message - Message steam producer, consumer, client and server
+ 
+     nb_webster - Minimal web server for caboodle administration
+
 
 b) From binary RPM file (x86_64 platform example)
 

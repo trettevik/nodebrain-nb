@@ -57,7 +57,7 @@
 #if defined(WIN32)
 #include <nbcfgw.h>       /* tweeked config file */
 #else
-#include <config.h>        /* Definitions provided by configure script */
+#include "../config.h"        /* Definitions provided by configure script */
 #endif
 
 #include <nb/nbstd.h>      // define some standard system stuff

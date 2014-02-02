@@ -127,7 +127,6 @@ NB_Node *nbNodeNew(void){
 
 void contextAlert(NB_Term *term){
   NB_Action *action;
-  int rulesScheduled=0;
   NB_Node *node=(NB_Node *)term->def;
   if(trace) outMsg(0,'T',"contextAlert() called.");
   if(node->cell.object.type!=nb_NodeType){
@@ -138,11 +137,8 @@ void contextAlert(NB_Term *term){
     }
   node->alertCount++;
   for(action=((NB_Node *)term->def)->ifrule;action!=NULL;action=(struct ACTION *)action->cell.object.next){
-    //if(action->cond!=NULL && !(((NB_Object *)action->cond)->value->type->attributes&TYPE_NOT_TRUE)){ /* if true put on action list */
-      if(action->status=='R') scheduleAction(action);  /* put ready rule on scheduled list */
-      //}
+    if(action->status=='R') scheduleAction(action);  /* put ready rule on scheduled list */
     }
-  //outMsg(0,'T',"contextAlert: %d IF rules on list",rulesScheduled);
   if(actList!=NULL || nb_RuleReady!=NULL) nbRuleReact();
   }
 

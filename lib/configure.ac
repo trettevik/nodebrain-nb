@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 #=============================================================================
 #
-# Copyright (C) 1998-2013 The Boeing Company
+# Copyright (C) 1998-2014 The Boeing Company
 #                         Ed Trettevik <eat@nodebrain.org>
 #
 # NodeBrain is free software; you can redistribute it and/or modify
@@ -89,6 +89,8 @@
 # 2013/01/19 eat 0.8.13 Included patch submit by Jeroen Roovers (gentoo)
 # 2013-03-10 eat 0.8.15 Changed NB_MODULE_PATH to only look in the minor version directories
 # 2013-12-05 eat 0.9.00 New version - not compatible with rules designed for prior versions
+# 2014-01-31 eat 0.9.00 Made OpenSSL optional
+# 2014-02-01 eat 0.9.00 Included --without-openssl
 #=============================================================================
 
 AC_PREREQ(2.62)
@@ -96,6 +98,7 @@ AC_INIT([libnb],[0.9.00],[bugs@nodebrain.org])
 AC_CONFIG_SRCDIR([nb.c])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(config)
+
 AM_INIT_AUTOMAKE
 
 # define module directory variables
@@ -132,8 +135,21 @@ AC_SEARCH_LIBS(initscr,ncurses)
 AC_CHECK_LIB(readline,readline,,[AC_MSG_ERROR(Required library -lreadline not found. Specify path in LDFLAGS.)])
 AC_CHECK_LIB(history,add_history,,[AC_MSG_ERROR(Required library -lhistory not found. Specify path in LDFLAGS.)])
 #AC_CHECK_LIB(ssl,SSL_library_init,,[AC_MSG_ERROR(Required library -lssl not found. Specify path in LDFLAGS.)])
-AC_SEARCH_LIBS(SSL_library_init,ssl)
-AC_SEARCH_LIBS(X509_get_subject_name,crypto)
+
+AC_ARG_WITH([tls],[AS_HELP_STRING([--with-tls],[Select TLS package and include related features @<:@default=openssl@:>@])],[],[with_tls=openssl])
+AS_IF([test "x$with_tls" != xno],
+  [AS_IF([test "x$with_tls" == xopenssl],
+    [AC_SEARCH_LIBS([SSL_library_init],[ssl],
+      [AC_DEFINE([HAVE_OPENSSL],[1],[Define if you have libssl])
+       AC_SEARCH_LIBS(X509_get_subject_name,crypto)
+       ],
+      [AC_MSG_FAILURE([--with-tls=openssl was given, but test for openssl failed])
+       ])
+     ])
+   ])
+
+#AC_SEARCH_LIBS(SSL_library_init,ssl)
+#AC_SEARCH_LIBS(X509_get_subject_name,crypto)
 #PKG_CHECK_MODULES(libssl,openssl)
 #PKG_CHECK_MODULES([libssl],[openssl],[LIBS="$LIBS `$PKG_CONFIG --cflags --libs openssl`"],[AC_MSG_ERROR(Required library -lssl not found. You may want to download it from http://www.openssl.org/ or locate it and include in LDFLAGS or LD_LIBRARY_PATH to support this build.)])
 

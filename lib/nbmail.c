@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2009-2013 The Boeing Company
+* Copyright (C) 2009-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *=============================================================================
 *
@@ -41,6 +41,9 @@
 * 2012-12-31 eat 0.8.13 Checker updates
 *============================================================================
 */
+#include "../config.h"
+#ifdef HAVE_OPENSSL
+
 #include <nb/nbi.h>
 
 int mailTrace=0;  // debugging
@@ -183,3 +186,5 @@ int nbMailSendAlarm(nbCELL context,nbMailClient *client){
   nbLogMsg(context,0,'I',"Mail sent from %s to %s - %s%s",from,to,topic,tweet);
   return(0);
   }
+
+#endif

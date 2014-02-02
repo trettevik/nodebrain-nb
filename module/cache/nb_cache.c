@@ -1201,7 +1201,7 @@ void printCacheRows(nbCELL context,struct CACHE_NODE *entry,int column){
 /*
 *  Show cache
 */
-int cacheShow(nbCELL context,void *skillHandle,NB_Cache *cache,int option){
+static int cacheShow(nbCELL context,void *skillHandle,NB_Cache *cache,int option){
 //  struct CACHE_NODE *entry;
   struct CACHE_ATTR  *attr=cache->attr;
   int i;

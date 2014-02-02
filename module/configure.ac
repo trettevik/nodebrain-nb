@@ -130,7 +130,22 @@ AC_STRUCT_TM
 AC_TYPE_UID_T
 
 #=====================================
-# Create the Makefile
+# Create the Makefiles
 
+AC_ARG_WITH([tls],[AS_HELP_STRING([--with-tls],[Select TLS package and include related features @<:@default=openssl@:>@])],[],[with_tls=openssl])
+AC_ARG_WITH([nb_peer],[AS_HELP_STRING([--with-nb_peer],[Include Peer module @<:@default=yes@:>@])],[],[with_nb_peer=yes])
+# Start with list of modules that we always build
+NB_MODULES="audit baseline cache console netflow pipe servant set snmptrap string syslog toy translator tree udp"
+AS_IF([test "x$with_nb_peer" == xyes],[NB_MODULES=$NB_MODULES" peer"])
+#NB_MODULES="audit baseline cache console mail message netflow peer pipe servant set snmptrap string syslog toy translator tree udp webster"
+AS_IF([test "x$with_tls" != xno],
+  [AC_SEARCH_LIBS([SSL_library_init],[ssl],
+    [AC_DEFINE([HAVE_OPENSSL],[1],[Define if you have libssl])
+     [NB_MODULES=$NB_MODULES" mail message webster"]
+     ],
+    [AC_MSG_FAILURE([--with-tls=openssl was given, but test for openssl failed])
+     ])
+    ])
+AC_SUBST([NB_MODULES])
 AC_CONFIG_FILES([Makefile audit/Makefile baseline/Makefile cache/Makefile console/Makefile mail/Makefile message/Makefile netflow/Makefile peer/Makefile pipe/Makefile servant/Makefile set/Makefile snmptrap/Makefile string/Makefile syslog/Makefile toy/Makefile translator/Makefile tree/Makefile udp/Makefile webster/Makefile])
 AC_OUTPUT

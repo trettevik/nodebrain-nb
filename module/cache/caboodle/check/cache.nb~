@@ -18,18 +18,18 @@ alder. alert (1,2,3),p=1;
 ~ > alder. alert (1,2,3),p=1;
 ~ 1970/01/01 00:00:01 NB000I Rule alder.r0 fired 
 ~ : alder. # x row 1,2,3 normal 1
-~ 1970/01/01 00:00:02 NB000I Rule alder.r1 fired 
-~ : alder. # y kid 1,2,3 normal 1
-~ 1970/01/01 00:00:03 NB000I Rule alder.r2 fired 
+~ 1970/01/01 00:00:02 NB000I Rule alder.r2 fired 
 ~ : alder. # z hit 1,2,3 normal 1
+~ 1970/01/01 00:00:03 NB000I Rule alder.r1 fired 
+~ : alder. # y kid 1,2,3 normal 1
 alder. alert (1,2,3),p=2;
 ~ > alder. alert (1,2,3),p=2;
 ~ 1970/01/01 00:00:01 NB000I Rule alder.r0 fired 
 ~ : alder. # x row 1,2,3 normal 2
-~ 1970/01/01 00:00:02 NB000I Rule alder.r1 fired 
-~ : alder. # y kid 1,2,3 normal 2
-~ 1970/01/01 00:00:03 NB000I Rule alder.r2 fired 
+~ 1970/01/01 00:00:02 NB000I Rule alder.r2 fired 
 ~ : alder. # z hit 1,2,3 minor 2
+~ 1970/01/01 00:00:03 NB000I Rule alder.r1 fired 
+~ : alder. # y kid 1,2,3 normal 2
 alder. alert (1,2,3),p=3;
 ~ > alder. alert (1,2,3),p=3;
 ~ 1970/01/01 00:00:01 NB000I Rule alder.r0 fired 

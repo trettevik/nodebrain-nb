@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -145,6 +145,9 @@
 * 2012-12-30 eat 0.8.13 Modified nbProxyConstuct to only load context for secure protocols
 *==============================================================================
 */
+#include "../config.h"
+#ifdef HAVE_OPENSSL
+
 #include <nb/nb.h>
 #include <nb/nbproxy.h>  // will move to nb.h after it settles down
 
@@ -1039,3 +1042,5 @@ int nbProxyDestroy(nbCELL context,nbProxy *proxy){
   nbFree(proxy,sizeof(nbProxy));
   return(0);
   }
+
+#endif
