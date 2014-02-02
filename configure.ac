@@ -199,22 +199,57 @@ AC_DEFINE_UNQUOTED(NB_COMPILE_PLATFORM,"$host",[Define compile platform])
 #=====================================
 # Figure out which modules, packages and features are requested
 
-AC_ARG_WITH([tls],[AS_HELP_STRING([--with-tls],[Select TLS package and include related features @<:@default=openssl@:>@])],[],[with_tls=openssl])
-AC_ARG_WITH([nb_peer],[AS_HELP_STRING([--with-nb_peer],[Include Peer module @<:@default=yes@:>@])],[],[with_nb_peer=yes])
-# Start with list of modules that we always build
-NB_MODULES="audit baseline cache console netflow pipe servant set snmptrap string syslog toy translator tree udp"
-AS_IF([test "x$with_nb_peer" == xyes],[NB_MODULES=$NB_MODULES" peer"])
+AC_ARG_WITH([tls],[AS_HELP_STRING([--with-tls],[Select TLS package and include related features (default is --with-tls=openssl)])],[],[with_tls=openssl])
 AS_IF([test "x$with_tls" != xno],
   [AS_IF([test "x$with_tls" == xopenssl],
     [AC_SEARCH_LIBS([SSL_library_init],[ssl],
       [AC_DEFINE([HAVE_OPENSSL],[1],[Define if you have libssl])
        AC_SEARCH_LIBS(X509_get_subject_name,crypto)
-       [NB_MODULES=$NB_MODULES" mail message webster"]
        ],
       [AC_MSG_FAILURE([--with-tls=openssl was given, but test for openssl failed])
        ])
      ])
    ])
+
+NB_MODULES=
+AC_ARG_ENABLE([nb_audit],[AS_HELP_STRING([--disable-nb_peer],[exclude Audit module])],[],[enable_nb_audit=yes])
+AS_IF([test "x$enable_nb_audit" == xyes],[NB_MODULES=$NB_MODULES" audit"])
+AC_ARG_ENABLE([nb_baseline],[AS_HELP_STRING([--disable-nb_baseline],[exclude Baseline module])],[],[enable_nb_baseline=yes])
+AS_IF([test "x$enable_nb_baseline" == xyes],[NB_MODULES=$NB_MODULES" baseline"])
+AC_ARG_ENABLE([nb_cache],[AS_HELP_STRING([--disable-nb_cache],[exclude Cache module])],[],[enable_nb_cache=yes])
+AS_IF([test "x$enable_nb_cache" == xyes],[NB_MODULES=$NB_MODULES" cache"])
+AC_ARG_ENABLE([nb_console],[AS_HELP_STRING([--disable-nb_console],[exclude Console module])],[],[enable_nb_console=yes])
+AS_IF([test "x$enable_nb_console" == xyes],[NB_MODULES=$NB_MODULES" console"])
+AC_ARG_ENABLE([nb_mail],[AS_HELP_STRING([--disable-nb_mail],[exclude Mail module (implied by --without-tls)])],[],[enable_nb_mail=yes])
+AS_IF([test "x$enable_nb_mail" == xyes -a "x$with_tls" != xno],[NB_MODULES=$NB_MODULES" mail"])
+AC_ARG_ENABLE([nb_message],[AS_HELP_STRING([--disable-nb_message],[exclude Message module (implied by --without-tls)])],[],[enable_nb_message=yes])
+AS_IF([test "x$enable_nb_message" == xyes -a "x$with_tls" != xno],[NB_MODULES=$NB_MODULES" message"])
+AC_ARG_ENABLE([nb_netflow],[AS_HELP_STRING([--disable-nb_netflow],[exclude Netflow module])],[],[enable_nb_netflow=yes])
+AS_IF([test "x$enable_nb_netflow" == xyes],[NB_MODULES=$NB_MODULES" netflow"])
+AC_ARG_ENABLE([nb_peer],[AS_HELP_STRING([--disable-nb_peer],[exclude Peer module])],[],[enable_nb_peer=yes])
+AS_IF([test "x$enable_nb_peer" == xyes],[NB_MODULES=$NB_MODULES" peer"])
+AC_ARG_ENABLE([nb_pipe],[AS_HELP_STRING([--disable-nb_pipe],[exclude Pipe module])],[],[enable_nb_pipe=yes])
+AS_IF([test "x$enable_nb_pipe" == xyes],[NB_MODULES=$NB_MODULES" pipe"])
+AC_ARG_ENABLE([nb_servant],[AS_HELP_STRING([--disable-nb_servant],[exclude Servant module])],[],[enable_nb_servant=yes])
+AS_IF([test "x$enable_nb_servant" == xyes],[NB_MODULES=$NB_MODULES" servant"])
+AC_ARG_ENABLE([nb_set],[AS_HELP_STRING([--disable-nb_set],[exclude Set module])],[],[enable_nb_set=yes])
+AS_IF([test "x$enable_nb_set" == xyes],[NB_MODULES=$NB_MODULES" set"])
+AC_ARG_ENABLE([nb_snmptrap],[AS_HELP_STRING([--disable-nb_snmptrap],[exclude Snmptrap module])],[],[enable_nb_snmptrap=yes])
+AS_IF([test "x$enable_nb_snmptrap" == xyes],[NB_MODULES=$NB_MODULES" snmptrap"])
+AC_ARG_ENABLE([nb_string],[AS_HELP_STRING([--disable-nb_string],[exclude String module])],[],[enable_nb_string=yes])
+AS_IF([test "x$enable_nb_string" == xyes],[NB_MODULES=$NB_MODULES" string"])
+AC_ARG_ENABLE([nb_syslog],[AS_HELP_STRING([--disable-nb_syslog],[exclude Syslog module])],[],[enable_nb_syslog=yes])
+AS_IF([test "x$enable_nb_syslog" == xyes],[NB_MODULES=$NB_MODULES" syslog"])
+AC_ARG_ENABLE([nb_toy],[AS_HELP_STRING([--disable-nb_toy],[exclude Toy module])],[],[enable_nb_toy=yes])
+AS_IF([test "x$enable_nb_toy" == xyes],[NB_MODULES=$NB_MODULES" toy"])
+AC_ARG_ENABLE([nb_translator],[AS_HELP_STRING([--disable-nb_translator],[exclude Translator module])],[],[enable_nb_translator=yes])
+AS_IF([test "x$enable_nb_translator" == xyes],[NB_MODULES=$NB_MODULES" translator"])
+AC_ARG_ENABLE([nb_tree],[AS_HELP_STRING([--disable-nb_tree],[exclude Tree module])],[],[enable_nb_tree=yes])
+AS_IF([test "x$enable_nb_tree" == xyes],[NB_MODULES=$NB_MODULES" tree"])
+AC_ARG_ENABLE([nb_udp],[AS_HELP_STRING([--disable-nb_udp],[exclude Udp module])],[],[enable_nb_udp=yes])
+AS_IF([test "x$enable_nb_udp" == xyes],[NB_MODULES=$NB_MODULES" udp"])
+AC_ARG_ENABLE([nb_webster],[AS_HELP_STRING([--disable-nb_webster],[exclude webster module (implied by --without-tls)])],[],[enable_nb_webster=yes])
+AS_IF([test "x$enable_nb_webster" == xyes -a "x$with_tls" != xno],[NB_MODULES=$NB_MODULES" webster"])
 
 AC_SUBST([NB_MODULES])
 # Set module subdirectory by minor version - ${libdir}/nb/${NB_MOD_DIR}/
