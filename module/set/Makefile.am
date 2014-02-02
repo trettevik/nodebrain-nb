@@ -87,7 +87,6 @@ nblibdir = ${libdir}/nb-${NB_MOD_DIR}
 include Makefile.nm
 
 EXTRA_DIST += \
-  README \
   Makefile.nm \
   caboodle/bin/nbcheck
 
