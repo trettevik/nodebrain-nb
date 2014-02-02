@@ -184,13 +184,52 @@
 # 2014-01-31 eat 0.9.00 Made OpenSSL optional
 # 2014-02-01 eat 0.9.00 Included --without-openssl
 #=============================================================================
+#=============================================================================
+# Program:  NodeBrain
+#
+# File:     configure.ac
+#
+# Title:    NodeBrain Node Module Autoconf Input File
+#
+# Function:
+#
+#   This file is processed by autoconf to create the configure script when
+#   a NodeBrain developer is creating a node module distribution.
+#
+# Description:
+#
+#   You will not need this file unless you are attempting to use autoconf
+#   to build a new configure script to resolve problems on your platform.
+#   If so, you would do something like the following.
+#
+#     o  Modify this file (configure.ac) as necessary.
+#     o  Execute "make distclean" if you have already run "make".  This
+#        will clean up files created previously by "./configure" and "make"
+#        that are not part of the NodeBrain distribution.
+#     o  Execute autoconf in this directory to create a new configure script.
+#     o  Execute ./configure to create a new Makefile and config.h file.
+#
+#   See http://www.gnu.org/software/autoconf for more information.
+#
+#=============================================================================
+# Change History:
+#
+# Date       Name/Change
+# ---------- -----------------------------------------------------------------
+# 2008/11/02 Ed Trettevik (version 0.7.3)
+# 2009/02/20 eat 0.7.5 - port to other systems (windows plus others)
+# 2011/02/19 eat 0.8.5 - set optimization level
+# 2011/05/31 eat 0.8.6 - Webster API and Proxy API included in Webster Module
+# 2012/06/02 eat 0.8.10- Webster API and Proxy API included in Webster Module
+# 2014-01-11 eat 0.9.00
+#=============================================================================
 
 AC_PREREQ(2.62)
 AC_INIT([nodebrain],[0.9.00],[bugs@nodebrain.org])
 #AC_CONFIG_SRCDIR([nb.c])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(config)
-AC_CONFIG_SUBDIRS([lib module])
+#AC_CONFIG_SUBDIRS([lib module])
 AM_INIT_AUTOMAKE
 
 # define module directory variables
@@ -214,49 +253,23 @@ LT_SYS_MODULE_EXT
 LT_FUNC_DLSYM_USCORE
 
 # define a release date variable
-AC_DEFINE(NB_RELEASE_DATE,"2013-12-05",[Define release date])
+AC_DEFINE([NB_RELEASE_DATE],"2014-02-15",[Define release date])
 
 # Checks for programs.
 AC_PROG_CC
 AM_PROG_CC_C_O
 
-# Checks for libraries.
-# LIBS="-lncurses"
-AC_CHECK_LIB(pcre,pcre_compile,,[AC_MSG_ERROR(Required library -lpcre not found.  Specify path in LDFLAGS.)])
-AC_SEARCH_LIBS(initscr,ncurses)
-AC_CHECK_LIB(readline,readline,,[AC_MSG_ERROR(Required library -lreadline not found. Specify path in LDFLAGS.)])
-AC_CHECK_LIB(history,add_history,,[AC_MSG_ERROR(Required library -lhistory not found. Specify path in LDFLAGS.)])
-#AC_CHECK_LIB(ssl,SSL_library_init,,[AC_MSG_ERROR(Required library -lssl not found. Specify path in LDFLAGS.)])
+#=====================================
+# Checks for library functions.
 
-AC_ARG_WITH([tls],[AS_HELP_STRING([--with-tls],[Select TLS package and include related features @<:@default=openssl@:>@])],[],[with_tls=openssl])
-AC_ARG_WITH([nb_peer],[AS_HELP_STRING([--with-nb_peer],[Include Peer module @<:@default=yes@:>@])],[],[with_nb_peer=yes])
-
-AS_IF([test "x$with_tls" != xno],
-  [AS_IF([test "x$with_tls" == xopenssl],
-    [AC_SEARCH_LIBS([SSL_library_init],[ssl],
-      [AC_DEFINE([HAVE_OPENSSL],[1],[Define if you have libssl])
-       AC_SEARCH_LIBS(X509_get_subject_name,crypto)
-       ],
-      [AC_MSG_FAILURE([--with-tls=openssl was given, but test for openssl failed])
-       ])
-     ])
-   ])
-
-#AC_SEARCH_LIBS(SSL_library_init,ssl)
-#AC_SEARCH_LIBS(X509_get_subject_name,crypto)
-#PKG_CHECK_MODULES(libssl,openssl)
-#PKG_CHECK_MODULES([libssl],[openssl],[LIBS="$LIBS `$PKG_CONFIG --cflags --libs openssl`"],[AC_MSG_ERROR(Required library -lssl not found. You may want to download it from http://www.openssl.org/ or locate it and include in LDFLAGS or LD_LIBRARY_PATH to support this build.)])
-
-AC_SEARCH_LIBS(socket,socket)
-AC_SEARCH_LIBS(inet_ntoa,nsl)
-
-AC_SEARCH_LIBS(fmod,m,,[AC_MSG_ERROR(Required math library -lm not found. Specify path in LDFLAGS.)])
-AC_SEARCH_LIBS(dlopen,dl)
+AC_FUNC_MALLOC
+AC_CHECK_FUNCS([strchr])
+AC_CHECK_FUNCS([setenv])
 
 # Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_STDC
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h netinet/in.h stdlib.h string.h sys/socket.h sys/time.h sys/limits.h limits.h machine/limits.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h netinet/in.h stdlib.h string.h sys/socket.h sys/time.h time.h sys/limits.h limits.h machine/limits.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -265,6 +278,30 @@ AC_TYPE_SIZE_T
 AC_HEADER_TIME
 AC_STRUCT_TM
 AC_TYPE_UID_T
+
+# Checks for libraries.
+# Figure out which NB_LIBRARY_PATH to use with "make check".
+#   If we are in a NodeBrain distribution, we'll use
+#   the library we created in the lib directory.  Otherwise
+#   we'll the installed one, which may be installed somewhere
+#   else if already in the search path.
+
+AC_CHECK_FILE([../lib/libnb.la],[AC_SUBST([NB_LIBRARY_PATH],[../../../lib/.libs])],[AC_SUBST([NB_LIBRARY_PATH],[/usr/local/lib/nb])])
+
+# Always provide a path to the module we created in this package
+
+AC_SUBST([NB_MOD_PATH],[../.libs])
+
+AC_CHECK_LIB(pcre,pcre_compile,,[AC_MSG_ERROR(Required library -lpcre not found.  Specify path in LDFLAGS.)])
+AC_SEARCH_LIBS(initscr,ncurses)
+AC_CHECK_LIB(readline,readline,,[AC_MSG_ERROR(Required library -lreadline not found. Specify path in LDFLAGS.)])
+AC_CHECK_LIB(history,add_history,,[AC_MSG_ERROR(Required library -lhistory not found. Specify path in LDFLAGS.)])
+
+AC_SEARCH_LIBS(socket,socket)
+AC_SEARCH_LIBS(inet_ntoa,nsl)
+
+AC_SEARCH_LIBS(fmod,m,,[AC_MSG_ERROR(Required math library -lm not found. Specify path in LDFLAGS.)])
+AC_SEARCH_LIBS(dlopen,dl)
 
 # Checks for library functions.
 AC_FUNC_FORK
@@ -283,6 +320,38 @@ AC_CHECK_FUNCS([alarm gethostbyaddr gethostbyname inet_ntoa memchr memset regcom
 
 AC_DEFINE_UNQUOTED(NB_COMPILE_PLATFORM,"$host",[Define compile platform])
 
-AC_CONFIG_FILES([Makefile nodebrain.spec nodebrain.dsc nb.pc lib/Makefile])
+#=====================================
+# Figure out which modules, packages and features are requested
+
+AC_ARG_WITH([tls],[AS_HELP_STRING([--with-tls],[Select TLS package and include related features @<:@default=openssl@:>@])],[],[with_tls=openssl])
+AC_ARG_WITH([nb_peer],[AS_HELP_STRING([--with-nb_peer],[Include Peer module @<:@default=yes@:>@])],[],[with_nb_peer=yes])
+# Start with list of modules that we always build
+NB_MODULES="audit baseline cache console netflow pipe servant set snmptrap string syslog toy translator tree udp"
+AS_IF([test "x$with_nb_peer" == xyes],[NB_MODULES=$NB_MODULES" peer"])
+AS_IF([test "x$with_tls" != xno],
+  [AS_IF([test "x$with_tls" == xopenssl],
+    [AC_SEARCH_LIBS([SSL_library_init],[ssl],
+      [AC_DEFINE([HAVE_OPENSSL],[1],[Define if you have libssl])
+       AC_SEARCH_LIBS(X509_get_subject_name,crypto)
+       [NB_MODULES=$NB_MODULES" mail message webster"]
+       ],
+      [AC_MSG_FAILURE([--with-tls=openssl was given, but test for openssl failed])
+       ])
+     ])
+   ])
+
+AC_SUBST([NB_MODULES])
+# Set module subdirectory by minor version - ${libdir}/nb/${NB_MOD_DIR}/
+AC_SUBST([NB_MOD_DIR],[0.9.00])
+
+# Figure out which nb program to use with "make check".
+#   If we are in a Nodebrain distribution, we'll use
+#   the one we created in the top directory.  Otherwise,
+#   we look for a compatible installed program.
+
+AC_SUBST([NB],[../../../../lib/.libs/lt-nb])
+AC_SUBST([NB_MOD_CFLAGS],["-I../../lib/include -Wall -fstack-protector-all -Wno-strict-aliasing"])
+
+AC_CONFIG_FILES([Makefile nodebrain.spec nodebrain.dsc nb.pc lib/Makefile module/audit/Makefile module/baseline/Makefile module/cache/Makefile module/console/Makefile module/mail/Makefile module/message/Makefile module/netflow/Makefile module/peer/Makefile module/pipe/Makefile module/servant/Makefile module/set/Makefile module/snmptrap/Makefile module/string/Makefile module/syslog/Makefile module/toy/Makefile module/translator/Makefile module/tree/Makefile module/udp/Makefile module/webster/Makefile])
 
 AC_OUTPUT

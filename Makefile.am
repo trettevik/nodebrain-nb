@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 ## =============================================================================
 ##
-## Copyright (C) 1998-2013 The Boeing Company
+## Copyright (C) 1998-2014 The Boeing Company
 ##                         Ed Trettevik <eat@nodebrain.org>
 ##
 ## NodeBrain is free software; you can redistribute it and/or modify
@@ -68,6 +68,8 @@
 ## 2010/02/27 eat 0.7.9  Included DESTDIR
 ## 2013/02/03 eat 0.8.13 Included nbkit man pages
 ##=============================================================================
+
+ACLOCAL_AMFLAGS= -I m4
 
 SUBDIRS = lib . module
 
