@@ -18,7 +18,7 @@ Version:     0.9 - Columbo
 
 Release:     0.9.00 
 
-Date:        TBD soon
+Date:        TBD
 
 Reference:   http://www.nodebrain.org
                1) Online documentation
@@ -42,15 +42,26 @@ a) From source code distribution - install to /usr/local directories
      $ make check
      $ make install
 
+   To get a list of configure script options use --help.
+
+     $ ./configure --help
+
+   You can exclude NodeBrain modules (plugins) from a build using
+   a --disable-nb_<module> parameter.  Examples for the Peer and
+   Webster modules are illustrated here.
+
+     $ ./configure --disable-nb_peer
+     $ ./configure --disable-nb_webster
+
    To exclude features and components that depend on openssl, add the
    configure script parameter --without-tls.
      
-     $ ./configure --without-openssl
+     $ ./configure --without-tls
 
    This will exclude the following API's from the NodeBrain library:
 
-     nbTls      - Abstraction of SSL/TLS layer provided by OpenSSL or
-                  potentially other providers like GnuTLS.
+     nbTls      - Abstraction of SSL/TLS layer provided by OpenSSL.
+                  (GnuTLS may be supported also in a future release.)
 
      nbPeer     - Non-blocking data transport between NodeBrain agents
  
@@ -69,19 +80,30 @@ a) From source code distribution - install to /usr/local directories
  
      nb_webster - Minimal web server for caboodle administration
 
+b) From git repository - requires autoconf/automake/libtools
 
-b) From binary RPM file (x86_64 platform example)
-
-     $ rpm --install nodebrain-0.9.00-1.x86_64.rpm
+     $ git clone git://git.code.sf.net/p/nodebrain/nb nodebrain-nb
+     $ cd nodebrain-nb
+     $ ./autogen.sh
+     $ ./configure
+     $ make
+     $ make check
+     $ make install
 
 c) From source RPM file 
 
+     $ rpmbuild --rebuild nodebrain-0.9.00-1.el6.src.rpm
      $ rpmbuild --rebuild nodebrain-0.9.00-1.src.rpm
+
+d) From binary RPM file (x86_64 platform example)
+
+     $ rpm --install nodebrain-0.9.00-1.el6.x86_64.rpm
+     $ rpm --install nodebrain-0.9.00-1.x86_64.rpm
 
 ======================================================================== 
 
 Although prior releases of NodeBrain were tested on various platforms,
-at time of release this version has only been tested on RHEL 6.4, x86_64.
+at time of release, this version has only been tested on RHEL 6.4, x86_64.
 It should work on other Linux platforms, and be relatively easy to port
 to Unix platforms.  The project has stopped porting to Windows, and the
 conditional compilation for Windows is no longer expected to work.  We
