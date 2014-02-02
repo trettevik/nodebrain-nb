@@ -350,8 +350,8 @@ AC_SUBST([NB_MOD_DIR],[0.9.00])
 #   we look for a compatible installed program.
 
 AC_SUBST([NB],[../../../../lib/.libs/lt-nb])
-AC_SUBST([NB_MOD_CFLAGS],["-I../../lib/include -Wall -fstack-protector-all -Wno-strict-aliasing"])
+AC_SUBST([NB_MOD_CFLAGS],["-I../../include -Wall -fstack-protector-all -Wno-strict-aliasing"])
 
-AC_CONFIG_FILES([Makefile nodebrain.spec nodebrain.dsc nb.pc lib/Makefile module/audit/Makefile module/baseline/Makefile module/cache/Makefile module/console/Makefile module/mail/Makefile module/message/Makefile module/netflow/Makefile module/peer/Makefile module/pipe/Makefile module/servant/Makefile module/set/Makefile module/snmptrap/Makefile module/string/Makefile module/syslog/Makefile module/toy/Makefile module/translator/Makefile module/tree/Makefile module/udp/Makefile module/webster/Makefile])
+AC_CONFIG_FILES([Makefile nodebrain.spec nodebrain.dsc nb.pc lib/Makefile module/Makefile module/audit/Makefile module/baseline/Makefile module/cache/Makefile module/console/Makefile module/mail/Makefile module/message/Makefile module/netflow/Makefile module/peer/Makefile module/pipe/Makefile module/servant/Makefile module/set/Makefile module/snmptrap/Makefile module/string/Makefile module/syslog/Makefile module/toy/Makefile module/translator/Makefile module/tree/Makefile module/udp/Makefile module/webster/Makefile])
 
 AC_OUTPUT

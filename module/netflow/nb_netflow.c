@@ -80,7 +80,7 @@
 * 2013-01-20 eat 0.8.13 Checker updates
 *=====================================================================
 */
-#include <config.h>
+#include "config.h"
 #include <nb/nb.h>
 
 struct NB_MOD_NETFLOW_METRIC_ARRAY{

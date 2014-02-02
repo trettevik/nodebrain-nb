@@ -58,51 +58,51 @@ ACLOCAL_AMFLAGS= -I m4
 
 libnb_adir = @includedir@/nb
 libnb_a_HEADERS = \
-  include/nb/nb.h \
-  include/nb/nbassertion.h \
-  include/nb/nbaxon.h \
-  include/nb/nbcell.h \
-  include/nb/nbclock.h \
-  include/nb/nbcmd.h \
-  include/nb/nbidentity.h \
-  include/nb/nbip.h \
-  include/nb/nbkit.h \
-  include/nb/nblist.h \
-  include/nb/nblistener.h \
-  include/nb/nblog.h \
-  include/nb/nbmail.h \
-  include/nb/nbmedulla.h \
-  include/nb/nbmodule.h \
-  include/nb/nbmsg.h \
-  include/nb/nbnode.h \
-  include/nb/nbobject.h \
-  include/nb/nbparse.h \
-  include/nb/nbpeer.h \
-  include/nb/nbproxy.h \
-  include/nb/nbqueue.h \
-  include/nb/nbrule.h \
-  include/nb/nbsentence.h \
-  include/nb/nbservice.h \
-  include/nb/nbset.h \
-  include/nb/nbsource.h \
-  include/nb/nbspine.h \
-  include/nb/nbstd.h \
-  include/nb/nbstream.h \
-  include/nb/nbstem.h \
-  include/nb/nbsynapse.h \
-  include/nb/nbterm.h \
-  include/nb/nbtext.h \
-  include/nb/nbtls.h \
-  include/nb/nbtranslator.h \
-  include/nb/nbtree.h \
-  include/nb/nbverb.h \
-  include/nb/nbwebster.h
+  ../include/nb/nb.h \
+  ../include/nb/nbassertion.h \
+  ../include/nb/nbaxon.h \
+  ../include/nb/nbcell.h \
+  ../include/nb/nbclock.h \
+  ../include/nb/nbcmd.h \
+  ../include/nb/nbidentity.h \
+  ../include/nb/nbip.h \
+  ../include/nb/nbkit.h \
+  ../include/nb/nblist.h \
+  ../include/nb/nblistener.h \
+  ../include/nb/nblog.h \
+  ../include/nb/nbmail.h \
+  ../include/nb/nbmedulla.h \
+  ../include/nb/nbmodule.h \
+  ../include/nb/nbmsg.h \
+  ../include/nb/nbnode.h \
+  ../include/nb/nbobject.h \
+  ../include/nb/nbparse.h \
+  ../include/nb/nbpeer.h \
+  ../include/nb/nbproxy.h \
+  ../include/nb/nbqueue.h \
+  ../include/nb/nbrule.h \
+  ../include/nb/nbsentence.h \
+  ../include/nb/nbservice.h \
+  ../include/nb/nbset.h \
+  ../include/nb/nbsource.h \
+  ../include/nb/nbspine.h \
+  ../include/nb/nbstd.h \
+  ../include/nb/nbstream.h \
+  ../include/nb/nbstem.h \
+  ../include/nb/nbsynapse.h \
+  ../include/nb/nbterm.h \
+  ../include/nb/nbtext.h \
+  ../include/nb/nbtls.h \
+  ../include/nb/nbtranslator.h \
+  ../include/nb/nbtree.h \
+  ../include/nb/nbverb.h \
+  ../include/nb/nbwebster.h
 
 # library gets installed 
 
 lib_LTLIBRARIES = libnb.la
 
-libnb_la_CFLAGS = -Iinclude -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-all -fno-strict-aliasing
+libnb_la_CFLAGS = -I../include -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-all -fno-strict-aliasing
 libnb_la_LDFLAGS = -release ${PACKAGE_VERSION}
 
 libnb_la_SOURCES = \
@@ -160,57 +160,57 @@ libnb_la_SOURCES = \
   nbtree.c \
   nbverb.c \
   nbwebster.c \
-  include/nb/nb.h \
-  include/nb/nbi.h \
-  include/nb/nbassertion.h \
-  include/nb/nbaxon.h \
-  include/nb/nbbfi.h \
-  include/nb/nbcall.h \
-  include/nb/nbcell.h \
-  include/nb/nbclock.h \
-  include/nb/nbcmd.h \
-  include/nb/nbcondition.h \
-  include/nb/nbglobal.h \
-  include/nb/nbhash.h \
-  include/nb/nbiconv.h \
-  include/nb/nbidentity.h \
-  include/nb/nbip.h \
-  include/nb/nbkit.h \
-  include/nb/nblist.h \
-  include/nb/nblistener.h \
-  include/nb/nbmacro.h \
-  include/nb/nbmath.h \
-  include/nb/nbmedulla.h \
-  include/nb/nbmodule.h \
-  include/nb/nbmsg.h \
-  include/nb/nbnode.h \
-  include/nb/nbobject.h \
-  include/nb/nblog.h \
-  include/nb/nbparse.h \
-  include/nb/nbpeer.h \
-  include/nb/nbproxy.h \
-  include/nb/nbqueue.h \
-  include/nb/nbreal.h \
-  include/nb/nbregex.h \
-  include/nb/nbrule.h \
-  include/nb/nbsched.h \
-  include/nb/nbsentence.h \
-  include/nb/nbservice.h \
-  include/nb/nbset.h \
-  include/nb/nbsource.h \
-  include/nb/nbspawn.h \
-  include/nb/nbspine.h \
-  include/nb/nbstem.h \
-  include/nb/nbstd.h \
-  include/nb/nbstream.h \
-  include/nb/nbstring.h \
-  include/nb/nbsynapse.h \
-  include/nb/nbterm.h \
-  include/nb/nbtext.h \
-  include/nb/nbtime.h \
-  include/nb/nbtls.h \
-  include/nb/nbtranslator.h \
-  include/nb/nbtree.h
+  ../include/nb/nb.h \
+  ../include/nb/nbi.h \
+  ../include/nb/nbassertion.h \
+  ../include/nb/nbaxon.h \
+  ../include/nb/nbbfi.h \
+  ../include/nb/nbcall.h \
+  ../include/nb/nbcell.h \
+  ../include/nb/nbclock.h \
+  ../include/nb/nbcmd.h \
+  ../include/nb/nbcondition.h \
+  ../include/nb/nbglobal.h \
+  ../include/nb/nbhash.h \
+  ../include/nb/nbiconv.h \
+  ../include/nb/nbidentity.h \
+  ../include/nb/nbip.h \
+  ../include/nb/nbkit.h \
+  ../include/nb/nblist.h \
+  ../include/nb/nblistener.h \
+  ../include/nb/nbmacro.h \
+  ../include/nb/nbmath.h \
+  ../include/nb/nbmedulla.h \
+  ../include/nb/nbmodule.h \
+  ../include/nb/nbmsg.h \
+  ../include/nb/nbnode.h \
+  ../include/nb/nbobject.h \
+  ../include/nb/nblog.h \
+  ../include/nb/nbparse.h \
+  ../include/nb/nbpeer.h \
+  ../include/nb/nbproxy.h \
+  ../include/nb/nbqueue.h \
+  ../include/nb/nbreal.h \
+  ../include/nb/nbregex.h \
+  ../include/nb/nbrule.h \
+  ../include/nb/nbsched.h \
+  ../include/nb/nbsentence.h \
+  ../include/nb/nbservice.h \
+  ../include/nb/nbset.h \
+  ../include/nb/nbsource.h \
+  ../include/nb/nbspawn.h \
+  ../include/nb/nbspine.h \
+  ../include/nb/nbstem.h \
+  ../include/nb/nbstd.h \
+  ../include/nb/nbstream.h \
+  ../include/nb/nbstring.h \
+  ../include/nb/nbsynapse.h \
+  ../include/nb/nbterm.h \
+  ../include/nb/nbtext.h \
+  ../include/nb/nbtime.h \
+  ../include/nb/nbtls.h \
+  ../include/nb/nbtranslator.h \
+  ../include/nb/nbtree.h
 
 # pcre.h \
 # readline/chardefs.h \
@@ -226,7 +226,7 @@ noinst_PROGRAMS = nb
 
 #bin_PROGRAMS = nb
 
-nb_CFLAGS = -Wall -Iinclude
+nb_CFLAGS = -Wall -I../include
 nb_SOURCES = nb.c
 
 #nb_LDADD = .libs/libnb.so
