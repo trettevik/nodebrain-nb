@@ -134,9 +134,9 @@ EXTRA_DIST = \
   build-nb \
   install-nb \
   bin/README \
-  bin/nbfarm \
+  bin/nbchange \
+  bin/nbgenperf \
   bin/nbman2ht \
-  bin/nbpen \
   sample/main.c \
   sample/main.nb \
   sample/snmptrap.log \
