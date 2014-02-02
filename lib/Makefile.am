@@ -45,14 +45,12 @@
 ## 2008-10-27 Ed Trettevik (version 0.7.3 - split out from nb package)
 ## 2011-11-05 eat - included nbmail.c and nbtext.c
 ## 2013-12-30 eat 0.9.00 included nbset.c and nbset.h
+## 2014-02-01 eat 0.9.00 adjusted single configure script and header directory move
 ##=============================================================================
      
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status --recheck
-
-ACLOCAL_AMFLAGS= -I m4
-#AM_FLAGS = -Wall -g -fstack-protector-all -Wstrict-aliasing=2
 
 # library headers
 

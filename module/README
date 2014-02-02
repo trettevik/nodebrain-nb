@@ -1,18 +1,11 @@
-2009-02-09 eat
+2014-02-01 eat
 
-This package contains a set of NodeBrain Module packages.  Each
-module is packaged in a subdirectory of this package.  Although
-this requires duplication of overhead scripts, it helps
-to separate out the special configuration and checkout requirements
-of each module.  It also makes it easy to spin off a new project
-using an existing module as an example.
-
-To help manage the redundancy, a common structure is used along
-with some helper scripts.
+This directory contains a set of NodeBrain modules that
+distribute with nb and libnb.  Each module is managed in 
+a separate subdirecgtory.
 
 --------------------------------------------------------------
 make model           - syncronize module directories with model directory
-newmod.sh            - create new module directory based on model 
 
 --------------------------------------------------------------
 module/model files    (model directory for new module directories)
@@ -25,7 +18,6 @@ caboodle/bin/nb      - symbolic link to appropriate nb
 caboodle/bin/nbcheck - script to check 
 caboodle/check       - check directory used by nbcheck
 caboodle/*           - other caboodle directories to support checkout
-
 
 --------------------------------------------------------------
 module/<module> files
