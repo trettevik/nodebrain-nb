@@ -1307,8 +1307,8 @@ in relational conditions.
 @example
 # Rules - where X=0,1,2,...,N-1
 define rX if(a="abcX" and b="defX" and c="xyzX");
-# Assertions - 4 million times, where X=0,1,2,...,N-1 repeating
-assert a="abcX",b="defX",c="xyzX"; 
+# Asserts - 4 million times, where X=0,1,2,...,N-1 repeating
+alert a="abcX",b="defX",c="xyzX"; 
 @end example
 @end cartouche
 
