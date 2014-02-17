@@ -1,4 +1,53 @@
-NodeBrain 0.8.15 Change Summary
+ _   _           _      ____
+| \ | |         | |    |    \          ( )
+|  \| | ___   __| | ___| | ) |_ _  __ _ _ _ __
+|     |/   \ /    |/ _ \    <|  _|/    | |  _ \
+| |\  | ( ) | ( | |  __/ | ) | |   ( | | | | | |
+|_| \_|\___/ \__ _|\___|____/|_|  \__ _|_|_| |_|
+
+============================================================
+
+NodeBrain 0.8.16 (Dopey) Change Summary
+
+* Released February 16, 2014
+
+* Theme: Build Options
+
+     This release is intended simply to provide the option
+     to exclude OpenSSL releated features and specified node
+     modules from a build using ./configure --without-XXXX.
+
+* Documentation:
+
+  o  NodeBrain Guide converted to texinfo
+
+  o  NodeBrain Guide includes build options (e.g. --without-tls)
+
+  o  NodeBrain Language - Minor revision to SHOW command
+
+* Incompatibilities: (none)
+
+* New Features:
+
+  o  Top level ./configure now handles lib and module
+     configuration to shorten the time to configure.
+
+  o  --without-tls may be used on ./configure command to
+     exclude OpenSSL dependant features.
+
+  o  --disable-nb_<module> may be used on ./configure to
+     exclude the specified node module.
+
+  o  The SHOW command now accepts a comma separated list
+     of options.
+
+* Deprecated Syntax: (none)
+
+* Bug Fixes: (none)
+
+============================================================
+
+NodeBrain 0.8.15 (Dopey) Change Summary
 
 * Released May 25, 2013
 

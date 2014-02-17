@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -247,6 +247,8 @@
 * 2013-01-01 eat 0.8.13 Checker updates
 * 2013-01-16 eat 0.8.13 Checker updates
 * 2013-04-27 eat 0.8.15 Included option parameter in nbSource calls
+* 2014-02-16 eat 0.8.16 Optional use of OpenSSL (from 0.9.00)
+* 2014-02-16 eat 0.8.16 Modified SHOW to accept option list (also in 0.9.01)
 *==============================================================================
 */
 #include <nb/nbi.h>
@@ -464,6 +466,20 @@ void showProcessList(){
   outFlush();
   }
 
+static void nbCmdShowHelp(){
+  outPut("\nThe show command provides context specific and global information.\n\n");
+  outPut("  show (<cell>) [<option>]  Show value of a cell expression.\n");
+  outPut("  show <term> [<option>]    Show specific term in active context.\n");
+  outPut("  show -<term_type>         Terms of a given type from active context.\n");
+  outPut("  show +<dictionary>        Terms in an alternate dictionary (name space).\n");
+  outPut("  show =<cell_type>         Global cell expressions of a specified type.\n");
+  outPut("  show /<trigger_type>      Global triggers of a specified type.\n");
+  outPut("  show %<measures>          Performance measures.\n");
+  outPut("  show *<section> [<topic>] Help on specified topic.\n\n");
+  outPut("A partial SHOW command displays a menu (e.g. \"show -\").\n\n");
+  outPut("Use \"?\" in place of options [<...>] for more information.\n");
+  }
+
 /***************************************************************
 *  Interpret Statements
 *  
@@ -474,9 +490,14 @@ int nbCmdShow(nbCELL context,void *handle,char *verb,char *cursor){
   NB_Cell *ref=NULL,*def=NULL,*val=NULL;
   int len;
 
+while(*cursor==' ') cursor++;
+if(!*cursor || *cursor==';'){
+  nbCmdShowHelp();
+  return(0);
+  }
+while(*cursor){
   cursave=cursor;
-  while(*cursor==' ') cursor++;
-  if(*cursor==0 || strchr("+-=/%*",*cursor)==NULL){
+  if(strchr("+-=/%*",*cursor)==NULL){
     symid=nbParseSymbol(ident,sizeof(ident),&cursor);
     if(symid=='t' || symid=='('){
       if(symid=='('){ /* compute a cell expression */
@@ -504,7 +525,7 @@ int nbCmdShow(nbCELL context,void *handle,char *verb,char *cursor){
         }
       optid=nbParseSymbol(ident,sizeof(ident),&cursor);
       len=strlen(ident);
-      if(optid==';'){
+      if(optid==';' || optid==','){
         if(symid=='t')  nbTermShowReport(term);
         else{
           outPut("() = ");
@@ -534,20 +555,11 @@ int nbCmdShow(nbCELL context,void *handle,char *verb,char *cursor){
       }
     else{
       if(*ident!=0 && symid!='?') outMsg(0,'E',"Expecting (<expression>) | <term> | - | + | = | / | % | *  at \"%s\".",cursave);
-      outPut("\nThe show command provides context specific and global information.\n\n");
-      outPut("  show (<cell>) [<option>]  Show value of a cell expression.\n");
-      outPut("  show <term> [<option>]    Show specific term in active context.\n");
-      outPut("  show -<term_type>         Terms of a given type from active context.\n");
-      outPut("  show +<dictionary>        Terms in an alternate dictionary (name space).\n");
-      outPut("  show =<cell_type>         Global cell expressions of a specified type.\n");
-      outPut("  show /<trigger_type>      Global triggers of a specified type.\n");
-      outPut("  show %<measures>          Performance measures.\n");
-      outPut("  show *<section> [<topic>] Help on specified topic.\n\n");
-      outPut("A partial SHOW command displays a menu (e.g. \"show -\").\n\n");
-      outPut("Use \"?\" in place of options [<...>] for more information.\n");
+      nbCmdShowHelp();
+      return(0);
       }
-    return(0);
     }
+  else{ // indentation cleaned up on master branch in 0.9.01
   symid=*cursor;
   cursor++;
   cursave=cursor;
@@ -706,6 +718,14 @@ int nbCmdShow(nbCELL context,void *handle,char *verb,char *cursor){
       outPut("\n");
       }
     }
+  } // else
+  if(*cursor==';' || *cursor==',') cursor++;
+  while(*cursor==' ') cursor++;
+  } // while
+if(*cursor){
+  outMsg(0,'E',"Syntax error at -->%s",cursor);
+  }
+
   return(0);
   }
 
@@ -1044,16 +1064,20 @@ int nbCmdSet(nbCELL context,void *handle,char *verb,char *cursor){
       else if(strcmp(ident,"shim")==0); /* this option is processed earlier */
       else if(strcmp(ident,"t")==0 || strcmp(ident,"trace")==0)   trace=1;
       else if(strcmp(ident,"T")==0 || strcmp(ident,"noTrace")==0) trace=0;
+#ifdef HAVE_OPENSSL
       else if(strcmp(ident,"traceMail")==0) mailTrace=1;
       else if(strcmp(ident,"notraceMail")==0) mailTrace=0;
+#endif
       else if(strcmp(ident,"traceParse")==0) parseTrace=1;
       else if(strcmp(ident,"notraceParse")==0) parseTrace=0;
+#ifdef HAVE_OPENSSL
       else if(strcmp(ident,"tracePeer")==0) peerTrace=1;
       else if(strcmp(ident,"notracePeer")==0) peerTrace=0;
       else if(strcmp(ident,"traceProxy")==0) proxyTrace=1;
       else if(strcmp(ident,"notraceProxy")==0) proxyTrace=0;
       else if(strcmp(ident,"traceWebster")==0) nb_websterTrace=1;
       else if(strcmp(ident,"notraceWebster")==0) nb_websterTrace=0;
+#endif
       else if(strcmp(ident,"traceMessage")==0) msgTrace=1;
       else if(strcmp(ident,"notraceMessage")==0) msgTrace=0;
       else if(strcmp(ident,"traceQuery")==0) queryTrace=1;
@@ -1064,8 +1088,10 @@ int nbCmdSet(nbCELL context,void *handle,char *verb,char *cursor){
       else if(strcmp(ident,"notraceSource")==0) sourceTrace=0;
       else if(strcmp(ident,"traceSymbolic")==0) symbolicTrace=1;
       else if(strcmp(ident,"notraceSymbolic")==0) symbolicTrace=0;
+#ifdef HAVE_OPENSSL
       else if(strcmp(ident,"traceTls")==0) tlsTrace=1;
       else if(strcmp(ident,"notraceTls")==0) tlsTrace=0;
+#endif
       /* continue to support old option names for a few versions - now 0.5.1 */
       else if(strcmp(ident,"parseTrace")==0) parseTrace=1;
       else if(strcmp(ident,"noparseTrace")==0) parseTrace=0;
@@ -1077,8 +1103,10 @@ int nbCmdSet(nbCELL context,void *handle,char *verb,char *cursor){
       else if(strcmp(ident,"nosourceTrace")==0) sourceTrace=0;
       else if(strcmp(ident,"symbolicTrace")==0) symbolicTrace=1;
       else if(strcmp(ident,"nosymbolicTrace")==0) symbolicTrace=0;
+#ifdef HAVE_OPENSSL
       else if(strcmp(ident,"websterTrace")==0) nb_websterTrace=1;
       else if(strcmp(ident,"nowebsterTrace")==0) nb_websterTrace=0;
+#endif
       /* 
       *  Debugging options used by "show" command
       */

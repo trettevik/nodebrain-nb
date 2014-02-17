@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -124,8 +124,12 @@
 * 2012-12-27 eat 0.8.13 Checker updates
 * 2013-01-01 eat 0.8.13 Checker updates
 * 2013-01-11 eat 0.8.13 Checker updates
+* 2014-02-16 eat 0.8.16 Optional use of OpenSSL (from 0.9.00)
 *==============================================================================
 */
+#include "../config.h"
+#ifdef HAVE_OPENSSL
+
 #include <nb/nb.h>
 
 int peerTrace;          // debugging trace flag for peer routines
@@ -666,3 +670,4 @@ int nbPeerDestroy(nbCELL context,nbPeer *peer){
   return(0);
   }
 
+#endif

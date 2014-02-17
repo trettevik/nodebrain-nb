@@ -92,12 +92,15 @@
 #include <nb/nbrule.h>        // rule routines
 #include <nb/nbnode.h>        // node routines
 #include <nb/nbqueue.h>       // queue routines
+#include <nb/nbverb.h>        /* verb structure */
+
+#ifdef HAVE_OPENSSL
 #include <nb/nbtls.h>         // TLS routines
 #include <nb/nbpeer.h>        // peer routines
 #include <nb/nbproxy.h>       // proxy routines
 #include <nb/nbmsg.h>         // message routines
-#include <nb/nbverb.h>        /* verb structure */
 #include <nb/nbwebster.h>     // webster routines
 #include <nb/nbmail.h>        // mail routines
+#endif
 
 #endif // _NB_H_

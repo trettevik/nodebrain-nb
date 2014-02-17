@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2009-2013 The Boeing Company
+* Copyright (C) 2009-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *=============================================================================
 *
@@ -39,8 +39,12 @@
 * 2012-05-20 eat - include mailTrace (traceMail) for debugging
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 * 2012-12-31 eat 0.8.13 Checker updates
+* 2014-02-16 eat 0.8.16 Optional use of OpenSSL (from 0.9.00)
 *============================================================================
 */
+#include "../config.h"
+#ifdef HAVE_OPENSSL
+
 #include <nb/nbi.h>
 
 int mailTrace=0;  // debugging
@@ -183,3 +187,5 @@ int nbMailSendAlarm(nbCELL context,nbMailClient *client){
   nbLogMsg(context,0,'I',"Mail sent from %s to %s - %s%s",from,to,topic,tweet);
   return(0);
   }
+
+#endif

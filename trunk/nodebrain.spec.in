@@ -1,6 +1,6 @@
 Name: @PACKAGE_NAME@
 Version: @PACKAGE_VERSION@
-Release: 2%{?dist}
+Release: 1%{?dist}
 
 %define _disable_ld_no_undefined 1
 %define is_mandriva %(test -e /etc/mandriva-release && echo 1 || echo 0)

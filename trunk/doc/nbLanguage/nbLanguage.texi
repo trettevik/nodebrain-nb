@@ -3,12 +3,12 @@
 @c %**start of header
 @setfilename nbLanguage.info
 @include version.texi
-@settitle NodeBrain Language Reference
+@settitle NodeBrain Language
 @dircategory NodeBrain
 @direntry
-* nbLanguage: (nbLanguage).       NodeBrain Language Reference
+* nbLanguage: (nbLanguage).       NodeBrain Language
 @end direntry
-@set UPDATED-YEAR 2013
+@set UPDATED-YEAR 2014
 @c %**end of header
 
 @finalout
@@ -16,16 +16,17 @@
 @setchapternewpage odd
 
 @copying
-NodeBrain Language Reference@*
+NodeBrain Language@*
 @value{UPDATED-MONTH}@*
-The Boeing Company, PO Box 3707, Seattle, WA 98124, USA
+NodeBrain Open Source Project
 
 @sp 2
 @b{Release @value{VERSION}}
 
 Author: Ed Trettevik <eat@@nodebrain.org>
 
-Copyright @copyright{} 2003--@value{UPDATED-YEAR} The Boeing Company
+Copyright @copyright{} 2003--2013 The Boeing Company
+Copyright @copyright{} @value{UPDATED-YEAR} Ed Trettevik
 
 @sp 1
 Permission is granted to copy, distribute, and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts. A copy of the license is included in the section titled @i{GNU Free Documentation License} preceding the index at the end of this document.
@@ -52,7 +53,7 @@ You should have received a copy of the GNU General PublicLicense along with this
 @titlepage
 @c @image{./image001,32pt,32pt,,gif}
 
-@titlefont{NodeBrain Language Reference}
+@titlefont{NodeBrain Language}
 @sp 1
 @tex
 \vskip4pt \hrule height 3pt width \hsize
@@ -68,112 +69,26 @@ You should have received a copy of the GNU General PublicLicense along with this
 @b{History}
 
 @multitable {-------------} {--------------------------------------------------------------------------------------------------------}
-@item 2005-05-13 @tab
-Title: @i{NodeBrain Language Reference}@*
+@item 2014-02-16 @tab
+Title: @i{NodeBrain Language}@*
 Author: Ed Trettevik <eat@@nodebrain.org>@*
-Publisher: The Boeing Company@*
+Publisher: NodeBrain Open Source Project@*
 @*
-Release 0.6.3 
+This document replaces @i{NodeBrain Language Reference}, first published 2005-05-13 in support of
+release 0.6.3 and updated to cover releases through 0.8.15.
+@*
+Release 0.8.16 
 @itemize @bullet
-@item The content of this document has been moved from the @i{NodeBrain Users Guide} to focus specifically on language syntax and semantics. 
-@item This document, like the software it describes, is a "prototype" version. Revisions will be made in response to user feedback.
-@item Included module and skill declaration
-@item Comma is required to delimit filenames on the source command. This was done to support spaces in filenames on Windows.
-@item The semi-colon (;) may be used as a platform-independent path separator when defining module paths. We still allow colon (:) on Unix/Linux.
-@item The underscore (_) may no longer be used within a simple term.  We have plans for using it as a special term separator associated with skill modules. 
+@item Include @code{show} command option list.
 @end itemize
 
-@item 2006-04-01 @tab
-Release 0.6.4
-@itemize @bullet
- 
-@item The - and = special symbol commands are now documented as a single command called the @code{servant} command. This update includes new syntax for directing @code{stdout} to a file or the interpreter, @code{stderr} to a file or the parent log, and specification of a shell program or other program.
-@item The : command has been included for writing to @code{stdout}. This is useful when NodeBrain is run as a servant.
-@item Servant option -s --servant added. This option assigns a new meaning to the -s option, which was previously associated with the --solve option. 
-@item Chapter 10, Prefix Commands, was renamed, Chapter 7, Special Symbol Commands.
-@item The + special symbol command was removed from Chapter 7, Special Symbol Commands. It is now deprecated in favor of node commands that start with a context identifier followed by ( or : that is covered at the start of Chapter 6, Commands. 
-@item In Chapter 8, Listeners, the unfinished CMD listener section was removed. The Servant skill module now provides this functionality. All "listener" objects will eventually be deprecated in favor of skill modules.
-@end itemize
-@item 2006-04-18 @tab
-Release 0.6.5 
-@itemize @bullet
-
-@item The : command introduced in 0.6.4 has been replaced by ^. This change was made to avoid a conflict with the use of : for a remote context override in client sessions.
-@item An @code{%INCLUDE} source file directive has been reintroduced as an alternative and probably eventual replacement for the @code{SOURCE} command. Because this command is interpreted within the symbolic context, a directive seems more appropriate.
-@end itemize
-@item 2006-05-18 @tab
-Version 0.6.6
-@itemize @bullet
- 
-@item Miscellaneous corrections. Version not released.
-@end itemize
-
-@item 2007-05-04 @tab
-Version 0.6.7 
-@itemize @bullet
-
-@item Version was not released and had no changes to this document.
-@end itemize
-
-@item 2007-07-03 @tab
-Version 0.6.8
-@itemize @bullet
-
-@item Version not released
-@item Terminology change: "node" replaced "expert" and "skill module" replace "expert skill module"
-@item Translator symbolic substitution updated to support alternate character replacement.
-@item Declare "brain" removed along with references to @@@i{brain} term glossaries.
-@item Removed chapter titled @i{Massage and Command Queues} and > \ / special symbol commands. These concepts are now covered in the Peer Module chapter of the @i{NodeBrain Module Reference}.
-@item Removed chapter titled Listeners. Listeners have been replaced by skill modules covered in the @i{NodeBrain Module Reference}.
-@item Removed @code{ADDRESS} command and included single quote special symbol command as replacement.
-@item Removed @code{DEFINE} types "listener" and "file."
-@item Removed @code{CONSULT},@code{ PIPE}, and @code{PORTRAY} commands.
-@item @code{COPY} command removed.
-@end itemize
-@item 2008-05-11 @tab
-Version 0.7.0
-@itemize @bullet
-@item Version not released
-@item Terminology change: "node module" replaces "skill module."
-@item The @code{IDENTIFY} command is replace by @code{PROFILE} command.
-@item Appendix A, Special Symbols updated to remove > \ / as special verbs.
-@item @code{DECLARE IDENTITY} updated to remove keys---see Peer Module in @i{NodeBrain Module Reference}.
-@item Rule action priority interpretation changed so actions fire from lowest value to highest value. Under prior versions they fired from highest to lowest value.
-@item Symbolic substitution is no longer implicit. Commands $ and % are used to explicitly request symbolic substitution. The use of $ as a symbolic reduction command has been eliminated.
-@item @code{SOLVE} command is now @code{QUERY}.
-@end itemize
-@item 2008-10-04 @tab
-Version 0.7.3
-@itemize @bullet
-@item @code{DEFINE TRANSLATOR} command removed. Translator syntax description moved to Chapter 9, Translators.
-@item @code{TRANSLATE} command removed (see Translator node module in the @i{NodeBrain Module Reference}).
-@item Lazy @code{AND} (&&) and @code{OR} (||) operators included.
-@item Enabled monitoring operators (&~& and |~|) included.
-@item Value capture operators (&^& and |^|) included.
-@item Switched back from ?? to ? as the symbol for Unknown. Still recognizing ?? for compatibility, but it is deprecated and will be removed later.
-@item @code{EXIT} command section modified to identify modified internal exit codes (254 and 255).
-@item New time delay syntax is ~^1(@dots{}) ~^0(@dots{}) ~^?(@dots{}.) instead of ~T(@dots{}) ~F(@dots{}) ~U(@dots{}). The old syntax is deprecated.
-@item New syntax for regex matches is @i{term}~"@dots{}" instead of @i{term}~~"@dots{}". The old syntax is deprecated.
-@end itemize
-@item 2009-02-06 @tab
-Release 0.7.4
-@itemize @bullet
-
-@item Updated the deprecated and obsolete feature lists in Appendix B, Transitional Features.
-@end itemize
-@item 2010-11-11 @tab
-Release 0.8.5
-@itemize @bullet
-
-@item Included line continuation \
-@end itemize
 @end multitable
 
 
 @page
 @b{Preface}
 
-This document describes the NodeBrain language. It is intended for application programmers familiar with concepts covered in the @i{NodeBrain User Guide}. If you are more comfortable learning by example, you should begin with the @i{NodeBrain Tutorial} and reference this document as needed. Although this is a reference document, we've made an effort to introduce topics in a logical sequence for those who choose to read it from front to back.
+This document describes the NodeBrain language. It is intended for application programmers familiar with concepts covered in the @i{NodeBrain Guide}. If you are more comfortable learning by example, you should begin with the @i{NodeBrain Tutorial} and reference this document as needed. Although this is a reference document, we've made an effort to introduce topics in a logical sequence for those who choose to read it from front to back.
 
 Since the previously released version, 0.6.5, the language has been simplified by the introduction of new node modules to replace listeners, brain declarations, identity keys, and remote command prefixes. Under version 0.7.4 this functionality is only available using the simplified node syntax, making 0.7.4 incompatible with rules designed for 0.6.5 and earlier versions.
 
@@ -183,10 +98,10 @@ See @url{www.nodebrain.org} for more information and the latest update to this d
 @b{Documents}
 @sp 1
 @quotation
-@i{NodeBrain User Guide}@*
+@i{NodeBrain Guide}@*
 @i{NodeBrain Tutorial}@*
-@i{NodeBrain Language Reference}@*
-@i{NodeBrain API Reference}@*
+@i{NodeBrain Language}@*
+@i{NodeBrain Library} [In work]@*
 @end quotation
 
 
@@ -300,12 +215,13 @@ Sometimes commands that must be coded on a single line in interactive mode are s
 
 @ifnottex
 @node Top, Language Concepts, (nodebrain), (nodebrain)
-@top NodeBrain Language Reference
+@top NodeBrain Language
 
 This document is for the NodeBrain rule engine, an open source agent for state and event monitoring applications.
 The NodeBrain language syntax and symantics are fully described in this document.
 Readers new to NodeBrain are encouraged to start with the @i{NodeBrain Tutorial}, which introduces concepts
-using simple examples.
+using simple examples. 
+Reference @i{NodeBrain Guide} for general information about using the rule engine and related components.
 
 Release @value{VERSION}, @value{UPDATED-MONTH}
 
@@ -3659,7 +3575,9 @@ The @code{SHOW} command is used to display NodeBrain objects. This is primarily 
 @cartouche
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
-@item @i{showCmd} @tab ::= @tab @b{show}  s* [ (@i{showExpr} | @i{showItem} ) [ @i{showQualifier} ]] [@b{;} [ @i{comment} ]] @b{@bullet{}} 
+@item @i{showCmd} @tab ::= @tab @b{show}  s* [ @i{showList} ] [@b{;} [ @i{comment} ]] @b{@bullet{}} 
+@item @i{showList} @tab ::= @tab showOption [ , showList ]
+@item @i{showOption} @tab ::= @tab (@i{showExpr} | @i{showItem} ) [ @i{showQualifier} ]
 @item @i{showExpr} @tab ::= @tab @b{.} | @i{term} | @b{(} @i{cellExpression} @b{)}
 @item @i{showItem} @tab ::= @tab (@b{-} | @b{+} | @b{=}  | @b{/} | @b{*} )  [s*] [ @i{showMenuItem} ]
 @item @i{showMenuItem} @tab ::= @tab Name of menu item.

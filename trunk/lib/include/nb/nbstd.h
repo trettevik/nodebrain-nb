@@ -42,6 +42,7 @@
 * 2008/11/06 eat 0.7.3  Converfted to PCRE's native API
 * 2008/11/11 eat 0.7.3  Added NB_EXITCODE_* definitions
 * 2012-12-25 eat 0.8.13 Included langinfo.h and locale.h
+* 2014-02-16 eat 0.8.16 Included sys/un.h  (from 0.9.01)
 *============================================================================
 */
 #ifndef _NB_STD_H_
@@ -84,6 +85,7 @@
 #include <grp.h>
 #include <sys/wait.h>    // 0.6.4
 #include <unistd.h>      // 0.6.4
+#include <sys/un.h>      // 2014-02-16 eat
 #if defined(HAVE_SYS_TYPES_H)
 #include <sys/types.h>
 #endif

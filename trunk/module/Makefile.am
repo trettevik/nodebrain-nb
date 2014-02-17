@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 ## =============================================================================
 ##
-## Copyright (C) 1998-2010 The Boeing Company
+## Copyright (C) 1998-2014 The Boeing Company
 ##                         Ed Trettevik <eat@nodebrain.org>
 ##
 ## NodeBrain is free software; you can redistribute it and/or modify
@@ -45,10 +45,12 @@
 ## 2008/10/27 Ed Trettevik (version 0.7.3 - split out from nb package)
 ## 2010/02/27 eat 0.7.9  Included DESTDIR
 ## 2013-03-10 eat 0.8.15 Installing modules directly to version subdirectory
+## 2014-02-16 eat 0.8.16 Optional use of OpenSSL (from 0.9.00)
 ##===================================o==========================================
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = audit baseline cache console mail message netflow peer pipe servant snmptrap string syslog toy translator tree udp webster
+##SUBDIRS = audit baseline cache console mail message netflow peer pipe servant snmptrap string syslog toy translator tree udp webster
+SUBDIRS = @NB_MODULES@
 
 EXTRA_DIST = \
   README

@@ -5,6 +5,7 @@ aclocal.m4
 Makefile.in
 Makefile
 nb
+!lib/include/nb
 nodebrain
 nbTutorial.info
 configure

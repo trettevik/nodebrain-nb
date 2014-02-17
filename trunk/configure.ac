@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 #=============================================================================
 #
-# Copyright (C) 1998-2013 The Boeing Company
+# Copyright (C) 1998-2014 The Boeing Company
 #                         Ed Trettevik <eat@nodebrain.org>
 #
 # NodeBrain is free software; you can redistribute it and/or modify
@@ -37,11 +37,11 @@
 #   If so, you would do something like the following.
 #
 #     o  Modify this file (configure.ac) as necessary.
-#     o  Execute autoconf in this directory to create new configure script.
 #     o  Execute "make distclean" if you have already run configure.  This
 #        will clean up files created previously by configure and make that
 #        are not part of the NodeBrain distribution.
-#     o  Execute ./configure to create a new Makefile and nbcfg.h file.
+#     o  Execute autoconf in this directory to create new configure script.
+#     o  Execute ./configure to create a new Makefile and config.h file.
 #
 #   See http://www.gnu.org/software/autoconf for more information.
 #
@@ -65,6 +65,7 @@
 # 2008/03/06 eat 0.7.0  New release
 # 2008/09/30 eat 0.7.2  New release
 # 2008/10/17 eat 0.7.3  Using libtool now
+# 2008/11/02 eat 0.7.3  Reorganized lib and module directories
 # 2008/11/02 eat 0.7.3  Stopped using libtool here---see lib and module directories
 # 2009/01/29 eat 0.7.4  New release - patch to nbtranslator.c
 # 2009/02/20 eat 0.7.5  New release - platform port (windows plus others)
@@ -78,20 +79,188 @@
 # 2010/09/06 eat 0.8.3  Baseline module
 # 2010/10/14 eat 0.8.4  Patches and pid file
 # 2010-11-07 eat 0.8.5  Line continue "\" in source files
+# 2011-02-19 eat 0.8.5  set optimization level
+# 2011-05-31 eat 0.8.6  Webster API and Proxy API
 # 2012-02-06 eat 0.8.7  Checker changes
 # 2012-04-22 eat 0.8.8  TLS and Message API changes
+# 2012-04-22 eat 0.8.8  Switched from nbcfg.h to standard config.h
 # 2012-05-11 eat 0.8.9  New version
-# 2012-06-02 eat 0.8.10 New version
+# 2012-05-12 eat 0.8.9  Set optimization to 0 because nbproxy.c has a problem with optimization
+# 2012-06-02 eat 0.8.10 New version -  Webster API and Proxy API included in Webster Module
 # 2012-09-17 eat 0.8.11 New version - fixing webster buffer overflow conditions
 # 2012-10-12 eat 0.8.12 New version
-# 2012-10-13 eat 0.8.13 New version - new checker
-@ 2013-02-03 eat 0.8.14 New version - nbkit support
+# 2012-10-24 eat 0.8.12 Included AC_PROG_CC_C_0 and removed platform checks
+# 2012-12-15 eat 0.8.13 New version - new checker
+# 2013-01-19 eat 0.8.13 Included patch submit by Jeroen Roovers (gentoo)
+# 2013-02-03 eat 0.8.14 New version - nbkit support
+# 2013-03-10 eat 0.8.15 Changed NB_MODULE_PATH to only look in the minor version directories
+# 2013-12-05 eat 0.9.00 New version - incompatible with rules designed for prior versions
+# 2014-01-31 eat 0.8.16 Made OpenSSL optional
+# 2014-02-01 eat 0.8.16 Included --with-tls and --with-nb_peer options
+# 2014-02-01 eat 0.8.16 Reduced to a single configure.ac file (from 0.9.00)
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([nodebrain],[0.8.15],[bugs@nodebrain.org])
+AC_INIT([nodebrain],[0.8.16],[bugs@nodebrain.org])
+#AC_CONFIG_SRCDIR([nb.c])
+AC_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(config)
-AC_CONFIG_SUBDIRS([lib module])
+#AC_CONFIG_SUBDIRS([lib module])
 AM_INIT_AUTOMAKE
-AC_CONFIG_FILES([Makefile nodebrain.spec nodebrain.dsc nb.pc])
+
+# define module directory variables
+
+AC_DEFINE_UNQUOTED(NB_API_VERSION,"0",[NodeBrain API version])
+NB_MODULE_PATH=".nb:/usr/local/lib/nb-0.8.16:/usr/lib/nb-0.8.16:/usr/lib64/nb-0.8.16"
+NB_MODULE_PATH_SEPARATOR=":"
+AC_DEFINE_UNQUOTED(NB_MODULE_PATH,"${NB_MODULE_PATH}",[Module path])
+AC_DEFINE_UNQUOTED(NB_MODULE_PATH_SEPARATOR,'${NB_MODULE_PATH_SEPARATOR}',[Module path separator])
+
+#AC_CONFIG_SUBDIRS([module])
+
+# following recommended by libtoolize
+AC_CONFIG_MACRO_DIR([m4])
+
+# LIBTOOL stuff
+LT_PREREQ([2.2.4])
+LT_INIT
+AC_SUBST([LIBTOOL_DEPS])
+LT_SYS_MODULE_EXT
+LT_FUNC_DLSYM_USCORE
+
+# define a release date variable
+AC_DEFINE([NB_RELEASE_DATE],"2014-02-16",[Define release date])
+
+# Checks for programs.
+AC_PROG_CC
+AM_PROG_CC_C_O
+
+#=====================================
+# Checks for library functions.
+
+AC_FUNC_MALLOC
+AC_CHECK_FUNCS([strchr])
+AC_CHECK_FUNCS([setenv])
+
+# Checks for header files.
+AC_HEADER_DIRENT
+AC_HEADER_STDC
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h netinet/in.h stdlib.h string.h sys/socket.h sys/time.h time.h sys/limits.h limits.h machine/limits.h])
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+AC_STRUCT_TM
+AC_TYPE_UID_T
+
+# Checks for libraries.
+# Figure out which NB_LIBRARY_PATH to use with "make check".
+#   If we are in a NodeBrain distribution, we'll use
+#   the library we created in the lib directory.  Otherwise
+#   we'll the installed one, which may be installed somewhere
+#   else if already in the search path.
+
+AC_CHECK_FILE([../lib/libnb.la],[AC_SUBST([NB_LIBRARY_PATH],[../../../lib/.libs])],[AC_SUBST([NB_LIBRARY_PATH],[/usr/local/lib/nb])])
+
+# Always provide a path to the module we created in this package
+
+AC_SUBST([NB_MOD_PATH],[../.libs])
+
+AC_CHECK_LIB(pcre,pcre_compile,,[AC_MSG_ERROR(Required library -lpcre not found.  Specify path in LDFLAGS.)])
+AC_SEARCH_LIBS(initscr,ncurses)
+AC_CHECK_LIB(readline,readline,,[AC_MSG_ERROR(Required library -lreadline not found. Specify path in LDFLAGS.)])
+AC_CHECK_LIB(history,add_history,,[AC_MSG_ERROR(Required library -lhistory not found. Specify path in LDFLAGS.)])
+
+AC_SEARCH_LIBS(socket,socket)
+AC_SEARCH_LIBS(inet_ntoa,nsl)
+
+AC_SEARCH_LIBS(fmod,m,,[AC_MSG_ERROR(Required math library -lm not found. Specify path in LDFLAGS.)])
+AC_SEARCH_LIBS(dlopen,dl)
+
+# Checks for library functions.
+AC_FUNC_FORK
+#AC_FUNC_MALLOC messes up on my AIX with no rpl_malloc
+AC_FUNC_MEMCMP
+AC_FUNC_MKTIME
+AC_FUNC_REALLOC
+AC_FUNC_SELECT_ARGTYPES
+AC_TYPE_SIGNAL
+AC_FUNC_STRTOD
+AC_FUNC_VPRINTF
+AC_CHECK_FUNCS([alarm gethostbyaddr gethostbyname inet_ntoa memchr memset regcomp select socket strchr strrchr strspn strstr])
+
+# check for platform requirements
+#AC_CANONICAL_HOST
+
+AC_DEFINE_UNQUOTED(NB_COMPILE_PLATFORM,"$host",[Define compile platform])
+
+#=====================================
+# Figure out which modules, packages and features are requested
+
+AC_ARG_WITH([tls],[AS_HELP_STRING([--with-tls],[Select TLS package and include related features (default is --with-tls=openssl)])],[],[with_tls=openssl])
+AS_IF([test "x$with_tls" != xno],
+  [AS_IF([test "x$with_tls" == xopenssl],
+    [AC_SEARCH_LIBS([SSL_library_init],[ssl],
+      [AC_DEFINE([HAVE_OPENSSL],[1],[Define if you have libssl])
+       AC_SEARCH_LIBS(X509_get_subject_name,crypto)
+       ],
+      [AC_MSG_FAILURE([--with-tls=openssl was given, but test for openssl failed])
+       ])
+     ])
+   ])
+
+NB_MODULES=
+AC_ARG_ENABLE([nb_audit],[AS_HELP_STRING([--disable-nb_peer],[exclude Audit module])],[],[enable_nb_audit=yes])
+AS_IF([test "x$enable_nb_audit" == xyes],[NB_MODULES=$NB_MODULES" audit"])
+AC_ARG_ENABLE([nb_baseline],[AS_HELP_STRING([--disable-nb_baseline],[exclude Baseline module])],[],[enable_nb_baseline=yes])
+AS_IF([test "x$enable_nb_baseline" == xyes],[NB_MODULES=$NB_MODULES" baseline"])
+AC_ARG_ENABLE([nb_cache],[AS_HELP_STRING([--disable-nb_cache],[exclude Cache module])],[],[enable_nb_cache=yes])
+AS_IF([test "x$enable_nb_cache" == xyes],[NB_MODULES=$NB_MODULES" cache"])
+AC_ARG_ENABLE([nb_console],[AS_HELP_STRING([--disable-nb_console],[exclude Console module])],[],[enable_nb_console=yes])
+AS_IF([test "x$enable_nb_console" == xyes],[NB_MODULES=$NB_MODULES" console"])
+AC_ARG_ENABLE([nb_mail],[AS_HELP_STRING([--disable-nb_mail],[exclude Mail module (implied by --without-tls)])],[],[enable_nb_mail=yes])
+AS_IF([test "x$enable_nb_mail" == xyes -a "x$with_tls" != xno],[NB_MODULES=$NB_MODULES" mail"])
+AC_ARG_ENABLE([nb_message],[AS_HELP_STRING([--disable-nb_message],[exclude Message module (implied by --without-tls)])],[],[enable_nb_message=yes])
+AS_IF([test "x$enable_nb_message" == xyes -a "x$with_tls" != xno],[NB_MODULES=$NB_MODULES" message"])
+AC_ARG_ENABLE([nb_netflow],[AS_HELP_STRING([--disable-nb_netflow],[exclude Netflow module])],[],[enable_nb_netflow=yes])
+AS_IF([test "x$enable_nb_netflow" == xyes],[NB_MODULES=$NB_MODULES" netflow"])
+AC_ARG_ENABLE([nb_peer],[AS_HELP_STRING([--disable-nb_peer],[exclude Peer module])],[],[enable_nb_peer=yes])
+AS_IF([test "x$enable_nb_peer" == xyes],[NB_MODULES=$NB_MODULES" peer"])
+AC_ARG_ENABLE([nb_pipe],[AS_HELP_STRING([--disable-nb_pipe],[exclude Pipe module])],[],[enable_nb_pipe=yes])
+AS_IF([test "x$enable_nb_pipe" == xyes],[NB_MODULES=$NB_MODULES" pipe"])
+AC_ARG_ENABLE([nb_servant],[AS_HELP_STRING([--disable-nb_servant],[exclude Servant module])],[],[enable_nb_servant=yes])
+AS_IF([test "x$enable_nb_servant" == xyes],[NB_MODULES=$NB_MODULES" servant"])
+AC_ARG_ENABLE([nb_snmptrap],[AS_HELP_STRING([--disable-nb_snmptrap],[exclude Snmptrap module])],[],[enable_nb_snmptrap=yes])
+AS_IF([test "x$enable_nb_snmptrap" == xyes],[NB_MODULES=$NB_MODULES" snmptrap"])
+AC_ARG_ENABLE([nb_string],[AS_HELP_STRING([--disable-nb_string],[exclude String module])],[],[enable_nb_string=yes])
+AS_IF([test "x$enable_nb_string" == xyes],[NB_MODULES=$NB_MODULES" string"])
+AC_ARG_ENABLE([nb_syslog],[AS_HELP_STRING([--disable-nb_syslog],[exclude Syslog module])],[],[enable_nb_syslog=yes])
+AS_IF([test "x$enable_nb_syslog" == xyes],[NB_MODULES=$NB_MODULES" syslog"])
+AC_ARG_ENABLE([nb_toy],[AS_HELP_STRING([--disable-nb_toy],[exclude Toy module])],[],[enable_nb_toy=yes])
+AS_IF([test "x$enable_nb_toy" == xyes],[NB_MODULES=$NB_MODULES" toy"])
+AC_ARG_ENABLE([nb_translator],[AS_HELP_STRING([--disable-nb_translator],[exclude Translator module])],[],[enable_nb_translator=yes])
+AS_IF([test "x$enable_nb_translator" == xyes],[NB_MODULES=$NB_MODULES" translator"])
+AC_ARG_ENABLE([nb_tree],[AS_HELP_STRING([--disable-nb_tree],[exclude Tree module])],[],[enable_nb_tree=yes])
+AS_IF([test "x$enable_nb_tree" == xyes],[NB_MODULES=$NB_MODULES" tree"])
+AC_ARG_ENABLE([nb_udp],[AS_HELP_STRING([--disable-nb_udp],[exclude Udp module])],[],[enable_nb_udp=yes])
+AS_IF([test "x$enable_nb_udp" == xyes],[NB_MODULES=$NB_MODULES" udp"])
+AC_ARG_ENABLE([nb_webster],[AS_HELP_STRING([--disable-nb_webster],[exclude webster module (implied by --without-tls)])],[],[enable_nb_webster=yes])
+AS_IF([test "x$enable_nb_webster" == xyes -a "x$with_tls" != xno],[NB_MODULES=$NB_MODULES" webster"])
+
+AC_SUBST([NB_MODULES])
+# Set module subdirectory by minor version - ${libdir}/nb/${NB_MOD_DIR}/
+AC_SUBST([NB_MOD_DIR],[0.8.16])
+
+# Figure out which nb program to use with "make check".
+#   If we are in a Nodebrain distribution, we'll use
+#   the one we created in the top directory.  Otherwise,
+#   we look for a compatible installed program.
+
+AC_SUBST([NB],[../../../../lib/.libs/lt-nb])
+AC_SUBST([NB_MOD_CFLAGS],["-I../../lib/include -Wall -fstack-protector-all -Wno-strict-aliasing"])
+
+AC_CONFIG_FILES([Makefile nodebrain.spec nodebrain.dsc nb.pc lib/Makefile module/Makefile module/audit/Makefile module/baseline/Makefile module/cache/Makefile module/console/Makefile module/mail/Makefile module/message/Makefile module/netflow/Makefile module/peer/Makefile module/pipe/Makefile module/servant/Makefile module/snmptrap/Makefile module/string/Makefile module/syslog/Makefile module/toy/Makefile module/translator/Makefile module/tree/Makefile module/udp/Makefile module/webster/Makefile])
+
 AC_OUTPUT

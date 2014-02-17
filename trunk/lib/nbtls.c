@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -177,8 +177,12 @@
 * 2012-12-27 eat 0.8.13 Checker updates
 * 2012-12-30 eat 0.8.13 Modified nbLoadListener to only load context for secure protocols
 * 2013-01-01 eat 0.8.13 Checker updates
+* 2014-02-16 eat 0.8.16 Optional use of OpenSSL (from 0.9.00)
 *==================================================================================
 */
+#include "../config.h"
+#ifdef HAVE_OPENSSL
+
 #include <nb/nb.h>
 
 #include <openssl/crypto.h>
@@ -314,7 +318,7 @@ static int nbTlsVerify(int preverify_ok,X509_STORE_CTX *ctx){
 */
 nbTLSX *nbTlsCreateContext(int option,void *handle,int timeout,char *keyFile,char *certFile,char *trustedCertsFile){
   nbTLSX *tlsx;
-  SSL_METHOD *method;
+  const SSL_METHOD *method;
   SSL_CTX    *ctx=NULL;
   char *ctxContext="nbTls";
   static int initialize=1; // changed to 0 after we initialize
@@ -1283,3 +1287,5 @@ int nbTlsConnectNonBlockingAndSchedule(nbCELL context,nbTLS *tls,void *handle,vo
   else nbLogMsg(context,0,'T',"nbTlsConnectNonBlockingAndSchedule: connect failed - %s - %s",tls->uriMap[tls->uriIndex].uri,strerror(errno));
   return(rc);
   }
+
+#endif
