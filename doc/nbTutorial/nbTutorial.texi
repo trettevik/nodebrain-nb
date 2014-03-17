@@ -150,15 +150,7 @@ Files referenced in this tutorial are included in the tutorial directory of the 
 
 See www.nodebrain.org for more information and the latest update to this document.
 
-@sp 2
-@b{Documents}
-@sp 1
-@quotation
-@i{NodeBrain Tutorial}@*
-@i{NodeBrain Language Reference}@*
-@i{NodeBrain User Guide}@*
-@i{NodeBrain API Reference}
-@end quotation
+@include ../documents.texi
 
 @sp 2
 @b{Document Conventions}

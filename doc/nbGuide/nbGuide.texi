@@ -17,14 +17,14 @@
 @copying
 NodeBrain Guide@*
 @value{UPDATED-MONTH}@*
-The Boeing Company,  P.O. Box 3707, Seattle, WA 98124, USA
+NodeBrain Open Source Project
 
 @sp 2
 @b{Release @value{VERSION}}
 
 Author: Ed Trettevik <eat@@nodebrain.org>
 
-Copyright @copyright{} 2003--@value{UPDATED-YEAR} The Boeing Company
+Copyright @copyright{} @value{UPDATED-YEAR} Ed Trettevik
 
 @sp 1
 Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
@@ -67,110 +67,15 @@ You should have received a copy of the GNU General Public License along with thi
 @b{History}
 
 @multitable {-------------} {--------------------------------------------------------------------------------------------------------}
-@item 2003-02-24 @tab
-Title: @i{NodeBrain User's Guide}@*  
-Author: Ed  Trettevik <eat@@nodebrain.org>@*
-Publisher: The Boeing Company
+@item 2014-02-16 @tab
+Title: @i{NodeBrain Guide}@*  
+Author: Ed Trettevik <eat@@nodebrain.org>@*
+Publisher: NodeBrain Open Source Project
 
 @item @tab
-Release 0.5  
+Release @value{VERSION}
 @itemize @bullet
-@item Released online through the NodeBrain open source project on SourceForge.net.
-@item This document, like the software it describes, is a prototype version.  Revisions will be made in response to user feedback.
-@end itemize
-
-@item 2003-03-18 @tab   
-Release 0.5.2
-@itemize @bullet
-@item Included reference to RANK command for agent configuration.
-@item Reference to GRANT permission removed---not yet supported.
-@item Context prefix syntax adjusted to match current program behavior.
-@item Cache interval syntax included with EXPERT definition.
-@end itemize
-
-@item 2003-07-24 @tab
-Release 0.5.4
-@itemize @bullet
-@item Removed a section on an unimplemented feature for remotely reading queues.
-@item Included short section (1.13) on using NodeBrain over SSH tunnels.
-@item Added software change summary.
-@end itemize
-
-@item 2003-10-26 @tab
-Version 0.5.5  [Software not released---rolled into 0.6.0]
-@itemize @bullet
-@item Brain declaration section explains how to specify persistent connections.
-@item Calendar declaration syntax revised to match new implementation.
-@item Time condition deficiency warnings removed---now fully implemented.
-@item ASSERT syntax updated to show shorthand notation for term=1 and term=0.
-@item Time sequences are introduced.
-@item Sequence rules are introduced.
-@end itemize
-
-@item 2004-04-16 @tab
-Release 0.6.0
-@itemize @bullet
-@item Revised syntax descriptions
-@item Changed shebang line in examples to #!/usr/local/bin/nb
-@item Included Chapter 6, @i{Rules}
-@item Revised Chapter 10, @i{Commands}
-@item Included Chapter 12, @i{Source File Directives}
-@item Revised Chapter 13, @i{Symbolic Substitution}
-@item Included Chapter 14, @i{API Functions}
-@item Included Chapter 15, @i{Expert Skill Module API}
-@item Revised Appendix A, @i{Special Symbols}
-@item Included Appendix D, @i{Sample Skill Modules}
-@end itemize
-
-@item 2005-04-04 @tab
-Release 0.6.1 and 0.6.2
-@itemize @bullet
-@item  The content of chapters titled API Functions and Expert Skill Module API was moved to a new document titled NodeBrain API Reference.  The API has been revised, so there are several updates and additions to the content as well.
-@item The content of sections related to cache tables and Sample Skill Modules was moved to a new document titled NodeBrain Module Reference.  New modules have been added and are covered in that document.
-
-@item Chapter 10, @i{Commands}
-@itemize @bullet
-@item DEFINE IF, ON, and WHEN rules . action priority added
-@item WINDOWS command syntax . SHOWENV verb added
-@end itemize
-@item Chapter 13, @i{Symbolic Substitution}
-@itemize @bullet
-@item Cell expression substitution replaces .term substitution expressions.
-@end itemize
-@item Appendix D, @i{Transitional Features}
-@item Appendix E, @i{Release News} - replaces @i{Software Change Summary}. 
-@end itemize
-
-@item 2005-05-13 @tab
-Version 0.6.3 [Software not released---rolled into 0.6.4]
-@itemize @bullet
-@item Moved major portions (the majority) of this document to other documents to create a document set.  This document will now focus on configuration and various ways to use NodeBrain as a client or agent.
-@sp 1
-The new documents include:
-@itemize @bullet
-@item NodeBrain Tutorial
-@item NodeBrain Language Reference
-@item NodeBrain Module Reference
-@item NodeBrain API Reference
-@end itemize
-@end itemize
-
-@item 2006-04-01 @tab
-Title: @i{NodeBrain User Guide}@*
-@*
-Release 0.6.4
-@itemize @bullet
-@item Title changed from @i{NodeBrain User's Guide} to @i{NodeBrain User Guide}.
-@item  Replaced the term "skull" with "servant".   We now use "skull program" to mean any program with an imbedded NodeBrain interpreter, and "skull process" to mean any process executing a skull program.  We use the shorter form of "skull" when the context is understood.  We use the term "servant" to mean any child process spawned by the NodeBrain interpreter, or a program or script designed to run as a servant.  The interpreter may also run as a servant to a parent process, in which case the interpreter is both a "skull" and a "servant".
-@end itemize
-
-@item 2014-02-08 @tab
-Title: @i{NodeBrain Guide}
-
-@item @tab
-Release 0.8.16
-@itemize @bullet
-@item Changed name from @i{NodeBrain User Guide} to @i{NodeBrain Guide}
+@item This document replaces @i{NodeBrain User Guide} first published in 2003.
 @item Converted to texinfo format
 @item Reorganized existing content and added content; e.g. @i{Security} and
 @i{Performance} chapters.
@@ -189,18 +94,7 @@ Other documents are available for readers looking for a more complete understand
 
 See www.nodebrain.org for more information and the latest update to this document.
 
-@sp 2
-@b{Documents}
-@sp 1
-@quotation
-@i{NodeBrain Guide}@*
-@i{NodeBrain Tutorial}@*
-@i{NodeBrain Language}@*
-@i{NodeBrain Library} [Not yet released]@*
-@*
-@i{Caboodle NodeBrain Kit}@*
-@i{System NodeBrain Kit}
-@end quotation
+@include ../documents.texi
 
 @sp 2
 @b{Document Conventions}
@@ -248,13 +142,16 @@ node module manuals, and kit manuals for additional information.
 
 Release @value{VERSION}, @value{UPDATED-MONTH}
 
-Copyright @copyright{} 2006-@value{UPDATED-YEAR} The Boeing Company
+Copyright @copyright{} @value{UPDATED-YEAR} Ed Trettevik
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
 @end quotation
 
+@ifnotplaintext
+@b{Short Table of Contents}
+@end ifnotplaintext
 @menu
 * Concepts:: What is NodeBrain all about?
 * Installing:: How to build and install
@@ -291,12 +188,24 @@ A copy of the license is included in the section titled @i{GNU Free Documentatio
 @chapter Concepts
 @cindex concepts
 
+@menu
+* Rule Language::
+* Agents::
+* Caboodles::
+* Servants::
+* Modules::
+* Kits::
+* Plans::
+* C API::
+@end menu
+
 NodeBrain is a rule engine and related components intended for the construction of
 state and event monitoring applications.  
 The rule engine interacts with other monitoring components to perform simple element state monitoring or complex event correlation based on user specified rules. 
 The language is extended through the development of node modules---plugins that use NodeBrain Library functions
 to implement a node and interact with the rule engine. Functionality is further extended by servants---programs written in any language that interact with NodeBrain via stdin, stdout, and stderr. A small set of plugins are distributed with NodeBrain to provide commonly needed features such as peer-to-peer communication, log monitoring, event caching, and a web browser interface for administrators. 
 
+@node Rule Language
 @section Rule Language
 @cindex rule language
 
@@ -358,6 +267,7 @@ an @code{nb} command with the file name as an argument. We sometime refer
 to a NodeBrain rule file as a NodeBrain script, but this is not intended
 to imply a procedural language like most scripting languages.
 
+@node Agents
 @section Agents
 @cindex agents
 
@@ -367,6 +277,7 @@ This is the primary use of the rule engine, although it can also
 run in the foreground as a batch job, or as an interactive program
 accepting commands from a terminal.
 
+@node Caboodles
 @section Caboodles
 @cindex caboodles
 
@@ -392,6 +303,7 @@ shebang, where bin/nb is the relative path within the caboodle of a symbolic
 link to the desired version of @code{nb}; e.g. @file{/usr/bin/nb-0.8.16}.
 This enables the timing of upgrades to be managed separately for each caboodle.
 
+@node Servants
 @section Servants
 @cindex servants
 
@@ -410,6 +322,7 @@ assume the current working directory is the caboodle root directory.
 References to all other components should be imade via paths relative to the caboodle
 root directory.
 
+@node Modules
 @section Modules
 @cindex modules
 
@@ -422,6 +335,7 @@ of upgrades to the NodeBrain Library or the OS. The advantages are: 1) modules
 can provide better performance in many cases, and 2) modules can participate
 as cells, not just as command processors and generators.
 
+@node Kits
 @section Kits
 @cindex kits
 
@@ -443,7 +357,7 @@ $ nbkit bobo link $HOME/bobo
 @end cartouche
 
 A kit framework can implement any set of commands for operating on a caboodle.
-This only requires creating an @code{nbkit} executable and placing it in the @file{bin}
+This only requires creating an @code{nbkit_} executable and placing it in the @file{bin}
 subdirectory of the caboodle. The @code{nbkit} command provided by the rule engine
 can then be used to invoke kit framework commands that can assume the caboodle root
 directory is the current working directory.  This means frameworks can be provided
@@ -462,6 +376,7 @@ $ bin/nbkit_ bobo @i{command} @i{arguments}
 The Caboodle NodeBrain Kit provides a framework using this scheme.  You can use
 it, or develop your own kit framework.
 
+@node Plans
 @section Plans
 @cindex plans
 
@@ -474,6 +389,7 @@ the NodeBrain rule language.  This approach to managing NodeBrain rules enables 
 to work at a higher level of abstraction, and provides leverage for adapting rules to take
 advantage of new rule engine features without updating plans. 
 
+@node C API
 @section C API
 @cindex C API
 
@@ -491,9 +407,17 @@ for examples of calls to API functions.
 @chapter Installing
 @cindex installing
 
+@menu
+* Installing from Package Repositories::
+* Installing from GNU Source Distribution File::
+* Installing from GNU Binary Distribution File::
+* Installing from Git Repository::
+@end menu
+
 NodeBrain is packaged using the GNU Build System---autoconf, automake, and libtool.
 The make file supports the creation of Linux RPM files with a simple @code{make rpm} command, and files are included for building Debian based packages (not yet as simple at @code{make deb}).
 
+@node Installing from Package Repositories
 @section Installing from Package Repositories
 @cindex package repositories
 
@@ -537,6 +461,7 @@ from the author's repository at software.opensuse.org.
 
 http://software.opensuse.org/download.html?project=home:trettevik&package=nodebrain
 
+@node Installing from GNU Source Distribution File
 @section Installing from GNU Source Distribution File
 @cindex GNU source distribution file
 
@@ -602,11 +527,11 @@ $ ./configure --without-tls
 @subsection Excluding Node Modules (Plugins)
 @cindex excluding modules
 
-To exclude any of the modules provided by the NodeBrain package, include @code{--without-nb_}@i{module} as an argument to @code{./configure}. For example, to exclude the Peer module, the command would look as follows.
+To exclude any of the modules provided by the NodeBrain package, include @code{--disable-nb_}@i{module} as an argument to @code{./configure}. For example, to exclude the Peer module, the command would look as follows.
 
 @cartouche
 @example
-$ ./configure --without-nb_peer
+$ ./configure --disable-nb_peer
 @end example
 @end cartouche
 
@@ -644,6 +569,7 @@ $ tar -czf nodebrain-@i{version}-@i{platform}.tar.gz *
 @end example
 @end cartouche
 
+@node Installing from GNU Binary Distribution File
 @section Installing from GNU Binary Distribution File
 @cindex GNU binary distribution file
 
@@ -682,6 +608,7 @@ $ export NB_MODULE_PATH=$HOME/usr/local/lib/nb
 If you have success installing to your home directory and the @code{nb} command works,
 add the two export commands to your profile so they are applied each time you login.
 
+@node Installing from Git Repository
 @section Installing from Git Repository
 @cindex git repository
 
@@ -726,9 +653,18 @@ $ make install
 @chapter Running
 @cindex running
 
+@menu
+* Command Line::
+* Script::
+* Relocatable Caboodle::
+* Daemon::
+* System Startup::
+@end menu
+
 The @code{nb} program may be invoked a variety of ways.
 This chapter describes some of the options.
 
+@node Command Line
 @section Command Line
 @cindex command line
 
@@ -740,6 +676,7 @@ $ nb cmdset1.nb cmdset2.nb
 @end example
 @end cartouche
 
+@node Script
 @section Script
 @cindex script
 
@@ -761,6 +698,7 @@ $ cmdset.nb
 @end example
 @end cartouche
 
+@node Relocatable Caboodle
 @section Relocatable Caboodle
 @cindex caboodle
 
@@ -788,6 +726,7 @@ Similarly, a script designed to run in a caboodle looks like this.
 @end cartouche
 
 
+@node Daemon
 @section Daemon
 @cindex daemon
 
@@ -821,6 +760,7 @@ switches users if starting as root and a different user was specified.
 If networking nodes are included in the rules, they may establish connections or listening sockets when enabled.
 The daemon is not attached to a terminal and writes output to a configured log file.
 
+@node System Startup
 @section System Startup
 @cindex system startup
 
@@ -841,10 +781,19 @@ remote connections.
 @chapter Rule Engine
 @cindex rule engine
 
+@menu
+* Spreadsheet Analogy::
+* Expert Analogy::
+* Inputs and Outputs::
+* Check Scripts::
+* Cron Schedules::
+@end menu
+
 NodeBrain rule syntax is covered in the @i{NodeBrain Language} manual.
 This chapter is intended to provide a mental picture of how the
 rule engine works. 
 
+@node Spreadsheet Analogy
 @section Spreadsheet Analogy
 @cindex spreadsheet analogy
 
@@ -873,6 +822,7 @@ A @i{rule} is another special type of cell.  Like a term, a rule cell
 references a single cell, but also has an action.  When the referenced
 cell transitions to a true state, the rule "fires" and the action is taken.
 
+@node Expert Analogy
 @section Expert Analogy
 @cindex expert analogy
 
@@ -902,6 +852,7 @@ The modes that correspond to the spreadsheet and expert analogies can be used
 in combination.  Rules running in reactive mode may detect a condition that
 cause a diagnostic rule set to be launched to troubleshoot the cause of the condition.
 
+@node Inputs and Outputs
 @section Inputs and Outputs
 @cindex inputs and outputs
 
@@ -927,6 +878,7 @@ elements or any event stream.  That is not intended to imply the NodeBrain rule 
 will always be the best choice for a monitoring application---only that it has
 the flexibility to adapt to a wide variety of monitoring applications.
 
+@node Check Scripts
 @section Check Scripts
 @cindex check scripts
 
@@ -977,6 +929,7 @@ A check line is "hidden" when a check script is run in normal mode, and displays
 
 If you write custom node modules, experiment with this feature as a simple method of performing regression tests.  Check out the samples provided in the check directory of a NodeBrain distribution.
 
+@node Cron Schedules
 @section Cron Schedules
 @cindex cron schedules
 
@@ -1056,6 +1009,14 @@ See the @i{NodeBrain Language} manual for more information on time conditions.
 @chapter Networking
 @cindex networking
 
+@menu
+* Networking Modules::
+* Networking Servants::
+* SSH and SCP Commands::
+* SSH Tunnels::
+* IPSec Tunnels::
+@end menu
+
 NodeBrain may be used by an application that does not require network communication.
 If this is the case for your application, no need to read this chapter.
 
@@ -1075,8 +1036,9 @@ You are free to use any method of network communication available to address the
 of your application.  This may be done using a module provided with NodeBrain, or by using
 available alternatives.
 
-@section Networking Node Modules
-@cindex  networking node modules
+@node Networking Modules
+@section Networking Modules
+@cindex  networking modules
 
 There are modules provided in the nodebrain package that support network communication
 of various types.  Some are intended to connect an agent to other applications using
@@ -1093,6 +1055,7 @@ needs.  If not, you might consider writing your own module if tight integration 
 NodeBrain is required.  Where looser integration is sufficient, it is normally easier
 to implement.
 
+@node Networking Servants
 @section Networking Servants
 @cindex networking servants
 
@@ -1102,6 +1065,7 @@ stderr, while communicating with a remote application component via any method y
 to implement.  Please consider the security risks when doing this, and select a protocol
 that meets your authentication and encryption requirements.
 
+@node SSH and SCP Commands
 @section SSH and SCP Commands
 @cindex ssh and SCP commands
 
@@ -1110,6 +1074,7 @@ with @code{ssh} and @code{scp} commands.
 You can invoke these commands directly in NodeBrain rule files, and from within
 scripts invoked by rule files.
 
+@node SSH Tunnels
 @section SSH Tunnels
 @cindex ssh tunnels
 
@@ -1123,6 +1088,7 @@ ssh -2 -f -N -L @i{portA}:localhost:@i{portB hostB}
 @end example
 @end cartouche
 
+@node IPSec Tunnels
 @section IPSec Tunnels
 @cindex IPSec tunnels
 
@@ -1133,11 +1099,20 @@ communication that would otherwise be insecure.
 @chapter Security
 @cindex security
 
+@menu
+* Code Scanning::
+* File Permissions::
+* Identity and Rank::
+* Module Security::
+* Root Agents::
+@end menu
+
 Because NodeBrain can issue any shell command and supports a variety of methods 
 of accepting shell commands from external sources, one can easily introduce
 security vulnerabilities.  It is important to understand the potential risks and take
 steps to avoid or reduce them.
 
+@node Code Scanning
 @section Code Scanning
 @cindex code scanning
 
@@ -1149,6 +1124,7 @@ If you write custom NodeBrain modules, you should scan your code with the best
 source and/or binary scan tools available to you.  This will reduce the number of security
 vulnerabilities your modules introduce to your application.
 
+@node File Permissions
 @section File Permissions
 @cindex file permissions
 
@@ -1158,6 +1134,7 @@ security risk.  It is best to have all files within a caboodle owned by a single
 with permission to write granted only to the owner.  This requires that all NodeBrain agents
 associated with a caboodle run as the owning user.
 
+@node Identity and Rank
 @section Identity and Rank
 @cindex identity and Rank
 
@@ -1174,6 +1151,7 @@ Warning: This control mechanism has not been rigorously tested.  Before relying 
 feature, you should test it with your own rule set.  If you discover a bug or weakness in 
 this feature, please report it by sending an email to bugs@@nodebrain.org.
 
+@node Module Security
 @section Module Security
 @cindex module security
 
@@ -1181,6 +1159,7 @@ Modules can introduce security risks, particular those that accept commands over
 or from other users on the local system.
 Read module documentation and follow any security recommendations.
 
+@node Root Agents
 @section Root Agents
 @cindex root agents
 
@@ -1200,12 +1179,21 @@ listening sockets have been established.
 @chapter Performance
 @cindex Performance
 
+@menu
+* Test Platform::
+* Test Conditions::
+* Relational Term-Rich Rules Assert Test::
+* Relational Value-Rich Rules Assert Test::
+* Relational Value-Rich Rules Alert Test::
+@end menu
+
 NodeBrain rule engine performance varies significantly depending on your rule set and the computing
 resources provided by the host system.  The numbers listed in this chapter provide
 only a rough estimate of the performance to expect.  The measures reported
 here were obtained on a virtual private server, so this is unscientific.  If you have dedicated
 hardware and skills in performance testing, please consider contributing your own results.
 
+@node Test Platform
 @section Test Platform
 @cindex test platform
 
@@ -1222,6 +1210,7 @@ with multiple processors. These measures are based on the utilization of a singl
 In a real NodeBrain application where high performance is needed, the monitoring problem is distributed over
 multiple NodeBrain processes which collectively make use of the available CPU's.
 
+@node Test Conditions
 @section Test Conditions
 @cindex test conditions
 
@@ -1238,6 +1227,7 @@ In other words, rules are not partitioned into multiple nodes.
 The partitioning of rules and terms into nodes generally improves performance.
 
 @page
+@node Relational Term-Rich Rules Assert Test
 @section Relational Term-Rich Rules Assert Test
 @cindex assert test
 
@@ -1263,6 +1253,7 @@ hash tables that grow with the number of objects, enabling it to achieve higher 
 when the number of rules becomes outrageous.
 
 @page
+@node Relational Value-Rich Rules Assert Test
 @section Relational Value-Rich Rules Assert Test
 @cindex assert test
 
@@ -1297,6 +1288,7 @@ A change turns it to false, and a binary search can quickly find the one false r
 that turns to true, if any.  With 1,000,000 rules, this enhancement improved the
 performance from 0.94 to 154,978 assertions per second.
 @page
+@node Relational Value-Rich Rules Alert Test
 @section Relational Value-Rich Rules Alert Test
 @cindex alert test
 
