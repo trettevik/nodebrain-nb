@@ -194,9 +194,20 @@ A copy of the license is included in the section titled @i{GNU Free Documentatio
 @chapter Concepts
 @cindex concepts
 
+@menu
+* Interface Structure:: You have options
+* Command Language:: Trivial interfacing
+* Servant Interface:: Language independent API
+* Interface Modules:: File and socket interfaces
+* Library Functions:: C API
+* Selecting an Interface:: Try easy first
+* Methods:: Another name for callback functions
+@end menu
+ 
 This chapter provides an outline of NodeBrain interfaces to help you choose the method most appropriate for you application.  
 You may find that interfaces other than the C API provided by the NodeBrain Library are sufficient for your application.  
 
+@node Interface Structure
 @section Interface Structure
 @cindex interface structure
 
@@ -204,6 +215,7 @@ The figure below illustrates the available interface options and the relationshi
 
 @image{./Interfaces,,,,png}
 
+@node Command Language
 @section Command Language
 @cindex command language
 
@@ -290,6 +302,7 @@ close(NB);
 @end example
 @end cartouche
 
+@node Servant Interface
 @section Servant Interface
 @cindex servant interface
 
@@ -345,6 +358,33 @@ The servant module is described in the @i{Servant NodeBrain Module} manual.
 
 You can use one NodeBrain script as a servant to another NodeBrain script since NodeBrain supports the trivial servant interface as both a parent and a child process.  In such a case, the text messages exchanged in both directions must be valid NodeBrain commands.  This is a way to split a NodeBrain agent into multiple processes, taking advantage of multiple CPU's and concurrent processing.   
 
+@node Interface Modules
+@section Interface Modules
+@cindex Interface Modules
+
+Some of the modules distributed with NodeBrain support various ways of communicating with the rule engine.
+The Mail, Pipe, Snmptrap, Syslog, and Webster modules support communication via standard protocols.  
+These can be used to communicate with non-NodeBrain components.
+For example, the Webster module enables you to send commands to a NodeBrain agent using a web browser.
+
+In addition, the Peer and Message modules enable communication between NodeBrain agents using NodeBrain specific protocols.
+It is possible for servants written in your favorite language, running under two different NodeBrain agents, to communicate with one another via
+messages sent between agents using a module specific protocol without the servants having any knowledge of the protocol.
+For example, a servant script might write the following command to @code{stdout}.
+
+@cartouche
+@example
+foo:bar:hello
+@end example
+@end cartouche
+
+If @code{foo} is defined as a node within the parent agent that securely forwards commands to a peer agent, and @code{bar} is defined as a servant in the peer,
+then @code{hello} will be sent to the peer's servant on @code{stdin}.
+If the peer-to-peer nodes were defined as @code{foo} on both ends, and the servants were both
+defined as @code{bar}, then the peer servant could return a message with the same @code{foo:bar:} prefix.  The Message module supports broadcasting messages to
+all agents within a cabal with assured one-time delivery.
+
+@node Library Functions
 @section Library Functions
 @cindex Library Functions
 
@@ -402,6 +442,7 @@ When the Medulla is operating in server mode it may conflict with a program's us
 The Spine is a subset of functions that provide an interface to the host operating system, without dependence on a NodeBrain environment.  These functions are primarily intended for use by other NodeBrain functions, but may be used by any C program.  
 Simply include the spine header (nb/nbspine.h) and link with the NodeBrain Library (-lnb).
 
+@node Selecting an Interface
 @section Selecting an Interface
 
 It seems wise to start with simple interfaces and move to more complex interfaces only as necessary.
@@ -409,13 +450,13 @@ If you follow this advice you will consider the interfaces in the order describe
 
 @b{Start by writing rules and using existing components.}
 
-Frequently a NodeBrain application can be accomplished using existing programs and skill modules.  All you need to do in many cases is write your NodeBrain rules and save them as source files.  You can use most existing utilities and shell commands as action servants.
+Frequently a NodeBrain application can be accomplished using existing programs and modules.  All you need to do in many cases is write your NodeBrain rules and save them as source files.  You can use most existing utilities and shell commands as action servants.
 
 @b{Write servants in your favorite language.}
 
 If you need to write servants, you should start by writing simple servants in your favorite programming language---shell scripts, other scripting languages (e.g. Perl or Python), or compiled languages (e.g. C/C++).  Servants may be parent or child processes in relation to NodeBrain, and need only conform to NodeBrain's assumptions about @code{stdin}, @code{stdout}, @code{stderr}.  Servants are often very simple programs.  Even when you write a complex servant, you are working in a language familiar to you and the interface to NodeBrain never gets more complicated than reading from @code{stdin} and/or writing to @code{stdout}. 
 
-@b{Write a skill module to extend NodeBrain.}
+@b{Write a module to extend NodeBrain.}
 
 If you are a C programmer, and want an integrated extension to NodeBrain, write a module.  
 This enables you to enhance NodeBrain without modifying the interpreter.  
@@ -433,6 +474,7 @@ If NodeBrain just doesn't work for you as released, but you see a way to modify 
 The downside of this approach is the burden of maintaining your own copy.  
 However, if your change could benefit others, you may be able to escape the burden of maintenance by submitting your change as a proposal to the NodeBrain project.
 
+@node Methods
 @section Methods
 @cindex methods
 
@@ -1021,7 +1063,7 @@ nbSynapseSetTimer(context,synapse,@i{seconds});
 
 @cartouche
 @smallexample
-void *@i{skill}[_@i{facet}]Alert(
+static oid *@i{skill}[_@i{facet}]Alert(
   nbCELL context,    // Context handle
   void *skillHandle, // Pointer to skill configuration structure
   void *nodeHandle,  // Pointer to node knowledge structure
@@ -1040,7 +1082,7 @@ Returns:
 
 @cartouche
 @smallexample
-void *@i{skill}[_@i{facet}]Assert(
+static void *@i{skill}[_@i{facet}]Assert(
   nbCELL context,    // Context handle
   void *skillHandle, // Pointer to skill configuration structure
   void *nodeHandle,  // Pointer to node knowledge structure
@@ -1122,14 +1164,16 @@ declare @i{skillAlias} skill @i{module}.@i{skill}[(@i{argList})][:@i{text}|;]
 
 @cartouche
 @smallexample
-nbCELL @i{skill}[_@i{facet}]Command(
+static int @i{skill}[_@i{facet}]Command(
   nbCELL context,    // Context handle
   void *skillHandle, // Pointer to skill configuration structure
   void *nodeHandle,  // Pointer to node knowledge structure
   nbCELL argList,    // Argument cell list or NULL
   char *text);       // Command text or null string
 
-Returns: Value cell
+Returns:
+  0 - successful
+ -1 - error (see message)
 @end smallexample
 @end cartouche
 
@@ -1161,7 +1205,7 @@ define @i{node} node @i{definition}
 
 @cartouche
 @smallexample
-nbCELL @i{skill}[_@i{facet}]Compute(
+static nbCELL @i{skill}[_@i{facet}]Compute(
   nbCELL context,    // Context handle
   void *skillHandle, // Pointer to skill configuration structure
   void *nodeHandle,  // Pointer to node knowledge structure
@@ -1180,7 +1224,7 @@ For example, an implementation of AND or OR would only require computation of th
 Use the nbCellCompute function to compute the value of arguments.  The following example computes all argument cells for illustration only---this would make the Compute method unnecessary.
 @cartouche
 @smallexample
-nbCELL fooCompute(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL argList)@{
+static nbCELL fooCompute(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL argList)@{
   nbCELL cell,valueCell;
   nbSET set;
 
@@ -1199,7 +1243,7 @@ nbCELL fooCompute(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL argLi
 
 @cartouche
 @smallexample
-void *@i{skill}Construct(
+static void *@i{skill}Construct(
   nbCELL context,     // Context handle
   void *skillHandle,  // Pointer to skill configuration structure
   nbCELL argList,     // Argument cell list or NULL
@@ -1229,7 +1273,7 @@ define @i{node} node [@i{module}.]@i{skill}[(@i{argList})][:@i{text} | ;]
 
 @cartouche
 @smallexample
-nbCELL @i{skill}[_@i{facet}]Enable(
+static nbCELL @i{skill}[_@i{facet}]Enable(
   nbCELL context,    // Context handle
   void *skillHandle, // Pointer to skill configuration structure
   void *nodeHandle); // Pointer to node knowledge structure
@@ -1260,7 +1304,7 @@ This can be scheduled using the nbListenerEnableOnDaemon function.
 
 @cartouche
 @smallexample
-nbCELL @i{skill}[_@i{facet}]Evaluate(
+static nbCELL @i{skill}[_@i{facet}]Evaluate(
   nbCELL context,    // Context handle
   void *skillHandle, // Pointer to skill configuration structure
   void *nodeHandle,  // Pointer to node knowledge structure
@@ -1280,7 +1324,7 @@ It is normally invoked for a node condition when an argument value has changed.
 
 @cartouche
 @smallexample
-nbCELL @i{skill}[_@i{facet}]Destroy(
+static nbCELL @i{skill}[_@i{facet}]Destroy(
   nbCELL context,    // Context handle
   void *skillHandle, // Pointer to skill configuration structure
   void *nodeHandle); // Pointer to node knowledge structure
@@ -1310,7 +1354,7 @@ undefine @i{node}
 
 @cartouche
 @smallexample
-nbCELL @i{skill}[_@i{facet}]Disable(
+static nbCELL @i{skill}[_@i{facet}]Disable(
   nbCELL context,    // Context handle
   void *skillHandle, // Pointer to skill configuration structure
   void *nodeHandle); // Pointer to node knowledge structure
@@ -1338,7 +1382,7 @@ disable @i{node}
 
 @cartouche
 @smallexample
-nbCELL @i{skill}[_@i{facet}]Solve(
+static nbCELL @i{skill}[_@i{facet}]Solve(
   nbCELL context,    // Context handle
   void *skillHandle, // Pointer to skill configuration structure
   void *nodeHandle,  // Pointer to node knowledge structure
@@ -1376,7 +1420,7 @@ show spruce
 
 @cartouche
 @smallexample
-nbCELL @i{skill}[_@i{facet}]Solve(
+static nbCELL @i{skill}[_@i{facet}]Solve(
   nbCELL context,    // Context handle
   void *skillHandle, // Pointer to skill configuration structure
   void *nodeHandle,  // Pointer to node knowledge structure
@@ -1437,7 +1481,7 @@ Options:
 @end smallexample
 @end cartouche
 
-The nbCmd function gives a skill module the full range of functionality provided by the NodeBrain command language.
+The nbCmd function gives a skull program or module the full range of functionality provided by the NodeBrain command language.
 
 @node nbListenerEnableOnDaemon
 @section nbListenerEnableOnDaemon - Schedule enable when daemonized
@@ -1554,9 +1598,11 @@ log data out to a second file.
 * nbCellCreateReal:: Create number cell
 * nbCellCreateString:: Create string cell
 * nbCellDrop:: Release cell
+* nbCellEvaluate:: Compute enabled cell value after change
 * nbCellGetReal:: Get number from number cell
 * nbCellGetString:: Get string from string cell
 * nbCellGetType:: Get cell type code
+* nbCellGetValue:: Get enabled cell value
 * nbCellGrab:: Reserve cell
 * nbCellSolve:: Solve for value of cell
 * nbListOpen:: Open a cell list to iterate
@@ -1569,57 +1615,425 @@ log data out to a second file.
 * nbTermSetDefinition:: Assign new definition to term
 @end menu
 
+The functions described in this chapter are for interacting with the rule engine at the cell level.
+It is possible to extend NodeBrain by adding your own "action" commands without using any of these
+functions.
+However, most programs that use the NodeBrain Library to extend NodeBrain will need to use some
+of these functions. 
+
 @node nbCellCompute
 @section nbCellCompute - Compute value of disabled cell
 @cindex nbCellCompute 
+
+@cartouche
+@smallexample
+nbCELL nbCellCompute(
+  nbCELL context,  // Node context handle
+  nbCELL cell);    // Cell to compute
+
+Returns: Constant cell representing computed value
+
+Warning: When you are finished with the returned value cell, you
+         must call nbCellDrop to release it to avoid a memory leak.
+
+See also: nbCellEvaluate, nbCellGetValue, and nbCellSolve.
+@end smallexample
+@end cartouche
+
+Use nbCellCompute to compute the value of a cell that may be disabled.
+A cell is disabled when there are no enabled rules depending on it.
+The value of a disabled cell is not maintained in response to assertions.
+A call to nbCellCompute will return the value of an enabled cell just like
+nbCellGetValue.  But for a disabled cell, nbCellCompute will recursively call
+nbCellCompute on operand cells and then nbCellEvaluate to compute the
+cell value.  The resulting value is the same as would have already been assigned
+if the cell had been enabled.
 
 @node nbCellCreate
 @section nbCellCreate - Create cell from expression
 @cindex nbCellCreate 
 
+@cartouche
+@smallexample
+nbCELL @b{nbCellCreate}(
+  nbCELL context,         // Node context handle
+  char  *cellExpression); // Cell expression
+
+Returns: Cell handle, or NULL on error (see message)
+
+Warning: When you are finished with the returned cell, you must
+         call nbCellDrop to release it to avoid a memory leak.
+@end smallexample
+@end cartouche
+
+The @code{nbCellCreate} function is used to obtain a handle
+to a cell.
+If the specified cell does not exist, it is created and a handle
+is returned.
+If the cell already exists, a handle to the existing cell is returned.
+
 @node nbCellCreateReal
 @section nbCellCreateReal - Create number cell
 @cindex nbCellCreateReal 
+
+@cartouche
+@smallexample
+nbCELL @b{nbCellCreateReal}(
+  nbCELL context,  // Node context handle
+  double real);    // Real number
+
+Returns: Handle for real number cell
+
+Warning: When you are finished with the returned cell, you must
+         call nbCellDrop to release it to avoid a memory leak.
+
+Warning: Prior to version 0.9.01 this function failed to grab
+         the created cell as intended. If you have code that used
+         this function under prior versions that accidentally
+         worked, it may break under 0.9.01 and above, requiring
+         a fix to the calling code.
+@end smallexample
+@end cartouche
+
+The @code{nbCellCreateReal} function is used to obtain a handle
+to a real number cell.
+If the specified cell does not exist, it is created and a handle
+is returned.
+If the cell already exists, a handle to the existing cell is returned.
+The value returned by this function is the same as @code{nbCellCreate}
+would return if passed the string representation of the number.
 
 @node nbCellCreateString
 @section nbCellCreateString - Create string cell
 @cindex nbCellCreateString 
 
+@cartouche
+@smallexample
+nbCELL @b{nbCellString}(
+  nbCELL context,  // Node context handle
+  char  *string);  // String
+
+Returns: Handle for string cell
+
+Warning: When you are finished with the returned cell, you must
+         call nbCellDrop to release it to avoid a memory leak.
+@end smallexample
+@end cartouche
+
+The @code{nbCellCreateString} function is used to obtain a handle
+to a string cell.
+If the specified cell does not exist, it is created and a handle
+is returned.
+If the cell already exists, a handle to the existing cell is returned.
+The value returned by this function is the same as @code{nbCellCreate}
+would return if passed the string enclosed in double quotes. 
+
 @node nbCellDrop
 @section nbCellDrop - Release cell
 @cindex nbCellDrop 
+
+@cartouche
+@smallexample
+nbCELL @b{nbCellDrop}(
+  nbCELL context,  // Node context handle
+  nbCELL cell);    // Cell to drop
+
+Returns: NULL (always)
+@end smallexample
+@end cartouche
+
+Each cell has a reference count.
+The @code{nbCellDrop} function is called to decrement the reference count
+and free the cell if the count drops to zero.
+
+While you may explicitly reserve a cell with a call to @code{nbCellGrab},
+you must also know when other functions that return a cell pointer
+have placed a reserve on it for you.
+If so, you are still responsible for issuing a @code{nbCellDrop}
+when you are finished with the pointer.
+While this is a burden, it is required for the rule engine to
+know when an application is finished with a cell.
+
+As you might imagine, you will get very unhappy results if you make too
+many calls to @code{nbCellDrop}.
+You can easily cause a cell to be released and the memory reused
+while there are still other pointers to the location of the released cell.
+One could say the result is unpredictable, but it is probably better
+to say the result is predictably bad.
+
+@cartouche
+@smallexample
+# drop cell and clear my pointer to it
+nodeHandle->somethingCell=nbCellDrop(nodeHandle->somethingCell);
+@end smallexample
+@end cartouche
+
+@node nbCellEvaluate
+@section nbCellEvaluate - Compute enabled cell value after change
+@cindex nbCellEvaluate
+
+@cartouche
+@smallexample
+nbCELL @b{nbCellEvaluate}(
+  nbCELL context,  // Node context handle
+  nbCELL cell);    // Cell to compute
+
+Returns: Constant cell representing cell value
+
+Warning: When you are finished with the returned value cell, you
+         must call nbCellDrop to release it to avoid a memory leak.
+
+See also: nbCellCompute, nbCellGetValue, and nbCellSolve
+@end smallexample
+@end cartouche
+
+Use @code{nbCellEvaluate} to compute the value of an enabled cell after a change to
+an operand.
+This function simply provides an interface to the evaluation method of the
+cell.  Normally the rule engine is aware of the need to call a cell
+evaluation method and performs this step automatically.
+However, it is possible for an application to implement cells for which
+the rule engine is not aware of all operands involved in an evaluation.
+In such a case, there are operands that are not cells known to the rule
+engine.  Any change to these operands would then require the application
+to call @code{nbCellEvaluate}, or directly call the evaluation method.
 
 @node nbCellGetReal
 @section nbCellGetReal - Get number from number cell
 @cindex nbCellGetReal 
 
+@cartouche
+@smallexample
+double @b{nbCellGetReal}(
+  nbCELL context,  // Node context handle
+  nbCELL cell);    // Real number cell
+
+Returns: Real number stored in specified cell
+@end smallexample
+@end cartouche
+
+Use @code{nbCellGetReal} to extract a C @code{double} value from
+a real number cell.
+
 @node nbCellGetString
 @section nbCellGetString - Get string from string cell
 @cindex nbCellGetString 
+
+@cartouche
+@smallexample
+char *@b{nbCellGetString}(
+  nbCELL context,  // Node context handle
+  nbCELL cell);    // String cell
+
+Returns: String stored in specified cell
+@end smallexample
+@end cartouche
+
+Use @code{nbCellGetString} to extract a C @code{char} pointer from
+a string cell.
 
 @node nbCellGetType
 @section nbCellGetType - Get cell type code
 @cindex nbCellGetType 
 
+@cartouche
+@smallexample
+int @b{nbCellGetType}(
+  nbCELL context,  // Node context handle
+  nbCELL cell);    // Cell to inspect
+
+Returns: Cell type code
+
+Type Codes:
+  NB_TYPE_UNDEFINED
+  NB_TYPE_DISABLED
+  NB_TYPE_FALSE
+  NB_TYPE_UNKNOWN
+  NB_TYPE_PLACEHOLDER
+  NB_TYPE_STRING
+  NB_TYPE_REAL
+  NB_TYPE_LIST
+  NB_TYPE_TERM
+  NB_TYPE_NODE
+  NB_TYPE_VERB
+  NB_TYPE_TEXT
+@end smallexample
+@end cartouche
+
+The @code{nbCELL} data type is a pointer to a cell.
+When returned by a library function, or passed to a method,
+you can call @code{nbCellGetType} to determine what type
+of cell you have.
+If it is not an expected type, you can call @code{nbLogMsg} to
+report an error.
+
+@node nbCellGetValue
+@section nbCellGetValue - Get enabled cell value
+@cindex nbCellGetValue
+
+@cartouche
+@smallexample
+nbCELL nbCellGetValue(
+  nbCELL context,  // Node context handle
+  nbCELL cell);    // Cell to compute
+
+Returns: Constant cell representing cell value
+
+Warning: When you are finished with the returned value cell, you
+         must call nbCellDrop to release it to avoid a memory leak.
+
+See also: nbCellCompute, nbCellEvaluate, and nbCellSolve.
+@end smallexample
+@end cartouche
+
+Use nbCellGetValue to get the current value of an enabled cell.
+This function is used when there is no need to compute a new value
+in response to changing operands---when you can assume the rule engine
+has already responded to changes at the level of the cell in the
+axon tree (bottom up tree of dependencies).
+
 @node nbCellGrab
 @section nbCellGrab - Reserve cell
 @cindex nbCellGrab 
+
+@cartouche
+@smallexample
+nbCELL @b{nbCellGrab}(
+  nbCELL context,  // Node context handle
+  nbCELL cell);    // Cell to drop
+
+Returns: The cell argment
+
+See also: nbCellDrop
+@end smallexample
+@end cartouche
+
+Each cell has a reference count.
+The @code{nbCellGrab} function is called to increment the reference count
+to ensure the cell will not be released while in use---while there is
+a pointer to it.
+
+@cartouche
+@smallexample
+nbCELL cell=...; // obtained somehow without a grab
+nodeHandle=malloc(sizeof(mynode));
+nodeHandle->somethingCell=nbCellGrab(context,cell);
+@end smallexample
+@end cartouche
+
+Make sure you know if the process you use to create or obtain
+a cell pointer has already grabbed the cell on your behalf.
+If so, you should only call @code{nbCellGrab} if you need an 
+additional grab---when you store the cell pointer more than once
+and have the possibility of calling @code{nbCellDrop} on each
+pointer independently.
+When you are finished with a cell pointer that you have reserved
+using a call to @code{nbCellGrab}, or that was grabbed for you
+by another function, you must release the cell pointer with a
+call to @code{nbCellDrop} to avoid a memory leak.
 
 @node nbCellSolve
 @section nbCellSolve - Solve for value of cell
 @cindex nbCellSolve 
 
+@cartouche
+@smallexample
+nbCELL @b{nbCellSolve}(
+  nbCELL context,  // Node context handle
+  nbCELL cell);    // Cell to compute
+
+Returns: Constant cell representing cell value
+
+Warning: When you are finished with the returned value cell, you
+         must call nbCellDrop to release it to avoid a memory leak.
+
+See also: nbCellCompute, nbCellEvaluate, and nbCellGetValue.
+@end smallexample
+@end cartouche
+
+Use nbCellSolve to compute the value of a cell for which the value is unknown
+because it references terms that are undefined.
+The goal of nbCellSolve is to obtain definitions for referenced undefined terms sufficient
+to derive a value other than Unknown for the cell, if possible.  A term is @i{undefined} if
+it has no formula.  The value of an undefined term is Unknown, but a term can have a value of
+Unknown without being undefined, because a formula can evalute to Unknown.  When a term definition
+is a constant (e.g. "abc"), the value is the same constant.  It is often the case in
+diagnostic mode, where nbCellSolve is used, that we expect to obtain a constant definition
+for a term, in which case it is the same as directly seeking a value.
+
+For example, a call to nbCellCompute for the cell @code{A or B}, where A and B are undefined,
+will first attempt to obtain a formula (definition) for @code{A} and solve the formula
+to obtain a value for @code{A}.  If the value is True, the value of @code{A} is returned and
+no attempt is made to obtain a definition for @code{B}.
+For @code{A and B}, a False or Unknown value for @code{A} would be sufficient to compute the
+cell value without bothering with @code{B}.
+Like a good doctor or car mechanic, a NodeBrain diagnostic rule writer should specify the 
+conditions so the least expensive tests are performed first, enabling the most expensive
+tests to be avoided when possible.
+
+Warning:  This feature of NodeBrain requires additional work to refine the methods by
+which definitions can be obtained.  Currently, prompts in interactive mode and scripts
+in background mode are supported.  
+
 @node nbListOpen
-@section nbListOpen - Open a cell lis to iterate
+@section nbListOpen - Open a cell list to iterate
 @cindex nbListOpen 
+
+@cartouche
+@smallexample
+nbSET @b{nbListOpen}(
+  nbCELL context,  // Node context handle
+  nbCELL cell);    // List cell to open
+
+Returns: List set cell cursor
+@end smallexample
+@end cartouche
+
+The @code{nbListOpen} function is used to obtain a set iterator for a list of cells.
+Skill methods often use this function, and related functions, to process an argument list, which
+is represented as a list of cells.
 
 @node nbListGetCell
 @section nbListGetCell - Get next cell in list
 @cindex nbListGetCell 
 
+@cartouche
+@smallexample
+nbCELL @b{nbListGetCell}(
+  nbCELL context,  // Node context handle
+  nbSET cell);     // List set cell cursor
+
+Returns: Next cell in the set, or NULL at end of list
+
+Warning: The returned cell has been grabbed, so you must
+         call nbCellDrop when it is no longer needed.
+@end smallexample
+@end cartouche
+
+The @code{nbListGetCell} function is used obtain the next cell in a list of cells.
+The next cell is returned and the set iterator advances.
+A NULL value is returned when the end of the list is reached.
+
 @node nbListGetCellValue
 @section nbListGetCellValue - Get value of next cell in list
 @cindex nbListGetCellValue
+
+@cartouche
+@smallexample
+nbCELL @b{nbListGetCellValue}(
+  nbCELL context,  // Node context handle
+  nbSET cell);     // List set cell cursor
+
+Returns: Value cell for Next cell in the set, or NULL if end of list
+
+Warning: The returned cell has been grabbed, so you must
+         call nbCellDrop when it is no longer needed.
+@end smallexample
+@end cartouche
+
+The @code{nbListGetCellValue} function returns the value of the next cell in a list.
+The value of a cell is itself a cell.  The set iterator steps within the list on each
+call and NULL returned at the end of the list.
 
 @node nbSynapseOpen
 @section nbSynapseOpen - Register an Alarm method
@@ -1633,13 +2047,81 @@ log data out to a second file.
 @section nbTermCreate - Create a new term
 @cindex nbTermCreate 
 
+@cartouche
+@smallexample
+nbCELL @b{nbTermCreate}(
+  nbCELL context,     // Node context handle
+  char *identifier,   // Term to create within context
+  nbCELL definition); // Cell that defines the term
+
+Returns: Term cell, or NULL on error (see message)
+
+Warning: The returned cell has been grabbed, so you must
+         call nbCellDrop when it is no longer needed.
+@end smallexample
+@end cartouche
+
+The @code{nbTermCreate} function is used to create a new term
+within the specified context.
+The definition of the term is provided by a cell handle
+obtained by another library function, perhaps @code{nbCellCreate}.
+
 @node nbTermLocate
 @section nbTermLocate - Locate an existing term
 @cindex nbTermLocate 
 
+@cartouche
+@smallexample
+nbCELL @b{nbTermLocate}(
+  nbCELL context,     // Node context handle
+  char *identifier);  // Term identifier to locate
+
+Returns: Term cell handle, or NULL if not found
+
+Warning: The returned cell has been grabbed, so you must
+         call nbCellDrop when it is no longer needed.
+@end smallexample
+@end cartouche
+
+The @code{nbTermLocate} function is used lookup a term within
+the specified context.
+
 @node nbTermSetDefinition
 @section nbTermSetDefinition - Assign new definition to term
 @cindex nbTermSetDefinition 
+
+@cartouche
+@smallexample
+nbCELL @b{nbTermSetDefinition}(
+  nbCELL context,     // Node context handle
+  nbCELL term,        // Term to update
+  nbCELL definition); // Cell that defines the term
+
+Returns: Cell handle of new value
+
+Warning: The returned cell has been grabbed, so you must
+         call nbCellDrop when it is no longer needed.
+@end smallexample
+@end cartouche
+
+The @code{nbTermSetDefinition} function is used to redefine a term.
+The new value returned is the value of the new definition.
+
+@cartouche
+@smallexample
+nbCELL term,definition,value;
+nbCmd(context,"assert a=1,b=1;",0);
+definition=nbCellCreate(context,"a*b");
+term=nbTermCreate(context,"bob",definition);
+definition=nbCellDrop(context,definition);
+definition=nbCellCreate(context,"a+b");
+value=nbTermSetDefinition(context,term,definition); // Redefine "bob"
+// value
+nbCellDrop(context,term);
+nbCellDrop(context,definition);
+nbCellDrop(context,value);
+@end smallexample
+@end cartouche
 
 @node Medulla Functions
 @chapter Medulla Functions
@@ -1648,6 +2130,7 @@ log data out to a second file.
 @node Spine Functions
 @chapter Spine Functions
 @cindex spine functions
+
 
 @node GNU Free Documentation License
 @unnumbered GNU Free Documentation License
