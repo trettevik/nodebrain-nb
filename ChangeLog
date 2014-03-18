@@ -1,3 +1,147 @@
+commit 94f8206c0d83773878dc811e01954d60c44dfbd9
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Tue Mar 18 13:19:28 2014 -0400
+
+    misc 0.9.01 updates
+
+commit 7a10ca8224f387b789b95a8710b27480d69a462b
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Mon Mar 17 19:35:19 2014 -0400
+
+    incomplete 09.01 doc updates
+
+commit 8dadc6192f18685c5c93dfe168c04aa782afa639
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Mon Mar 17 19:17:21 2014 -0400
+
+    minor progress on Library document
+
+commit d330f241a55ff05dc272dca025ba3b1f91f58704
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Mon Mar 17 19:14:33 2014 -0400
+
+    moved .gitignore entries up to doc level
+
+commit 18abc0f36d839628a4cd9e85e5acffc99686abe9
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Mon Mar 17 19:08:48 2014 -0400
+
+    stop tracking auto generated version file
+
+commit d4014edb3a8df3ceafc94f5b22a7ba7c1eabc2a8
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Mon Mar 17 18:25:10 2014 -0400
+
+    stop tracking auto generated version file
+
+commit f3bbf4af34cd3a23e9b5821f1899bc30a460bf49
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Mon Mar 17 18:21:05 2014 -0400
+
+    stop tracking auto generated version file
+
+commit 596846b21b133df2202aa95e83763b2409ba42f7
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Mon Mar 17 18:06:56 2014 -0400
+
+    stop tracking generated version file
+
+commit 6c983f46fc0be987ee043d9a761849e23a2335b9
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sun Feb 23 22:46:57 2014 -0500
+
+    drafting api doc
+
+commit 3170ed864b6003ab6d16026dd8bb3977b917b95e
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Wed Feb 19 18:01:38 2014 -0500
+
+    partitioned corrected to partition
+
+commit 040885e9462b046ee2a6a4321224d98c4f935a46
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sat Feb 15 23:02:14 2014 -0500
+
+    fixed alert test - was showing assert
+
+commit a2889616d6e3f7ba87b55d2f566086412af6ccee
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sat Feb 15 22:52:16 2014 -0500
+
+    New version of NodeBrain Guide
+
+commit b2aee7f25f8d663c5d1c6b931ffc4ae7d0392fa7
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sun Feb 2 04:03:58 2014 -0500
+
+    dropped features that did not make the cut
+
+commit 0c9f346c4c60befdb02397567ebdecf328cb7a90
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sun Feb 2 03:40:19 2014 -0500
+
+    included module and TLS disable options
+
+commit c317851d115fc83dce98c579465a4c35bdaed712
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sun Feb 2 03:38:46 2014 -0500
+
+    option to disable each module
+
+commit 0e8d1b30d6c147fc2a96c406f53520e2196b741d
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sun Feb 2 03:37:52 2014 -0500
+
+    repared Source parameter
+
+commit d24b29f019d2e3a8d9cbf97c31e6e861f66563dd
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sun Feb 2 01:45:18 2014 -0500
+
+    removed module README
+
+commit 77e8ee104cc3eddd58e1a956e007d52a2443a295
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sun Feb 2 00:50:16 2014 -0500
+
+    cleaned up module directory
+
+commit 96042cae9ec51530693eafaa8e19c8b4f0cbd18c
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sun Feb 2 00:02:30 2014 -0500
+
+    bin file changes
+
+commit 93bdb249e6f57348a01d893d7b295d482921013a
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sat Feb 1 23:44:40 2014 -0500
+
+    single configure script
+
+commit 9f6952d609055fee05e9ddcd289a72b1b9e0ed79
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sat Feb 1 22:49:00 2014 -0500
+
+    eliminated sub directory configure scripts
+
+commit 663883ad1f596e55c5cadee2e0b96477447d14ab
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sat Feb 1 20:52:59 2014 -0500
+
+    optional tls
+
+commit 7eac9fbf25d7297a37d91d7fe236099a5476a764
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sat Feb 1 00:50:55 2014 -0500
+
+    cleaned up package bin
+
+commit f347f2e98cc15c8dc687cff626e06a5fea89ce1b
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sat Feb 1 00:46:36 2014 -0500
+
+    comment change
+
 commit fdec89219790b78625b21df26666332ada197a00
 Author: Ed Trettevik <eat@nodebrain.org>
 Date:   Fri Jan 31 14:11:58 2014 -0500
