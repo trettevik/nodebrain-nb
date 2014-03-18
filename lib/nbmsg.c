@@ -427,7 +427,9 @@ int nbMsgPrint(FILE *file,nbMsgRec *msgrec){
     fprintf(file,"\n");
     return(1);
     }
-  msgend=msgrec->len+msglen;
+  //msgend=msgrec->len+msglen;
+  msgend=(unsigned char *)msgrec;
+  msgend+=msglen;
   switch(msgrec->type){
     case NB_MSG_REC_TYPE_STATE: mType='s'; break;
     case NB_MSG_REC_TYPE_HEADER: mType='h'; break;
@@ -607,7 +609,9 @@ int nbMsgIncludesState(nbMsgLog *msglog){
   // 2011-01-25 eat - changed from logState to pgmState - was wrong before
   //else if(mTime==logState->msgnum[node].time && nbMsgCountCompare(mCount,logState->msgnum[node].count)>0) return(0);
   else if(mTime==pgmState->msgnum[node].time && nbMsgCountCompare(mCount,pgmState->msgnum[node].count)>0) return(0);
-  msgid+=2;
+  // 2014-02-08 eat - avoid having checker think we are overrunning an array
+  //msgid+=2;
+  msgid=(nbMsgId *)((char *)msgrec+sizeof(nbMsgRec));
   for(msgids=msgrec->msgids;msgids;msgids--){
     node=msgid->node;
     mTime=CNTOHL(msgid->time);
@@ -665,10 +669,14 @@ int nbMsgLogStateToRecord(nbCELL context,nbMsgLog *msglog,unsigned char *buffer,
   msgrec->msgids=0;
   msgid=&msgrec->si;
   nbMsgIdStuff(msgid,node,logState->msgnum[node].time,logState->msgnum[node].count);
-  msgid++;
+  // 2014-02-08 eat - changed so checker doesn't think we are overrunning an array
+  //msgid++;
+  msgid=&msgrec->pi;
   // We have a phony path message id here.  Need to stuff from something in msglog structure 
   nbMsgIdStuff(msgid,node,logState->msgnum[node].time,logState->msgnum[node].count);
-  msgid++;
+  // 2014-02-08 eat - changed so checker doesn't think we are overrunning an array
+  //msgid++;
+  msgid=(nbMsgId *)((char *)msgrec+sizeof(nbMsgRec));
   for(nodeIndex=0;nodeIndex<NB_MSG_NODE_MAX;nodeIndex++){
     if(nodeIndex==msglog->node) continue; // we handled self above
     if(logState->msgnum[nodeIndex].time<pgmState->msgnum[nodeIndex].time){
@@ -714,7 +722,9 @@ int nbMsgStateSetFromRecord(nbCELL context,nbMsgState *msgstate,nbMsgRec *msgrec
   nodeIndex=msgid->node;
   msgstate->msgnum[nodeIndex].time=CNTOHL(msgid->time);
   msgstate->msgnum[nodeIndex].count=CNTOHL(msgid->count);
-  msgid+=2;
+  // 2014-02-08 eat - changed so checker doesn't think we are overrunning an array
+  //msgid+=2;
+  msgid=(nbMsgId *)((char *)msgrec+sizeof(nbMsgRec));
   for(msgids=msgrec->msgids;msgids;msgids--){
     nodeIndex=msgid->node;
     msgstate->msgnum[nodeIndex].time=CNTOHL(msgid->time);
@@ -736,7 +746,9 @@ nbMsgState *nbMsgLogStateFromRecord(nbCELL context,nbMsgRec *msgrec){
   nodeIndex=msgid->node;
   msgstate->msgnum[nodeIndex].time=CNTOHL(msgid->time);
   msgstate->msgnum[nodeIndex].count=CNTOHL(msgid->count);
-  msgid+=2;
+  // 2014-02-08 eat - changed so checker doesn't think we are overrunning an array
+  //msgid+=2;
+  msgid=(nbMsgId *)((char *)msgrec+sizeof(nbMsgRec));
   for(msgids=msgrec->msgids;msgids;msgids--){
     nodeIndex=msgid->node;
     msgstate->msgnum[nodeIndex].time=CNTOHL(msgid->time);
@@ -775,11 +787,15 @@ char *nbMsgHeaderExtract(nbMsgRec *msgrec,int node,uint32_t *tranTimeP,uint32_t 
   if(msgid->node!=node) return("state message id node does not match expected node");
   *tranTimeP=CNTOHL(msgid->time);
   *tranCountP=CNTOHL(msgid->count);
-  msgid++;
+  // 2014-02-08 eat - changed so checker doesn't think we are overruning an array
+  //msgid++;
+  msgid=&msgrec->pi;
   if(msgid->node!=node) return("log message id node does not match expected node");
   *recordTimeP=CNTOHL(msgid->time);
   *recordCountP=CNTOHL(msgid->count);
-  msgid+=1+msgrec->msgids;
+  // 2014-02-08 eat - changed so checker doesn't think we are overruning an array
+  //msgid+=1+msgrec->msgids;
+  msgid=(nbMsgId *)((char *)msgrec+sizeof(nbMsgRec)+msgrec->msgids);
   if(msgid->node!=node) return("log message id node does not match expected node");
   *fileTimeP=CNTOHL(msgid->time);
   *fileCountP=CNTOHL(msgid->count);
@@ -1644,9 +1660,13 @@ int nbMsgFileWriteState(nbCELL context,int file,nbMsgState *msgstate,unsigned ch
   msgrec->datatype=NB_MSG_REC_DATA_ID;
   msgid=&msgrec->si;
   nbMsgIdStuff(msgid,node,msgstate->msgnum[node].time,msgstate->msgnum[node].count);  // 2012-12-31 eat - VID 4943-0.8.13-1
-  msgid++;
+  // 2014-02-08 eat - changed so checker doesn't think we are overrunning an array
+  //msgid++;
+  msgid=&msgrec->pi;
   nbMsgIdStuff(msgid,node,recordTime,recordCount);
-  msgid++;
+  // 2014-02-08 eat - changed so checker doesn't think we are overrunning an array
+  //msgid++;
+  msgid=(nbMsgId *)((char *)msgrec+sizeof(nbMsgRec));
   msgids=0;
   for(nodeIndex=0;nodeIndex<32;nodeIndex++){
     if(nodeIndex!=node && msgstate->msgnum[nodeIndex].time!=0){
@@ -2083,9 +2103,13 @@ int nbMsgLogFileCreate(nbCELL context,nbMsgLog *msglog){
   msgrec->datatype=NB_MSG_REC_DATA_ID;  
   msgid=&msgrec->si;
   nbMsgIdStuff(msgid,node,msglog->logState->msgnum[node].time,msglog->logState->msgnum[node].count);
-  msgid++;
+  // 2014-02-08 eat - changed so checker doesn't think we are overrunning an array
+  //msgid++;
+  msgid=&msgrec->pi;
   nbMsgIdStuff(msgid,node,msglog->recordTime,msglog->recordCount);
-  msgid++;
+  // 2014-02-08 eat - changed so checker doesn't think we are overrunning an array
+  //msgid++;
+  msgid=(nbMsgId *)((char *)msgrec+sizeof(nbMsgRec));
   msgids=0;
   for(nodeIndex=0;nodeIndex<32;nodeIndex++){
     if(nodeIndex!=node && msglog->logState->msgnum[nodeIndex].time!=0){
@@ -2121,8 +2145,9 @@ void nbMsgProducerUdpRead(nbCELL context,int serverSocket,void *handle){
   char name[32];       // 2012-12-31 eat - VID 4732-0.8.13-1  changed from 33 to 32
   ssize_t  len;
   
-  len=recvfrom(msglog->socket,name,sizeof(name),0,NULL,0);
+  len=recvfrom(msglog->socket,name,sizeof(name)-1,0,NULL,0);
   while(len==-1 && errno==EINTR) len=recvfrom(msglog->socket,name,sizeof(name),0,NULL,0);
+  name[sizeof(name)-1]=0;  // 2014-02-03 eat - CID 761628 - still trying to find a way to convince the checker it is null terminated
   if(len<0){
     outMsg(0,'E',"nbMsgProducerUdpRead: Cabal %s node %s ignoring recvfrom len=%d - %s",msglog->cabal,msglog->nodeName,len,strerror(errno));
     return;
@@ -2135,11 +2160,11 @@ void nbMsgProducerUdpRead(nbCELL context,int serverSocket,void *handle){
     outMsg(0,'E',"nbMsgProducerUdpRead: Cabal %s node %s ignoring request with out null terminator",msglog->cabal,msglog->nodeName);
     return;
     }
-  *(name+sizeof(name)-1)=0;  // 2013-01-04 eat - CID 751628 FP see if this convinces the checker - seems to miss that we checked above
-  if(*(name+sizeof(name)-1)!=0){ // 2013-01-04 eat - hey let's get really crazy until the checker agrees with me
-    outMsg(0,'E',"nbMsgProducerUdpRead: Cabal %s node %s ignoring request with out null terminator",msglog->cabal,msglog->nodeName);
-    return;
-    }
+  //*(name+sizeof(name)-1)=0;  // 2013-01-04 eat - CID 751628 FP see if this convinces the checker - seems to miss that we checked above
+  //if(*(name+sizeof(name)-1)!=0){ // 2013-01-04 eat - hey let's get really crazy until the checker agrees with me
+  //  outMsg(0,'E',"nbMsgProducerUdpRead: Cabal %s node %s ignoring request with out null terminator",msglog->cabal,msglog->nodeName);
+  //  return;
+  //  }
   nbMsgConsumerAdd(msglog,name);
   }
 
@@ -3558,7 +3583,9 @@ int nbMsgPeerCacheMsgHandler(nbCELL context,void *handle,nbMsgRec *msgrec){
     if(msgTrace) nbLogMsg(context,0,'T',"nbMsgPeerCacheMsgHandler: checking msgid for visit at node %d",msgnode->number);
     msgid=&msgrec->si;
     if(msgid->node==msgnode->number) return(0);
-    msgid+=2;
+    // 2014-02-08 eat - changed so checker doesn't think we are overruning an array
+    //msgid+=2;
+    msgid=(nbMsgId *)((char *)msgrec+sizeof(nbMsgRec));
     for(msgids=msgrec->msgids;msgids;msgids--){
       if(msgid->node==msgnode->number) return(0);
       }

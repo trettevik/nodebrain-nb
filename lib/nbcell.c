@@ -831,6 +831,18 @@ void nbCellReact(void){
 //******************************
 // External API
 
+nbCELL nbCellObtain(nbCELL context,char *cellExpression){
+  nbCELL cell;
+  char *cursor=cellExpression;
+  cell=(nbCELL)nbParseCell((NB_Term *)context,&cursor,0);
+  if(*cursor!=0){
+    outMsg(0,'E',"nbCellCreate() called with unrecognized syntax: %s",cellExpression);
+    cell=NULL;
+    }
+  cell=grabObject(cell);
+  return(cell);
+  }
+
 NB_Cell *nbCellCreate(nbCELL context,char *cellExpression){
   nbCELL cell;
   char *cursor=cellExpression;
@@ -853,6 +865,11 @@ NB_Cell *nbCellGetValue(NB_Cell *context,NB_Cell *cell){
 int nbCellGetType(NB_Cell *context,NB_Cell *cell){
   return(cell->object.type->apicelltype);
   }
+
+nbCELL nbCellObtainString(nbCELL context,char *string){
+  return((nbCELL)grabObject(useString(string)));
+  }
+
 NB_Cell *nbCellCreateString(NB_Cell *context,char *string){
   return(nbCellGrab(context,(NB_Cell *)useString(string)));
   }
@@ -867,8 +884,12 @@ char *nbCellGetText(NB_Cell *context,NB_Cell *cell){
   return(((NB_Text *)cell)->value);
   }
 
+nbCELL nbCellObtainReal(nbCELL context,double real){
+  return((nbCELL)grabObject(useReal(real)));
+  }
+
 NB_Cell *nbCellCreateReal(NB_Cell *context,double real){
-  return((NB_Cell *)useReal(real));
+  return(nbCellGrab(context,(NB_Cell *)useReal(real)));
   }
 
 double nbCellGetReal(NB_Cell *context,NB_Cell *cell){

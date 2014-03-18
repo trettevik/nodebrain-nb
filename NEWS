@@ -7,7 +7,7 @@
 
 ============================================================
 
-NodeBrain 0.9.00 (Columbo) Change Summary
+NodeBrain 0.9.01 (Columbo) Change Summary
 
 * Released TBD
 
@@ -38,8 +38,6 @@ NodeBrain 0.9.00 (Columbo) Change Summary
      command. 
 
   o  Introduced node facets.
-
-  o  ./configure --without-tls
 
 * Incompatibilities:
 
@@ -191,6 +189,11 @@ NodeBrain 0.9.00 (Columbo) Change Summary
      evaluation to determine if a value is in a set,
      and removal of values from sets.
 
+  o  The show command now supports a comma separated
+     list of display options.
+
+       > show a,b,c i,-r
+
 * Deprecated Syntax:
 
   o  The previously obsolete "address" command is no
@@ -214,6 +217,46 @@ NodeBrain 0.9.00 (Columbo) Change Summary
      This bug has been resolved by requiring a node to
      be defined before it is used in a sentence.  This
      seems not to create any hardship.
+
+============================================================
+
+NodeBrain 0.8.16 (Dopey) Change Summary
+
+* Released February 16, 2014
+
+* Theme: Build Options
+
+     This release is intended simply to provide the option
+     to exclude OpenSSL related features and specified node
+     modules from a build using ./configure --without-XXXX.
+
+* Documentation:
+
+  o  NodeBrain Guide converted to texinfo
+
+  o  NodeBrain Guide includes build options (e.g. --without-tls)
+
+  o  NodeBrain Language - Minor revision to SHOW command
+
+* Incompatibilities: (none)
+
+* New Features:
+
+  o  Top level ./configure now handles lib and module
+     configuration to shorten the time to configure.
+
+  o  --without-tls may be used on ./configure command to
+     exclude OpenSSL dependant features.
+
+  o  --disable-nb_<module> may be used on ./configure to
+     exclude the specified node module.
+
+  o  The SHOW command now accepts a comma separated list
+     of options.
+
+* Deprecated Syntax: (none)
+
+* Bug Fixes: (none)
 
 ============================================================
 

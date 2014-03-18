@@ -259,6 +259,8 @@
 *            transition to >, but that warning has not been removed. 
 * 2014-01-25 eat 0.9.00 Checker updates
 * 2014-01-27 eat 0.9.00 Double linked IF rules into on and off lists
+* 2014-02-16 eat 0.9.01 Modified SHOW to accept option list (also in 0.8.16)
+* 2014-03-15 eat 0.9.01 Fixed bug in rule parsing - was looking for newline in call to strtok
 *==============================================================================
 */
 #include "../config.h"
@@ -480,6 +482,20 @@ void showProcessList(){
   outFlush();
   }
 
+static void nbCmdShowHelp(){
+  outPut("\nThe show command provides context specific and global information.\n\n");
+  outPut("  show (<cell>) [<option>]  Show value of a cell expression.\n");
+  outPut("  show <term> [<option>]    Show specific term in active context.\n");
+  outPut("  show -<term_type>         Terms of a given type from active context.\n");
+  outPut("  show +<dictionary>        Terms in an alternate dictionary (name space).\n");
+  outPut("  show =<cell_type>         Global cell expressions of a specified type.\n");
+  outPut("  show /<trigger_type>      Global triggers of a specified type.\n");
+  outPut("  show %<measures>          Performance measures.\n");
+  outPut("  show *<section> [<topic>] Help on specified topic.\n\n");
+  outPut("A partial SHOW command displays a menu (e.g. \"show -\").\n\n");
+  outPut("Use \"?\" in place of options [<...>] for more information.\n");
+  }
+
 /***************************************************************
 *  Interpret Statements
 *  
@@ -490,247 +506,251 @@ int nbCmdShow(nbCELL context,void *handle,char *verb,char *cursor){
   NB_Cell *ref=NULL,*def=NULL,*val=NULL;
   int len;
 
-  cursave=cursor;
   while(*cursor==' ') cursor++;
-  if(*cursor==0 || strchr("+-=/%*$",*cursor)==NULL){
-    symid=nbParseSymbol(ident,sizeof(ident),&cursor);
-    if(symid=='t' || symid=='('){
-      if(symid=='('){ /* compute a cell expression */
-        if(NULL==(def=(NB_Cell *)nbParseCell((NB_Term *)context,&cursor,0))) return(1);
-        grabObject(def);
-        ref=def;
-        val=(NB_Cell *)nbCellCompute_(def);
-        cursor++;
-        }
-      else if(symid=='t'){
-        term=nbTermFind((NB_Term *)context,ident);
-        if(term==NULL){
-          if(*ident==0){ // symid='t' but ident=="" --- must have been "show ."
-            term=(NB_Term *)context;  // reference current context
-            if(*cursor=='.') cursor++;
-            }
-          else{
-            outMsg(0,'E',"Term \"%s\" not defined.",ident);
-            return(1);
-            }
+  if(!*cursor || *cursor==';'){
+    nbCmdShowHelp();
+    return(0);
+    }
+  while(*cursor){
+    cursave=cursor;
+    if(strchr("+-=/%*$",*cursor)==NULL){
+      symid=nbParseSymbol(ident,sizeof(ident),&cursor);
+      if(symid=='t' || symid=='('){
+        if(symid=='('){ /* compute a cell expression */
+          if(NULL==(def=(NB_Cell *)nbParseCell((NB_Term *)context,&cursor,0))) return(1);
+          grabObject(def);
+          ref=def;
+          val=(NB_Cell *)nbCellCompute_(def);
+          cursor++;
           }
-        ref=(NB_Cell *)term;
-        val=grabObject((NB_Cell *)term->cell.object.value);
-        def=grabObject((NB_Cell *)term->def);
-        }
-      optid=nbParseSymbol(ident,sizeof(ident),&cursor);
-      len=strlen(ident);
-      if(optid==';'){
-        if(symid=='t')  nbTermShowReport(term);
+        else if(symid=='t'){
+          term=nbTermFind((NB_Term *)context,ident);
+          if(term==NULL){
+            if(*ident==0){ // symid='t' but ident=="" --- must have been "show ."
+              term=(NB_Term *)context;  // reference current context
+              if(*cursor=='.') cursor++;
+              }
+            else{
+              outMsg(0,'E',"Term \"%s\" not defined.",ident);
+              return(1);
+              }
+            }
+          ref=(NB_Cell *)term;
+          val=grabObject((NB_Cell *)term->cell.object.value);
+          def=grabObject((NB_Cell *)term->def);
+          }
+        optid=nbParseSymbol(ident,sizeof(ident),&cursor);
+        len=strlen(ident);
+        if(optid==';' || optid==','){
+          if(symid=='t')  nbTermShowReport(term);
+          else{
+            outPut("() = ");
+            printObject((NB_Object *)val);
+            outPut(" == ");
+            printObject((NB_Object *)def);
+            outPut("\n");
+            }
+          if(optid==',') symid=',';
+          }
+        else if(strncmp(ident,"subscribers",len)==0) nbCellShowSub(ref);
+        else if(strncmp(ident,"impact",len)==0) nbCellShowImpact(ref);
+        else if(strncmp(ident,"value",len)==0) printObject((NB_Object *)val);
+        else if(strncmp(ident,"definition",len)==0) printObject((NB_Object *)def);
         else{
-          outPut("() = ");
-          printObject((NB_Object *)val);
-          outPut(" == ");
-          printObject((NB_Object *)def);
+          if(strcmp(ident,"?")!=0) outMsg(0,'E',"Option \"%s\" not recognized.",ident);
+          outPut("\nTo show information about a term in the active context:\n\n",ident);
+          outPut("  show <term> [<option>]\n\n",ident);
+          outPut("You may specify an option with a single character:\n\n");
+          outPut("  (v)alue       - object representing a value\n");
+          outPut("  (d)efinition  - object generating the value\n");
+          outPut("  (s)ubscribers - objects subscribing to the value\n");
+          outPut("  (i)mpact      - subscription hierarchy\n"); 
+          outPut("\n");
+          }
+        dropObject(val);
+        dropObject(def);
+        }
+      else{
+        if(*ident!=0 && symid!='?') outMsg(0,'E',"Expecting (<expression>) | <term> | - | + | = | / | % | *  at \"%s\".",cursave);
+        nbCmdShowHelp();
+        return(0);
+        }
+      }
+    else{
+      symid=*cursor;
+      cursor++;
+      cursave=cursor;
+      optid=nbParseSymbol(ident,sizeof(ident),&cursor);  
+      if(optid!='t' && optid!='?' && optid!=';'){  // 2012-12-27 eat 0.8.13 - CID 751517
+        outMsg(0,'E',"Unrecognized show command.  Use show command without parameters for help.");
+        return(0);
+        }
+      len=strlen(ident);
+      if(len==0){
+        strcpy(ident,"?");
+        len=1;
+        }
+      if(symid=='-'){  /* active context terms */
+        if(strncmp(ident,"terms",len)==0) termPrintGloss((NB_Term *)context,NULL,0);
+        else if(strncmp(ident,"cells",len)==0) termPrintGloss((NB_Term *)context,NULL,0);
+        else if(strncmp(ident,"facts",len)==0) termPrintGloss((NB_Term *)context,NULL,TYPE_IS_FACT);
+        else if(strncmp(ident,"if",len)==0) termPrintGloss((NB_Term *)context,NULL,0);
+        else if(strncmp(ident,"numbers",len)==0) termPrintGloss((NB_Term *)context,realType,0);
+        else if(strncmp(ident,"on",len)==0) termPrintGloss((NB_Term *)context,NULL,0);
+        else if(strncmp(ident,"rules",len)==0) termPrintGloss((NB_Term *)context,NULL,TYPE_IS_RULE);
+        else if(strncmp(ident,"strings",len)==0) termPrintGloss((NB_Term *)context,strType,0);
+        else if(strncmp(ident,"when",len)==0) termPrintGloss((NB_Term *)context,NULL,0);
+        else{
+          if(strcmp(ident,"?")!=0) outMsg(0,'E',"Expecting term type option at \"%s\".",cursave);
+          outPut("\nTo show all terms of a specified type in the active context:\n\n");
+          outPut("  show -<term_type>\n\n");
+          outPut("The <term_type> option may be specified with a single character:\n\n");
+          outPut("  (c)ells     - terms defined as dynamic cell expressions\n");
+          outPut("  (f)acts     - terms defined as constant numbers or strings\n");
+          outPut("  (i)f        - if rules\n");
+          outPut("  (n)umbers   - numbers\n");
+          outPut("  (o)n        - on rules\n");
+          outPut("  (r)ules     - if, on, and when rules\n");
+          outPut("  (s)trings   - strings\n");
+          outPut("  (t)erms     - all terms defined in the current context\n");
+          outPut("  (w)hen      - when rules\n");
           outPut("\n");
           }
         }
-      else if(strncmp(ident,"subscribers",len)==0) nbCellShowSub(ref);
-      else if(strncmp(ident,"impact",len)==0) nbCellShowImpact(ref);
-      else if(strncmp(ident,"value",len)==0) printObject((NB_Object *)val);
-      else if(strncmp(ident,"definition",len)==0) printObject((NB_Object *)def);
-      else{
-        if(strcmp(ident,"?")!=0) outMsg(0,'E',"Option \"%s\" not recognized.",ident);
-        outPut("\nTo show information about a term in the active context:\n\n",ident);
-        outPut("  show <term> [<option>]\n\n",ident);
-        outPut("You may specify an option with a single character:\n\n");
-        outPut("  (v)alue       - object representing a value\n");
-        outPut("  (d)efinition  - object generating the value\n");
-        outPut("  (s)ubscribers - objects subscribing to the value\n");
-        outPut("  (i)mpact      - subscription hierarchy\n"); 
-        outPut("\n");
+      else if(symid=='+'){  /* dictionary */
+        if(strncmp(ident,"settings",len)==0) showSet();
+        else if(strncmp(ident,"identities",len)==0){
+          outPut("active: %s\n",clientIdentity->name->value);
+          termPrintGloss(identityC,NULL,0);
+          }
+        else if(strncmp(ident,"calendars",len)==0) termPrintGlossHome(nb_TimeCalendarContext,NULL,0);
+        else if(strncmp(ident,"globals",len)==0) termPrintGloss(symGloss,NULL,0);
+        else if(strncmp(ident,"locals",len)==0) termPrintGloss(symContext,NULL,0);
+        else if(strncmp(ident,"modules",len)==0){
+          termPrintGloss(moduleC,NULL,0);
+          termPrintGloss(nb_SkillGloss,NULL,0);
+          nbModuleShowInstalled(context);
+          }
+        else if(strncmp(ident,"processes",len)==0) showProcessList();
+        else if(strncmp(ident,"types",len)==0) termPrintGloss(nb_TypeGloss,NULL,0);
+        //else if(strncmp(ident,"verbs",len)==0) nbVerbPrintAll(context->object.type->stem->verbTree);
+        else if(strncmp(ident,"verbs",len)==0) nbVerbPrintAll(context);
+        else{
+          if(strcmp(ident,"?")!=0) outMsg(0,'E',"Expecting name space option at \"%s\".",cursave);
+          outPut("\nTo show all terms in an alternate dictionary (name space):\n\n");
+          outPut("  show +<dictionary>\n\n");
+          outPut("You may specify the <dictionary> option with a single character:\n\n");
+          //outPut("  (b)rains     - declared brains (peers)\n");
+          outPut("  (c)alendars  - declared calendars (time expressions)\n");
+          outPut("  (g)lobals    - global source variables\n");
+          outPut("  (i)dentities - declared identities\n");
+          outPut("  (l)ocals     - local source variables\n");
+          outPut("  (m)odules    - declared modules (extensions)\n");
+          outPut("  (s)ettings   - control variables assigned with the SET command.\n");
+          outPut("  (t)ypes      - recognized term definition types\n");
+          outPut("  (v)erbs      - recognized verbs\n");
+          outPut("\n");
+          }
         }
-      dropObject(val);
-      dropObject(def);
-      }
-    else{
-      if(*ident!=0 && symid!='?') outMsg(0,'E',"Expecting (<expression>) | <term> | - | + | = | / | % | *  at \"%s\".",cursave);
-      outPut("\nThe show command provides context specific and global information.\n\n");
-      outPut("  show (<cell>) [<option>]  Show value of a cell expression.\n");
-      outPut("  show <term> [<option>]    Show specific term in active context.\n");
-      outPut("  show -<term_type>         Terms of a given type from active context.\n");
-      outPut("  show +<dictionary>        Terms in an alternate dictionary (name space).\n");
-      outPut("  show =<cell_type>         Global cell expressions of a specified type.\n");
-      outPut("  show /<trigger_type>      Global triggers of a specified type.\n");
-      outPut("  show %<measures>          Performance measures.\n");
-      outPut("  show *<section> [<topic>] Help on specified topic.\n\n");
-      outPut("A partial SHOW command displays a menu (e.g. \"show -\").\n\n");
-      outPut("Use \"?\" in place of options [<...>] for more information.\n");
-      }
-    return(0);
-    }
-  symid=*cursor;
-  cursor++;
-  cursave=cursor;
-  optid=nbParseSymbol(ident,sizeof(ident),&cursor);  
-  if(optid!='t' && optid!='?' && optid!=';'){  // 2012-12-27 eat 0.8.13 - CID 751517
-    outMsg(0,'E',"Unrecognized show command.  Use show command without parameters for help.");
-    return(0);
-    }
-  len=strlen(ident);
-  if(len==0){
-    strcpy(ident,"?");
-    len=1;
-    }
-  if(symid=='-'){  /* active context terms */
-    if(strncmp(ident,"terms",len)==0) termPrintGloss((NB_Term *)context,NULL,0);
-    else if(strncmp(ident,"cells",len)==0) termPrintGloss((NB_Term *)context,NULL,0);
-    else if(strncmp(ident,"facts",len)==0) termPrintGloss((NB_Term *)context,NULL,TYPE_IS_FACT);
-    else if(strncmp(ident,"if",len)==0) termPrintGloss((NB_Term *)context,NULL,0);
-    else if(strncmp(ident,"numbers",len)==0) termPrintGloss((NB_Term *)context,realType,0);
-    else if(strncmp(ident,"on",len)==0) termPrintGloss((NB_Term *)context,NULL,0);
-    else if(strncmp(ident,"rules",len)==0) termPrintGloss((NB_Term *)context,NULL,TYPE_IS_RULE);
-    else if(strncmp(ident,"strings",len)==0) termPrintGloss((NB_Term *)context,strType,0);
-    else if(strncmp(ident,"when",len)==0) termPrintGloss((NB_Term *)context,NULL,0);
-    else{
-      if(strcmp(ident,"?")!=0) outMsg(0,'E',"Expecting term type option at \"%s\".",cursave);
-      outPut("\nTo show all terms of a specified type in the active context:\n\n");
-      outPut("  show -<term_type>\n\n");
-      outPut("The <term_type> option may be specified with a single character:\n\n");
-      outPut("  (c)ells     - terms defined as dynamic cell expressions\n");
-      outPut("  (f)acts     - terms defined as constant numbers or strings\n");
-      outPut("  (i)f        - if rules\n");
-      outPut("  (n)umbers   - numbers\n");
-      outPut("  (o)n        - on rules\n");
-      outPut("  (r)ules     - if, on, and when rules\n");
-      outPut("  (s)trings   - strings\n");
-      outPut("  (t)erms     - all terms defined in the current context\n");
-      outPut("  (w)hen      - when rules\n");
-      outPut("\n");
-      }
-    }
-  else if(symid=='+'){  /* dictionary */
-    if(strncmp(ident,"settings",len)==0) showSet();
-    else if(strncmp(ident,"identities",len)==0){
-      outPut("active: %s\n",clientIdentity->name->value);
-      termPrintGloss(identityC,NULL,0);
-      }
-    else if(strncmp(ident,"calendars",len)==0) termPrintGlossHome(nb_TimeCalendarContext,NULL,0);
-    else if(strncmp(ident,"globals",len)==0) termPrintGloss(symGloss,NULL,0);
-    else if(strncmp(ident,"locals",len)==0) termPrintGloss(symContext,NULL,0);
-    else if(strncmp(ident,"modules",len)==0){
-      termPrintGloss(moduleC,NULL,0);
-      termPrintGloss(nb_SkillGloss,NULL,0);
-      nbModuleShowInstalled(context);
-      }
-    else if(strncmp(ident,"processes",len)==0) showProcessList();
-    else if(strncmp(ident,"types",len)==0) termPrintGloss(nb_TypeGloss,NULL,0);
-    //else if(strncmp(ident,"verbs",len)==0) nbVerbPrintAll(context->object.type->stem->verbTree);
-    else if(strncmp(ident,"verbs",len)==0) nbVerbPrintAll(context);
-    else{
-      if(strcmp(ident,"?")!=0) outMsg(0,'E',"Expecting name space option at \"%s\".",cursave);
-      outPut("\nTo show all terms in an alternate dictionary (name space):\n\n");
-      outPut("  show +<dictionary>\n\n");
-      outPut("You may specify the <dictionary> option with a single character:\n\n");
-      //outPut("  (b)rains     - declared brains (peers)\n");
-      outPut("  (c)alendars  - declared calendars (time expressions)\n");
-      outPut("  (g)lobals    - global source variables\n");
-      outPut("  (i)dentities - declared identities\n");
-      outPut("  (l)ocals     - local source variables\n");
-      outPut("  (m)odules    - declared modules (extensions)\n");
-      outPut("  (s)ettings   - control variables assigned with the SET command.\n");
-      outPut("  (t)ypes      - recognized term definition types\n");
-      outPut("  (v)erbs      - recognized verbs\n");
-      outPut("\n");
-      }
-    }
-  else if(symid=='='){  /* cell expression */   
-    if(strncmp(ident,"conditions",len)==0) condPrintAll(0);
-    else if(strncmp(ident,"assertion",len)==0) condPrintAll(4);
-    else if(strncmp(ident,"boolean",len)==0) condPrintAll(2);
-    else if(strncmp(ident,"relations",len)==0) condPrintAll(1);
-    else if(strncmp(ident,"math",len)==0)  printMathAll();
-    else if(strncmp(ident,"times",len)==0) condPrintAll(3);
-    else if(strncmp(ident,"string",len)==0) printStringAll();
-    else if(strncmp(ident,"number",len)==0) printRealAll();
-    else if(strncmp(ident,"list",len)==0) nbListShowAll();
-    else if(strncmp(ident,"projection",len)==0) nbProjectionShowAll();
-    /* old stuff */
-    else if(strncmp(ident,"timers",len)==0) nbClockShowTimers(cursor);   /* logical    */
-    else if(strncmp(ident,"schedule",len)==0) nbClockShowTimers(cursor); /* deprecated */
-    else{
-      if(strcmp(ident,"?")!=0) outMsg(0,'E',"Expecting cell expression type option at \"%s\".",cursave);
-      outPut("\nTo show all cells of a given type:\n\n");
-      outPut("  show =<cell_type>\n\n");
-      outPut("You may specify the <cell_type> option with a single character:\n\n");
-      outPut("  (a)ssertion - assertion cells\n");
-      outPut("  (b)oolean   - boolean condition cells\n");
-      outPut("  (c)ondition - all condition cells\n");
-      outPut("  (l)ist      - list cells\n");
-      outPut("  (m)ath      - math cells (real number operations)\n");
-      outPut("  (n)umber    - number constants\n");
-      outPut("  (r)elation  - relational condition cells\n");
-      outPut("  (s)tring    - string constants\n");
-      outPut("  (t)ime      - time condition cells\n");
-      outPut("\n");
-      }
-    }
-  else if(symid=='/'){  /* trigger type */   
-    if(strncmp(ident,"clock",len)==0) nbClockShowTimers(cursor);    /* preferred   */
-    else if(strncmp(ident,"rule",len)==0) nbRuleShowAll();
-    else if(strncmp(ident,"process",len)==0) nbClockShowProcess(cursor);   /* process time */
-    /* old stuff */
-    else if(strncmp(ident,"timers",len)==0) nbClockShowTimers(cursor);   /* logical    */
-    else if(strncmp(ident,"schedule",len)==0) nbClockShowTimers(cursor); /* deprecated */
-    else{
-      if(strcmp(ident,"?")!=0) outMsg(0,'E',"Expecting trigger type option at \"%s\".",cursave);
-      outPut("\nTo show all triggers of a specified type:\n\n");
-      outPut("  show /<trigger_type>\n\n");
-      outPut("You may specify the <trigger_type> with a single character.\n\n");
-      outPut("  (c)lock     - active timers\n");
-      outPut("  (p)roblem   - rules representing a problem to be solved\n");
-      outPut("  (r)ule      - rules\n");
-      outPut("\n");
-      }
-    }
+      else if(symid=='='){  /* cell expression */   
+        if(strncmp(ident,"conditions",len)==0) condPrintAll(0);
+        else if(strncmp(ident,"assertion",len)==0) condPrintAll(4);
+        else if(strncmp(ident,"boolean",len)==0) condPrintAll(2);
+        else if(strncmp(ident,"relations",len)==0) condPrintAll(1);
+        else if(strncmp(ident,"math",len)==0)  printMathAll();
+        else if(strncmp(ident,"times",len)==0) condPrintAll(3);
+        else if(strncmp(ident,"string",len)==0) printStringAll();
+        else if(strncmp(ident,"number",len)==0) printRealAll();
+        else if(strncmp(ident,"list",len)==0) nbListShowAll();
+        else if(strncmp(ident,"projection",len)==0) nbProjectionShowAll();
+        /* old stuff */
+        else if(strncmp(ident,"timers",len)==0) nbClockShowTimers(cursor);   /* logical    */
+        else if(strncmp(ident,"schedule",len)==0) nbClockShowTimers(cursor); /* deprecated */
+        else{
+          if(strcmp(ident,"?")!=0) outMsg(0,'E',"Expecting cell expression type option at \"%s\".",cursave);
+          outPut("\nTo show all cells of a given type:\n\n");
+          outPut("  show =<cell_type>\n\n");
+          outPut("You may specify the <cell_type> option with a single character:\n\n");
+          outPut("  (a)ssertion - assertion cells\n");
+          outPut("  (b)oolean   - boolean condition cells\n");
+          outPut("  (c)ondition - all condition cells\n");
+          outPut("  (l)ist      - list cells\n");
+          outPut("  (m)ath      - math cells (real number operations)\n");
+          outPut("  (n)umber    - number constants\n");
+          outPut("  (r)elation  - relational condition cells\n");
+          outPut("  (s)tring    - string constants\n");
+          outPut("  (t)ime      - time condition cells\n");
+          outPut("\n");
+          }
+        }
+      else if(symid=='/'){  /* trigger type */   
+        if(strncmp(ident,"clock",len)==0) nbClockShowTimers(cursor);    /* preferred   */
+        else if(strncmp(ident,"rule",len)==0) nbRuleShowAll();
+        else if(strncmp(ident,"process",len)==0) nbClockShowProcess(cursor);   /* process time */
+        /* old stuff */
+        else if(strncmp(ident,"timers",len)==0) nbClockShowTimers(cursor);   /* logical    */
+        else if(strncmp(ident,"schedule",len)==0) nbClockShowTimers(cursor); /* deprecated */
+        else{
+          if(strcmp(ident,"?")!=0) outMsg(0,'E',"Expecting trigger type option at \"%s\".",cursave);
+          outPut("\nTo show all triggers of a specified type:\n\n");
+          outPut("  show /<trigger_type>\n\n");
+          outPut("You may specify the <trigger_type> with a single character.\n\n");
+          outPut("  (c)lock     - active timers\n");
+          outPut("  (p)roblem   - rules representing a problem to be solved\n");
+          outPut("  (r)ule      - rules\n");
+          outPut("\n");
+          }
+        }
 #if !defined(WIN32)
-  else if(symid=='%'){  // experimental measures
-    if(strncmp(ident,"type",len)==0) nbObjectShowTypes();
-    //else if(strncmp(ident,"facet",len==0 nbSkillShowTypes();
-    else{
-      if(strcmp(ident,"?")!=0) outMsg(0,'E',"Expecting performance type option at \"%s\".",cursave);
-      outPut("\nTo show all time measurements of a specified type:\n\n");
-      outPut("  show ~<time_measure_type>\n\n");
-      outPut("You may specify the <time_measure_type> with a single character.\n\n");
-      outPut("  (t)ype      - cell types\n");
-      outPut("  (s)kill     - skills\n");
-      outPut("\n");
-      }
-    }
-#endif
-  else if(symid=='*'){  /* help topic */   
-    if(strncmp(ident,"about",len)==0){
-      symid=nbParseSymbol(ident,sizeof(ident),&cursor);
-      if(symid=='t'){
-        if(strncmp(ident,"copyright",len)==0) showCopyright();
-        else if(strncmp(ident,"version",len)==0) showVersion();
+      else if(symid=='%'){  // experimental measures
+        if(strncmp(ident,"type",len)==0) nbObjectShowTypes();
+        //else if(strncmp(ident,"facet",len==0 nbSkillShowTypes();
+        else{
+          if(strcmp(ident,"?")!=0) outMsg(0,'E',"Expecting performance type option at \"%s\".",cursave);
+          outPut("\nTo show all time measurements of a specified type:\n\n");
+          outPut("  show ~<time_measure_type>\n\n");
+          outPut("You may specify the <time_measure_type> with a single character.\n\n");
+          outPut("  (t)ype      - cell types\n");
+          outPut("  (s)kill     - skills\n");
+          outPut("\n");
+          }
         }
-      else showAbout();
+#endif
+      else if(symid=='*'){  /* help topic */   
+        if(strncmp(ident,"about",len)==0){
+          symid=nbParseSymbol(ident,sizeof(ident),&cursor);
+          if(symid=='t'){
+            if(strncmp(ident,"copyright",len)==0) showCopyright();
+            else if(strncmp(ident,"version",len)==0) showVersion();
+            }
+          else showAbout();
+          }
+        else if(strncmp(ident,"copyright",len)==0) showCopyright();
+        else if(strncmp(ident,"version",len)==0) showVersion();
+        else{
+          if(strcmp(ident,"?")!=0) outMsg(0,'E',"Expecting help topic option at \"%s\".",cursave);
+          outPut("\nTo obtain help on a particular topic:\n\n");
+          outPut("  show *<section> [<topic>]\n\n");
+          outPut("You may specify the <section> with a single character:\n\n");
+          outPut("  (a)bout  [(v)ersion|(c)opyright]\n\n");
+          outPut("More topics will be added in the future.\n");
+          outPut("\n");
+          }
+        }
+      else if(symid=='$'){  /* Size of structures */   
+        outPut("\nStructure Sizes:\n");
+        outPut("  Tree Node:     %d\n",sizeof(NB_TreeNode));
+        outPut("  Object Header: %d\n",sizeof(NB_Object));
+        outPut("  Cell Header:   %d\n",sizeof(NB_Cell));
+        outPut("  Condition:     %d\n",sizeof(NB_Cond));
+        outPut("  Term:          %d\n",sizeof(NB_Term));
+        }
       }
-    else if(strncmp(ident,"copyright",len)==0) showCopyright();
-    else if(strncmp(ident,"version",len)==0) showVersion();
-    else{
-      if(strcmp(ident,"?")!=0) outMsg(0,'E',"Expecting help topic option at \"%s\".",cursave);
-      outPut("\nTo obtain help on a particular topic:\n\n");
-      outPut("  show *<section> [<topic>]\n\n");
-      outPut("You may specify the <section> with a single character:\n\n");
-      outPut("  (a)bout  [(v)ersion|(c)opyright]\n\n");
-      outPut("More topics will be added in the future.\n");
-      outPut("\n");
-      }
+    if(*cursor==';' || *cursor==',') cursor++;
+    while(*cursor==' ') cursor++;
     }
-  else if(symid=='$'){  /* Size of structures */   
-    outPut("\nStructure Sizes:\n");
-    outPut("  Tree Node:     %d\n",sizeof(NB_TreeNode));
-    outPut("  Object Header: %d\n",sizeof(NB_Object));
-    outPut("  Cell Header:   %d\n",sizeof(NB_Cell));
-    outPut("  Condition:     %d\n",sizeof(NB_Cond));
-    outPut("  Term:          %d\n",sizeof(NB_Term));
+  if(*cursor){
+    outMsg(0,'E',"Syntax error at -->%s",cursor);
     }
   return(0);
   }
@@ -1083,7 +1103,6 @@ int nbCmdSet(nbCELL context,void *handle,char *verb,char *cursor){
       else if(strcmp(ident,"notraceProxy")==0) proxyTrace=0;
       else if(strcmp(ident,"traceWebster")==0) nb_websterTrace=1;
       else if(strcmp(ident,"notraceWebster")==0) nb_websterTrace=0;
-      else if(strcmp(ident,"notraceTls")==0) tlsTrace=0;
 #endif
       else if(strcmp(ident,"traceMessage")==0) msgTrace=1;
       else if(strcmp(ident,"notraceMessage")==0) msgTrace=0;
@@ -1667,7 +1686,7 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     else rule_type=condTypeIfRule;
     action->assert=assertions;
     if(!cursor) action->command=NULL;
-    else action->command=grabObject(useString(strtok(cursor,"\n"))); /* action is rest of line */
+    else action->command=grabObject(useString(cursor)); /* action is rest of line */
     action->cmdopt=NB_CMDOPT_RULE;     /* do not suppress symbolic substitution */
     action->status='R';   /* ready */
     ruleCond=useCondition(rule_type,object,action);
@@ -2049,48 +2068,6 @@ int nbCmdSource(nbCELL context,void *handle,char *verb,char *cursor){
   //nbParseSource(context,cursor);
   nbSource(context,0,cursor);
   return(0);
-  }
-
-/*
-*  Generate source from a file
-*/
-void nbCmdTranslate(nbCELL context,char *verb,char *cursor){
-  char xtrname[256],filename[512];
-  NB_Term *xtrTerm;
-  char *delim;
-
-  if(strlen(cursor)>=sizeof(xtrname)){    // 2012-12-15 eat - CID 751635
-    outMsg(0,'E',"Translator name may not be greater than %d characters.",sizeof(xtrname)-1);
-    return;
-    }
-  strncpy(xtrname,my_strtok_r(cursor," ",&cursor),sizeof(xtrname)-1); // 2014-01-25 eat - CID 1164441 2012-12-15 eat - CID 751635
-  *(xtrname+sizeof(xtrname)-1)=0;
-  if((xtrTerm=nbTermFind((NB_Term *)context,xtrname))==NULL){
-    outMsg(0,'E',"Translator \"%s\" not defined.",xtrname);
-    return;
-    }
-  if(xtrTerm->def==NULL || xtrTerm->def->type!=nb_TranslatorType){
-    outMsg(0,'E',"Expecting translator name. Term \"%s\" not a translator.",xtrname);
-    return;
-    }
-  delim=cursor;
-  while(*delim==' ') delim++;
-  cursor=delim;
-  while(*delim!=' ' && *delim!=0 && *delim!=';') delim++;
-  if(*delim==' '){
-    *delim=0;
-    delim++;
-    while(*delim==' ') delim++;
-    if(*delim!=0 && *delim!=';') nbLet(delim,symContext,0);  
-    }
-  else *delim=0;
-  if(strlen(cursor)>=sizeof(filename)){   // 2012-12-15 eat - CID 751635
-    outMsg(0,'E',"File name may not be greater than %d characters.",sizeof(filename)-1);
-    return;
-    }
-  snprintf(filename,sizeof(filename),"%s",cursor);  // 2013-01-16 eat - RC-STR31-C
-  outFlush(); 
-  nbTranslatorExecuteFile(context,(nbCELL)(xtrTerm->def),filename);
   }
 
 /*

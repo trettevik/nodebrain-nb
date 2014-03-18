@@ -1,4 +1,4 @@
-ÿþ\input texinfo   @c -*-texinfo-*-
+\input texinfo   @c -*-texinfo-*-
 @c %**start of header
 @setfilename nb_peer.info
 @include version.texi
@@ -12,7 +12,7 @@
 
 @copying
 Peer NodeBrain Module@*
-June 2012@*
+February 2014@*
 The Boeing Company,  P.O. Box 3707, Seattle, WA 98124, USA
 
 @sp 2
@@ -20,7 +20,7 @@ The Boeing Company,  P.O. Box 3707, Seattle, WA 98124, USA
 
 Author: Ed Trettevik <eat@@nodebrain.org>
 
-Copyright @copyright{} 2006, 2007, 2008, 2009, 2010, 2011 The Boeing Company
+Copyright @copyright{} 2006---2014 The Boeing Company
 
 @sp 1
 Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} preceding the index at the end of this document.
@@ -32,7 +32,7 @@ NodeBrain(TM) is a trademark of The Boeing Company.   All other trademarks and r
 @b{Software License}
 
 @multitable {------------------------------} {----------------------------------------------------}
-@item Copyright @copyright{} 1998--2010 @tab The Boeing Company
+@item Copyright @copyright{} 1998--2014 @tab The Boeing Company
 @item @tab Ed Trettevik <eat@@nodebrain.org>
 @end multitable
 
@@ -105,7 +105,7 @@ See www.nodebrain.org for more information and the latest update to this documen
 This tutorial is for NodeBrain (version @value{VERSION}, @value{UPDATED-MONTH}), an open source agent
 for state and event monitoring.
 
-Copyright @copyright{} 2006, 2007, 2008, 2009, 2010, 2011, 2012 The Boeing Company
+Copyright @copyright{} 2006---2014 The Boeing Company
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
@@ -145,6 +145,58 @@ Permission is granted to copy, distribute and/or modify this document under the 
 The peer module provides support for external communication between NodeBrain nodes within the same process, in two separate processes on the same system, or two processes running on different systems.  This includes TCP/IP communication using network or local domain sockets and communication via peer queue files.  Both methods can be combined to provide store-and-forward transmission of messages to ensure delivery when interrupted by network or agent outages.
 
 The peer module implements the NodeBrain protocol (NBP) originally built into the NodeBrain Interpreter.
+
+@section Identity
+
+NodeBrain associates permissions with identities, which are nothing more
+than names to which permissions are be granted. 
+An identity may map to something less abstract, like a person, account, application, component, or role. 
+NodeBrain makes no assumptions about how you map an abstract identity to something specific.
+
+Modules that enable NodeBrain commands to be executed remotely, as the
+Peer module does, must map incoming commands to an identity.
+The Peer module does this by mapping authentication keys to identities.
+Each end of a connection (client and server) claim an identity and
+each is authenticated by the other using keys.
+Commands issued locally on behalf of the peer, are issued under
+the peer's authenticated identity.
+
+@section Keys
+@cindex keys
+
+The peer module uses private and shared keys.  
+Shared keys are chryptographically known as public keys, except here they are not intended to be widely published. 
+Instead they are shared within a small circle of users, often the same user on multiple servers.  
+Keys are stored in a key file named @file{$HOME/.nb/nb_peer.keys}, a file readable and writable only by the owner.
+
+A key file with identities @code{tigger} and @code{lion} is illustrated below.
+@cartouche
+@example
+lion   3.e57f2e4dbe5d8bc4.0.0;                 # Shared key for lion
+tigger 3.be5d8bc4465d3aa7.bd6107c786f72c15.0;  # Private key for tigger
+@end example
+@end cartouche
+
+The difference between a shared and private key can be seen in the third component, which
+is @code{0} in a shared key.
+
+A new private key can be generated using the @code{identify} Peer module command.
+@cartouche
+@example
+nb :"peer.identify bear"
+@end example
+@end cartouche
+
+The @code{identify} command appends a new private key to the key file for the specified identity.
+
+@cartouche
+@example
+lion   3.e57f2e4dbe5d8bc4.0.0;                 # Shared key for lion
+tigger 3.be5d8bc4465d3aa7.bd6107c786f72c15.0;  # Private key for tigger
+bear   5.65d3aa7be5d8bc44.6f72c15bd6107c78.0;
+@end example
+@end cartouche
+
 
 @node Tutorial
 @chapter Tutorial
@@ -703,4 +755,3 @@ This module does not implement triggers.
 @unnumbered Index 
 @printindex cp 
 @bye 
-

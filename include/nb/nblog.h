@@ -117,7 +117,7 @@ extern void nbExit(char *format,...);
 #if defined(WIN32)
 __declspec(dllexport)
 #endif
-extern void nbAbort(char *format,...);
+extern void nbAbort(const char *format,...);
 
 #if defined(WIN32)
 __declspec(dllexport)

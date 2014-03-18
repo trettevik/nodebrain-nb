@@ -50,6 +50,7 @@
 * 2009-02-22 eat 0.7.5  Renamed nbout.h to nblog.h
 * 2009-12-12 eat 0.7.7  Included nbmsg.h
 * 2011-11-05 eat 0.8.6  Included nbmail.h
+* 2014-02-16 eat 0.9.01 Conditional OpenSSL headers (also in 0.8.16)
 *============================================================================
 */
 #ifndef _NB_H_
@@ -93,12 +94,15 @@
 #include <nb/nbrule.h>        // rule routines
 //#include <nb/nbnode.h>        // node routines
 #include <nb/nbqueue.h>       // queue routines
+#include <nb/nbverb.h>        /* verb structure */
+
+#ifdef HAVE_OPENSSL
 #include <nb/nbtls.h>         // TLS routines
 #include <nb/nbpeer.h>        // peer routines
 #include <nb/nbproxy.h>       // proxy routines
 #include <nb/nbmsg.h>         // message routines
-#include <nb/nbverb.h>        /* verb structure */
 #include <nb/nbwebster.h>     // webster routines
 #include <nb/nbmail.h>        // mail routines
+#endif
 
 #endif // _NB_H_

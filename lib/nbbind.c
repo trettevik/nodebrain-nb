@@ -40,8 +40,7 @@
 *   statically linked extended skills supplied from outside the library.  Or
 *   you can add new calls here and rebuild the NodeBrain library to include
 *   your extended skills.  In that case, you will need to update Makefile.am
-*   to include the additional source files for the library and run automake
-*   to update the Makefile. 
+*   to include the additional source files for the library.
 *
 *   It is best to use dynamic skill modules, or link extensions into another
 *   program from outside the library, rather than updating the library.  But

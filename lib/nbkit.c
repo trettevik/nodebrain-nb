@@ -137,11 +137,21 @@ static int nbKitUnlink(char *home,char *caboodle){
   return(0);
   }
 
-static int nbKitLink(char *home,char *caboodle,char *directory){
+static int nbKitLink(const char *home,const char *caboodle,const char *directory){
   char pathname[1024];
   int len,rc;
   DIR *dir;
-
+  struct stat filestat;
+ 
+  // 2014-02-03 eat - add verification of directory parameter
+  if(stat(directory,&filestat)){
+    fprintf(stderr,"Unable to obtain attributes of %s - %s\n",directory,strerror(errno));
+    return(1);
+    }
+  if(!(S_ISDIR(filestat.st_mode))){
+    fprintf(stderr,"Directory parameter %s is not a directory\n",directory);
+    return(1);
+    }
   len=snprintf(pathname,sizeof(pathname),"%s/.nb",home);
   if(len<0 || len>=sizeof(pathname)){
     fprintf(stderr,"Unable to link %s - link path too long for buffer\n",caboodle);
@@ -178,9 +188,15 @@ static int nbKitLink(char *home,char *caboodle,char *directory){
     fprintf(stderr,"Unable to unlink %s - %s\n",pathname,strerror(errno));
     return(1);
     }
-  rc=symlink(directory,pathname);
+  rc=symlink(directory,pathname); // 2014-02-08 eat - CID 1167487 TOCTOU - OK, checking again after
   if(rc<0){
     fprintf(stderr,"Unable to link %s to %s - %s\n",pathname,directory,strerror(errno));
+    return(1);
+    }
+  if(stat(directory,&filestat) || !(S_ISDIR(filestat.st_mode))){
+    fprintf(stderr,"Directory parameter %s not recognized as a directory - removing link\n",directory);
+    rc=unlink(pathname);
+    if(rc<0) fprintf(stderr,"Unable to unlink %s - %s\n",pathname,strerror(errno));
     return(1);
     }
   return(0);

@@ -421,6 +421,7 @@ nbServer *smtpServer(nbCELL context,char *cursor,char *qDir,char *msg){
   nbServer *server;
   char *inCursor;
   char *interfaceAddr;
+  int port;
 
   if(strlen(qDir)>=512){   // 2012-12-25 eat - AST 38 - replaced > with >=
     sprintf(msg,"Queue directory name too long for buffer");
@@ -468,7 +469,13 @@ nbServer *smtpServer(nbCELL context,char *cursor,char *qDir,char *msg){
     nbFree(server,sizeof(nbServer));
     return(NULL);
     }
-  server->port=atoi(inCursor);
+  port=atoi(inCursor);
+  if(port<0 || port>65535){
+    sprintf(msg,"Port number greater than 65535 in server specification - expecting identity@address:port");
+    nbFree(server,sizeof(nbServer));
+    return(NULL);
+    }
+  server->port=(unsigned short)port;
   server->socket=0;
   if(*server->address<'0' || *server->address>'9'){
     interfaceAddr=nbIpGetAddrByName(server->address);

@@ -9,6 +9,7 @@ aclocal.m4
 Makefile.in
 Makefile
 nb
+!include/nb
 nodebrain
 nodebrain.dsc
 nbTutorial.info

@@ -156,6 +156,11 @@ extern nbCELL NB_CELL_TRUE;
 #if defined(WIN32)
 __declspec(dllexport)
 #endif
+extern nbCELL nbCellObtain(nbCELL context,char *cellExpression);
+
+#if defined(WIN32)
+__declspec(dllexport)
+#endif
 extern nbCELL nbCellCreate(nbCELL context,char *cellExpression);
 
 #if defined(WIN32)
@@ -228,6 +233,11 @@ extern void nbCellPublish(nbCELL pub);
 #if defined(WIN32)
 __declspec(dllexport)
 #endif
+extern nbCELL nbCellObtainString(nbCELL context,char *string);
+
+#if defined(WIN32)
+__declspec(dllexport)
+#endif
 extern nbCELL nbCellCreateString(nbCELL context,char *string);
 
 #if defined(WIN32)
@@ -241,6 +251,11 @@ __declspec(dllexport)
 extern char *nbCellGetText(nbCELL context,nbCELL cell);
 
 /* API Real Functions */
+#if defined(WIN32)
+__declspec(dllexport)
+#endif
+extern nbCELL nbCellObtainReal(nbCELL context,double real);
+
 #if defined(WIN32)
 __declspec(dllexport)
 #endif

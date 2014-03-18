@@ -95,13 +95,14 @@
 # 2013-02-03 eat 0.8.14 New version - nbkit support
 # 2013-03-10 eat 0.8.15 Changed NB_MODULE_PATH to only look in the minor version directories
 # 2013-12-05 eat 0.9.00 New version - incompatible with rules designed for prior versions
-# 2014-01-31 eat 0.9.00 Made OpenSSL optional
-# 2014-02-01 eat 0.9.00 Included --with-tls and --with-nb_peer options
-# 2014-02-01 eat 0.9.00 Reduced to a single configure.ac file - handles subordinate directories
+# 2014-01-31 eat 0.8.16 Made OpenSSL optional
+# 2014-02-01 eat 0.8.16 Included --with-tls and --with-nb_peer options
+# 2014-02-01 eat 0.8.16 Reduced to a single configure.ac file - handles subordinate directories
+# 2014-02-12 eat 0.9.01 Target 0.9.x release
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([nodebrain],[0.9.00],[bugs@nodebrain.org])
+AC_INIT([nodebrain],[0.9.01],[bugs@nodebrain.org])
 #AC_CONFIG_SRCDIR([nb.c])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(config)
@@ -111,7 +112,7 @@ AM_INIT_AUTOMAKE
 # define module directory variables
 
 AC_DEFINE_UNQUOTED(NB_API_VERSION,"0",[NodeBrain API version])
-NB_MODULE_PATH=".nb:/usr/local/lib/nb-0.9.00:/usr/lib/nb-0.9.00:/usr/lib64/nb-0.9.00"
+NB_MODULE_PATH=".nb:/usr/local/lib/nb-0.9.01:/usr/lib/nb-0.9.01:/usr/lib64/nb-0.9.01"
 NB_MODULE_PATH_SEPARATOR=":"
 AC_DEFINE_UNQUOTED(NB_MODULE_PATH,"${NB_MODULE_PATH}",[Module path])
 AC_DEFINE_UNQUOTED(NB_MODULE_PATH_SEPARATOR,'${NB_MODULE_PATH_SEPARATOR}',[Module path separator])
@@ -253,7 +254,7 @@ AS_IF([test "x$enable_nb_webster" == xyes -a "x$with_tls" != xno],[NB_MODULES=$N
 
 AC_SUBST([NB_MODULES])
 # Set module subdirectory by minor version - ${libdir}/nb/${NB_MOD_DIR}/
-AC_SUBST([NB_MOD_DIR],[0.9.00])
+AC_SUBST([NB_MOD_DIR],[0.9.01])
 
 # Figure out which nb program to use with "make check".
 #   If we are in a Nodebrain distribution, we'll use

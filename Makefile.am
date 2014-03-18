@@ -67,15 +67,18 @@
 ## 2008/10/24 eat 0.7.3  Moving modules down to a sub-package in "module" directory
 ## 2010/02/27 eat 0.7.9  Included DESTDIR
 ## 2013/02/03 eat 0.8.13 Included nbkit man pages
+## 2014-02-18 eat 0.9.01 Included NodeBrain Library manual
 ##=============================================================================
 
 ACLOCAL_AMFLAGS= -I m4
 
 SUBDIRS = lib . module
 
-info_TEXINFOS = doc/nodebrain.texi doc/nbTutorial/nbTutorial.texi doc/nbLanguage/nbLanguage.texi
+info_TEXINFOS = doc/nodebrain.texi doc/nbGuide/nbGuide.texi doc/nbTutorial/nbTutorial.texi doc/nbLanguage/nbLanguage.texi doc/nbLibrary/nbLibrary.texi
+doc_nbGuide_nbGuide_TEXINFOS = doc/nbGuide/fdl.texi
 doc_nbTutorial_nbTutorial_TEXINFOS = doc/nbTutorial/fdl.texi
 doc_nbLanguage_nbLanguage_TEXINFOS = doc/nbLanguage/fdl.texi
+doc_nbLibrary_nbLibrary_TEXINFOS = doc/nbLibrary/fdl.texi
 
 dist_man_MANS = \
   man/nb.1 \

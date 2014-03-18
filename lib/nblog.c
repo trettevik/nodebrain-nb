@@ -525,7 +525,7 @@ void nbExit(char *format,...){
 *    nbAbort(msgid,msgclass,format,arg1,arg2,...);
 *
 */
-void nbAbort(char *format,...){
+void nbAbort(const char *format,...){
   va_list args;
   int len;
   va_start(args,format);

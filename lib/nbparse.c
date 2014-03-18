@@ -166,31 +166,6 @@ void nbParseInit(void){
   }
 
 /*
-*  The strtok_r function was not found on the Sequent machine used to
-*  compile this program for the Sequent platform.  This routine is a
-*  work around.  It only supports a single delimiter character.
-*/
-char *my_strtok_r(char *cursor,char *delim,char **newcur){
-  char *mycursor;
-  while(*cursor==*delim){
-    cursor++;
-    }
-  if(*cursor==0){
-    *newcur=NULL;
-    return(NULL);
-    }
-  mycursor=strchr(cursor,*delim);
-  if(mycursor!=NULL){
-    *mycursor=0;
-    mycursor++;
-    *newcur=mycursor;
-    }
-  //else *newcur=strchr(cursor,0);       // 2013-01-01 eat VIC 821-0.8.13-1 FP but change
-  else *newcur=cursor+strlen(cursor);  
-  return(cursor);
-  }
-
-/*
 *  Parse a term (single level of qualification)
 *
 *  Returns length of qualifier copied
