@@ -261,6 +261,7 @@
 * 2014-01-27 eat 0.9.00 Double linked IF rules into on and off lists
 * 2014-02-16 eat 0.9.01 Modified SHOW to accept option list (also in 0.8.16)
 * 2014-03-15 eat 0.9.01 Fixed bug in rule parsing - was looking for newline in call to strtok
+* 2014-03-20 eat 0.9.01 Restored capability to define a node for a term that is current defined as undefined
 *==============================================================================
 */
 #include "../config.h"
@@ -1752,7 +1753,7 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
       }
     }
   else if(strcmp(type,"node")==0){
-    if(term){
+    if(term && term->def!=nb_Undefined){ // 2014-03-20 eat - allow when defined as undefined
       outMsg(0,'E',"Sorry, you may not redefine a term as node.");
       return(1);
       }
