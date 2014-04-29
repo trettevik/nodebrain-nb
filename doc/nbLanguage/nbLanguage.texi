@@ -1189,7 +1189,7 @@ Because that syntax was less intuitive, it is now deprecated and support will be
 @item ?A then B @tab then  @tab B If A is Unknown, else Unknown 
 @end multitable
 
-@multitable {-----------------}{----------------}{----------------}{---------------}
+@multitable {-----------------}{-----------------}{----------------}{----------------}{---------------}
 @headitem A @tab B @tab A then B @tab A &~& B @tab A |~| B
 @item ! @tab ! @tab ? A @tab ? A @tab ! B 
 @item ! @tab T @tab ? A @tab ? A @tab T B
@@ -1219,7 +1219,7 @@ The value capture operator, @code{capture}, take the idea of enabled monitoring 
 @item ?A capture B @tab capture @tab If A toggles Unknown, capture B
 @end multitable
 
-@multitable {-------------}{---------------}{---------------}{---------------}{-------------}
+@multitable {-------------}{------------}{------------}{-----------}{----------}{----------}
 @headitem A @tab B @tab C @tab A capture B @tab A &^& B @tab A |^| B
 @item ! -> T @tab B @tab C @tab B @tab B @tab C 
 @item ? -> T @tab B @tab C @tab B @tab B @tab C
