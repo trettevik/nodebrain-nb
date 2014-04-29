@@ -12,8 +12,8 @@
 ~ > #
 define r1 on(a)[1]: show r1
 ~ > define r1 on(a)[1]: show r1
-define r2 on(not a)[2]: show r2
-~ > define r2 on(not a)[2]: show r2
+define r2 on(!a)[2]: show r2
+~ > define r2 on(!a)[2]: show r2
 define r3 on(a & b)[3]: show r3
 ~ > define r3 on(a & b)[3]: show r3
 define r4 on(a | b)[4]: show r4

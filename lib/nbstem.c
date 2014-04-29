@@ -89,7 +89,8 @@ void nbStemInit(NB_Stem *stem){
   initMath(stem);
   initRegexp(stem);
   initTerm(stem);
-  initCondition(stem);
+  nbConditionInit(stem);
+  nbConditionalInit(stem);
   nbAxonInit(stem);
   nbAssertionInit(stem);
   initCall(stem);              /* must follow initCondition */

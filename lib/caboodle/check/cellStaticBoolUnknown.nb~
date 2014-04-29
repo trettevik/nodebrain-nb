@@ -22,8 +22,8 @@ define r1 if(e1 & e2 & e3 & e4 & e5 & e6 & e7 & e8 & e9 & eA & eB);
 
 assert e1==(?    );
 ~ > assert e1==(?    );
-assert e2==(not ?);
-~ > assert e2==(not ?);
+assert e2==(!?);
+~ > assert e2==(!?);
 assert e3==(1 & ?);
 ~ > assert e3==(1 & ?);
 assert e4==(? & 1);
@@ -71,8 +71,8 @@ assert u=?;
 
 assert e1==(u    );
 ~ > assert e1==(u    );
-assert e2==(not u);
-~ > assert e2==(not u);
+assert e2==(!u);
+~ > assert e2==(!u);
 assert e3==(t & u);
 ~ > assert e3==(t & u);
 assert e4==(u & t);
@@ -116,8 +116,8 @@ show -cells;
 
 assert e1==( u       );
 ~ > assert e1==( u       );
-assert e2==(not u    );
-~ > assert e2==(not u    );
+assert e2==(!u    );
+~ > assert e2==(!u    );
 assert e3==("a" &  u );
 ~ > assert e3==("a" &  u );
 assert e4==( u  & "a");
@@ -164,8 +164,8 @@ assert a="a";
 
 assert e1==(u    );
 ~ > assert e1==(u    );
-assert e2==(not u);
-~ > assert e2==(not u);
+assert e2==(!u);
+~ > assert e2==(!u);
 assert e3==(a & u);
 ~ > assert e3==(a & u);
 assert e4==(u & a);

@@ -169,11 +169,8 @@ void nbClockSetTimer(time_t etime,NB_Cell *object){
     nb_timerFree=newTimer;
     }
   if(etime==0) return;
-  if(nb_timerFree==NULL) newTimer=(NB_Timer *)nbAlloc(sizeof(NB_Timer));
-  else{
-    newTimer=nb_timerFree;
-    nb_timerFree=newTimer->next;
-    }
+  if((newTimer=nb_timerFree)==NULL) newTimer=(NB_Timer *)nbAlloc(sizeof(NB_Timer));
+  else nb_timerFree=newTimer->next;
   newTimer->time=etime;
   newTimer->object=(NB_Object *)object;  
   // 2008-05-24 eat - changed comparison to >= so events with same time fire in the order they were scheduled

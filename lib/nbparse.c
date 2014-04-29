@@ -131,6 +131,10 @@
 * 2013-04-06 eat 0.8.15 Added size parameter to nbParseSymbol and nbParseQualifier
 * 2013-04-06 eat 0.8.15 Added size parameter to nbParseTerm and nbParseTimeSymbol
 * 2014-01-25 eat 0.9.00 Checker updates
+* 2014-04-06 eat 0.9.01 "Assume False" operator -? replaces [] (closed word)
+* 2014-04-06 eat 0.9.01 "Assume True" operator +? is new
+* 2014-04-06 eat 0.9.01 Delay false operator ~^!() replaces ~^0()
+* 2014-04-18 eat 0.9.01 Included conditional operators
 *==============================================================================
 */
 #include <nb/nbi.h>
@@ -145,9 +149,9 @@ void nbParseInit(void){
   char *alphaChar="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
   char *leadingChar="_.@%$";
   char *relationChar="=<>";
-  char *comboChar="&?[|";      // single character operators that can start combo operators
-  char *soloChar="^(,{+-*/`";  // single character operators - consumed
-  char *delimChar="])}:;";     // cell delimiter - not consumed 
+  char *comboChar="&?[|+-*"; // single character operators that can start combo operators
+  char *soloChar="^(,{/`";   // single character operators - consumed
+  char *delimChar="])}:;";   // cell delimiter - not consumed 
 
   memset(nb_CharClass,(unsigned char)255,sizeof(nb_CharClass));
   for(i=0;i<strlen(numChar);i++) nb_CharClass[(int)*(numChar+i)]=NB_CHAR_NUMBER;
@@ -331,21 +335,25 @@ static void nbParseTimeSymbol(char *symid,char *ident,size_t size,char **sourceP
 * I  m   ~          ~~   regex match               0.7.3  0.2.8
 * I  c   ~?         ~=   change                    0.7.3  0.2.8
 * S  ~   ~()             time condition
-* I  T   ~^1()      ~T() delay true condition      0.7.3
-* I  F   ~^0()      ~F() delay false condition     0.7.3
+* I  9   ~^1()      ~T() delay true condition      0.7.3  Deprecated in 0.9.01
+* I  T   ~^()       ~T() delay true condition      0.9.01  Replaces ~^1()
+* I  0   ~^0()      ~F() delay false condition     0.7.3  Deprecated in 0.9.01
+* I  F   ~^!()      ~F() delay false condition     0.9.01  Replaces ~^0()
 * I  U   ~^?()      ~U() delay unknown condition   0.7.3
 *
 * S  !   !               Not operator 
 * S  ?   ?               Unknown operator or value 0.6.0  use (?) to force it to be a value
 * S  1   !!              True operator             0.4.1
 * S  k   !?              Known operator            0.4.1
-* S  w   []              closed world operator     0.4.1
+* S  w   []              closed world operator     0.4.1  Deprecated in 0.9.01
+* S  w   -?              False if Unknown          0.9.01  Replaces closed world operator
+* S  W   +?              True if Unknown           0.9.01
 *
 * I  A   &&              lazy and                  0.7.3
-* B  &   and
+* B  &   &,and
 * I  a   !&,nand         nand                      0.4.1
 * I  O   ||              lazy or                   0.7.3
-* B  |   or
+* B  |   |,or
 * I  o   !|,nor          nor                       0.4.1
 * I  x   |!&,xor         exclusive or              0.4.1
 * I  E   &~&             and enable                0.7.3
@@ -357,6 +365,14 @@ static void nbParseTimeSymbol(char *symid,char *ident,size_t size,char **sourceP
 * B  {   {               left brace                0.2.8
 * B  [   [               left bracket              0.2.9
 * B  ,   ,               comma
+*
+* I  2   true    !!      conditional operators     0.9.01
+* I  3   untrue
+* I  4   false    !
+* I  5   unfalse
+* I  6   known
+* I  7   unknown  ?
+* I  8   else
 *
 * 2005/05/14 eat 0.6.3  leading symbols for terms are handled differently now
 * 2006/01/06 eat 0.6.4  recognize null delimiter (0) as term delimiter after "."
@@ -527,12 +543,13 @@ char nbParseSymbol(char *symbol,size_t size,char **source){
           *symcur=0;
           break;
           }
-      // consider getting rid of the closed world operator syntax
-      //    we can reduce a?0 to the same cell type as []a
-      //    not using [ seem like a good idea since we may want that
-      /* handle closed world prefix operator */
-      else if(*cursor=='[' && *(cursor+1)==']'){
-        symid='w';
+      // The []e closed world syntax is deprecated but still supported
+      // The -?e syntax replaces Unknown the False -  same as e?!
+      // The +?e syntax replaces Unknown the True  -  same as e?1
+      if(((*cursor=='-' || *cursor=='+') && *(cursor+1)=='?') || (*cursor=='[' && *(cursor+1)==']')){
+        if(*cursor=='[') outMsg(0,'W',"Replace deprecated [] closed world operator with -?");
+        if(*cursor=='+') symid='W';
+        else symid='w';
         *symcur=*cursor; symcur++; cursor++;
         *symcur=*cursor; symcur++; cursor++;
         *symcur=0;
@@ -584,6 +601,17 @@ static char nbParseSymbolInfix(char *symbol,size_t size,char **source){
         else if(strcmp(symbol,"or")==0) symid='|';
         else if(strcmp(symbol,"nor")==0) symid='o';
         else if(strcmp(symbol,"xor")==0) symid='x';
+        // 2014-04-18 eat - conditional operators
+        else if(strcmp(symbol,"true")==0) symid='2';
+        else if(strcmp(symbol,"untrue")==0) symid='3';
+        else if(strcmp(symbol,"false")==0) symid='4';
+        else if(strcmp(symbol,"unfalse")==0) symid='5';
+        else if(strcmp(symbol,"known")==0) symid='6';
+        else if(strcmp(symbol,"unknown")==0) symid='7';
+        else if(strcmp(symbol,"else")==0) symid='8';
+        // 2014-04-25 eat - enabled monitoring and value capture
+        else if(strcmp(symbol,"then")==0) symid='E';
+        else if(strcmp(symbol,"capture")==0) symid='V';
         }
       break;
     case NB_CHAR_RELATION:   // handle relational operators
@@ -606,21 +634,26 @@ static char nbParseSymbolInfix(char *symbol,size_t size,char **source){
       else{
         symid='~';
         cursor++;
-        if(*cursor=='^'){  // new syntax time delay: ~^1(...) ~^0(...) ~^?(...)
+        if(*cursor=='^'){  // new syntax time delay: ~^(...) ~^!(...) ~^?(...)
+          // 2014-04-27 eat - This will get cleaned up when the deprecated syntax is dropped
           cursor++;
-          if(*cursor=='1') symid='T';
-          else if(*cursor=='0') symid='F';
+          if(*cursor=='(') symid='T';
+          else if(*cursor=='1') symid='9'; // 2014-04-27 eat - deprecated 'T'
+          else if(*cursor=='0') symid='0'; // 2014-04-06 eat - deprecated 'F'
+          else if(*cursor=='!') symid='F'; 
           else if(*cursor=='?') symid='U';
           else symid='.';
-          cursor++;
-          if(symid!='.') nbParseTimeSymbol(&symid,symbol,size,&cursor);
+          if(*cursor!='(') cursor++;
+          if(symid=='9') nbParseTimeSymbol("T",symbol,size,&cursor);
+          else if(symid=='0') nbParseTimeSymbol("F",symbol,size,&cursor);
+          else if(symid!='.') nbParseTimeSymbol(&symid,symbol,size,&cursor);
           }
         // support deprecated syntax
-        else if(*cursor=='T' || *cursor=='F' || *cursor=='U'){
-          symid=*cursor;
-          cursor++;
-          nbParseTimeSymbol(&symid,symbol,size,&cursor);
-          }
+        //else if(*cursor=='T' || *cursor=='F' || *cursor=='U'){
+        //  symid=*cursor;
+        //  cursor++;
+        //  nbParseTimeSymbol(&symid,symbol,size,&cursor);
+        //  }
         else symid='m';
         }
       break;
@@ -629,9 +662,11 @@ static char nbParseSymbolInfix(char *symbol,size_t size,char **source){
       *symcur=*cursor; symcur++; cursor++;
       if(*cursor=='&') symid='a';
       else if(*cursor=='|') symid='o';
+      else if(*cursor=='!') symid='2';    // alias for "true" conditional
       if(symid!='!'){
         *symcur=*cursor; symcur++; cursor++;
         }
+      else symid='4';     // alias for "false" conditional
       *symcur=0;
       break;
     case NB_CHAR_COMBO:    // handle combination operators and related single char operators
@@ -696,7 +731,8 @@ static char nbParseSymbolInfix(char *symbol,size_t size,char **source){
         }
       // fall through to handle single character when combo not found
     case NB_CHAR_SOLO:    // handle characters not combining with others
-      symid=*cursor;
+      if(*cursor=='?') symid='7';   // alias for "unknown" conditional
+      else symid=*cursor;
       *symcur=*cursor; symcur++; cursor++;
       *symcur=0;
       break;
@@ -721,7 +757,7 @@ static char nbParseSymbolInfix(char *symbol,size_t size,char **source){
 /*
 * Parse low level object expressions (objects, terms, calls)
 *
-*   This is level 7 from nbParseCell's perspective
+*   This is level 8 from nbParseCell's perspective
 */
 NB_Object *nbParseObject(NB_Term *context,char **cursor){
   char ident[NB_BUFSIZE],token[1024],facetIdent[256];
@@ -742,16 +778,19 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
   if(symid==','){(*cursor)--; return(NULL);}
   switch(symid){
     case '!': // !
-      // 2013-12-05 eat - reversed commenting on next two lines to recognize ! as false
-      //if((object=nbParseRel(context,cursor))==NULL) return(NULL);          // 2013-12-05 eat - commented
+      if(strcmp(ident,"not")==0){
+        outMsg(0,'W',"The \"not\" operator is deprecated to avoid reserved terms.  Please use ! instead.");
+        }
+      else if(**cursor==' ') return(NB_OBJECT_FALSE);  // 2014-04-26 eat - space means it is not a prefix operator
       if((object=nbParseRel(context,cursor))==NULL) return(NB_OBJECT_FALSE); // 2013-12-05 eat - uncommented
       if(object==nb_Unknown) return(nb_Unknown);
       if(object==NB_OBJECT_FALSE) return(NB_OBJECT_TRUE);
       if(object->value==object) return(NB_OBJECT_FALSE);
       return((NB_Object *)useCondition(condTypeNot,object,nb_Unknown));
     case '1': // !! true
-      if((object=nbParseRel(context,cursor))==NULL) return(NULL);
-      //if((object=nbParseRel(context,cursor))==NULL) return(NB_OBJECT_TRUE);
+      //if((object=nbParseRel(context,cursor))==NULL) return(NULL);
+      if(**cursor==' ') return(NB_OBJECT_TRUE);
+      if((object=nbParseRel(context,cursor))==NULL) return(NB_OBJECT_TRUE);
       if(object==nb_Unknown || object==NB_OBJECT_FALSE) return(NB_OBJECT_FALSE); // false constant
       if(object->value==object) return(NB_OBJECT_TRUE);  // true constant
       return((NB_Object *)useCondition(condTypeTrue,object,nb_Unknown));
@@ -764,17 +803,24 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
       return((NB_Object *)useCondition(condTypeKnown,object,nb_Unknown));
     case '?': // ? unknown
       //if((object=nbParseRel(context,cursor))==NULL) return(NULL);
+      if(**cursor==' ') return(nb_Unknown); // 2014-04-26 eat - space means it is not a prefix operator
       if((object=nbParseRel(context,cursor))==NULL) return(nb_Unknown);
       if(object==nb_Unknown) return(NB_OBJECT_TRUE);     // we know unknown is unknown
       if(object->value==object) return(NB_OBJECT_FALSE); // other constants are known
       if(object->type==condTypeUnknown || object->type==condTypeKnown) return(NB_OBJECT_FALSE);
       return((NB_Object *)useCondition(condTypeUnknown,object,nb_Unknown));
-    case 'w': // [] closed world
+    case 'w': // -? closed world false - [] closed world
       if((object=nbParseRel(context,cursor))==NULL) return(NULL);
-      if(object==nb_Unknown) return(NB_OBJECT_FALSE);      // unknown if false in closed world
+      if(object==nb_Unknown) return(NB_OBJECT_FALSE);      // unknown is false in closed world
       if(object==NB_OBJECT_FALSE) return(NB_OBJECT_FALSE); // false is false
       if(object->value==object) return(NB_OBJECT_TRUE);     // other constants are true
-      return((NB_Object *)useCondition(condTypeClosedWorld,object,nb_Unknown));
+      return((NB_Object *)useCondition(condTypeAssumeFalse,object,nb_Unknown));
+    case 'W': // +? assume true
+      if((object=nbParseRel(context,cursor))==NULL) return(NULL);
+      if(object==nb_Unknown) return(NB_OBJECT_TRUE);      // unknown is true
+      if(object==NB_OBJECT_FALSE) return(NB_OBJECT_FALSE); // false is false
+      if(object->value==object) return(NB_OBJECT_TRUE);     // other constants are true
+      return((NB_Object *)useCondition(condTypeAssumeTrue,object,nb_Unknown));
     case 'c':
       object=nbParseObject(context,cursor);
       if(object==NULL) return(NULL);
@@ -790,7 +836,7 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
     case '$': // value expression
       if((object=nbParseCell(context,cursor,0))==NULL) return(NULL);
       if(**cursor!=')'){
-        outMsg(0,'E',"Unbalanced braces at [%s].",*cursor);
+        outMsg(0,'E',"Unbalanced braces at-->%s",*cursor);
         return(NULL);
         }
       *cursor=*cursor+1; // consume right brace 
@@ -871,7 +917,7 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
         savecursor=*cursor;
         symid=nbParseSymbol(facetIdent,sizeof(facetIdent),cursor);
         if(symid!='t'){
-          outMsg(0,'E',"Expecting facet at->%s",savecursor);
+          outMsg(0,'E',"Expecting facet at-->%s",savecursor);
           return(NULL);
           }
         }
@@ -941,7 +987,7 @@ NB_Object *nbParseRel(NB_Term *context,char **cursor){
   int not=0;
 
   if(parseTrace) outMsg(0,'T',"nbParseRel(): called [%s].",*cursor);
-  if((lobject=nbParseCell(context,cursor,5))==NULL) return(NULL);
+  if((lobject=nbParseCell(context,cursor,6))==NULL) return(NULL);
   savecursor=*cursor;
   symid=nbParseSymbolInfix(operator,sizeof(operator),cursor);
   if(parseTrace) outMsg(0,'T',"nbParseRel(): nbParseSymbol returned ['%c',\"%s\"].",symid,operator);
@@ -987,8 +1033,8 @@ NB_Object *nbParseRel(NB_Term *context,char **cursor){
     //  }
     return((NB_Object *)useCondition(type,lobject,re));
     }
-  if((robject=nbParseCell(context,cursor,5))==NULL){
-    outMsg(0,'E',"Expecting right operand to relational operator at [%s]",cursor);
+  if((robject=nbParseCell(context,cursor,6))==NULL){
+    outMsg(0,'E',"Expecting right operand to relational operator at-->%s",cursor);
     /* dropObject(lobject); add this later */
     return(NULL);
     }
@@ -1038,8 +1084,8 @@ NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
   char symid,*cursave;
 
   if(parseTrace) outMsg(0,'T',"nbParseCell(%d): called [%s].",level,*cursor);
-  if(level==6) lobject=nbParseObject(context,cursor);
-  else if(level==3) lobject=nbParseRel(context,cursor);
+  if(level==7) lobject=nbParseObject(context,cursor);
+  else if(level==4) lobject=nbParseRel(context,cursor);
   else lobject=nbParseCell(context,cursor,level+1);
   if(lobject==NULL) return(NULL);
   while(1){
@@ -1057,30 +1103,154 @@ NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
     if(symid==','){(*cursor)--; return(lobject);}
     robject=NULL;
     switch(level){
-      case 0:
+      case 0: // conditional
+        if(symid<'2' || symid>'8'){  // not a conditional operator
+          *cursor=cursave;
+          return(lobject);
+          //outMsg(0,'E',"Operator \"%s\" not expected at-->%s",operator,cursave);
+          //return(NULL);
+          }
+        if(symid=='8'){ // else
+          if(lobject->type!=nb_ConditionalType){
+            outMsg(0,'E',"Operator \"%s\" not expected at-->%s",operator,cursave);
+            return(NULL);
+            }
+          NB_Conditional *conditional=(NB_Conditional *)lobject;
+          cursave=*cursor;
+          symid=nbParseSymbolInfix(operator,sizeof(operator),cursor);
+          if(symid>='2' && symid<='7'){ // conditional
+            robject=nbParseCell(context,cursor,1);
+            if(robject==NULL){
+              outMsg(0,'E',"Operator \"%s\" right side not valid at-->%s",operator,cursave);
+              return(NULL);
+              }
+            switch(symid){
+              case '2':  // true
+                if(conditional->ifTrue!=conditional->condition){
+                  outMsg(0,'E',"Operator \"%s\" repeated at-->%s",operator,cursave);
+                  return(NULL);
+                  }
+                dropObject(conditional->ifTrue);
+                conditional->ifTrue=(nbCELL)grabObject(robject);
+                if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifTrue,(nbCELL)conditional);
+                break;
+              case '3':  // untrue
+                if(conditional->ifFalse!=conditional->condition || conditional->ifUnknown!=conditional->condition){
+                  outMsg(0,'E',"Operator \"%s\" conflict with prior at-->%s",operator,cursave);
+                  return(NULL);
+                  }
+                dropObject(conditional->ifFalse);
+                conditional->ifFalse=(nbCELL)grabObject(robject);
+                if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifFalse,(nbCELL)conditional);
+                dropObject(conditional->ifUnknown);
+                conditional->ifUnknown=(nbCELL)grabObject(robject);
+                if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifUnknown,(nbCELL)conditional);
+                break;
+              case '4':  // false
+                if(conditional->ifFalse!=conditional->condition){
+                  outMsg(0,'E',"Operator \"%s\" repeated at-->%s",operator,cursave);
+                  return(NULL);
+                  }
+                dropObject(conditional->ifFalse);
+                conditional->ifFalse=(nbCELL)grabObject(robject);
+                if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifFalse,(nbCELL)conditional);
+                break;
+              case '5':  // unfalse
+                if(conditional->ifTrue!=conditional->condition || conditional->ifUnknown!=conditional->condition){
+                  outMsg(0,'E',"Operator \"%s\" conflict with prior at-->%s",operator,cursave);
+                  return(NULL);
+                  }
+                dropObject(conditional->ifTrue);
+                conditional->ifTrue=(nbCELL)grabObject(robject);
+                if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifTrue,(nbCELL)conditional);
+                dropObject(conditional->ifUnknown);
+                conditional->ifUnknown=(nbCELL)grabObject(robject);
+                if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifUnknown,(nbCELL)conditional);
+                 break;
+              case '6':  // known
+                if(conditional->ifTrue!=conditional->condition || conditional->ifFalse!=conditional->condition){
+                  outMsg(0,'E',"Operator \"%s\" conflict with prior at-->%s",operator,cursave);
+                  return(NULL);
+                  }
+                dropObject(conditional->ifTrue);
+                conditional->ifTrue=(nbCELL)grabObject(robject);
+                if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifTrue,(nbCELL)conditional);
+                dropObject(conditional->ifFalse);
+                conditional->ifFalse=(nbCELL)grabObject(robject);
+                if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifFalse,(nbCELL)conditional);
+                break;
+              case '7':  // unknown
+                if(conditional->ifUnknown!=conditional->condition){
+                  outMsg(0,'E',"Operator \"%s\" repeated at-->%s",operator,cursave);
+                  return(NULL);
+                  }
+                dropObject(conditional->ifUnknown);
+                conditional->ifUnknown=(nbCELL)grabObject(robject);
+                if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifUnknown,(nbCELL)conditional);
+                break;
+              }
+            }
+          else{ // simple else without condition
+            *cursor=cursave; // backup
+            robject=nbParseCell(context,cursor,1);
+            if(robject==NULL){
+              outMsg(0,'E',"Operator \"%s\" right side not valid at-->%s",operator,cursave);
+              return(NULL);
+              }
+            if(conditional->ifTrue==conditional->condition) conditional->ifTrue=(nbCELL)robject;
+            if(conditional->ifFalse==conditional->condition) conditional->ifFalse=(nbCELL)robject;
+            if(conditional->ifUnknown==conditional->condition) conditional->ifUnknown=(nbCELL)robject;
+            }
+          }
+        else{  // condtional other than else
+          cursave=*cursor;
+          robject=nbParseCell(context,cursor,1);
+          if(robject==NULL){
+            outMsg(0,'E',"Operator \"%s\" right side not valid at-->%s",operator,cursave);
+            return(NULL);
+            }
+          NB_Conditional *conditional=NULL;
+          switch(symid){
+            case '2':  // true
+              conditional=nbConditionalUse((nbCELL)lobject,(nbCELL)robject,(nbCELL)lobject,(nbCELL)lobject);
+              break;
+            case '3':  // untrue
+              conditional=nbConditionalUse((nbCELL)lobject,(nbCELL)lobject,(nbCELL)robject,(nbCELL)robject);
+              break;
+            case '4':  // false
+              conditional=nbConditionalUse((nbCELL)lobject,(nbCELL)lobject,(nbCELL)robject,(nbCELL)lobject);
+              break;
+            case '5':  // unfalse
+              conditional=nbConditionalUse((nbCELL)lobject,(nbCELL)robject,(nbCELL)lobject,(nbCELL)robject);
+              break;
+            case '6':  // known
+              conditional=nbConditionalUse((nbCELL)lobject,(nbCELL)robject,(nbCELL)robject,(nbCELL)lobject);
+              break;
+            case '7':  // unknown
+              conditional=nbConditionalUse((nbCELL)lobject,(nbCELL)lobject,(nbCELL)lobject,(nbCELL)robject);
+              break;
+            }
+          lobject=(NB_Object *)conditional;
+          }
+        break;
+      case 1:
         if(symid=='|') type=condTypeOr;
         else if(symid=='O') type=condTypeLazyOr;
         else if(symid=='o') type=condTypeNor;
         else if(symid=='x') type=condTypeXor;
-        else{
-          outMsg(0,'T',"Operator \"%s\" not expected.",operator);
-          return(NULL);
-          }
-        if((robject=nbParseCell(context,cursor,0))!=NULL){
-          //if(type==condTypeOr || type==condTypeLazyOr)
-          //  if((sobject=reduceOr(lobject,robject))!=NULL) lobject=sobject;
-          //else lobject=(NB_Object *)useCondition(type,lobject,robject);
+        else{*cursor=cursave; return(lobject);}
+        if((robject=nbParseCell(context,cursor,1))!=NULL){
           if((type==condTypeOr || type==condTypeLazyOr) && (sobject=reduceOr(lobject,robject))!=NULL) lobject=sobject;
           else lobject=(NB_Object *)useCondition(type,lobject,robject);
           }
         break;
-      case 1:
+      case 2:
         if(symid=='&') type=condTypeAnd;
         else if(symid=='A') type=condTypeLazyAnd;
         else if(symid=='a') type=condTypeNand;
         else if(symid=='?') type=condTypeDefault;
         else{*cursor=cursave; return(lobject);}
-        if((robject=nbParseCell(context,cursor,1))!=NULL){
+        if((robject=nbParseCell(context,cursor,2))!=NULL){
           if(type==condTypeDefault){
             if(lobject==nb_Unknown) lobject=robject;        // use right if left is unknown
             else if(lobject->value==lobject || robject==nb_Unknown); // use left if constant left or unknown right
@@ -1091,42 +1261,57 @@ NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
           else lobject=(NB_Object *)useCondition(type,lobject,robject);
           }
         break;
-      case 2:
+      case 3:
         if(symid=='^') type=condTypeFlipFlop;
         else if(symid=='V') type=condTypeAndCapture;
         else if(symid=='v') type=condTypeOrCapture;
         else if(symid=='E') type=condTypeAndMonitor;
         else if(symid=='e') type=condTypeOrMonitor;
         else{*cursor=cursave; return(lobject);}
-        if((robject=nbParseCell(context,cursor,3))!=NULL) lobject=(NB_Object *)useCondition(type,lobject,robject);
+        if(symid=='v' || strcmp(operator,"&^&")==0){
+          outMsg(0,'W',"Operator %s is deprecated, please use \"capture\" instead.",operator); 
+          }
+        else if(symid=='e' || strcmp(operator,"&~&")==0){
+          outMsg(0,'W',"Operator %s is deprecated, please use \"then\" instead.",operator); 
+          }
+        if((robject=nbParseCell(context,cursor,4))!=NULL) lobject=(NB_Object *)useCondition(type,lobject,robject);
         break;
-      case 3:
+      case 4:
         if(symid=='T') type=condTypeDelayTrue;
         else if(symid=='F') type=condTypeDelayFalse;
         else if(symid=='U') type=condTypeDelayUnknown;
+        else if(symid=='0'){
+          symid='F';
+          type=condTypeDelayFalse;
+          outMsg(0,'W',"Operator ~^0(...) is deprecated, please use ~^!(...) instead.");
+          }
+        else if(symid=='9'){
+          symid='T';
+          type=condTypeDelayTrue;
+          outMsg(0,'W',"Operator ~^1(...) is deprecated, please use ~^(...) instead.");
+          }
         else{*cursor=cursave; return(lobject);}
         robject=(NB_Object *)newSched((nbCELL)context,symid,operator,&delim,msg,sizeof(msg),1);
         if(robject==NULL){
           outPut("%s\n",msg);
           return(NULL);
           }
-        robject=(NB_Object *)useCondition(condTypeTimeDelay,lobject,robject); // insert time delay
-        lobject=(NB_Object *)useCondition(type,lobject,robject);
+        lobject=(NB_Object *)useCondition(type,lobject,robject); 
         break;
-      /* level 4 is handled by nbParseRel */
-      case 5:
+      /* level 5 is handled by nbParseRel */
+      case 6:
         if(symid=='+') type=mathTypeAdd;
         else if(symid=='-') type=mathTypeSub;
         else{*cursor=cursave; return(lobject);}
-        if((robject=nbParseCell(context,cursor,6))!=NULL) lobject=(NB_Object *)useMath(0,type,lobject,robject);
+        if((robject=nbParseCell(context,cursor,7))!=NULL) lobject=(NB_Object *)useMath(0,type,lobject,robject);
         break;
-      case 6:
+      case 7:
         if(symid=='*') type=mathTypeMul;
         else if(symid=='/') type=mathTypeDiv;
         else{*cursor=cursave; return(lobject);}
         if((robject=nbParseObject(context,cursor))!=NULL) lobject=(NB_Object *)useMath(0,type,lobject,robject);
         break;
-      /* level 7 is handled by nbParseObject */
+      /* level 8 is handled by nbParseObject */
       default:
         outMsg(0,'L',"nbParseCell(%d): Level not recognized",level);
         return(NULL);
@@ -1189,7 +1374,7 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
       cursave=cursor;
       symid=nbParseSymbol(facetIdent,sizeof(facetIdent),&cursor);
       if(symid!='t'){
-        outMsg(0,'E',"Expecting facet at->%s",cursave);
+        outMsg(0,'E',"Expecting facet at-->%s",cursave);
         return(NULL);
         }
       }

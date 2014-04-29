@@ -255,7 +255,7 @@ Permission is granted to copy, distribute and/or modify this document under the 
 @menu
 * Language Concepts::
 * Identifiers::
-* Conditions::
+* Formulas::
 * Time Expressions::
 * Rules::
 * Commands::
@@ -291,7 +291,8 @@ Permission is granted to copy, distribute and/or modify this document under the 
 @menu
 * String::
 * Number::
-* Logic:: True, False and Unknown
+* Truth::
+* Formula::
 * Cell::
 * Term::
 * Condition::
@@ -351,15 +352,15 @@ Some common numeric functions are also recognized by the interpreter. Examples a
 @item exp(35.5) @tab @math{e^{35.4}} 
 @end multitable
 
-@node Logic
-@section Logic - True, False, and Unknown
-@cindex logic
+@node Truth
+@section Truth
+@cindex truth
 @cindex true
 @cindex false
 @cindex unknown
 
-The logical value of true can be represented by any number or string.
-Special symbols are used to represent the logical values of false and unknown.
+The logical value of True can be represented by any number or string.
+Special symbols are used to represent the logical values of False and Unknown.
 @multitable {-----------} {------------}
 @headitem Value @tab Logical
 @item ?     @tab unknown
@@ -371,17 +372,24 @@ Special symbols are used to represent the logical values of false and unknown.
 @item -5.4  @tab true
 @end multitable
 
-NodeBrain deviates from the common practice of using zero to represent false.
-This enables logical operators to perform operations that are not purely boolean
-without descriminating against the value 0.  For example, @code{A | B} returns the value of
-@code{A} if true (not false or unknown) and @code{B} otherwise. If @code{A=0}, the value of
-@code{A | B} is 0 and true.  This is only possible because 0 is not used to represent false.
+This deviates from the common practice of using zero to represent false, with the goal of
+enabling operators to discriminate against False without discriminating against 0.
+For example, the formula @code{A false "abc"} evaluates to the value of A unless it is False, in which
+case it evaluates to "abc".  If False were represented by 0, this formula could never return 0,
+and any formula that could return 0 could not avoid having its value interpreted as false. 
+
+@node Formula
+@section Formula
+@cindex Formula
+
+A formula is a simple value (e.g. number, string, False, and Unknown), or an expression that computes a value.
 
 @node Cell
 @section Cell
 @cindex cell
 
-A NodeBrain cell is a "container" of knowledge. A cell has both a definition and a value. You represent a cell with an expression that defines the value. For simple cells, the representation of the definition and value are identical. 
+A cell is a container of both a value and a formula from which the value is computed.
+For simple cells, the formula and value are identical. 
 
 @multitable {-----------------------}{----------------------}
 
@@ -391,7 +399,8 @@ A NodeBrain cell is a "container" of knowledge. A cell has both a definition and
 @item ? @tab ?
 @end multitable 
 
-For more complex cells, the definition is an expression that includes references to other cells (operands) and operators that derive values from them. This concept is illustrated below with multiplication (*) and addition (+) operators.
+For more complex cells, the formula includes references to operators that derive values from the value of other cells (operands).
+This concept is illustrated below with multiplication (*) and addition (+) operators.
 
 @multitable {-----------------------}{----------------------}
 
@@ -400,7 +409,7 @@ For more complex cells, the definition is an expression that includes references
 @item 10+5 @tab 15
 @end multitable
 
-A cell definition is a unique identifier of a cell. In other words, only one cell exists for a given definition. Any number of cells may reference a given cell. In the example above, the two complex cells, (5*2) and (10+5), reference three simple cells (2, 5, and 10). A complex cell may reference other complex cells. For example, the definition below creates a cell that references the existing simple cell 5 and the existing complex cell (5*2). 
+A formula is a unique identifier of a cell. In other words, only one cell exists for a given formula. Any number of cells may reference a given cell. In the example above, the two complex cells, (5*2) and (10+5), reference three simple cells (2, 5, and 10). A complex cell may reference other complex cells. For example, the definition below creates a cell that references the existing simple cell 5 and the existing complex cell (5*2). 
 
 
 @multitable {-----------------------}{----------------------}
@@ -433,9 +442,11 @@ The new values are A=4, D=21, and E=84. Notice the value of E changed automatica
 @section Condition
 @cindex condition
 
-A condition is an expression that returns a value of True, False, or Unknown. As said earlier, all values other than False (0) and Unknown map to True (1) when interpreted as a condition. This means all cell expressions may be used as a condition.
+A condition is a cell for which the value is reduced to True, False, or Unknown. All values other than False (!) and Unknown (?) map to True when interpreted as a condition.
+This means any cell may be used as a condition or an operand within a condition.
 
-Two groups of operators are used for conditions: relational operators (=, >, >=, <, <=, and <>) and Boolean operators (&, |, and !). The words "and", "or", and "not" may be used as well.
+Some operators are designed specifically for use in conditions.
+Examples include relational operators (=, >, >=, <, <=, and <>) and trinary logic operators (&, |, and !). The words "and", "or", and "not" may be used as well for the trinary logic operators.
 
 @example
 a>1		[a greater than 1]
@@ -444,9 +455,7 @@ a & ! b		[a and not b]
 a and not b	[a and not b]
 @end example
 
-While all of these operators produce logical values (True, False, or Unknown), the Boolean operators also interpret the operands as logical values.
-
-While normal Boolean logic is limited to values of 0 and 1 (False and True), NodeBrain extends this system to include a third value of Unknown. The following table shows this extension for the ampersand (&) operator.
+Trinary logic operators extend Boolean logic, which has only True and False values, to include a third value of Unknown. The following table shows this extension for the logical AND (&) operator.
 
 @multitable {-----------------}{------------------}{----------------}
 
@@ -486,13 +495,13 @@ If you then make the following assertion, A becomes 8 (5+3) and X becomes 1. To 
 assert C=5,B=1;
 @end example
 
-In addition to the common operators for conditional expressions, NodeBrain has special operators with memory and time awareness.
+In addition to the common operators used within conditions, NodeBrain has special operators with memory and time awareness.
 
 @example 
 A ^ B			[flip-flop]
-team(A,B,C)		[node condition]
+team(A,B,C)		[node sentence formula]
 ~(h(4).su[3]jan)	[time condition]
-A ~^1(10m)		[time delay]
+A ~^(10m)		[time delay]
 @end example
 
 We won't go into the details of these operators here, but they are important features of the language to cover later.
@@ -739,8 +748,7 @@ To understand the evaluation of shania("abc",20) and the assertions shania(1,3,5
 
 To send a command (message) to a node, you begin a command with the node name followed by an optional argument list, followed by a colon (:). If a node module implements the command method, the argument list and text following the colon (:) are sent to the skill's command method. The interpretation of node commands is entirely up to the node module.
 
-See the @i{NodeBrain Module Reference} for a description of node modules distributed with NodeBrain. See the @i{NodeBrain API Reference} for information needed to write your own node modules.
-
+Manuals for modules distributed with NodeBrain are available at http://nodebrain.org. See the @i{NodeBrain Library} manual for information needed to write your own node modules.
 
 @node Identifiers
 @chapter Identifiers
@@ -857,7 +865,7 @@ When the interpreter needs to look up a term, the dictionary is understood by th
 
 @example
 assert x=a+b;  	    # x, a, and b are all looked up in the rule dictionary
-define moony node lunar; 
+define moony node lunar; # lunar is looked up in the skill or module dictionary
 @end example
 
 @node Contexts
@@ -970,34 +978,61 @@ The interpreter does not reference the context or glossary hierarchies to resolv
 	assert a="abc",b=5.345e+9,c="abc",d=2.5;
 @end example
 
-@node Conditions
-@chapter Conditions
-@cindex Conditions
-This chapter describes the basic syntax and semantics of logical expressions used in NodeBrain rule conditions.
+@node Formulas
+@chapter Formulas
+@cindex Formulas
+
+@menu
+* Relational Operators::
+* Trinary Logic Operators::
+* Conditional Operators::
+* Enabled Monitoring Operators::
+* Value Capture Operators::
+* Flip-flop Operator::
+* Time Operator::
+* Delay Operators::
+* Node Sentence Formulas::
+@end menu
+
+This chapter describes the syntax and semantics of cell formulas.
 
 @cartouche
 @b{Syntax}
-@multitable {-------------------------} {---} {---------------------------------------------------------------------------}
-@item @i{condition} @tab ::= @tab @i{relationalCondition} | @i{infixBoolCondition} | @i{atomicCondition} | @i{delayedCondition}
-@item @i{relationalCondition}  @tab ::= @tab @i{cell} [s*] (@b{=} | @b{<>} | @b{<} | @b{>} | @b{<=} | @b{>= }) [s*] @i{cell} 
-@item @i{cell}  @tab ::= @tab @i{identifier} | @i{stringLiteral} | @i{numberLiteral} | @b{?} | @b{ (} [s*] @i{cellExpression} [s*]  @b{) }|   @i{nodeCondition}
-@item @i{infixBoolCondition}  @tab ::= @tab @i{condition} [s*] (@i{infixBoolOperator} ) [s*] @i{simpleCondition}
-@item @i{infixBoolOperator}  @tab ::= @tab @b{and} | @b{&} | @b{nand} | @b{!&} | @b{or} | @b{|} | @b{nor} | @b{!|} | @b{xor} | @b{|!&} | @b{^} | @b{&^&} | @b{|^|} | @b{&~&} | @b{|~|}
-@item @i{simpleCondition} @tab ::= @tab @i{relationalCondition} |@i{atomicCondition}
-@item @i{atomicCondition} @tab ::= @tab @i{cell} | @i{prefixBoolCondition} | @i{timeCondition}
-@item @i{prefixBoolCondition} @tab ::= @tab (@b{not} | @b{! } | @b{!!} | @b{?} | @b{!?} | @b{[]} ) @i{atomicCondition}
-@item @i{nodeCondition} @tab ::= @tab @i{identifier} "@b{(} " @i{cellList} "@b{)}"
-@item @i{cellList} @tab ::= @tab [ @i{cellExpression} @{ @b{,} @i{cellExpression} @} ]
-@item @i{timeCondition} @tab ::= @tab @b{~} "@b{(} " @i{timeExpression} "@b{)}"
-@item @i{delayedCondition} @tab ::= @tab @i{condition} @b{~^} (@b{1} | @b{0} | @b{?} ) "@b{(} " @i{timeExpression} "@b{)}"
+@multitable {-----------------------------} {---} {----------------------------------------------------------------------------------------}
+@item @i{cellFormula} @tab ::= @tab @i{basicFormula} | @i{conditionalFormula} | @i{switchedFormula}
+@item @i{basicFormula} @tab ::= @tab @i{atomicFormula} | @i{relationalLogic} | @i{prefixLogic} | @i{infixLogic} | @i{delayLogic}
+@item @i{atomicFormula}  @tab ::= @tab @i{constant} | @i{cellTerm} | @i{nodeSentence} | @i{timeLogic} | @b{(} @i{cellFormula} @b{)}
+@item @i{constant}  @tab ::= @tab @i{string} | @i{number} | @b{?} | @b{!} | @b{!!}
+@item @i{nodeSentence} @tab ::= @tab @i{nodeTerm} @b{(} @i{cellList} @b{)}
+@item @i{cellList} @tab ::= @tab @i{cellFormula} [ @b{,} @i{cellList} ]
+@item @i{timeLogic} @tab ::= @tab @b{~} @b{(} @i{timeExpression} @b{)}
+@item @i{relationalLogic}  @tab ::= @tab @i{atomicFormula} @i{relationalOperator} @i{automicFormula} 
+@item @i{relationalOperator}  @tab ::= @tab @b{=} | @b{<>} | @b{<} | @b{>} | @b{<=} | @b{>= }
+@item @i{prefixLogic} @tab ::= @tab @i{prefixLogicOperator} @i{atomicFormula}
+@item @i{prefixLogicOperator} @tab ::= @tab @b{not} | @b{!} | @b{!!} | @b{?} | @b{!?} | @b{-?} | @b{+?} 
+@item @i{infixLogic}  @tab ::= @tab @i{basicFormula} @i{infixLogicOperator} @i{basicFormula}
+@item @i{infixLogicOperator}  @tab ::= @tab @b{and} | @b{&} | @b{nand} | @b{!&} | @b{or} | @b{|} | @b{nor} | @b{!|} | @b{xor} | @b{|!&} | @b{^}
+@item @i{delayLogic} @tab ::= @tab @i{basicFormula} @i{delayLogicOperator} @b{(} @i{timeExpression} @b{)}
+@item @i{delayLogicOperator} @tab ::= @tab @b{~^} | @b{~^!} | @b{~^?} 
+@item @i{conditionalFormula} @tab ::= @tab @i{basicFormula} @i{conditionalOperator} @i{basicFormula} | @i{conditionalElse} 
+@item @i{conditionalOperator} @tab ::= @tab @b{true} | @b{!!} | @b{untrue} | @b{false} | @b{!} | @b{unfalse} | @b{known} | @b{unknown} | @b{?}
+@item @i{conditionalElse} @tab ::= @tab @i{conditionalFormula} @b{else} [ @i{conditionalOperator} ] @i{basicFormula}
+@item @i{switchedFormula} @tab ::= @tab @i{thenSwitch} | @i{captureSwitch}
+@item @i{thenSwitch} @tab ::= @tab @i{basicFormula} @b{then} @i{basicFormula}
+@item @i{captureSwitch} @tab ::= @tab @i{basicFormula} @b{capture} @i{basicFormula}
 @end multitable
 @end cartouche
 
-A subset of NodeBrain condition syntax should be familiar to anyone who has programmed in a high-level procedural language. Where it deviates from any familiar standard (perhaps due to ignorance) is in the handling of the Unknown state and time.
+Anyone familiar with high-level procedural languages will be comfortable with elements of this formula syntax at first glance, but other elements may take a little more study.
+This is partially because trinary logic has more possibilities than binary logic, and partially because the language includes operators
+that maintain state, specifically designed for monitoring applications. 
 
+There are a few symbols that may be interpreted as a constant, prefix operator, or infix operator.  Examples include @code{!} and @code{?}.  They are recognized as constants when standing alone, prefix operators when directly preceding a formula (not separated by a space), and an infix operator when following a formula.
+
+@node Relational Operators
 @section Relational Operators
 @cindex Relational Operators
-Relational operators always return Unknown (?) when one or more of the operands is unknown. When both of the operands are Known (K) and of the same type (number or string), relational operators return True (1) or False (0) as you would expect for equal, not equal, less than, greater than, less than or equal, and greater than or equal.
+Relational operators always return Unknown (?) when one or more of the operands is unknown. When both of the operands are Known (K) and of the same type (number or string), relational operators return true (1) or false (!) as you would expect for equal, not equal, less than, greater than, less than or equal, and greater than or equal.
 
 @example
 	? -  Unknown      K -  Known
@@ -1040,66 +1075,36 @@ Two objects of types other than number or string have an Unknown relationship, e
 
 This means the relational operator = can be used to test for a specific object of any type.
 
-@section Boolean Operators
-@cindex Boolean Operators
-The Boolean operators treat their operands as logical values (True, False, and Unknown) and produce logical values.
-Any number or string is interpreted as True, and 1 is used by default as a True result, but in some cases the value of True result is provided by an operand.
-Within this document, T is used to represent any True value.
-NodeBrain represents False with an exclamation point ("!") and Unknown with a question mark ("?").
+@node Trinary Logic Operators
+@section Trinary Logic Operators
+@cindex  Trinary Logic Operators
 
-There are two prefix operators, NOT (!) and UNKNOWN (?). They operate as shown in the following truth table. Note that the inverse of Unknown is also unknown. If you don't know a value, you don't know the inverse value.
+The trinary logic operators reduce their operands to one of three logical values (True, False, and Unknown) and produce a result that is also one of these three values.
+False is represented by an exclamation point ("!"), Unknown is represented by a question mark ("?"),
+and True is represented by an number or string.  True operands are represented by T in truth tables.
+A True result produced by these operators is represented by the number one ("1").
 
-@multitable {----------}{----------}{-------------------------}
+There are six prefix operators as shown in the table below.
+Note that the inverse of Unknown is also unknown. If you don't know a value, you don't know the inverse value.
+
+@multitable {----------}{----------}{-----------------------------------------}
 @headitem Prefix @tab Function @tab Description
-@item !A @tab Not @tab Normal Boolean NOT.
-@item ?A @tab Unknown @tab Test for Unknown value.
+@item !A @tab Not @tab Normal Boolean NOT, without change to Unknown.
+@item ?A @tab Unknown @tab True if Unknown, otherwise False.
+@item !!A @tab True @tab True if True - converts any True value to 1.
+@item !?A @tab Known @tab True if not Unknown.
+@item -?A @tab Assume False @tab False if Unknown.
+@item +?A @tab Assume True@tab True if Unknown.
 @end multitable
 
-@multitable {--------}{--------}{--------}
-@headitem A @tab !A @tab ?A
-@item ! @tab 1 @tab !
-@item ? @tab ? @tab 1
-@item T @tab ! @tab !
+@multitable {----------}{----------}{----------}{----------}{----------}{----------}{----------}
+@headitem A @tab !A @tab ?A @tab !!A @tab !?A @tab -?A @tab +?A
+@item ! @tab 1 @tab ! @tab ! @tab 1 @tab ! @tab !
+@item ? @tab ? @tab 1 @tab ? @tab ! @tab ! @tab 1
+@item T @tab ! @tab ! @tab 1 @tab 1 @tab 1 @tab 1
 @end multitable
 
-A double NOT (!!) will convert any True value to 1, and a NOT UNKNOWN (!?) will test for known values.
-
-@multitable {----------}{----------}{--------------------------}
-@headitem Prefix @tab Function @tab Description
-@item !!A @tab True @tab Converts any True value to 1.
-@item !?A @tab Known @tab Test for Known value.
-@end multitable
-
-@multitable {----------}{----------}{----------}{----------}{----------}
-@headitem A @tab !A @tab ?A @tab !!A @tab !?A
-@item ! @tab 1 @tab ! @tab ! @tab 1
-@item ? @tab ? @tab 1 @tab ? @tab !
-@item T @tab ! @tab ! @tab 1 @tab 1
-@end multitable
-
-@multitable {----------}{----------}{--------------------------}
-@headitem Prefix @tab Function @tab Description
-@item A?B @tab Default  @tab B if A is Unknown, else A
-@item (A|B)&A @tab @tab B if A is False, else A
-@item (A&B)|A @tab @tab B if A is True, else A
-@item A|B @tab Or  @tab B if A is False or (A is Unknown and B is not False), else A
-@item A&B @tab And @tab B if A is True or (A is Unknown and B is False), else A
-@end multitable
-
-@multitable {--------}{--------}{--------}{--------}{--------}{--------}{---------}
-@headitem A  @tab B  @tab A?B  @tab A!B  @tab A T B  @tab A|B  @tab A&B
-@item ?  @tab ?  @tab @b{? B}  @tab ? A  @tab ? A   @tab ? @b{B}  @tab @b{? A}
-@item ?  @tab ! @tab @b{! B} @tab ? A @tab ? A @tab ? @b{A} @tab @b{! B}
-@item ? @tab T  @tab @b{T B} @tab ? A @tab ? A @tab @b{T B} @tab @b{? A}
-@item ! @tab ? @tab ! A @tab @b{? B} @tab ! A @tab ? @b{B} @tab ! A
-@item ! @tab ! @tab ! A @tab @b{! B} @tab ! A @tab @b{! B} @tab ! A
-@item ! @tab T @tab ! A @tab @b{T B} @tab ! A @tab @b{T B} @tab ! A
-@item T @tab ? @tab T A @tab T A @tab @b{? B} @tab T A @tab @b{? B}
-@item T @tab ! @tab T A @tab T A @tab @b{! B} @tab T A @tab @b{! B}
-@item T @tab T @tab T A @tab T A @tab @b{T B} @tab T A @tab @b{T B}
-@end multitable
-
-All but one infix operator supports standard Boolean logic, but they are extended to support Unknown values and True values other than 1. They are also extended to return True values other than 1 in some cases. A "Default" operator provides a way to specify default values to replace Unknown. 
+Infix operator supports standard Boolean logic, but they are extended to support Unknown values and True values other than 1 in operands.  
 
 @multitable {--------------}{----------------}{----------------------------------------------}
 @headitem Infix  @tab Function  @tab Description 
@@ -1110,20 +1115,19 @@ All but one infix operator supports standard Boolean logic, but they are extende
 @item A | B @tab OR @tab Either A or B is True
 @item A !| B @tab NOR @tab Not (A or B) -  both A and B are False
 @item A|!&B @tab XOR @tab (A or B) and not (A and B)
-@item A ? B @tab Default @tab A if known, else B
 @end multitable
 
-@multitable {-----}{----}{--------}{--------}{--------}{--------}{--------}{--------}{--------}{--------}
-@headitem A @tab B @tab A && B @tab A & B @tab A !& B @tab A || B @tab A | B @tab A !| B @tab A|!&B @tab A ? B
-@item ! @tab ! @tab @b{! A} @tab ! A @tab 1 @tab ! B @tab ! B @tab 1 @tab !  @tab ! A
-@item ! @tab ? @tab @b{! A} @tab ! A @tab 1 @tab ? B @tab ? B @tab ? @tab ? @tab ! A
-@item ! @tab T @tab @b{! A} @tab ! A @tab 1 @tab T B @tab T B @tab ! @tab T B @tab ! A
-@item ? @tab ! @tab ! B @tab ! B @tab 1 @tab ? A @tab ?  A @tab ? @tab ? @tab ! B
-@item ? @tab ? @tab ? B @tab ? B @tab ? @tab ? B @tab ?  B @tab ? @tab ? @tab ? B
-@item ? @tab T @tab ? A @tab ? A @tab ? @tab T B @tab T  B @tab ! @tab ? @tab T B
-@item T @tab ! @tab ! B @tab ! B @tab 1 @tab @b{T A} @tab T A @tab ! @tab T A @tab T A
-@item T @tab ? @tab ? B @tab ? B @tab ? @tab @b{T A} @tab T A @tab ! @tab ? @tab T A
-@item T @tab T @tab T B @tab T B @tab 0 @tab @b{T A} @tab T A @tab ! @tab ! @tab T A
+@multitable {-----}{----}{--------}{--------}{--------}{--------}{--------}{--------}{--------}
+@headitem A @tab B @tab A && B @tab A & B @tab A !& B @tab A || B @tab A | B @tab A !| B @tab A|!&B
+@item ! @tab ! @tab @b{! A} @tab ! A @tab 1 @tab ! B @tab ! B @tab 1 @tab !
+@item ! @tab ? @tab @b{! A} @tab ! A @tab 1 @tab ? B @tab ? B @tab ? @tab ?
+@item ! @tab T @tab @b{! A} @tab ! A @tab 1 @tab T B @tab T B @tab ! @tab T B
+@item ? @tab ! @tab ! B @tab ! B @tab 1 @tab ? A @tab ?  A @tab ? @tab ?
+@item ? @tab ? @tab ? B @tab ? B @tab ? @tab ? B @tab ?  B @tab ? @tab ?
+@item ? @tab T @tab ? A @tab ? A @tab ? @tab T B @tab T  B @tab ! @tab ?
+@item T @tab ! @tab ! B @tab ! B @tab 1 @tab @b{T A} @tab T A @tab ! @tab T A
+@item T @tab ? @tab ? B @tab ? B @tab ? @tab @b{T A} @tab T A @tab ! @tab ?
+@item T @tab T @tab T B @tab T B @tab 0 @tab @b{T A} @tab T A @tab ! @tab !
 @end multitable
 
 With respect to logic, there is no difference between the lazy @code{and} (&&) and normal @code{and} (&), or the lazy @code{or} (||) and normal @code{or} (|). However, there can be a performance difference under specific conditions. The lazy operators are provided for cases where the right operand may be expensive to monitor. When the left operand alone provides enough information to determine the result, the cell's subscription for the right operand value is disabled. When the left operand alone does not determine the result, the cell subscribes to the right operand is enabled. There is overhead involved in enabling and disabling the cell's subscription to the right operand, so it is generally better to use the normal @code{and} and @code{or} operators. Only use the lazy form when the left operand is relatively stable and the right operand is relatively expensive.
@@ -1148,74 +1152,101 @@ The lazy @code{or} (||) works the same way, except it is a False left operand th
 
 If you study the truth table above, you will notice shaded cells indicating when the lazy operators provide a performance improvement in cases where the right operand is expensive. 
 
+@node Conditional Operators
+@section Conditional Operators
+@cindex Conditional Operators
 
+Conditional operators replace a selected value of a condition with the value of another condition.
+They are similar to IF-THEN-ELSE statements, but for the purpose of expression evaluation only.
+Notice that "untrue" is not the same as "false", and "unfalse" is not the same as "true".
+
+@multitable {----------------}{---------------------------------------------------------------------}
+@headitem Operation @tab Description
+@item A true B @tab if A is True then B else A
+@item A false B @tab if A is False then B else A
+@item A unknown B @tab if A is Unknown then B else A
+@item A untrue B @tab if A is False or Unknown then B else A
+@item A unfalse B  @tab if A is True or Unknown then B else A
+@item A known B @tab if A is True or False then B else A
+@end multitable
+
+@node Enabled Monitoring Operators
 @section Enabled Monitoring Operators
 @cindex Enabled Monitoring Operators
-The enabled monitoring operators are similar to the lazy @code{and} (&&) and lazy @code{or} (||) described in the previous section in that the left operand determines if the cell subscribes to the right operand. However, the logic table is modified so the left operand simply controls when the right operand is monitored. The cell value is always Unknown when the right operand is not monitored and always the value of the right operand when it is monitored.
+The enabled monitoring operator, @code{then}, is similar to the lazy AND, @code{&&}, and lazy OR, @code{||}, described in the previous section in that the left operand determines if the cell subscribes to the right operand.
+However, the logic table is modified so the left operand simply controls when the right operand is monitored.
+The cell value is always Unknown when the right operand is not monitored and always the value of the right operand when it is monitored.
+
+Prior to release 0.9.01 two operators were provided based on AND and OR.
+Because that syntax was less intuitive, it is now deprecated and support will be dropped in a future release.
 
 @multitable {----------}{----------}{---------------------------------------------}
 @headitem Infix @tab Function @tab Description
-@item A &~& B @tab AndMon @tab B If A is True, else Unknown
-@item A |~| B @tab OrMon @tab B If A is False, else Unknown 
+@item A then B @tab then @tab B If A is True, else Unknown
+@item A &~& B @tab AndMon @tab B If A is True, else Unknown [deprecated syntax]
+@item !A then B @tab then @tab B If A is False, else Unknown 
+@item A |~| B @tab OrMon @tab B If A is False, else Unknown [deprecated syntax] 
+@item ?A then B @tab then  @tab B If A is Unknown, else Unknown 
 @end multitable
 
 @multitable {-----------------}{----------------}{----------------}{---------------}
-@headitem A @tab B @tab A &~& B @tab A |~| B
-@item ! @tab ! @tab ? A @tab ! B 
-@item ! @tab T @tab ? A @tab T B
-@item ! @tab ? @tab ? A @tab ? B
-@item ? @tab ! @tab ? A @tab ? A 
-@item ? @tab T @tab ? A @tab ? A
-@item ? @tab ? @tab ? A @tab ? A
-@item T @tab ! @tab ! B @tab ? A
-@item T @tab T @tab T B @tab ? A
-@item T @tab ? @tab ? B @tab ? A
+@headitem A @tab B @tab A then B @tab A &~& B @tab A |~| B
+@item ! @tab ! @tab ? A @tab ? A @tab ! B 
+@item ! @tab T @tab ? A @tab ? A @tab T B
+@item ! @tab ? @tab ? A @tab ? A @tab ? B
+@item ? @tab ! @tab ? A @tab ? A @tab ? A 
+@item ? @tab T @tab ? A @tab ? A @tab ? A
+@item ? @tab ? @tab ? A @tab ? A @tab ? A
+@item T @tab ! @tab ! B @tab ! B @tab ? A
+@item T @tab T @tab T B @tab T B @tab ? A
+@item T @tab ? @tab ? B @tab ? B @tab ? A
 @end multitable
 
-These operators should be used instead of the lazy @code{and} and @code{or} when the value of an expensive expression is only needed infrequently relative to all the evaluation opportunities, and it is not necessary or desirable for the left operand to contribute True or False results.
+The @code{then} operator should be used instead of the lazy @code{and} and @code{or} when the value of an expensive expression is only needed infrequently relative to all the evaluation opportunities, and it is not necessary or desirable for the left operand to contribute True or False results.
 
  
+@node Value Capture Operators
 @section Value Capture Operators
 @cindex Value Capture Operators
-The value capture operators take the idea of enabled monitoring a bit further. These operators never subscribe to the value of the right operand. Instead, they compute and capture the value of the right operand when the left operand toggles to a specific state.
+The value capture operator, @code{capture}, take the idea of enabled monitoring a bit further. These operators never subscribe to the value of the right operand. Instead, they compute and capture the value of the right operand when the left operand toggles to a specific state.
 
 @multitable {---------------}{---------------}{-----------------------------------------}
 @headitem Infix @tab Function @tab Description
+@item A capture B @tab capture @tab If A toggles True, capture B
 @item A &^& B @tab And Capture @tab If A toggles True, capture B
+@item !A capture B @tab capture @tab If A toggles False, capture B
 @item A |^| B @tab Or Capture @tab If A toggles False, capture B
+@item ?A capture B @tab capture @tab If A toggles Unknown, capture B
 @end multitable
 
 @multitable {-------------}{---------------}{---------------}{---------------}{-------------}
-@headitem A @tab B @tab C @tab A &^& B @tab A |^| B
-@item ! -> T @tab B @tab C @tab B @tab C 
-@item ? -> T @tab B @tab C @tab B @tab C
-@item ! -> ? @tab B @tab C @tab C @tab C
-@item T -> ? @tab B @tab C @tab C @tab C
-@item ? -> ! @tab B @tab C @tab C @tab B
-@item T -> ! @tab B @tab C @tab C @tab B
+@headitem A @tab B @tab C @tab A capture B @tab A &^& B @tab A |^| B
+@item ! -> T @tab B @tab C @tab B @tab B @tab C 
+@item ? -> T @tab B @tab C @tab B @tab B @tab C
+@item ! -> ? @tab B @tab C @tab C @tab C @tab C
+@item T -> ? @tab B @tab C @tab C @tab C @tab C
+@item ? -> ! @tab B @tab C @tab C @tab C @tab B
+@item T -> ! @tab B @tab C @tab C @tab C @tab B
 @end multitable
 
-These operators may be used as a slightly more efficient alternative to rules as shown below.
+The @code{capture}  operator can be used as a more efficient alternative to a rule as shown below.
 
 @example
-	define capture cell a &^& b;
+	define capture cell a capture b;
 			-instead of-
 	define AndCapture on(a) capture=b;
-	
-	define capture cell a |^| b;
-		-instead of-
-	define OrCapture on(!a) capture=b;
 @end example
 
 It should be noted, that none of the operators intended to reduce expensive expression evaluation yield much benefit when at least one cell referencing the expensive expression subscribes. The first three rules below attempt to avoid unnecessary evaluation of expensive expression b, but the fourth rule defeats them. Since b is only evaluated once each time its arguments change, a single subscription causes as much evaluation as any number of subscriptions greater than one. However, there may be reasons other than performance to use "value capture" and "enabled monitoring" operators. 
 
 @example
-	define capture on(a &^& b);
-	define enabled on(a &~& b);
+	define capture on(a capture b);
+	define enabled on(a then b);
 	define lazy on(a && b);
 	define defeatsit on(b);
 @end example 
 
+@node Flip-flop Operator
 @section Flip-flop Operator
 @cindex Flip-flop Operator
 The flip-flop operator is provided to incorporate "memory" into a condition. Consider the condition c3 defined here as a flip-flop with operands c1 and c2. The symbol ^ was chosen to give visual indication that the first condition, c1, turns the flip-flop on, and the second condition, c2, turns it off (up on c1 and down on c2).
@@ -1230,13 +1261,13 @@ The name flip-flop is borrowed from digital electronics. The behavior of NodeBra
 @headitem c1 @tab c2 @tab c3
 @item ? @tab ? @tab c3
 @item ? @tab T @tab c3
-@item ? @tab F @tab c3
+@item ? @tab ! @tab c3
 @item T @tab ? @tab c3
 @item T @tab T @tab c3
-@item T @tab F @tab T
-@item F @tab ? @tab c3
-@item F @tab T @tab F
-@item F @tab F @tab c3
+@item T @tab ! @tab 1
+@item ! @tab ? @tab c3
+@item ! @tab T @tab !
+@item ! @tab ! @tab c3
 @end multitable
 
 If one of c1 or c2 becomes true while the other is false, the value of c3 changes to true (c1=true) or false (c2=true). For any other combination of c1 and c2, c3 remains unchanged. This means the flip-flop operator "remembers" previous states.
@@ -1295,15 +1326,16 @@ The second transformation provides a convenient way to "lock" a flip-flop. This 
 To summarize, flip-flop logic allows you to define "on" and "off" conditions for a Boolean value. This introduces an element of memory. The state of a flip-flop is not only based on current conditions, but also on past conditions or "events."
 
  
-@section Time Conditions
-@cindex Time Conditions
-A time condition is a function of time that returns a logical value (True, False, or Unknown). You specify a time condition with the tilde (~) followed by a time expression enclosed in parentheses.  
+@node Time Operator
+@section Time Operator
+@cindex Time Operator 
+A time condition is a function of time that returns a logical value (True, False, or Unknown). You specify a time condition with the time operator, tilde (~), followed by a time expression enclosed in parentheses.  
 
 @example
 	~(@i{timeExpression})
 @end example
 
-The next chapter is devoted to a full explanation of time expressions. Here we use simple, and hopefully intuitive, examples to illustrate how time conditions may be included in rule conditions.
+The next chapter is devoted to a full explanation of time expressions. Here we use simple, and hopefully intuitive, examples to illustrate how time conditions may be included in cell formulas.
 
 To take an action at 00:00 every Sunday, the following rule might be used.
 
@@ -1332,13 +1364,14 @@ A time condition may be used as an operand of infix operators, as illustrated in
 In rule r4, the time condition "~(h(4))" is true from 4:00am to 5:00am and false otherwise. So r4 will take no action when x transitions to 2 between 4:00am and 5:00am on any day. But it will take action if x=2 at 5:00am or x transitions to 2 outside the 04:00 hour.
 
  
-@section Delayed Conditions
-@cindex Delayed Conditions
-State delays provide a way to delay a state transition. The operators "~^1" "~^0" and "~^?" capture and delay state changes to True, False, and Unknown respectively.
+@node Delay Operators
+@section Delay Operators
+@cindex Delay Operators
+State delays provide a way to delay a state transition. The operators "~^" "~^!" and "~^?" capture and delay state changes to True, False, and Unknown respectively.
  
 @example
-	@i{condition} ~^1(@i{timeExpression})
-	@i{condition} ~^0(@i{timeExpression})
+	@i{condition} ~^(@i{timeExpression})
+	@i{condition} ~^!(@i{timeExpression})
 	@i{condition} ~^?(@i{timeExpression})
 @end example
 
@@ -1347,43 +1380,43 @@ The time expression specifies the delay duration. Time expressions are covered i
 Suppose you want to take action if term A has a value of 3 for 20 minutes. This can be accomplished with the relational condition A=3 by delaying the transition to True for 20 minutes.
 
 @example
-	define r1 on(A=3 ~^1(20m)): @i{action}
+	define r1 on(A=3 ~^(20m)): @i{action}
 @end example
 
-When the condition A=3 transitions from an Unknown or False state to True, the state of "A=3 ~^1(20m)" does not change, it preserves the prior state. But a timer is set for 20 minutes. When the timer expires, the delay condition transitions to True. If the condition A=3 transitions to a new state before the timer expires, the state of "A=3 ~^1(20m)" takes on the new state (which may not be a change for the delayed condition) and the timer is cancelled. This means the timer will not expire until the condition A=3 holds a True state for 20 minutes.
+When the condition A=3 transitions from an Unknown or False state to True, the state of "A=3 ~^(20m)" does not change, it preserves the prior state. But a timer is set for 20 minutes. When the timer expires, the delay condition transitions to True. If the condition A=3 transitions to a new state before the timer expires, the state of "A=3 ~^(20m)" takes on the new state (which may not be a change for the delayed condition) and the timer is cancelled. This means the timer will not expire until the condition A=3 holds a True state for 20 minutes.
 
 Now suppose you want to prevent a condition from "resetting" until it has been false for 10 minutes. Use A=3 as the base condition again, and assume that A is always known. Once this rule fires, it will not fire again until having been false for 10 minutes.
 
 @example
-	define r2 on(A=3 ~^0(10m)): @i{action}
+	define r2 on(A=3 ~^!(10m)): @i{action}
 @end example
 
 You may specify multiple time delays to ignore "temporary" transitions to more than one state. The following expression will respond 20 minutes after A becomes true, if at no time it is false for 10 seconds. This is accomplished simply by delaying the true timer reset condition (false).
 
 @example
-	define r3 on(A=3 ~^0(10s) ~^1(20m)): @i{action}
+	define r3 on(A=3 ~^!(10s) ~^(20m)): @i{action}
 @end example
 
 Let's not forget about the unknown state. If you want to suppress short unknown states, you can either include a delay on unknown or apply the closed world assumption to A. If A is unknown, []A is false (0), otherwise []A is the same as A.
 
 @example
-	define r4 on(A=3 ~^?(10s) ~^0(10s) ~^1(20m)): @i{action}
-	define r5 on([]A=3 ~^0(10s) ~^1(20m)): @i{action}
+	define r4 on(A=3 ~^?(10s) ~^!(10s) ~^(20m)): @i{action}
+	define r5 on([]A=3 ~^!(10s) ~^(20m)): @i{action}
 @end example
 
 The following example will respond to the @code{/tmp} file system reaching 90% usage for 15 minutes, resetting after falling below 90% for 30 minutes.
 
 @example
-	define r6 on([]filesys.'/tmp’.percent>90 ~^0(30m) ~^1(15m)): @i{action}
+	define r6 on([]filesys.'/tmp'.percent>90 ~^!(30m) ~^(15m)): @i{action}
 @end example
 
 The behavior of the state delay operators is summarized in the following tables, where time t is the time C1 takes on a new state. A transition of C1 may change t before t+delay, moving you to a new row in the table.
 
-@subheading assert c2==(c1 ~^1(delay))
+@subheading assert c2==(c1 ~^(delay))
 @multitable {-------------}{-------------}{-------------}
 @headitem  C1 at time t @tab C2 at time t @tab C2 at t+delay
 @item ? @tab ? @tab ?
-@item F @tab F @tab F
+@item ! @tab ! @tab !
 @item T @tab C2 @tab T
 @end multitable
 
@@ -1391,7 +1424,7 @@ The behavior of the state delay operators is summarized in the following tables,
 @multitable {-------------}{-------------}{-------------}
 @headitem C1 at time t @tab C2 at time t @tab C2 at t+delay
 @item ? @tab ? @tab ?
-@item F @tab C2 @tab F
+@item ! @tab C2 @tab !
 @item T @tab T @tab T
 @end multitable
 
@@ -1399,30 +1432,31 @@ The behavior of the state delay operators is summarized in the following tables,
 @multitable {-------------}{-------------}{-------------}
 @headitem  C1 at time t @tab C2 at time t @tab C2 at t+delay
 @item ? @tab C2 @tab ?
-@item F @tab F @tab F
+@item ! @tab ! @tab !
 @item T @tab T @tab T
 @end multitable
 
-@section Node Conditions
-@cindex Node Conditions
-A node condition looks like a function call in many other languages.
+@node Node Sentence Formulas
+@section Node Sentence Formulas
+@cindex node sentence formulas
+A node sentence formula looks like a function call in many other languages.
 
 @example
 @i{node}(@i{arge1},@i{arge2},@dots{})
 @end example
 
-However this same syntax can appear in multiple places within NodeBrain syntax. It is only a node condition when it appears in a cell expression. The highlighted strings are node conditions in the examples below. In fact, they are the same node condition.
+However this same node sentence syntax can appear in multiple places within NodeBrain syntax. It is only a node sentence formula when it appears in a cell expression. The highlighted strings are node sentence formulas in the examples below. In fact, they are the same node sentence formulas.
 
 @example
 	define @i{term} on(x=2 and @b{process("inetd","running")}) @i{action}
 	assert good==@b{process("inetd","running"),}process("nb","stopped");
 @end example
 
-The reason process("nb","stopped") is not a node condition is because it is not part of a cell expression. In this case, it is a node assertion instead.
+The reason process("nb","stopped") is not a node sentence formula is because it is not part of a cell expression. In this case, it is a node sentence assertion instead.
 
 The first type of node to show up in the NodeBrain language was the cache. The generalized notion of a node evolved from the cache, so we use a cache to illustrate the concept here. (You can find more information on cache nodes in the @i{NodeBrain Module Reference}.)
 
-A NodeBrain cache is a table designed for event correlation. It has built-in features for monitoring frequency and variation, but may also be used for more general event correlation through cache node conditions.
+A NodeBrain cache is a table designed for event correlation. It has built-in features for monitoring frequency and variation, but may also be used for more general event correlation through cache node sentence formulas.
 
 Suppose you want to take some action when an event of Type T2 occurs within 5 minutes after an event of Type T1 if both events have the same value for attributes A and B. This could be accomplished with the following rule set.
  
@@ -1463,7 +1497,7 @@ If you defined the cache without scheduled expiration of entries, you must expli
 
 With or without an expiration period, you may want to delete entries based on some condition. This is simply a way of forcing the cache condition to be False, just as asserting an entry forces it to be True. So, you can think of a cache condition as a dynamic set of named Boolean switches. You address a specific switch via the argument list.
 
-The value of a node condition and the relationship of this value to an assertion is determined by a node module. The behavior of a cache node is determined by the cache node module. Other nodes may use different node modules and will behave quit differently. See @i{NodeBrain Module Reference} for information on a set of node modules distributed with NodeBrain.
+The value of a node sentence formula and the relationship of this value to an assertion is determined by a node module. The behavior of a cache node is determined by the cache node module. Other nodes may use different node modules and will behave quit differently. See @i{NodeBrain Module Reference} for information on a set of node modules distributed with NodeBrain.
 
 
 @node Time Expressions
@@ -1491,7 +1525,14 @@ NodeBrain rules schedule actions. The scheduling of an action may be event based
 
 @section Time Expression Concepts
 @cindex Time Expression Concepts
-A time condition is a function of time that "asserts" a Boolean value. At any given time, a time condition has a value of true or false. This value automatically changes over time according to a defined schedule. Within the context of a logical expression, a brain responds to changes in the value of a time condition as if it were explicitly asserted. In other words, the firing of rules can be scheduled.
+A time condition is a function of time that produces a Boolean value
+that automatically changes over time according to a defined schedule.
+The rule engine responds to changes in the value of a time condition as if it were explicitly asserted.
+This enables the firing of rules based on a schedule.
+
+Note: Traditional Boolean values of 1 and 0 are used in this section to describe time expressions.
+The values produced by time formulas are actually 1 and !. 
+This section will be revised to use T and F to represent True and False to avoid confusion.
 
 @subsection Boolean Function of Time
 @cindex Boolean Function of Time
@@ -5524,8 +5565,8 @@ We are still considering the ideas in boldface---they have not been implemented.
 @item ^ @tab cell @tab Flip-flop operator
 @item ~(@dots{}) @tab cell @tab Time condition
 @item ~@{@dots{}@}@tab cell @tab Time sequence
-@item ~^1(@dots{}) @tab cell @tab Time Delay Condition---delay transition to True
-@item ~^0(@dots{}) @tab cell @tab Time Delay Condition---delay transition to False
+@item ~^(@dots{}) @tab cell @tab Time Delay Condition---delay transition to True
+@item ~^!(@dots{}) @tab cell @tab Time Delay Condition---delay transition to False
 @item ~^?(@dots{}) @tab cell @tab Time Delay Condition---delay transition to Unknown
 @item @{@dots{}@} @tab cell @tab Sequence
 @item ; @tab Sequence @tab Statement terminator

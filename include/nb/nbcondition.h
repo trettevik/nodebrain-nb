@@ -63,7 +63,8 @@ extern struct TYPE *condTypeNot;
 extern struct TYPE *condTypeTrue;
 extern struct TYPE *condTypeUnknown;
 extern struct TYPE *condTypeKnown;
-extern struct TYPE *condTypeClosedWorld;
+extern struct TYPE *condTypeAssumeFalse;
+extern struct TYPE *condTypeAssumeTrue;
 extern struct TYPE *condTypeDefault;
 extern struct TYPE *condTypeLazyAnd;
 extern struct TYPE *condTypeAnd;
@@ -94,7 +95,7 @@ extern struct TYPE *condTypeChange;
 /*
 *  Public methods
 */
-void initCondition(NB_Stem *stem);
+void nbConditionInit(NB_Stem *stem);
 struct COND *useCondition(struct TYPE *type,void *left,void *right);
 //void *hashCond(struct HASH *hash,struct TYPE *type,void *left,void *right);
 uint32_t hashCond(struct TYPE *type,void *left,void *right);

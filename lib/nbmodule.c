@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 1998-2014 The Boeing Company
 *                         Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
@@ -119,6 +119,7 @@
 *                       compatibilty of the module with an application using
 *                       nb-0.x.p and the associated libnb-0.x.p.so
 * 2013-04-06 eat 0.8.15 Modified nbModuleDeclare to avoid buffer overflow
+* 2014-04-05 eat 0.9.01 Checker update
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -354,7 +355,7 @@ void *nbModuleSearchPath(char *path,char *filename,char *msg,size_t msglen){
     outMsg(0,'L',"nbModuleSearchPath: path element longer than max of %d in path %s",sizeof(fullname)-1,path);
     return(NULL);
     }
-  strcpy(fullname,cursor);
+  strncpy(fullname,cursor,len); //2014-04-05 eat - VID 7618 FP
   *(fullname+len)='/';
   if(len+strlen(filename)+2>=sizeof(fullname)){
     outMsg(0,'L',"nbModuleSearchPath: full path name of file longer than max of %d in path %s/%s",sizeof(fullname)-1,path,filename);
@@ -494,7 +495,7 @@ NB_Term *nbModuleDeclare(NB_Term *context,char *ident,char *cursor){
         outMsg(0,'E',"Module name too long for buffer");
         return(NULL);
         }
-      else sprintf(filename,"nb_%s%s",modname,LT_MODULE_EXT);
+      else sprintf(filename,"nb_%s%s",modname,LT_MODULE_EXT); // 2014-04-05 eat VID 7618 FP
       }
     } 
   while(*cursor==' ') cursor++;

@@ -376,14 +376,16 @@ NB_Object *NB_OBJECT_TRUE;
 *  Initialization Cells 
 */
 void nbCellInit(NB_Stem *stem){
+  NB_Object *zero;
   NB_Link *link;
   int i;
   NB_OBJECT_TRUE=(NB_Object *)useReal((double)1);
   NB_OBJECT_TRUE->refcnt=(unsigned int)-1;         /* flag as perminent object */
   nb_True=NB_OBJECT_TRUE;
-  //NB_OBJECT_FALSE=(NB_Object *)useReal((double)0);
+  zero=(NB_Object *)useReal((double)0);
+  zero->refcnt=(unsigned int)-1;        /* flag as perminent object */
+  //nb_False->value=zero; // 2014-04-27 eat - experiment that didn't work
   NB_OBJECT_FALSE=(NB_Object *)nb_False;           // 2013-12-05 eat - using special false object (not zero)
-  //NB_OBJECT_FALSE->refcnt=(unsigned int)-1;        /* flag as perminent object */
   NB_CELL_DISABLED=(NB_Cell *)nb_Disabled;
   NB_CELL_UNKNOWN=(NB_Cell *)nb_Unknown;
   NB_CELL_PLACEHOLDER=(NB_Cell *)nb_Placeholder;
@@ -531,6 +533,7 @@ void *nbCellNew(NB_Type *type,void **pool,int length){
   cell=(NB_Cell *)newObject(type,pool,length);
   cell->object.value=nb_Disabled;
   cell->sub=NULL;
+  cell->mode=0;   // 2014-04-20 eat
   cell->level=0;
   return(cell);
   }

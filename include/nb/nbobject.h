@@ -113,7 +113,7 @@ extern NB_Object *nb_Placeholder;
 #define TYPE_WELDED  1024  /* terms should not release these objects easily */
                            /* - an explicit undefine is required */
 #define TYPE_IS_FACT   0x0800   /* facts */
-#define TYPE_NOT_TRUE  0x1000   // Objects like zero, unknown, and disabled that are not true
+#define TYPE_NOT_TRUE  0x1000   // Objects like false, unknown, and disabled that are not true
 #define TYPE_IS_ASSERT 0x2000   /* assertions */
 #define TYPE_IS_MATH   0x4000   // Math functions
 

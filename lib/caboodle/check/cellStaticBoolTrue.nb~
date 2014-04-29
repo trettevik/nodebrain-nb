@@ -22,8 +22,8 @@ define r1 if(e1 and e2 and e3 and e4 and e5 and e6 and e7 and e8 and e9);
 
 assert e1==(1    );
 ~ > assert e1==(1    );
-assert e2==(not !);
-~ > assert e2==(not !);
+assert e2==(!!);
+~ > assert e2==(!!);
 assert e3==(1 & 1);
 ~ > assert e3==(1 & 1);
 assert e4==(1 | !);
@@ -63,8 +63,8 @@ assert f=!;
 
 assert e1==(t    );
 ~ > assert e1==(t    );
-assert e2==(not f);
-~ > assert e2==(not f);
+assert e2==(!f);
+~ > assert e2==(!f);
 assert e3==(t & t);
 ~ > assert e3==(t & t);
 assert e4==(t | f);
@@ -104,8 +104,8 @@ assert a="a";
 
 assert e1==a=("a");
 ~ > assert e1==a=("a");
-assert e2==(not !);
-~ > assert e2==(not !);
+assert e2==(!!);
+~ > assert e2==(!!);
 assert e3==a=("a" & "a");
 ~ > assert e3==a=("a" & "a");
 assert e4==a=("a" | !);
@@ -143,20 +143,20 @@ show -cells;
 
 assert e1==a=(a);
 ~ > assert e1==a=(a);
-assert e2==(not f);
-~ > assert e2==(not f);
-assert e3==a=(a & a);
-~ > assert e3==a=(a & a);
+assert e2==(!f);
+~ > assert e2==(!f);
+assert e3==1=(a & a);
+~ > assert e3==1=(a & a);
 assert e4==(t | f);
 ~ > assert e4==(t | f);
 assert e5==(t | ?);
 ~ > assert e5==(t | ?);
-assert e6==a=(f | a);
-~ > assert e6==a=(f | a);
-assert e7==a=(? | a);
-~ > assert e7==a=(? | a);
-assert e8==a=(a | a);
-~ > assert e8==a=(a | a);
+assert e6==1=(f | a);
+~ > assert e6==1=(f | a);
+assert e7==1=(? | a);
+~ > assert e7==1=(? | a);
+assert e8==1=(a | a);
+~ > assert e8==1=(a | a);
 assert e9==(a ^ f);
 ~ > assert e9==(a ^ f);
 
@@ -166,12 +166,12 @@ show -cells;
 ~ a = "a"
 ~ e1 = 1 == (a=a)
 ~ e2 = 1 == (!f)
-~ e3 = 1 == (a=(a&a))
+~ e3 = 1 == ((a&a)=1)
 ~ e4 = 1 == (t|f)
 ~ e5 = 1 == (t|?)
-~ e6 = 1 == (a=(f|a))
-~ e7 = 1 == (a=(?|a))
-~ e8 = 1 == (a=(a|a))
+~ e6 = 1 == ((f|a)=1)
+~ e7 = 1 == ((?|a)=1)
+~ e8 = 1 == ((a|a)=1)
 ~ e9 = 1 == (a^f)
 ~ f = !
 ~ r1 = # 1 == if(e1&(e2&(e3&(e4&(e5&(e6&(e7&(e8&e9))))))));

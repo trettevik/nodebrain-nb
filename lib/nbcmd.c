@@ -1421,7 +1421,7 @@ struct IDENTITY *iIdentity(char **cursorP){
   cursave=*cursorP;
   symid=nbParseSymbol(ident,sizeof(ident),cursorP); 
   if(symid!='t'){
-    outMsg(0,'E',"Expecting term identifier at [%s].",cursave);
+    outMsg(0,'E',"Expecting term identifier at-->%s",cursave);
     return(NULL);
     }
   if((term=nbTermFind(identityC,ident))==NULL){
@@ -1452,7 +1452,7 @@ int nbCmdRank(nbCELL context,void *handle,char *verb,char *cursor){
   cursave=cursor;
   symid=nbParseSymbol(ident,sizeof(ident),&cursor); 
   if(symid!='t'){
-    outMsg(0,'E',"Expecting permission name at [%s].",cursave);
+    outMsg(0,'E',"Expecting permission name at-->%s",cursave);
     return(1);
     }
   authmask=nbGetAuthMask(ident);
@@ -1493,14 +1493,14 @@ int nbCmdDeclare(nbCELL context,void *handle,char *verb,char *cursor){
   cursave=cursor;
   symid=nbParseSymbol(ident,sizeof(ident),&cursor); 
   if(symid!='t'){
-    outMsg(0,'E',"Expecting term identifier at [%s].",cursave);
+    outMsg(0,'E',"Expecting term identifier at-->%s",cursave);
     return(1);
     }
   while(*cursor==' ') cursor++;
   cursave=cursor;
   symid=nbParseSymbol(type,sizeof(ident),&cursor);
   if(symid!='t'){
-    outMsg(0,'E',"Expecting term identitier at [%s].",cursave);
+    outMsg(0,'E',"Expecting term identitier at-->%s",cursave);
     return(1);
     }
   if(strcmp(type,"identity")==0){
@@ -1539,7 +1539,7 @@ int nbCmdDeclare(nbCELL context,void *handle,char *verb,char *cursor){
     if(nbTimeDeclareCalendar(context,ident,&cursor,msg,sizeof(msg))==NULL) outPut("%s\n",msg);
     }
   else{
-    outMsg(0,'E',"Expecting {identity|module|calendar} at [%s].",cursave);
+    outMsg(0,'E',"Expecting {identity|module|calendar} at-->%s",cursave);
     return(1);
     }
   return(0);
@@ -1567,7 +1567,7 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
   cursave=cursor;
   symid=nbParseSymbol(ident,sizeof(ident),&cursor);
   if(symid!='t'){
-    outMsg(0,'E',"Expecting term identifier at [%s].",cursave);
+    outMsg(0,'E',"Expecting term identifier at-->%s",cursave);
     return(1);
     }
   if(*ident=='$' || *ident=='_'){
@@ -1628,7 +1628,7 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
       }
     if(standardRule){
       if(*cursor!=')'){
-        outMsg(0,'E',"Expecting ')' at [%s]",cursor);
+        outMsg(0,'E',"Expecting ')' at-->%s",cursor);
         return(1);
         }
       cursor++; /* step over paren */
@@ -1674,7 +1674,7 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
         }
       }
     else if(*cursor!=';' && *cursor!=0){
-      outMsg(0,'E',"Expecting ':', ';' or end of line at [%s].",cursor);
+      outMsg(0,'E',"Expecting ':', ';' or end of line at-->%s",cursor);
       return(1);
       }
     else cursor=NULL;  // rule has no action
@@ -1717,7 +1717,7 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
   else if(strcmp(type,"nerve")==0){
     object=nbParseCell((NB_Term *)context,&cursor,0);
     if(*cursor!=';' && *cursor!=0){
-      outMsg(0,'E',"Expecting ';' at [%s].",cursor);
+      outMsg(0,'E',"Expecting ';' at-->%s",cursor);
       return(1);
       }
     
@@ -1730,7 +1730,7 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
   else if(strcmp(type,"cell")==0) {
     object=nbParseCell((NB_Term *)context,&cursor,0);
     if(*cursor!=';' && *cursor!=0){
-      outMsg(0,'E',"Expecting ';' at [%s].",cursor);
+      outMsg(0,'E',"Expecting ';' at-->%s",cursor);
       return(1);
       }
     if(object==NULL) object=nb_Unknown;  // accept empty expression here
@@ -2242,7 +2242,7 @@ void nbCmd(nbCELL context,char *cursor,unsigned char cmdopt){
         if(*cursor=='.'){  // context prefix 
           cursor++;
           if(*cursor!=' '){
-            outMsg(0,'E',"Expecting ' ' at [%s]\n",cursor);
+            outMsg(0,'E',"Expecting ' ' at-->%s\n",cursor);
             addrContext=saveContext;
             return;
             }

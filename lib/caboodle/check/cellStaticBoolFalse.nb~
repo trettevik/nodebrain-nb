@@ -24,8 +24,8 @@ define r1 on(e1 and e2 and e3 and e4 and e5 and e6 and e7 and e8 and e9);
 
 assert e1==(!    );
 ~ > assert e1==(!    );
-assert e2==(not 1);
-~ > assert e2==(not 1);
+assert e2==!;
+~ > assert e2==!;
 assert e3==(! & !);
 ~ > assert e3==(! & !);
 assert e4==(! & 1);
@@ -65,8 +65,8 @@ assert f=!;
 
 assert e1==(f    );
 ~ > assert e1==(f    );
-assert e2==(not t);
-~ > assert e2==(not t);
+assert e2==(!t);
+~ > assert e2==(!t);
 assert e3==(f & f);
 ~ > assert e3==(f & f);
 assert e4==(f & t);
@@ -103,8 +103,8 @@ show -cells;
 
 assert e1==( !       );
 ~ > assert e1==( !       );
-assert e2==(not "a"  );
-~ > assert e2==(not "a"  );
+assert e2==(!"a");
+~ > assert e2==(!"a");
 assert e3==( !  &  ! );
 ~ > assert e3==( !  &  ! );
 assert e4==( !  & "a");
@@ -144,8 +144,8 @@ assert a="a";
 
 assert e1==(f    );
 ~ > assert e1==(f    );
-assert e2==(not a);
-~ > assert e2==(not a);
+assert e2==(!a);
+~ > assert e2==(!a);
 assert e3==(f & f);
 ~ > assert e3==(f & f);
 assert e4==(f & a);

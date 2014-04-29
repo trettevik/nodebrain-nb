@@ -262,6 +262,11 @@
 * 2008/10/23 eat 0.7.3  Now using standard API header nb.h
 * 2010-02-25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2012-12-27 eat 0.8.13 Checker updates
+* 2014-04-23 eat 0.9.01 Fixed bug in cacheAlarm
+*                
+*                cacheAlarm could previously call cacheDecNode with a NULL
+*                entry pointer if nbRuleReact modified the timer list cacheAlarm
+*                is still spinning through.
 *=============================================================================
 */
 #include "config.h"
@@ -913,6 +918,7 @@ void cacheAlarm(nbCELL context,void *skillHandle,NB_Cache *cache){
     if(expire){
       nbRuleReact();
       nbNodeAlert(context,cache->context);
+      timerRoot=cache->timer; // 2014-04-23 eat - nbRuleReact could modify timer list 
       }
     timer=timerRoot->next;
     }
@@ -1037,7 +1043,7 @@ int cacheRemove(nbCELL context,struct CACHE *cache,nbSET argSet){
       timer=timer->prior;
       }
     }
-  /* cancel alarm timer when the cash becomes empty */
+  /* cancel alarm timer when the cache becomes empty */
   if(cache->interval && cache->timer->next==cache->timer){
     nbClockSetTimer(0,cache->node);
     cache->state&=0xff^CACHE_STATE_ALARM;

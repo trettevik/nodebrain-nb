@@ -133,6 +133,18 @@
 *            called a node condition.
 * 2014-01-12 eat 0.9.00 Removed hash pointer - referenced via types
 * 2014-01-18 eat 0.9.00 Implementing LT and GT axon
+* 2014-04-06 eat 0.9.01 Assume True -? replaces [] closed world
+* 2014-04-06 eat 0.9.01 Assume False +? included
+* 2014-04-06 eat 0.9.01 Old AND operator "&" returns 1 for true
+* 2014-04-06 eat 0.9.01 New AND-like operator "true" returns multiple true values
+* 2014-04-06 eat 0.9.01 Old OR operator "|" returns 1 for true
+* 2014-04-06 eat 0.9.01 New OR-like  operator "untrue" returns multiple true values
+* 2014-04-27 eat 0.9.01 The "not" operator is now deprecated to avoid reserved terms
+* 2014-04-27 eat 0.9.01 Fixed a time delay bug
+*            Multiple types of delays of the same duration on the same condition
+*            cause conflicts in the management of a subordinate time condition.
+*            Modified to eliminate subordinate time condition and now manage
+*            state of the time delay using a flag in the cell.mode field.
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -150,7 +162,8 @@ struct TYPE *condTypeNot;      /* !c      - not(cond) */
 struct TYPE *condTypeTrue;     /* !!c     - true(cond) - All true values compression to 1 */
 struct TYPE *condTypeUnknown;  /* ?c      - unknown(cond) */
 struct TYPE *condTypeKnown;    /* !?c     - known(cond) */
-struct TYPE *condTypeClosedWorld;  /* []c - closedworld(cond) - ? converts to 0*/
+struct TYPE *condTypeAssumeFalse;  // -?c - assumeFalse(cond) ?=>!
+struct TYPE *condTypeAssumeTrue;   // +?c - assumeTrue(cond) ?=>1
 struct TYPE *condTypeDefault;      /* c?d     - default(cond,cond) */
 struct TYPE *condTypeLazyAnd;      /* c&&d    - lazyand(cond,cond) */
 struct TYPE *condTypeAnd;          /* c&d     - and(cond,cond) */
@@ -171,10 +184,9 @@ struct TYPE *condTypeRelLE;       /* a<=b    - compare(object,object) */
 struct TYPE *condTypeRelGT;       /* a>b     - compare(object,object) */
 struct TYPE *condTypeRelGE;       /* a>=b    - compare(object,object) */
 struct TYPE *condTypeTime;         /* ~()    - timespec */
-struct TYPE *condTypeTimeDelay;    /* ~x()   - timespec for time delays */
-struct TYPE *condTypeDelayTrue;    /* ~^1() ~T()   - logic part of delay(cond,timespec)*/
-struct TYPE *condTypeDelayFalse;   /* ~^0() ~F()   - logic part of delay(cond,timespec)*/
-struct TYPE *condTypeDelayUnknown; /* ~^?() ~U()   - logic part of delay(cond,timespec)*/
+struct TYPE *condTypeDelayTrue;    /* ~^()   - logic part of delay(cond,timespec)*/
+struct TYPE *condTypeDelayFalse;   /* ~^!()  - logic part of delay(cond,timespec)*/
+struct TYPE *condTypeDelayUnknown; /* ~^?()  - logic part of delay(cond,timespec)*/
 struct TYPE *condTypeMatch;        /* a~"..."  - match(term,regexp) */
 struct TYPE *condTypeChange;       /* a~~      - change(term) */
 
@@ -298,12 +310,20 @@ void condPrintRule(struct COND *cond){
 /*
 *  Print conditions with a left and right operand
 */
-void condPrintInfix(struct COND *cond){
+static void condPrintInfix(struct COND *cond){
   outPut("(");
   printObject(cond->left);
   outPut("%s",cond->cell.object.type->name);   // 2012-12-31 eat - VID 5328-0.8.13-1 added format string
   printObject(cond->right); 
   outPut(")");
+  }
+  
+static void condPrintDelay(struct COND *cond){
+  outPut("(");
+  printObject(cond->left);
+  outPut("%s(",cond->cell.object.type->name);
+  printObject(cond->right); 
+  outPut("))");
   }
   
 void condPrintTime(struct COND *cond){
@@ -442,8 +462,9 @@ void alertRule(NB_Cell *rule){
     if(trace) outMsg(0,'T',"alertRule scheduled action %p",action);
     scheduleAction(action);
     //rule->object.value=NB_OBJECT_TRUE;
-    rule->object.value=object; // 2013-12-05 eat - pass the condition value thru
+    //rule->object.value=object; // 2013-12-05 eat - pass the condition value thru
     }
+  rule->object.value=object; // 2014-04-25 eat - always the condition value thru
   nbCellPublish(rule);
   if(trace) outMsg(0,'T',"alertRule returning");
   }
@@ -524,14 +545,21 @@ NB_Object *evalKnown(struct COND *cond){
   return(NB_OBJECT_TRUE);
   }
 
-/* Closed Word Value: [e] converts Unknown to 0 (False) */
-NB_Object *evalClosedWorld(struct COND *cond){
+/* Assume False: -?e  converts Unknown to ! (False) */
+NB_Object *evalAssumeFalse(struct COND *cond){
   NB_Object *object=((NB_Object *)cond->left)->value;
   if(object==nb_Unknown) return(NB_OBJECT_FALSE);
   return(object);
   }
 
-/* Not: !e converts 0 to 1 and all True values to 0 */
+/* Assume True: +?e  converts Unknown to 1 (True) */
+NB_Object *evalAssumeTrue(struct COND *cond){
+  NB_Object *object=((NB_Object *)cond->left)->value;
+  if(object==nb_Unknown) return(NB_OBJECT_TRUE);
+  return(object);
+  }
+
+/* Not: !e converts ! to 1 and all True values to ! */
 NB_Object *evalNot(struct COND *cond){
   NB_Object *object=((NB_Object *)cond->left)->value;
   if(object==nb_Unknown) return(nb_Unknown);
@@ -578,8 +606,9 @@ NB_Object *evalLazyAnd(struct COND *cond){
 NB_Object *evalAnd(struct COND *cond){
   NB_Object *lobject=((NB_Object *)cond->left)->value;
   NB_Object *robject=((NB_Object *)cond->right)->value;
-  if(lobject==NB_OBJECT_FALSE || (lobject==nb_Unknown && robject!=NB_OBJECT_FALSE)) return(lobject);
-  return(robject);
+  if(lobject==NB_OBJECT_FALSE || robject==NB_OBJECT_FALSE) return(NB_OBJECT_FALSE);
+  if(lobject==nb_Unknown || robject==nb_Unknown) return(nb_Unknown);
+  return(nb_True);
   }
 
 NB_Object *reduceAnd(NB_Object *lobject,NB_Object *robject){
@@ -623,8 +652,16 @@ NB_Object *evalLazyOr(struct COND *cond){
 NB_Object *evalOr(struct COND *cond){
   NB_Object *lobject=((NB_Object *)cond->left)->value;
   NB_Object *robject=((NB_Object *)cond->right)->value;
-  if(lobject==NB_OBJECT_FALSE || (lobject==nb_Unknown && robject!=NB_OBJECT_FALSE)) return(robject);
-  return(lobject);
+  if(lobject==NB_OBJECT_FALSE){
+    if(robject==NB_OBJECT_FALSE) return(NB_OBJECT_FALSE);
+    if(robject==nb_Unknown) return(nb_Unknown);
+    return(nb_True);
+    }
+  if(lobject==nb_Unknown){
+    if(robject==NB_OBJECT_FALSE || robject==nb_Unknown) return(nb_Unknown);
+    return(nb_True);
+    }
+  return(nb_True);
   }
 
 NB_Object *reduceOr(NB_Object *lobject,NB_Object *robject){
@@ -682,31 +719,56 @@ NB_Object *evalFlipFlop(struct COND *cond){
   return(cond->cell.object.value);
   }
 
-NB_Object *evalDelay(struct COND *cond){
-  /* delay reaction is caused by a scheduled event or subordinate value change */
-  struct COND *lcond=cond->left,*rcond=cond->right;
-  NB_Object *value=lcond->cell.object.value;
-  if(trace) outMsg(0,'T',"evalDelay starting.");
-  if((cond->cell.object.type==condTypeDelayTrue && (value==NB_OBJECT_FALSE || value==nb_Unknown)) ||
-     (cond->cell.object.type==condTypeDelayFalse && value!=NB_OBJECT_FALSE) ||
-     (cond->cell.object.type==condTypeDelayUnknown && value!=nb_Unknown)){
-      if(rcond->cell.object.value==NB_OBJECT_TRUE) condUnschedule(rcond);  /* unschedule timer */
-      rcond->cell.object.value=nb_Disabled;       /* set time value to disabled */
-      return(value);                               /* and pass left value through */
-      }
-  else if(rcond->cell.object.value==NB_OBJECT_FALSE){    /* delay timer expired */
-    return(value);                                 /* pass delayed value */ 
-    }    
-  else if(rcond->cell.object.value==nb_Disabled || rcond->cell.object.value==nb_Unknown){
-    condSchedule(rcond,NB_OBJECT_FALSE);     /* need to schedule a delay */
-    rcond->cell.object.value=NB_OBJECT_TRUE;             /* set timer value to true */
-    return(cond->cell.object.value);           /* retain "remembered" value */
-    }
-  outMsg(0,'L',"evalDelay unexpected %d state on timer.",rcond->cell.object.value);
-  return(nb_Unknown);  /* is this a good thing to return? */  
+// 2014-04-27 eat - alarm handler for state transition time  delays
+static void alarmDelay(NB_Cond *cond){
+  cond->cell.object.value=((NB_Object *)cond->left)->value;
+  nbCellPublish((nbCELL)cond);
+  cond->cell.mode&=~NB_CELL_MODE_TIMER;
   }
-  
-NB_Object *evalTime(struct COND *cond){
+
+static NB_Object *evalDelayTrue(NB_Cond *cond){
+  NB_Object *value=((NB_Object *)cond->left)->value;
+  if(value==nb_False || value==nb_Unknown){
+    if(cond->cell.mode&NB_CELL_MODE_TIMER){
+      nbClockSetTimer(0,(NB_Cell *)cond);
+      cond->cell.mode&=~NB_CELL_MODE_TIMER;
+      }
+    return(value);
+    }
+  nbClockSetTimer(nb_ClockTime+((NB_Sched *)cond->right)->duration,(NB_Cell *)cond);
+  cond->cell.mode|=NB_CELL_MODE_TIMER;
+  return(cond->cell.object.value);
+  }
+
+static NB_Object *evalDelayFalse(NB_Cond *cond){
+  NB_Object *value=((NB_Object *)cond->left)->value;
+  if(value!=nb_False){
+    if(cond->cell.mode&NB_CELL_MODE_TIMER){
+      nbClockSetTimer(0,(NB_Cell *)cond);
+      cond->cell.mode&=~NB_CELL_MODE_TIMER;
+      }
+    return(value);
+    }
+  nbClockSetTimer(nb_ClockTime+((NB_Sched *)cond->right)->duration,(NB_Cell *)cond);
+  cond->cell.mode|=NB_CELL_MODE_TIMER;
+  return(cond->cell.object.value);
+  }
+
+static NB_Object *evalDelayUnknown(NB_Cond *cond){
+  NB_Object *value=((NB_Object *)cond->left)->value;
+  if(value!=nb_Unknown){
+    if(cond->cell.mode&NB_CELL_MODE_TIMER){
+      nbClockSetTimer(0,(NB_Cell *)cond);
+      cond->cell.mode&=~NB_CELL_MODE_TIMER;
+      }
+    return(value);
+    }
+  nbClockSetTimer(nb_ClockTime+((NB_Sched *)cond->right)->duration,(NB_Cell *)cond);
+  cond->cell.mode|=NB_CELL_MODE_TIMER;
+  return(cond->cell.object.value);
+  }
+
+static NB_Object *evalTime(struct COND *cond){
   /* 1) Time condition reaction is caused by scheduled events */
   /*    because there are no time subordinate conditions */
   /* 2) Delay time conditions always transition to False, and are placed in */
@@ -720,7 +782,7 @@ NB_Object *evalTime(struct COND *cond){
   if(cond->cell.object.value==NB_OBJECT_TRUE){
     if(trace) outPut("evalTime calling condSchedule\n");
     condSchedule(cond,NB_OBJECT_TRUE); /* schedule the true event */
-    //outMsg(0,'T',"evalTime ending False.");  
+    outMsg(0,'T',"evalTime ending False.");  
     return(NB_OBJECT_FALSE);
     }
   condSchedule(cond,NB_OBJECT_FALSE); /* schedule the false value */
@@ -954,6 +1016,14 @@ void enableFlipFlop(struct COND *cond){
   enableInfix(cond);
   }
 
+void enableDelay(NB_Cond *cond){
+  nbAxonEnable((NB_Cell *)cond->left,(NB_Cell *)cond);
+  }
+void disableDelay(struct COND *cond){
+  nbAxonDisable((NB_Cell *)cond->left,(NB_Cell *)cond);
+  }
+
+
 /*
 *  Enable time condition
 *    By setting the value to true, we cause evalTime() to return False
@@ -1017,7 +1087,7 @@ void destroyRule(struct COND *cond){
 /**********************************************************************
 * Public Methods
 **********************************************************************/
-void initCondition(NB_Stem *stem){
+void nbConditionInit(NB_Stem *stem){
   condTypeNerve=newType(stem,"nerve",NULL,TYPE_RULE,condPrintNerve,destroyNerve);
   nbCellType(condTypeNerve,solvePrefix,evalNerve,enableRule,disableRule);
 
@@ -1039,8 +1109,10 @@ void initCondition(NB_Stem *stem){
   nbCellType(condTypeUnknown,solvePrefix,evalUnknown,enablePrefix,disablePrefix);
   condTypeKnown=newType(stem,"!?",NULL,TYPE_BOOL,condPrintPrefix,destroyCondition);
   nbCellType(condTypeKnown,solvePrefix,evalKnown,enablePrefix,disablePrefix);
-  condTypeClosedWorld=newType(stem,"[]",NULL,TYPE_BOOL,condPrintPrefix,destroyCondition);
-  nbCellType(condTypeClosedWorld,solvePrefix,evalClosedWorld,enablePrefix,disablePrefix);
+  condTypeAssumeFalse=newType(stem,"-?",NULL,TYPE_BOOL,condPrintPrefix,destroyCondition);
+  nbCellType(condTypeAssumeFalse,solvePrefix,evalAssumeFalse,enablePrefix,disablePrefix);
+  condTypeAssumeTrue=newType(stem,"+?",NULL,TYPE_BOOL,condPrintPrefix,destroyCondition);
+  nbCellType(condTypeAssumeTrue,solvePrefix,evalAssumeTrue,enablePrefix,disablePrefix);
 
   condTypeDefault=newType(stem,"?",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeDefault,solveInfix1,evalDefault,enableInfix,disableInfix);
@@ -1058,28 +1130,31 @@ void initCondition(NB_Stem *stem){
   nbCellType(condTypeNor,solveInfix1,evalNor,enableInfix,disableInfix);
   condTypeXor=newType(stem,"|!&",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeXor,solveInfix1,evalXor,enableInfix,disableInfix);
-  condTypeAndMonitor=newType(stem,"&~&",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
+  //condTypeAndMonitor=newType(stem,"&~&",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeAndMonitor=newType(stem," then ",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeAndMonitor,solveInfix2,evalAndMonitor,enableCapture,disableInfix);
   condTypeOrMonitor=newType(stem,"|~|",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeOrMonitor,solveInfix2,evalOrMonitor,enableCapture,disableInfix);
-  condTypeAndCapture=newType(stem,"&^&",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
+  //condTypeAndCapture=newType(stem,"&^&",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeAndCapture=newType(stem," capture ",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeAndCapture,solveInfix2,evalAndCapture,enableCapture,disableInfix);
   condTypeOrCapture=newType(stem,"|^|",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeOrCapture,solveInfix2,evalOrCapture,enableCapture,disableInfix);
   condTypeFlipFlop=newType(stem,"^",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeFlipFlop,solveInfix2,evalFlipFlop,enableFlipFlop,disableInfix);
 
-  condTypeDelayTrue=newType(stem,"~^1",NULL,TYPE_DELAY,condPrintInfix,destroyCondition);
-  nbCellType(condTypeDelayTrue,solveKnown,evalDelay,enableInfix,disableInfix);
-  condTypeDelayFalse=newType(stem,"~^0",NULL,TYPE_DELAY,condPrintInfix,destroyCondition);
-  nbCellType(condTypeDelayFalse,solveKnown,evalDelay,enableInfix,disableInfix);
-  condTypeDelayUnknown=newType(stem,"~^?",NULL,TYPE_DELAY,condPrintInfix,destroyCondition);
-  nbCellType(condTypeDelayUnknown,solveKnown,evalDelay,enableInfix,disableInfix);
+  condTypeDelayTrue=newType(stem,"~^",NULL,TYPE_DELAY,condPrintDelay,destroyCondition);
+  nbCellType(condTypeDelayTrue,solveKnown,evalDelayTrue,enableDelay,disableDelay);
+  condTypeDelayTrue->alarm=alarmDelay;
+  condTypeDelayFalse=newType(stem,"~^!",NULL,TYPE_DELAY,condPrintDelay,destroyCondition);
+  nbCellType(condTypeDelayFalse,solveKnown,evalDelayFalse,enableDelay,disableDelay);
+  condTypeDelayFalse->alarm=alarmDelay;
+  condTypeDelayUnknown=newType(stem,"~^?",NULL,TYPE_DELAY,condPrintDelay,destroyCondition);
+  nbCellType(condTypeDelayUnknown,solveKnown,evalDelayUnknown,enableDelay,disableDelay);
+  condTypeDelayUnknown->alarm=alarmDelay;
 
   condTypeTime=newType(stem,"~",NULL,TYPE_TIME,condPrintTime,destroyCondition);
   nbCellType(condTypeTime,solveKnown,evalTime,enableTime,disableTime);
-  condTypeTimeDelay=newType(stem,"",NULL,TYPE_TIME,condPrintTime,destroyCondition);
-  nbCellType(condTypeTimeDelay,solveKnown,evalTime,enableTime,disableTime);
 
   condTypeRelEQ=newType(stem,"=",NULL,TYPE_REL,condPrintInfix,destroyCondition);
   nbCellType(condTypeRelEQ,solveInfix2,evalRelEQ,enableRelEQ,disableRelEQ);

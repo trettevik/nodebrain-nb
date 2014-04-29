@@ -12,13 +12,13 @@
 ~ > #=======================================================
 #
 ~ > #
-define r00 on(a=1 ~^1(10s) | b & c & d | e & f | g);
-~ > define r00 on(a=1 ~^1(10s) | b & c & d | e & f | g);
+define r00 on(a=1 ~^(10s) | b & c & d | e & f | g);
+~ > define r00 on(a=1 ~^(10s) | b & c & d | e & f | g);
 show r00
 ~ > show r00
-~ r00 = # ? == on(((a=1)~^1(10s))|((b&(c&d))|((e&f)|g)));
-#              on(((a=1)~^1(10s))|((b&(c&d))|((e&f)|g)))
-~ > #              on(((a=1)~^1(10s))|((b&(c&d))|((e&f)|g)))
+~ r00 = # ? == on(((a=1)~^(10s))|((b&(c&d))|((e&f)|g)));
+#              on(((a=1)~^(10s))|((b&(c&d))|((e&f)|g)))
+~ > #              on(((a=1)~^(10s))|((b&(c&d))|((e&f)|g)))
 define r01 on(a=1 and b=2 or c=5 and d=9*e+7 or x*2>y/4*2);
 ~ > define r01 on(a=1 and b=2 or c=5 and d=9*e+7 or x*2>y/4*2);
 show r01

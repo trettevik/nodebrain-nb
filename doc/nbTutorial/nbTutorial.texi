@@ -82,7 +82,7 @@ Version 0.6.3 (not released)
 Release 0.6.4
 @itemize @bullet
 @item Included interface examples of release 0.6.4 enhancement.
-@item Included cell expression and ignorance tutorials.
+@item Included cell formula and ignorance tutorials.
 @end itemize
 
 @item 2007-01-03 @tab   
@@ -212,7 +212,7 @@ A copy of the license is included in the section titled @i{GNU Free Documentatio
 @end ifnotplaintext
 @menu
 * Invoking NodeBrain:: Interactive, batch, servant, and agent
-* Cell Expressions:: Specifying rule conditions
+* Cell Formulas:: Specifying rule conditions
 * Ignorance:: Dealing with the unknown
 * Rules:: State and event  monitoring
 * Syntax Surprises:: You might have expected something different
@@ -1215,9 +1215,9 @@ The log tells you the scheduled process is running and that 78 active processes 
 
 That's it---you have a working agent.  But clearly this example was not designed to convince you that NodeBrain should be used when the application is this simple.  This entire problem could be solved with one simple script written in your favorite scripting language.  NodeBrain is appropriate for situations where there is a benefit to separating declarative rules from procedural logic in a modular fashion.  It may take experimentation with more complex and evolving agent requirements to appreciate when it is appropriate.
 
-@node Cell Expressions
-@chapter Cell Expressions
-@cindex cell expressions
+@node Cell Formulas
+@chapter Cell Formulas
+@cindex cell formulas
 
 @quotation
 @i{I like nonsense; it wakes up the brain cells.}
@@ -1226,24 +1226,24 @@ That's it---you have a working agent.  But clearly this example was not designed
 
 What could be more nonsensical than a program called NodeBrain?  And of course, if I claim this program is a brain, there must be brain cells and a way to wake them up.  So here goes.
 
-You can think of a cell as a structure capable of storing a value and optionally a formula for computing a value.  You may be familiar with this notion if you use a spreadsheet program.  A NodeBrain cell is vary similar to a spreadsheet cell, but without the tabular model.  There is no physical relationship between NodeBrain cells; no notions like "two to the left" or "one cell up."  NodeBrain cells are referenced only by their formula, which is called a cell expression.
+You can think of a cell as a structure capable of storing a value and optionally a formula for computing a value.  You may be familiar with this notion if you use a spreadsheet program.  A NodeBrain cell is vary similar to a spreadsheet cell, but without the tabular model.  There is no physical relationship between NodeBrain cells; no notions like "two to the left" or "one cell up."  NodeBrain cells are referenced only by their formula, which is called a cell formula.
 
-Cell expressions are allowed in various places within the command syntax.
-I can't tell you where exactly because I promised not to get BNF (Backus-Naur Form) on you here, but I can say cell definitions, assertions, and rule conditions are the primary places where cell expressions are used.
+Cell formulas are allowed in various places within the command syntax.
+I can't tell you where exactly because I promised not to get BNF (Backus-Naur Form) on you here, but I can say cell definitions, assertions, and rule conditions are the primary places where cell formulas are used.
 
 @menu
 * Numbers and Strings::
 * Arithmetic::
 * Logic::
 * Time Conditions::
-* Node Conditions::
-* Complex Expressions::
+* Node Sentence Formulas::
+* Complex Formulas::
 @end menu
 
 @node Numbers and Strings
 @section Numbers and Strings
 
-The simplest cell expressions identify a literal number or string.  Here you define a cell @code{a} with the expression @code{5}, and a cell @code{b} with the expression @code{"abc"}.
+The simplest cell formulas identify a literal number or string.  Here you define a cell @code{a} with the formula @code{5}, and a cell @code{b} with the formula @code{"abc"}.
 
 @cartouche
 @smallexample
@@ -1261,7 +1261,7 @@ b = "abc"
 @node Arithmetic
 @section Arithmetic
 
-NodeBrain can do simple arithmetic in a cell expression.
+NodeBrain can do simple arithmetic in a cell.
 
 @cartouche
 @smallexample
@@ -1276,7 +1276,7 @@ b = ! == (a+3)
 @end smallexample
 @end cartouche
 
-Wait, this must not be what Dr. Seuss meant by nonsense because these brain cells don't seem to be awake!  NodeBrain accepted the expression @code{5+4} but didn't compute @code{9}.  This is because NodeBrain is lazy. Nobody cares what the value of @code{a} or @code{b} is, so NodeBrain doesn't bother to compute them.
+Wait, this must not be what Dr. Seuss meant by nonsense because these brain cells don't seem to be awake!  NodeBrain accepted the formula @code{5+4} but didn't compute @code{9}.  This is because NodeBrain is lazy. Nobody cares what the value of @code{a} or @code{b} is, so NodeBrain doesn't bother to compute them.
 You need more nonsense to wake up these brain cells.
 Let's try adding a rule that depends on the value of @code{b}.
 
@@ -1294,7 +1294,7 @@ When you added the rule referencing @code{b}, NodeBrain was motivated to compute
 
 The double equals signs symbol (@code{==}) can be read as "is defined as."  The response to @code{show b} above can be read as "@code{b} is @code{12} and is defined as @code{a+3}."
 
-Just for fun, let's see what happens when you assert new cell expressions for @code{a}.
+Just for fun, let's see what happens when you assert new cell formulas for @code{a}.
 
 @cartouche
 @smallexample
@@ -1325,7 +1325,7 @@ When you asserted that @code{a=1}, NodeBrain recomputed @code{b} and got @code{4
 ---Samuel Butler (1835--1902)
 @end quotation
 
-One can appeal to logic in cell expressions, much as in other programming languages.  Some familiar operators are illustrated here.
+One can appeal to logic in cell formulas, much as in other programming languages.  Some familiar operators are illustrated here.
 
 @cartouche
 @smallexample
@@ -1333,15 +1333,15 @@ One can appeal to logic in cell expressions, much as in other programming langua
 > define x cell a>b;
 > define rule2 on(a=b or b=c or c>25);
 > define rule3 on(a=21 and (b>5 or c<2));
-> define rule4 on(x and not a<5.73);
+> define rule4 on(x and !(a<5.73));
 > define rule5 on(a=b and c=d);
 @end smallexample
 @end cartouche
 
-Relational operators (@code{>  <  <>  = >= <=}) have precedence over Boolean operators (@code{and}, @code{or}, @code{not}).  Use parentheses to force the order of precedence when you don't want or don't know the default.  
+Relational operators (@code{>  <  <>  = >= <=}) have precedence over trinary logic operators (@code{and}, @code{or}, @code{not}).  Use parentheses to force the order of precedence when you don't want or don't know the default.  
 
-As demonstrated with arithmetic expressions, NodeBrain evaluates logical expressions when there are assertions that change the value of operands.
-For example, consider the following expression used by @code{rule5}.
+As demonstrated with arithmetic formulas, NodeBrain evaluates cells when there are assertions that change the value of operands.
+For example, consider the following formula used by @code{rule5}.
 
 @cartouche
 @smallexample
@@ -1349,16 +1349,16 @@ a=b and c=d
 @end smallexample
 @end cartouche
 
-If you assert that @code{a=3}, the interpreter has to recomputed @code{a=b}, but doesn't recompute the larger expression @code{a=b and c=d}.  Since @code{c} and @code{d} didn't change, the value of @code{c=d} has not changed, and since @code{a=b} remains false, the value of the larger expression is known to be unchanged without further computation.  
+If you assert that @code{a=3}, the interpreter has to recomputed @code{a=b}, but doesn't recompute the larger formula @code{a=b and c=d}.  Since @code{c} and @code{d} didn't change, the value of @code{c=d} has not changed, and since @code{a=b} remains false, the value of the larger formula is known to be unchanged without further computation.  
 
-There is only one cell for computing any given expression.
+There is only one cell for computing any given formula.
 No matter how many rule conditions reference @code{a=b}, there is only one @code{a=b} cell, as there is only one @code{a} cell and one @code{b} cell.
 Every cell knows which cells reference it.
 In this example, both @code{a} and @code{b} know that @code{a=b} depends on them.
 If @code{a} changes, it reports a change to @code{a=b}.
 If @code{b} changes, it does the same.
 If @code{a} changes, @code{b} changes, or both @code{a} and @code{b} change in the same assertion, @code{a=b} is recomputed once.
-If @code{a=b} changes, expressions that reference it are recomputed.
+If @code{a=b} changes, cells that reference it are recomputed.
 
 How do you think the interpreter would respond to the following assertion?
 
@@ -1469,8 +1469,8 @@ Operators (@code{,} @code{.} @code{(n)} @code{[n]}) that operate on time interva
 
 The operators are based on formal concepts like intersection, union, selection, rejection, inverse, and so on.        
 
-@node Node Conditions
-@section Node Conditions 
+@node Node Sentence Formulas
+@section Node Sentence Formulas 
 
 @quotation
 @i{An expert knows all the answers---if you ask the right questions.}
@@ -1479,7 +1479,7 @@ The operators are based on formal concepts like intersection, union, selection, 
 
 A NodeBrain node is an expert, with a set of knowledge and associated skill.  The skill is provided by a node module (plug-in) that extends NodeBrain functionality.  Since NodeBrain is not a general purpose scripting language, many things are simply inappropriate to attempt without help from a node module.  It is the combination of skill and knowledge that makes a node an expert.  Of course, you need to know how to ask the right questions.
 
-Node modules can be developed to perform any function imaginable, but within the context of a cell expression they only provide the value of node conditions.  These expressions look like a function call.  In rule @code{r1} below, @code{sally(x)} is a node condition and @code{sally} is a node with the skills provided by the tree module.
+Node modules can be developed to perform any function imaginable, but within the context of a cell formula they only provide the value of node sentence formulas.  These formulas look like a function call.  In rule @code{r1} below, @code{sally(x)} is a node sentence formula and @code{sally} is a node with the skills provided by the tree module.
 
 @cartouche
 @smallexample
@@ -1499,18 +1499,18 @@ sally = ! == node tree
 @end smallexample
 @end cartouche
 
-Do you see why rule @code{r1} fired when you asserted that @code{x="abc"}? It is because @code{sally("abc")} was asserted to be true, so @code{sally(x)} is true when @code{x="abc"}.  What a node module does with assertions and how it computes the value of node conditions is entirely up to it.  In this case, the @code{tree} node module keeps track of assertions and returns a value for conditions by doing a lookup.  When the value of @code{x} changes, the interpreter reports a change to the node module and it computes a new value for the cell.
+Do you see why rule @code{r1} fired when you asserted that @code{x="abc"}? It is because @code{sally("abc")} was asserted to be true, so @code{sally(x)} is true when @code{x="abc"}.  What a node module does with assertions and how it computes the value of node sentence formulas is entirely up to it.  In this case, the @code{tree} node module keeps track of assertions and returns a value for formulas by doing a lookup.  When the value of @code{x} changes, the interpreter reports a change to the node module and it computes a new value for the cell.
 When the cell value changes, it reports a change to the referencing cells, in this case rule @code{r1}, which fired.
 
-@node Complex Expressions
-@section Complex Expressions
+@node Complex Formulas
+@section Complex Formulas
 
 @quotation
 @i{A complex system that works is invariably found to have evolved from a simple system that works.}
 ---John Gaule (c. 1603--1687)
 @end quotation
 
-Every type of cell expression introduced in this tutorial can be combined into complex expressions as illustrated by rule @code{complex} below.
+Every type of cell formula introduced in this tutorial can be combined into complex formulas as illustrated by rule @code{complex} below.
 
 @cartouche
 @smallexample
@@ -1529,8 +1529,8 @@ $ nb complex.nb
 
 If the complex rule doesn't fire when you run @code{complex.nb}, perhaps you are not running it on a Friday.
 If you try it on a Friday, it will fire because @code{y<7} is true and @code{sally(x,y)=a+b} is true.  
-The fact that the last expression is true may not be so obvious, so let's break it down.  The command @code{assert a,b;}
-sets @code{a} and @code{b} to 1 (true).  That means the expression @code{a+b} is 2.  Since @code{x} is @code{"def"} and @code{y} is 5, the expression @code{sally(x,y)=a+b} is @code{sally("def",5)=2}, which you assert to be true.
+The fact that this condition is true may not be so obvious, so let's break it down.  The command @code{assert a,b;}
+sets @code{a} and @code{b} to 1 (true).  That means the cell @code{a+b} is 2.  Since @code{x} is @code{"def"} and @code{y} is 5, the cell @code{sally(x,y)=a+b} is the same as @code{sally("def",5)=2}, which you assert to be true.
 
 @node Ignorance
 @chapter Ignorance
@@ -1656,7 +1656,7 @@ Let's pause to make sure you know what just happened here. The condition @code{?
 @node Closed World Assumption
 @section Closed World Assumption
 
-Some systems use a closed world assumption, where anything not known to be true is assumed to be false.  As  illustrated in the previous section, NodeBrain does not generally make this assumption.  Instead it allows the unknown state to propagate through the evaluation of cell expression.
+Some systems use a closed world assumption, where anything not known to be true is assumed to be false.  As  illustrated in the previous section, NodeBrain does not generally make this assumption.  Instead it allows the unknown state to propagate through the evaluation of cells.
 
 However, node modules are allowed to handle the unknown state using either the closed world assumption or three-state logic.  This means you must be aware of how each node module handles the unknown state when coding rules.
 
@@ -1779,7 +1779,7 @@ Enter cell soreThroat==@b{1}
 
 Since you are running in interactive mode and have not provided any alternate methods for NodeBrain to solve for unknown values, the interpreter prompts the user to resolve unknown values.  If you study the rule file, you will find five unknown terms in the two rule conditions: @code{cough}, @code{soreThroat}, @code{fever}, @code{achy}, and @code{upsetStomach}.  However, the interpreter only prompted the user for values of three of these terms.  This is because requesting values for the other two terms would not have changed the result.  Since @code{fever=0}, the @code{flu} condition is false for any value of the other two terms in the condition.
 
-The response to each query may be any valid cell expression.  This means you must enclose strings in quotes and have the option of introducing new terms for which the interpreter does not have a value.  When new terms are introduced, the interpreter attempts to resolve them as necessary.  If you respond with @code{5 or soreEye}, the interpreter will not attempt to solve for @code{soreEye} because it knows the expression is true without knowledge of @code{soreEye}.
+The response to each query may be any valid cell formula.  This means you must enclose strings in quotes and have the option of introducing new terms for which the interpreter does not have a value.  When new terms are introduced, the interpreter attempts to resolve them as necessary.  If you respond with @code{5 or soreEye}, the interpreter will not attempt to solve for @code{soreEye} because it knows the condition is true without knowledge of @code{soreEye}.
 
 @subsection Batch Query Mode
 
@@ -1847,7 +1847,7 @@ $
 @end smallexample
 @end cartouche
 
-In this example, the consulted script @code{illnessConsult.pl} returned simple 0 and 1 values.  The interpreter will accept any valid cell expression and will attempt to resolve any term whose value is both unknown and needed.
+In this example, the consulted script @code{illnessConsult.pl} returned simple 0 and 1 values.  The interpreter will accept any valid cell formula and will attempt to resolve any term whose value is both unknown and needed.
 
 @node Rules
 @chapter Rules
@@ -1862,7 +1862,7 @@ In this tutorial you'll see how much fun it is to make up rules and watch NodeBr
 
 @section When and If a Rule Fires on What
 
-NodeBrain @code{on}, @code{when}, and @code{if} rules have almost identical syntax. Their conditional cell expressions are resolved by the same cell evaluation algorithm, yet they respond differently to new information.  You can study these differences using rules that have no action.  Start by creating the following script called @code{rules.nb}.
+NodeBrain @code{on}, @code{when}, and @code{if} rules have almost identical syntax. Their conditional cell formulas are resolved by the same cell evaluation algorithm, yet they respond differently to new information.  You can study these differences using rules that have no action.  Start by creating the following script called @code{rules.nb}.
 
 @cartouche
 @smallexample
@@ -2176,7 +2176,7 @@ Under the current implementation, you should not expect these rules to fire in a
 
 @section How do I include quotes within a string?
 
-Including quotes within a string is not allowed.  Because NodeBrain is not a general purpose or report writing language, I have not yet found a reason to support quotes within a string.  When generating cell expressions manually or with a program, simply avoid generating values containing quotes.
+Including quotes within a string is not allowed.  Because NodeBrain is not a general purpose or report writing language, I have not yet found a reason to support quotes within a string.  When generating cell formulas manually or with a program, simply avoid generating values containing quotes.
 
 @section Is there an escape sequence for including special characters in strings?
 

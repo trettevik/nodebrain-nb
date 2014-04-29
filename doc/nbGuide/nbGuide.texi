@@ -319,7 +319,7 @@ or implement external actions.
 When using the 
 caboodle model, a servant is stored in the @file{servant} subdirectory and can
 assume the current working directory is the caboodle root directory.
-References to all other components should be imade via paths relative to the caboodle
+References to all other components should be made via paths relative to the caboodle
 root directory.
 
 @node Modules
@@ -415,7 +415,7 @@ for examples of calls to API functions.
 @end menu
 
 NodeBrain is packaged using the GNU Build System---autoconf, automake, and libtool.
-The make file supports the creation of Linux RPM files with a simple @code{make rpm} command, and files are included for building Debian based packages (not yet as simple at @code{make deb}).
+The make file supports the creation of Linux RPM files with a simple @code{make rpm} command, and files are included for building Debian based packages (not yet as simple as @code{make deb}).
 
 @node Installing from Package Repositories
 @section Installing from Package Repositories
@@ -694,7 +694,7 @@ any other executable script.
 
 @cartouche
 @example
-$ cmdset.nb
+$ ./cmdset.nb
 @end example
 @end cartouche
 

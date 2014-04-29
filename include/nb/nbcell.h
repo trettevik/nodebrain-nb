@@ -73,6 +73,7 @@ typedef NB_Cell *nbCELL;
 
 #define NB_CELL_MODE_SCHEDULED  1  // cell is scheduled for evaluation - avoids scheduling multiple times
 #define NB_CELL_MODE_AXON_BOOST 2  // use axon accelerator cell for relational operators
+#define NB_CELL_MODE_TIMER      4  // cell has a timer set - cancel when appropriate
 
 void nbCellInit(struct NB_STEM *stem);
 void nbCellType(

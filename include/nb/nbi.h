@@ -74,8 +74,9 @@
 #include <nb/nbiconv.h>       /* EBCDIC/ASCII conversion */
 
 #include <nb/nbreal.h>        /* real object */
-#include <nb/nbregex.h>      /* regular expression object */
+#include <nb/nbregex.h>       /* regular expression object */
 #include <nb/nbcondition.h>   /* condition object */
+#include <nb/nbconditional.h> /* conditional object */
 #include <nb/nbclock.h>
 #include <nb/nbbfi.h>         /* binary function of integer */
 #include <nb/nbtime.h>        /* time conditions */

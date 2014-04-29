@@ -24,25 +24,59 @@ NodeBrain 0.9.01 (Columbo) Change Summary
 
   o  False and Disabled special value symbols have changed.
 
-       ! - Replaces 0 for "false"
-       # - Replaces ! for "disabled"
+       !             [Replaces]     0     [as false]
+       #             [Replaces]     !     [as disabled]
 
-  o  Updates have been made to examples of show command
-     to reflect the minor display changes. (See Features
+  o  True and false transition time delays have changed.
+
+       ~^(...)       [Replaces]     ~^1(...)
+       ~^!(...)      [Replaces]     ~^0(...)
+
+  o  Enabled monitoring and capture operators changed.
+
+       A then B      [Replaces]     A &~& B 
+       A capture B   [Replaces]     A &^& B
+
+  o  Updates have been made to examples of the "show" command
+     to reflect minor display changes. (See Features
      and Incompatibilities below.)
 
-  o  "Redefine" command introduced.
+  o  Updated to indicate trinary logic operators reverted
+     back to generating only one true value 1.
 
-  o  Introducing the term "sentence" for the construct
-     node(args) used as a node condition, assertion, or
-     command. 
+       Old: A & B  returns B when A is True (excluded 0) else A
+       New: A & B  returns 1 when A and B are True (includes 0)
+                   returns ! when A or B is False (! instead of 0)
+                   returns ? when one is True and the other Unknown
 
-  o  Introduced node facets.
+  o  Introduced conditional operators as replacement for
+     prior feature of trinary logic operators returning
+     the full range of true values.  Unlike the prior
+     feature, these operators do not descriminate against
+     zero which is now an additional True value.
+       
+       Old: A & B       returns B when A is True (excluded 0) else A
+       New: A true B    returns B when A is True (includes 0) else A
+
+  o  Introduced "Redefine" command.
+
+       define r1 on(a and b);
+       redefine r1 on(a or b);
+
+  o  Introduced the terminology "node sentence" for the construct
+     where arguments are passed to a node in a formula, assertion,
+     or command. 
+
+       node(args)
+
+  o  Introduced node facets as part of a node sentence.
+
+       node_facet(args)
 
 * Incompatibilities:
 
   o  When a rule term is referenced in a cell expression,
-     the term longer maps all true values to 1.  Instead,
+     the term no longer maps all true values to 1.  Instead,
      the value of the condition cell is returned.  This is
      to maintain consistency between rule references and
      simple cell references.  However, if you have a rule
@@ -194,14 +228,36 @@ NodeBrain 0.9.01 (Columbo) Change Summary
 
        > show a,b,c i,-r
 
+
 * Deprecated Syntax:
 
-  o  The previously obsolete "address" command is no
+  o  The state transition time delay syntax of ~^1(...)
+     and ~^0(...) is deprecated because 0 is no longer
+     used to represent False. The prefered syntax is now
+
+       ~^(...)   delay transition to True
+       ~^!(...)  delay transition to False
+       ~^?(...)  delay transition to Unknown
+
+  o  The "not" operator has been deprecated to support
+     a goal of not having any reserved terms.  Once it
+     is dropped as a prefix operator (use ! instead),
+     the term "not" can be used to name a cell.
+   
+
+* Dropped Syntax:
+
+  o  The previously deprecated "address" command is no
      longer recognized to produce a hint to use ">"
      for interactive command prefix.
 
-  o  The previously obsolete single quote for defining
+  o  The previously deprecated single quote for defining
      command prefixes no longer produces a warning.
+
+  o  The previously deprecated syntax ~T(...), ~F(...), and
+     ~U(...) for time delays has been dropped and no longer
+     generates a warning message.
+
 
 * Bug Fixes:
 
@@ -217,6 +273,10 @@ NodeBrain 0.9.01 (Columbo) Change Summary
      This bug has been resolved by requiring a node to
      be defined before it is used in a sentence.  This
      seems not to create any hardship.
+
+  o  State transition time delays didn't work properly
+     when multiple types of delays were placed on a
+     common condition. This has been fixed.
 
 ============================================================
 

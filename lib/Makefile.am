@@ -113,6 +113,7 @@ libnb_la_SOURCES = \
   nbclock.c \
   nbcmd.c \
   nbcondition.c \
+  nbconditional.c \
   nbglobal.c \
   nbhash.c \
   nbiconv.c \
@@ -168,6 +169,7 @@ libnb_la_SOURCES = \
   ../include/nb/nbclock.h \
   ../include/nb/nbcmd.h \
   ../include/nb/nbcondition.h \
+  ../include/nb/nbconditional.h \
   ../include/nb/nbglobal.h \
   ../include/nb/nbhash.h \
   ../include/nb/nbiconv.h \
