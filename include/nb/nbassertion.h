@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@
 * 2002-09-14 Ed Trettevik (original prototype)
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2014-01-12 eat 0.9.00 nbAssertionInit replaces initAssertion
+* 2014-06-15 eat 0.9.02 Dropped nbAlert and Added mode to nbAssert to cover botha
 *=============================================================================
 */
 #ifndef _NB_ASSERTION_H_
@@ -73,7 +74,6 @@ extern struct TYPE *assertTypeRef;
 void nbAssertionInit(NB_Stem *stem);
 void printAssertions(NB_Link *link);
 void printAssertedValues(NB_Link *member);
-void assert(NB_Link *member,int alert);
 
 #endif // NB_INTERNAL
 
@@ -87,11 +87,6 @@ extern int nbAssertionAddTermValue(nbCELL context,nbSET *set,nbCELL term,nbCELL 
 #if defined(WIN32)
 _declspec (dllexport)
 #endif
-extern void nbAssert(nbCELL context,nbSET set);
-
-#if defined(WIN32)
-_declspec (dllexport)
-#endif
-extern void nbAlert(nbCELL context,nbSET set);
+extern void nbAssert(nbCELL context,nbSET set,int mode);
 
 #endif

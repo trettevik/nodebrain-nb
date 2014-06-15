@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -66,6 +66,7 @@
 * 2008-11-06 eat 0.7.3  Converted to PCRE's native API
 * 2010-02-26 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.1.2)
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages (gcc 4.5.0)
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 *===============================================================================
 */
 #include <nb/nbi.h>
@@ -160,5 +161,5 @@ void destroyRegexp(struct REGEXP *regexp){
 *  Context object type initialization
 */
 void initRegexp(NB_Stem *stem){
-  regexpType=newType(stem,"~",NULL,TYPE_REGEXP,printRegexp,destroyRegexp);
+  regexpType=nbObjectType(stem,"~",0,TYPE_REGEXP,printRegexp,destroyRegexp);
   }

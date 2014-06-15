@@ -1,6 +1,5 @@
 /*
-* Copyright (C) 2013-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 2013-2014 Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -59,6 +58,7 @@
 * ---------- -----------------------------------------------------------------
 * 2013-12-09 Ed Trettevik (original version introduced in 0.9.00)
 * 2014-01-25 eat 0.9.00 - CID 1164444 
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -526,25 +526,25 @@ static void destroyAxonRel(NB_AxonRel *axon){
 * Public Methods
 **********************************************************************/
 void nbAxonInit(NB_Stem *stem){
-  nb_TypeAxonRelEq=newType(stem,"AxonRelEq",NULL,0,printAxon,destroyAxonRel);
+  nb_TypeAxonRelEq=nbObjectType(stem,"AxonRelEq",0,0,printAxon,destroyAxonRel);
   nbCellType(nb_TypeAxonRelEq,solveAxon,evalAxonRelEq,enableAxonRel,disableAxonRel);
-  nb_TypeAxonRelNe=newType(stem,"AxonRelNe",NULL,0,printAxon,destroyAxonRel);
+  nb_TypeAxonRelNe=nbObjectType(stem,"AxonRelNe",0,0,printAxon,destroyAxonRel);
   nbCellType(nb_TypeAxonRelNe,solveAxon,evalAxonRelNe,enableAxonRel,disableAxonRel);
-  nb_TypeAxonRelLtString=newType(stem,"AxonRelLtString",NULL,0,printAxon,destroyAxonRel);
+  nb_TypeAxonRelLtString=nbObjectType(stem,"AxonRelLtString",0,0,printAxon,destroyAxonRel);
   nbCellType(nb_TypeAxonRelLtString,solveAxon,evalAxonRelLtString,enableAxonRel,disableAxonRel);
-  nb_TypeAxonRelLeString=newType(stem,"AxonRelLeString",NULL,0,printAxon,destroyAxonRel);
+  nb_TypeAxonRelLeString=nbObjectType(stem,"AxonRelLeString",0,0,printAxon,destroyAxonRel);
   nbCellType(nb_TypeAxonRelLeString,solveAxon,evalAxonRelLeString,enableAxonRel,disableAxonRel);
-  nb_TypeAxonRelLtReal=newType(stem,"AxonRelLtReal",NULL,0,printAxon,destroyAxonRel);
+  nb_TypeAxonRelLtReal=nbObjectType(stem,"AxonRelLtReal",0,0,printAxon,destroyAxonRel);
   nbCellType(nb_TypeAxonRelLtReal,solveAxon,evalAxonRelReal,enableAxonRel,disableAxonRel);
-  nb_TypeAxonRelLeReal=newType(stem,"AxonRelLeReal",NULL,0,printAxon,destroyAxonRel);
+  nb_TypeAxonRelLeReal=nbObjectType(stem,"AxonRelLeReal",0,0,printAxon,destroyAxonRel);
   nbCellType(nb_TypeAxonRelLeReal,solveAxon,evalAxonRelReal,enableAxonRel,disableAxonRel);
-  nb_TypeAxonRelGtString=newType(stem,"AxonRelGtString",NULL,0,printAxon,destroyAxonRel);
+  nb_TypeAxonRelGtString=nbObjectType(stem,"AxonRelGtString",0,0,printAxon,destroyAxonRel);
   nbCellType(nb_TypeAxonRelGtString,solveAxon,evalAxonRelGtString,enableAxonRel,disableAxonRel);
-  nb_TypeAxonRelGeString=newType(stem,"AxonRelGeString",NULL,0,printAxon,destroyAxonRel);
+  nb_TypeAxonRelGeString=nbObjectType(stem,"AxonRelGeString",0,0,printAxon,destroyAxonRel);
   nbCellType(nb_TypeAxonRelGeString,solveAxon,evalAxonRelGeString,enableAxonRel,disableAxonRel);
-  nb_TypeAxonRelGtReal=newType(stem,"AxonRelGtReal",NULL,0,printAxon,destroyAxonRel);
+  nb_TypeAxonRelGtReal=nbObjectType(stem,"AxonRelGtReal",0,0,printAxon,destroyAxonRel);
   nbCellType(nb_TypeAxonRelGtReal,solveAxon,evalAxonRelReal,enableAxonRel,disableAxonRel);
-  nb_TypeAxonRelGeReal=newType(stem,"AxonRelGeReal",NULL,0,printAxon,destroyAxonRel);
+  nb_TypeAxonRelGeReal=nbObjectType(stem,"AxonRelGeReal",0,0,printAxon,destroyAxonRel);
   nbCellType(nb_TypeAxonRelGeReal,solveAxon,evalAxonRelReal,enableAxonRel,disableAxonRel);
   }
 

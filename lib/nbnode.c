@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2013-2014 Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -93,6 +93,7 @@
 * 2012-10-17 eat 0.8.12 Replaced termGetName with nbTermName
 * 2013-12-07 eat 0.9.00 Implementing node facets
 * 2014-01-27 eat 0.9.00 Changed node.ifrule list to only haved True IF rules
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -117,6 +118,7 @@ NB_Node *nbNodeNew(void){
   node->source=(struct STRING *)nb_Unknown;  /* command to request unknown values */
   node->cell.object.value=nb_Disabled;
   node->ifrule=NULL;
+  node->transientLink=NULL;
   node->cmdopt=0;             /* default to no echo for now */
   node->skill=NULL;
   node->facet=NULL;
@@ -314,15 +316,16 @@ static void disableNode(struct NB_NODE *node){
 * Public Methods
 **********************************************************************/
 void nbNodeInit(NB_Stem *stem){
-  nb_NodeType=newType(stem,"node",NULL,TYPE_ENABLES,nbNodeShowItem,nbNodeDestroy);
+  nb_NodeType=nbObjectType(stem,"node",0,TYPE_ENABLES|TYPE_WELDED,nbNodeShowItem,nbNodeDestroy);
+  //nb_NodeType=nbObjectType(stem,"node",0,TYPE_ENABLES,nbNodeShowItem,nbNodeDestroy);
   nb_NodeType->apicelltype=NB_TYPE_NODE;
   nbCellType(nb_NodeType,solveNode,evalNode,enableNode,disableNode);
   nb_NodeType->showReport=&nbNodeShowReport;
   nb_NodeType->alarm=&alarmNode;
 
   nb_SkillGloss=nbTermNew(NULL,"skill",nbNodeNew());
-  skillType=newType(stem,"skill",NULL,0,printSkill,destroySkill);
-  facetType=newType(stem,"facet",NULL,0,NULL,NULL);
+  skillType=nbObjectType(stem,"skill",0,0,printSkill,destroySkill);
+  facetType=nbObjectType(stem,"facet",0,0,NULL,NULL);
   }
 
 void *nbSkillNullConstruct(struct NB_TERM *context,void *skillHandle,NB_Cell *arglist,char *text){

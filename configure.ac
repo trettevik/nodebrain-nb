@@ -98,11 +98,12 @@
 # 2014-01-31 eat 0.8.16 Made OpenSSL optional
 # 2014-02-01 eat 0.8.16 Included --with-tls and --with-nb_peer options
 # 2014-02-01 eat 0.8.16 Reduced to a single configure.ac file - handles subordinate directories
-# 2014-02-12 eat 0.9.01 Target 0.9.x release
+# 2014-02-12 eat 0.9.01 Possible 0.9.x release
+# 2014-05-04 eat 0.9.02 Target 0.9.x release
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([nodebrain],[0.9.01],[bugs@nodebrain.org])
+AC_INIT([nodebrain],[0.9.02],[bugs@nodebrain.org])
 #AC_CONFIG_SRCDIR([nb.c])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(config)
@@ -112,7 +113,7 @@ AM_INIT_AUTOMAKE
 # define module directory variables
 
 AC_DEFINE_UNQUOTED(NB_API_VERSION,"0",[NodeBrain API version])
-NB_MODULE_PATH=".nb:/usr/local/lib/nb-0.9.01:/usr/lib/nb-0.9.01:/usr/lib64/nb-0.9.01"
+NB_MODULE_PATH=".nb:/usr/local/lib/nb-0.9.02:/usr/lib/nb-0.9.02:/usr/lib64/nb-0.9.02"
 NB_MODULE_PATH_SEPARATOR=":"
 AC_DEFINE_UNQUOTED(NB_MODULE_PATH,"${NB_MODULE_PATH}",[Module path])
 AC_DEFINE_UNQUOTED(NB_MODULE_PATH_SEPARATOR,'${NB_MODULE_PATH_SEPARATOR}',[Module path separator])
@@ -170,9 +171,8 @@ AC_CHECK_FILE([../lib/libnb.la],[AC_SUBST([NB_LIBRARY_PATH],[../../../lib/.libs]
 AC_SUBST([NB_MOD_PATH],[../.libs])
 
 AC_CHECK_LIB(pcre,pcre_compile,,[AC_MSG_ERROR(Required library -lpcre not found.  Specify path in LDFLAGS.)])
-AC_SEARCH_LIBS(initscr,ncurses)
-AC_CHECK_LIB(readline,readline,,[AC_MSG_ERROR(Required library -lreadline not found. Specify path in LDFLAGS.)])
-AC_CHECK_LIB(history,add_history,,[AC_MSG_ERROR(Required library -lhistory not found. Specify path in LDFLAGS.)])
+#AC_SEARCH_LIBS(initscr,ncurses)
+AC_CHECK_LIB(edit,readline,,[AC_MSG_ERROR(Required library -ledit not found. Specify path in LDFLAGS.)])
 
 AC_SEARCH_LIBS(socket,socket)
 AC_SEARCH_LIBS(inet_ntoa,nsl)
@@ -202,12 +202,21 @@ AC_DEFINE_UNQUOTED(NB_COMPILE_PLATFORM,"$host",[Define compile platform])
 
 AC_ARG_WITH([tls],[AS_HELP_STRING([--with-tls],[Select TLS package and include related features (default is --with-tls=openssl)])],[],[with_tls=openssl])
 AS_IF([test "x$with_tls" != xno],
-  [AS_IF([test "x$with_tls" == xopenssl],
-    [AC_SEARCH_LIBS([SSL_library_init],[ssl],
-      [AC_DEFINE([HAVE_OPENSSL],[1],[Define if you have libssl])
-       AC_SEARCH_LIBS(X509_get_subject_name,crypto)
+  [AS_IF([test "x$with_tls" == xgnutls],
+    [AC_SEARCH_LIBS([SSL_library_init],[gnutls],
+      [AC_DEFINE([HAVE_OPENSSL],[1],[Define if you have libgnutls-openssl])
+       AC_SEARCH_LIBS(X509_get_subject_name,gnutls-openssl)
        ],
-      [AC_MSG_FAILURE([--with-tls=openssl was given, but test for openssl failed])
+      [AC_MSG_FAILURE([--with-tls=xgnutls was given, but test for gnutls-openssl failed])
+       ])
+     ],
+    [AS_IF([test "x$with_tls" == xopenssl],
+      [AC_SEARCH_LIBS([SSL_library_init],[ssl],
+        [AC_DEFINE([HAVE_OPENSSL],[1],[Define if you have libssl])
+         AC_SEARCH_LIBS(X509_get_subject_name,crypto)
+         ],
+        [AC_MSG_FAILURE([--with-tls=openssl was given, but test for openssl failed])
+         ])
        ])
      ])
    ])
@@ -254,7 +263,7 @@ AS_IF([test "x$enable_nb_webster" == xyes -a "x$with_tls" != xno],[NB_MODULES=$N
 
 AC_SUBST([NB_MODULES])
 # Set module subdirectory by minor version - ${libdir}/nb/${NB_MOD_DIR}/
-AC_SUBST([NB_MOD_DIR],[0.9.01])
+AC_SUBST([NB_MOD_DIR],[0.9.02])
 
 # Figure out which nb program to use with "make check".
 #   If we are in a Nodebrain distribution, we'll use

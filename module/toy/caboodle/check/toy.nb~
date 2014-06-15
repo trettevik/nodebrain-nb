@@ -24,13 +24,13 @@ assert a=1,b=2,c=3;
 ~ > assert a=1,b=2,c=3;
 show countAandB;
 ~ > show countAandB;
-~ countAandB = 1 == node toy.count((a&b))
+~ countAandB = 1 == node toy.count((_.a&_.b))
 ~ counter 1
 assert !a,c;
 ~ > assert !a,c;
 show countAandB;
 ~ > show countAandB;
-~ countAandB = 1 == node toy.count((a&b))
+~ countAandB = 1 == node toy.count((_.a&_.b))
 ~ counter 1
 assert a=3;
 ~ > assert a=3;
@@ -38,13 +38,13 @@ assert a=3;
 ~ 1970-01-01 00:00:02 NB000I Rule r2 fired 
 show countAandB;
 ~ > show countAandB;
-~ countAandB = 2 == node toy.count((a&b))
+~ countAandB = 2 == node toy.count((_.a&_.b))
 ~ counter 2
 assert !a,c=0;
 ~ > assert !a,c=0;
 show countAandB;
 ~ > show countAandB;
-~ countAandB = 2 == node toy.count((a&b))
+~ countAandB = 2 == node toy.count((_.a&_.b))
 ~ counter 2
 assert a=2;
 ~ > assert a=2;
@@ -58,7 +58,7 @@ show -t
 ~ add = 0 == node toy.add
 ~ b = 2
 ~ c = 0
-~ countAandB = 3 == node toy.count((a&b))
+~ countAandB = 3 == node toy.count((_.a&_.b))
 ~ r1 = # !! == on(a=add(b,c))[1];
 ~ r2 = # !! == on(a=sum(c,b))[2];
 ~ r3 = # !! == on(countAandB=3)[3];
@@ -74,7 +74,7 @@ show -t
 ~ add = 0 == node toy.add
 ~ b = 2
 ~ c = 0
-~ countAandB = 4 == node toy.count((a&b))
+~ countAandB = 4 == node toy.count((_.a&_.b))
 ~ r1 = # ! == on(a=add(b,c))[1];
 ~ r2 = # ! == on(a=sum(c,b))[2];
 ~ r3 = # ! == on(countAandB=3)[3];

@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -85,6 +85,7 @@
 * 2010-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 * 2012-12-31 eat 0.8.13 Change hash size from int to size_t
 * 2014-01-25 eat 0.9.00 Updated for changes to hash structure
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -420,7 +421,7 @@ void disableList(NB_List *list){
 */
 void nbListInit(NB_Stem *stem){
   if(trace) outMsg(0,'T',"listInit: called");
-  nb_ListType=newType(stem,"list",NULL,0,printList,destroyList);
+  nb_ListType=nbObjectType(stem,"list",0,0,printList,destroyList);
   nb_ListType->apicelltype=NB_TYPE_LIST;
   nbCellType(nb_ListType,solveList,evalList,enableList,disableList);
   nb_ListNull=nbCellNew(nb_ListType,(void **)&nb_ListFree,sizeof(NB_List));
@@ -488,11 +489,13 @@ NB_Cell *nbListRemoveCell(nbCELL context,nbSET *setP){
 *  Get next object from a list  [short for nbGetListNext() and nbGetListObject()]
 */ 
 NB_Cell *nbListGetCell(nbCELL context,nbSET *setP){
-  NB_Link **linkP=*setP;
+  NB_Link *link=*setP;
   NB_Cell *cell;
-  if(linkP==NULL || *linkP==NULL) return(NULL);
-  cell=grabObject((*linkP)->object);
-  *setP=&(*linkP)->next;  /* step to next link */
+  if(link==NULL) return(NULL);
+  link=link->next;
+  if(link==NULL) return(NULL);
+  *setP=link;  /* step to next link */
+  cell=grabObject(link->object);
   return(cell);
   }
 
@@ -505,11 +508,13 @@ NB_Cell *nbListGetCell(nbCELL context,nbSET *setP){
 
 NB_Cell *nbListGetCellValue(nbCELL context,nbSET *setP){
   NB_Cell *cell;
-  NB_Link **linkP=*setP;
+  NB_Link *link=*setP;
 
-  if(linkP==NULL || *linkP==NULL) return(NULL);
-  cell=(NB_Cell *)(*linkP)->object;
-  *setP=&(*linkP)->next;  /* step to next link */
+  if(link==NULL) return(NULL);
+  link=link->next;
+  if(link==NULL) return(NULL);
+  *setP=link;  /* step to next link */
+  cell=(NB_Cell *)link->object;
   if((NB_Object *)cell->object.value==nb_Disabled) cell=(NB_Cell *)cell->object.type->compute(cell);
   else cell=grabObject((NB_Cell *)cell->object.value); /* 2004/08/28 eat - grab moved here from return */
   return(cell);

@@ -1,4 +1,4 @@
-#!/usr/local/bin/nb
+#!/usr/bin/nb
 define x cell a+b;
 define r1 on(?x);
 assert a=7,b=12;

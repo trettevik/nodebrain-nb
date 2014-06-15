@@ -1,4 +1,4 @@
-#!/usr/local/bin/nb
+#!/usr/bin/nb
 # File: tutorial/tree/stuff.nb
 define stuff node tree;
 define r1 on(stuff(x,y)>17 and stuff(x,y,z)="Sally");

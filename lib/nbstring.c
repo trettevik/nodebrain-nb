@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -93,6 +93,7 @@
 * 2012-02-07 dtl Checker updates
 * 2012-10-12 eat 0.8.12 Replaced malloc with nbAlloc
 * 2013-01-01 eat 0.8.13 Checker updates
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -168,7 +169,7 @@ void destroyString(NB_String *str){
 void initString(NB_Stem *stem){
   nb_StringPool=(struct NB_STRING_POOL *)nbAlloc(sizeof(struct NB_STRING_POOL));
   memset(nb_StringPool,0,sizeof(struct NB_STRING_POOL));
-  strType=newType(stem,"string",NULL,0,printString,destroyString);
+  strType=nbObjectType(stem,"string",NB_OBJECT_KIND_STRING|NB_OBJECT_KIND_CONSTANT|NB_OBJECT_KIND_TRUE,0,printString,destroyString);
   strType->apicelltype=NB_TYPE_STRING;
   }
 

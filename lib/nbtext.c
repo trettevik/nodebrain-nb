@@ -1,6 +1,6 @@
 /*
 * Copyright (C) 2011-2013 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -81,6 +81,7 @@
 * ---------- -----------------------------------------------------------------
 * 2011-11-05 Ed Trettevik (original prototype version introduced in 0.8.6)
 * 2012-12-18 eat 0.8.13 Checker updates
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -102,7 +103,7 @@ void destroyText(NB_Text *text){
 * Public Methods
 **********************************************************************/
 void initText(NB_Stem *stem){
-  textType=newType(stem,"text",NULL,0,printText,destroyText);
+  textType=nbObjectType(stem,"text",0,0,printText,destroyText);
   textType->apicelltype=NB_TYPE_TEXT;
   }
 

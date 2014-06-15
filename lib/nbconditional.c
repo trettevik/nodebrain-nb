@@ -1,6 +1,5 @@
 /*
-* Copyright (C) 2014 The Boeing Company
-*                    Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -44,7 +43,8 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2014-04-12 Ed Trettevik - original prototype introduced in 0.9.01
+* 2014-04-12 Ed Trettevik - Introduced in 0.9.01
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -175,7 +175,7 @@ static void disableConditional(NB_Conditional *conditional){
 **********************************************************************/
 
 void nbConditionalInit(NB_Stem *stem){
-  nb_ConditionalType=newType(stem,"nodeConditional",NULL,0,nbConditionalShow,nbConditionalDestroy);
+  nb_ConditionalType=nbObjectType(stem,"nodeConditional",0,0,nbConditionalShow,nbConditionalDestroy);
   nbCellType(nb_ConditionalType,solveConditional,evalConditional,enableConditional,disableConditional);
   }
 

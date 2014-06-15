@@ -1,6 +1,6 @@
 /*
 * Copyright (C) 1998-2013 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -57,6 +57,7 @@
 * 2002-09-07 Ed Trettevik (original version introduced in 0.4.1)
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning message. (gcc 4.5.0)
 * 2013-01-13 eat 0.8.13 Checker updates - rosechecker
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -119,7 +120,7 @@ void disableCall(struct CALL *call){
 * Public Methods
 **********************************************************************/
 void initCall(NB_Stem *stem){
-  callTypeMod=newType(stem,"_mod",NULL,0,printCall,destroyCondition);
+  callTypeMod=nbObjectType(stem,"_mod",0,0,printCall,destroyCondition);
   nbCellType(callTypeMod,solveCall,evalCallMod,enableCall,disableCall);
   }
 

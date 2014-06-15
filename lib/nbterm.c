@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -108,13 +108,14 @@
 * 2012-10-17 eat 0.8.12 Added size parameter
 * 2012-12-15 eat 0.8.13 Checker updates
 * 2013-01-01 eat 0.8.13 Checker updates
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 *=============================================================================
 */
 #include <nb/nbi.h>
 #include <stddef.h>
 
 NB_Term *termFree=NULL;
-NB_Term *gloss;      /* root context term */
+NB_Term *rootGloss;          /* root context term */
 struct TYPE *termType;
 NB_Term *addrContext=NULL;   /* current context term (local)  */
 NB_Term *symContext=NULL;    /* symbolic context */
@@ -471,7 +472,7 @@ void printTerm(NB_Term *term){
   }
 
 void initTerm(NB_Stem *stem){
-  termType=newType(stem,"term",NULL,0,printTerm,destroyTerm);
+  termType=nbObjectType(stem,"term",0,0,printTerm,destroyTerm);
   termType->apicelltype=NB_TYPE_TERM;
   nbCellType(termType,solveTerm,evalTerm,enableTerm,disableTerm);
   }
@@ -538,9 +539,15 @@ NB_Term *nbTermFindInScope(NB_Term *term,char *qualifier){
     term=symContext; /* Switch context for symbolic variable */
     cursor++;
     }
-  else if(strcmp("_",qualifier)==0) return(gloss);    /* root context reference */
-  else if(strcmp("@",qualifier)==0) return(locGloss); /* local root context reference */
-  else if(*qualifier=='@') term=gloss;     /* Switch context for brain context reference */
+  else if(strcmp("_",qualifier)==0) return(rootGloss);    /* root context reference */
+  else if(strcmp("@",qualifier)==0){
+    outMsg(0,'W',"The @ symbol is deprecated reference to top glossary. Use _ instead.");
+    return(rootGloss);
+    }
+  // 2014-06-07 eat - eliminating locGloss in favor of rootGloss
+  //else if(strcmp("@",qualifier)==0) return(locGloss); /* local root context reference */
+  // 2014-06-07 eat - free up @ for transient terms - no longer supporting brain context reference
+  //else if(*qualifier=='@') term=rootGloss;     /* Switch context for brain context reference */
   if(*cursor=='.' && (NULL==(term=nbTermFindDot(term,&cursor)))) return(NULL);
   word=grabObject(useString(cursor));
   while(termFound==NULL && term!=NULL){
@@ -565,7 +572,17 @@ NB_Term *nbTermFind(NB_Term *term,char *identifier){
 
   if((cursor=nbParseQualifier(qualifier,sizeof(qualifier),cursor))==NULL) return(NULL);
   if(*qualifier!='.'){
-    if(strcmp("@",qualifier)==0) term=locGloss;
+    // 2014-06-07 eat - eliminated locGloss - using rootGloss
+    if(strcmp("@",qualifier)==0){
+      outMsg(0,'W',"The @ is deprecated reference to top glossary.  Use _ instead.");
+      term=rootGloss;
+      }
+    else if(*qualifier=='@'){ // 2014-06-07 eat - find event attribute transient terms here
+      word=grabObject(useString(qualifier));
+      term=nbTermFindHere(term,word);
+      dropObject(word);
+      if(term==NULL) return(NULL);
+      }
     else if(NULL==(term=nbTermFindInScope(term,qualifier))) return(NULL);
     }
   else{
@@ -613,6 +630,7 @@ NB_Term *makeTerm(NB_Term *context,NB_String *word){
   if(trace) outMsg(0,'T',"makeTerm calling nbCellNew");
   term=nbCellNew(termType,(void **)&termFree,sizeof(NB_Term));
   term->cell.object.hashcode=word->object.hashcode; // inherit hashcode from name
+  if(*word->value=='@') term->cell.mode|=NB_CELL_MODE_TRANSIENT;
   term->context=context; 
   term->gloss=NULL;                                 // glossary of subordinate terms
   term->def=nb_Undefined;  
@@ -723,7 +741,8 @@ NB_Term *nbTermNew(NB_Term *context,char *ident,void *def){
       cursor=nbParseQualifier(qualifier,sizeof(qualifier),cursor);
       // This should only be done for the first qualifier, but just checking to see if this is the problem
       // NOTE: nbTermNew gets called when "@" is first defined and we don't yet have locGloss
-      if(strcmp("@",qualifier)==0 && *cursor!=0) term=locGloss;
+      if(strcmp("_",qualifier)==0 && *cursor!=0) term=rootGloss;
+      else if(strcmp("@",qualifier)==0 && *cursor!=0) term=rootGloss;
       else{
         word=grabObject(useString(qualifier));
         if(!context->gloss) context->gloss=nbHashNew(4);  // create glossary hash if necessary
@@ -869,14 +888,13 @@ void nbTermName(char *name,size_t size,NB_Term *term,NB_Term *refContext){
   char *cursor=name,*curlast=name+size-1;
   
   *name=0;
-  if(term==gloss) return; //dtl: moved *name=0 to here for Checker // 2012-10-17 eat - changed back just to see what happens
+  if(term==rootGloss){
+    strcpy(name,"_");
+    return;
+    }
   if(size<1024){
     outMsg(0,'L',"nbTermName: name buffer must be at least 1024 characters");
     exit(NB_EXITCODE_FAIL);
-    }
-  if(term==locGloss){  /* special case to avoid next special case */
-    strcpy(name,"@");
-    return;
     }
   if(term==refContext){ /* special case when term is the reference context */
     strcpy(name,".");
@@ -888,11 +906,15 @@ void nbTermName(char *name,size_t size,NB_Term *term,NB_Term *refContext){
     }
   qual[0]=term->word->value;
   context=term->context;
-  for(level=1;level<50 && context!=gloss && context!=refContext && context!=symContext && context!=NULL;level++){
-    //outMsg(0,'T',"nbTermName reverse level=%d",level);
+  for(level=1;level<50 && context!=rootGloss && context!=refContext && context!=symContext && context!=NULL;level++){
     qual[level]=context->word->value;
-    //outMsg(0,'T',"nbTermName qualifier=%s",qual[level]);
     context=context->context;
+    }
+  if(context==rootGloss && context!=refContext){
+    *cursor='_';
+    cursor++;
+    *cursor='.';
+    cursor++;
     }
   for(level=level-1;level>=0;level--){ // 2012-12-28 eat - fixed defect dropping last char of each qualifier
     n=strlen(qual[level]);
@@ -920,13 +942,13 @@ void termPrintName(NB_Term *term){
 void termPrintFullName(NB_Term *term){
   char name[1024];
   
-  nbTermName(name,sizeof(name),term,gloss);
+  nbTermName(name,sizeof(name),term,rootGloss);
   outPut("%s",name);
   }   
 
 void nbTermPrintLongName(NB_Term *term){
   char name[1024];
-  nbTermName(name,sizeof(name),term,locGloss);
+  nbTermName(name,sizeof(name),term,rootGloss);
   outPut("%s",name);
   }
 

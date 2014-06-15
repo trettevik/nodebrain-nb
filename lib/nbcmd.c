@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -262,14 +262,14 @@
 * 2014-02-16 eat 0.9.01 Modified SHOW to accept option list (also in 0.8.16)
 * 2014-03-15 eat 0.9.01 Fixed bug in rule parsing - was looking for newline in call to strtok
 * 2014-03-20 eat 0.9.01 Restored capability to define a node for a term that is current defined as undefined
+* 2014-06-14 eat 0.9.02 Replaced libreadline with libedit for licensing reasons
 *==============================================================================
 */
 #include "../config.h"
 #include <nb/nbi.h>
 
 #if !defined(WIN32)
-#include <readline/readline.h>
-#include <readline/history.h>
+#include <editline/readline.h>
 #endif
 
 // Get a command from interactive user.
@@ -358,7 +358,8 @@ static int nbGetCmdInteractive(char *cmd,size_t cmdlen){  // 2012-12-31 eat - VI
 void printVersion(void){
   printf("nb %s\n\n",PACKAGE_VERSION);
   printf("N o d e B r a i n\n");
-  printf("Copyright (C) 1998-2014 The Boeing Company\n");
+  printf("Copyright (C) 2014 Ed Trettevik <eat@nodebrain.org>\n");
+  printf("Copyright (C) 1998-2013 The Boeing Company\n");
   printf("GNU General Public License\n\n");
   }
 
@@ -420,7 +421,8 @@ void showVersion(void){
 
 void showCopyright(void){
   showVersion();
-  outPut("Copyright (C) 1998-2014 The Boeing Company\n");
+  outPut("Copyright (C) 2014 Ed Trettevik <eat@nodebrain.org>\n");
+  outPut("Copyright (C) 1998-2013 The Boeing Company\n");
   outPut("GNU General Public License\n");
   outPut("----------------------------------------------------------------\n\n");
   }
@@ -1176,6 +1178,7 @@ int nbCmdAssert(nbCELL context,void *handle,char *verb,char *cursor){
   /* Think about the necessary controls. */
   NB_Link *assertion=NULL;
   int alert=0,alertCount;
+  //NB_Node *node=(NB_Node *)((NB_Term *)context)->def;
 
   if(*(verb+1)=='l') alert=1; // determine if assert or alert
 
@@ -1189,7 +1192,8 @@ int nbCmdAssert(nbCELL context,void *handle,char *verb,char *cursor){
       return(1);
       }
     if(assertion!=NULL){
-      assert(assertion,alert);  // assert or alert
+      //assert(assertion,alert);  // assert or alert
+      nbAssert(context,assertion,alert);  // assert or alert
       dropMember(assertion);
       }
     if(alert){
@@ -1232,7 +1236,8 @@ int nbLet(char *cursor,NB_Term *context,int mode){
     return(-1);
     }
   if(assertion!=NULL){
-    assert(assertion,mode<<1);  // assert 
+    //assert(assertion,mode<<1);  // assert 
+    nbAssert((nbCELL)context,assertion,mode<<1);  // assert 
     dropMember(assertion);
     }
   return(0);
@@ -1566,6 +1571,7 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     }
   cursave=cursor;
   symid=nbParseSymbol(ident,sizeof(ident),&cursor);
+  if(symid=='*') outMsg(0,'T',"Hey an event cell"); // 2014-05-06 eat - experiment
   if(symid!='t'){
     outMsg(0,'E',"Expecting term identifier at-->%s",cursave);
     return(1);
@@ -1575,7 +1581,7 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     return(1);
     } 
   if(*ident=='@'){
-    if(*(ident+1)=='.') context=(nbCELL)locGloss;
+    if(*(ident+1)=='.') context=(nbCELL)rootGloss;
     else{
       outMsg(0,'E',"Terms starting '@' may not be user defined.");
       return(1);
@@ -1691,6 +1697,8 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     action->cmdopt=NB_CMDOPT_RULE;     /* do not suppress symbolic substitution */
     action->status='R';   /* ready */
     ruleCond=useCondition(rule_type,object,action);
+    if(object->type->kind&NB_OBJECT_KIND_CONSTANT && (rule_type==condTypeOnRule || rule_type==condTypeWhenRule))
+      outMsg(0,'W',"Rule of this type with a constant condition will never fire");
     action->cond=ruleCond; /* plug the condition pointer into the action */
     if(term) nbTermAssign(term,(NB_Object *)ruleCond);
     else term=nbTermNew((NB_Term *)context,ident,ruleCond);
@@ -1705,7 +1713,8 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     action->priorIf=NULL;
     if(rule_type==condTypeIfRule){
       NB_Object *condState=action->cond->cell.object.type->compute(action->cond);
-      if(!(condState->value->type->attributes&TYPE_NOT_TRUE)){
+      //if(!(condState->value->type->attributes&TYPE_NOT_TRUE)){
+      if(condState->value->type->kind&NB_OBJECT_KIND_TRUE){  // 2014-06-07 eat - converting to kind 
         action->cell.object.next=(NB_Object *)((NB_Node *)((NB_Term *)context)->def)->ifrule;
         if(action->cell.object.next) ((NB_Action *)action->cell.object.next)->priorIf=action;
         ((NB_Node *)((NB_Term *)context)->def)->ifrule=action;
@@ -2055,7 +2064,7 @@ void nbParseStdin(int prompt){
       buffer=nbSymSource((nbCELL)symContext,bufin);
       if(buffer!=NULL){
         if(sourceTrace) outPut("] %s\n",buffer);
-        if(*bufin!=0) nbCmd((nbCELL)locGloss,buffer,NB_CMDOPT_HUSH);
+        if(*bufin!=0) nbCmd((nbCELL)rootGloss,buffer,NB_CMDOPT_HUSH);
         }
       }
     }
@@ -2268,7 +2277,7 @@ void nbCmd(nbCELL context,char *cursor,unsigned char cmdopt){
   if(cmdopt&NB_CMDOPT_ECHO && !(cmdopt&NB_CMDOPT_HUSH)){
     if(cmdopt&NB_CMDOPT_RULE) outPut(":");
     else outPut(">");
-    if(context!=(nbCELL)locGloss){
+    if(context!=(nbCELL)rootGloss){
       outPut(" ");
       nbTermPrintLongName((NB_Term *)context);
       outPut(".");

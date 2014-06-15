@@ -1,4 +1,4 @@
-#!/usr/local/bin/nb -d
+#!/usr/bin/nb -d
 # File: tutorial/Pipe/smokey.nb
 -rm smokey.log
 set log="smokey.log",out=".";

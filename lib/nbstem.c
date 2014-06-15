@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -56,6 +56,7 @@
 * 2013-01-01 eat 0.8.13 Checher updates
 * 2013-04-08 eat 0.8.15 Change prefix switch from -"'..." to -">..." to match command
 * 2013-04-27 eat 0.8.15 Included option parameter in nbSource calls
+* 2014-01-20 eat 0.9.00 glossary back to hash and double link IF rule list
 *============================================================================*/
 #include <nb/nbi.h>
 #include <nb/nbmedulla.h>
@@ -260,20 +261,20 @@ void nbSigHandler(int sig){
     case SIGTERM:
       outMsg(0,'W',"SIGTERM - stopping");
       outFlush();
-      if(agent) nbCmd((nbCELL)locGloss,"stop",1);
+      if(agent) nbCmd((nbCELL)rootGloss,"stop",1);
       else exit(NB_EXITCODE_FAIL);
       break;
     case SIGINT:
       outMsg(0,'W',"SIGINT - stopping");
       outFlush();
-      if(agent) nbCmd((nbCELL)locGloss,"stop",1);
+      if(agent) nbCmd((nbCELL)rootGloss,"stop",1);
       else exit(NB_EXITCODE_FAIL);
       break;
 #if !defined(WIN32)
     case SIGHUP:
       outMsg(0,'W',"SIGHUP - stopping");
       outFlush();
-      if(agent) nbCmd((nbCELL)locGloss,"stop",1);
+      if(agent) nbCmd((nbCELL)rootGloss,"stop",1);
       else exit(NB_EXITCODE_FAIL);
       break;
     default:
@@ -327,7 +328,7 @@ nbCELL nbStart(int argc,char *argv[]){
 /*
 *  Create the stem cell
 */
-  if((stem=(NB_Stem *)nbAlloc(sizeof(NB_Stem)))==NULL) return(NULL); /* pass to all init(init) functions who pass to all newType() calls */
+  if((stem=(NB_Stem *)nbAlloc(sizeof(NB_Stem)))==NULL) return(NULL); /* pass to all init(init) functions who pass to all nbObjectType() calls */
   memset(stem,0,sizeof(NB_Stem));
   //stem->parentChannel=NULL;
   stem->exitcode=0; 
@@ -436,28 +437,28 @@ nbCELL nbStart(int argc,char *argv[]){
   nbSchedInit(stem);       /* initialize schedule hash */
   nbTranslatorInit(stem);
   
-  /* initialize root context (gloss) verbs and types */
+  /* initialize root context, verbs, and types */
  
-  gloss=nbTermNew(NULL,"root",nbNodeNew());
+  rootGloss=nbTermNew(NULL,"root",nbNodeNew());
   
   nbModuleInit(stem);
 
   initIdentity(stem);   
   defaultIdentity=nbIdentityNew("default",AUTH_OWNER);  // default identity
   clientIdentity=defaultIdentity; 
-  ((NB_Node *)gloss->def)->owner=clientIdentity;
-  ((NB_Node *)gloss->def)->context=gloss;
+  ((NB_Node *)rootGloss->def)->owner=clientIdentity;
+  ((NB_Node *)rootGloss->def)->context=rootGloss;
   nbTermNew(identityC,"default",defaultIdentity);
   
-  locGloss=nbTermNew(gloss,"@",nbNodeNew());
-  ((NB_Node *)locGloss->def)->context=locGloss;
+  //locGloss=nbTermNew(rootGloss,"@",nbNodeNew());
+  //((NB_Node *)locGloss->def)->context=locGloss;
   symGloss=nbTermNew(NULL,"%",nbNodeNew());
-  addrContext=locGloss;
+  addrContext=rootGloss;
   symContext=symGloss;
   /* 
   *  Get startup options  
   */
-  nbStartParseArgs((nbCELL)locGloss,stem,argc,argv);
+  nbStartParseArgs((nbCELL)rootGloss,stem,argc,argv);
 
   /*
   *  Define some handy terms 
@@ -509,10 +510,8 @@ nbCELL nbStart(int argc,char *argv[]){
   /*
   *  get private definitions
   */
-  //privateContext=(nbCELL)nbTermNew(gloss,"private",nbNodeNew());      
-
-  if(nb_opt_user) nbLoadUserProfile((nbCELL)locGloss);
-  nbLoadCaboodleProfile((nbCELL)locGloss);
+  if(nb_opt_user) nbLoadUserProfile((nbCELL)rootGloss);
+  nbLoadCaboodleProfile((nbCELL)rootGloss);
 
   // 2005-12-12 eat 0.6.4  modified signal handling
   // signal(SIGCHLD,childSigHandler);  // not needed because we are using medulla
@@ -525,7 +524,7 @@ nbCELL nbStart(int argc,char *argv[]){
 #endif
 
   outFlush();
-  return((nbCELL)locGloss);
+  return((nbCELL)rootGloss);
   }
   
 int stdReader(nbPROCESS process,int pid,void *session,char *msg){
@@ -560,7 +559,7 @@ int nbServe(nbCELL context,int argc,char *argv[]){
   else{
     //if(stem->parentChannel){  // running as a socket child
     //  outMsg(0,'T',"registering parent socket command listener");
-    //  nbListenerAdd((nbCELL)locGloss,stem->parentChannel->socket,stem->parentChannel,socketCmdListener);
+    //  nbListenerAdd((nbCELL)rootGloss,stem->parentChannel->socket,stem->parentChannel,socketCmdListener);
     //  outMsg(0,'I',"Parent channel established\n");
     //  nbListenerStart(context);  
     //  }

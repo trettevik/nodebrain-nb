@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@
 * 2012-10-17 eat 0.8.12 Added size parameter to nbNodeGetNameFull
 * 2013-01-11 eat 0.8.13 Checker updates
 * 2014-01-27 eat 0.9.00 Switch ifrule list to double linked and double root
+* 2014-06-14 eat 0.9.02 Include event transient terms
 *=============================================================================
 */
 #ifndef _NB_NODE_H_
@@ -59,6 +60,7 @@ struct NB_NODE{
   struct IDENTITY  *owner;      /* identity that owns the context */
   struct STRING    *source;     /* command to request unknown values */
   struct ACTION    *ifrule;     // if rules scheduled to process on alert
+  NB_Link      *transientLink;  // event transient terms from last alert
   unsigned char    cmdopt;      /* command option - see NB_CMDOPT_* in nbcmd.h */ // 2013-01-11 eat - VID 6552
   char             reserved;    /* reserved */
   unsigned short   alertCount;  /* wrap-around counter for alerts */

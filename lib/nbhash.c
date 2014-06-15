@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -77,6 +77,7 @@
 * 2012-12-31 eat 0.8.13 Checker updates
 * 2014-01-12 eat 0.9.00 Included nbHashGrow function
 * 2014-01-25 eat 0.9.00 Switch from storing modulo to storing mask (modulo-1)
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -234,5 +235,5 @@ static void destroyHash(NB_Object object){
 *  Initialize types provided by this header
 */
 void nbHashInit(NB_Stem *stem){
-  typeHash=newType(stem,"hash",NULL,0,nbHashShow,destroyHash);
+  typeHash=nbObjectType(stem,"hash",0,0,nbHashShow,destroyHash);
   }

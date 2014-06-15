@@ -1,4 +1,4 @@
-#!/usr/local/bin/nb -d
+#!/usr/bin/nb -d
 # File: tutorial/Snmptrap/snmptrap.nb
 -rm snmptrap.log
 set log="snmptrap.log",out=".";

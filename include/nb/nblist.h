@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -86,12 +86,14 @@ void nbListInit(NB_Stem *stem);
 
 void nbListFree(struct NB_LINK *member);
 
-#endif // !NB_INERNAL
+typedef NB_Link *nbSET;
+#else  // !NB_INTERNAL
+typedef void *nbSET;         // Position pointer within a set of cells (e.g. lists) 
+#endif // NB_INTERNAL
 
 //**********************************************
 // External API
 
-typedef void*  nbSET;         // Position pointer within a set of cells (e.g. lists) 
 
 #if defined(WIN32)
 _declspec (dllexport)

@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2013-2014 Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@
 *   These routines are called by the following methods associated with each 
 *   object type.
 *
-*      1) Init    - creates type using newType
+*      1) Init    - creates type using nbObjectType
 *      2) Use/New - create new object using newObject or nbCellNew
 *      3) Destroy - calls dropObject for all referenced objects
 *
@@ -69,9 +69,9 @@
 *        struct TYPE myobjType;
 *
 *   3) Write an "init" method to perform initialization functions.  In
-*      particular, this method must call newType to define the type.
+*      particular, this method must call nbObjectType to define the type.
 *
-*        myobjType=newType(stem,name,hash,attributes,myobjPrint,myobjDestroy);
+*        myobjType=nbObjectType(stem,name,hash,attributes,myobjPrint,myobjDestroy);
 *
 *      The method arguments are routines you write as described later. 
 *
@@ -184,6 +184,9 @@
 * 2012-10-13 eat 0.8.12 Added nbHeap function (was first part of nbObjectInit)
 * 2012-12-27 eat 0.8.13 Checker updates
 * 2013-12-05 eat 0.9.00 Included TYPE_NOT_TRUE attribute on types not true
+* 2014-05-04 eat 0.9.02 Renamed newType to nbObjectType
+* 2014-05-04 eat 0.9.02 Introduced type.kind
+* 2014-06-07 eat 0.9.02 Replaced TYPE_NOT_TRUE with not NB_OBJECT_KIND_TRUE
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -195,13 +198,14 @@ int showcount=0;         /* show object usage count */
 
 
 NB_Object *nb_Disabled=NULL;
-NB_Object *nb_True=NULL;        // set by nbcell.c
+NB_Object *nb_True=NULL;
 NB_Object *nb_False=NULL;
 NB_Object *nb_Unknown=NULL;
 NB_Object *nb_Undefined=NULL;
 NB_Object *nb_Placeholder=NULL;
 
 NB_Type *nb_DisabledType; 
+NB_Type *nb_TrueType;  
 NB_Type *nb_FalseType;  
 NB_Type *nb_UnknownType;  
 NB_Type *nb_UndefinedType;  
@@ -241,6 +245,9 @@ struct NB_OBJECT_POOL *nb_ObjectPool;  // free object pool vector by length
 void nbDisabledShow(NB_Object *object){
   outPut("#");
   }
+static void nbTrueShow(NB_Object *object){
+  outPut("!!");
+  }
 void nbFalseShow(NB_Object *object){
   outPut("!");
   }
@@ -274,27 +281,34 @@ void nbHeap(){
   }
 
 void nbObjectInit(NB_Stem *stem){
-  nb_DisabledType=newType(stem,"disabled",NULL,TYPE_SPECIAL|TYPE_NOT_TRUE,nbDisabledShow,NULL);
+  nb_DisabledType=nbObjectType(stem,"disabled",NB_OBJECT_KIND_CONSTANT|NB_OBJECT_KIND_PERMANENT,TYPE_SPECIAL,nbDisabledShow,NULL);
   nb_DisabledType->apicelltype=NB_TYPE_DISABLED;
   nb_Disabled=newObject(nb_DisabledType,NULL,sizeof(NB_Object));
   nb_Disabled->refcnt=(unsigned int)-1;   /* flag as perminent object */
 
-  nb_FalseType=newType(stem,"unknown",NULL,TYPE_SPECIAL|TYPE_NOT_TRUE,nbFalseShow,NULL);
-  nb_FalseType->apicelltype=NB_TYPE_FALSE;
-  nb_False=newObject(nb_FalseType,NULL,sizeof(NB_Object));
-  nb_False->refcnt=(unsigned int)-1;    /* flag as perminent object */
+  nb_TrueType=nbObjectType(stem,"true",NB_OBJECT_KIND_TRUE|NB_OBJECT_KIND_REAL|NB_OBJECT_KIND_CONSTANT|NB_OBJECT_KIND_PERMANENT,TYPE_SPECIAL,nbTrueShow,NULL);
+  nb_TrueType->apicelltype=NB_TYPE_TRUE;
+  nb_True=newObject(nb_TrueType,NULL,sizeof(NB_Real));
+  nb_True->refcnt=(unsigned int)-1;    /* flag as perminent object */
+  ((NB_Real *)nb_True)->value=1;
 
-  nb_UnknownType=newType(stem,"unknown",NULL,TYPE_SPECIAL|TYPE_NOT_TRUE,nbUnknownShow,NULL);
+  nb_FalseType=nbObjectType(stem,"false",NB_OBJECT_KIND_FALSE|NB_OBJECT_KIND_REAL|NB_OBJECT_KIND_CONSTANT|NB_OBJECT_KIND_PERMANENT,TYPE_SPECIAL,nbFalseShow,NULL);
+  nb_FalseType->apicelltype=NB_TYPE_FALSE;
+  nb_False=newObject(nb_FalseType,NULL,sizeof(NB_Real));
+  nb_False->refcnt=(unsigned int)-1;    /* flag as perminent object */
+  ((NB_Real *)nb_False)->value=0;
+
+  nb_UnknownType=nbObjectType(stem,"unknown",NB_OBJECT_KIND_UNKNOWN|NB_OBJECT_KIND_CONSTANT|NB_OBJECT_KIND_PERMANENT,TYPE_SPECIAL,nbUnknownShow,NULL);
   nb_UnknownType->apicelltype=NB_TYPE_UNKNOWN;
   nb_Unknown=newObject(nb_UnknownType,NULL,sizeof(NB_Object));
   nb_Unknown->refcnt=(unsigned int)-1;    /* flag as perminent object */
 
-  nb_UndefinedType=newType(stem,"undefined",NULL,TYPE_SPECIAL|TYPE_NOT_TRUE,nbUndefinedShow,NULL);
+  nb_UndefinedType=nbObjectType(stem,"undefined",NB_OBJECT_KIND_CONSTANT|NB_OBJECT_KIND_PERMANENT,TYPE_SPECIAL,nbUndefinedShow,NULL);
   nb_UndefinedType->apicelltype=NB_TYPE_UNDEFINED;
   nb_Undefined=newObject(nb_UndefinedType,NULL,sizeof(NB_Object));
   nb_Undefined->refcnt=(unsigned int)-1;    /* flag as perminent object */
 
-  nb_PlaceholderType=newType(stem,"placeholder",NULL,TYPE_SPECIAL|TYPE_NOT_TRUE,nbPlaceholderShow,NULL);
+  nb_PlaceholderType=nbObjectType(stem,"placeholder",NB_OBJECT_KIND_CONSTANT|NB_OBJECT_KIND_PERMANENT,TYPE_SPECIAL,nbPlaceholderShow,NULL);
   nb_PlaceholderType->apicelltype=NB_TYPE_PLACEHOLDER;
   nb_Placeholder=newObject(nb_PlaceholderType,NULL,sizeof(NB_Object));
   nb_Placeholder->refcnt=(unsigned int)-1;    /* flag as perminent object */
@@ -304,7 +318,7 @@ void nbObjectInit(NB_Stem *stem){
   nb_UndefinedType->object.value=nb_Unknown;
   nb_PlaceholderType->object.value=nb_Unknown;
 
-  nb_TypeType=newType(stem,"type",NULL,TYPE_WELDED,nbTypeShow,NULL);
+  nb_TypeType=nbObjectType(stem,"type",NB_OBJECT_KIND_CONSTANT|NB_OBJECT_KIND_PERMANENT,TYPE_WELDED,nbTypeShow,NULL);
   }
 /*
 *  Obtain space for a new constant object instance
@@ -347,6 +361,7 @@ void *newObject(struct TYPE *type,void **pool,int size){
   //memset(&object->node,0,sizeof(NB_SetNode));
   object->type=type;
   object->value=object;
+  //object->kind=type->kind; // 2014-05-04 eat - put kind in object has shortcut
   object->refcnt=0;
   return(object);
   }
@@ -518,7 +533,7 @@ void printObjectType(void *object){   // 2012-12-31 eat - VID 5328-0.8.13-1 adde
 *   These routines are called by the following methods associated with each 
 *   object type.
 *
-*      1) Init    - creates type using newType
+*      1) Init    - creates type using nbObjectType
 *      2) Use/New - create new object using newObject or nbCellNew
 *      3) Destroy - calls dropObject for all referenced objects
 *
@@ -526,9 +541,9 @@ void printObjectType(void *object){   // 2012-12-31 eat - VID 5328-0.8.13-1 adde
 *
 *   #include "nb.h"
 *
-*   struct TYPE *newType(
+*   struct TYPE *nbObjectType(
 *      char *name,
-*      struct HASH *hash,
+*      uint32_t kind,
 *      int attributes,
 *      void (*display)(),
 *      void (*destroy)() );
@@ -617,7 +632,7 @@ void disableBug(NB_Object *object){
 /*
 *  Type Constructor
 */
-struct TYPE *newType(NB_Stem *stem,char *name,struct HASH *hash,int  attributes,void (*showExpr)(),void (*destroy)()){
+struct TYPE *nbObjectType(NB_Stem *stem,char *name,uint32_t kind,int  attributes,void (*showExpr)(),void (*destroy)()){
   struct TYPE *type;
   type=nbAlloc(sizeof(struct TYPE));
   type->object.type=nb_TypeType;
@@ -627,8 +642,8 @@ struct TYPE *newType(NB_Stem *stem,char *name,struct HASH *hash,int  attributes,
   type->object.refcnt=1;
   type->stem=stem;           
   type->name=name;
-  if(hash==NULL) type->hash=nbHashNew(8);  // every type get's a hash - if this works the hash parameter will be dropped
-  else type->hash=hash;
+  type->hash=nbHashNew(8);  // every type get's a hash
+  type->kind=kind;
   type->attributes=attributes;
   type->apicelltype=0;
   if(showExpr==NULL) type->showExpr=&nullVoid;

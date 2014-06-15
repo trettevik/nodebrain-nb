@@ -1,6 +1,6 @@
 /*
 * Copyright (C) 1998-2013 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -59,6 +59,7 @@
 *            consistent with other types of objects.
 * 2012-01-16 dtl        Checker updates.
 * 2013-01-11 eat 0.8.13 Checker updates
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -154,7 +155,7 @@ void nbVerbDestroy(struct NB_VERB *verb){
 * Public Methods
 **********************************************************************/
 void nbVerbInit(NB_Stem *stem){
-  nb_verbType=newType(stem,"verb",NULL,0,nbVerbPrint,nbVerbDestroy);
+  nb_verbType=nbObjectType(stem,"verb",0,0,nbVerbPrint,nbVerbDestroy);
   nb_verbType->apicelltype=NB_TYPE_VERB;
   stem->verbs=nbTermNew(NULL,"verb",useString("verb"));
   }

@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@
 *              2) Parameters are not allowed (use preprocessor variables
 *              3) A given file will only source once in a session.
 * 2013-05-25 eat 0.8.15 Fixed overlapping strcpy bug
+* 2014-01-31 eat 0.9.00 glossary back to hash and double link IF rule list
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -282,7 +283,7 @@ int nbSourceTil(nbCELL context,FILE *file){
           else if(strcmp(ident,"default")==0){
             if(nbLet(cursor,symContext,1)!=0) return(-1);
             }
-          else if(strcmp(ident,"use")==0) nbSource((nbCELL)locGloss,1,cursor);
+          else if(strcmp(ident,"use")==0) nbSource((nbCELL)rootGloss,1,cursor);
           else if(strcmp(ident,"include")==0) nbSource(context,0,cursor);
           else{
             outMsg(0,'E',"Directive \"%s\" not recognized.",ident);

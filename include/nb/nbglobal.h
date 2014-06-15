@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -107,8 +107,8 @@ extern char servepid[256];      // pid file
 extern char serveuser[32];      // su user
 extern char servegroup[32];     // sg group
 
-extern struct HASH   *localH;   /* local brain term hash */
-extern NB_Term       *locGloss; /* local glossary "@" brain */
+//extern struct HASH   *localH;   /* local brain term hash */
+//extern NB_Term       *rootGloss; // root glossary "_" 
 extern NB_Term       *symGloss; /* symbolic variable "$" glossary */
 extern NB_Term *nb_TypeGloss;    /* type glossary */
 

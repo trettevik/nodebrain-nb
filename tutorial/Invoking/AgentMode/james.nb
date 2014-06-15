@@ -1,4 +1,4 @@
-#!/usr/local/bin/nb -d
+#!/usr/bin/nb -d
 # File: tutorial/AgentMode/james.nb
 set log="james.log";
 define myProcessRule1 on(processes>200):-./alarmMe.pl 1 "dang - more than 200 processes."

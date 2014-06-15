@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -61,6 +61,8 @@
 * 2005-04-08 eat 0.6.2  API functions definitions move to nbapi.h
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2014-01-12 eat 0.9.00 Included more type flags
+* 2014-05-05 eat 0.9.02 Experimenting with kind field in object
+* 2014-06-07 eat 0.9.02 Ended experiment with kind in object using kind in type
 *=============================================================================
 */
 #ifndef _NB_OBJECT_H_
@@ -94,6 +96,19 @@ typedef struct NB_LINK{       // object list link
 extern NB_Object *nb_Undefined;
 extern NB_Object *nb_Placeholder;
 
+// 2014-05-04 eat - kind field in type enables more than one type of a given kind
+//            This enables ! and !! to be real 0 and 1 for real operators, but
+//            the regular 0 is true while ! is false.  The type controls how they
+//            display, but kind controls how they are operated on by some operators.J
+#define NB_OBJECT_KIND_TRUE      0x01  
+#define NB_OBJECT_KIND_FALSE     0x02
+#define NB_OBJECT_KIND_UNKNOWN   0x04  
+#define NB_OBJECT_KIND_CELL      0x08  // object is a cell - has additional fields
+#define NB_OBJECT_KIND_CONSTANT  0x10  // never changes - don't subscribe
+#define NB_OBJECT_KIND_PERMANENT 0x20  // don't destroy
+#define NB_OBJECT_KIND_REAL      0x40 
+#define NB_OBJECT_KIND_STRING    0x80
+
                            /* object type attributes - bit mask */
 #define TYPE_ENABLES    2  /* Qualifies for enable/disable command */
 #define TYPE_RULE       6  /* rule: 4+2 - subscriber */
@@ -113,7 +128,6 @@ extern NB_Object *nb_Placeholder;
 #define TYPE_WELDED  1024  /* terms should not release these objects easily */
                            /* - an explicit undefine is required */
 #define TYPE_IS_FACT   0x0800   /* facts */
-#define TYPE_NOT_TRUE  0x1000   // Objects like false, unknown, and disabled that are not true
 #define TYPE_IS_ASSERT 0x2000   /* assertions */
 #define TYPE_IS_MATH   0x4000   // Math functions
 
@@ -122,6 +136,7 @@ typedef struct TYPE{
   struct NB_STEM   *stem;      /* brain stem cell */ 
   char *name;                  /* symbolic name */
   struct HASH *hash;           /* hashing table for object lookup */
+  uint32_t kind;               // 2014-05-04 eat - object kind flags that may apply to more than one type
   int  attributes;             /* see object type attributes above */
   int  apicelltype;            /* cell type code for API */
   void (*showExpr)();          /* show as expression */
@@ -173,12 +188,13 @@ struct NB_TYPE_SHIM{           // type method trace shim
 NB_Type *nb_TypeList;
 
 extern NB_Type *nb_DisabledType; /* Special object type */
+extern NB_Type *nb_TrueType;     /* Special object type */
 extern NB_Type *nb_FalseType;    /* Special object type */
 extern NB_Type *nb_UnknownType;  /* Special object type */
 extern NB_Type *nb_DefinedType;  /* Special object type */
 extern NB_Type *nb_TypeType;     /* Type object type */
 
-struct TYPE *newType(struct NB_STEM *stem,char *name,struct HASH *hash,int  attributes,void (*showExpr)(),void (*destroy)());
+struct TYPE *nbObjectType(struct NB_STEM *stem,char *name,uint32_t kind,int  attributes,void (*showExpr)(),void (*destroy)());
 void enableBug(NB_Object *object);
 void disableBug(NB_Object *object);
 
@@ -227,7 +243,8 @@ extern void nbObjectShowTypes(void);
 #define NB_TYPE_NODE         8
 #define NB_TYPE_VERB         9
 #define NB_TYPE_TEXT        10
-#define NB_TYPE_FALSE       11    // 2013-12-05 eat - no longer zero
+#define NB_TYPE_TRUE        11
+#define NB_TYPE_FALSE       12
 
 #if defined(WIN32)
 __declspec(dllexport)

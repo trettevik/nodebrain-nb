@@ -1,4 +1,4 @@
-#!/usr/local/bin/nb
+#!/usr/bin/nb
 # File: tutorial/Translator/opera.nb
 define opera node translator("opera.nbx");
 opera. define r1 on(info~"they didn't");

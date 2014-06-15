@@ -7,23 +7,40 @@
 
 ============================================================
 
-NodeBrain 0.9.01 (Columbo) Change Summary
+NodeBrain 0.9.02 (Columbo) Change Summary
 
 * Released TBD
 
-* Theme: Performance
+* Theme: Performance, Logic, and License
 
-     The primary goal of this version of NodeBrain is to
+     A primary goal of this version of NodeBrain is to
      improve performance for large rule sets with specific
      characteristics causing prior versions of NodeBrain
      to perform poorly.  This is based on theoretical rule
      sets, not rule sets of known applications, but the
      improvements are real.
 
+     A secondary goal is to provide consistency in logic
+     related to a performance improvement.  Basic logical
+     operators no longer pass all true values through,
+     converting all true values to a single true value to
+     avoid unnecessary evaluation of dependent cells. For
+     other functions that do pass all true value through,
+     if was decided that special values of true and false
+     should be provided as separate from all number and
+     string values, make 0 and 1 both true and not special.
+
+     Finally, in preparation for a possible change of
+     license to a more perissive open source license or
+     introduction of a commercial license, dependence on
+     GPL licensed libraries is being removed.
+
+
 * Documentation:
 
-  o  False and Disabled special value symbols have changed.
+  o  True, False and Disabled special value symbols have changed.
 
+       !!            [Replaces]     1     [as true special symbol]
        !             [Replaces]     0     [as false]
        #             [Replaces]     !     [as disabled]
 
@@ -119,6 +136,21 @@ NodeBrain 0.9.01 (Columbo) Change Summary
        "a"<=a  ==>   a>="a"
        "a">a   ==>   a<"a"
        "a">=a  ==>   a<="a"
+
+  o  Top glossary symbol changed from "@" to "_".  There
+     has always been a mostly invisible root glossary
+     named "_" and in prior versions a local glossary
+     under it named "@".  This dates back to early versions
+     where peers where understood by the interpreter and
+     they each had a context name starting with "@".  That
+     notion is obselete, so the local glossary named "@"
+     has been elinated and the top glossary "_" is now
+     visible in the way "@" used to be.  This means a
+     show command will produce different output at the 
+     top and check scripts must be modified.
+
+	_ = # == node   [top node in show command now]
+	@ = ! == node   [top node in show command prior]
 
   o  Term glossaries are now displayed in alphabetical
      order by the SHOW command.  This will cause check
@@ -228,6 +260,15 @@ NodeBrain 0.9.01 (Columbo) Change Summary
 
        > show a,b,c i,-r
 
+  o  Event attribute terms starting with @ have been
+     introducted for use with the ALERT command.  The
+     value of these terms automatically resetis to Unknown
+     on the next alert to the same node, unless a value
+     is assigned.
+
+       alert @a=1,@b=2;
+       alert @a=3;       // @b=?
+       alert @b=1;       // @a=?
 
 * Deprecated Syntax:
 
@@ -244,6 +285,11 @@ NodeBrain 0.9.01 (Columbo) Change Summary
      is dropped as a prefix operator (use ! instead),
      the term "not" can be used to name a cell.
    
+  o  The @ symbol is deprecated a name for top context.
+     Use _ instead.  Use of @ will cause a Warning message.
+
+       define r1 on(@.a=1 or a=2);  // replace this
+       define r1 on(_.a=1 or a=2);  // with this
 
 * Dropped Syntax:
 
@@ -257,7 +303,6 @@ NodeBrain 0.9.01 (Columbo) Change Summary
   o  The previously deprecated syntax ~T(...), ~F(...), and
      ~U(...) for time delays has been dropped and no longer
      generates a warning message.
-
 
 * Bug Fixes:
 

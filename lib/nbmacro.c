@@ -1,6 +1,6 @@
 /*
 * Copyright (C) 1998-2013 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -79,6 +79,7 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
 * 2012-10-17 eat 0.8.12 Checker updates
 * 2012-12-31 eat 0.8.13 Checker updates
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -118,7 +119,7 @@ void nbMacroDestroy(NB_Macro *macro){
 *  Initialize macro object type
 */
 void nbMacroInit(NB_Stem *stem){
-  nb_MacroType=newType(stem,"macro",NULL,0,nbMacroPrint,nbMacroDestroy);
+  nb_MacroType=nbObjectType(stem,"macro",0,0,nbMacroPrint,nbMacroDestroy);
   }
 
 /*
@@ -254,7 +255,8 @@ char *nbMacroSub(nbCELL context,char **cursorP){
     outMsg(0,'T',"Term \"%s\" not defined as macro.",ident);
     return(NULL);
     }
-  if(macro->defaults!=NULL) assert(macro->defaults,0);
+  //if(macro->defaults!=NULL) assert(macro->defaults,0);
+  if(macro->defaults!=NULL) nbAssert(context,macro->defaults,0);
   if(*cursor=='('){
     cursor++;
     /* assign positional parameters the argument values */
@@ -279,7 +281,8 @@ char *nbMacroSub(nbCELL context,char **cursorP){
     if(*cursor==':'){
       cursor++;
       assertion=nbParseAssertion(macro->context,(NB_Term *)context,&cursor);
-      assert(assertion,0);
+      //assert(assertion,0);
+      nbAssert(context,assertion,0);
       }
     dropMember(assertion);
     if(*cursor!=')'){

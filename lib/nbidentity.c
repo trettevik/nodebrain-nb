@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -64,6 +64,7 @@
 * 2001-07-21 Ed Trettevik (original prototype version 0.2.8)
 *             1) This code has been pulled from nodebrain.c.
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -128,7 +129,7 @@ void destroyIdentity(identity) struct IDENTITY *identity;{
 */
 void initIdentity(NB_Stem *stem){
   nb_IdentityFree=NULL;
-  identityType=newType(stem,"identity",NULL,0,printIdentity,destroyIdentity);
+  identityType=nbObjectType(stem,"identity",0,0,printIdentity,destroyIdentity);
   identityC=nbTermNew(NULL,"identity",nbNodeNew());
   }
 

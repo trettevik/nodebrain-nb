@@ -7,7 +7,7 @@
 @direntry
 * nbTutorial: (nbTutorial).       NodeBrain Tutorial
 @end direntry
-@set UPDATED-YEAR 2013
+@set UPDATED-YEAR 2014
 @c %**end of header
 
 @finalout
@@ -17,14 +17,15 @@
 @copying
 NodeBrain Tutorial@*
 @value{UPDATED-MONTH}@*
-The Boeing Company,  P.O. Box 3707, Seattle, WA 98124, USA
+NodeBrain Open Source Project
 
 @sp 2
 @b{Release @value{VERSION}}
 
 Author: Ed Trettevik <eat@@nodebrain.org>
 
-Copyright @copyright{} 2006--@value{UPDATED-YEAR} The Boeing Company
+Copyright @copyright{} @value{UPDATED-YEAR} Ed Trettevik <eat@@nodebrain.org>@*
+Copyright @copyright{} 2006--2014 The Boeing Company
 
 @sp 1
 Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
@@ -35,10 +36,8 @@ NodeBrain(TM) is a trademark of The Boeing Company.   All other trademarks and r
 @sp 2
 @b{Software License}
 
-@multitable {------------------------------} {----------------------------------------------------}
-@item Copyright @copyright{} 1998--@value{UPDATED-YEAR} @tab The Boeing Company
-@item @tab Ed Trettevik <eat@@nodebrain.org>
-@end multitable
+Copyright @copyright{} @value{UPDATED-YEAR} Ed Trettevik <eat@@nodebrain.org>@*
+Copyright @copyright{} 1998--2013 The Boeing Company
 
 NodeBrain is free software; you can redistribute it and/or  modify it under the terms of the GNU General Public License as published by theFree Software Foundation; either version 2 of the License, or (at your option) any later version.
 
@@ -70,7 +69,7 @@ You should have received a copy of the GNU General Public License along with thi
 @item 2005-10-12 @tab
 Title: @i{NodeBrain  Tutorial}@*  
 Author: Ed  Trettevik <eat@@nodebrain.org>@*
-Publisher: The Boeing Company
+Publisher: NodeBrain Open Source Project
 
 @item @tab
 Version 0.6.3 (not released)  
@@ -200,7 +199,8 @@ node module manuals for additional information.
 
 Release @value{VERSION}, @value{UPDATED-MONTH}
 
-Copyright @copyright{} 2006-@value{UPDATED-YEAR} The Boeing Company
+Copyright @copyright{} @value{UPDATED-YEAR} Ed Trettevik <eat@@nodebrain.org>@*
+Copyright @copyright{} 2006-2013 The Boeing Company
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
@@ -298,24 +298,24 @@ If you execute NodeBrain with no arguments, it starts in interactive mode and pr
 @smallexample
 $ @b{nb}
 
-N o d e B r a i n   0.8.10 (Dopey) 2012/06/02
+N o d e B r a i n   0.9.02 (Columbo) 2014-02-15
 
-Compiled Jun  2 2012 15:41:14 x86_64-unknown-linux-gnu
+Compiled Jun 12 2014 19:20:12 x86_64-unknown-linux-gnu
 
-Copyright (C) 1998-2012 The Boeing Company
+Copyright (C) 2014 Ed Trettevik <eat@@nodebrain.org>
+Copyright (C) 1998-2013 The Boeing Company
 GNU General Public License
 ----------------------------------------------------------------
 
-nb
+nb 
 
 Date       Time     Message
 ---------- -------- --------------------------------------------
-2012/06/03 14:16:03 NB000I NodeBrain nb[24764] myuser@@myhost
-2012/06/03 14:16:03 NB000I User profile /home/myuser/.nb/user.nb loaded.
-2012/06/03 14:16:03 NB000I Reading from standard input.
+2014-06-12 19:56:02 NB000I NodeBrain nb[10656] myuser@@myhost
+2014-06-12 19:56:02 NB000I Reading from standard input.
 ---------- --------
 
->
+> 
 @end smallexample
 @end cartouche
 
@@ -400,11 +400,11 @@ $ nb
 > assert a=1;
 > assert c=3;
 > assert b=2;
-2008/06/05 12:19:05 NB000I Rule myFirstRule fired
+2014-06-12 20:19:05 NB000I Rule myFirstRule fired
 > assert a=0;
 > assert c=1;
 > assert a=1;
-2008/06/05 12:19:21 NB000I Rule myFirstRule fired
+2014-06-12 20:19:21 NB000I Rule myFirstRule fired
 > quit
 $
 @end smallexample
@@ -422,7 +422,7 @@ $ nb
 > show mood
 mood = "sad"
 > assert a=1,b=2,c=3;
-2008/06/05 12:20:48 NB000I Rule mySecondRule fired(mood="happy")
+2014-06-12 20:20:48 NB000I Rule mySecondRule fired(mood="happy")
 > show mood
 mood = "happy"
 > quit
@@ -446,11 +446,11 @@ From NodeBrain you can get into the host systems command shell by using a comman
 $ nb
 > @b{-date}
 [17445] Started: -date
-[17445| Thu Jun  512:22:34 PDT 2008
+[17445| Thu Jun 12 20:27:00 EDT 2014
 [17445] Exit(0)
 > @b{-ls -al kim.nb}
 [17478] Started: -ls -al kim.nb
-[17478| -rw-r--r-- 1 myuser users 52 2006-01-05 11:44 kim.nb
+[17478| -rw-r--r-- 1 myuser users Jun 12 21:11 kim.nb
 [17478] Exit(0)
 > quit
 $
@@ -490,21 +490,21 @@ It does not wait for a non-blocking shell command to finish.
 @cartouche
 @smallexample
 > =echo `date` ": it happened" >> happening.log
-2012/12/30 13:30:42 NB000I [18589] Started: =echo `date` ": it happened" >> happening.log
+2014-06-12 20:27:00 NB000I [12756] Started: =echo `date` ": it happened" >> happening.log
 > -cat happening.log
-2012/12/30 13:30:49 NB000I [18589] Exit(0)
-[18592] Started: -cat happening.log
-[18592| Sun Dec 30 13:30:42 PST 2012 : it happened
-[18592] Exit(0)
+2014-06-12 20:27:08 NB000I [12756] Exit(0)
+[12759] Started: -cat happening.log
+[12759| Thu Jun 12 20:27:00 EDT 2014 : it happened
+[12759] Exit(0)
 > =echo `date` ": it happened" >> happening.log
-2012/12/30 13:30:55 NB000I [18594] Started: =echo `date` ": it happened" >> happening.log
->
-2012/12/30 13:30:56 NB000I [18594] Exit(0)
+2014-06-12 20:27:31 NB000I [12760] Started: =echo `date` ": it happened" >> happening.log
+> 
+2014-06-12 20:27:32 NB000I [12760] Exit(0)
 > -cat happening.log
-[18597] Started: -cat happening.log
-[18597| Sun Dec 30 13:30:42 PST 2012 : it happened
-[18597| Sun Dec 30 13:30:55 PST 2012 : it happened
-[18597] Exit(0)
+[12763] Started: -cat happening.log
+[12763| Thu Jun 12 20:27:00 EDT 2014 : it happened
+[12763| Thu Jun 12 20:27:31 EDT 2014 : it happened
+[12763] Exit(0)
 @end smallexample
 @end cartouche
 
@@ -520,11 +520,11 @@ Try the following example, pressing the enter key once without a command after t
 @cartouche
 @smallexample
 > =|echo abc;echo def;echo xyz
-2012/12/30 13:53:54 NB000I [19490] Started: =|echo abc;echo def;echo xyz
->
-2012/12/30 13:53:54 NB000I [19490| abc
-2012/12/30 13:53:54 NB000I [19490| def
-2012/12/30 13:53:54 NB000I [19490| xyz
+2014-06-12 20:34:49 NB000I [12769] Started: =|echo abc;echo def;echo xyz
+> 
+2014-06-12 20:34:50 NB000I [12769| abc
+2014-06-12 20:34:50 NB000I [12769| def
+2014-06-12 20:34:50 NB000I [12769| xyz
 @end smallexample
 @end cartouche
 
@@ -583,17 +583,16 @@ shell command finish.
 $ nb
 > assert !x;
 > show x
-x = 0
-> =:echo "assert x=1";echo "show x";echo "assert x=2"
-2012/12/30 13:14:31 NB000I [18218] Started: =:echo "assert x=1";echo "show x";echo "assert x=2"
->
-2012/12/30 13:14:31 NB000I [18218: assert x=1
-2012/12/30 13:14:31 NB000I [18218: show x
+x = !
+> @b{=:echo "assert x=1";echo "show x";echo "assert x=2"}
+2014-06-12 20:47:01 NB000I [23949] Started: =:echo "assert x=1";echo "show x";echo "assert x=2"
+> 
+2014-06-12 20:47:02 NB000I [23949: assert x=1
+2014-06-12 20:47:02 NB000I [23949: show x
 x = 1
-2012/12/30 13:14:31 NB000I [18218: assert x=2
->
-2012/12/30 13:14:32 NB000I [18218] Exit(0)
+2014-06-12 20:47:02 NB000I [23949: assert x=2
 > show x
+2014-06-12 20:47:08 NB000I [23949] Exit(0)
 x = 2
 @end smallexample
 @end cartouche
@@ -615,7 +614,7 @@ $ nb
 > define cmdRule on(a and b)@b{: show x;}
 > assert x=3;
 > assert a,b;
-2008/06/05 12:27:41 NB000I Rule cmdRule fired
+2014-06-12 21:53:21 NB000I Rule cmdRule fired
 : show x;
 x = 3
 > quit
@@ -630,7 +629,7 @@ An assertion may be included as part of a rule action following the condition an
 $ nb
 > define cmdRule on(a and b) x=3:show x;
 > assert a,b;
-2012/12/30 14:07:43 NB000I Rule cmdRule fired (x=3)
+2014-06-12 21:56:27 NB000I Rule cmdRule fired (x=3)
 : show x;
 x = 3
 > quit
@@ -645,7 +644,7 @@ A rule action may also have an assertion without a command, as illustrated below
 $ nb
 > define cmdRule on(a and b) x=3;
 > assert a,b;
-2012/12/30 14:11:19 NB000I Rule cmdRule fired (x=3)
+2014-06-12 21:58:20 NB000I Rule cmdRule fired (x=3)
 > show x
 x = 3
 > quit
@@ -677,7 +676,7 @@ Here's a session that uses a rule that invokes the @code{alarmMe.pl} script as a
 $ nb
 > define alarmRule on(a):-./alarmMe.pl 1 "Things aren't looking good"
 > assert a;
-2008/06/05 12:31:42 NB000I Rule alarmRule fired
+2014-06-12 22:05:14 NB000I Rule alarmRule fired
 : -./alarmMe.pl 1 "Things aren't looking good"
 [17571] Started: -./alarmMe.pl 1 "Things aren't looking good"
 [17571] Exit(0)
@@ -705,13 +704,13 @@ When you specify a file as an argument to NodeBrain, it reads the file and proce
 @cartouche
 @smallexample
 $ nb roger.nb
-2008/06/05 14:37:14 NB000I Argument [1] roger.nb
+2014-06-12 22:11:01  NB000I Argument [1] roger.nb
 > # roger.nb
 > define myProcessRule1 on(processes>200):-./alarmMe.pl 1 "dang - more than 200 processes."
 > define myProcessRule2 on(processes<100):-./alarmMe.pl 2 "ok - under 100 processes."
 > define myProcessRule3 on(a=1 and b=2):-:./processCount.pl
-2008/06/05 14:37:14 NB000I Source file "roger.nb" included. size=246
-2008/06/05 14:37:14 NB000I NodeBrain nb[5393] terminating - exit code=0
+2014-06-12 22:11:01 NB000I Source file "roger.nb" included. size=241
+2014-06-12 22:11:01 NB000I NodeBrain nb[26914] terminating - exit code=0
 $
 @end smallexample
 @end cartouche
@@ -730,20 +729,20 @@ $ nb roger.nb -
 > define myProcessRule1 on(processes>200):-./alarmMe.pl 1 "dang - more than 200 processes."
 > define myProcessRule2 on(processes<100):-./alarmMe.pl 2 "ok - under 100 processes."
 > define myProcessRule3 on(a=1 and b=2):-:./processCount.pl
-2009/03/16 11:32:35 NB000I Source file "roger.nb" included. size=243
-2009/03/16 11:32:35 NB000I Argument [2] -
-2009/03/16 11:32:35 NB000I Reading from standard input.
+2014-06-12 22:11:44 NB000I Source file "roger.nb" included. size=241
+2014-06-12 22:11:44 NB000I Argument [2] -
+2014-06-12 22:11:44 NB000I Reading from standard input.
 ---------- --------
-> @b{assert a,b=2;}
-2009/03/16 11:32:48 NB000I Rule myProcessRule3 fired
+> @b{assert a=1,b=2;}
+2014-06-12 22:11:49 NB000I Rule myProcessRule3 fired 
 : -:./processCount.pl
-[3515] Started: -:./processCount.pl
-[3515: assert processes=74;
-2009/03/16 11:32:48 NB000I Rule myProcessRule2 fired
+[26916] Started: -:./processCount.pl
+[26916: assert processes=32;
+2014-06-12 22:11:49 NB000I Rule myProcessRule2 fired 
 : -./alarmMe.pl 2 "ok - under 100 processes."
-[3519] Started: -./alarmMe.pl 2 "ok - under 100 processes."
-[3519] Exit(0)
-[3515] Exit(0)
+[26921] Started: -./alarmMe.pl 2 "ok - under 100 processes."
+[26921] Exit(0)
+[26916] Exit(0)
 > @b{quit}
 2009/03/16 11:32:52 NB000I NodeBrain nb[3514] terminating - exit code=0
 @end smallexample
@@ -761,13 +760,13 @@ In the previous section, you actually ran a batch session by accident.
 @cartouche
 @smallexample
 $ nb roger.nb
-2008/06/05 14:42:37 NB000I Argument [1] roger.nb
+2014-06-12 22:11:01  NB000I Argument [1] roger.nb
 > # roger.nb
 > define myProcessRule1 on(processes>200):-./alarmMe.pl 1 "dang - more than 200 processes."
 > define myProcessRule2 on(processes<100):-./alarmMe.pl 2 "ok - under 100 processes."
 > define myProcessRule3 on(a=1 and b=2):-:./processCount.pl
-2008/06/05 14:42:37 NB000I Source file "roger.nb" included. size=246
-2008/06/05 14:42:37 NB000I NodeBrain nb[5409] terminating - exit code=0
+2014-06-12 22:11:01 NB000I Source file "roger.nb" included. size=241
+2014-06-12 22:11:01 NB000I NodeBrain nb[26914] terminating - exit code=0
 $
 @end smallexample
 @end cartouche
@@ -793,34 +792,34 @@ Combine the rule file and assertions in a single batch session.
 @smallexample
 @b{@ }
 $ nb roger.nb abby.nb
-2008/06/05 20:35:59 NB000I Argument [1] roger.nb
+2014-06-12 22:49:15 NB000I Argument [1] roger.nb
 > # roger.nb
 > define myProcessRule1 on(processes>200):-./alarmMe.pl 1 "dang - more than 200 processes."
 > define myProcessRule2 on(processes<100):-./alarmMe.pl 2 "ok - under 100 processes."
 > define myProcessRule3 on(a=1 and b=2):-:./processCount.pl
-2008/06/05 20:35:59 NB000I Source file "roger.nb" included. size=251
-2008/06/05 20:35:59 NB000I Argument [2] abby.nb
+2014-06-12 22:49:15 NB000I Source file "roger.nb" included. size=241
+2014-06-12 22:49:15 NB000I Argument [2] abby.nb
 > # abby.nb
 > assert a=1,b=3;
 > assert b=2;
-2008/06/05 20:35:59 NB000I Rule myProcessRule3 fired
+2014-06-12 22:49:15 NB000I Rule myProcessRule3 fired 
 : -:./processCount.pl
-[7141] Started: -:./processCount.pl
-[7141: assert processes=58;
-2008/06/05 20:35:59 NB000I Rule myProcessRule2 fired
+[27372] Started: -:./processCount.pl
+[27372: assert processes=32;
+2014-06-12 22:49:15 NB000I Rule myProcessRule2 fired 
 : -./alarmMe.pl 2 "ok - under 100 processes."
-[7145] Started: -./alarmMe.pl 2 "ok - under 100 processes."
-[7145] Exit(0)
-[7141] Exit(0)
+[27376] Started: -./alarmMe.pl 2 "ok - under 100 processes."
+[27376] Exit(0)
+[27372] Exit(0)
 > assert a=0;
 > assert a=1;
-2008/06/05 20:36:00 NB000I Rule myProcessRule3 fired
+2014-06-12 22:49:15 NB000I Rule myProcessRule3 fired 
 : -:./processCount.pl
-[7152] Started: -:./processCount.pl
-[7152: assertprocesses=62;
-[7152] Exit(0)
-2008/06/05 20:36:00 NB000I Source file "abby.nb" included. size=52
-2008/06/05 20:36:00 NB000I NodeBrain nb[7140] terminating - exit code=0
+[27382] Started: -:./processCount.pl
+[27382: assert processes=32;
+[27382] Exit(0)
+2014-06-12 22:49:15 NB000I Source file "abby.nb" included. size=57
+2014-06-12 22:49:15 NB000I NodeBrain nb[27371] terminating - exit code=0
 $
 @end smallexample
 @end cartouche
@@ -880,39 +879,38 @@ You can use this script as the source of your assertions by piping the output of
 @cartouche
 @smallexample
 $ ./randy.pl | nb roger.nb =
-2008/06/05 20:54:23 NB000I Argument [1] roger.nb
 > # roger.nb
-> define myProcessRule1 on(processes>200):-./alarmMe.pl1 "dang - more than 200 processes."
+> define myProcessRule1 on(processes>200):-./alarmMe.pl 1 "dang - more than 200 processes."
 > define myProcessRule2 on(processes<100):-./alarmMe.pl 2 "ok - under 100 processes."
 > define myProcessRule3 on(a=1 and b=2):-:./processCount.pl
-2008/06/05 20:54:23 NB000I Source file "roger.nb" included. size=251
-2008/06/05 20:54:23 NB000I Argument [2] =
-2008/06/05 20:54:23 NB000I Reading from standard input.
+2014-06-12 23:11:34 NB000I Source file "roger.nb" included. size=243
+2014-06-12 23:11:34 NB000I Argument [2] =
+2014-06-12 23:11:34 NB000I Reading from standard input.
 ---------- --------
-| assert a=3;
-| assert a=1;
-| assert a=1;
-| assert b=0;
 | assert b=2;
-2008/06/05 20:54:23 NB000I Rule myProcessRule3 fired
+| assert a=1;
+2014-06-12 23:11:34 NB000I Rule myProcessRule3 fired 
 : -:./processCount.pl
-[7251] Started: -:./processCount.pl
-[7251: assert processes=58;
-2008/06/05 20:54:23 NB000I Rule myProcessRule2 fired
+[27890] Started: -:./processCount.pl
+[27890: assert processes=32;
+2014-06-12 23:11:34 NB000I Rule myProcessRule2 fired 
 : -./alarmMe.pl 2 "ok - under 100 processes."
-[7255] Started: -./alarmMe.pl 2 "ok - under 100 processes."
-[7255] Exit(0)
-[7251] Exit(0)
-| assert b=0;
+[27895] Started: -./alarmMe.pl 2 "ok - under 100 processes."
+[27895] Exit(0)
+[27890] Exit(0)
 | assert b=2;
-2008/06/05 20:54:24 NB000I Rule myProcessRule3 fired
-: -:./processCount.pl
-[7262] Started: -:./processCount.pl
-[7262: assert processes=62;
-[7262] Exit(0)
 | assert a=1;
 | assert b=0;
-2008/06/05 20:54:25 NB000I NodeBrain nb[7250] terminating - exit code=0
+| assert b=2;
+2014-06-12 23:11:34 NB000I Rule myProcessRule3 fired 
+: -:./processCount.pl
+[27901] Started: -:./processCount.pl
+[27901: assert processes=32;
+[27901] Exit(0)
+| assert a=1;
+| assert a=1;
+| assert b=0;
+2014-06-12 23:11:34 NB000I NodeBrain nb[27889] terminating - exit code=0
 $
 @end smallexample
 @end cartouche
@@ -938,34 +936,34 @@ The result is the same.
 @cartouche
 @smallexample
 $ ./randal.pl
-2008/06/05 21:02:43 NB000I Argument [1] roger.nb
+2014-06-12 23:14:55 NB000I Argument [1] roger.nb
 > # roger.nb
 > define myProcessRule1 on(processes>200):-./alarmMe.pl 1 "dang - more than 200 processes."
 > define myProcessRule2 on(processes<100):-./alarmMe.pl 2 "ok - under 100 processes."
 > define myProcessRule3 on(a=1 and b=2):-:./processCount.pl
-2008/06/05 21:02:43 NB000I Source file "roger.nb" included. size=251
-2008/06/05 21:02:43 NB000I Argument [2] =
-2008/06/05 21:02:43 NB000I Reading from standard input.
+2014-06-12 23:14:55 NB000I Source file "roger.nb" included. size=243
+2014-06-12 23:14:55 NB000I Argument [2] =
+2014-06-12 23:14:55 NB000I Reading from standard input.
 ---------- --------
-| assert b=0;
-| assert b=0;
+| assert a=3;
+| assert a=1;
+| assert a=3;
+| assert a=1;
+| assert a=3;
 | assert a=1;
 | assert b=2;
-2008/06/05 21:02:43 NB000I Rule myProcessRule3 fired
+2014-06-12 23:14:55 NB000I Rule myProcessRule3 fired 
 : -:./processCount.pl
-[7376] Started: -:./processCount.pl
-[7376: assert processes=59;
-2008/06/05 21:02:44 NB000I Rule myProcessRule2 fired
+[27913] Started: -:./processCount.pl
+[27913: assert processes=33;
+2014-06-12 23:14:55 NB000I Rule myProcessRule2 fired 
 : -./alarmMe.pl 2 "ok - under 100 processes."
-[7380] Started: -./alarmMe.pl 2 "ok - under 100 processes."
-[7380] Exit(0)
-[7376] Exit(0)
-| assert a=3;
-| assert b=2;
+[27918] Started: -./alarmMe.pl 2 "ok - under 100 processes."
+[27918] Exit(0)
+[27913] Exit(0)
 | assert b=0;
-| assert a=3;
 | assert a=1;
-2008/06/05 21:02:44 NB000I NodeBrain nb[7375] terminating - exit code=0
+2014-06-12 23:14:55 NB000I NodeBrain nb[27912] terminating - exit code=0
 $
 @end smallexample
 @end cartouche
@@ -1004,7 +1002,8 @@ Here's a script called @code{bertie.pl} that uses the @code{-s} option to put No
 
 @cartouche
 @smallexample
-bertie.pl#!/usr/bin/perl
+bertie.pl
+#!/usr/bin/perl
 use FileHandle;
 open(NB,"|nb jeeves.nb @b{-s}")||die;  # use servant option
 NB->autoflush(1); # force output to nb as soon as we send a command

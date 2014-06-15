@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -58,6 +58,8 @@
 * 2012-10-12 eat 0.8.12 Replaced malloc with nbAlloc
 * 2014-01-12 eat 0.9.00 Removed hash pointer - referenced via type
 * 2014-01-12 eat 0.9.00 nbAssertionInit replaces initAssertion
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
+* 2014-06-15 eat 0.9.02 Added support for event transient terms
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -120,18 +122,20 @@ void printAssertions(NB_Link *link){
 *   mode=1  - alert
 *   mode=2  - default (only set if unknown)
 */
-void assert(NB_Link *member,int mode){
+void nbAssert(nbCELL context,nbSET member,int mode){
   //struct ASSERTION *assertion,*target;
   struct ASSERTION *assertion;
   NB_Sentence *sentence;
   NB_Term     *term;
-  NB_Node     *node;
+  NB_Node     *node,*contextNode;
   NB_Skill    *skill;
   NB_Facet    *facet;
   NB_List     *arglist;
   NB_Object   *object;
+  NB_Link     *transientRoot=NULL,*transientLink,**transientLinkP,**transientNextP=&transientRoot;
 
   if(trace) outMsg(0,'T',"assert() called");
+  contextNode=(NB_Node *)((NB_Term *)context)->def;
   while(member!=NULL){
     assertion=(struct ASSERTION *)member->object;
     object=assertion->object;
@@ -150,6 +154,26 @@ void assert(NB_Link *member,int mode){
         dropObject(term->def); /* 2004/08/28 eat */
         }
       else nbTermAssign(term,object->value);
+      if(mode==1 && term->cell.mode&NB_CELL_MODE_TRANSIENT){  // switch a cell flag to identify transient term
+        // remove from old list
+        for(transientLinkP=&contextNode->transientLink;*transientLinkP!=NULL && (*transientLinkP)->object!=(NB_Object *)term;transientLinkP=&(*transientLinkP)->next);
+        if(*transientLinkP!=NULL){ // found it, so remove and reuse
+          transientLink=*transientLinkP;
+          *transientLinkP=transientLink->next;
+          //transientLink->next=nb_LinkFree;
+          //nb_LinkFree=transientLink;
+          transientLink->next=NULL;
+          }
+        else{ // not found, so create new
+          if((transientLink=nb_LinkFree)==NULL) transientLink=nbAlloc(sizeof(NB_Link));
+          else nb_LinkFree=transientLink->next;
+          transientLink->next=NULL;
+          transientLink->object=(NB_Object *)term;  // we don't grab here, but an undefine of transient term must remove from this list
+          }
+        // insert in new list
+        *transientNextP=transientLink;
+        transientNextP=&(transientLink->next);
+        }
       }
     else if(assertion->target->type==nb_SentenceType){
       if(assertion->cell.object.type==assertTypeVal){
@@ -184,6 +208,17 @@ void assert(NB_Link *member,int mode){
       }
     member=member->next;
     }
+  if(mode==1){ // for alerts
+    // Reset to Unknown the event transient terms from the last alert not set this time.
+    for(transientLink=contextNode->transientLink;transientLink!=NULL;transientLink=contextNode->transientLink){
+      term=(NB_Term *)transientLink->object;
+      nbTermAssign(term,nb_Unknown); // reset event cell to Unknown
+      contextNode->transientLink=transientLink->next;
+      transientLink->next=nb_LinkFree;
+      nb_LinkFree=transientLink;
+      }
+    contextNode->transientLink=transientRoot;  // Save list of event transient terms in this alert
+    }
   }
 
 void printAssertedValues(NB_Link *member){
@@ -200,9 +235,9 @@ void printAssertedValues(NB_Link *member){
   }
 
 void nbAssertionInit(NB_Stem *stem){
-  assertTypeDef=newType(stem,"==",NULL,TYPE_IS_ASSERT,printAssertion,destroyAssertion);
-  assertTypeVal=newType(stem,"=",NULL,TYPE_IS_ASSERT,printAssertion,destroyAssertion);
-  assertTypeRef=newType(stem,"=.=",NULL,TYPE_IS_ASSERT,printAssertion,destroyAssertion);
+  assertTypeDef=nbObjectType(stem,"==",0,TYPE_IS_ASSERT,printAssertion,destroyAssertion);
+  assertTypeVal=nbObjectType(stem,"=",0,TYPE_IS_ASSERT,printAssertion,destroyAssertion);
+  assertTypeRef=nbObjectType(stem,"=.=",0,TYPE_IS_ASSERT,printAssertion,destroyAssertion);
   }
 
 /*
@@ -222,14 +257,4 @@ int nbAssertionAddTermValue(nbCELL context,nbSET *set,nbCELL term,nbCELL cell){
   entry->next=*set;
   *set=entry;
   return(0);
-  }
-
-// Assert
-void nbAssert(nbCELL context,nbSET set){
-  assert(set,0);
-  }
-
-// Alert
-void nbAlert(nbCELL context,nbSET set){
-  assert(set,1);
   }

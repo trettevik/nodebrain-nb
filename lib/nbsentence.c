@@ -1,6 +1,5 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 2013-2014 Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -44,8 +43,9 @@
 *
 *    Date    Name/Change
 * ---------- -----------------------------------------------------------------
-* 2014-12-20 Ed Trettevik - original prototype introduced in 0.9.00
+* 2013-12-20 Ed Trettevik - Introduced in 0.9.00
 * 2014-01-25 eat 0.9.00 - Checker updates
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -105,7 +105,7 @@ static void disableSentence(NB_Sentence *cell){
 **********************************************************************/
 
 void nbSentenceInit(NB_Stem *stem){
-  nb_SentenceType=newType(stem,"nodeSentence",NULL,0,nbSentenceShow,nbSentenceDestroy);
+  nb_SentenceType=nbObjectType(stem,"nodeSentence",0,0,nbSentenceShow,nbSentenceDestroy);
   nbCellType(nb_SentenceType,solveSentence,evalSentence,enableSentence,disableSentence);
   }
 

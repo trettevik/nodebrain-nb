@@ -1,4 +1,4 @@
-#!/usr/local/bin/nb -'myClient:
+#!/usr/bin/nb -'myClient:
 # File: tutorial/Peer/iclient
 declare buddy identity;
 define myClient node peer.client("buddy@./socket");         # Unix domain

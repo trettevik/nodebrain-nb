@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -205,9 +205,9 @@
 *        NB_Type myobjType;
 *
 *   3) Write an "init" method to perform initialization functions.  In
-*      particular, this method must call newType to define the type.
+*      particular, this method must call nbObjectType to define the type.
 *
-*        myobjType=newType(stem,myobjType,hash,attributes,myobjPrint,myobjDestroy);
+*        myobjType=nbObjectType(stem,myobjType,kind,attributes,myobjPrint,myobjDestroy);
 *
 *      Then nbCellType() is called to define cell methods.
 *
@@ -376,15 +376,18 @@ NB_Object *NB_OBJECT_TRUE;
 *  Initialization Cells 
 */
 void nbCellInit(NB_Stem *stem){
-  NB_Object *zero;
+  NB_Object *zero,*one;
   NB_Link *link;
   int i;
-  NB_OBJECT_TRUE=(NB_Object *)useReal((double)1);
-  NB_OBJECT_TRUE->refcnt=(unsigned int)-1;         /* flag as perminent object */
-  nb_True=NB_OBJECT_TRUE;
+
+  one=(NB_Object *)useReal((double)1);
+  //one->kind|=NB_OBJECT_KIND_PERMANENT;
+  one->refcnt=(unsigned int)-1;         /* flag as perminent object */
   zero=(NB_Object *)useReal((double)0);
+  //zero->kind|=NB_OBJECT_KIND_PERMANENT;
   zero->refcnt=(unsigned int)-1;        /* flag as perminent object */
-  //nb_False->value=zero; // 2014-04-27 eat - experiment that didn't work
+
+  NB_OBJECT_TRUE=(NB_Object *)nb_True;
   NB_OBJECT_FALSE=(NB_Object *)nb_False;           // 2013-12-05 eat - using special false object (not zero)
   NB_CELL_DISABLED=(NB_Cell *)nb_Disabled;
   NB_CELL_UNKNOWN=(NB_Cell *)nb_Unknown;

@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2011 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -75,6 +75,7 @@
 * 2008-05-24 eat 0.7.0  Modified to include nbSynapseSetTimer function
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2010-06-16 eat 0.8.2  Modified nbSynapseSetTimer to cancel timer when interval is zero
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -94,7 +95,7 @@ void nbSynapseAlert(struct NB_SYNAPSE *synapse){
 *  Initialization Cells 
 */
 void nbSynapseInit(NB_Stem *stem){
-  nb_SynapseType=newType(stem,"synapse",NULL,0,nbSynapsePrint,NULL);
+  nb_SynapseType=nbObjectType(stem,"synapse",0,0,nbSynapsePrint,NULL);
   nb_SynapseType->alert=nbSynapseAlert;
   nb_SynapseType->alarm=nbSynapseAlert;
   }

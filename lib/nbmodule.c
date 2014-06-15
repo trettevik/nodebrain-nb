@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -120,6 +120,7 @@
 *                       nb-0.x.p and the associated libnb-0.x.p.so
 * 2013-04-06 eat 0.8.15 Modified nbModuleDeclare to avoid buffer overflow
 * 2014-04-05 eat 0.9.01 Checker update
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -387,7 +388,7 @@ void *nbModuleSearch(char *path,char *filename,char *msg,size_t msglen){
 **********************************************************************/
 void nbModuleInit(NB_Stem *stem){
   nb_ModuleFree=NULL;
-  moduleType=newType(stem,"module",NULL,0,printModule,destroyModule);
+  moduleType=nbObjectType(stem,"module",0,0,printModule,destroyModule);
   moduleC=nbTermNew(NULL,"module",nbNodeNew());
   }
 
@@ -752,6 +753,7 @@ int nbSkillTraceAssert(struct NB_TERM *context,void *skillHandle,void *objectHan
 */
 NB_Facet *nbSkillGetFacet(NB_Skill *skill,const char *ident){
   NB_Facet *facet;
+  if(skill==NULL) return(NULL);
   for(facet=skill->facet;facet && strcmp(facet->ident->value,ident);facet=(NB_Facet *)facet->object.next);
   return(facet);
   }

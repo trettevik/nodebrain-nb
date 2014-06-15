@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -57,6 +57,7 @@
 * 2013-01-01 eat 0.8.13 Checker updates
 * 2014-01-13 eat 0.9.00 Removed hash pointer - referenced via type
 *            Rule objects are not assigned keys currently
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -788,11 +789,13 @@ void nbRuleAct(struct ACTION *action){
   // 2007-07-22 eat 0.6.8 - modified to make sure the action command is issued before we react to action assertion in all cases
   if(action->assert!=NULL){
     if(action->cmdopt&NB_CMDOPT_ALERT){
-      assert(action->assert,1);
+      //assert(action->assert,1);
+      nbAssert((nbCELL)action->context,action->assert,1);
       nbCellReact();
       contextAlert(action->context);
       }
-    else assert(action->assert,0);
+    //else assert(action->assert,0);
+    else nbAssert((nbCELL)action->context,action->assert,0);
     if(action->command!=NULL)nbCmdSid((nbCELL)action->context,action->command->value,cmdopt,((NB_Node *)action->context->def)->owner);
     else nbRuleReact();  // react to changes - this is automatic with nbCmdSid   
     }
@@ -840,7 +843,8 @@ void nbRuleReact(void){
         outMsgHdr(0,'T',"%.8x.%.3d ",rule,rule->id);
         printAssertions(rule->assertions);
         outPut("\n");
-        assert(rule->assertions,0);
+        //assert(rule->assertions,0);
+        nbAssert((nbCELL)rule->homeContext,rule->assertions,0);
         rule->assertions=NULL;
         }
       if(rule->command!=NULL){
@@ -1074,8 +1078,8 @@ void nbRuleDisable(NB_Rule *rule){
   }
 
 void nbRuleInit(NB_Stem *stem){
-  nb_PlanType=newType(stem,"plan",NULL,0,nbPlanPrint,destroyPlan);
-  nb_RuleType=newType(stem,"rule",NULL,0,nbRuleShowExpr,nbRuleDestroy);
+  nb_PlanType=nbObjectType(stem,"plan",0,0,nbPlanPrint,destroyPlan);
+  nb_RuleType=nbObjectType(stem,"rule",0,0,nbRuleShowExpr,nbRuleDestroy);
   nb_RuleType->showItem=&nbRuleShowItem;
   nbCellType(nb_RuleType,NULL,nbRuleEval,nbRuleEnable,nbRuleDisable);
   nb_RuleType->alarm=&nbRuleAlarm;

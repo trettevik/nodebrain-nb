@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -79,6 +79,8 @@
 *            of value changes via address changes.
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2012-12-27 eat 0.8.13 Checker updates
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
+* 2014-05-04 eat 0.9.02 Replaced references to realType to NB_OBJECT_KIND_REAL
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -125,9 +127,21 @@ void printMath(math) struct MATH *math;{
 */
   else{  // 2012-12-27 eat 0.8.13 - CID 751548
     outPut("(");
-    if(math->left!=NULL) printObject(math->left);
+    if(math->left!=NULL){
+      if(math->left==nb_False){
+        outPut("(");
+        printObject(math->left);
+        outPut(")");
+        }
+      else printObject(math->left);
+      }
     outPut("%s",math->cell.object.type->name);
-    printObject(math->right);
+    if(math->right==nb_False || math->right==nb_True){
+      outPut("(");
+      printObject(math->right);
+      outPut(")");
+      }
+    else printObject(math->right);
     outPut(")");
     }
   }
@@ -215,8 +229,9 @@ NB_Object *evalMathX(struct MATH *math){
   struct REAL *rreal;
   
   rreal=(struct REAL *)rmath->cell.object.value;
-  if(rreal->object.type!=realType) return(nb_Unknown);
-  return((NB_Object *)useReal((math->cell.object.type->evalDouble)(rreal->value)));
+  if(rreal->object.type->kind&=NB_OBJECT_KIND_REAL)
+    return((NB_Object *)useReal((math->cell.object.type->evalDouble)(rreal->value)));
+  return(nb_Unknown);
   }
 
 NB_Object *evalMathXY(struct MATH *math){
@@ -225,8 +240,9 @@ NB_Object *evalMathXY(struct MATH *math){
 
   lreal=(struct REAL *)lmath->cell.object.value;
   rreal=(struct REAL *)rmath->cell.object.value;
-  if(lreal->object.type!=realType || rreal->object.type!=realType) return(nb_Unknown);
-  return((NB_Object *)useReal((math->cell.object.type->evalDouble)(lreal->value,rreal->value)));
+  if(lreal->object.type->kind&NB_OBJECT_KIND_REAL && rreal->object.type->kind&NB_OBJECT_KIND_REAL)
+    return((NB_Object *)useReal((math->cell.object.type->evalDouble)(lreal->value,rreal->value)));
+  return(nb_Unknown);
   }
 
 NB_Object *evalMathInv(math) struct MATH *math; {
@@ -234,8 +250,9 @@ NB_Object *evalMathInv(math) struct MATH *math; {
   struct REAL *rreal;
 
   rreal=(struct REAL *)rmath->cell.object.value;
-  if(rreal->object.type!=realType) return(nb_Unknown);
-  return((NB_Object *)useReal(-rreal->value));
+  if(rreal->object.type->kind&=NB_OBJECT_KIND_REAL)
+    return((NB_Object *)useReal(-rreal->value));
+  else return(nb_Unknown);
   }
 
 NB_Object *evalMathAdd(math) struct MATH *math; {
@@ -245,8 +262,9 @@ NB_Object *evalMathAdd(math) struct MATH *math; {
   if(trace) outMsg(0,'T',"evalMathAdd() called");
   lreal=(struct REAL *)lmath->cell.object.value;
   rreal=(struct REAL *)rmath->cell.object.value;
-  if(lreal->object.type!=realType || rreal->object.type!=realType) return(nb_Unknown);
-  return((NB_Object *)useReal(lreal->value+rreal->value));
+  if(lreal->object.type->kind&NB_OBJECT_KIND_REAL && rreal->object.type->kind&NB_OBJECT_KIND_REAL)
+    return((NB_Object *)useReal(lreal->value+rreal->value));
+  return(nb_Unknown);
   }
 
 NB_Object *evalMathSub(math) struct MATH *math; {
@@ -256,8 +274,9 @@ NB_Object *evalMathSub(math) struct MATH *math; {
   if(trace) outMsg(0,'T',"evalMathSub() called");
   lreal=(struct REAL *)lmath->cell.object.value;
   rreal=(struct REAL *)rmath->cell.object.value;
-  if(lreal->object.type!=realType || rreal->object.type!=realType) return(nb_Unknown);
-  return((NB_Object *)useReal(lreal->value-rreal->value));
+  if(lreal->object.type->kind&NB_OBJECT_KIND_REAL && rreal->object.type->kind&NB_OBJECT_KIND_REAL)
+    return((NB_Object *)useReal(lreal->value-rreal->value));
+  return(nb_Unknown);
   }
 
 NB_Object *evalMathMul(math) struct MATH *math; {
@@ -267,8 +286,9 @@ NB_Object *evalMathMul(math) struct MATH *math; {
   if(trace) outMsg(0,'T',"evalMathMul() called");
   lreal=(struct REAL *)lmath->cell.object.value;
   rreal=(struct REAL *)rmath->cell.object.value;
-  if(lreal->object.type!=realType || rreal->object.type!=realType) return(nb_Unknown);
-  return((NB_Object *)useReal(lreal->value*rreal->value));
+  if(lreal->object.type->kind&NB_OBJECT_KIND_REAL && rreal->object.type->kind&NB_OBJECT_KIND_REAL)
+    return((NB_Object *)useReal(lreal->value*rreal->value));
+  return(nb_Unknown);
   }
 
 NB_Object *evalMathDiv(math) struct MATH *math; {
@@ -278,9 +298,9 @@ NB_Object *evalMathDiv(math) struct MATH *math; {
   if(trace) outMsg(0,'T',"evalMathDiv() called");
   lreal=(struct REAL *)lmath->cell.object.value;
   rreal=(struct REAL *)rmath->cell.object.value;
-  if(lreal->object.type!=realType || rreal->object.type!=realType) return(nb_Unknown);
-  if(rreal->value==0) return(nb_Unknown);
-  return((NB_Object *)useReal(lreal->value/rreal->value));
+  if(lreal->object.type->kind&NB_OBJECT_KIND_REAL && rreal->object.type->kind&NB_OBJECT_KIND_REAL && rreal->value!=0)
+    return((NB_Object *)useReal(lreal->value/rreal->value));
+  return(nb_Unknown);
   }
 
 /*
@@ -331,53 +351,53 @@ NB_Object *mathConXY(struct TYPE *type,NB_Link *member){
 * Public Methods
 **********************************************************************/
 void initMath(NB_Stem *stem){
-  mathTypeInv=newType(stem,"-",NULL,TYPE_IS_MATH,printMath,destroyMath);
+  mathTypeInv=nbObjectType(stem,"-",0,TYPE_IS_MATH,printMath,destroyMath);
   nbCellType(mathTypeInv,solveMath,evalMathInv,enableMath,disableMath);
-  mathTypeAdd=newType(stem,"+",NULL,TYPE_IS_MATH,printMath,destroyMath);
+  mathTypeAdd=nbObjectType(stem,"+",0,TYPE_IS_MATH,printMath,destroyMath);
   nbCellType(mathTypeAdd,solveMath,evalMathAdd,enableMath,disableMath);
-  mathTypeSub=newType(stem,"-",NULL,TYPE_IS_MATH,printMath,destroyMath);
+  mathTypeSub=nbObjectType(stem,"-",0,TYPE_IS_MATH,printMath,destroyMath);
   nbCellType(mathTypeSub,solveMath,evalMathSub,enableMath,disableMath);
-  mathTypeMul=newType(stem,"*",NULL,TYPE_IS_MATH,printMath,destroyMath);
+  mathTypeMul=nbObjectType(stem,"*",0,TYPE_IS_MATH,printMath,destroyMath);
   nbCellType(mathTypeMul,solveMath,evalMathMul,enableMath,disableMath);
-  mathTypeDiv=newType(stem,"/",NULL,TYPE_IS_MATH,printMath,destroyMath);
+  mathTypeDiv=nbObjectType(stem,"/",0,TYPE_IS_MATH,printMath,destroyMath);
   nbCellType(mathTypeDiv,solveMath,evalMathDiv,enableMath,disableMath);
 
-  mathTypeCeil=newType(stem,"ceil",NULL,TYPE_IS_MATH,printMathX,destroyMath);
+  mathTypeCeil=nbObjectType(stem,"ceil",0,TYPE_IS_MATH,printMathX,destroyMath);
   nbCellType(mathTypeCeil,solveMath,evalMathX,enableMath,disableMath);
   nbCellTypeSub(mathTypeCeil,1,NULL,mathConX,ceil,NULL);
-  mathTypeFloor=newType(stem,"floor",NULL,TYPE_IS_MATH,printMathX,destroyMath);
+  mathTypeFloor=nbObjectType(stem,"floor",0,TYPE_IS_MATH,printMathX,destroyMath);
   nbCellType(mathTypeFloor,solveMath,evalMathX,enableMath,disableMath);
   nbCellTypeSub(mathTypeFloor,1,NULL,mathConX,floor,NULL);
-  mathTypeAbs=newType(stem,"abs",NULL,TYPE_IS_MATH,printMathX,destroyMath);
+  mathTypeAbs=nbObjectType(stem,"abs",0,TYPE_IS_MATH,printMathX,destroyMath);
   nbCellType(mathTypeAbs,solveMath,evalMathX,enableMath,disableMath);
   nbCellTypeSub(mathTypeAbs,1,NULL,mathConX,fabs,NULL);
 /*
-  mathTypeRint=newType(stem,"rint",NULL,0,printMathX,destroyMath);
+  mathTypeRint=nbObjectType(stem,"rint",0,0,printMathX,destroyMath);
   nbCellType(mathTypeRint,solveMath,evalMathX,enableMath,disableMath);
   nbCellTypeSub(mathTypeRint,1,NULL,mathConX,rint,NULL);
 */
-  mathTypeExp=newType(stem,"exp",NULL,TYPE_IS_MATH,printMathX,destroyMath);
+  mathTypeExp=nbObjectType(stem,"exp",0,TYPE_IS_MATH,printMathX,destroyMath);
   nbCellType(mathTypeExp,solveMath,evalMathX,enableMath,disableMath);
   nbCellTypeSub(mathTypeExp,1,NULL,mathConX,exp,NULL);
-  mathTypeLog=newType(stem,"log",NULL,TYPE_IS_MATH,printMathX,destroyMath);
+  mathTypeLog=nbObjectType(stem,"log",0,TYPE_IS_MATH,printMathX,destroyMath);
   nbCellType(mathTypeLog,solveMath,evalMathX,enableMath,disableMath);
   nbCellTypeSub(mathTypeLog,1,NULL,mathConX,log,NULL);
-  mathTypeLog10=newType(stem,"log10",NULL,TYPE_IS_MATH,printMathX,destroyMath);
+  mathTypeLog10=nbObjectType(stem,"log10",0,TYPE_IS_MATH,printMathX,destroyMath);
   nbCellType(mathTypeLog10,solveMath,evalMathX,enableMath,disableMath);
   nbCellTypeSub(mathTypeLog10,1,NULL,mathConX,log10,NULL);
-  mathTypeSqrt=newType(stem,"sqrt",NULL,TYPE_IS_MATH,printMathX,destroyMath);
+  mathTypeSqrt=nbObjectType(stem,"sqrt",0,TYPE_IS_MATH,printMathX,destroyMath);
   nbCellType(mathTypeSqrt,solveMath,evalMathX,enableMath,disableMath);
   nbCellTypeSub(mathTypeSqrt,1,NULL,mathConX,sqrt,NULL);
 
 #if !defined mpe
-  mathTypeHypot=newType(stem,"hypot",NULL,TYPE_IS_MATH,printMathXY,destroyMath);
+  mathTypeHypot=nbObjectType(stem,"hypot",0,TYPE_IS_MATH,printMathXY,destroyMath);
   nbCellType(mathTypeHypot,solveMath,evalMathXY,enableMath,disableMath);
   nbCellTypeSub(mathTypeHypot,1,NULL,mathConXY,hypot,NULL);
 #endif
-  mathTypeMod=newType(stem,"mod",NULL,TYPE_IS_MATH,printMathXY,destroyMath);
+  mathTypeMod=nbObjectType(stem,"mod",0,TYPE_IS_MATH,printMathXY,destroyMath);
   nbCellType(mathTypeMod,solveMath,evalMathXY,enableMath,disableMath);
   nbCellTypeSub(mathTypeMod,1,NULL,mathConXY,fmod,NULL);
-  mathTypePow=newType(stem,"pow",NULL,TYPE_IS_MATH,printMathXY,destroyMath);
+  mathTypePow=nbObjectType(stem,"pow",0,TYPE_IS_MATH,printMathXY,destroyMath);
   nbCellType(mathTypePow,solveMath,evalMathXY,enableMath,disableMath);
   nbCellTypeSub(mathTypePow,1,NULL,mathConXY,pow,NULL);
   }

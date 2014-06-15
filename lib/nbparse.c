@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -142,6 +142,7 @@
 int parseTrace=0;        /* debugging trace flag for parsing routines */
 
 unsigned char nb_CharClass[256];  // see nbparse.h for definitions
+//static unsigned char nb_CharClassPrefix[256];  // see nbparse.h for definitions
 
 void nbParseInit(void){
   unsigned int i;
@@ -149,8 +150,8 @@ void nbParseInit(void){
   char *alphaChar="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
   char *leadingChar="_.@%$";
   char *relationChar="=<>";
-  char *comboChar="&?[|+-*"; // single character operators that can start combo operators
-  char *soloChar="^(,{/`";   // single character operators - consumed
+  char *comboChar="&?[|+-"; // single character operators that can start combo operators
+  char *soloChar="^(,{/*`";   // single character operators - consumed
   char *delimChar="])}:;";   // cell delimiter - not consumed 
 
   memset(nb_CharClass,(unsigned char)255,sizeof(nb_CharClass));
@@ -167,6 +168,8 @@ void nbParseInit(void){
   for(i=0;i<strlen(delimChar);i++) nb_CharClass[(int)*(delimChar+i)]=NB_CHAR_DELIM;
   nb_CharClass['\n']=NB_CHAR_END;
   nb_CharClass[0]=NB_CHAR_END;
+  //memcpy(nb_CharClassPrefix,nb_CharClass,256);
+  //nb_CharClassPrefix[(int)'*']=NB_CHAR_LEADING;  // '*' is leading char as prefix
   }
 
 /*
@@ -187,6 +190,7 @@ static int nbParseTerm(char **termP,size_t size,char **cursorP){
   
   *term=0;
   while(*cursor=='.') cursor++;  // accept leading periods on a term qualifier
+  //if(*cursor=='_' || *cursor=='*') cursor++;     // accept leading underscore or star
   if(*cursor=='_') cursor++;     // accept leading underscore
   if(*cursor=='\''){
     cursor++;
@@ -388,6 +392,7 @@ char nbParseSymbol(char *symbol,size_t size,char **source){
   *symbol=0;
   while(*cursor==' ') cursor++;
   start=cursor;
+  //switch(nb_CharClassPrefix[(int)*cursor]){
   switch(nb_CharClass[(int)*cursor]){
     case NB_CHAR_NUMBER: // handle numbers - integer and real 
       while(NB_ISNUMERIC((int)*cursor)) cursor++;
@@ -1082,6 +1087,8 @@ NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
   char *delim,msg[1024];
   struct TYPE *type;
   char symid,*cursave;
+  int conditionalState=0;  // 8 - decided, 4 - true, 2 - false, 1 - unknown
+  NB_Object *cobject=NULL; // conditional condition object
 
   if(parseTrace) outMsg(0,'T',"nbParseCell(%d): called [%s].",level,*cursor);
   if(level==7) lobject=nbParseObject(context,cursor);
@@ -1111,11 +1118,13 @@ NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
           //return(NULL);
           }
         if(symid=='8'){ // else
-          if(lobject->type!=nb_ConditionalType){
-            outMsg(0,'E',"Operator \"%s\" not expected at-->%s",operator,cursave);
-            return(NULL);
-            }
           NB_Conditional *conditional=(NB_Conditional *)lobject;
+          if(!(conditionalState&8) && lobject->type!=nb_ConditionalType){  // go ahead and create a conditional - we can add could to make sure we really need to
+            conditional=nbConditionalUse((nbCELL)cobject,(nbCELL)cobject,(nbCELL)cobject,(nbCELL)cobject);
+            lobject=(NB_Object *)conditional;
+            //outMsg(0,'E',"Operator \"%s\" not expected at-->%s",operator,cursave);
+            //return(NULL);
+            }
           cursave=*cursor;
           symid=nbParseSymbolInfix(operator,sizeof(operator),cursor);
           if(symid>='2' && symid<='7'){ // conditional
@@ -1124,9 +1133,9 @@ NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
               outMsg(0,'E',"Operator \"%s\" right side not valid at-->%s",operator,cursave);
               return(NULL);
               }
-            switch(symid){
+            if(!(conditionalState&8)) switch(symid){  // process if we have already decided branch
               case '2':  // true
-                if(conditional->ifTrue!=conditional->condition){
+                if(conditionalState&4){
                   outMsg(0,'E',"Operator \"%s\" repeated at-->%s",operator,cursave);
                   return(NULL);
                   }
@@ -1135,7 +1144,7 @@ NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
                 if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifTrue,(nbCELL)conditional);
                 break;
               case '3':  // untrue
-                if(conditional->ifFalse!=conditional->condition || conditional->ifUnknown!=conditional->condition){
+                if(conditionalState&3){
                   outMsg(0,'E',"Operator \"%s\" conflict with prior at-->%s",operator,cursave);
                   return(NULL);
                   }
@@ -1147,7 +1156,7 @@ NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
                 if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifUnknown,(nbCELL)conditional);
                 break;
               case '4':  // false
-                if(conditional->ifFalse!=conditional->condition){
+                if(conditionalState&2){
                   outMsg(0,'E',"Operator \"%s\" repeated at-->%s",operator,cursave);
                   return(NULL);
                   }
@@ -1156,7 +1165,7 @@ NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
                 if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifFalse,(nbCELL)conditional);
                 break;
               case '5':  // unfalse
-                if(conditional->ifTrue!=conditional->condition || conditional->ifUnknown!=conditional->condition){
+                if(conditionalState&5){
                   outMsg(0,'E',"Operator \"%s\" conflict with prior at-->%s",operator,cursave);
                   return(NULL);
                   }
@@ -1168,7 +1177,7 @@ NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
                 if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifUnknown,(nbCELL)conditional);
                  break;
               case '6':  // known
-                if(conditional->ifTrue!=conditional->condition || conditional->ifFalse!=conditional->condition){
+                if(conditionalState&6){
                   outMsg(0,'E',"Operator \"%s\" conflict with prior at-->%s",operator,cursave);
                   return(NULL);
                   }
@@ -1180,7 +1189,7 @@ NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
                 if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifFalse,(nbCELL)conditional);
                 break;
               case '7':  // unknown
-                if(conditional->ifUnknown!=conditional->condition){
+                if(conditionalState&1){
                   outMsg(0,'E',"Operator \"%s\" repeated at-->%s",operator,cursave);
                   return(NULL);
                   }
@@ -1197,9 +1206,11 @@ NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
               outMsg(0,'E',"Operator \"%s\" right side not valid at-->%s",operator,cursave);
               return(NULL);
               }
-            if(conditional->ifTrue==conditional->condition) conditional->ifTrue=(nbCELL)robject;
-            if(conditional->ifFalse==conditional->condition) conditional->ifFalse=(nbCELL)robject;
-            if(conditional->ifUnknown==conditional->condition) conditional->ifUnknown=(nbCELL)robject;
+            if(!(conditionalState&8)){
+              if(!(conditionalState&4)) conditional->ifTrue=(nbCELL)robject;
+              if(!(conditionalState&2)) conditional->ifFalse=(nbCELL)robject;
+              if(!(conditionalState&1)) conditional->ifUnknown=(nbCELL)robject;
+              }
             }
           }
         else{  // condtional other than else
@@ -1210,27 +1221,46 @@ NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
             return(NULL);
             }
           NB_Conditional *conditional=NULL;
+          cobject=lobject;
           switch(symid){
             case '2':  // true
-              conditional=nbConditionalUse((nbCELL)lobject,(nbCELL)robject,(nbCELL)lobject,(nbCELL)lobject);
+              conditionalState|=4;
+              if(lobject->type->kind&NB_OBJECT_KIND_TRUE) lobject=robject,conditionalState|=8;
+              else if(lobject->type->kind&NB_OBJECT_KIND_CONSTANT || lobject==robject); // lobject is good enough
+              else conditional=nbConditionalUse((nbCELL)lobject,(nbCELL)robject,(nbCELL)lobject,(nbCELL)lobject);
               break;
             case '3':  // untrue
-              conditional=nbConditionalUse((nbCELL)lobject,(nbCELL)lobject,(nbCELL)robject,(nbCELL)robject);
+              conditionalState|=3;
+              if(lobject->type->kind&NB_OBJECT_KIND_CONSTANT && !(lobject->type->kind&NB_OBJECT_KIND_TRUE)) lobject=robject,conditionalState|=8;
+              else if(lobject->type->kind&NB_OBJECT_KIND_TRUE || lobject==robject);
+              else conditional=nbConditionalUse((nbCELL)lobject,(nbCELL)lobject,(nbCELL)robject,(nbCELL)robject);
               break;
             case '4':  // false
-              conditional=nbConditionalUse((nbCELL)lobject,(nbCELL)lobject,(nbCELL)robject,(nbCELL)lobject);
+              conditionalState|=2;
+              if(lobject->type->kind&NB_OBJECT_KIND_FALSE) lobject=robject,conditionalState|=8;
+              else if(lobject->type->kind&NB_OBJECT_KIND_CONSTANT || lobject==robject); // lobject is good enough
+              else conditional=nbConditionalUse((nbCELL)lobject,(nbCELL)lobject,(nbCELL)robject,(nbCELL)lobject);
               break;
             case '5':  // unfalse
-              conditional=nbConditionalUse((nbCELL)lobject,(nbCELL)robject,(nbCELL)lobject,(nbCELL)robject);
+              conditionalState|=5;
+              if(lobject->type->kind&NB_OBJECT_KIND_CONSTANT && !(lobject->type->kind&NB_OBJECT_KIND_FALSE)) lobject=robject,conditionalState|=8;
+              else if(lobject->type->kind&NB_OBJECT_KIND_FALSE || lobject==robject);
+              else conditional=nbConditionalUse((nbCELL)lobject,(nbCELL)robject,(nbCELL)lobject,(nbCELL)robject);
               break;
             case '6':  // known
-              conditional=nbConditionalUse((nbCELL)lobject,(nbCELL)robject,(nbCELL)robject,(nbCELL)lobject);
+              conditionalState|=6;
+              if(lobject->type->kind&NB_OBJECT_KIND_CONSTANT && !(lobject->type->kind&NB_OBJECT_KIND_UNKNOWN)) lobject=robject,conditionalState|=8;
+              else if(lobject->type->kind&NB_OBJECT_KIND_UNKNOWN || lobject==robject);
+              else conditional=nbConditionalUse((nbCELL)lobject,(nbCELL)robject,(nbCELL)robject,(nbCELL)lobject);
               break;
             case '7':  // unknown
-              conditional=nbConditionalUse((nbCELL)lobject,(nbCELL)lobject,(nbCELL)lobject,(nbCELL)robject);
+              conditionalState|=1;
+              if(lobject->type->kind&NB_OBJECT_KIND_UNKNOWN) lobject=robject,conditionalState|=8;
+              else if(lobject->type->kind&NB_OBJECT_KIND_CONSTANT || lobject==robject); // lobject is good enough
+              else conditional=nbConditionalUse((nbCELL)lobject,(nbCELL)lobject,(nbCELL)lobject,(nbCELL)robject);
               break;
             }
-          lobject=(NB_Object *)conditional;
+          if(conditional) lobject=(NB_Object *)conditional;
           }
         break;
       case 1:
@@ -1449,7 +1479,7 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
         }
       else term=nbTermNew(termContext,ident,nb_Unknown);
       }
-    else if((term->def->type->attributes&TYPE_WELDED) && type!=assertTypeRef){
+    else if((term->def->type->attributes&TYPE_WELDED) && type!=assertTypeRef && *facetIdent==0 && list==NULL){
       outMsg(0,'E',"Term \"%s\" is not open to assertion.",ident);
       return(NULL);
       }

@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -79,6 +79,7 @@
 * 2002-08-31 eat 0.4.1  Introduced prototype
 * 2003-03-15 eat 0.5.1  Modified to conform to make file
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -162,7 +163,7 @@ void destroyReal(struct REAL *real){
 * Public Methods
 **********************************************************************/
 void nbRealInit(NB_Stem *stem){
-  realType=newType(stem,"real",NULL,0,printReal,destroyReal);
+  realType=nbObjectType(stem,"real",NB_OBJECT_KIND_REAL|NB_OBJECT_KIND_CONSTANT|NB_OBJECT_KIND_TRUE,0,printReal,destroyReal);
   realType->apicelltype=NB_TYPE_REAL;
   }
 

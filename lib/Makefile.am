@@ -212,16 +212,6 @@ libnb_la_SOURCES = \
   ../include/nb/nbtranslator.h \
   ../include/nb/nbtree.h
 
-# pcre.h \
-# readline/chardefs.h \
-# readline/history.h \
-# readline/keymaps.h \
-# readline/readline.h \
-# readline/rlconf.h \
-# readline/rlstdc.h \
-# readline/rltypedefs.h \
-# readline/tilde.h
-
 noinst_PROGRAMS = nb
 
 #bin_PROGRAMS = nb

@@ -1,4 +1,4 @@
-#!/usr/local/bin/nb
+#!/usr/bin/nb
 assert a=1,b=2,c=3,d=3;
 define x cell a>b;
 define rule2 on(a=b or b=c or c>25);

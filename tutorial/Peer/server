@@ -1,4 +1,4 @@
-#!/usr/local/bin/nb -d
+#!/usr/bin/nb -d
 # File: tutorial/Peer/server
 -rm server.log
 set out=".",log="server.log";

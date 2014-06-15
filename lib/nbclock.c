@@ -82,7 +82,7 @@
 *            character. This is designed for writing time stamps to a buffer.
 *            The format is controlled by nb_clockFormat.
 *
-*               "yyyy/mm/dd hh:mm:ss "   Local and GMT format
+*               "yyyy-mm-dd hh:mm:ss "   Local and GMT format
 *               "ssssssssss "             UTC format 
 *
 *   nbClockToString(time_t utc,char *string)
@@ -281,7 +281,7 @@ char *nbClockToBuffer(char *buffer){
     return(buffer+11);
     }
   printTm=nbClockGetTm(nb_clockClock,nb_ClockTime);
-  sprintf(buffer,"%.4d/%.2d/%.2d %.2d:%.2d:%.2d ",
+  sprintf(buffer,"%.4d-%.2d-%.2d %.2d:%.2d:%.2d ",
     printTm->tm_year+1900,printTm->tm_mon+1,printTm->tm_mday,
     printTm->tm_hour,printTm->tm_min,printTm->tm_sec);
   return(buffer+20);  
@@ -299,7 +299,7 @@ char *nbClockToString(time_t utc,char *buffer){
     return(buffer);
     }
   printTm=nbClockGetTm(nb_clockClock,utc);
-  snprintf(buffer,(size_t)CTIME_SIZE,"%.4d/%.2d/%.2d %.2d:%.2d:%.2d ",  //2012-01-09 dtl use snprintf
+  snprintf(buffer,(size_t)CTIME_SIZE,"%.4d-%.2d-%.2d %.2d:%.2d:%.2d ",  //2012-01-09 dtl use snprintf
     printTm->tm_year+1900,printTm->tm_mon+1,printTm->tm_mday,
     printTm->tm_hour,printTm->tm_min,printTm->tm_sec); 
   return(buffer);

@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2012 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -72,6 +72,7 @@
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2012-01-16 dtl Checker updates
 * 2012-10-13 eat 0.8.12 Replaced malloc with nbAlloc
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -103,9 +104,9 @@ void nbStreamDestroy(NB_Stream *Stream){
 void nbStreamInit(NB_Stem *stem){
   nb_StreamFree=NULL;
   nb_StreamList=NULL;
-  nb_StreamType=newType(stem,"Stream",NULL,0,nbStreamPrint,nbStreamDestroy);
+  nb_StreamType=nbObjectType(stem,"Stream",0,0,nbStreamPrint,nbStreamDestroy);
   nb_StreamProducerFree=NULL;
-  nb_StreamProducerType=newType(stem,"StreamProducer",NULL,0,NULL,NULL);
+  nb_StreamProducerType=nbObjectType(stem,"StreamProducer",0,0,NULL,NULL);
   nb_StreamSubscriptionFree=NULL;
   }
 

@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -74,6 +74,7 @@ typedef NB_Cell *nbCELL;
 #define NB_CELL_MODE_SCHEDULED  1  // cell is scheduled for evaluation - avoids scheduling multiple times
 #define NB_CELL_MODE_AXON_BOOST 2  // use axon accelerator cell for relational operators
 #define NB_CELL_MODE_TIMER      4  // cell has a timer set - cancel when appropriate
+#define NB_CELL_MODE_TRANSIENT  8  // alert transient term
 
 void nbCellInit(struct NB_STEM *stem);
 void nbCellType(

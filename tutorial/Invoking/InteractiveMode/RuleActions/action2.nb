@@ -1,0 +1,3 @@
+#!/usr/bin/nb
+define cmdRule on(a and b) x=3:show x;
+assert a,b;

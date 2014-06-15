@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -123,6 +123,7 @@
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 * 2012-12-31 eat 0.8.13 schedInit n from int to size_t
 * 2014-01-12 eat 0.9.00 nbSchedInit replaces schedInit
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -172,9 +173,9 @@ void destroySched(struct SCHED *sched){
 void nbSchedInit(NB_Stem *stem){
   time(&eternity.start);
   eternity.end=0x7fffffff;  /* up to implementation limit */
-  schedTypeTime=newType(stem,"~",NULL,0,schedPrint,destroySched);
-  schedTypePulse=newType(stem,"~",NULL,0,schedPrint,destroySched);
-  schedTypeDelay=newType(stem,"",NULL,0,schedPrint,destroySched);
+  schedTypeTime=nbObjectType(stem,"~",0,0,schedPrint,destroySched);
+  schedTypePulse=nbObjectType(stem,"~",0,0,schedPrint,destroySched);
+  schedTypeDelay=nbObjectType(stem,"",0,0,schedPrint,destroySched);
   }
 
 /*

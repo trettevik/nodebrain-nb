@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2013-2014 Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -145,6 +145,7 @@
 *            cause conflicts in the management of a subordinate time condition.
 *            Modified to eliminate subordinate time condition and now manage
 *            state of the time delay using a flag in the cell.mode field.
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -443,7 +444,7 @@ void alertRule(NB_Cell *rule){
   if(object==nb_Unknown || object==NB_OBJECT_FALSE){
     if(action->status=='S'){
       char name[1024];
-      nbTermName(name,sizeof(name),action->term,locGloss);
+      nbTermName(name,sizeof(name),action->term,rootGloss);
       outMsg(0,'E',"Cycle error - %s condition untrue before firing",name);
       action->status='E';
       }
@@ -451,14 +452,15 @@ void alertRule(NB_Cell *rule){
     }
   else if(action->status!='R'){
     char name[1024];
-    nbTermName(name,sizeof(name),action->term,locGloss);
+    nbTermName(name,sizeof(name),action->term,rootGloss);
     outMsg(0,'E',"Cycle error - %s repetitive firing suppressed - status=%c",name,action->status);
     action->status='E';
     rule->object.value=object;
     }
   // 2013-12-13 eat - commented out the check for NB_OBJECT_TRUE
   //else if(rule->object.value!=NB_OBJECT_TRUE){ // 2006/10/28 eat - make sure we didn't get alerted to a different true value
-  else if(rule->object.value->type->attributes&TYPE_NOT_TRUE){ // 2013-12-13 eat - only schedule if old value was not true
+  //else if(rule->object.value->type->attributes&TYPE_NOT_TRUE){ // 2013-12-13 eat - only schedule if old value was not true
+  else if(!(rule->object.value->type->kind&NB_OBJECT_KIND_TRUE)){ // only sechedule if old value was not true // 2014-06-07 eat - converted test to kind
     if(trace) outMsg(0,'T',"alertRule scheduled action %p",action);
     scheduleAction(action);
     //rule->object.value=NB_OBJECT_TRUE;
@@ -613,8 +615,12 @@ NB_Object *evalAnd(struct COND *cond){
 
 NB_Object *reduceAnd(NB_Object *lobject,NB_Object *robject){
   if(lobject==NB_OBJECT_FALSE || robject==NB_OBJECT_FALSE) return(NB_OBJECT_FALSE);
-  if(lobject!=nb_Unknown && lobject->value==lobject) return(robject);
-  if(lobject==nb_Unknown && robject->value==robject) return(nb_Unknown);
+  if(lobject==nb_Unknown && robject==nb_Unknown) return(nb_Unknown);
+  if(lobject->type->kind&NB_OBJECT_KIND_TRUE){
+    if(robject->type->kind&NB_OBJECT_KIND_TRUE) return(nb_True);
+    return(robject);
+    }
+  if(robject->type->kind&NB_OBJECT_KIND_TRUE) return(lobject);
   return(NULL);
   }
 
@@ -665,14 +671,13 @@ NB_Object *evalOr(struct COND *cond){
   }
 
 NB_Object *reduceOr(NB_Object *lobject,NB_Object *robject){
-  if(lobject==NB_OBJECT_FALSE) return(robject);
-  if(robject==NB_OBJECT_FALSE) return(lobject);
-  if(lobject->value==lobject){    // left is constant and not false
-    if(lobject!=nb_Unknown) return(lobject); 
-    else if(robject->value==robject) return(robject);  // left is unknown and right is constant not true
+  if(lobject->type->kind&NB_OBJECT_KIND_TRUE || robject->type->kind&NB_OBJECT_KIND_TRUE) return(nb_True);
+  if(lobject->type->kind&NB_OBJECT_KIND_UNKNOWN && robject->type->kind&NB_OBJECT_KIND_UNKNOWN) return(nb_Unknown);
+  if(lobject->type->kind&NB_OBJECT_KIND_FALSE){
+    if(robject->type->kind&NB_OBJECT_KIND_FALSE) return(nb_False);
+    return(robject);
     }
-  // if left is variable we can't reduce because we don't know
-  // which side would provide the True value---we can not assume it would be the right side
+  if(robject->type->kind&NB_OBJECT_KIND_FALSE) return(lobject);
   return(NULL);
   }
 
@@ -795,7 +800,7 @@ static NB_Object *evalRelEQ(struct COND *cond){
   NB_Object *right=((NB_Object *)cond->right)->value;
   if(left==nb_Unknown || right==nb_Unknown) return(nb_Unknown);
   if(left==right) return(NB_OBJECT_TRUE); 
-  if(left->type==realType && right->type==realType &&
+  if(left->type->kind&NB_OBJECT_KIND_REAL && right->type->kind&NB_OBJECT_KIND_REAL &&
     ((struct REAL *)left)->value==((struct REAL *)right)->value) return(NB_OBJECT_TRUE);
   return(NB_OBJECT_FALSE);
   }
@@ -805,7 +810,7 @@ static NB_Object *evalRelNE(struct COND *cond){
   NB_Object *right=((NB_Object *)cond->right)->value;
   if(left==nb_Unknown || right==nb_Unknown) return(nb_Unknown);
   if(left==right) return(NB_OBJECT_FALSE);
-  if(left->type==realType && right->type==realType &&
+  if(left->type->kind&NB_OBJECT_KIND_REAL && right->type->kind&NB_OBJECT_KIND_REAL &&
     ((struct REAL *)left)->value==((struct REAL *)right)->value) return(NB_OBJECT_FALSE);
   return(NB_OBJECT_TRUE);
   }
@@ -1088,90 +1093,90 @@ void destroyRule(struct COND *cond){
 * Public Methods
 **********************************************************************/
 void nbConditionInit(NB_Stem *stem){
-  condTypeNerve=newType(stem,"nerve",NULL,TYPE_RULE,condPrintNerve,destroyNerve);
+  condTypeNerve=nbObjectType(stem,"nerve",0,TYPE_RULE,condPrintNerve,destroyNerve);
   nbCellType(condTypeNerve,solvePrefix,evalNerve,enableRule,disableRule);
 
-  condTypeOnRule=newType(stem,"on",NULL,TYPE_RULE,condPrintRule,destroyRule);
+  condTypeOnRule=nbObjectType(stem,"on",0,TYPE_RULE,condPrintRule,destroyRule);
   nbCellType(condTypeOnRule,solvePrefix,evalRule,enableRule,disableRule);
   condTypeOnRule->alert=alertRule;
-  condTypeWhenRule=newType(stem,"when",NULL,TYPE_RULE,condPrintRule,destroyRule);
+  condTypeWhenRule=nbObjectType(stem,"when",0,TYPE_RULE,condPrintRule,destroyRule);
   nbCellType(condTypeWhenRule,solvePrefix,evalRule,enableRule,disableRule);
   condTypeWhenRule->alert=alertRule;
-  condTypeIfRule=newType(stem,"if",NULL,TYPE_RULE,condPrintRule,destroyRule);
+  condTypeIfRule=nbObjectType(stem,"if",0,TYPE_RULE,condPrintRule,destroyRule);
   nbCellType(condTypeIfRule,solvePrefix,evalRule,enableRule,disableRule);
   condTypeIfRule->alert=alertRuleIf;
 
-  condTypeNot=newType(stem,"!",NULL,TYPE_BOOL,condPrintPrefix,destroyCondition);
+  condTypeNot=nbObjectType(stem,"!",0,TYPE_BOOL,condPrintPrefix,destroyCondition);
   nbCellType(condTypeNot,solvePrefix,evalNot,enablePrefix,disablePrefix);
-  condTypeTrue=newType(stem,"!!",NULL,TYPE_BOOL,condPrintPrefix,destroyCondition);
+  condTypeTrue=nbObjectType(stem,"!!",0,TYPE_BOOL,condPrintPrefix,destroyCondition);
   nbCellType(condTypeTrue,solvePrefix,evalTrue,enablePrefix,disablePrefix);
-  condTypeUnknown=newType(stem,"?",NULL,TYPE_BOOL,condPrintPrefix,destroyCondition);
+  condTypeUnknown=nbObjectType(stem,"?",0,TYPE_BOOL,condPrintPrefix,destroyCondition);
   nbCellType(condTypeUnknown,solvePrefix,evalUnknown,enablePrefix,disablePrefix);
-  condTypeKnown=newType(stem,"!?",NULL,TYPE_BOOL,condPrintPrefix,destroyCondition);
+  condTypeKnown=nbObjectType(stem,"!?",0,TYPE_BOOL,condPrintPrefix,destroyCondition);
   nbCellType(condTypeKnown,solvePrefix,evalKnown,enablePrefix,disablePrefix);
-  condTypeAssumeFalse=newType(stem,"-?",NULL,TYPE_BOOL,condPrintPrefix,destroyCondition);
+  condTypeAssumeFalse=nbObjectType(stem,"-?",0,TYPE_BOOL,condPrintPrefix,destroyCondition);
   nbCellType(condTypeAssumeFalse,solvePrefix,evalAssumeFalse,enablePrefix,disablePrefix);
-  condTypeAssumeTrue=newType(stem,"+?",NULL,TYPE_BOOL,condPrintPrefix,destroyCondition);
+  condTypeAssumeTrue=nbObjectType(stem,"+?",0,TYPE_BOOL,condPrintPrefix,destroyCondition);
   nbCellType(condTypeAssumeTrue,solvePrefix,evalAssumeTrue,enablePrefix,disablePrefix);
 
-  condTypeDefault=newType(stem,"?",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeDefault=nbObjectType(stem,"?",0,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeDefault,solveInfix1,evalDefault,enableInfix,disableInfix);
-  condTypeLazyAnd=newType(stem,"&&",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeLazyAnd=nbObjectType(stem,"&&",0,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeLazyAnd,solveInfix1,evalLazyAnd,enablePrefix,disablePrefix); // prefix enabling is intentional
-  condTypeAnd=newType(stem,"&",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeAnd=nbObjectType(stem,"&",0,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeAnd,solveInfix1,evalAnd,enableInfix,disableInfix);
-  condTypeNand=newType(stem,"!&",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeNand=nbObjectType(stem,"!&",0,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeNand,solveInfix1,evalNand,enableInfix,disableInfix);
-  condTypeLazyOr=newType(stem,"||",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeLazyOr=nbObjectType(stem,"||",0,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeLazyOr,solveInfix1,evalLazyOr,enablePrefix,disablePrefix);
-  condTypeOr=newType(stem,"|",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeOr=nbObjectType(stem,"|",0,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeOr,solveInfix1,evalOr,enableInfix,disableInfix);
-  condTypeNor=newType(stem,"!|",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeNor=nbObjectType(stem,"!|",0,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeNor,solveInfix1,evalNor,enableInfix,disableInfix);
-  condTypeXor=newType(stem,"|!&",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeXor=nbObjectType(stem,"|!&",0,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeXor,solveInfix1,evalXor,enableInfix,disableInfix);
-  //condTypeAndMonitor=newType(stem,"&~&",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
-  condTypeAndMonitor=newType(stem," then ",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
+  //condTypeAndMonitor=nbObjectType(stem,"&~&",0,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeAndMonitor=nbObjectType(stem," then ",0,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeAndMonitor,solveInfix2,evalAndMonitor,enableCapture,disableInfix);
-  condTypeOrMonitor=newType(stem,"|~|",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeOrMonitor=nbObjectType(stem,"|~|",0,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeOrMonitor,solveInfix2,evalOrMonitor,enableCapture,disableInfix);
-  //condTypeAndCapture=newType(stem,"&^&",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
-  condTypeAndCapture=newType(stem," capture ",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
+  //condTypeAndCapture=nbObjectType(stem,"&^&",0,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeAndCapture=nbObjectType(stem," capture ",0,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeAndCapture,solveInfix2,evalAndCapture,enableCapture,disableInfix);
-  condTypeOrCapture=newType(stem,"|^|",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeOrCapture=nbObjectType(stem,"|^|",0,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeOrCapture,solveInfix2,evalOrCapture,enableCapture,disableInfix);
-  condTypeFlipFlop=newType(stem,"^",NULL,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeFlipFlop=nbObjectType(stem,"^",0,TYPE_BOOL,condPrintInfix,destroyCondition);
   nbCellType(condTypeFlipFlop,solveInfix2,evalFlipFlop,enableFlipFlop,disableInfix);
 
-  condTypeDelayTrue=newType(stem,"~^",NULL,TYPE_DELAY,condPrintDelay,destroyCondition);
+  condTypeDelayTrue=nbObjectType(stem,"~^",0,TYPE_DELAY,condPrintDelay,destroyCondition);
   nbCellType(condTypeDelayTrue,solveKnown,evalDelayTrue,enableDelay,disableDelay);
   condTypeDelayTrue->alarm=alarmDelay;
-  condTypeDelayFalse=newType(stem,"~^!",NULL,TYPE_DELAY,condPrintDelay,destroyCondition);
+  condTypeDelayFalse=nbObjectType(stem,"~^!",0,TYPE_DELAY,condPrintDelay,destroyCondition);
   nbCellType(condTypeDelayFalse,solveKnown,evalDelayFalse,enableDelay,disableDelay);
   condTypeDelayFalse->alarm=alarmDelay;
-  condTypeDelayUnknown=newType(stem,"~^?",NULL,TYPE_DELAY,condPrintDelay,destroyCondition);
+  condTypeDelayUnknown=nbObjectType(stem,"~^?",0,TYPE_DELAY,condPrintDelay,destroyCondition);
   nbCellType(condTypeDelayUnknown,solveKnown,evalDelayUnknown,enableDelay,disableDelay);
   condTypeDelayUnknown->alarm=alarmDelay;
 
-  condTypeTime=newType(stem,"~",NULL,TYPE_TIME,condPrintTime,destroyCondition);
+  condTypeTime=nbObjectType(stem,"~",0,TYPE_TIME,condPrintTime,destroyCondition);
   nbCellType(condTypeTime,solveKnown,evalTime,enableTime,disableTime);
 
-  condTypeRelEQ=newType(stem,"=",NULL,TYPE_REL,condPrintInfix,destroyCondition);
+  condTypeRelEQ=nbObjectType(stem,"=",0,TYPE_REL,condPrintInfix,destroyCondition);
   nbCellType(condTypeRelEQ,solveInfix2,evalRelEQ,enableRelEQ,disableRelEQ);
-  condTypeRelNE=newType(stem,"<>",NULL,TYPE_REL,condPrintInfix,destroyCondition);
+  condTypeRelNE=nbObjectType(stem,"<>",0,TYPE_REL,condPrintInfix,destroyCondition);
   nbCellType(condTypeRelNE,solveInfix2,evalRelNE,enableRelNE,disableRelNE);
-  condTypeRelLT=newType(stem,"<",NULL,TYPE_REL,condPrintInfix,destroyCondition);
+  condTypeRelLT=nbObjectType(stem,"<",0,TYPE_REL,condPrintInfix,destroyCondition);
   nbCellType(condTypeRelLT,solveInfix2,evalRelLT,enableRelRange,disableRelRange);
-  condTypeRelLE=newType(stem,"<=",NULL,TYPE_REL,condPrintInfix,destroyCondition);
+  condTypeRelLE=nbObjectType(stem,"<=",0,TYPE_REL,condPrintInfix,destroyCondition);
   nbCellType(condTypeRelLE,solveInfix2,evalRelLE,enableRelRange,disableRelRange);
-  condTypeRelGT=newType(stem,">",NULL,TYPE_REL,condPrintInfix,destroyCondition);
+  condTypeRelGT=nbObjectType(stem,">",0,TYPE_REL,condPrintInfix,destroyCondition);
   nbCellType(condTypeRelGT,solveInfix2,evalRelGT,enableRelRange,disableRelRange);
-  condTypeRelGE=newType(stem,">=",NULL,TYPE_REL,condPrintInfix,destroyCondition);
+  condTypeRelGE=nbObjectType(stem,">=",0,TYPE_REL,condPrintInfix,destroyCondition);
   nbCellType(condTypeRelGE,solveInfix2,evalRelGE,enableRelRange,disableRelRange);
 
-  condTypeMatch=newType(stem,"~",NULL,0,condPrintMatch,destroyCondition);
+  condTypeMatch=nbObjectType(stem,"~",0,0,condPrintMatch,destroyCondition);
   nbCellType(condTypeMatch,solvePrefix,evalMatch,enableInfix,disableInfix);
-  condTypeChange=newType(stem,"~=",NULL,0,condPrintChange,destroyCondition);
+  condTypeChange=nbObjectType(stem,"~=",0,0,condPrintChange,destroyCondition);
   nbCellType(condTypeChange,solveKnown,evalChange,enableInfix,disableInfix);
   }
 

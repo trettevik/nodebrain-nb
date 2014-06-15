@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2014 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2013 The Boeing Company
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -71,7 +71,7 @@ typedef struct NB_TERM{
   } NB_Term;
 
 extern NB_Term *termFree;
-extern NB_Term *gloss;
+extern NB_Term *rootGloss;
 extern struct TYPE *termType;
 extern NB_Term *addrContext;
 extern NB_Term *symContext;

@@ -1,6 +1,6 @@
 /*
 * Copyright (C) 1998-2013 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -160,6 +160,7 @@
 * 2012-12-27 eat 0.8.13 Checker updates
 * 2013-01-01 eat 0.8.13 Checker updates
 * 2013-01-12 eat 0.8.13 Checker updates
+* 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 *=============================================================================
 */
 #define _USE_32BIT_TIME_T
@@ -1623,7 +1624,7 @@ void nbTimeDestroyCalendar(NB_Calendar *calendar){
   }
 
 void nbTimeInit(NB_Stem *stem){
-  nb_TimeCalendarType=newType(stem,"calendar",NULL,0,nbTimePrintCalendar,nbTimeDestroyCalendar);
+  nb_TimeCalendarType=nbObjectType(stem,"calendar",0,0,nbTimePrintCalendar,nbTimeDestroyCalendar);
   nb_TimeCalendarContext=nbTermNew(NULL,"calendar",nbNodeNew());
   }
 
