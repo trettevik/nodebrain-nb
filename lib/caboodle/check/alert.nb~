@@ -1,0 +1,157 @@
+# File: alert.nb
+~ > # File: alert.nb
+#
+~ > #
+alert x;
+~ > alert x;
+undefine x;
+~ > undefine x;
+alert x;
+~ > alert x;
+undefine x;
+~ > undefine x;
+
+alert @a=1,@b=2,c=3,@d=4;
+~ > alert @a=1,@b=2,c=3,@d=4;
+show -t
+~ > show -t
+~ _ = # == node 
+~ @a = 1
+~ @b = 2
+~ @d = 4
+~ c = 3
+alert @a=5;
+~ > alert @a=5;
+show -t
+~ > show -t
+~ _ = # == node 
+~ @a = 5
+~ @b = ?
+~ @d = ?
+~ c = 3
+alert @a=1,@b=2,c=3,@d=4;
+~ > alert @a=1,@b=2,c=3,@d=4;
+show -t
+~ > show -t
+~ _ = # == node 
+~ @a = 1
+~ @b = 2
+~ @d = 4
+~ c = 3
+alert @b=5;
+~ > alert @b=5;
+show -t
+~ > show -t
+~ _ = # == node 
+~ @a = ?
+~ @b = 5
+~ @d = ?
+~ c = 3
+alert @a=1,@b=2,c=3,@d=4;
+~ > alert @a=1,@b=2,c=3,@d=4;
+show -t
+~ > show -t
+~ _ = # == node 
+~ @a = 1
+~ @b = 2
+~ @d = 4
+~ c = 3
+alert c=5;
+~ > alert c=5;
+show -t
+~ > show -t
+~ _ = # == node 
+~ @a = ?
+~ @b = ?
+~ @d = ?
+~ c = 5
+alert @a=1,@b=2,c=3,@d=4;
+~ > alert @a=1,@b=2,c=3,@d=4;
+show -t
+~ > show -t
+~ _ = # == node 
+~ @a = 1
+~ @b = 2
+~ @d = 4
+~ c = 3
+alert @d=5;
+~ > alert @d=5;
+show -t
+~ > show -t
+~ _ = # == node 
+~ @a = ?
+~ @b = ?
+~ @d = 5
+~ c = 3
+alert @a=1,@b=2,c=3,@d=4;
+~ > alert @a=1,@b=2,c=3,@d=4;
+show -t
+~ > show -t
+~ _ = # == node 
+~ @a = 1
+~ @b = 2
+~ @d = 4
+~ c = 3
+alert @b=5,@a=5;
+~ > alert @b=5,@a=5;
+show -t
+~ > show -t
+~ _ = # == node 
+~ @a = 5
+~ @b = 5
+~ @d = ?
+~ c = 3
+alert @a=1,@b=2,c=3,@d=4;
+~ > alert @a=1,@b=2,c=3,@d=4;
+show -t
+~ > show -t
+~ _ = # == node 
+~ @a = 1
+~ @b = 2
+~ @d = 4
+~ c = 3
+alert @d=5,@b=5;
+~ > alert @d=5,@b=5;
+show -t
+~ > show -t
+~ _ = # == node 
+~ @a = ?
+~ @b = 5
+~ @d = 5
+~ c = 3
+alert @a=1,@b=2,c=3,@d=4;
+~ > alert @a=1,@b=2,c=3,@d=4;
+show -t
+~ > show -t
+~ _ = # == node 
+~ @a = 1
+~ @b = 2
+~ @d = 4
+~ c = 3
+alert c=5,@a=5;
+~ > alert c=5,@a=5;
+show -t
+~ > show -t
+~ _ = # == node 
+~ @a = 5
+~ @b = ?
+~ @d = ?
+~ c = 5
+alert @a=1,@b=2,c=3,@d=4;
+~ > alert @a=1,@b=2,c=3,@d=4;
+show -t
+~ > show -t
+~ _ = # == node 
+~ @a = 1
+~ @b = 2
+~ @d = 4
+~ c = 3
+alert @a=5,@d=5;
+~ > alert @a=5,@d=5;
+show -t
+~ > show -t
+~ _ = # == node 
+~ @a = 5
+~ @b = ?
+~ @d = 5
+~ c = 3

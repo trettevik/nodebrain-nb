@@ -1,7 +1,3 @@
-#!../nb/nb
-~ > #!../nb/nb
-#
-~ > #
 # File: cellStaticBoolUnknown.nb
 ~ > # File: cellStaticBoolUnknown.nb
 #
@@ -45,7 +41,7 @@ assert eB==(? ^ ?);
 
 show -cells;
 ~ > show -cells;
-~ @ = # == node 
+~ _ = # == node 
 ~ e1 = ?
 ~ e2 = ?
 ~ e3 = ?
@@ -94,7 +90,7 @@ assert eB==(u ^ u);
 
 show -cells;
 ~ > show -cells;
-~ @ = # == node 
+~ _ = # == node 
 ~ e1 = ? == u
 ~ e2 = ? == (!u)
 ~ e3 = ? == (t&u)
@@ -139,11 +135,11 @@ assert eB==( u  ^  u );
 
 show -cells;
 ~ > show -cells;
-~ @ = # == node 
+~ _ = # == node 
 ~ e1 = ? == u
 ~ e2 = ? == (!u)
 ~ e3 = ? == u
-~ e4 = ? == (u&"a")
+~ e4 = ? == u
 ~ e5 = ? == (u&u)
 ~ e6 = ? == (u|u)
 ~ e7 = ? == (u^f)
@@ -187,7 +183,7 @@ assert eB==(u ^ u);
 
 show -cells;
 ~ > show -cells;
-~ @ = # == node 
+~ _ = # == node 
 ~ a = "a"
 ~ e1 = ? == u
 ~ e2 = ? == (!u)

@@ -1,5 +1,4 @@
-#
-# File:   lib/caboodle/check/build.nb
+# File:   build.nb
 #
 # Title:  NodeBrain Build Test   
 #

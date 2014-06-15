@@ -1,5 +1,3 @@
-#!./nb
-~ > #!./nb
 # The solve.pl script returns a cell expression to
 ~ > # The solve.pl script returns a cell expression to
 # provide a value for terms with Unknown values.
@@ -18,21 +16,21 @@ eUser. define r3 on(b=5);
 ~ > eUser. define r3 on(b=5);
 query
 ~ > query
-~ 1970/01/01 00:00:01 NB000T Resolving "b" via command : check/solve.pl e1 "b"
+~ 1970-01-01 00:00:01 NB000T Resolving "b" via command : check/solve.pl e1 "b"
 ~ Value=("goodbye")
-~ 1970/01/01 00:00:02 NB000T Resolving "a" via command : check/solve.pl e1 "a"
+~ 1970-01-01 00:00:02 NB000T Resolving "a" via command : check/solve.pl e1 "a"
 ~ Value=("hello")
-~ 1970/01/01 00:00:03 NB000W No consultant for eUser.b
-~ 1970/01/01 00:00:04 NB000I Rule e1.r1 fired 
-~ 1970/01/01 00:00:05 NB000I Rule e1.r2 fired 
+~ 1970-01-01 00:00:03 NB000W No consultant for eUser.b
+~ 1970-01-01 00:00:04 NB000I Rule e1.r1 fired 
+~ 1970-01-01 00:00:05 NB000I Rule e1.r2 fired 
 show -t
 ~ > show -t
-~ @ = # == node 
+~ _ = # == node 
 ~ e1 = # == node 
 ~ e1.a = "hello"
 ~ e1.b = "goodbye"
-~ e1.r1 = # 1 == on(e1.a="hello");
-~ e1.r2 = # 1 == on(e1.b="goodbye");
+~ e1.r1 = # !! == on(e1.a="hello");
+~ e1.r2 = # !! == on(e1.b="goodbye");
 ~ eUser = # == node 
 ~ eUser.b = ?
 ~ eUser.r3 = # ? == on(eUser.b=5);
