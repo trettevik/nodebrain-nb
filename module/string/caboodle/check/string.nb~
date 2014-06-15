@@ -6,7 +6,7 @@ define r1 on(x="abc,def");
 ~ > define r1 on(x="abc,def");
 assert a="abc;def";
 ~ > assert a="abc;def";
-~ 1970/01/01 00:00:01 NB000I Rule r1 fired 
+~ 1970-01-01 00:00:01 NB000I Rule r1 fired 
 show a;
 ~ > show a;
 ~ a = "abc;def"

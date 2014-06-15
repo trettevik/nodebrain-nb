@@ -417,7 +417,6 @@ struct LISTENER *nbpCloneListener(struct LISTENER *parent,int fildes,void *sessi
   //we don't put on the used list because we are managing it under the new listener scheme
   //ear->cell.object.next=(NB_Object *)listenerUsed;
   //listenerUsed=ear;
-  //ear->cell.object.value=NB_OBJECT_TRUE;  /* clones are enabled by default */
   ear->cell.object.value=(NB_Object *)NB_CELL_TRUE;  /* clones are enabled by default */
   ear->brainTerm=parent->brainTerm;
   ear->dstBrain=parent->dstBrain;

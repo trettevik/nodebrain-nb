@@ -10,7 +10,7 @@ define pipeIn node pipe.server("default@pipe/fIfo");
 ~ > define pipeIn node pipe.server("default@pipe/fIfo");
 enable pipeIn;
 ~ > enable pipeIn;
-~ 1970/01/01 00:00:01 NM000I pipe.server @.pipeIn: Listening for FIFO connections as default@pipe/fIfo
+~ 1970-01-01 00:00:01 NM000I pipe.server pipeIn: Listening for FIFO connections as default@pipe/fIfo
 disable pipeIn;
 ~ > disable pipeIn;
 undefine pipeIn;
@@ -19,7 +19,7 @@ define pipeIn node pipe.server("default@pipe/fIfo");
 ~ > define pipeIn node pipe.server("default@pipe/fIfo");
 enable pipeIn;
 ~ > enable pipeIn;
-~ 1970/01/01 00:00:01 NM000I pipe.server @.pipeIn: Listening for FIFO connections as default@pipe/fIfo
+~ 1970-01-01 00:00:01 NM000I pipe.server pipeIn: Listening for FIFO connections as default@pipe/fIfo
 
 define pipeOut node pipe("pipe/fifO");
 ~ > define pipeOut node pipe("pipe/fifO");
@@ -35,7 +35,7 @@ define exit on(stop):stop;
 ~ [0] Exit(0)
 =|servant/echo.sh < pipe/fifO > pipe/fIfo
 ~ > =|servant/echo.sh < pipe/fifO > pipe/fIfo
-~ 1970/01/01 00:00:01 NB000I [0] Started: =|servant/echo.sh < pipe/fifO > pipe/fIfo
+~ 1970-01-01 00:00:01 NB000I [0] Started: =|servant/echo.sh < pipe/fifO > pipe/fIfo
 
 pipeOut:assert a=1;
 ~ > pipeOut:assert a=1;

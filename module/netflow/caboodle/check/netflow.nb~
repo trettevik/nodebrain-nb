@@ -4,9 +4,9 @@ declare netflow module {"../.libs"}; # for checking only
 ~ > declare netflow module {"../.libs"}; # for checking only
 define netflow node netflow(59996):trace,dump;
 ~ > define netflow node netflow(59996):trace,dump;
-~ 1970/01/01 00:00:01 NB000T Stream "Netflow.Alert" registered
-~ 1970/01/01 00:00:02 NB000T Stream "Netflow.EngineStats" registered
-~ 1970/01/01 00:00:03 NB000T Stream "Netflow.Flow" registered
+~ 1970-01-01 00:00:01 NB000T Stream "Netflow.Alert" registered
+~ 1970-01-01 00:00:02 NB000T Stream "Netflow.EngineStats" registered
+~ 1970-01-01 00:00:03 NB000T Stream "Netflow.Flow" registered
 #enable netflow;
 ~ > #enable netflow;
 #disable netflow;

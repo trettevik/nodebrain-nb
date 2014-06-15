@@ -14,7 +14,7 @@ echo. define stop on(a=2):stop
 ~ > echo. define stop on(a=2):stop
 enable echo
 ~ > enable echo
-~ 1970/01/01 00:00:01 NM000I servant @.echo: Enabling |=|:servant/echo.sh
+~ 1970-01-01 00:00:01 NM000I servant echo: Enabling |=|:servant/echo.sh
 ~^ Ignore line with variable pid
 echo:assert a=1;
 ~ > echo:assert a=1;

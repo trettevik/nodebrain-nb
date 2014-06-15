@@ -16,57 +16,57 @@ alder. define r2 if(z._hitState):$ # z hit ${x},${y},${z} ${z._hitState} ${p}
 ~ > alder. define r2 if(z._hitState):$ # z hit ${x},${y},${z} ${z._hitState} ${p}
 alder. alert (1,2,3),p=1;
 ~ > alder. alert (1,2,3),p=1;
-~ 1970/01/01 00:00:01 NB000I Rule alder.r0 fired 
+~ 1970-01-01 00:00:01 NB000I Rule alder.r0 fired 
 ~ : alder. # x row 1,2,3 normal 1
-~ 1970/01/01 00:00:02 NB000I Rule alder.r2 fired 
+~ 1970-01-01 00:00:02 NB000I Rule alder.r2 fired 
 ~ : alder. # z hit 1,2,3 normal 1
-~ 1970/01/01 00:00:03 NB000I Rule alder.r1 fired 
+~ 1970-01-01 00:00:03 NB000I Rule alder.r1 fired 
 ~ : alder. # y kid 1,2,3 normal 1
 alder. alert (1,2,3),p=2;
 ~ > alder. alert (1,2,3),p=2;
-~ 1970/01/01 00:00:01 NB000I Rule alder.r0 fired 
+~ 1970-01-01 00:00:01 NB000I Rule alder.r0 fired 
 ~ : alder. # x row 1,2,3 normal 2
-~ 1970/01/01 00:00:02 NB000I Rule alder.r2 fired 
+~ 1970-01-01 00:00:02 NB000I Rule alder.r2 fired 
 ~ : alder. # z hit 1,2,3 minor 2
-~ 1970/01/01 00:00:03 NB000I Rule alder.r1 fired 
+~ 1970-01-01 00:00:03 NB000I Rule alder.r1 fired 
 ~ : alder. # y kid 1,2,3 normal 2
 alder. alert (1,2,3),p=3;
 ~ > alder. alert (1,2,3),p=3;
-~ 1970/01/01 00:00:01 NB000I Rule alder.r0 fired 
+~ 1970-01-01 00:00:01 NB000I Rule alder.r0 fired 
 ~ : alder. # x row 1,2,3 normal 3
-~ 1970/01/01 00:00:02 NB000I Rule alder.r1 fired 
+~ 1970-01-01 00:00:02 NB000I Rule alder.r1 fired 
 ~ : alder. # y kid 1,2,3 normal 3
 alder. alert (1,2,3),p=4;
 ~ > alder. alert (1,2,3),p=4;
-~ 1970/01/01 00:00:01 NB000I Rule alder.r0 fired 
+~ 1970-01-01 00:00:01 NB000I Rule alder.r0 fired 
 ~ : alder. # x row 1,2,3 normal 4
-~ 1970/01/01 00:00:02 NB000I Rule alder.r1 fired 
+~ 1970-01-01 00:00:02 NB000I Rule alder.r1 fired 
 ~ : alder. # y kid 1,2,3 normal 4
-~ 1970/01/01 00:00:03 NB000I Rule alder.r2 fired 
+~ 1970-01-01 00:00:03 NB000I Rule alder.r2 fired 
 ~ : alder. # z hit 1,2,3 major 4
 alder. alert (1,2,4),p=1;
 ~ > alder. alert (1,2,4),p=1;
-~ 1970/01/01 00:00:01 NB000I Rule alder.r0 fired 
+~ 1970-01-01 00:00:01 NB000I Rule alder.r0 fired 
 ~ : alder. # x row 1,2,4 normal 1
-~ 1970/01/01 00:00:02 NB000I Rule alder.r1 fired 
+~ 1970-01-01 00:00:02 NB000I Rule alder.r1 fired 
 ~ : alder. # y kid 1,2,4 minor 1
-~ 1970/01/01 00:00:03 NB000I Rule alder.r2 fired 
+~ 1970-01-01 00:00:03 NB000I Rule alder.r2 fired 
 ~ : alder. # z hit 1,2,4 normal 1
 alder. alert (2,3,4),p=2;
 ~ > alder. alert (2,3,4),p=2;
-~ 1970/01/01 00:00:01 NB000I Rule alder.r0 fired 
+~ 1970-01-01 00:00:01 NB000I Rule alder.r0 fired 
 ~ : alder. # x row 2,3,4 normal 2
-~ 1970/01/01 00:00:02 NB000I Rule alder.r1 fired 
+~ 1970-01-01 00:00:02 NB000I Rule alder.r1 fired 
 ~ : alder. # y kid 2,3,4 normal 2
-~ 1970/01/01 00:00:03 NB000I Rule alder.r2 fired 
+~ 1970-01-01 00:00:03 NB000I Rule alder.r2 fired 
 ~ : alder. # z hit 2,3,4 normal 2
 alder. alert (2,4,5),p=3;
 ~ > alder. alert (2,4,5),p=3;
-~ 1970/01/01 00:00:01 NB000I Rule alder.r0 fired 
+~ 1970-01-01 00:00:01 NB000I Rule alder.r0 fired 
 ~ : alder. # x row 2,4,5 normal 3
-~ 1970/01/01 00:00:02 NB000I Rule alder.r1 fired 
+~ 1970-01-01 00:00:02 NB000I Rule alder.r1 fired 
 ~ : alder. # y kid 2,4,5 normal 3
-~ 1970/01/01 00:00:03 NB000I Rule alder.r2 fired 
+~ 1970-01-01 00:00:03 NB000I Rule alder.r2 fired 
 ~ : alder. # z hit 2,4,5 normal 3
 
 assert alder(1,2,3);
@@ -77,7 +77,7 @@ define r1 on(alder(a,b,c));
 ~ > define r1 on(alder(a,b,c));
 show (alder(a,b,c)); 
 ~ > show (alder(a,b,c)); 
-~ () = 1 == alder(a,b,c)
+~ () = !! == alder(a,b,c)
 alder. assert ?(a,b,c);
 ~ > alder. assert ?(a,b,c);
 show (alder(a,b,c)); 
@@ -85,10 +85,10 @@ show (alder(a,b,c));
 ~ () = ! == alder(a,b,c)
 alder. assert (1,2,3);
 ~ > alder. assert (1,2,3);
-~ 1970/01/01 00:00:01 NB000I Rule r1 fired 
+~ 1970-01-01 00:00:01 NB000I Rule r1 fired 
 show (alder(a,b,c)); 
 ~ > show (alder(a,b,c)); 
-~ () = 1 == alder(a,b,c)
+~ () = !! == alder(a,b,c)
 assert !alder(1,2,3);
 ~ > assert !alder(1,2,3);
 show (alder(a,b,c)); 
@@ -96,7 +96,7 @@ show (alder(a,b,c));
 ~ () = ! == alder(a,b,c)
 assert alder(a,b,c);
 ~ > assert alder(a,b,c);
-~ 1970/01/01 00:00:01 NB000I Rule r1 fired 
+~ 1970-01-01 00:00:01 NB000I Rule r1 fired 
 show (alder(a,b,c)); 
 ~ > show (alder(a,b,c)); 
-~ () = 1 == alder(a,b,c)
+~ () = !! == alder(a,b,c)

@@ -275,6 +275,7 @@ nbCELL sumEvaluate(nbCELL context,void *skillHandle,void *knowledgeHandle,nbCELL
     type=nbCellGetType(context,cell);
     if(type==NB_TYPE_REAL) r+=nbCellGetReal(context,cell);
     else if(type==NB_TYPE_STRING) r+=strlen(nbCellGetString(context,cell));
+    else if(type==NB_TYPE_TRUE) r++;
     }
   return(nbCellCreateReal(context,r));
   }
