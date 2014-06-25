@@ -1,6 +1,6 @@
 /*
 * Copyright (C) 2005-2013 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -248,6 +248,7 @@
 * 2012-10-13 eat 0.8.12 Replaced malloc/free with nbAlloc/nbFree
 * 2012-12-27 eat 0.8.13 Checker updates
 * 2013-01-13 eat 0.8.13 Checker updates
+* 2014-06-24 eat 0.9.02 Fixed length of stop on NULLOBJ variable type 
 *=====================================================================
 */
 #include "config.h"
@@ -541,7 +542,7 @@ static char *translateValue(unsigned char **cursorP,unsigned char *bufend,char *
     case 0x05: /* NULLOBJ */
       if(objlen!=0) return("variable binding NULLOBJ length error - expecting zero");
       strcpy(cmdcur,"?");  /* we'll use NodeBrain's Unknown value for NULLOBJ */
-      cmdcur+=2;
+      cmdcur++; // 2014-06-24 eat - changed from 2 to 1 byte step because "?" replaced "??"
       break;
     case 0x06: /* OID */
       *cmdcur='"';
