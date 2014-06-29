@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 1998-2010 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2014 Ed Trettevik <eat@nodebrain.org>
+*
 */
 // 2009-04-19 eat 0.7.5 - nbprotocol.c is now coupled with nb_peer.c 
 //   The coupling of nbprotocol.c is very messy, unfortunate, and something we need to clean up

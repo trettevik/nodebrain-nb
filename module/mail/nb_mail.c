@@ -1,6 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2014 Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -361,8 +360,7 @@ void smtpFork(nbCELL context,nbSession *session){
 #endif
 
 /*
-* Copyright (C) 1998-2007 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2014 Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -641,8 +639,7 @@ extern void *serverBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL ar
   return(NULL);
   }
 /*
-* Copyright (C) 1998-2012 The Boeing Company
-*                         Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2014 Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by

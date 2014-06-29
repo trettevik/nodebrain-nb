@@ -1,6 +1,5 @@
 /*
-* Copyright (C) 1998-2013 The Boeing Company
-* Copyright (C) 2014      Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 1998-2014 Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -358,8 +357,7 @@ static int nbGetCmdInteractive(char *cmd,size_t cmdlen){  // 2012-12-31 eat - VI
 void printVersion(void){
   printf("nb %s\n\n",PACKAGE_VERSION);
   printf("N o d e B r a i n\n");
-  printf("Copyright (C) 2014 Ed Trettevik <eat@nodebrain.org>\n");
-  printf("Copyright (C) 1998-2013 The Boeing Company\n");
+  printf("Copyright (C) 1998-2014 Ed Trettevik <eat@nodebrain.org>\n");
   printf("GNU General Public License\n\n");
   }
 
@@ -421,8 +419,7 @@ void showVersion(void){
 
 void showCopyright(void){
   showVersion();
-  outPut("Copyright (C) 2014 Ed Trettevik <eat@nodebrain.org>\n");
-  outPut("Copyright (C) 1998-2013 The Boeing Company\n");
+  outPut("Copyright (C) 1998-2014 Ed Trettevik <eat@nodebrain.org>\n");
   outPut("GNU General Public License\n");
   outPut("----------------------------------------------------------------\n\n");
   }

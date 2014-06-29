@@ -147,8 +147,7 @@ XP        Compiled this release (0.6.5)
 95        No longer supported.
 ======================================================================== 
 
-Copyright (C) 1998-2009 The Boeing Company
-                        Ed Trettevik <eat@nodebrain.org>
+Copyright (C) 1998-2009 Ed Trettevik <eat@nodebrain.org>
 
 NodeBrain is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

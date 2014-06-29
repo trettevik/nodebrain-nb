@@ -2,8 +2,8 @@ Format: 1.8
 Source: nodebrain
 Version: 0.9.02-1
 Homepage: nodebrain.org
-Maintainer: Ed Trettevik <ed.a.trettevik@boeing.com>
-Changed-By: Ed Trettevik <ed.a.trettevik@boeing.com>
+Maintainer: Ed Trettevik <eat@nodebrain.org>
+Changed-By: Ed Trettevik <eat@nodebrain.org>
 Architecture: any
 Package: nodebrain
 Depends: libpcre3, libssl, libcrypto, libedit

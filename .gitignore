@@ -39,3 +39,4 @@ doc/version-nbTutorial.texi
 doc/nbLanguage/stamp-*
 doc/nbTutorial/stamp-*
 html
+gmon.out

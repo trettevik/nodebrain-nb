@@ -165,7 +165,7 @@ N o d e B r a i n   0.7.0(Dunce) 2008/05/24
   
 Compiled Jun 10 2008 15:30:28s390x-ibm-linux-gnu
   
-Copyright (C) 1998-2008 The Boeing Company
+Copyright (C) 1998-2008 Ed Trettevik <eat@@nodebrain.org>
 GNU General Public License
 ----------------------------------------------------------------
   

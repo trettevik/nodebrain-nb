@@ -11,29 +11,26 @@
 
 @copying
 Tree NodeBrain Module@*
-June 2012@*
-The Boeing Company, P.O. Box 3707, Seattle, WA 98124, USA
+June 2014@*
+NodeBrain Open Source Projet
 
 @sp 2
 @b{Version @value{VERSION}}
 
 Author: Ed Trettevik <eat@@nodebrain.org>
 
-Copyright @copyright{} 2012 The Boeing Company
+Copyright @copyright{} 2012--2014 Ed Trettevik <eat@@nodebrain.org>
 
 @sp 1
 Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
 
 @sp 1
-NodeBrain(TM) is a trademark of The Boeing Company.   All other trademarks and registered trademarks referenced in this document are the trademarks of their respective owners.
+All trademarks and registered trademarks referenced in this document are the trademarks of their respective owners.
 
 @sp 2
 @b{Software License}
 
-@multitable {------------------------------} {----------------------------------------------------}
-@item Copyright @copyright{} 1998-2012 @tab The Boeing Company
-@item @tab Ed Trettevik <eat@@nodebrain.org>
-@end multitable
+Copyright @copyright{} 1998-2014 Ed Trettevik <eat@@nodebrain.org>
 
 The Tree NodeBrain Module is free software; you can redistribute it and/or  modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option)any later version.
 
@@ -65,7 +62,7 @@ You should have received a copy of the GNU General PublicLicense along with this
 @item 2012-06-04 @tab
 Title: @i{Tree NodeBrain Module}@*  
 Author: Ed Trettevik <eat@@nodebrain.org>@*
-Publisher: The Boeing Company
+Publisher: NodeBrain Open Source Project
 
 @item 2012-06-04 @tab
 Release 0.8.10
@@ -98,7 +95,7 @@ on NodeBrain.
 
 This manual is for the Tree NodeBrain Module (version @value{VERSION}, @value{UPDATED-MONTH}) used to store a table of data in main memory.
 @*@*
-Copyright @copyright{} 2012 The Boeing Company
+Copyright @copyright{} 2012--2014 Ed Trettevik <eat@@nodebrain.org>
 @quotation
 Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
 @end quotation

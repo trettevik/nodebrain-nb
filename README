@@ -6,17 +6,17 @@
 |_| \_|\___/ \__ _|\___|____/|_|  \__ _|_|_| |_|
 
 
-NodeBrain 0.9.01
+NodeBrain 0.9.02
 
 ========================================================================
 
-File:        README for nodebrain-0.9.01 release files
+File:        README for nodebrain-0.9.02 release files
 
 Package:     NodeBrain (nb)
 
 Version:     0.9 - Columbo
 
-Release:     0.9.01 
+Release:     0.9.02 
 
 Date:        TBD
 
@@ -35,8 +35,8 @@ Installation instructions for Linux/Unix Platforms
 
 a) From source code distribution - install to /usr/local directories
 
-     $ tar -xzf nodebrain-0.9.01.tar.gz
-     $ cd nodebrain-0.9.01
+     $ tar -xzf nodebrain-0.9.02.tar.gz
+     $ cd nodebrain-0.9.02
      $ ./configure
      $ make
      $ make check
@@ -84,7 +84,7 @@ b) From git repository - requires autoconf/automake/libtools
 
      $ git clone git://git.code.sf.net/p/nodebrain/nb nodebrain-nb
      $ cd nodebrain-nb
-     $ git checkout 0.9.01
+     $ git checkout 0.9.02
      $ ./autogen.sh
      $ ./configure
      $ make
@@ -93,13 +93,13 @@ b) From git repository - requires autoconf/automake/libtools
 
 c) From source RPM file 
 
-     $ rpmbuild --rebuild nodebrain-0.9.01-1.el6.src.rpm
-     $ rpmbuild --rebuild nodebrain-0.9.01-1.src.rpm
+     $ rpmbuild --rebuild nodebrain-0.9.02-1.el6.src.rpm
+     $ rpmbuild --rebuild nodebrain-0.9.02-1.src.rpm
 
 d) From binary RPM file (x86_64 platform example)
 
-     $ rpm --install nodebrain-0.9.01-1.el6.x86_64.rpm
-     $ rpm --install nodebrain-0.9.01-1.x86_64.rpm
+     $ rpm --install nodebrain-0.9.02-1.el6.x86_64.rpm
+     $ rpm --install nodebrain-0.9.02-1.x86_64.rpm
 
 ======================================================================== 
 
@@ -113,8 +113,7 @@ high priority at this time.
 
 ======================================================================== 
 
-Copyright (C) 1998-2014 The Boeing Company
-                        Ed Trettevik <eat@nodebrain.org>
+Copyright (C) 1998-2014 Ed Trettevik <eat@nodebrain.org>
 
 NodeBrain is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

@@ -227,13 +227,13 @@ Date:   Fri Dec 20 18:41:18 2013 -0500
     removing svn tag directory
 
 commit e5107721e6033cc62cc7c80837b264c14dc76ea8
-Author: Ed Trettevik <ed.a.trettevik@boeing.com>
+Author: Ed Trettevik <eat@nodebrain.org>
 Date:   Thu Dec 19 19:47:31 2013 -0700
 
     quicker compare on eq
 
 commit 9d3b4b5d5404562e091d0c2af77ff7e475ff7e64
-Author: Ed Trettevik <ed.a.trettevik@boeing.com>
+Author: Ed Trettevik <eat@nodebrain.org>
 Date:   Wed Dec 18 19:52:37 2013 -0700
 
     fixed trick cell
@@ -245,7 +245,7 @@ Date:   Wed Dec 18 20:54:14 2013 -0500
     test
 
 commit 61c3643c1f437b8847366787498f34e8c50c1eb7
-Author: Ed Trettevik <ed.a.trettevik@boeing.com>
+Author: Ed Trettevik <eat@nodebrain.org>
 Date:   Wed Dec 18 18:28:55 2013 -0700
 
     test
