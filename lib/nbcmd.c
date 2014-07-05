@@ -1,21 +1,20 @@
 /*
-* Copyright (C) 1998-2014 Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 2014 Ed Trettevik <eat@nodebrain.org>
 *
-* NodeBrain is free software; you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation; either version 2 of the License, or
-* (at your option) any later version.
+* NodeBrain is free software; you can modify and/or redistribute it under the
+* terms of either the MIT License (Expat) or the following NodeBrain License.
 *
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
+* Permission to use and redistribute with or without fee, in source and binary
+* forms, with or without modification, is granted free of charge to any person
+* obtaining a copy of this software, provided that the above copyright notice,
+* this permission notice, and the following disclaimer are retained with source
+* code and reproduced in documentation included with binary distributions. 
 *
-* You should have received a copy of the GNU General Public License
-* along with this program; if not, write to the Free Software
-* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+* Unless required by applicable law or agreed to in writing, this software is
+* distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.
 *
-*=============================================================================
+*===============================================================================
 * Program:  NodeBrain
 *
 * File:     nbcmd.c 
@@ -357,8 +356,8 @@ static int nbGetCmdInteractive(char *cmd,size_t cmdlen){  // 2012-12-31 eat - VI
 void printVersion(void){
   printf("nb %s\n\n",PACKAGE_VERSION);
   printf("N o d e B r a i n\n");
-  printf("Copyright (C) 1998-2014 Ed Trettevik <eat@nodebrain.org>\n");
-  printf("GNU General Public License\n\n");
+  printf("Copyright (C) 2014 Ed Trettevik <eat@nodebrain.org>\n");
+  printf("MIT or NodeBrain License\n\n");
   }
 
 /*
@@ -367,7 +366,7 @@ void printVersion(void){
 void printHelp(void){
   printVersion();
   printf("This is free software that you may copy and redistribute under\n");
-  printf("the terms of the GPL license.\n");
+  printf("the terms of the GNU General Public License\n");
   printf("----------------------------------------------------------------\n\n");
   printf("Usage: nb [-options] [file]\n");
   printf("\nSwitch Options:   May specify multiple times.\n\n");
@@ -419,8 +418,8 @@ void showVersion(void){
 
 void showCopyright(void){
   showVersion();
-  outPut("Copyright (C) 1998-2014 Ed Trettevik <eat@nodebrain.org>\n");
-  outPut("GNU General Public License\n");
+  outPut("Copyright (C) 2014 Ed Trettevik <eat@nodebrain.org>\n");
+  outPut("MIT or NodeBrain License\n");
   outPut("----------------------------------------------------------------\n\n");
   }
 

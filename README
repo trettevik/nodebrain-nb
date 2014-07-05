@@ -18,7 +18,7 @@ Version:     0.9 - Columbo
 
 Release:     0.9.02 
 
-Date:        TBD
+Date:        July 13, 2014
 
 Reference:   http://www.nodebrain.org
                1) Online documentation
@@ -113,20 +113,9 @@ high priority at this time.
 
 ======================================================================== 
 
-Copyright (C) 1998-2014 Ed Trettevik <eat@nodebrain.org>
+Copyright (C) 2014 Ed Trettevik <eat@nodebrain.org>
 
-NodeBrain is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+NodeBrain is free software; you can modify and/or redistribute it under the
+terms of either the MIT License (Expat) or the NodeBrain License.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-Software License:  See COPYING file (also LICENSE.txt on Windows)
+See COPYING file for licenses.

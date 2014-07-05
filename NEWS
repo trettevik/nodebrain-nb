@@ -9,7 +9,7 @@
 
 NodeBrain 0.9.02 (Columbo) Change Summary
 
-* Released TBD
+* Released July 13, 2014
 
 * Theme: Performance, Logic, and License
 
@@ -30,10 +30,8 @@ NodeBrain 0.9.02 (Columbo) Change Summary
      should be provided as separate from all number and
      string values, make 0 and 1 both true and not special.
 
-     Finally, in preparation for a possible change of
-     license to a more perissive open source license or
-     introduction of a commercial license, dependence on
-     GPL licensed libraries is being removed.
+     Finally, in support of a change to the MIT License,
+     dependence on GPL licensed libraries has being removed.
 
 
 * Documentation:
