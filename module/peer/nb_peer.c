@@ -1,21 +1,20 @@
 /*
-* Copyright (C) 1998-2014 Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 2014 Ed Trettevik <eat@nodebrain.org>
 *
-* NodeBrain is free software; you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation; either version 2 of the License, or
-* (at your option) any later version.
+* NodeBrain is free software; you can modify and/or redistribute it under the
+* terms of either the MIT License (Expat) or the following NodeBrain License.
 *
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
+* Permission to use and redistribute with or without fee, in source and binary
+* forms, with or without modification, is granted free of charge to any person
+* obtaining a copy of this software, provided that the above copyright notice,
+* this permission notice, and the following disclaimer are retained with source
+* code and reproduced in documentation included with binary distributions. 
 *
-* You should have received a copy of the GNU General Public License
-* along with this program; if not, write to the Free Software
-* Foundation, Inc., 59 Temple Place Suite 330, Boston, MA 02111-1307, USA.
+* Unless required by applicable law or agreed to in writing, this software is
+* distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.
 *
-*=============================================================================
+*==============================================================================
 *
 * Name:   nb_peer.c
 *

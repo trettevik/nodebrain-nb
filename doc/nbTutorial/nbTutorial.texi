@@ -24,7 +24,7 @@ NodeBrain Open Source Project
 
 Author: Ed Trettevik <eat@@nodebrain.org>
 
-Copyright @copyright{} @value{UPDATED-YEAR} Ed Trettevik <eat@@nodebrain.org>@*
+Copyright @copyright{} @value{UPDATED-YEAR} Ed Trettevik <eat@@nodebrain.org>
 
 @sp 1
 Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
@@ -307,7 +307,7 @@ N o d e B r a i n   0.9.02 (Columbo) 2014-02-15
 
 Compiled Jun 12 2014 19:20:12 x86_64-unknown-linux-gnu
 
-Copyright (C) 1998-2014 Ed Trettevik <eat@@nodebrain.org>
+Copyright (C) 2014 Ed Trettevik <eat@@nodebrain.org>
 MIT or NodeBrain License
 ----------------------------------------------------------------
 

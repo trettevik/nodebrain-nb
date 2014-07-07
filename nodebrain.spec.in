@@ -6,7 +6,7 @@ Release: 1%{?dist}
 %define is_mandriva %(test -e /etc/mandriva-release && echo 1 || echo 0)
 
 Summary: A declarative rule-based language for state and event monitoring
-License: GPL-2.0+
+License: MIT
 Group: Development/Languages
 Source: @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
 URL: http://www.nodebrain.org/
