@@ -754,6 +754,7 @@ This module does not implement triggers.
 
 @node GNU Free Documentation License
 @unnumbered GNU Free Documentation License
+@include fdl.texi
 
 @node Index 
 @unnumbered Index 

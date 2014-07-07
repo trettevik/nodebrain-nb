@@ -123,9 +123,11 @@ of user authentication requiring high availability.
 
 This manual is for the Message NodeBrain Module (version @value{VERSION}, @value{UPDATED-MONTH}), a plug-in module for broadcasting
 messages to multiple NodeBrain agents.
-
+@*@*
 Copyright @copyright{} 2014 Ed Trettevik <eat@@nodebrain.org>
-
+@quotation
+Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
+@end quotation
 @ifnotplaintext
 @b{Short Table of Contents}
 @end ifnotplaintext

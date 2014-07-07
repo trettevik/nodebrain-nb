@@ -282,7 +282,8 @@ The @command{ENABLE} and @command{DISABLE} commands and assertions are not suppo
 This module does not implement triggers.  Each line received on a pipe is passed to the interpretter.
 
 @node GNU Free Documentation License
-@unnumbered GNUE Free Documentation License
+@unnumbered GNU Free Documentation License
+@include fdl.texi
 
 @node Index 
 @unnumbered Index 

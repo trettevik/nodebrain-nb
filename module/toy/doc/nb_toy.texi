@@ -159,6 +159,7 @@ Permission is granted to copy, distribute and/or modify this document under the 
 @b{References}
 @end ifnotplaintext
 @menu
+* GNU Free Documentation License::
 * Index::
 @end menu
 @end ifnottex
@@ -234,6 +235,10 @@ The Count skill increments a counter every time the condition specified in the n
 @end example
 
 These sample skills are useful for illustrating the way a node module can add functionality to NodeBrain without modifying nb. However, they are not very impressive skills, and when you look at the source code you might wonder if the effort to create a node module is worth the benefit. But keep in mind, the complexity of the API calls is not proportional to the complexity of the skill you are implementing. Trivial examples like these have a much greater percent of overhead in the API. You can start with one of these examples and create a very useful node module without having to touch the API calls much---depending on your requirements. In most cases, the bulk of the complexity should be in the code you write to perform the internal function of the module, not in API calls to NodeBrain.
+
+@node GNU Free Documentation License
+@unnumbered GNU Free Documentation License
+@include fdl.texi
 
 @node Index
 @unnumbered Index

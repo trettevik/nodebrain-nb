@@ -288,7 +288,7 @@ One reason you want to use a configuration file is to share these options with c
 
 The Webster module does not implement any triggers
 
-@node GNU Free Documentation License 
+@node GNU Free Documentation License
 @unnumbered GNU Free Documentation License
 @include fdl.texi
 

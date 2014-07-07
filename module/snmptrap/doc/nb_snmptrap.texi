@@ -215,6 +215,7 @@ This module generates an @code{alert} for every trap received.
 
 @node GNU Free Documentation License
 @unnumbered GNU Free Documentation License
+@include fdl.texi
 
 @node Index 
 @unnumbered Index 
