@@ -73,10 +73,10 @@ ACLOCAL_AMFLAGS= -I m4
 SUBDIRS = lib . module
 
 info_TEXINFOS = doc/nodebrain.texi doc/nbGuide/nbGuide.texi doc/nbTutorial/nbTutorial.texi doc/nbLanguage/nbLanguage.texi doc/nbLibrary/nbLibrary.texi
-doc_nbGuide_nbGuide_TEXINFOS = doc/nbGuide/fdl.texi
-doc_nbTutorial_nbTutorial_TEXINFOS = doc/nbTutorial/fdl.texi
-doc_nbLanguage_nbLanguage_TEXINFOS = doc/nbLanguage/fdl.texi
-doc_nbLibrary_nbLibrary_TEXINFOS = doc/nbLibrary/fdl.texi
+#doc_nbGuide_nbGuide_TEXINFOS = doc/nbGuide/fdl.texi
+#doc_nbTutorial_nbTutorial_TEXINFOS = doc/nbTutorial/fdl.texi
+#doc_nbLanguage_nbLanguage_TEXINFOS = doc/nbLanguage/fdl.texi
+#doc_nbLibrary_nbLibrary_TEXINFOS = doc/nbLibrary/fdl.texi
 
 dist_man_MANS = \
   man/nb.1 \
@@ -131,6 +131,12 @@ EXTRA_DIST = \
   debian/control \
   debian/rules \
   debian/changelog \
+  doc/documents.texi \
+  doc/licenses.texi \
+  doc/nbGuide/makedoc \
+  doc/nbLanguage/makedoc \
+  doc/nbLibrary/makedoc \
+  doc/nbTutorial/makedoc \
   nb.pc.in \
   build-nb \
   install-nb \

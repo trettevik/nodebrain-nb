@@ -6,15 +6,16 @@
 *
 * Permission to use and redistribute with or without fee, in source and binary
 * forms, with or without modification, is granted free of charge to any person
-* obtaining a copy of this software, provided that the above copyright notice,
-* this permission notice, and the following disclaimer are retained with source
-* code and reproduced in documentation included with binary distributions. 
+* obtaining a copy of this software and included documentation, provided that
+* the above copyright notice, this permission notice, and the following
+* disclaimer are retained with source files and reproduced in documention
+* included with source and binary distributions. 
 *
 * Unless required by applicable law or agreed to in writing, this software is
 * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 * KIND, either express or implied.
 *
-*==============================================================================
+*=============================================================================
 */
 // 2009-04-19 eat 0.7.5 - nbprotocol.c is now coupled with nb_peer.c 
 //   The coupling of nbprotocol.c is very messy, unfortunate, and something we need to clean up

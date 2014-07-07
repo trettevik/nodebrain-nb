@@ -22,34 +22,14 @@ NodeBrain Open Source Project
 @sp 2
 @b{Release @value{VERSION}}
 
-Author: Ed Trettevik <eat@@nodebrain.org>
+Author: Ed Trettevik
 
 Copyright @copyright{} @value{UPDATED-YEAR} Ed Trettevik <eat@@nodebrain.org>
 
 @sp 1
-Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
-
+Permission is granted to copy, distribute and/or modify this document under the terms of either the MIT License (Expat) or the NodeBrain License.
 @sp 1
-All trademarks and registered trademarks referenced in this document are the trademarks of their respective owners.
-
-@sp 2
-@b{Software License}
-
-Copyright @copyright{} @value{UPDATED-YEAR} Ed Trettevik <eat@@nodebrain.org>
-
-NodeBrain is free software; you can modify and/or redistribute it under the
-terms of either the MIT License (Expat) or the following NodeBrain License.
-
-Permission to use and redistribute with or without fee, in source and binary
-forms, with or without modification, is granted free of charge to any person
-obtaining a copy of this software, provided that the above copyright notice,
-this permission notice, and the following disclaimer are retained with source
-code and reproduced in documentation included with binary distributions.
-
-Unless required by applicable law or agreed to in writing, this software is
-distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, either express or implied.
-
+@include ../licenses.texi
 @end copying
 
 @iftex
@@ -150,8 +130,8 @@ Release @value{VERSION}, @value{UPDATED-MONTH}
 Copyright @copyright{} @value{UPDATED-YEAR} Ed Trettevik <eat@@nodebrain.org>
 
 @quotation
-Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
-A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
+Permission is granted to copy, distribute and/or modify this document under the terms of either the MIT License (Expat) or NodeBrain License.
+See the @i{Licenses} section at the end of this document for details.
 @end quotation
 
 @ifnotplaintext
@@ -171,7 +151,7 @@ A copy of the license is included in the section titled @i{GNU Free Documentatio
 @b{References}
 @end ifnotplaintext
 @menu
-* GNU Free Documentation License::
+* Licenses::
 * Index::
 @end menu
 @end ifnottex
@@ -1320,9 +1300,16 @@ true, unlike @code{on} and @code{when} rules that fire only when they transition
 This requires scheduling them to fire under a different mechanism.
 The scheduling mechanism for @code{if} rules was enhanced in 0.9.00 to achieve better performance.
 
-@node GNU Free Documentation License
-@unnumbered GNU Free Documentation License
-@include fdl.texi
+@ifnottex
+@node Licenses
+@unnumbered Licenses
+
+NodeBrain is free software; you can modify and/or redistribute it, including this document, under the
+terms of either the MIT License (Expat) or the NodeBrain License.
+
+@sp 1
+@include ../licenses.texi
+@end ifnottex
 
 @node Index
 @unnumbered Index
