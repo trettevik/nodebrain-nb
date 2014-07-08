@@ -17,34 +17,39 @@
 @copying
 NodeBrain Tutorial@*
 @value{UPDATED-MONTH}@*
-The Boeing Company,  P.O. Box 3707, Seattle, WA 98124, USA
+NodeBrain Open Source Project
 
 @sp 2
 @b{Release @value{VERSION}}
 
 Author: Ed Trettevik <eat@@nodebrain.org>
 
-Copyright @copyright{} 2006--@value{UPDATED-YEAR} The Boeing Company
+Copyright @copyright{} @value{UPDATED-YEAR} Ed Trettevik <eat@@nodebrain.org>
 
 @sp 1
 Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
 
 @sp 1
-NodeBrain(TM) is a trademark of The Boeing Company.   All other trademarks and registered trademarks referenced in this document are the trademarks of their respective owners.
+All trademarks and registered trademarks referenced in this document are the trademarks of their respective owners.
 
 @sp 2
 @b{Software License}
 
-@multitable {------------------------------} {----------------------------------------------------}
-@item Copyright @copyright{} 1998--@value{UPDATED-YEAR} @tab The Boeing Company
-@item @tab Ed Trettevik <eat@@nodebrain.org>
-@end multitable
+Copyright @copyright{} @value{UPDATED-YEAR} Ed Trettevik <eat@@nodebrain.org>
 
-NodeBrain is free software; you can redistribute it and/or  modify it under the terms of the GNU General Public License as published by theFree Software Foundation; either version 2 of the License, or (at your option) any later version.
+NodeBrain is free software; you can modify and/or redistribute it under the
+terms of either the MIT License (Expat) or the following NodeBrain License.
 
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+Permission to use and redistribute with or without fee, in source and binary
+forms, with or without modification, is granted free of charge to any person
+obtaining a copy of this software, provided that the above copyright notice,
+this permission notice, and the following disclaimer are retained with source
+code and reproduced in documentation included with binary distributions.
 
-You should have received a copy of the GNU General Public License along with this program; if not, write to Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+Unless required by applicable law or agreed to in writing, this software is
+distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.
+
 @end copying
 
 @iftex
@@ -70,7 +75,7 @@ You should have received a copy of the GNU General Public License along with thi
 @item 2005-10-12 @tab
 Title: @i{NodeBrain  Tutorial}@*  
 Author: Ed  Trettevik <eat@@nodebrain.org>@*
-Publisher: The Boeing Company
+Publisher: NodeBrain Open Source Project
 
 @item @tab
 Version 0.6.3 (not released)  
@@ -208,7 +213,7 @@ node module manuals for additional information.
 
 Release @value{VERSION}, @value{UPDATED-MONTH}
 
-Copyright @copyright{} 2006-@value{UPDATED-YEAR} The Boeing Company
+Copyright @copyright{} @value{UPDATED-YEAR} Ed Trettevik <eat@@nodebrain.org>
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
@@ -306,21 +311,20 @@ If you execute NodeBrain with no arguments, it starts in interactive mode and pr
 @smallexample
 $ @b{nb}
 
-N o d e B r a i n   0.8.10 (Dopey) 2012/06/02
+N o d e B r a i n   0.8.17 (Dopey) 2014-06-10
 
-Compiled Jun  2 2012 15:41:14 x86_64-unknown-linux-gnu
+Compiled Jun 12 2014 19:20:12 x86_64-unknown-linux-gnu
 
-Copyright (C) 1998-2012 The Boeing Company
-GNU General Public License
+Copyright (C) 2014 Ed Trettevik <eat@@nodebrain.org>
+MIT or NodeBrain License
 ----------------------------------------------------------------
 
-nb
+nb 
 
 Date       Time     Message
 ---------- -------- --------------------------------------------
-2012/06/03 14:16:03 NB000I NodeBrain nb[24764] myuser@@myhost
-2012/06/03 14:16:03 NB000I User profile /home/myuser/.nb/user.nb loaded.
-2012/06/03 14:16:03 NB000I Reading from standard input.
+2014-06-12 19:56:02 NB000I NodeBrain nb[10656] myuser@@myhost
+2014-06-12 19:56:02 NB000I Reading from standard input.
 ---------- --------
 
 >

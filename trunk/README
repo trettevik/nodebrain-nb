@@ -6,19 +6,19 @@
 |_| \_|\___/ \__ _|\___|____/|_|  \__ _|_|_| |_|
 
 
-NodeBrain 0.8.16
+NodeBrain 0.8.17
 
 ========================================================================
 
-File:        README for nodebrain-0.8.16 release files
+File:        README for nodebrain-0.8.17 release files
 
 Package:     NodeBrain (nb)
 
 Version:     0.8 - Dopey
 
-Release:     0.8.16 
+Release:     0.8.17 
 
-Date:        February 16, 2014
+Date:        July 10, 2014
 
 Reference:   http://www.nodebrain.org
                1) Online documentation
@@ -35,8 +35,8 @@ Installation Instructions for Linux/Unix Platforms
 
 a) From source code distribution - install to standard directories
 
-     $ tar -xzf nodebrain-0.8.16.tar.gz
-     $ cd nodebrain-0.8.16
+     $ tar -xzf nodebrain-0.8.17.tar.gz
+     $ cd nodebrain-0.8.17
      $ ./configure
      $ make
      $ make check
@@ -84,7 +84,7 @@ b) From git repository - requires autoconf/automake/libtools
 
      $ git clone git://git.code.sf.net/p/nodebrain/nb nodebrain-nb
      $ cd nodebrain-nb
-     $ git checkout 0.8.16
+     $ git checkout 0.8.17
      $ ./autogen.sh
      $ ./configure
      $ make
@@ -93,18 +93,18 @@ b) From git repository - requires autoconf/automake/libtools
 
 c) From source RPM file 
 
-     $ rpmbuild --rebuild nodebrain-0.8.16-1.el6.src.rpm
-     $ rpmbuild --rebuild nodebrain-0.8.16-1.src.rpm
+     $ rpmbuild --rebuild nodebrain-0.8.17-1.el6.src.rpm
+     $ rpmbuild --rebuild nodebrain-0.8.17-1.src.rpm
 
 d) From binary RPM file (x86_64 platform example)
 
-     $ rpm --install nodebrain-0.8.16-1.el6.x86_64.rpm
-     $ rpm --install nodebrain-0.8.16-1.x86_64.rpm
+     $ rpm --install nodebrain-0.8.17-1.el6.x86_64.rpm
+     $ rpm --install nodebrain-0.8.17-1.x86_64.rpm
 
 ======================================================================== 
 
 Although prior releases of NodeBrain were tested on various platforms,
-at time of release this version has only been tested on RHEL 5.7, x86_64.
+at time of release this version has only been tested on RHEL 6.4, x86_64.
 It should work on other Linux platforms, and be relatively easy to port
 to Unix platforms.  The project has stopped porting to Windows, and the
 conditional compilation for Windows is no longer expected to work.  We
@@ -113,21 +113,9 @@ high priority at this time.
 
 ======================================================================== 
 
-Copyright (C) 1998-2014 The Boeing Company
-                        Ed Trettevik <eat@nodebrain.org>
+Copyright (C) 2014 Ed Trettevik <eat@nodebrain.org>
 
-NodeBrain is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+NodeBrain is free software; you can modify and/or redistribute it under the
+terms of either the MIT License (Expat) or the NodeBrain License.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-Software License:  See COPYING file (also LICENSE.txt on Windows)
+See COPYING file for licenses.

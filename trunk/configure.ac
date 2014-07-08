@@ -1,22 +1,20 @@
 # Process this file with autoconf to produce a configure script.
 #=============================================================================
 #
-# Copyright (C) 1998-2014 The Boeing Company
-#                         Ed Trettevik <eat@nodebrain.org>
+# Copyright (C) 2014 Ed Trettevik <eat@nodebrain.org>
 #
-# NodeBrain is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
+# NodeBrain is free software; you can modify and/or redistribute it under the
+# terms of either the MIT License (Expat) or the following NodeBrain License.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# Permission to use and redistribute with or without fee, in source and binary
+# forms, with or without modification, is granted free of charge to any person
+# obtaining a copy of this software, provided that the above copyright notice,
+# this permission notice, and the following disclaimer are retained with source
+# code and reproduced in documentation included with binary distributions. 
 #
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+# Unless required by applicable law or agreed to in writing, this software is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.
 #
 #=============================================================================
 # Program:  NodeBrain
@@ -98,10 +96,11 @@
 # 2014-01-31 eat 0.8.16 Made OpenSSL optional
 # 2014-02-01 eat 0.8.16 Included --with-tls and --with-nb_peer options
 # 2014-02-01 eat 0.8.16 Reduced to a single configure.ac file (from 0.9.00)
+# 2014-04-07 eat 0.8.17 New version - license change
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([nodebrain],[0.8.16],[bugs@nodebrain.org])
+AC_INIT([nodebrain],[0.8.17],[bugs@nodebrain.org])
 #AC_CONFIG_SRCDIR([nb.c])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(config)
@@ -111,7 +110,7 @@ AM_INIT_AUTOMAKE
 # define module directory variables
 
 AC_DEFINE_UNQUOTED(NB_API_VERSION,"0",[NodeBrain API version])
-NB_MODULE_PATH=".nb:/usr/local/lib/nb-0.8.16:/usr/lib/nb-0.8.16:/usr/lib64/nb-0.8.16"
+NB_MODULE_PATH=".nb:/usr/local/lib/nb-0.8.17:/usr/lib/nb-0.8.17:/usr/lib64/nb-0.8.17"
 NB_MODULE_PATH_SEPARATOR=":"
 AC_DEFINE_UNQUOTED(NB_MODULE_PATH,"${NB_MODULE_PATH}",[Module path])
 AC_DEFINE_UNQUOTED(NB_MODULE_PATH_SEPARATOR,'${NB_MODULE_PATH_SEPARATOR}',[Module path separator])
@@ -129,7 +128,7 @@ LT_SYS_MODULE_EXT
 LT_FUNC_DLSYM_USCORE
 
 # define a release date variable
-AC_DEFINE([NB_RELEASE_DATE],"2014-02-16",[Define release date])
+AC_DEFINE([NB_RELEASE_DATE],"2014-04-10",[Define release date])
 
 # Checks for programs.
 AC_PROG_CC
@@ -251,7 +250,7 @@ AS_IF([test "x$enable_nb_webster" == xyes -a "x$with_tls" != xno],[NB_MODULES=$N
 
 AC_SUBST([NB_MODULES])
 # Set module subdirectory by minor version - ${libdir}/nb/${NB_MOD_DIR}/
-AC_SUBST([NB_MOD_DIR],[0.8.16])
+AC_SUBST([NB_MOD_DIR],[0.8.17])
 
 # Figure out which nb program to use with "make check".
 #   If we are in a Nodebrain distribution, we'll use

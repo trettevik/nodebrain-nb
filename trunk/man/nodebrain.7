@@ -1,7 +1,7 @@
 .\" Process this file with "groff -man -Tascii foo.1" or "nbman2ht foo.1"
 .\" See NodeBrain Developer Guide for project standards
 .\"
-.TH nb.man 7 "April 2013" "NodeBrain 0.8.15" "NodeBrain Administrator Guide"
+.TH nb.man 7 "July 2014" "NodeBrain 0.8.17" "NodeBrain Administrator Guide"
 .SH NAME
 \fBnodebrain\fP - NodeBrain State and Event Monitoring Agent
 .SH TOPICS
@@ -119,25 +119,25 @@ below, user input is highlighted.  Normally, assertions will come from external 
 .nf
 $ \fB./reactor\fP
 
-N o d e B r a i n   0.7.1 (Dunce) 2008/06/23
+N o d e B r a i n   0.8.17 (Dopey) 2014-02-15
 
-Compiled Jun 25 2008 16:31:35 s390x-ibm-linux-gnu
+Compiled Jun 25 2014 16:31:35 s390x-ibm-linux-gnu
 
-Copyright (C) 1998-2008 The Boeing Company
-GNU General Public License
+Copyright (C) 2014 Ed Trettevik <eat@nodebrain.org>
+MIT or Nodebrain License
 ----------------------------------------------------------------
 
 /usr/local/bin/nb -p ./reactor
 
 Date       Time     Message
 ---------- -------- --------------------------------------------
-2008/06/27 09:38:03 NB000I NodeBrain nb[23246] me@myserver
-2008/06/27 09:38:03 NB000I Argument [1] -p
-2008/06/27 09:38:03 NB000I Argument [2] ./reactor
+2014-06-27 09:38:03 NB000I NodeBrain nb[23246] me@myserver
+2014-06-27 09:38:03 NB000I Argument [1] -p
+2014-06-27 09:38:03 NB000I Argument [2] ./reactor
 > #!/usr/local/bin/nb -p
 > define r1 on(a=1 and b=2) x=25;
-2008/06/27 09:38:03 NB000I Source file "./reactor" included. size=57
-2008/06/27 09:38:03 NB000I Reading from standard input.
+2014-06-27 09:38:03 NB000I Source file "./reactor" included. size=57
+2014-06-27 09:38:03 NB000I Reading from standard input.
 ---------- --------
 
 > \fBassert a=1,b=7;\fP
@@ -175,29 +175,30 @@ from you. Your responses and NodeBrain conclusion are highlighted.
 .nf
 $ \fB./creature\fP
 
-N o d e B r a i n   0.7.1 (Dunce) 2008/06/23
+N o d e B r a i n   0.8.17 (Dopey) 2014-02-15
 
-Compiled Jun 26 2008 19:52:51 s390x-ibm-linux-gnu
+Compiled Jun 25 2014 16:31:35 s390x-ibm-linux-gnu
 
-Copyright (C) 1998-2008 The Boeing Company
-GNU General Public License
+Copyright (C) 2014 Ed Trettevik <eat@nodebrain.org>
+MIT or Nodebrain License
 ----------------------------------------------------------------
 
 ./nb -p ./creature
 
 Date       Time     Message
 ---------- -------- --------------------------------------------
-2008/06/27 07:01:37 NB000I NodeBrain nb[22427] me@myserver
-2008/06/27 07:01:37 NB000I Argument [1] -p
-2008/06/27 07:01:37 NB000I Argument [2] ./creature
+2014-06-27 07:01:37 NB000I NodeBrain nb[22427] me@myserver
+2014-06-27 07:01:37 NB000I Argument [1] -p
+2014-06-27 07:01:37 NB000I Argument [2] ./creature
 > #!./nb -p
 > define dog on(legs=4 and coat="fur" and tail);
 > define cow on(legs=4 and coat="leather" and tail);
 > define person on(legs=2 and (coat="skin" or coat="leather"));
 > define bird on(legs=2 and coat="feathers" and tail);
 > define fish on(!legs and coat="scales" and tail);
-2008/06/27 07:01:37 NB000I Source file "./creature" included. size=274
-2008/06/27 07:01:37 NB000I Reading from standard input.
+2014-06-27 07:01:37 NB000I Source file "./creature" included. size=274
+2014-06-27 07:01:37 NB000I Reading from standard input.
+
 ---------- --------
 
 > \fBquery\fP

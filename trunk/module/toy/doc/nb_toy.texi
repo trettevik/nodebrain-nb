@@ -11,35 +11,20 @@
 
 @copying
 Toy NodeBrain Module@*
-September 2011@*
-The Boeing Company,  P.O. Box 3707, Seattle, WA 98124, USA
+July 2014@*
+NodeBrain Open Source Project
 
 @sp 2
-@b{Release 0.8}
+@b{Release @value{RELEASE}}
 
-Author: Ed Trettevik <eat@@nodebrain.org>
+Author: Ed Trettevik
 
-Copyright @copyright{} 2011 The Boeing Company
-
-@sp 1
-Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts. A copy of the license is included in the section titled @i{GNU Free Documentation License} preceding the index at the end of this document.
+Copyright @copyright{} 2014 Ed Trettevik <eat@@nodebrain.org>
 
 @sp 1
-NodeBrain(TM) is a trademark of The Boeing Company. All other trademarks and registered trademarks referenced in this document are the trademarks of their respective owners.
-
-@sp 2
-@b{Software License}
-
-@multitable {------------------------------} {----------------------------------------------------}
-@item Copyright @copyright{} 1998--2010 @tab The Boeing Company
-@item @tab Ed Trettevik <eat@@nodebrain.org>
-@end multitable
-
-NodeBrain is free software; you can redistribute it and/or  modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option)any later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License formore details.
-
-You should have received a copy of the GNU General PublicLicense along with this program; if not, write to Free Software Foundation,Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+Permission is granted to copy, distribute and/or modify this document under the terms of either the MIT License (Expat) or the NodeBrain License.
+@sp 1
+@include ../../../doc/licenses.texi
 @end copying
 
 @iftex
@@ -52,7 +37,7 @@ You should have received a copy of the GNU General PublicLicense along with this
 \vskip4pt \hrule height 3pt width \hsize
 @end tex
 @sp 3
-@b{Release @value{VERSION}}
+@b{Release @value{RELEASE}}
 @page
 @vskip 0pt plus 1filll
 @insertcopying
@@ -65,7 +50,7 @@ You should have received a copy of the GNU General PublicLicense along with this
 @item 2005-10-12 @tab
 Title: @i{NodeBrain  Tutorial}@*  
 Author: Ed  Trettevik <eat@@nodebrain.org>@*
-Publisher: The Boeing Company
+Publisher: NodeBrain Open Source Project
 
 @item 2010-12-31 @tab
 Release 0.8.3
@@ -140,10 +125,10 @@ $
 
 This tutorial is for NodeBrain (version @value{VERSION}, @value{UPDATED}), an open source agent for state and event monitoring.
 
-Copyright @copyright{} 2006, 2007, 2008, 2009, 2010, 2011 The Boeing Company
-
+Copyright @copyright{} 2014 Ed Trettevik <eat@@nodebrain.org>
 @quotation
-Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} preceding the index at the end of this document.
+Permission is granted to copy, distribute and/or modify this document under the terms of either the MIT License (Expat) or NodeBrain License.
+See the @i{Licenses} section at the end of this document for details.
 @end quotation
 
 @ifnotplaintext
@@ -162,6 +147,7 @@ Permission is granted to copy, distribute and/or modify this document under the 
 @b{References}
 @end ifnotplaintext
 @menu
+* Licenses::
 * Index::
 @end menu
 @end ifnottex
@@ -237,6 +223,17 @@ The Count skill increments a counter every time the condition specified in the n
 @end example
 
 These sample skills are useful for illustrating the way a node module can add functionality to NodeBrain without modifying nb. However, they are not very impressive skills, and when you look at the source code you might wonder if the effort to create a node module is worth the benefit. But keep in mind, the complexity of the API calls is not proportional to the complexity of the skill you are implementing. Trivial examples like these have a much greater percent of overhead in the API. You can start with one of these examples and create a very useful node module without having to touch the API calls much---depending on your requirements. In most cases, the bulk of the complexity should be in the code you write to perform the internal function of the module, not in API calls to NodeBrain.
+
+@ifnottex
+@node Licenses
+@unnumbered Licenses
+
+NodeBrain is free software; you can modify and/or redistribute it, including this document, under the
+terms of either the MIT License (Expat) or the NodeBrain License.
+
+@sp 1
+@include ../../../doc/licenses.texi
+@end ifnottex
 
 @node Index
 @unnumbered Index

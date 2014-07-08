@@ -1,3 +1,38 @@
+/*
+* Copyright (C) 2014 Ed Trettevik <eat@nodebrain.org>
+*
+* NodeBrain is free software; you can modify and/or redistribute it under the
+* terms of either the MIT License (Expat) or the following NodeBrain License.
+*
+* Permission to use and redistribute with or without fee, in source and binary
+* forms, with or without modification, is granted free of charge to any person
+* obtaining a copy of this software, provided that the above copyright notice,
+* this permission notice, and the following disclaimer are retained with source
+* code and reproduced in documentation included with binary distributions. 
+*
+* Unless required by applicable law or agreed to in writing, this software is
+* distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.
+*
+*==============================================================================
+* Program:  NodeBrain
+*
+* File:     nbrand.c
+*
+* Title:    Random Number Functions
+*
+* Function:
+*
+*   Random number generation functions that use the OpenSSL library.
+*
+*=============================================================================
+* Change History:
+*
+*    Date    Name/Change
+* ---------- -----------------------------------------------------------------
+* 2012-10-16 Ed Trettevik - Introduced in 0.8.12
+*=============================================================================
+*/
 #include <nb/nb.h>
 #include <openssl/rand.h>
 

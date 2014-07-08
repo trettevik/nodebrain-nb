@@ -7,6 +7,36 @@
 
 ============================================================
 
+NodeBrain 0.8.17 (Dopey) Change Summary
+
+* Released July 10, 2014
+
+* Theme: License Change
+
+     This version is released under the MIT License or the
+     NodeBrain License which is designed to be a combination
+     of the MIT Lisense (Expat) and 2-clause BSD License.
+
+* Documentation:
+
+  o  All documents modified to identify new license.
+
+* Incompatibilities:
+
+  o  Line editing is now handled by libedit instead of
+     readline.  This is only a build incompatibility. The
+     new library provides the same functionality as the
+     old.
+
+* New Features: (none)
+
+* Deprecated Syntax: (none)
+
+* Bug Fixes: (none)
+
+============================================================
+
+
 NodeBrain 0.8.16 (Dopey) Change Summary
 
 * Released February 16, 2014

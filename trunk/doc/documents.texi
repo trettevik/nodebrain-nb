@@ -1,0 +1,12 @@
+@sp 2
+@b{Documents}
+@sp 1
+@quotation
+@i{NodeBrain Guide} - Information on using @code{nb}@*
+@i{NodeBrain Tutorial} - A gentle introduction to @code{nb} and the rule language@*
+@i{NodeBrain Language} - Rule language syntax and semantics@*
+@i{NodeBrain Library} - C API@*
+@*
+@i{Caboodle NodeBrain Kit} - A framework for managing rules@*
+@i{System NodeBrain Kit} - A small sample application
+@end quotation

@@ -1,0 +1,6 @@
+makeinfo --html --no-split --number-sections --css-include=../style.css nbLibrary.texi
+makeinfo --plaintext --no-split --number-sections --output=nbLibrary.txt nbLibrary.texi
+makeinfo --docbook --no-split --number-sections --output=nbLibrary_DocBook.xml nbLibrary.texi
+makeinfo --xml --no-split --number-sections nbLibrary.texi
+makeinfo --no-split --number-sections nbLibrary.texi
+texi2pdf -o nbLibrary.pdf nbLibrary.texi
