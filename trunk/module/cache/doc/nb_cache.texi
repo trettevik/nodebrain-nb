@@ -73,49 +73,7 @@ Files referenced in this tutorial are included in the tutorial directory of the 
 
 See www.nodebrain.org for more information and the latest update to this document.
 
-@sp 2
-@b{Documents}
-@sp 1
-@quotation
-@i{NodeBrain Tutorial}
-
-@i{NodeBrain User Guide}
-
-@i{NodeBrain Language Reference}
-
-@i{NodeBrain Module Reference}
-
-@i{NodeBrain API Reference}
-@end quotation
-
-@sp 2
-@b{Document Conventions}
-@sp 1
-Sample code and input/output examples are displayed in a monospace font, indented in HTML and Info, and enclosed
-in a box in PDF or printed copies.
-Bold text is used to bring the reader's attention to specific portions of an example.
-In the following example, the first and last line are associated with the host shell and the lines in between are input or output unique to NodeBrain.
-The @code{define} command is highlighted, indicating it is the focus of the example.
-Lines starting with "@dots{}" are a continuation of the previous line ending with "@dots{}".
-This is not part of the language, just one way of breaking up single lines to fit on a printed page.
-If you copy an example, you must remove the dots and combine the lines into a single line.
-
-@cartouche
-@smallexample
-$ nb
-> @b{define myFirstRule on(a=1 and b=2) mood="happy";}
-> assert mood="sad";
-> show mood
-mood = "sad"
-> assert a=1,b=2,c=3,d="This is an example of a long single line that", @dots{}
-@dots{} e="we depict on multiple lines to fit on the documnet page";
-2008/06/05 12:09:08 NB000I Rule myFirstRule fired(mood="happy")
-> show mood
-mood = "happy"
-> quit
-$
-@end smallexample
-@end cartouche
+@include conventions.texi
 
 @end titlepage
 

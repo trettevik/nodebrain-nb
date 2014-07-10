@@ -1,3 +1,4 @@
+if [ ! -h "module" ]; then ln -s ../../module; fi
 makeinfo --html --no-split --number-sections --css-include=../style.css nbTutorial.texi
 makeinfo --plaintext --no-split --number-sections --output=nbTutorial.txt nbTutorial.texi
 makeinfo --docbook --no-split --number-sections --output=nbTutorial_DocBook.xml nbTutorial.texi

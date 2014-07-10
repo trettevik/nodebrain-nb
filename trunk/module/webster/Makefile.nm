@@ -16,4 +16,5 @@ EXTRA_DIST = \
   caboodle/security/TrustedCertificates.pem \
   doc/nb_webster.texi \
   doc/nb_webster_tutorial.texi \
+  doc/conventions.texi \
   doc/version.texi

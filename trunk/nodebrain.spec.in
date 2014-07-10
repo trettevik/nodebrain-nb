@@ -14,7 +14,7 @@ URL: http://www.nodebrain.org/
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires: libedit-devel pcre-devel openssl-devel gettext pkgconfig
-Requires: liedit pcre
+Requires: libedit pcre
 Requires(post): /sbin/install-info
 Requires(preun): /sbin/install-info
 

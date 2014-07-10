@@ -9,4 +9,7 @@ nb_toy_la_CFLAGS  = $(NB_MOD_CFLAGS)
 nb_toy_la_LDFLAGS = -module -avoid-version
 
 EXTRA_DIST = \
-  caboodle/check/toy.nb~
+  caboodle/check/toy.nb~ \
+  doc/nb_toy.texi \
+  doc/conventions.texi \
+  doc/version.texi

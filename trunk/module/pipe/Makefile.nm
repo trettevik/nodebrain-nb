@@ -14,4 +14,5 @@ EXTRA_DIST = \
   caboodle/servant/echo.sh \
   doc/nb_pipe.texi \
   doc/nb_pipe_tutorial.texi \
+  doc/conventions.texi \
   doc/version.texi

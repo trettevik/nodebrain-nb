@@ -1,14 +1,4 @@
-@c This file is included at the end of the preface and before @end titlepage in a module document
-@sp 2
-@b{Documents}
-@sp 1
-@quotation
-@i{NodeBrain Guide} - Information on using @code{nb}@*
-@i{NodeBrain Tutorial} - A gentle introduction to @code{nb} and the rule language@*
-@i{NodeBrain Language} - Rule language syntax and semantics@*
-@i{NodeBrain Library} - C API@*
-@end quotation
-
+@c This file is included at the end of the preface and before @end titlepage
 @sp 2
 @b{Document Conventions}
 @sp 1

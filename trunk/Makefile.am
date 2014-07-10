@@ -71,10 +71,28 @@
 SUBDIRS = lib . module
 
 info_TEXINFOS = doc/nodebrain.texi doc/nbGuide/nbGuide.texi doc/nbTutorial/nbTutorial.texi doc/nbLanguage/nbLanguage.texi doc/nbLibrary/nbLibrary.texi
-doc_nbGuide_nbGuide_TEXINFOS = doc/nbGuide/licenses.texi
-doc_nbTutorial_nbTutorial_TEXINFOS = doc/nbTutorial/licenses.texi
-doc_nbLanguage_nbLanguage_TEXINFOS = doc/nbLanguage/licenses.texi
-doc_nbLibrary_nbLibrary_TEXINFOS = doc/nbLibrary/licenses.texi
+doc_nbGuide_nbGuide_TEXINFOS = \
+  doc/nbGuide/makedoc \
+  doc/nbGuide/licenses.texi \
+  doc/nbGuide/RelationalTermRichRulesAssert.png \
+  doc/nbGuide/RelationalTermRichRulesAssert.txt \
+  doc/nbGuide/RelationalValueRichRulesAlert.png \
+  doc/nbGuide/RelationalValueRichRulesAlert.txt \
+  doc/nbGuide/RelationalValueRichRulesAssert.png \
+  doc/nbGuide/RelationalValueRichRulesAssert.txt 
+doc_nbLanguage_nbLanguage_TEXINFOS = \
+  doc/nbLanguage/makedoc \
+  doc/nbLanguage/style.css \
+  doc/nbLanguage/licenses.texi \
+  doc/nbLanguage/langref* 
+doc_nbLibrary_nbLibrary_TEXINFOS = \
+  doc/nbLibrary/makedoc \
+  doc/nbLibrary/licenses.texi \
+  doc/nbLibrary/Interfaces.png \
+  doc/nbLibrary/Interfaces.txt
+doc_nbTutorial_nbTutorial_TEXINFOS = \
+  doc/nbTutorial/makedoc \
+  doc/nbTutorial/licenses.texi
 
 dist_man_MANS = \
   man/nb.1 \
@@ -130,7 +148,9 @@ EXTRA_DIST = \
   debian/rules \
   debian/changelog \
   doc/documents.texi \
+  doc/conventions.texi \
   doc/licenses.texi \
+  doc/style.css \
   nb.pc.in \
   build-nb \
   install-nb \

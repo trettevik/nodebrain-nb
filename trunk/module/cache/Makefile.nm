@@ -12,4 +12,5 @@ EXTRA_DIST = \
   caboodle/check/cache.nb~ \
   doc/nb_cache.texi \
   doc/nb_cache_tutorial.texi \
+  doc/conventions.texi \
   doc/version.texi
