@@ -9,6 +9,8 @@ nb
 nodebrain
 nbTutorial.info
 configure
+m4
+config.h.in~
 libtool
 config.h.in
 config.h
