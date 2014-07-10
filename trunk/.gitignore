@@ -42,3 +42,4 @@ doc/version-nbTutorial.texi
 *.toc
 *.tp
 *.vr
+html/n*.html
