@@ -252,8 +252,9 @@
 #include <nb/nbi.h>
 
 #if !defined(WIN32)
-#include <readline/readline.h>
-#include <readline/history.h>
+#include <editline/readline.h>
+//#include <readline/readline.h>
+//#include <readline/history.h>
 #endif
 
 // Get a command from interactive user.

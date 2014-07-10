@@ -737,7 +737,10 @@ static int nbWebsterCgi(nbCELL context,nbWebSession *session,char *file,char *qu
       nbLogMsg(context,0,'E',"Unable to chdir to %s - %s",dir,strerror(errno));
       return(-1);
       }
-    getcwd(dir,sizeof(dir));
+    if(getcwd(dir,sizeof(dir))==NULL){
+      nbLogMsg(context,0,'E',"Unable to obtain current working directory - %s",strerror(errno));
+      return(-1);
+      }
     nbLogMsg(context,0,'T',"During pwd=%s",dir);
     }
   if(session->method==NB_WEBSTER_METHOD_GET){
@@ -903,9 +906,10 @@ static void nbWebsterServe(nbCELL context,nbWebServer *webster,nbWebSession *ses
     nbProxyProducer(context,session->client,session,NULL); // remove producer
     nbProxyBookClose(context,&session->book);  // make sure we have a closed book
     if(!session->queryString) session->queryString="";
-    chdir(webster->dir); // let handler make own decision about directory
-    rc=(*resource->handler)(context,session,resource->handle);
-    chdir(webster->rootdir);
+    if((rc=chdir(webster->dir))==0){ // let handler make own decision about directory
+      rc=(*resource->handler)(context,session,resource->handle);
+      if(chdir(webster->rootdir)<0) nbAbort("Webster unable to chdir back to content directory");
+      }
     nbWebsterReply(context,session);
     // 2012-05-11 eat - experiment with close option - note need to be able to close session any point we finish a reply
     if(session->close) nbProxyProducer(context,session->client,session,nbWebsterShutdownProducer);
@@ -1398,9 +1402,10 @@ static int nbWebsterRequest(nbCELL context,nbProxy *proxy,void *handle){
     return(0);
     }
   // ok, just act like a little web server
-  chdir(webster->rootdir);
-  nbWebsterServe(context,webster,session);
-  chdir(webster->dir);
+  if(chdir(webster->rootdir)==0){
+    nbWebsterServe(context,webster,session);
+    if(chdir(webster->dir)<0) nbAbort("Webster unable to chdir back to document directory");
+    }
   return(0);
   }
 

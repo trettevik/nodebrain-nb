@@ -3,23 +3,21 @@ Name: nodebrain
 Maintainer: Ed Trettevik <eat@nodebrain.org>
 Source: http://svn.code.sf.net/p/nodebrain/code/nb
 
-Copyright: 1998-2013 The Boeing Company <eat@nodebrain.org>
-License: GPL-2+
+Copyright: 2014 Ed Trettevik <eat@nodebrain.org>
+License: MIT
 
 Files: debian/*
-Copyright: 1998-2013 The Boeing Company <eat@nodebrain.org>
-License: GPL-2+
+Copyright: 2014 Ed Trettevik <eat@nodebrain.org>
+License: MIT
 
-License: GPL-2+
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-.
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-.
-You should have received a copy of the GNU General Public License along
-with this program; if not, write to the Free Software Foundation, Inc.,
+License: MIT
+Permission to use and redistribute with or without fee, in source and binary
+forms, with or without modification, is granted free of charge to any person
+obtaining a copy of this software and included documentation, provided that
+the above copyright notice, this permission notice, and the following
+disclaimer are retained with source files and reproduced in documention
+included with source and binary distributions.
+
+Unless required by applicable law or agreed to in writing, this software is
+distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.

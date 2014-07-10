@@ -1,3 +1,15 @@
+nodebrain (0.8.17-1) unstable; urgency=low
+
+  * License change
+
+ -- Ed Trettevik <eat@nodebrain.org>  Wed, 9 Jul 2014 19:49:59 -0300
+
+nodebrain (0.8.16-1) unstable; urgency=low
+
+  * Configuration options
+
+ -- Ed Trettevik <eat@nodebrain.org>  Mon, 17 Feb 2014 15:00:00 +0800
+
 nodebrain (0.8.15-1) unstable; urgency=low
 
   * Initial Release

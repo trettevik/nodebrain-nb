@@ -8,9 +8,10 @@
 #
 # Permission to use and redistribute with or without fee, in source and binary
 # forms, with or without modification, is granted free of charge to any person
-# obtaining a copy of this software, provided that the above copyright notice,
-# this permission notice, and the following disclaimer are retained with source
-# code and reproduced in documentation included with binary distributions. 
+# obtaining a copy of this software and included documentation, provided that
+# the above copyright notice, this permission notice, and the following
+# disclaimer are retained with source files and reproduced in documention
+# included with source and binary distributions. 
 #
 # Unless required by applicable law or agreed to in writing, this software is
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -168,9 +169,10 @@ AC_CHECK_FILE([../lib/libnb.la],[AC_SUBST([NB_LIBRARY_PATH],[../../../lib/.libs]
 AC_SUBST([NB_MOD_PATH],[../.libs])
 
 AC_CHECK_LIB(pcre,pcre_compile,,[AC_MSG_ERROR(Required library -lpcre not found.  Specify path in LDFLAGS.)])
-AC_SEARCH_LIBS(initscr,ncurses)
-AC_CHECK_LIB(readline,readline,,[AC_MSG_ERROR(Required library -lreadline not found. Specify path in LDFLAGS.)])
-AC_CHECK_LIB(history,add_history,,[AC_MSG_ERROR(Required library -lhistory not found. Specify path in LDFLAGS.)])
+#AC_SEARCH_LIBS(initscr,ncurses)
+AC_CHECK_LIB(edit,readline,,[AC_MSG_ERROR(Required library -ledit not found. Specify path in LDFLAGS.)])
+#AC_CHECK_LIB(readline,readline,,[AC_MSG_ERROR(Required library -lreadline not found. Specify path in LDFLAGS.)])
+#AC_CHECK_LIB(history,add_history,,[AC_MSG_ERROR(Required library -lhistory not found. Specify path in LDFLAGS.)])
 
 AC_SEARCH_LIBS(socket,socket)
 AC_SEARCH_LIBS(inet_ntoa,nsl)

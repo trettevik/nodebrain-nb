@@ -1,167 +1,121 @@
-N o d e B r a i n   0.7.4
+ _   _           _      ____
+| \ | |         | |    |    \          ( )
+|  \| | ___   __| | ___| | ) |_ _  __ _ _ _ __
+|     |/   \ /    |/ _ \    <|  _|/    | |  _ \
+| |\  | ( ) | ( | |  __/ | ) | |   ( | | | | | |
+|_| \_|\___/ \__ _|\___|____/|_|  \__ _|_|_| |_|
+
+
+NodeBrain 0.8.17
 
 ========================================================================
 
-File:        README for nb-0.7.4 release files
+File:        README for nodebrain-0.8.17 release files
 
 Package:     NodeBrain (nb)
 
-Version:     0.7 - Dunce
+Version:     0.8 - Dopey
 
-Release:     0.7.4
+Release:     0.8.17 
 
-Date:        February 9, 2009
+Date:        July 10, 2014
 
 Reference:   http://www.nodebrain.org
                1) Online documentation
                2) Signatures to verify release file integrity
 
-See NEWS for a list of changes in this release.
+Warning:     This version has incompatibilities with prior versions that
+             may require minor changes to rules used with prior releases.
 
-NOTE: This version is incompatible with rules coded for prior versions.
-You will need to modify existing rules for use with 0.7.x.
+See NEWS for a list of changes in this release.
 
 ======================================================================== 
 
-Installation Instructions for Unix/Linux Platforms
+Installation Instructions for Linux/Unix Platforms
 
 a) From source code distribution - install to standard directories
 
-     $ gunzip nb-0.7.4-source.tar.gz
-     $ tar -xf nb-0.7.4-source.tar
-     $ cd nb-0.7.4
+     $ tar -xzf nodebrain-0.8.17.tar.gz
+     $ cd nodebrain-0.8.17
      $ ./configure
      $ make
      $ make check
      $ make install
 
-b) From source code distribution - install to /tmp/nodebrain
+   To get a list of configure script options use --help.
 
-     $ gunzip nb-0.7.4-source.tar.gz
-     $ tar -xf nb-0.7.4-source.tar
-     $ cd nb-0.7.4
-     $ mkdir /tmp/nodebrain
-     $ ./configure --prefix=/tmp/nodebrain
+     $ ./configure --help
+
+   You can exclude NodeBrain modules (plugins) from a build using
+   a --disable-nb_<module> parameter.  Examples for the Peer and
+   Webster modules are illustrated here.
+
+     $ ./configure --disable-nb_peer
+     $ ./configure --disable-nb_webster
+
+   To exclude features and components that depend on openssl, add the
+   configure script parameter --without-tls.
+
+     $ ./configure --without-tls
+
+   This will exclude the following API's from the NodeBrain library:
+
+     nbTls      - Abstraction of SSL/TLS layer provided by OpenSSL.
+                  (GnuTLS may be supported also in a future release.)
+
+     nbPeer     - Non-blocking data transport between NodeBrain agents
+
+     nbProxy    - Message page forwarding for proxies.
+
+     nbMsg      - Decoupled event streams with reliable one-time delivery
+
+     nbWebster  - Interface for HTTPS communication
+
+   It also excludes the following modules that depend on one or more
+   of these excluded API's.
+
+     nb_mail    - SMTP send and receive
+
+     nb_message - Message steam producer, consumer, client and server
+
+     nb_webster - Minimal web server for caboodle administration
+
+b) From git repository - requires autoconf/automake/libtools
+
+     $ git clone git://git.code.sf.net/p/nodebrain/nb nodebrain-nb
+     $ cd nodebrain-nb
+     $ git checkout 0.8.17
+     $ ./autogen.sh
+     $ ./configure
      $ make
      $ make check
      $ make install
 
-c) From binary distribution (none available at time of initial release)
+c) From source RPM file 
 
-     $ gunzip nb-0.7.4-<distribution>.tar.gz
-     $ tar -xf nb-0.7.4-<distribution>.tar
-     $ cd nb-0.7.4
-     $ ./install-nb
-   
-======================================================================== 
-Unix/Linux Platforms
+     $ rpmbuild --rebuild nodebrain-0.8.17-1.el6.src.rpm
+     $ rpmbuild --rebuild nodebrain-0.8.17-1.src.rpm
 
-The install instructions above have been tried with success on the
-following platforms with this release.
+d) From binary RPM file (x86_64 platform example)
 
-OS            Hardware
------------   ----------------------------------------------------
-GNU/Linux
-  Suse        IBM s390
-UNIX
-  Solaris     x86, sparc
-
-Previous version of NodeBrain built ok on the following platforms, but
-have not been tried with this release.  We relied on the SourceForge
-compiler farm for a few of these platforms in the past. 
-
-OS            Hardware
------------   ----------------------------------------------------
-GNU/Linux         (Most distribtuions versions probably work)
-  Debian      x86, alpha,
-  Fedora      x86
-  Suse        amd64,IBM s390
-  Mandrake    x86 (Not tested for several versions)
-  Redhat      x86 (Compile farm switched to Fedora)
-UNIX
-  FreeBSD     x86
-  NetBSD      x86
-  OpenBSD     x86
-  Solaris     x86, sparc
-  HPUX        hp 9000/700
-  Mac OS X    ppc
-  AIX         RS/6000 (skill modules will not work without a patch)
-  Teradata    NCR (Not tested for several versions)
-  Dynix/ptx   Sequent (End of life - not tested for several versions)
-  zOS USS     IBM s390 (Not tested for several versions)
-  IRIX        SGI (Compiled many versions ago)
+     $ rpm --install nodebrain-0.8.17-1.el6.x86_64.rpm
+     $ rpm --install nodebrain-0.8.17-1.x86_64.rpm
 
 ======================================================================== 
 
-Installation Instructions for Windows
+Although prior releases of NodeBrain were tested on various platforms,
+at time of release this version has only been tested on RHEL 6.4, x86_64.
+It should work on other Linux platforms, and be relatively easy to port
+to Unix platforms.  The project has stopped porting to Windows, and the
+conditional compilation for Windows is no longer expected to work.  We
+hope to support Windows again at some future release, but it is not a
+high priority at this time.  
 
-Version 0.7 has not been ported to Windows yet.  You will need to use
-0.6.5 on Windows and follow these instrucutions.
-
-The best way to install on a Windows platform is to obtain a Windows
-distribution file.  A binary distribution with a Microsoft Installer (MSI)
-file is provided for easy installation, and a source distribution is 
-provided with Microsoft Visual Studio 6.0 C++ project workspace.
-
-     nb-0.6.5-win.2k-x86.setup.zip    (binary)
-     nb-0.6.5-source.msdsw.zip        (source)
-
-If you are installing from the standard source only distribution on a
-Windows platform and want to use Microsoft Visual Studio 6.0 to compile,
-use the following settings.
-
-  o  nb  
-
-     Project type:   Win32 Console Application
-     Link libraries: ws2_32.lib advapi32.lib librxspencer.lib
-
-     You may obtain librxspencer.lib from gnuwin32.source.net
-     download package RegEx-Spencer.  You may substitute a
-     compatible RegEx library if you have a preference.
- 
-  o  nb_mod_console.dll
-     nb_mod_netflow.dll
-     nb_mod_servant.dll
-     nb_mod_simple.dll
-     nb_mod_snmptrap.dll
-     nb_mod_syslog.dll
-     nb_mod_translate.dll
-     nb_mod_tree.dll
-
-     Project type:   Win32 Dynamic-Link Library
-     Link libraries: nb.lib msvcrt.lib  
-     Link options:   /nodefaultlib:"libcmt.lib"
-
-     You will need to build nb before linking skill modules.
-     Qualify the nb.lib as necessary so the linker can
-     find the one your built.
-
-Version 0.6.5 has only been built on Windows XP.
-
-Windows   Status
---------  ---------------------------------------------------
-XP        Compiled this release (0.6.5)
-2003      Not tested
-2000      Not tested
-98        No longer supported
-95        No longer supported.
 ======================================================================== 
 
-Copyright (C) 1998-2009 The Boeing Company
-                        Ed Trettevik <eat@nodebrain.org>
+Copyright (C) 2014 Ed Trettevik <eat@nodebrain.org>
 
-NodeBrain is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+NodeBrain is free software; you can modify and/or redistribute it under the
+terms of either the MIT License (Expat) or the NodeBrain License.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-Software License:  See COPYING file (also LICENSE.txt on Windows)
+See COPYING file for licenses.
