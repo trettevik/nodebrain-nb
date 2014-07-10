@@ -17,33 +17,14 @@ NodeBrain Open Source Project
 @sp 2
 @b{Release @value{RELEASE}}
 
-Author: Ed Trettevik <eat@@nodebrain.org>
+Author: Ed Trettevik
 
 Copyright @copyright{} 2014 Ed Trettevik <eat@@nodebrain.org>
 
 @sp 1
-Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts. A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
-
+Permission is granted to copy, distribute and/or modify this document under the terms of either the MIT License (Expat) or the NodeBrain License.
 @sp 1
-All trademarks and registered trademarks referenced in this document are the trademarks of their respective owners.
-
-@sp 2
-@b{Software License}
-
-Copyright @copyright{} 2014 Ed Trettevik <eat@@nodebrain.org>
-
-The Translator NodeBrain Module is free software; you can modify and/or redistribute it under the
-terms of either the MIT License (Expat) or the following NodeBrain License.
-
-Permission to use and redistribute with or without fee, in source and binary
-forms, with or without modification, is granted free of charge to any person
-obtaining a copy of this software, provided that the above copyright notice,
-this permission notice, and the following disclaimer are retained with source
-code and reproduced in documentation included with binary distributions.
-
-Unless required by applicable law or agreed to in writing, this software is
-distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, either express or implied.
+@include ../../../doc/licenses.texi
 @end copying
 
 @iftex
@@ -56,7 +37,7 @@ KIND, either express or implied.
 \vskip4pt \hrule height 3pt width \hsize
 @end tex
 @sp 3
-@b{Version @value{VERSION}}
+@b{Release @value{RELEASE}}
 @page
 @vskip 0pt plus 1filll
 @insertcopying
@@ -109,7 +90,8 @@ plug-in for translating character strings into cell values and/or NodeBrain comm
 @*@* 
 Copyright @copyright{} 2014 Ed Trettevik <eat@@nodebrain.org>
 @quotation
-Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
+Permission is granted to copy, distribute and/or modify this document under the terms of either the MIT License (Expat) or NodeBrain License.
+See the @i{Licenses} section at the end of this document for details.
 @end quotation
 
 @ifnotplaintext
@@ -126,7 +108,7 @@ Permission is granted to copy, distribute and/or modify this document under the 
 @b{References}
 @end ifnotplaintext
 @menu
-* GNU Free Documentation License::
+* Licenses::
 * Index::
 @end menu
 @end ifnottex
@@ -256,9 +238,16 @@ See "Translators" in the @i{NodeBrain Language Reference} for information on tra
 When a string is sent to a translator node, by an assertion or a command, the node may emit NodeBrain commands.
 Emitted commands executed in the context of the translator node. To direct a command to another node, a context prefix is required on the command within the translator file.
 
-@node GNU Free Documentation License
-@unnumbered GNU Free Documentation License
-@include fdl.texi
+@ifnottex
+@node Licenses
+@unnumbered Licenses
+
+NodeBrain is free software; you can modify and/or redistribute it, including this document, under the
+terms of either the MIT License (Expat) or the NodeBrain License.
+
+@sp 1
+@include ../../../doc/licenses.texi
+@end ifnottex
 
 @node Index 
 @unnumbered Index 

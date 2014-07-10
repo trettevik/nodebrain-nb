@@ -14,6 +14,7 @@ URL: http://www.nodebrain.org/
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires: libedit-devel pcre-devel openssl-devel gettext pkgconfig
+Requires: libedit pcre
 Requires(post): /sbin/install-info
 Requires(preun): /sbin/install-info
 
@@ -122,8 +123,14 @@ This package contains static libraies for nodebrain.
 #-------------------------------------------------------------------------
 
 %changelog
-* Sat Jun 14 2014 Ed Trettevik <eat@nodebrain.org> - 0.9.02-1
+* Wed Jul 9 2014 Ed Trettevik <eat@nodebrain.org> - 0.9.02-1
 - Update for 0.9.02
+
+* Tue Jul 8 2014 Ed Trettevik <eat@nodebrain.org> - 0.8.17-1
+- License change and switch from readline to libedit
+
+* Mon Feb 17 2014 Ed Trettevik <eat@nodebrain.org> - 0.8.16-1
+- Configuration options
 
 * Sat Apr 27 2013 Ed Trettevik <eat@nodebrain.org> - 0.8.15-2
 - Changed to please rpmlint

@@ -161,28 +161,28 @@ There is no @code{myServer.r1} defined in the client.  This is what happened at 
 @smallexample
 $ @b{cat server.log}
   
-N o d e B r a i n   0.7.0(Dunce) 2008/05/24
-  
-Compiled Jun 10 2008 15:30:28s390x-ibm-linux-gnu
-  
-Copyright (C) 1998-2008 Ed Trettevik <eat@@nodebrain.org>
-GNU General Public License
+N o d e B r a i n   0.9.02 (Columbo) 2014-02-15
+
+Compiled Jun 12 2014 19:20:12 x86_64-unknown-linux-gnu
+
+Copyright (C) 2014 Ed Trettevik <eat@@nodebrain.org>
+MIT or NodeBrain License
 ----------------------------------------------------------------
   
 nb -d ./server
 
 Date       Time     Message
 ---------- ----------------------------------------------------
-2008/06/11 10:27:58 NB000I NodeBrain nb[20643:1] myuser@@myhost
-2008/06/11 10:27:58 NB000I Agent log is server.log
-2008/06/11 10:27:58 NM000I peer.server myServer: @dots{}
+2014-06-11 10:27:58 NB000I NodeBrain nb[20643:1] myuser@@myhost
+2014-06-11 10:27:58 NB000I Agent log is server.log
+2014-06-11 10:27:58 NM000I peer.server myServer: @dots{}
 @dots{} Listening for NBP connections as buddy@@./socket
-2008/06/11 10:28:00 NM000I peer.server myServer: buddy@@./socket
+2014-06-11 10:28:00 NM000I peer.server myServer: buddy@@./socket
 > myServer. @b{assert a=1,b=2;}
-2008/06/11 10:28:00 NB000I @b{RulemyServer.r1 fired}
-2008/06/11 10:28:00 NM000I peer.server myServer: buddy@@./socket
+2014-06-11 10:28:00 NB000I @b{RulemyServer.r1 fired}
+2014-06-11 10:28:00 NM000I peer.server myServer: buddy@@./socket
 > myServer. @b{stop;}
-2008/06/11 10:28:00 NB000I NodeBrain nb[20643] terminating - exit code=0
+2014-06-11 10:28:00 NB000I NodeBrain nb[20643] terminating - exit code=0
 $
 @end smallexample
 @end cartouche

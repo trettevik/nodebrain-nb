@@ -367,7 +367,7 @@ void printVersion(void){
 void printHelp(void){
   printVersion();
   printf("This is free software that you may copy and redistribute under\n");
-  printf("the terms of the GNU General Public License\n");
+  printf("the terms of the MIT License or NodeBrain License\n");
   printf("----------------------------------------------------------------\n\n");
   printf("Usage: nb [-options] [file]\n");
   printf("\nSwitch Options:   May specify multiple times.\n\n");

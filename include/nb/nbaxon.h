@@ -40,7 +40,7 @@
 
 #include <nb/nbstem.h>
 
-struct TYPE *nb_TypeAxonRelEq;
+extern struct TYPE *nb_TypeAxonRelEq;
 
 /* 
 * Relational Equal Operator Axon Object 

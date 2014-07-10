@@ -17,33 +17,14 @@ NodeBrain Open Source Project
 @sp 2
 @b{Release @value{RELEASE}}
 
-Author: Ed Trettevik <eat@@nodebrain.org>
+Author: Ed Trettevik
 
 Copyright @copyright{} 2014 Ed Trettevik <eat@@nodebrain.org>
 
 @sp 1
-Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
-
+Permission is granted to copy, distribute and/or modify this document under the terms of either the MIT License (Expat) or the NodeBrain License.
 @sp 1
-All trademarks and registered trademarks referenced in this document are the trademarks of their respective owners.
-
-@sp 2
-@b{Software License}
-
-Copyright @copyright{} 2014 Ed Trettevik <eat@@nodebrain.org>
-
-The Mail NodeBrain Module is free software; you can modify and/or redistribute it under the
-terms of either the MIT License (Expat) or the following NodeBrain License.
-
-Permission to use and redistribute with or without fee, in source and binary
-forms, with or without modification, is granted free of charge to any person
-obtaining a copy of this software, provided that the above copyright notice,
-this permission notice, and the following disclaimer are retained with source
-code and reproduced in documentation included with binary distributions.
-
-Unless required by applicable law or agreed to in writing, this software is
-distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, either express or implied.
+@include ../../../doc/licenses.texi
 @end copying
 
 @iftex
@@ -56,7 +37,7 @@ KIND, either express or implied.
 \vskip4pt \hrule height 3pt width \hsize
 @end tex
 @sp 3
-@b{Release @value{VERSION}}
+@b{Release @value{RELEASE}}
 @page
 @vskip 0pt plus 1filll
 @insertcopying
@@ -92,49 +73,7 @@ Files referenced in this tutorial are included in the tutorial directory of the 
 
 See www.nodebrain.org for more information and the latest update to this document.
 
-@sp 2
-@b{Documents}
-@sp 1
-@quotation
-@i{NodeBrain Tutorial}
-
-@i{NodeBrain User Guide}
-
-@i{NodeBrain Language Reference}
-
-@i{NodeBrain Module Reference}
-
-@i{NodeBrain API Reference}
-@end quotation
-
-@sp 2
-@b{Document Conventions}
-@sp 1
-Sample code and input/output examples are displayed in a monospace font, indented in HTML and Info, and enclosed
-in a box in PDF or printed copies.
-Bold text is used to bring the reader's attention to specific portions of an example.
-In the following example, the first and last line are associated with the host shell and the lines in between are input or output unique to NodeBrain.
-The @code{define} command is highlighted, indicating it is the focus of the example.
-Lines starting with "@dots{}" are a continuation of the previous line ending with "@dots{}".
-This is not part of the language, just one way of breaking up single lines to fit on a printed page.
-If you copy an example, you must remove the dots and combine the lines into a single line.
-
-@cartouche
-@smallexample
-$ nb
-> @b{define myFirstRule on(a=1 and b=2) mood="happy";}
-> assert mood="sad";
-> show mood
-mood = "sad"
-> assert a=1,b=2,c=3,d="This is an example of a long single line that", @dots{}
-@dots{} e="we depict on multiple lines to fit on the documnet page";
-2008/06/05 12:09:08 NB000I Rule myFirstRule fired(mood="happy")
-> show mood
-mood = "happy"
-> quit
-$
-@end smallexample
-@end cartouche
+@include conventions.texi
 
 @end titlepage
 
@@ -150,9 +89,9 @@ $
 This manual is for the Mail NodeBrain Module (version @value{VERSION}, @value{UPDATED-MONTH}) used to send and receive SMTP mail.
 @*@*
 Copyright @copyright{} 2014 Ed Trettevik <eat@@nodebrain.org>
-
 @quotation
-Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A copy of the license is included in the section titled @i{GNU Free Documentation License} at the end of this document.
+Permission is granted to copy, distribute and/or modify this document under the terms of either the MIT License (Expat) or NodeBrain License.
+See the @i{Licenses} section at the end of this document for details.
 @end quotation
 @ifnotplaintext
 @b{Short Table Of Contents}
@@ -163,7 +102,7 @@ Permission is granted to copy, distribute and/or modify this document under the 
 * Triggers:: Conditions and Response
 @end menu
 @menu
-* GNU Free Documentation License::
+* Licenses::
 * Index::
 @end menu
 @end ifnotplaintext
@@ -240,9 +179,16 @@ The server will only accept mail to usernames that have been declared as identit
 
 The Mail module does not implement any triggers.
 
-@node GNU Free Documentation License
-@unnumbered GNU Free Documentation License
-@include fdl.texi
+@ifnottex
+@node Licenses
+@unnumbered Licenses
+
+NodeBrain is free software; you can modify and/or redistribute it, including this document, under the
+terms of either the MIT License (Expat) or the NodeBrain License.
+
+@sp 1
+@include ../../../doc/licenses.texi
+@end ifnottex
 
 @node Index 
 @unnumbered Index 

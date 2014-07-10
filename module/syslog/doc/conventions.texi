@@ -3,13 +3,10 @@
 @b{Documents}
 @sp 1
 @quotation
-@i{NodeBrain Tutorial}
-
-@i{NodeBrain User Guide}
-
-@i{NodeBrain Language Reference}
-
-@i{NodeBrain API Reference}
+@i{NodeBrain Guide} - Information on using @code{nb}@*
+@i{NodeBrain Tutorial} - A gentle introduction to @code{nb} and the rule language@*
+@i{NodeBrain Language} - Rule language syntax and semantics@*
+@i{NodeBrain Library} - C API@*
 @end quotation
 
 @sp 2

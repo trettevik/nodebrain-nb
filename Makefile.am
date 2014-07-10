@@ -8,9 +8,10 @@
 ##
 ## Permission to use and redistribute with or without fee, in source and binary
 ## forms, with or without modification, is granted free of charge to any person
-## obtaining a copy of this software, provided that the above copyright notice,
-## this permission notice, and the following disclaimer are retained with source
-## code and reproduced in documentation included with binary distributions. 
+## obtaining a copy of this software and included documentation, provided that
+## the above copyright notice, this permission notice, and the following
+## disclaimer are retained with source files and reproduced in documention
+## included with source and binary distributions. 
 ##
 ## Unless required by applicable law or agreed to in writing, this software is
 ## distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -73,10 +74,29 @@ ACLOCAL_AMFLAGS= -I m4
 SUBDIRS = lib . module
 
 info_TEXINFOS = doc/nodebrain.texi doc/nbGuide/nbGuide.texi doc/nbTutorial/nbTutorial.texi doc/nbLanguage/nbLanguage.texi doc/nbLibrary/nbLibrary.texi
-#doc_nbGuide_nbGuide_TEXINFOS = doc/nbGuide/fdl.texi
-#doc_nbTutorial_nbTutorial_TEXINFOS = doc/nbTutorial/fdl.texi
-#doc_nbLanguage_nbLanguage_TEXINFOS = doc/nbLanguage/fdl.texi
-#doc_nbLibrary_nbLibrary_TEXINFOS = doc/nbLibrary/fdl.texi
+doc_nbGuide_nbGuide_TEXINFOS = \
+  doc/nbGuide/makedoc \
+  doc/nbGuide/licenses.texi \
+  doc/nbGuide/RelationalTermRichRulesAssert.png \
+  doc/nbGuide/RelationalTermRichRulesAssert.txt \
+  doc/nbGuide/RelationalValueRichRulesAlert.png \
+  doc/nbGuide/RelationalValueRichRulesAlert.txt \
+  doc/nbGuide/RelationalValueRichRulesAssert.png \
+  doc/nbGuide/RelationalValueRichRulesAssert.txt
+doc_nbLanguage_nbLanguage_TEXINFOS = \
+  doc/nbLanguage/makedoc \
+  doc/nbLanguage/style.css \
+  doc/nbLanguage/licenses.texi \
+  doc/nbLanguage/langref*
+doc_nbLibrary_nbLibrary_TEXINFOS = \
+  doc/nbLibrary/makedoc \
+  doc/nbLibrary/licenses.texi \
+  doc/nbLibrary/Interfaces.png \
+  doc/nbLibrary/Interfaces.txt
+doc_nbTutorial_nbTutorial_TEXINFOS = \
+  doc/nbTutorial/makedoc \
+  doc/nbTutorial/licenses.texi
+
 
 dist_man_MANS = \
   man/nb.1 \
@@ -133,10 +153,7 @@ EXTRA_DIST = \
   debian/changelog \
   doc/documents.texi \
   doc/licenses.texi \
-  doc/nbGuide/makedoc \
-  doc/nbLanguage/makedoc \
-  doc/nbLibrary/makedoc \
-  doc/nbTutorial/makedoc \
+  doc/style.css \
   nb.pc.in \
   build-nb \
   install-nb \

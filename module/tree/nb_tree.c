@@ -29,7 +29,7 @@
 * 
 * Reference:
 *
-*   See NodeBrain API Reference for more information.
+*   See NodeBrain Library manual for more information.
 *
 * Syntax:
 *

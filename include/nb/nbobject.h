@@ -184,7 +184,7 @@ struct NB_TYPE_SHIM{           // type method trace shim
   void (*disable)();           /* subscription cancellation method */
   };
 
-NB_Type *nb_TypeList;
+extern NB_Type *nb_TypeList;
 
 extern NB_Type *nb_DisabledType; /* Special object type */
 extern NB_Type *nb_TrueType;     /* Special object type */

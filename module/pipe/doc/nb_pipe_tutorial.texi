@@ -83,29 +83,29 @@ The log file shows you what happened.
 @smallexample
 $ @b{cat smokey.log}
 
-N o d e B r a i n   0.7.0(Dunce) 2008/05/24
+N o d e B r a i n   0.9.02 (Columbo) 2014-02-15
 
-Compiled Jun 10 2008 15:30:28s390x-ibm-linux-gnu
+Compiled Jun 12 2014 19:20:12 x86_64-unknown-linux-gnu
 
-Copyright (C) 1998-2008 Ed Trettevik <eat@@nodebrain.org>
-GNU General Public License
+Copyright (C) 2014 Ed Trettevik <eat@@nodebrain.org>
+MIT or NodeBrain License
 ----------------------------------------------------------------
 
 /usr/local/bin/nb -d ./smokey.nb
 
 Date       Time     Message
 ---------- ----------------------------------------------------
-2008/06/10 17:09:16 NB000I NodeBrain nb[13994:1] myuser@@myhost
-2008/06/10 17:09:16 NB000I Agent log is smokey.log
-2008/06/10 17:09:16 NM000I pipe.server peace: Listening for FIFO connections as chief@@peace
-2008/06/10 17:09:16 NM000I pipe.server corncob: @dots{}
+2014-06-10 17:09:16 NB000I NodeBrain nb[13994:1] myuser@@myhost
+2014-06-10 17:09:16 NB000I Agent log is smokey.log
+2014-06-10 17:09:16 NM000I pipe.server peace: Listening for FIFO connections as chief@@peace
+2014-06-10 17:09:16 NM000I pipe.server corncob: @dots{}
 @dots{} Listening for FIFO connections as jed@@corncob
-2008/06/10 17:41:11 NM000I pipe.server corncob: FIFO jed@@corncob
+2014-06-10 17:41:11 NM000I pipe.server corncob: FIFO jed@@corncob
 > corncob. stop
-2008/06/10 17:41:11 NB000E @b{Identity "jed" does not have authority to issue stop command.}
-2008/06/10 17:41:19 NM000I pipe.server peace: FIFO chief@@peace
+2014-06-10 17:41:11 NB000E @b{Identity "jed" does not have authority to issue stop command.}
+2014-06-10 17:41:19 NM000I pipe.server peace: FIFO chief@@peace
 > peace. stop
-2008/06/10 17:41:19 NB000I NodeBrain nb[13994] terminating - exit code=0
+2014-06-10 17:41:19 NB000I NodeBrain nb[13994] terminating - exit code=0
 $
 @end smallexample
 @end cartouche

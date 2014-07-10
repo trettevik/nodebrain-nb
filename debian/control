@@ -2,13 +2,13 @@ Source: nodebrain
 Section: interpreters
 Priority: optional
 Maintainer: Ed Trettevik <eat@nodebrain.org>
-Build-Depends: debhelper (>=7.0.50~), libpcre3-dev, libssl-dev, libreadline-dev
+Build-Depends: debhelper (>=7.0.50~), libedit-dev, libpcre3-dev, libssl-dev
 Standards-Version: 3.8.4
 Homepage: http://www.nodebrain.org
 
 Package: nodebrain
 Architecture: any
-Depends: libpcre3, libssl, libreadline
+Depends: libedit, libpcre3, libssl
 Description: NodeBrain Program, Library and Base Modules
  NodeBrain is an interpreter of a declarative rule-based language
  designed for construction of state and event monitoring applications.

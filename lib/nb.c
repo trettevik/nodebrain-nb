@@ -46,7 +46,7 @@
 *   How do I extend NodeBrain?
 *
 *   The NodeBrain Library provides a C API for use by plug-ins called 
-*   "node modules" that add functionality.  See the NodeBrain API Reference
+*   "node modules" that add functionality.  See the NodeBrain Library manual
 *   for more information on writing node modules.  
 *
 *   If you are imbedding NodeBrain in your own program, you can still use
