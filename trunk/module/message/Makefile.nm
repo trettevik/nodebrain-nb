@@ -10,4 +10,8 @@ nb_message_la_LDFLAGS = -module -avoid-version
 
 EXTRA_DIST = \
   caboodle/check/message.nb- \
-  caboodle/check/message.pl
+  caboodle/check/message.pl \
+  doc/makedoc \
+  doc/nb_message.texi \
+  doc/conventions.texi \
+  doc/version.texi

@@ -12,6 +12,7 @@ EXTRA_DIST = \
   caboodle/check/self.nb- \
   caboodle/check/servant.nb~ \
   caboodle/servant/echo.sh \
+  doc/makedoc \
   doc/nb_servant.texi \
   doc/nb_servant_tutorial.texi \
   doc/conventions.texi \

@@ -10,6 +10,10 @@ nb_cache_la_LDFLAGS = -module -avoid-version
 
 EXTRA_DIST = \
   caboodle/check/cache.nb~ \
+  doc/makedoc \
+  doc/cache*.pdf \
+  doc/cache*.png \
+  doc/cache*.txt \
   doc/nb_cache.texi \
   doc/nb_cache_tutorial.texi \
   doc/conventions.texi \
