@@ -1,0 +1,60 @@
+# File: term.nb
+~ > # File: term.nb
+assert .a=1,.b=1,.c=1;
+~ > assert .a=1,.b=1,.c=1;
+define X node;
+~ > define X node;
+X. assert .a=2,.b=2,.c=2;
+~ > X. assert .a=2,.b=2,.c=2;
+X. define r1 on(a=_.a and a=..a);
+~ > X. define r1 on(a=_.a and a=..a);
+X. define Y node;
+~ > X. define Y node;
+X.Y. assert .a=3,.b=3,.c=3;
+~ > X.Y. assert .a=3,.b=3,.c=3;
+X.Y. define r1 on(a=_.a or a=..a);
+~ > X.Y. define r1 on(a=_.a or a=..a);
+show -t
+~ > show -t
+~ _ = # == node 
+~ X = # == node 
+~ X.Y = # == node 
+~ X.Y.a = 3
+~ X.Y.b = 3
+~ X.Y.c = 3
+~ X.Y.r1 = # ! == on((X.Y.a=a)|(X.Y.a=X.a));
+~ X.a = 2
+~ X.b = 2
+~ X.c = 2
+~ X.r1 = # ! == on((X.a=a)&(X.a=a));
+~ a = 1
+~ b = 1
+~ c = 1
+X. show -t
+~ > X. show -t
+~ . = # == node 
+~ Y = # == node 
+~ Y.a = 3
+~ Y.b = 3
+~ Y.c = 3
+~ Y.r1 = # ! == on((Y.a=_.a)|(Y.a=a));
+~ a = 2
+~ b = 2
+~ c = 2
+~ r1 = # ! == on((a=_.a)&(a=_.a));
+X.Y. show -t
+~ > X.Y. show -t
+~ . = # == node 
+~ a = 3
+~ b = 3
+~ c = 3
+~ r1 = # ! == on((a=_.a)|(a=_.X.a));
+assert a=3;
+~ > assert a=3;
+~ 1970-01-01 00:00:01 NB000I Rule X.Y.r1 fired 
+assert a=2;
+~ > assert a=2;
+~ 1970-01-01 00:00:01 NB000I Rule X.r1 fired 
+assert X.a=3;
+~ > assert X.a=3;
+~ 1970-01-01 00:00:01 NB000I Rule X.Y.r1 fired 
