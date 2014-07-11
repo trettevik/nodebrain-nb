@@ -9,4 +9,8 @@ nb_string_la_CFLAGS  = $(NB_MOD_CFLAGS)
 nb_string_la_LDFLAGS = -module -avoid-version
 
 EXTRA_DIST = \
-  caboodle/check/string.nb~
+  caboodle/check/string.nb~ \
+  doc/makedoc \
+  doc/nb_string.texi \
+  doc/conventions.texi \
+  doc/version.texi

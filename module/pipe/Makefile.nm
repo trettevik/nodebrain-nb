@@ -12,6 +12,8 @@ EXTRA_DIST = \
   caboodle/check/pipe.nb~ \
   caboodle/pipe/README \
   caboodle/servant/echo.sh \
+  doc/makedoc \
   doc/nb_pipe.texi \
   doc/nb_pipe_tutorial.texi \
+  doc/conventions.texi \
   doc/version.texi

@@ -11,6 +11,8 @@ nb_baseline_la_LDFLAGS = -module -avoid-version
 EXTRA_DIST = \
   caboodle/check/baseline.nb~ \
   caboodle/cache/baseline/test/README \
+  doc/makedoc \
   doc/nb_baseline.texi \
   doc/nb_baseline_tutorial.texi \
-  doc/version.texi 
+  doc/conventions.texi \
+  doc/version.texi

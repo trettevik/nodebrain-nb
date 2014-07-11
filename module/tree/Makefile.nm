@@ -10,6 +10,8 @@ nb_tree_la_LDFLAGS = -module -avoid-version
 
 EXTRA_DIST = \
   caboodle/check/tree.nb~ \
+  doc/makedoc \
   doc/nb_tree.texi \
   doc/nb_tree_tutorial.texi \
+  doc/conventions.texi \
   doc/version.texi

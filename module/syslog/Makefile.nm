@@ -11,6 +11,8 @@ nb_syslog_la_LDFLAGS = -module -avoid-version
 EXTRA_DIST = \
   caboodle/check/syslog.nb~ \
   caboodle/plan/syslog/syslog.nbx \
+  doc/makedoc \
   doc/nb_syslog.texi \
   doc/nb_syslog_tutorial.texi \
+  doc/conventions.texi \
   doc/version.texi

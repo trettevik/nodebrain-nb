@@ -11,4 +11,8 @@ nb_mail_la_LDFLAGS = -module -avoid-version
 EXTRA_DIST = \
   caboodle/check/client.nb \
   caboodle/check/mail.form \
-  caboodle/check/mail.nb-
+  caboodle/check/mail.nb- \
+  doc/makedoc \
+  doc/nb_mail.texi \
+  doc/conventions.texi \
+  doc/version.texi

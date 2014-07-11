@@ -10,6 +10,8 @@ nb_set_la_LDFLAGS = -module -avoid-version
 
 EXTRA_DIST = \
   caboodle/check/set.nb- \
+  doc/makedoc \
   doc/nb_set.texi \
   doc/nb_set_tutorial.texi \
+  doc/conventions.texi \
   doc/version.texi

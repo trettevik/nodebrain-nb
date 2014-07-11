@@ -12,6 +12,8 @@ EXTRA_DIST = \
   caboodle/check/audit.nb~ \
   caboodle/log/README \
   caboodle/plan/audit/audit.nbx \
+  doc/makedoc \
   doc/nb_audit.texi \
   doc/nb_audit_tutorial.texi \
+  doc/conventions.texi \
   doc/version.texi
