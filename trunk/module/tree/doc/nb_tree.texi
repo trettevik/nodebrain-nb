@@ -268,7 +268,7 @@ The @command{define} command is used to create a Tree node.
 @multitable {---------------------} {----------------------------------------------------------------------}
 @item @i{treeDefineCmd} @tab ::= @b{define} @v{s} @i{term} @v{s} @b{node} [@v{s}@i{treeDef} ] @bullet{} 	   
 @item @i{treeDef}       @tab ::= @b{tree} [ : @i{option} ]
-@item @i{option}        @tab ::= @b{order} | @b{partitioned}
+@item @i{option}        @tab ::= @b{order} | @b{partition}
 @end multitable
 @end cartouche
 
@@ -276,14 +276,14 @@ The @command{define} command is used to create a Tree node.
 Tree nodes are most often defined with no parameters.
 The @code{order} option is used when you plan to write the tree
 to a file using the @code{store} command. 
-The @code{partitioned} option is used to define values for
+The @code{partition} option is used to define values for
 blocks of key values.
 
 @cartouche
 @smallexample
 define tree node tree;
 define tree node tree:order;       # store values in order
-define tree node tree:partitioned; # associate values to key ranges
+define tree node tree:partition; # associate values to key ranges
 @end smallexample
 @end cartouche
 
