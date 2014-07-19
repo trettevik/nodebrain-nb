@@ -6,13 +6,13 @@
 ---Francois de La Rochefoucauld (1613--1680)
 @end quotation
 
-To construct a successful NodeBrain application, you must configure NodeBrain to listen closely and respond well.  The @i{Operating Mode} tutorial" illustrates how NodeBrain can listen for input commands from @code{stdin} and both input commands and error messages from servant scripts.   NodeBrain's ability to listen is controlled by a component called the @i{medulla.}  Node modules interface with the medulla to extend NodeBrain's ability to listen to include other sources of input.  
+To construct a successful NodeBrain application, you must configure NodeBrain to listen closely and respond well.  The @i{Operating Mode} tutorial illustrates how NodeBrain can listen for input commands from @code{stdin} and both input commands and error messages from servant scripts.   NodeBrain's ability to listen is controlled by a component called the @i{medulla.}  Node modules interface with the medulla to extend NodeBrain's ability to listen to include other sources of input.  
 
 A pipe node is perhaps the simplest of listening nodes.  It listens to a FIFO (named pipe) file, and you can write to the pipe using any program you like, including an @code{echo} command.
 
 @section Defining Pipe Server Nodes
 
-To begin this tutorial, createan agent script called @code{smokey.nb} with two pipe server nodes as shown here.
+To begin this tutorial, create an agent script called @code{smokey.nb} with two pipe server nodes as shown here.
 
 @cartouche
 @smallexample

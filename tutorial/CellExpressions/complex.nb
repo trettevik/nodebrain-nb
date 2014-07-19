@@ -1,7 +1,7 @@
 # complex.nb
 define sally node tree;
 assert sally("abc"),sally("def",5)=2;
-define complex on(sally(x,y)=a+b and y<7 and ~(fr));
+define complex on(sally(x,y)=a+b and y<7 and ~(fr,su));
 assert y=5;
 assert a,b;
 assert x="def";

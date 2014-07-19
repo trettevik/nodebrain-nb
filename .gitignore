@@ -24,7 +24,7 @@ config
 INSTALL
 !tutorial/Webster/config
 autom4te.cache
-stamp-h1
+stamp-*
 .dirstamp
 .libs
 .deps
@@ -32,11 +32,7 @@ nb.pc
 nodebrain-*.tar.gz
 nodebrain.spec
 doc/nb.info
-doc/stamp-1
-doc/stamp-vti
 doc/version-nb.texi
 doc/version-nbTutorial.texi
-doc/nbLanguage/stamp-*
-doc/nbTutorial/stamp-*
 html
 gmon.out

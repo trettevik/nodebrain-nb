@@ -786,7 +786,7 @@ static NB_Object *evalTime(struct COND *cond){
   if(cond->cell.object.value==NB_OBJECT_TRUE){
     if(trace) outPut("evalTime calling condSchedule\n");
     condSchedule(cond,NB_OBJECT_TRUE); /* schedule the true event */
-    outMsg(0,'T',"evalTime ending False.");  
+    //outMsg(0,'T',"evalTime ending False.");  
     return(NB_OBJECT_FALSE);
     }
   condSchedule(cond,NB_OBJECT_FALSE); /* schedule the false value */

@@ -1,8 +1,8 @@
 #!/usr/bin/nb
-assert a=1,b=2,c=3,d=3;
+assert a=2,b=2,c=3,d=3;
 define x cell a>b;
 define rule2 on(a=b or b=c or c>25);
-define rule3 on(a=21 and (b>5 or c<2));
-define rule4 on(x and not a<5.73);
+define rule3 on(a=20 and (b>5 or c<2));
+define rule4 on(x and !(a<5.73));
 define rule5 on(a=b and c=d);
-assert c=21,b=21;
+assert a=21,b=21;

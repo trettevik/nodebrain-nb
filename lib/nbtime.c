@@ -207,7 +207,7 @@ char *tcTimeString(char *str,long timer){
   day[6]="sa";
   timeTm=localtime((const time_t *)&timer);
   if(timeTm==NULL) snprintf(str,34,"%s",".................................");
-  else snprintf(str,34,"%s %4.4d/%2.2d/%2.2d %2.2d:%2.2d:%2.2d %10.10ld",day[timeTm->tm_wday],timeTm->tm_year+1900,timeTm->tm_mon+1,timeTm->tm_mday,timeTm->tm_hour,timeTm->tm_min,timeTm->tm_sec,timer);
+  else snprintf(str,34,"%s %4.4d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d %10.10ld",day[timeTm->tm_wday],timeTm->tm_year+1900,timeTm->tm_mon+1,timeTm->tm_mday,timeTm->tm_hour,timeTm->tm_min,timeTm->tm_sec,timer);
   return(str);
   }
   

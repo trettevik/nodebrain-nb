@@ -979,51 +979,51 @@ You can see from the output below that the activity scheduled by @code{mySchedul
 @cartouche
 @smallexample
 $ ./bertie.pl
-2008/06/05 21:31:00 NB000I Argument [1] jeeves.nb
+2014-07-13 15:56:48 NB000I Argument [1] jeeves.nb
 > # jeeves.nb
 > define myProcessRule1 on(processes>200):-./alarmMe.pl 1 "dang - more than 200 processes."
 > define myProcessRule2 on(processes<100):-./alarmMe.pl 2 "ok - under 100 processes."
 > define myProcessRule3 on(a=1 and b=2):-:./processCount.pl
 > define mySchedulingRule on(~(3s)) a=0;
-2008/06/05 21:31:00 NB000I Source file "jeeves.nb" included. size=283
-2008/06/05 21:31:00 NB000I Argument [2] -s
-2008/06/05 21:31:00 NB000T Servant mode selected
----------- ----------------------------------------------------
-> assert a=3;
-2008/06/05 21:31:03 NB000I Rule mySchedulingRule fired (a=0)
+2014-07-13 15:56:48 NB000I Source file "jeeves.nb" included. size=283
+2014-07-13 15:56:48 NB000I Argument [2] -s
+2014-07-13 15:56:48 NB000T Servant mode selected
+---------- -------- --------------------------------------------
 > assert b=0;
-2008/06/05 21:31:06 NB000I Rule mySchedulingRule fired (a=0)
-2008/06/05 21:31:09 NB000I Rule mySchedulingRule fired (a=0)
-> assert a=3;
-2008/06/05 21:31:12 NB000I Rule mySchedulingRule fired (a=0)
-2008/06/05 21:31:15 NB000I Rule mySchedulingRule fired (a=0)
-> assert b=2;
-2008/06/05 21:31:18 NB000I Rule mySchedulingRule fired (a=0)
+2014-07-13 15:56:51 NB000I Rule mySchedulingRule fired (a=0)
 > assert b=0;
-2008/06/05 21:31:21 NB000I Rule mySchedulingRule fired (a=0)
-2008/06/05 21:31:24 NB000I Rule mySchedulingRule fired (a=0)
+2014-07-13 15:56:54 NB000I Rule mySchedulingRule fired (a=0)
+2014-07-13 15:56:57 NB000I Rule mySchedulingRule fired (a=0)
+> assert b=2;
+2014-07-13 15:57:00 NB000I Rule mySchedulingRule fired (a=0)
+2014-07-13 15:57:03 NB000I Rule mySchedulingRule fired (a=0)
+> assert b=2;
+2014-07-13 15:57:06 NB000I Rule mySchedulingRule fired (a=0)
 > assert a=3;
-2008/06/05 21:31:27 NB000I Rule mySchedulingRule fired (a=0)
-2008/06/05 21:31:30 NB000I Rule mySchedulingRule fired (a=0)
-> assert b=2;
-2008/06/05 21:31:33 NB000I Rule mySchedulingRule fired (a=0)
-> assert b=2;
-2008/06/05 21:31:36 NB000I Rule mySchedulingRule fired (a=0)
-2008/06/05 21:31:39 NB000I Rule mySchedulingRule fired (a=0)
+2014-07-13 15:57:09 NB000I Rule mySchedulingRule fired (a=0)
+2014-07-13 15:57:12 NB000I Rule mySchedulingRule fired (a=0)
+> assert a=3;
+2014-07-13 15:57:15 NB000I Rule mySchedulingRule fired (a=0)
+2014-07-13 15:57:18 NB000I Rule mySchedulingRule fired (a=0)
 > assert a=1;
-2008/06/05 21:31:40 NB000I Rule myProcessRule3 fired
+2014-07-13 15:57:18 NB000I Rule myProcessRule3 fired 
 : -:./processCount.pl
-[7537] Started: -:./processCount.pl
-[7537: assert processes=59;
-2008/06/05 21:31:40 NB000I Rule myProcessRule2 fired
+[30506] Started: -:./processCount.pl
+[30506: assert processes=43;
+2014-07-13 15:57:18 NB000I Rule myProcessRule2 fired 
 : -./alarmMe.pl 2 "ok - under 100 processes."
-[7541] Started: -./alarmMe.pl 2 "ok - under 100 processes."
-[7541] Exit(0)
-[7537] Exit(0)
-2008/06/05 21:31:43 NB000I Rule mySchedulingRulefired (a=0)
-2008/06/05 21:31:45 NB000I Rule mySchedulingRulefired (a=0)
+[30511] Started: -./alarmMe.pl 2 "ok - under 100 processes."
+[30511] Exit(0)
+[30506] Exit(0)
+2014-07-13 15:57:21 NB000I Rule mySchedulingRule fired (a=0)
+> assert b=2;
+2014-07-13 15:57:24 NB000I Rule mySchedulingRule fired (a=0)
+2014-07-13 15:57:27 NB000I Rule mySchedulingRule fired (a=0)
+> assert b=2;
+2014-07-13 15:57:30 NB000I Rule mySchedulingRule fired (a=0)
+2014-07-13 15:57:33 NB000I Rule mySchedulingRule fired (a=0)
 > stop
-2008/06/05 21:31:45 NB000I NodeBrain nb[7536] terminating - exit code=0
+2014-07-13 15:57:33 NB000I NodeBrain nb[30505] terminating - exit code=0
 $
 @end smallexample
 @end cartouche
@@ -1049,14 +1049,14 @@ Now you'll execute it.
 @cartouche
 @smallexample
 $ nb maxwell.nb
-2008/06/05 21:45:53 NB000I Argument [1] maxwell.nb
-> # maxwell.nb
+2014-07-13 16:00:31 NB000I Argument [1] maxwell.nb
+> # File: tutorial/AgentMode/maxwell.nb
 > define myProcessRule1 on(processes>200):-./alarmMe.pl 1 "dang - more than 200 processes."
 > define myProcessRule2 on(processes<100):-./alarmMe.pl 2 "ok - under 100 processes."
 > # check process count every minute
 > define myProcessRule3 on(~(m)):-:./processCount.pl
-2008/06/05 21:45:53 NB000I Source file "maxwell.nb" included. size=273
-2008/06/05 21:45:53 NB000I NodeBrain nb[7618] terminating - exit code=0
+2014-07-13 16:00:31 NB000I Source file "maxwell.nb" included. size=298
+2014-07-13 16:00:31 NB000I NodeBrain nb[30905] terminating - exit code=0
 $
 @end smallexample
 @end cartouche
@@ -1065,16 +1065,16 @@ But wait, that's not right.  The program just ended after loading the rules.  Yo
  
 @cartouche
 @smallexample
-$ nb .d maxwell.nb
-2008/06/05 21:47:28 NB000I Argument [1] -d
-2008/06/05 21:47:28 NB000I Argument [2] maxwell.nb
-> # maxwell.nb
+$ nb -d maxwell.nb
+2014-07-13 16:01:57 NB000I Argument [1] -d
+2014-07-13 16:01:57 NB000I Argument [2] maxwell.nb
+> # File: tutorial/AgentMode/maxwell.nb
 > define myProcessRule1 on(processes>200):-./alarmMe.pl 1 "dang - more than 200 processes."
 > define myProcessRule2 on(processes<100):-./alarmMe.pl 2 "ok - under 100 processes."
 > # check process count every minute
 > define myProcessRule3 on(~(m)):-:./processCount.pl
-2008/06/05 21:47:28 NB000I Source file "maxwell.nb" included. size=273
-2008/06/05 21:47:28 NB000I NodeBrain nb[@b{7621},7060]daemonizing
+2014-07-13 16:01:57 NB000I Source file "maxwell.nb" included. size=298
+2014-07-13 16:01:57 NB000I NodeBrain nb[30909] daemonizing
 $
 @end smallexample
 @end cartouche
@@ -1084,7 +1084,7 @@ Okay, that's better, it daemonized.  It disconnected from the terminal and is ru
 @cartouche
 @smallexample
 $ ps -ef | grep nb
-myuser   @b{7622}     1  0 21:47 ?       00:00:00 nb -d maxwell.nb
+eat      30910     1  0 16:01 ?        00:00:00 nb -d maxwell.nb
 @end smallexample
 @end cartouche
 
@@ -1123,18 +1123,18 @@ Now let's start it.
 @cartouche
 @smallexample
 $ ./james.nb
-2008/06/05 21:55:31 NB000I Argument [1] -d
-2008/06/05 21:55:31 NB000I Argument [2] ./james.nb
-> #!/usr/local/bin/nb -d
-> # james.nb
+2014-07-13 16:05:53 NB000I Argument [1] -d
+2014-07-13 16:05:53 NB000I Argument [2] ./james.nb
+> #!/usr/bin/nb -d
+> # File: tutorial/AgentMode/james.nb
 > set log="james.log";
-2008/06/05 21:55:31 NB000I NodeBrain nb will log to james.log
+2014-07-13 16:05:53 NB000I NodeBrain nb will log to james.log
 > define myProcessRule1 on(processes>200):-./alarmMe.pl 1 "dang - more than 200 processes."
 > define myProcessRule2 on(processes<100):-./alarmMe.pl 2 "ok - under 100 processes."
 > # check process count every minute
 > define myProcessRule3 on(~(m)):-:./processCount.pl
-2008/06/05 21:55:31 NB000I Source file "./james.nb" included. size=370
-2008/06/05 21:55:31 NB000I NodeBrain nb[7688,7060] daemonizing
+2014-07-13 16:05:53 NB000I Source file "./james.nb" included. size=334
+2014-07-13 16:05:53 NB000I NodeBrain nb[30944] daemonizing
 $
 @end smallexample
 @end cartouche
@@ -1144,25 +1144,26 @@ Now you can see what the agent is doing by tailing the log file.  Wait a minute,
 @cartouche
 @smallexample
 $ tail james.log
-2009/01/28 09:04:26 NB000I Rule myProcessRule3 fired
+2014-07-13 16:05:53 NB000I Agent log is james.log
+2014-07-13 16:05:53 NB000I Rule myProcessRule3 fired
 : -:./processCount.pl
-[5619] Started: -:./processCount.pl
-[5619: assert processes=75;
-2009/01/28 09:04:26 NB000I Rule myProcessRule2 fired
+[30946] Started: -:./processCount.pl
+[30946: assert processes=43;
+2014-07-13 16:05:53 NB000I Rule myProcessRule2 fired
 : -./alarmMe.pl 2 "ok - under 100 processes."
-[5623] Started: -./alarmMe.pl 2 "ok - under 100 processes."
-[5623] Exit(0)
-[5619] Exit(0)
-2009/01/28 09:05:00 NB000I Rule myProcessRule3 fired
+[30950] Started: -./alarmMe.pl 2 "ok - under 100 processes."
+[30950] Exit(0)
+[30946] Exit(0)
+2014-07-13 16:06:05 NB000I Rule myProcessRule3 fired
 : -:./processCount.pl
-[5648] Started: -:./processCount.pl
-[5648: assert processes=78;
-[5648] Exit(0)
-2009/01/28 09:06:00 NB000I Rule myProcessRule3 fired
+[30961] Started: -:./processCount.pl
+[30961: assert processes=43;
+[30961] Exit(0)
+2014-07-13 16:07:00 NB000I Rule myProcessRule3 fired
 : -:./processCount.pl
-[5659] Started: -:./processCount.pl
-[5659: assert processes=78;
-[5659] Exit(0)
+[30965] Started: -:./processCount.pl
+[30965: assert processes=44;
+[30965] Exit(0)
 @end smallexample
 @end cartouche
 
@@ -1224,9 +1225,9 @@ $ nb
 > define a cell 5+4;
 > define b cell a+3;
 > show a
-a = ! == (5+4)
+a = # == (5+4)
 > show b
-b = ! == (a+3)
+b = # == (a+3)
 > @ 
 @end smallexample
 @end cartouche
@@ -1258,8 +1259,8 @@ Just for fun, let's see what happens when you assert new cell formulas for @code
 a = 19
 > show b
 b = 22 == (a+3)
-@b{>assert a=1;}
-@b{2008/06/05 22:04:51 NB000I Rule rule1 fired}
+@b{> assert a=1;}
+@b{2014-07-13 21:42:26 NB000I Rule rule1 fired}
 > show b
 b = 4 == (a+3)
 > assert a=5*15/7+2;
@@ -1284,10 +1285,10 @@ One can appeal to logic in cell formulas, much as in other programming languages
 
 @cartouche
 @smallexample
-> assert a=1,b=2,c=3,d=3;
+> assert a=2,b=2,c=3,d=3;
 > define x cell a>b;
 > define rule2 on(a=b or b=c or c>25);
-> define rule3 on(a=21 and (b>5 or c<2));
+> define rule3 on(a=20 and (b>5 or c<2));
 > define rule4 on(x and !(a<5.73));
 > define rule5 on(a=b and c=d);
 @end smallexample
@@ -1315,16 +1316,17 @@ If @code{b} changes, it does the same.
 If @code{a} changes, @code{b} changes, or both @code{a} and @code{b} change in the same assertion, @code{a=b} is recomputed once.
 If @code{a=b} changes, cells that reference it are recomputed.
 
-How do you think the interpreter would respond to the following assertion?
+If @code{a} and @code{b} are both 2, how do you think the interpreter would respond to the following assertion?
 
 @cartouche
 @smallexample
-assert a=21,b=21.
+assert a=21,b=21;
 @end smallexample
 @end cartouche
 
 Because either of @code{a} or @code{b} has changed (in this case both), the interpreter must evaluate @code{a=b} again.
-Since the value is still true, no further computation is required.
+Since the value is still true, no further computation is required up that chain of dependencies.  Other cells, like @code{a=20}, @code{b=c}, @code{b>5},
+and @code{a<5.73} must be evaluated again because of the changes to @code{a} and @code{b}.
 
 @node Time Conditions
 @section Time Conditions
@@ -1346,19 +1348,18 @@ I'll just jump into it with a few examples.  The following script, @code{schedul
 @cartouche
 @smallexample
 $ nb schedule.nb -
-2008/06/06 06:38:14 NB000I Argument [1] schedule.nb
-> define FourOClockHour on(~(h(4)));
-> define MondayWednesayAndFriday on(~(mo,we,fr));
-2008/06/06 06:38:14 NB000I Rule MondayWednesayAndFriday fired
+2014-07-13 21:16:48 NB000I Argument [1] schedule.nb
+> define FourOClockHour on(~(h(4))); 
+> define MondayWednesayAndFriday on(~(mo,we,fr)); 
 > define Four2FiveMonWedFri on(~(h(4).(mo,we,fr)));
 > define January9 on(~(jan(9)));
 > define WeekOfJanuary15 on(~(w.jan(15)));
 > define ThursdayOfWeekOfJanuary15 on(~(th.w.jan(15)));
 > define LastFridayInJanuary on(~(fr[-1]jan));
 > define TuesdayOfWeekOfLastFridayInJanuary on(~(tu.w.fr[-1]jan));
-2008/06/06 06:38:14 NB000I Source file "schedule.nb" included. size=371
-2008/06/06 06:38:14 NB000I Argument [2] -
-2008/06/06 06:38:14 NB000I Reading from standard input.
+2014-07-13 21:16:48 NB000I Source file "schedule.nb" included. size=371
+2014-07-13 21:16:48 NB000I Argument [2] -
+2014-07-13 21:16:48 NB000I Reading from standard input.
 ---------- --------
 >
 @end smallexample
@@ -1370,22 +1371,22 @@ I issued this command at 6:41 on Friday, June 6, 2008.  The @code{h(4)} conditio
 @cartouche
 @smallexample
 > show /c
-~ 2008/06/06 06:41:17 Clock
-~ 2008/06/07 00:00:00 ~(mo,we,fr)
+~ 2014-07-13 21:22:22 Clock
+~ 2014-07-14 00:00:00 ~(mo,we,fr)
                       on(~(mo,we,fr));
-~ 2008/06/07 04:00:00 ~(h(4))
+~ 2014-07-14 04:00:00 ~(h(4))
                       on(~(h(4)));
-~ 2008/06/09 04:00:00 ~(h(4).(mo,we,fr))
+~ 2014-07-14 04:00:00 ~(h(4).(mo,we,fr))
                       on(~(h(4).(mo,we,fr)));
-~ 2009/01/09 00:00:00 ~(jan(9))
+~ 2015-01-09 00:00:00 ~(jan(9))
                       on(~(jan(9)));
-~ 2009/01/11 00:00:00 ~(w.jan(15))
+~ 2015-01-11 00:00:00 ~(w.jan(15))
                       on(~(w.jan(15)));
-~ 2009/01/15 00:00:00 ~(th.w.jan(15))
+~ 2015-01-15 00:00:00 ~(th.w.jan(15))
                       on(~(th.w.jan(15)));
-~ 2009/01/27 00:00:00 ~(tu.w.fr[-1]jan)
+~ 2015-01-27 00:00:00 ~(tu.w.fr[-1]jan)
                       on(~(tu.w.fr[-1]jan));
-~ 2009/01/30 00:00:00 ~(fr[-1]jan)
+~ 2015-01-30 00:00:00 ~(fr[-1]jan)
                       on(~(fr[-1]jan));
 @end smallexample
 @end cartouche
@@ -1396,20 +1397,20 @@ A @code{forecast} command is used to see when a time condition will transition t
 @smallexample
 > @b{forecast ~(mo,we,fr)}
 mo,we,fr schedule ~0-0 interval=0,duration=0)
-fr 2008/06/06 00:00:00 1212735600 - sa 2008/06/0700:00:00 1212822000
-mo 2008/06/09 00:00:00 1212994800 - tu 2008/06/1000:00:00 1213081200
-we 2008/06/11 00:00:00 1213167600 - th 2008/06/1200:00:00 1213254000
-fr 2008/06/13 00:00:00 1213340400 - sa 2008/06/1400:00:00 1213426800
-mo 2008/06/16 00:00:00 1213599600 - tu 2008/06/1700:00:00 1213686000
-we 2008/06/18 00:00:00 1213772400 - th 2008/06/1900:00:00 1213858800
+mo 2014-07-14 00:00:00 1405310400 - tu 2014-07-15 00:00:00 1405396800 
+we 2014-07-16 00:00:00 1405483200 - th 2014-07-17 00:00:00 1405569600 
+fr 2014-07-18 00:00:00 1405656000 - sa 2014-07-19 00:00:00 1405742400 
+mo 2014-07-21 00:00:00 1405915200 - tu 2014-07-22 00:00:00 1406001600 
+we 2014-07-23 00:00:00 1406088000 - th 2014-07-24 00:00:00 1406174400 
+fr 2014-07-25 00:00:00 1406260800 - sa 2014-07-26 00:00:00 1406347200 
 > @b{forecast ~(h(4));}
 h(4) schedule ~0-0 interval=0,duration=0)
-sa 2008/06/07 04:00:00 1212836400 - sa 2008/06/0705:00:00 1212840000
-su 2008/06/08 04:00:00 1212922800 - su 2008/06/0805:00:00 1212926400
-mo 2008/06/09 04:00:00 1213009200 - mo 2008/06/0905:00:00 1213012800
-tu 2008/06/10 04:00:00 1213095600 - tu 2008/06/1005:00:00 1213099200
-we 2008/06/11 04:00:00 1213182000 - we 2008/06/1105:00:00 1213185600
-th 2008/06/12 04:00:00 1213268400 - th 2008/06/1205:00:00 1213272000
+mo 2014-07-14 04:00:00 1405324800 - mo 2014-07-14 05:00:00 1405328400 
+tu 2014-07-15 04:00:00 1405411200 - tu 2014-07-15 05:00:00 1405414800 
+we 2014-07-16 04:00:00 1405497600 - we 2014-07-16 05:00:00 1405501200 
+th 2014-07-17 04:00:00 1405584000 - th 2014-07-17 05:00:00 1405587600 
+fr 2014-07-18 04:00:00 1405670400 - fr 2014-07-18 05:00:00 1405674000 
+sa 2014-07-19 04:00:00 1405756800 - sa 2014-07-19 05:00:00 1405760400
 @end smallexample
 @end cartouche
 
@@ -1439,18 +1440,18 @@ Node modules can be developed to perform any function imaginable, but within the
 @cartouche
 @smallexample
 $ nb sally.nb
-2008/06/06 07:05:49 NB000I Argument [1] sally.nb
+2014-07-13 21:33:47 NB000I Argument [1] sally.nb
 > # sally.nb
 > define sally node tree;
 > assert sally("abc"),sally("def",5)=2;
 > show sally
-sally = ! == node tree
+sally = # == node tree
   "def"
     5=2
-  "abc"=1
+  "abc"=!!
 > define r1 on(sally(x));
 > assert x="abc";
-2008/06/06 07:05:49 NB000I Rule r1 fired
+2014-07-13 21:33:47 NB000I Rule r1 fired
 @end smallexample
 @end cartouche
 
@@ -1470,15 +1471,15 @@ Every type of cell formula introduced in this tutorial can be combined into comp
 @cartouche
 @smallexample
 $ nb complex.nb
-2008/06/06 07:14:28 NB000I Argument [1] complex.nb
+2014-07-13 21:36:52 NB000I Argument [1] complex.nb
 > # complex.nb
 > define sally node tree;
 > assert sally("abc"),sally("def",5)=2;
-> define complex on(sally(x,y)=a+b and y<7 and ~(fr));
+> define complex on(sally(x,y)=a+b and y<7 and ~(fr,su));
 > assert y=5;
 > assert a,b;
 > assert x="def";
-2008/06/06 07:14:28 NB000I Rule complex fired
+2014-07-13 21:36:52 NB000I Rule complex fired
 @end smallexample
 @end cartouche
 
