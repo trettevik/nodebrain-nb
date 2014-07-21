@@ -1,0 +1,13 @@
+define r1 on(a) x=5,y=2;         # action is assertion
+define r2 on(b):assert x=5,y=2;  # action is assert command
+define r3 on(c) x=5:assert y=2;  # action is assertion and assert command
+assert a;
+show x,y
+assert ?x,?y;
+show x,y
+assert b;
+show x,y
+assert ?x,?y;
+show x,y
+assert c;
+show x,y

@@ -425,33 +425,34 @@ The new values are A=4, D=21, and E=84. Notice the value of E changed automatica
 @section Condition
 @cindex condition
 
-A condition is a cell for which the value is reduced to True, False, or Unknown. All values other than False (!) and Unknown (?) map to True when interpreted as a condition.
+A condition is a cell for which the value is reduced to True, False, or Unknown. All values other than False (@code{!}) and Unknown (@code{?}) map to True when interpreted as a condition.
 This means any cell may be used as a condition or an operand within a condition.
 
 Some operators are designed specifically for use in conditions.
-Examples include relational operators (=, >, >=, <, <=, and <>) and trinary logic operators (&, |, and !). The words "and", "or", and "not" may be used as well for the trinary logic operators.
+Examples include relational operators (=, >, >=, <, <=, and <>) and trinary logic operators (&, |, and !). The words "and", "or" may be used as alternatives to & and | respectively.
 
 @example
 a>1		[a greater than 1]
 b<>a		[b not equal to a]
-a & ! b		[a and not b]
-a and not b	[a and not b]
+a & !b		[a and !b]
+a and !b	[a & !b]
 @end example
 
 Trinary logic operators extend Boolean logic, which has only True and False values, to include a third value of Unknown. The following table shows this extension for the logical AND (&) operator.
+The symbol @code{!!} is a special case of True that is returned by some logical operators.
 
 @multitable {-----------------}{------------------}{----------------}
 
 @headitem A @tab B @tab A & B
-@item ! @tab ! @tab !
-@item ! @tab 1 @tab !
-@item ! @tab ? @tab !
-@item 1 @tab ! @tab !
-@item 1 @tab 1 @tab 1
-@item 1 @tab ? @tab ?
-@item ? @tab ! @tab !
-@item ? @tab 1 @tab ?
-@item ? @tab ? @tab ?
+@item !  @tab !  @tab !
+@item !  @tab !! @tab !
+@item !  @tab ?  @tab !
+@item !! @tab !  @tab !
+@item !! @tab !! @tab !!
+@item !! @tab ?  @tab ?
+@item ?  @tab !  @tab !
+@item ?  @tab !! @tab ?
+@item ?  @tab ?  @tab ?
 @end multitable
 
 Relational operators like >, <, and = always return Unknown when one of their operands is Unknown, and when a number is compared to a string.
@@ -787,7 +788,7 @@ When you use a term like a common variable, you assign a value using an @code{as
 You can also use a term like a function by assigning a definition. This requires a double equal symbol.
 
 @example 
-       assert Thomas==(ToB or not Tob);
+       assert Thomas==(ToB or !Tob);
 @end example
 	
 That is the question, now what is the answer? It is explained later that Thomas is 1 (true) @i{when} ToB is true or Tob is false, and otherwise Thomas is false or unknown. You really don't want to get into a painful discussion about logical expressions here. The point is simply that a term has simultaneously a definition and a value, both of which are NodeBrain objects.
@@ -992,7 +993,7 @@ This chapter describes the syntax and semantics of cell formulas.
 @item @i{relationalLogic}  @tab ::= @tab @i{atomicFormula} @i{relationalOperator} @i{automicFormula} 
 @item @i{relationalOperator}  @tab ::= @tab @b{=} | @b{<>} | @b{<} | @b{>} | @b{<=} | @b{>= }
 @item @i{prefixLogic} @tab ::= @tab @i{prefixLogicOperator} @i{atomicFormula}
-@item @i{prefixLogicOperator} @tab ::= @tab @b{not} | @b{!} | @b{!!} | @b{?} | @b{!?} | @b{-?} | @b{+?} 
+@item @i{prefixLogicOperator} @tab ::= @tab @b{!} | @b{!!} | @b{?} | @b{!?} | @b{-?} | @b{+?} 
 @item @i{infixLogic}  @tab ::= @tab @i{basicFormula} @i{infixLogicOperator} @i{basicFormula}
 @item @i{infixLogicOperator}  @tab ::= @tab @b{and} | @b{&} | @b{nand} | @b{!&} | @b{or} | @b{|} | @b{nor} | @b{!|} | @b{xor} | @b{|!&} | @b{^}
 @item @i{delayLogic} @tab ::= @tab @i{basicFormula} @i{delayLogicOperator} @b{(} @i{timeExpression} @b{)}
@@ -1015,7 +1016,7 @@ There are a few symbols that may be interpreted as a constant, prefix operator, 
 @node Relational Operators
 @section Relational Operators
 @cindex Relational Operators
-Relational operators always return Unknown (?) when one or more of the operands is unknown. When both of the operands are Known (K) and of the same type (number or string), relational operators return true (1) or false (!) as you would expect for equal, not equal, less than, greater than, less than or equal, and greater than or equal.
+Relational operators always return Unknown (?) when one or more of the operands is unknown. When both of the operands are Known (K) and of the same type (number or string), relational operators return true (!!) or false (!) as you would expect for equal, not equal, less than, greater than, less than or equal, and greater than or equal.
 
 @example
 	? -  Unknown      K -  Known
@@ -1037,23 +1038,23 @@ n -  number   <   s -  string   <   . -  any other type
 
 @multitable {-----}{----}{----------}{----------}{----------}{----------}{----------}{----------}
 @headitem A @tab  B @tab  A = B @tab  A<>B @tab  A < B @tab A > B @tab A<=B @tab A>=B
-@item s @tab s @tab A = B@tab A<>B @tab A < B @tab A > B @tab A<=B @tab A>=B
-@item s @tab n @tab ! @tab 1 @tab ! @tab 1 @tab ! @tab 1
-@item s @tab . @tab ! @tab 1 @tab 1 @tab ! @tab 1 @tab !
-@item n @tab s @tab ! @tab 1 @tab 1 @tab ! @tab 1 @tab !
+@item s @tab s @tab A = B @tab A<>B @tab A < B @tab A > B @tab A<=B @tab A>=B
+@item s @tab n @tab !     @tab !!   @tab !!    @tab !!    @tab !    @tab !!
+@item s @tab . @tab !     @tab !!   @tab !!    @tab !     @tab !!   @tab !
+@item n @tab s @tab !     @tab !!   @tab !!    @tab !     @tab !!   @tab !
 @item n @tab n @tab A = B @tab A<>B @tab A < B @tab A > B @tab A<=B @tab A>=B
-@item n @tab . @tab ! @tab 1 @tab 1 @tab ! @tab 1 @tab !
-@item . @tab s @tab ! @tab 1 @tab ! @tab 1 @tab ! @tab 1
-@item . @tab n @tab ! @tab 1 @tab ! @tab 1 @tab ! @tab 1
-@item . @tab . @tab - @tab - @tab ? @tab ? @tab - @tab -
+@item n @tab . @tab !     @tab !!   @tab !!    @tab !     @tab !!   @tab !
+@item . @tab s @tab !     @tab !!   @tab !     @tab !!    @tab !    @tab !!
+@item . @tab n @tab !     @tab !!   @tab !     @tab !!    @tab !    @tab !!
+@item . @tab . @tab -     @tab -    @tab ?     @tab ?     @tab -    @tab -
 @end multitable
 
 Two objects of types other than number or string have an Unknown relationship, except an object X (at a given address) is always equal to itself and never equal to an object Y (at a different address).
 
 @multitable {-----}{----}{----------}{----------}{----------}{----------}{----------}{----------}
 @headitem A @tab B @tab A = B @tab A<>B @tab A < B @tab A > B @tab A<=B @tab A>=B
-@item X @tab X @tab 1 @tab ! @tab ? @tab ? @tab 1 @tab 1
-@item X @tab Y @tab ! @tab 1 @tab ? @tab ? @tab ? @tab ?
+@item X     @tab X @tab !!    @tab !    @tab ?     @tab ?     @tab !!   @tab !!
+@item X     @tab Y @tab !     @tab !!   @tab ?     @tab ?     @tab ?    @tab ?
 @end multitable
 
 This means the relational operator = can be used to test for a specific object of any type.
@@ -1082,35 +1083,36 @@ Note that the inverse of Unknown is also unknown. If you don't know a value, you
 
 @multitable {----------}{----------}{----------}{----------}{----------}{----------}{----------}
 @headitem A @tab !A @tab ?A @tab !!A @tab !?A @tab -?A @tab +?A
-@item ! @tab 1 @tab ! @tab ! @tab 1 @tab ! @tab !
-@item ? @tab ? @tab 1 @tab ? @tab ! @tab ! @tab 1
-@item T @tab ! @tab ! @tab 1 @tab 1 @tab 1 @tab 1
+@item !     @tab !! @tab !  @tab !   @tab !!  @tab !   @tab !
+@item ?     @tab ?  @tab !! @tab ?   @tab !   @tab !   @tab !!
+@item T     @tab !  @tab !  @tab !!  @tab !!  @tab !!  @tab !!
 @end multitable
 
-Infix operator supports standard Boolean logic, but they are extended to support Unknown values and True values other than 1 in operands.  
+Infix operators support standard Boolean logic, but they are extended to support Unknown values and True values other than @code{!!} in operands.  
 
 @multitable {--------------}{----------------}{----------------------------------------------}
 @headitem Infix  @tab Function  @tab Description 
-@item A && B @tab Lazy AND @tab B if A is True, else A 
-@item A & B @tab AND @tab Both A and B are True
-@item A !& B @tab NAND @tab Not (A and B) -  either A or B is False
-@item A || B @tab Lazy OR @tab B if A is False, else A
-@item A | B @tab OR @tab Either A or B is True
-@item A !| B @tab NOR @tab Not (A or B) -  both A and B are False
-@item A|!&B @tab XOR @tab (A or B) and not (A and B)
+@item A && B     @tab Lazy AND  @tab B if A is True, else A 
+@item A & B      @tab AND       @tab Both A and B are True
+@item A !& B     @tab NAND      @tab Not (A and B) -  either A or B is False
+@item A || B     @tab Lazy OR   @tab B if A is False, else A
+@item A | B      @tab OR        @tab Either A or B is True
+@item A !| B     @tab NOR       @tab Not (A or B) -  both A and B are False
+@item A |!& B    @tab XOR       @tab (A or B) and not (A and B)
 @end multitable
 
+In the following logic table T represents any True value while @code{!!} represents the special True value.
 @multitable {-----}{----}{--------}{--------}{--------}{--------}{--------}{--------}{--------}
 @headitem A @tab B @tab A && B @tab A & B @tab A !& B @tab A || B @tab A | B @tab A !| B @tab A|!&B
-@item ! @tab ! @tab @b{! A} @tab ! A @tab 1 @tab ! B @tab ! B @tab 1 @tab !
-@item ! @tab ? @tab @b{! A} @tab ! A @tab 1 @tab ? B @tab ? B @tab ? @tab ?
-@item ! @tab T @tab @b{! A} @tab ! A @tab 1 @tab T B @tab T B @tab ! @tab T B
-@item ? @tab ! @tab ! B @tab ! B @tab 1 @tab ? A @tab ?  A @tab ? @tab ?
-@item ? @tab ? @tab ? B @tab ? B @tab ? @tab ? B @tab ?  B @tab ? @tab ?
-@item ? @tab T @tab ? A @tab ? A @tab ? @tab T B @tab T  B @tab ! @tab ?
-@item T @tab ! @tab ! B @tab ! B @tab 1 @tab @b{T A} @tab T A @tab ! @tab T A
-@item T @tab ? @tab ? B @tab ? B @tab ? @tab @b{T A} @tab T A @tab ! @tab ?
-@item T @tab T @tab T B @tab T B @tab 0 @tab @b{T A} @tab T A @tab ! @tab !
+@item !     @tab ! @tab !      @tab !     @tab !!     @tab !      @tab !     @tab !!     @tab !
+@item !     @tab ? @tab !      @tab !     @tab !!     @tab ?      @tab ?     @tab ?      @tab ?
+@item !     @tab T @tab !      @tab !     @tab !!     @tab !!     @tab !!    @tab !      @tab !!
+@item ?     @tab ! @tab !      @tab !     @tab !!     @tab ?      @tab ?     @tab ?      @tab ?
+@item ?     @tab ? @tab ?      @tab ?     @tab ?      @tab ?      @tab ?     @tab ?      @tab ?
+@item ?     @tab T @tab ?      @tab ?     @tab ?      @tab !!     @tab !!    @tab !      @tab ?
+@item T     @tab ! @tab !      @tab !     @tab !!     @tab !!     @tab !!    @tab !      @tab !!
+@item T     @tab ? @tab ?      @tab ?     @tab ?      @tab !!     @tab !!    @tab !      @tab ?
+@item T     @tab T @tab !!     @tab !!    @tab !      @tab !!     @tab !!    @tab !      @tab !
 @end multitable
 
 With respect to logic, there is no difference between the lazy @code{and} (&&) and normal @code{and} (&), or the lazy @code{or} (||) and normal @code{or} (|). However, there can be a performance difference under specific conditions. The lazy operators are provided for cases where the right operand may be expensive to monitor. When the left operand alone provides enough information to determine the result, the cell's subscription for the right operand value is disabled. When the left operand alone does not determine the result, the cell subscribes to the right operand is enabled. There is overhead involved in enabling and disabling the cell's subscription to the right operand, so it is generally better to use the normal @code{and} and @code{or} operators. Only use the lazy form when the left operand is relatively stable and the right operand is relatively expensive.
@@ -1118,19 +1120,19 @@ With respect to logic, there is no difference between the lazy @code{and} (&&) a
 Suppose you are monitoring a stream of events and one out of 1000 events (EventType="abc") requires an expensive evaluation on two of the event attributes (Attribute1 and Attribute2). If you use the normal @code{and} (&) as shown below, the MyExpensiveLookup(Attribute1,Attribute2) condition is computed every time there is a change to Attribute1 or Attribute2.
 
 @example
-	EventType="abc" & MyExpensiveLookup(Attribute1,Attribute2)
+EventType="abc" & MyExpensiveLookup(Attribute1,Attribute2)
 @end example
 
 If Attribute1 or Attribute2 changes with almost every event, the right operand condition is computed 1000 times more often than necessary. This is an ideal time to use the lazy @code{and} (&&) to improve performance.
 
 @example
-	EventType="abc" && MyExpensiveLookup(Attribute1,Attribute2)
+EventType="abc" && MyExpensiveLookup(Attribute1,Attribute2)
 @end example
 
 The lazy @code{or} (||) works the same way, except it is a False left operand that causes the right operand to be computed.
 
 @example
-	HaveEnoughInfo || MyExpensiveLookup(Attribute1,Attribute2)
+HaveEnoughInfo || MyExpensiveLookup(Attribute1,Attribute2)
 @end example
 
 If you study the truth table above, you will notice shaded cells indicating when the lazy operators provide a performance improvement in cases where the right operand is expensive. 
@@ -1152,6 +1154,65 @@ Notice that "untrue" is not the same as "false", and "unfalse" is not the same a
 @item A unfalse B  @tab if A is True or Unknown then B else A
 @item A known B @tab if A is True or False then B else A
 @end multitable
+
+When the left condition A is a conditional expression, a conditional operator applies no differently, so you can apply a conditional operator to the result of a conditional
+operator.  The following expression returns the value of C if @code{A true B} is false.  In other words, it returns C if A is false, or if A is true and B is false.
+
+@example
+A true B false C
+@end example
+
+A conditional operation may be extended using an @code{else} clause.
+Where the conditional operator replaces two of the three possible truth values, an @code{else} can be used to replace the third truth value.
+
+@multitable {----------------}{---------------------------------------------------------------------}
+@headitem Operation @tab Description
+@item A untrue B @tab if A is False or Unknown then B else A
+@item A untrue B else C@tab if A is False or Unknown then B else C
+@item A unfalse B  @tab if A is True or Unknown then B else A
+@item A unfalse B else C@tab if A is True or Unknown then B else C
+@item A known B @tab if A is True or False then B else A
+@item A known B else C@tab if A is True or False then B else C
+@end multitable
+
+Where the conditional operator replaces only one of the three possile truth values, an @code{else} replaces the other two.
+
+@multitable {----------------}{---------------------------------------------------------------------}
+@headitem Operation @tab Description
+@item A true B@tab if A is True then B else A
+@item A true B else C@tab if A is True then B else C
+@item A false B @tab if A is False then B else A
+@item A false B else C@tab if A is False then B else C
+@item A unknown B @tab if A is Unknown then B else A
+@item A unknown B else C@tab if A is Unknown then B else C
+@end multitable
+
+The operators @code{elsetrue}, @code{elsefalse}, and @code{elseunknown} may be used to replace a single truth value following
+a conditional operator that replaces a different single truth value.
+@multitable {----------------}{---------------------------------------------------------------------}
+@headitem Operation @tab Description
+@item A true B elsefalse C@tab if A is True then B else if A is False then C else A
+@item A true B elsefalse C else D@tab if A is True then B else if A is False then C else D
+@item A true B elseunknown C@tab if A is True then B else if A is Unknown then C else A
+@item A true B elseunknown C else D@tab if A is True then B else if A is Unknown then C else D
+@item A false B elsetrue C@tab if A is False then B else if A is True then C else A
+@item A false B elsetrue C else D@tab if A is False then B else if A is True then C else D
+@item A false B elseunknown C@tab if A is False then B else if A is Unknown then C else A
+@item A false B elseunknown C else D@tab if A is False then B else if A is Unknown then C else D
+@item A unknown B elsetrue C@tab if A is Unknown then B else if A is True then C else A
+@item A unknown B elsetrue C else D@tab if A is Unknown then B else if A is True then C else D
+@item A unknown B elsefalse C@tab if A is Unknown then B else if A is False then C else A
+@item A unknown B elsefalse C else D@tab if A is Unknown then B else if A is False then C else D
+@end multitable
+
+Conditional expressions may be simplied when displayed.
+In the following examples the expression on the left is replaced by the expression on the right.
+
+@example
+A true A              ==>  A
+A true B elsefalse B  ==>  A known B
+A untrue B elsetrue C ==>  A true C else B 
+@end example
 
 @node Enabled Monitoring Operators
 @section Enabled Monitoring Operators
@@ -1247,7 +1308,7 @@ The name flip-flop is borrowed from digital electronics. The behavior of NodeBra
 @item ? @tab ! @tab c3
 @item T @tab ? @tab c3
 @item T @tab T @tab c3
-@item T @tab ! @tab 1
+@item T @tab ! @tab !!
 @item ! @tab ? @tab c3
 @item ! @tab T @tab !
 @item ! @tab ! @tab c3
@@ -1271,8 +1332,8 @@ For the final assertion to give predictable results, a and b must both be assign
 The flip-flop operator has no transformation rules like the ones most of us are familiar with in Boolean algebra, at least not relative to standard Boolean operators. Some common Boolean transformations are shown below. 
 
 @example
-     not (c1 and c2)  ==> not c1 or not c2
-     not (c1 or c2) ==> not c1 and not c2
+     !(c1 and c2)  ==> !c1 or !c2
+     !(c1 or c2) ==> !c1 and !c2
      (c1 and c2) or (c1 and c3) ==> c1 and (c2 or c3)
 @end example
 
@@ -1289,7 +1350,7 @@ For notational convenience, the "and" operator distributes over the flip-flop op
 
 @example
      c1 & c2 ^ c3 ==> (c1 & c2) ^ (c1 & c3)
-     ! c1 & c2 ^ c3 ==> (c1 | c2) ^ (c1 | c3)
+     !c1 & c2 ^ c3 ==> (c1 | c2) ^ (c1 | c3)
 @end example
 
 The first expression is used to specify a "key" condition. This is illustrated with the following rule and assertion. Unless the name is "sam" the flip-flop will not change states.
@@ -1302,7 +1363,7 @@ The first expression is used to specify a "key" condition. This is illustrated w
 The second transformation provides a convenient way to "lock" a flip-flop. This is illustrated below.  As long as check="off", the flip-flop will not change states.
 
 @example
-     define silly on(! check="off" & value>"90" ^ value<"70");
+     define silly on(!(check="off") & value>"90" ^ value<"70");
      assert check="off";
 @end example
 
@@ -1569,7 +1630,7 @@ day(1,15,28)
  
 @subsection Operators
 @cindex Operators
-Time expression operators are used to construct time interval sets based on other time interval sets. Some operators have a Boolean logic orientation. For example, when used in a time expression, @i{and}, @i{or}, and @i{not} operate on time interval sets to produce new sets that behave in the same way separate time conditions would if combined using these same Boolean operators. The following logical expressions will have the same value at any given time.
+Time expression operators are used to construct time interval sets based on other time interval sets. Some operators have a Boolean logic orientation. For example, when used in a time expression, @i{and} (@code{&}), @i{or} (@code{|}), and @i{not} (@code{!}) operate on time interval sets to produce new sets that behave in the same way separate time conditions would if combined using these same Boolean operators. The following logical expressions will have the same value at any given time.
 
 @example
 threshold=5 & @b{~(monday)} & ! (@b{~(january)} | @b{~(june)})
@@ -1579,7 +1640,7 @@ threshold=5 & @b{~(monday&!(january|june))}
 Other operators are based purely on the notion of time interval sets. The figure below illustrates the @i{union} operation, which accepts any two sets, @i{a} and @i{b}, as operands and produces a new set (@i{a},@i{b}). This condition includes the time intervals from both sets. (The @i{union} operator symbol is a comma.)
 @image{langref4-1-7,,,,png}
 
-The union operator (,) is an example of an infix operator, meaning it is specified between two sets. Other operators, like "!" (not), work on a single set. These operators are specified before the set and are called prefix operators.
+The union operator (,) is an example of an infix operator, meaning it is specified between two sets. Other operators, like @code{!} (not), work on a single set. These operators are specified before the set and are called prefix operators.
 
 A complex operator, [], enables indexed selection. The example below selects January 5.
 
@@ -2501,11 +2562,9 @@ Sequence rules are not named. This may be convenient in situations where you hav
 
 @example
 define watching node cache:(x);
-define r1 if(A=1 and not watching(B)): @dots{}
-   @{`watching(B),%b=B;on(A=7 and B=%B)`!watching(%b);: @i{command};@}
+define r1 if(A=1 and !watching(B)): \
+ @{`watching(B),%b=B;on(A=7 and B=%B)`!watching(%b);: @i{command};@}
 @end example
-
-(The "@dots{}" at the end of a line indicates, in documentation only, the next line is a continuation that you must code on a single line.)
 
 @example
 alert A=1,B=2; # spin off sequence rule for B=2 - new thread
@@ -2521,7 +2580,7 @@ Although this is a trivial example, it illustrates the general idea. You want to
 
 @example
 	define watching node cache:(x);
-	define r1 if(A=1 and not watching(B)) watching(B);
+	define r1 if(A=1 and !watching(B)) watching(B);
 	define r2 if(A=7 and watching(B)) !watching(B):@i{command}
 @end example
 
@@ -2535,7 +2594,7 @@ In this case, you might want to use a sequence rule.
 
 @example
 define watching node cache:(x);
-define r1 if(A=1 and not watching(B)): @dots{}
+define r1 if(A=1 and !watching(B)): @dots{}
    @{`watching(B),%b=B,%c=C; @dots{}
       on(A=%c and B=%B)`!watching(%b);:@i{command};@}
 @end example

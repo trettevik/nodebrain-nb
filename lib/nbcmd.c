@@ -1181,9 +1181,9 @@ int nbCmdAssert(nbCELL context,void *handle,char *verb,char *cursor){
 
   /* handle cache reference */
   while(*cursor==' ') cursor++;
-  if(*cursor!=':'){
+  if(*cursor!=';' && *cursor!=0 && *cursor!=':'){
     assertion=nbParseAssertion((NB_Term *)context,(NB_Term *)context,&cursor);
-    if(*cursor!=':' && *cursor!=';' && *cursor!=0){
+    if(*cursor!=';' && *cursor!=0 && *cursor!=':'){
       outMsg(0,'E',"Unrecognized at-->%s",cursor);
       dropMember(assertion);
       return(1);
@@ -1193,11 +1193,13 @@ int nbCmdAssert(nbCELL context,void *handle,char *verb,char *cursor){
       nbAssert(context,assertion,alert);  // assert or alert
       dropMember(assertion);
       }
-    if(alert){
-      // This alertCount is used to avoid alerting the address context if a skill already did
-      alertCount=((NB_Node *)((NB_Term *)context)->def)->alertCount;
-      nbRuleReact(); // react to changing conditions
-      if(alertCount==((NB_Node *)((NB_Term *)context)->def)->alertCount) contextAlert((NB_Term *)context);
+    }
+  if(alert){
+    // This alertCount is used to avoid alerting the address context if a skill already did
+    alertCount=((NB_Node *)((NB_Term *)context)->def)->alertCount;
+    nbRuleReact(); // react to changing conditions
+    if(alertCount==((NB_Node *)((NB_Term *)context)->def)->alertCount){
+      contextAlert((NB_Term *)context);
       }
     }
   if(*cursor==':'){
@@ -1693,6 +1695,7 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     else action->command=grabObject(useString(cursor)); /* action is rest of line */
     action->cmdopt=NB_CMDOPT_RULE;     /* do not suppress symbolic substitution */
     action->status='R';   /* ready */
+    action->context=(NB_Term *)context;
     ruleCond=useCondition(rule_type,object,action);
     if(object->type->kind&NB_OBJECT_KIND_CONSTANT && (rule_type==condTypeOnRule || rule_type==condTypeWhenRule))
       outMsg(0,'W',"Rule of this type with a constant condition will never fire");
@@ -1700,7 +1703,6 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     if(term) nbTermAssign(term,(NB_Object *)ruleCond);
     else term=nbTermNew((NB_Term *)context,ident,ruleCond);
     action->term=term;
-    action->context=(NB_Term *)context;
     action->type='R';
     /* If a reused term already has subscribers, enable term and adjust levels */
     if(term->cell.sub!=NULL){

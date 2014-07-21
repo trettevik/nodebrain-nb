@@ -120,6 +120,13 @@ Release 0.8.13
 @item Included additional examples of rule actions and shell commands.
 @end itemize
 
+@item 2014-07-20 @tab
+Release 0.9.02
+@itemize @bullet
+@item Updated to use new representation of True (!!) and False (!).
+@item Updated to show new time stamp format in examples.
+@end itemize
+
 @end multitable
 
 @page
@@ -1210,7 +1217,7 @@ $ nb
 a = 5
 > show b
 b = "abc"
-> @ 
+>
 @end smallexample
 @end cartouche
 
@@ -1228,7 +1235,7 @@ $ nb
 a = # == (5+4)
 > show b
 b = # == (a+3)
-> @ 
+>
 @end smallexample
 @end cartouche
 
@@ -1266,7 +1273,7 @@ b = 4 == (a+3)
 > assert a=5*15/7+2;
 > show a
 a = 12.71428571
-> @ 
+>
 @end smallexample
 @end cartouche
 
@@ -1366,7 +1373,7 @@ $ nb schedule.nb -
 @end cartouche
 
 To see the next event for each schedule, use the @code{show} command with a @code{/c} (clock) option.
-I issued this command at 6:41 on Friday, June 6, 2008.  The @code{h(4)} condition will transition to true at 04:00, and then back to false at 05:00.  The @code{(mo,we,fr)} condition will transition to true at 00:00 Monday the 9th.  See if you can make sense out of the rest of the conditions in this list, given the hint that weeks start at 00:00 Sunday. Match the conditions to the name of the corresponding rule above if you need help.    
+I issued this command at 21:22 on Thursday, July 13, 2014.  The @code{h(4)} condition will transition to true at 04:00, and then back to false at 05:00.  The @code{(mo,we,fr)} condition will transition to true at 00:00 Monday the 14th.  See if you can make sense out of the rest of the conditions in this list, given the hint that weeks start at 00:00 Sunday. Match the conditions to the name of the corresponding rule above if you need help.    
 
 @cartouche
 @smallexample
@@ -1527,63 +1534,79 @@ The NodeBrain interpreter recognizes three logical states: true, false, and unkn
 @quotation
 @multitable {-------------} {-----------------------------------------------------------------------}
 @item @b{Value} @tab @b{Representation}
+@item True    @tab !! or any number or string (e.g. 5.2, -7, "abc", "")
+@item False   @tab !
 @item Unknown @tab ?
-@item False   @tab 0
-@item True    @tab 1 or anything else (e.g., 5.2, --7, "abc", "")
 @end multitable
 @end quotation
 
-You can test for these states by using the @code{=} relational operator or a prefix operator. The @code{!} prefix operator means "not" and the @code{?} prefix operator means "is unknown."
+You can test for these states by using the @code{=} relational operator or a prefix operator with no space between
+the prefix operator and expression being tested.
+A space after the prefix operator will cause it to be interpretted as a value instead of an operator, causing
+a syntax error.
+
+The symbol @code{!!} is more complicated than @code{!} and @code{?}.
+In rule @code{r0} below, @code{a} is tested for the special true value returned by some logical operators, while
+@code{x} is tested for any true value (not false or unknown).  If @code{x} has any true value, @code{!!x} has the
+special true value of @code{!!}.
+In rule @code{r1}, @code{a} and @code{x} are tested for any true value, and return their value unmodified, a more common condition.
  
 @cartouche
 @smallexample
-> define r1 on(a=1 and b=0 and c=? and x and !y and ?z);
+> define r0 on(a=!! and b=! and c=? and !!x and !y and ?z);
+> define r1 on(a and b=! and c=? and x and !y and ?z);
 @end smallexample
 @end cartouche
 
-Values can be asserted similarly.
+Logical values can be asserted similarly.
+In the example below, the way in which @code{x} is asserted to be true, is generally prefered over @code{x=!!}
+because it is simple and intuitive.
+The symbol @code{!!} is not supported as an assertion prefix because it is more complex and unnecessary.
 
 @cartouche
 @smallexample
 $ nb
-> assert a=1,b=0,c=?,x,!y,?z;
+> assert a=!!,b=!,c=?,x,!y,?z;
 > show -t
-@@ =! == node
-z =?
-y =0
-x =1
-c =?
-b =0
-a =1
-> @ 
+_ = # == node 
+a = !!
+b = !
+c = ?
+x = !!
+y = !
+z = ?
+> 
 @end smallexample
 @end cartouche
 
-Although anything other than @code{?} or @code{0} is interpreted as true, logical operators often return a value of @code{1} to represent a true state. Below you see that the value of @code{a<b} is @code{1}.
+Although any string or number is interpreted as true, logical operators may return a value of @code{!!} to represent a true state.
+Below you see that the value of @code{a<b} is @code{!!}.
 
 @cartouche
 @smallexample
 > assert a=5,b=7;
 > define r1 on(a<b);
 > show (a<b)
-()= @b{1} == (@b{a<b})
+() = @b{!!} == (@b{a<b})
 @end smallexample
 @end cartouche
 
-Here's the important thing to understand.  Logical operators accept the unknown value as an operand and return the unknown value under specific conditions.  Logic tables for @code{A and B} and @code{A or B} are shown below. Notice that in some cases NodeBrain knows the result without knowing both operands.
+Here's the important thing to understand.  Logical operators accept unknown (@code{?}), false (@code{!}), true (@code{!!}), and any string or number as true, and
+return any of these values. 
+Logic tables for @code{(A and B)} and @code{(A or B)} are shown below. Notice that in some cases NodeBrain knows the result without knowing both operands.
 
 @quotation
 @multitable {---} {---} {------} {------}
 @item   @b{A} @tab @b{B} @tab @b{A&B} @tab @b{A|B}
-@item   0 @tab 0 @tab  0  @tab  0
-@item   0 @tab 1 @tab  0  @tab  1
-@item   0 @tab ? @tab  0  @tab  ?
-@item   1 @tab 0 @tab  0  @tab  1
-@item   1 @tab 1 @tab  1  @tab  1
-@item   1 @tab ? @tab  ?  @tab  1
-@item   ? @tab 0 @tab  0  @tab  ?
-@item   ? @tab 1 @tab  ?  @tab  1
-@item   ? @tab ? @tab  ?  @tab  ?
+@item   !  @tab !  @tab  !   @tab  !
+@item   !  @tab !! @tab  !   @tab  !!
+@item   !  @tab ?  @tab  !   @tab  ?
+@item   !! @tab !  @tab  !   @tab  !!
+@item   !! @tab !! @tab  !!  @tab  !!
+@item   !! @tab ?  @tab  ?   @tab  !!
+@item   ?  @tab !  @tab  !   @tab  ?
+@item   ?  @tab !! @tab  ?   @tab  !!
+@item   ?  @tab ?  @tab  ?   @tab  ?
 @end multitable
 @end quotation
 
@@ -1596,18 +1619,18 @@ $ nb
 > define r1 on(?x);
 > assert a=7,b=12;
 > show -t
-@@ =! == node
-r1= ! == on(?x);
-x =19 == (a+b)
-b =12
-a =7
+_ = # == node 
+a = 7
+b = 12
+r1 = # ! == on(?x);
+x = 19 == (a+b)
 > assert ?b;
-2008/06/0607:41:34 NB000I Rule r1 fired
-> 
+2014-07-19 14:45:58 NB000I Rule r1 fired
+>
 @end smallexample
 @end cartouche
 
-Let's pause to make sure you know what just happened here. The condition @code{?x} is true when @code{x} is unknown.  This was true when @code{r1} was defined because @code{x} is @code{@i{a}+@i{b}}and both @code{@i{a}} and @code{@i{b}} are unknown at that time.  Hey, the arithmetic operators understand the unknown value also.  When you assert that @code{a=7} and @code{b=12}, @code{x} was known to be 19 and @code{?x} was false.  Then you assert @code{?b}, making @code{a+b} unknown, making @code{x} unknown, making @code{?x} true and @code{r1} fired.
+Let's pause to make sure you know what just happened here. The condition @code{?x} is true when @code{x} is unknown.  This was true when @code{r1} was defined because @code{x} is @code{a+b}and both @code{a} and @code{b} are unknown at that time.  Hey, the arithmetic operators understand the unknown value also.  When you assert that @code{a=7} and @code{b=12}, @code{x} was known to be 19 and @code{?x} was false.  Then you assert @code{?b}, making @code{a+b} unknown, making @code{x} unknown, making @code{?x} true and @code{r1} fired.
  
 @node Closed World Assumption
 @section Closed World Assumption
@@ -1621,9 +1644,9 @@ I'll illustrate using two nodes, one with the @code{tree} skill and one with the
 @cartouche
 @smallexample
 $ nb closedWorld.nb
-2008/06/0607:44:05 NB000I Argument [1] closedWorld.nb
-> define myTree expert tree;
-> define myCache expert cache:(soup);
+2014-07-20 14:32:02 NB000I Argument [1] closedWorld.nb
+> define myTree node tree;
+> define myCache node cache:(soup);
 > define rMyTreeHasSoup on(myTree(soup));
 > define rMyCacheHasSoup on(myCache(soup));
 > define rMyTreeHasNotSoup on(!myTree(soup));
@@ -1631,17 +1654,17 @@ $ nb closedWorld.nb
 > define rMyTreeKnowsNotSoup on(?myTree(soup));
 > define rMyCacheKnowsNotSoup on(?myCache(soup));
 > assert myTree("Chicken"),myCache("Chicken");
-> assert soup="Tomato"; 
+> assert soup="Tomato";
 > assert soup="Chicken";
-2008/06/0607:44:05 NB000I Rule rMyCacheHasSoup fired
-2008/06/0607:44:05 NB000I Rule rMyTreeHasSoup fired
+2014-07-20 14:32:02 NB000I Rule rMyCacheHasSoup fired 
+2014-07-20 14:32:02 NB000I Rule rMyTreeHasSoup fired 
 > assert ?myTree("Chicken"),?myCache("Chicken");
-2008/06/0607:44:05 NB000I Rule rMyTreeKnowsNotSoup fired
-2008/06/0607:44:05 NB000I Rule rMyCacheHasNotSoup fired
+2014-07-20 14:32:02 NB000I Rule rMyTreeKnowsNotSoup fired 
+2014-07-20 14:32:02 NB000I Rule rMyCacheHasNotSoup fired 
 > assert !myTree("Chicken"),!myCache("Chicken");
-2008/06/0607:44:05 NB000I Rule rMyTreeHasNotSoup fired
-2008/06/0607:44:05 NB000I Source file "closedWorld.nb" included. size=514
-2008/06/0607:44:05 NB000I NodeBrain nb[13980] terminating - exit code=0
+2014-07-20 14:32:02 NB000I Rule rMyTreeHasNotSoup fired 
+2014-07-20 14:32:02 NB000I Source file "closedWorld.nb" included. size=509
+2014-07-20 14:32:02 NB000I NodeBrain nb[22600] terminating - exit code=0
 $
 @end smallexample
 @end cartouche
@@ -1711,25 +1734,25 @@ $ @b{nb illness.nb -}
 > # File: tutorial/Ignorance/illness.nb
 > define CommonCold on(cough and soreThroat);
 > define Flu on(fever and achy and upsetStomach);
-2008/06/10 15:51:44 NB000I Source file "illness.nb" included. size=111
-2008/06/10 15:51:44 NB000I Argument [2] -
-2008/06/10 15:51:44 NB000I Reading from standard input.
+2014-07-20 14:36:58 NB000I Source file "illness.nb" included. size=130
+2014-07-20 14:36:58 NB000I Argument [2] -
+2014-07-20 14:36:58 NB000I Reading from standard input.
 ---------- --------
 > @b{query}
- 
+
   (fever&(achy&upsetStomach))
- 
-Enter cell fever==@b{0}
- 
-  (cough&soreThroat)
- 
-Enter cell cough==@b{1}
+
+Enter cell fever==@b{!}
 
   (cough&soreThroat)
- 
-Enter cell soreThroat==@b{1}
-2008/06/10 15:52:11 NB000I @b{Rule CommonCold fired}
-> @ 
+
+Enter cell cough==@b{!!}
+
+  (cough&soreThroat)
+
+Enter cell soreThroat==@b{!!}
+2014-07-20 14:37:57 NB000I @b{Rule CommonCold fired}
+>
 @end smallexample
 @end cartouche
 
@@ -1746,11 +1769,11 @@ Here's a script called @code{illnessConsult.pl} that simulates the running of po
 @smallexample
 #!/usr/bin/perl
 # File: tutorial/Ignorance/illnessConsult.pl
-$state@{"cough"@}=1;
-$state@{"soreThroat"@}=1;
-$state@{"fever"@}=0;
-$state@{"achy"@}=1;
-$state@{"upsetStomach"@}=0;
+$state@{"cough"@}='!!';
+$state@{"soreThroat"@}='!!';
+$state@{"fever"@}='!';
+$state@{"achy"@}='!!';
+$state@{"upsetStomach"@}='!';
 
 $symptom=shift;
 if(exists($state@{$symptom@}))@{print("$state@{$symptom@}\n");@}
@@ -1763,7 +1786,7 @@ Let's run this script that you are pretending is complicated software to determi
 @cartouche
 @smallexample
 $./illnessConsult.pl cough
-1
+!!
 @end smallexample
 @end cartouche
  
@@ -1784,21 +1807,21 @@ Diagnose an illness in batch mode.
 @cartouche
 @smallexample
 $ nb illnessConsult.nb
-2008/06/1016:12:25 NB000I Argument [1] illnessConsult.nb
+2014-07-20 14:51:30 NB000I Argument [1] illnessConsult.nb
 > # File: tutorial/Ignorance/illnessConsult.nb
 > use : ./illnessConsult.pl
 > define CommonCold on(cough and soreThroat);
 > define Flu on(fever and achy and upsetStomach);
 > query;
-2008/06/1016:12:25 NB000T Resolving "fever" via command : ./illnessConsult.pl "fever"
-Value=(0)
-2008/06/1016:12:25 NB000T Resolving "cough" via command : ./illnessConsult.pl "cough"
-Value=(1)
-2008/06/1016:12:25 NB000T Resolving "soreThroat" via command : ./illnessConsult.pl "soreThroat"
-Value=(1)
-2008/06/1016:12:25 NB000I @b{Rule CommonCold fired}
-2008/06/1016:12:25 NB000I Source file "illnessConsult.nb" included. size=149
-2008/06/1016:12:25 NB000I NodeBrain nb[13690] terminating - exit code=0
+2014-07-20 14:51:30 NB000T Resolving "fever" via command : ./illnessConsult.pl "fever"
+Value=(!)
+2014-07-20 14:51:30 NB000T Resolving "cough" via command : ./illnessConsult.pl "cough"
+Value=(!!)
+2014-07-20 14:51:30 NB000T Resolving "soreThroat" via command : ./illnessConsult.pl "soreThroat"
+Value=(!!)
+2014-07-20 14:51:30 NB000I @b{Rule CommonCold fired}
+2014-07-20 14:51:30 NB000I Source file "illnessConsult.nb" included. size=170
+2014-07-20 14:51:30 NB000I NodeBrain nb[23726] terminating - exit code=0
 $
 @end smallexample
 @end cartouche
@@ -1841,26 +1864,26 @@ When you execute this script you will notice that rules fire in response to asse
 @cartouche
 @smallexample
 $ nb rules.nb
-2008/06/1016:54:24 NB000I Argument [1] rules.nb
+2014-07-20 14:56:47 NB000I Argument [1] rules.nb
 > # File: tutorial/RuleTypes/rules.nb
 > define r0 when(a=1 and b=2);
 > define r1 on(a=1 and b=2);
 > define r2 on(a=2 and b=2);
 > define r3 if(a=1 and b=2);
 > assert a=1,b=2;
-2008/06/1016:54:24 NB000I Rule r0 fired
-2008/06/1016:54:24 NB000I Rule r1 fired
+2014-07-20 14:56:47 NB000I Rule r0 fired 
+2014-07-20 14:56:47 NB000I Rule r1 fired 
 > assert a=1,b=2;
 > assert a=2;
-2008/06/1016:54:24 NB000I Rule r2 fired
+2014-07-20 14:56:47 NB000I Rule r2 fired 
 > assert a=27;
 > alert a=1;
-2008/06/1016:54:24 NB000I Rule r1 fired
-2008/06/1016:54:24 NB000I Rule r3 fired
+2014-07-20 14:56:47 NB000I Rule r1 fired 
+2014-07-20 14:56:47 NB000I Rule r3 fired 
 > alert a=1;
-2008/06/1016:54:24 NB000I Rule r3 fired
-2008/06/1016:54:24 NB000I Source file "rules.nb" included. size=206
-2008/06/1016:54:24 NB000I NodeBrain nb[13859] terminating - exit code=0
+2014-07-20 14:56:47 NB000I Rule r3 fired 
+2014-07-20 14:56:47 NB000I Source file "rules.nb" included. size=225
+2014-07-20 14:56:47 NB000I NodeBrain nb[23757] terminating - exit code=0
 $
 @end smallexample
 @end cartouche
@@ -1933,20 +1956,15 @@ define r1 on(a) x=5,y=2;         # action is assertion
 define r2 on(b):assert x=5,y=2;  # action is assert command
 define r3 on(c) x=5:assert y=2;  # action is assertion and assert command
 assert a;
-show x
-show y
+show x,y
 assert ?x,?y;
-show x
-show y
+show x,y
 assert b;
-show x
-show y
+show x,y
 assert ?x,?y;
-show x
-show y
+show x,y
 assert c;
-show x
-show y
+show x,y
 @end smallexample
 @end cartouche
 
@@ -1955,38 +1973,34 @@ Copy the script above into a file named @code{xwise.nb} and execute it as illust
 @cartouche
 @smallexample
 $ nb xwise.nb
+2014-07-20 15:04:24 NB000I Argument [1] xwise.nb
 > define r1 on(a) x=5,y=2;         # action is assertion
 > define r2 on(b):assert x=5,y=2;  # action is assert command
 > define r3 on(c) x=5:assert y=2;  # action is assertion and assert command
 > assert a;
-@b{2012/12/30 12:17:22 NB000I Rule r1 fired (x=5,y=2)}
-> show x
+2014-07-20 15:04:24 NB000I @b{Rule r1 fired (x=5,y=2)}
+> show x,y
 x = 5
-> show y
 y = 2
 > assert ?x,?y;
-> show x
+> show x,y
 x = ?
-> show y
 y = ?
 > assert b;
-@b{2012/12/30 12:17:22 NB000I Rule r2 fired}
+2014-07-20 15:04:24 NB000I @b{Rule r2 fired}
 : @b{assert x=5,y=2;  # action is assert command}
-> show x
+> show x,y
 x = 5
-> show y
 y = 2
 > assert ?x,?y;
-> show x
+> show x,y
 x = ?
-> show y
 y = ?
 > assert c;
-@b{2012/12/30 12:17:22 NB000I Rule r3 fired (x=5)}
+2014-07-20 15:04:24 NB000I @b{Rule r3 fired (x=5)}
 : @b{assert y=2;  # action is assertion and assert command}
-> show x
+> show x,y
 x = 5
-> show y
 y = 2
 @end smallexample
 @end cartouche
@@ -2016,7 +2030,7 @@ $ nb
 > define r1 if(a):$ assert x="$@{n@} cases of $x@{e@}";
 > assert n=5,e="something";
 > alert a;
-2012/12/30 16:52:54 NB000I Rule r1 fired
+2014-07-20 15:13:04 NB000I Rule r1 fired
 : assert x="5 cases of something";
 @end smallexample
 @end cartouche

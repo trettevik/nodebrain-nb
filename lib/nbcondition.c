@@ -145,6 +145,7 @@
 *            Modified to eliminate subordinate time condition and now manage
 *            state of the time delay using a flag in the cell.mode field.
 * 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
+* 2014-07-19 eat 0.9.02 Applied logic change to Lazy AND and OR to match simple operators
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -600,8 +601,12 @@ NB_Object *evalLazyAnd(struct COND *cond){
     }
   nbAxonEnable((NB_Cell *)cond->right,(NB_Cell *)cond);
   robject=((NB_Object *)cond->right)->value;
-  if(lobject==nb_Unknown && robject!=NB_OBJECT_FALSE) return(lobject);
-  return(robject);
+  // 2014-07-19 eat - Lazy AND needs to support same logic change as simple AND
+  //if(lobject==nb_Unknown && robject!=NB_OBJECT_FALSE) return(lobject);
+  //return(robject);
+  if(robject==NB_OBJECT_FALSE) return(NB_OBJECT_FALSE);
+  if(lobject==nb_Unknown || robject==nb_Unknown) return(nb_Unknown);
+  return(nb_True);
   }
 
 NB_Object *evalAnd(struct COND *cond){
@@ -646,12 +651,21 @@ NB_Object *evalLazyOr(struct COND *cond){
   NB_Object *robject=((NB_Object *)cond->right)->value;
   if(lobject!=NB_OBJECT_FALSE && lobject!=nb_Unknown){
     nbAxonDisable((NB_Cell *)cond->right,(NB_Cell *)cond);
-    return(lobject);
+    //return(lobject);
+    return(nb_True);
     }
   nbAxonEnable((NB_Cell *)cond->right,(NB_Cell *)cond);
   robject=((NB_Object *)cond->right)->value;
-  if(lobject==nb_Unknown && robject==NB_OBJECT_FALSE) return(lobject);
-  return(robject);
+  // 2014-07-19 eat - Lazy OR gets the same logic change as simple OR
+  //if(lobject==nb_Unknown && robject==NB_OBJECT_FALSE) return(lobject);
+  //return(robject);
+  if(robject==nb_Unknown) return(nb_Unknown);
+  if(robject==NB_OBJECT_FALSE){
+    if(lobject==nb_Unknown) return(nb_Unknown);
+    return(nb_False);
+    }
+  if(robject==nb_Unknown) return(nb_Unknown);
+  return(nb_True);
   }
 
 NB_Object *evalOr(struct COND *cond){

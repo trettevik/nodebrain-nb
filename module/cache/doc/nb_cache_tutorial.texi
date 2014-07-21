@@ -30,12 +30,12 @@ Here's a 24-hour cache node with four thresholds and four rules to respond when 
 # File: tutorial/cache/cache.nb
 @b{define horace node cache:(~(24h):type(20),city@{10@}[5],customer,item,quantity(3));}
 horace. define r1 if(type._hitState): $ # There have been $@{type._hits@} $@{type@} events
-horace. define r2 if(city._rowState): @dots{}
-@dots{} $ # ($@{type@},$@{city@}) had $@{city._rows@} different events
-horace. define r3 if(city._kidState): @dots{}
-@dots{} $ # ($@{type@},$@{city@}) had $@{city._kids@} different customers
-horace. define r4 if(quantity._hitState): @dots{}
-@dots{} $ # ($@{type@},$@{city@},$@{customer@},$@{item@},$@{quantity@}) happened $@{quantity._hits@} times
+horace. define r2 if(city._rowState): \
+  $ # ($@{type@},$@{city@}) had $@{city._rows@} different events
+horace. define r3 if(city._kidState): \
+  $ # ($@{type@},$@{city@}) had $@{city._kids@} different customers
+horace. define r4 if(quantity._hitState): \
+  $ # ($@{type@},$@{city@},$@{customer@},$@{item@},$@{quantity@}) happened $@{quantity._hits@} times
 @end smallexample
 @end cartouche
 
@@ -79,22 +79,22 @@ $ ./cache.nb events.nb
 > #!/usr/local/bin/nb
 > # File: tutorial/cache/cache.nb
 @b{> define horace node cache:(~(24h):type(20),city@{10@}[5],customer,item,quantity(3));}
-> horace. define r1 if(type._hitState): @dots{}
-@dots{} $ # There have been $@{type._hits@} $@{type@} events
-> horace. define r2 if(city._rowState): @dots{}
-@dots{} $ # ($@{type@},$@{city@}) had $@{city._rows@} different events
-> horace. define r3 if(city._kidState): @dots{}
-@dots{} $ # ($@{type@},$@{city@}) had $@{city._kids@} different customers
-> horace. define r4 if(quantity._hitState): @dots{}
-@dots{} $ # ($@{type@},$@{city@},$@{customer@},$@{item@},$@{quantity@}) happened $@{quantity._hits@} times
-2009/01/31 09:10:04 NB000I Source file "./cache.nb" included. size=511
-2009/01/31 09:10:04 NB000I Argument [2] events.nb
-> # File: tutorial/cache/events.nb
+> horace. define r1 if(type._hitState): \
+  $ # There have been $@{type._hits@} $@{type@} events
+> horace. define r2 if(city._rowState): \
+  $ # ($@{type@},$@{city@}) had $@{city._rows@} different events
+> horace. define r3 if(city._kidState): \
+  $ # ($@{type@},$@{city@}) had $@{city._kids@} different customers
+> horace. define r4 if(quantity._hitState): \
+  $ # ($@{type@},$@{city@},$@{customer@},$@{item@},$@{quantity@}) happened $@{quantity._hits@} times
+2014-07-20 22:04:46 NB000I Source file "./cache.nb" included. size=537
+2014-07-20 22:04:46 NB000I Argument [2] events.nb
+> # Filte: tutorial/cache/events.nb
 > horace. assert ("purchase","Paris","Bruno","iPod",5);
 > horace. assert ("purchase","Paris","Bruno","iPod",5);
 > horace. assert ("purchase","Paris","Bruno","iPod",5);
-2009/01/31 09:10:04 NB000I Rule horace.@b{r4 fired}
-@b{: horace. # (purchase,Paris,Bruno,iPod,5) happened 3 times}
+2014-07-20 22:04:46 NB000I Rule horace.r4 fired 
+: horace. @b{# (purchase,Paris,Bruno,iPod,5) happened 3 times}
 > horace. assert ("purchase","Paris","Bruno","shirt",2);
 > horace. assert ("purchase","Paris","Bruno","shoes",1);
 > horace. assert ("purchase","Paris","Madeleine","shoes",5);
@@ -103,8 +103,8 @@ $ ./cache.nb events.nb
 > horace. assert ("purchase","Paris","Jeannine","bread",1);
 > horace. assert ("purchase","Paris","Laure","bread",1);
 > horace. assert ("purchase","Paris","Henri","iPod",1);
-2009/01/31 09:10:04 NB000I Rule horace.@b{r3 fired}
-@b{: horace. # (purchase,Paris) had 5 different customers}
+2014-07-20 22:04:46 NB000I Rule horace.r3 fired 
+: horace. @b{# (purchase,Paris) had 5 different customers}
 > horace. assert ("return","Paris","Henri","iPod",1);
 > horace. assert ("return","Paris","Madeleine","iPod",1);
 > horace. assert ("purchase","London","Abigail","milk",1);
@@ -116,15 +116,15 @@ $ ./cache.nb events.nb
 > horace. assert ("purchase","London","Alston","candy",4);
 > horace. assert ("purchase","London","Alston","candy",5);
 > horace. assert ("purchase","London","Alston","candy",6);
-2009/01/31 09:10:04 NB000I Rule horace.@b{r1 fired}
-@b{: horace. # There have been 20 purchase events}
+2014-07-20 22:04:46 NB000I Rule horace.r1 fired 
+: horace. @b{# There have been 20 purchase events}
 > horace. assert ("purchase","London","Alston","candy",7);
-2009/01/31 09:10:04 NB000I Rule horace.@b{r2 fired}
-@b{: horace. # (purchase,London) had 10 different events}
+2014-07-20 22:04:46 NB000I Rule horace.r2 fired 
+: horace. @b{# (purchase,London) had 10 different events}
 > horace. assert ("purchase","London","Alston","candy",8);
 > horace. assert ("purchase","London","Alston","candy",9);
-2009/01/31 09:10:04 NB000I Source file "events.nb" included. size=1407
-2009/01/31 09:10:04 NB000I NodeBrain nb[27523] terminating - exit code=0
+2014-07-20 22:04:46 NB000I Source file "events.nb" included. size=1441
+2014-07-20 22:04:46 NB000I NodeBrain nb[4608] terminating - exit code=0
 $
 @end smallexample
 @end cartouche
@@ -140,8 +140,8 @@ In the example above, when @code{r4} fired, it was responding to an invisible al
 
 @cartouche
 @smallexample
-horace. alert quantity._hitState,quantity._hits=3,type="purchase",city="Paris", @dots{}
-@dots{} customer="Bruno",item="iPod",quantity=5;
+horace. alert quantity._hitState,quantity._hits=3,type="purchase",city="Paris", \
+  customer="Bruno",item="iPod",quantity=5;
 @end smallexample
 @end cartouche
 
@@ -200,19 +200,19 @@ When executed below, you are notified when "Fred" has not been asserted to the c
 > tardy. assert ("Fred");
 > # Press the ENTER key once repeatedly until the rule fires
 > # Should happen in 6 seconds
-2009/01/31 10:38:06 NB000I Source file "./tardy.nb" included. size=290
-2009/01/31 10:38:06 NB000I Argument [2] -
-2009/01/31 @b{10:38:06} NB000I Reading from standard input.
+2014-07-20 22:10:30 NB000I Source file "./tardy.nb" included. size=284
+2014-07-20 22:10:30 NB000I Argument [2] -
+2014-07-20 @b{22:10:30} NB000I Reading from standard input.
 ---------- --------
->
->
->
->
->
->
-2009/01/31 @b{10:38:12} NB000I Rule tardy.r1 fired
-@b{: tardy. # Fred has been quiet for 6 seconds}
->
+> 
+> 
+> 
+> 
+> 
+> 
+2014-07-20 @b{22:10:36} NB000I Rule tardy.r1 fired 
+: tardy. @b{# Fred has been quiet for 6 seconds}
+> 
 @end smallexample
 @end cartouche
 
@@ -248,31 +248,34 @@ In the execution below, notice that the @code{TurnedOff} rule did not respond wh
 @cartouche
 @smallexample
 $ ./sequence.nb
-2009/01/31 11:23:14 NB000I Argument [1] ./sequence.nb
-> #!/usr/local/bin/nb
+2014-07-20 22:14:53 NB000I Argument [1] ./sequence.nb
+> #!/usr/bin/nb
 > # File: tutorial/cache/sequence.nb
 > define OnJust node cache:(~(5s):switch);
 > define TurnedOn if(on) OnJust(switch);
-> define TurnedOff if(!on and OnJust(switch)): @dots{}
-@dots{} $ # The $@{switch@} turned off within $@{OnJust._interval@} of turning on
+> define TurnedOff if(!on and OnJust(switch)): \
+  $ # The $@{switch@} turned off within $@{OnJust._interval@} of turning on
+> # Sample events
 > alert on,switch="kitchen light";
-2009/01/31 11:23:14 NB000I Rule TurnedOn fired (OnJust(switch)=1)
+2014-07-20 22:14:53 NB000I Rule TurnedOn fired (OnJust(switch)=!!)
 > alert on,switch="porch light";
-2009/01/31 11:23:14 NB000I Rule TurnedOn fired (OnJust(switch)=1)
+2014-07-20 22:14:53 NB000I Rule TurnedOn fired (OnJust(switch)=!!)
 > alert !on,switch="kitchen light";
-2009/01/31 11:23:14 NB000I Rule TurnedOff fired
+2014-07-20 22:14:53 NB000I Rule TurnedOff fired 
 : # The kitchen light turned off within 5 seconds of turning on
 > -sleep 6
-[6410] Started: -sleep 6
-[6410] Exit(0)
-@b{> alert !on,switch="porch light";}
+[4619] Started: -sleep 6
+[4619] Exit(0)
+> @b{alert !on,switch="porch light";}
 > alert on,switch="porch light";
-2009/01/31 11:23:20 NB000I Rule TurnedOn fired (OnJust(switch)=1)
+2014-07-20 22:14:59 NB000I Rule TurnedOn fired (OnJust(switch)=!!)
 > alert !on,switch="porch light";
-2009/01/31 11:23:20 NB000I Rule TurnedOff fired
+2014-07-20 22:14:59 NB000I Rule TurnedOff fired 
 : # The porch light turned off within 5 seconds of turning on
-2009/01/31 11:23:20 NB000I Source file "./sequence.nb" included. size=453
-2009/01/31 11:23:20 NB000I NodeBrain nb[6409] terminating - exit code=0
+2014-07-20 22:14:59 NB000I Source file "./sequence.nb" included. size=463
+2014-07-20 22:14:59 NB000I NodeBrain nb[4618] terminating - exit code=0
+009/01/31 11:23:20 NB000I NodeBrain nb[6409] terminating - exit code=0
+$
 @end smallexample
 @end cartouche
 
@@ -285,5 +288,3 @@ A single cache can detect multiple patterns, but it often necessary to specify a
 For example, a cache specified as (@code{child,action[5],toy}) could detect a given child taking a given action on five different toys, while a cache specified as (@code{toy[10],child[3],action(7)}) could detect when 10 different children performed a given action on a given toy, a given child performed three different actions on a given toy, and a given child performed a given action on a given toy seven times.  The last condition could be detected by the first cache if you included another threshold (@code{child,action[5],toy(7)}).
 But the first two conditions detected by the second cache could not be detected by the first cache.
 It is necessary to use two different cache nodes with the attributes in a different order to detect all four conditions.
-
-

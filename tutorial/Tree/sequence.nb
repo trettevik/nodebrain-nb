@@ -3,8 +3,10 @@
 define jumped node tree;
 define r1 if(event="jump" and ?jumped(name)) jumped(name);
 define r2 if(event="land" and jumped(name)) ?jumped(name);
-define r3 if(event="jump" and jumped(name)):$ # ${name} jumped twice without an intervening landing
-define r4 if(event="land" and ?jumped(name)):$ # ${name} landed twice without an intervening jump
+define r3 if(event="jump" and jumped(name)): \
+  $ # ${name} jumped twice without an intervening landing
+define r4 if(event="land" and ?jumped(name)): \
+  $ # ${name} landed twice without an intervening jump
 
 # Sample events
 alert event="jump",name="sally";

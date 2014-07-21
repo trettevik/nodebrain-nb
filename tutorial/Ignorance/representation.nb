@@ -1,5 +1,5 @@
 #!/usr/bin/nb
-assert a=1,b=0,c=?,x,!y,?z;
+assert a=!!,b=!,c=?,x,!y,?z;
 show -t
 #
 assert a=5,b=7;

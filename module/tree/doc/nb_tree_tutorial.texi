@@ -47,15 +47,15 @@ Then replace the @code{stuff(...)} expressions in the rule with their values at 
 @cartouche
 @smallexample
 $ ./stuff.nb
-2009/01/31 12:36:15 NB000I Argument [1] ./stuff.nb
-> #!/usr/local/bin/nb
+2014-07-20 15:26:53 NB000I Argument [1] ./stuff.nb
+> #!/usr/bin/nb
 > # File: tutorial/tree/stuff.nb
 > define stuff node tree;
 > define r1 on(stuff(x,y)>17 and stuff(x,y,z)="Sally");
 > stuff. assert ("Kathy","apple")=2,(1,2,3)="Sally",(1,2)=27;
 > assert x=1,y=2;
 > assert z=3;
-@b{2009/01/31 12:36:15 NB000I Rule r1 fired}
+2014-07-20 15:26:53 NB000I Rule r1 fired 
 > show stuff
 stuff = ? == node tree
   "Kathy"
@@ -79,8 +79,8 @@ stuff = ? == node tree
 > assert a=stuff("Kathy","apple");
 > show a
 a = 2
-2009/01/31 12:36:15 NB000I Source file "./stuff.nb" included. size=301
-2009/01/31 12:36:15 NB000I NodeBrain nb[24913] terminating - exit code=0
+2014-07-20 15:26:53 NB000I Source file "./stuff.nb" included. size=326
+2014-07-20 15:26:53 NB000I NodeBrain nb[24682] terminating - exit code=0
 $
 @end smallexample
 @end cartouche
@@ -112,22 +112,22 @@ Notice how the following execution picks out the events of interest.
 
 @cartouche
 @smallexample
-./watch.nb
-2009/01/31 12:56:27 NB000I Argument [1] ./watch.nb
-> #!/usr/local/bin/nb
+$ ./watch.nb
+2014-07-20 15:30:53 NB000I Argument [1] ./watch.nb
+> #!/usr/bin/nb
 > # File: tutorial/tree/watch.nb
 > define watchtype node tree;
 > watchtype. assert ("tree fell"),("log rolled"),("frog croaked");
 > define r1 if(watchtype(type));
 > # Sample events
 > alert type="tide out";
-@b{> alert type="log rolled";}
-2009/01/31 12:56:27 NB000I Rule r1 fired
+> @b{alert type="log rolled";}
+2014-07-20 15:30:53 NB000I @b{Rule r1 fired}
 > alert type="tide in";
-@b{> alert type="frog croaked";}
-2009/01/31 12:56:27 NB000I Rule r1 fired
-2009/01/31 12:56:27 NB000I Source file "./watch.nb" included. size=289
-2009/01/31 12:56:27 NB000I NodeBrain nb[26148] terminating - exit code=0
+> @b{alert type="frog croaked";}
+2014-07-20 15:30:53 NB000I @b{Rule r1 fired}
+2014-07-20 15:30:53 NB000I Source file "./watch.nb" included. size=283
+2014-07-20 15:30:53 NB000I NodeBrain nb[24688] terminating - exit code=0
 $
 @end smallexample
 @end cartouche
@@ -141,13 +141,13 @@ Let's look at an example that provides a better illustration of this.
 @smallexample
 #!/usr/local/bin/nb
 # File: tutorial/tree/sequence.nb
-@b{define jumped node tree;
+define jumped node tree;
 define r1 if(event="jump" and ?jumped(name)) jumped(name);
 define r2 if(event="land" and jumped(name)) ?jumped(name);
-define r3 if(event="jump" and jumped(name)): @dots{}
-@dots{} $ # $@{name@} jumped twice without intervening landing
-define r4 if(event="land" and ?jumped(name)): @dots{}
-@dots{} $ # $@{name@} landed twice without intervening jump}
+define r3 if(event="jump" and jumped(name)): \
+  $ # $@{name@} jumped twice without intervening landing
+define r4 if(event="land" and ?jumped(name)): \
+  $ # $@{name@} landed twice without intervening jump
 
 # Sample events
 alert event="jump",name="sally";
@@ -164,35 +164,36 @@ In the execution below, NodeBrain was able to detect a couple things that happen
 
 @cartouche
 @smallexample
-2009/01/31 13:22:07 NB000I Argument [1] ./sequence.nb
-> #!/usr/local/bin/nb
+$ ./sequence.nb
+2014-07-20 19:50:03 NB000I Argument [1] sequence.nb
+> #!/usr/bin/nb
 > # File: tutorial/tree/sequence.nb
 > define jumped node tree;
 > define r1 if(event="jump" and ?jumped(name)) jumped(name);
 > define r2 if(event="land" and jumped(name)) ?jumped(name);
-> define r3 if(event="jump" and jumped(name)): @dots{}
-@dots{} $ # $@{namer@} jumped twice without an intervening landing
-> define r4 if(event="land" and ?jumped(name)): @dots{}
-@dots{} $ # $@{name@} landed twice without an intervening jump
+> define r3 if(event="jump" and jumped(name)): \
+  $ # $@{namei@} jumped twice without an intervening landing
+> define r4 if(event="land" and ?jumped(name)): \
+$ # $@{name@} landed twice without an intervening jump
 > # Sample events
 > alert event="jump",name="sally";
-2009/01/31 13:22:07 NB000I Rule r1 fired (jumped(name)=1)
+2014-07-20 19:50:03 NB000I Rule r1 fired (jumped(name)=!!)
 > alert event="jump",name="joe";
-2009/01/31 13:22:07 NB000I Rule r1 fired (jumped(name)=1)
+2014-07-20 19:50:03 NB000I Rule r1 fired (jumped(name)=!!)
 > alert event="land",name="sally";
-2009/01/31 13:22:07 NB000I Rule r2 fired (jumped(name)=?)
+2014-07-20 19:50:03 NB000I Rule r2 fired (jumped(name)=?)
 > alert event="land",name="joe";
-2009/01/31 13:22:07 NB000I Rule r2 fired (jumped(name)=?)
+2014-07-20 19:50:03 NB000I Rule r2 fired (jumped(name)=?)
 > alert event="jump",name="sally";
-2009/01/31 13:22:07 NB000I Rule r1 fired (jumped(name)=1)
+2014-07-20 19:50:03 NB000I Rule r1 fired (jumped(name)=!!)
 > alert event="land",name="joe";
-2009/01/31 13:22:07 NB000I Rule r4 fired
-@b{: # joe landed twice without an intervening jump}
+2014-07-20 19:50:03 NB000I Rule r4 fired 
+: @b{# joe landed twice without an intervening jump}
 > alert event="jump",name="sally";
-2009/01/31 13:22:07 NB000I Rule r3 fired
-@b{: # sally jumped twice without an intervening landing}
-2009/01/31 13:22:07 NB000I Source file "./sequence.nb" included. size=631
-2009/01/31 13:22:07 NB000I NodeBrain nb[26552] terminating - exit code=0
+2014-07-20 19:50:03 NB000I Rule r3 fired 
+: @b{# sally jumped twice without an intervening landing}
+2014-07-20 19:50:03 NB000I Source file "sequence.nb" included. size=641
+2014-07-20 19:50:03 NB000I NodeBrain nb[8693] terminating - exit code=0
 $
 @end smallexample
 @end cartouche
@@ -200,5 +201,3 @@ $
 A tree node can support large trees if you have enough memory on your system. 
 From a performance perspective, tree nodes scale well because they are organized as binary trees that are kept reasonably balanced.
 A lookup on a tuple (@code{x,y,z}) is performed as a binary search for @code{x}, followed by a binary search for @code{y} in a tree owned by (@code{x}), followed by a binary search for @code{z} in a tree owned by (@code{x,y}).
-
-

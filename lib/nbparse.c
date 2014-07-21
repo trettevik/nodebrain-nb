@@ -376,6 +376,9 @@ static void nbParseTimeSymbol(char *symid,char *ident,size_t size,char **sourceP
 * I  6   known
 * I  7   unknown  ?
 * I  8   else
+* I  G   elsetrue        
+* I  H   elsefalse
+* I  I   elseunknown
 *
 * 2005/05/14 eat 0.6.3  leading symbols for terms are handled differently now
 * 2006/01/06 eat 0.6.4  recognize null delimiter (0) as term delimiter after "."
@@ -612,7 +615,11 @@ static char nbParseSymbolInfix(char *symbol,size_t size,char **source){
         else if(strcmp(symbol,"unfalse")==0) symid='5';
         else if(strcmp(symbol,"known")==0) symid='6';
         else if(strcmp(symbol,"unknown")==0) symid='7';
-        else if(strcmp(symbol,"else")==0) symid='8';
+        else if(strcmp(symbol,"else")==0) symid='J';
+        // 2014-07-19 eat - extra else values
+        else if(strcmp(symbol,"elsetrue")==0) symid='G';
+        else if(strcmp(symbol,"elsefalse")==0) symid='H';
+        else if(strcmp(symbol,"elseunknown")==0) symid='I';
         // 2014-04-25 eat - enabled monitoring and value capture
         else if(strcmp(symbol,"then")==0) symid='E';
         else if(strcmp(symbol,"capture")==0) symid='V';
@@ -1110,106 +1117,70 @@ NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
     robject=NULL;
     switch(level){
       case 0: // conditional
-        if(symid<'2' || symid>'8'){  // not a conditional operator
+        if(symid<'2' || (symid>'7' && symid<'G') || symid>'j'){  // not a conditional operator
           *cursor=cursave;
           return(lobject);
           //outMsg(0,'E',"Operator \"%s\" not expected at-->%s",operator,cursave);
           //return(NULL);
           }
-        if(symid=='8'){ // else
+        if(symid>='G' && symid<='J'){ // elsetrue, elsefalse, elseunknown, else
           NB_Conditional *conditional=(NB_Conditional *)lobject;
-          if(!(conditionalState&8) && lobject->type!=nb_ConditionalType){  // go ahead and create a conditional - we can add could to make sure we really need to
-            conditional=nbConditionalUse((nbCELL)cobject,(nbCELL)cobject,(nbCELL)cobject,(nbCELL)cobject);
-            lobject=(NB_Object *)conditional;
-            //outMsg(0,'E',"Operator \"%s\" not expected at-->%s",operator,cursave);
-            //return(NULL);
+          //if(!(conditionalState&8) && lobject->type!=nb_ConditionalType){  // go ahead and create a conditional - we can add code to make sure we really need to
+          if(lobject->type!=nb_ConditionalType){  // go ahead and create a conditional - we can add code to make sure we really need to
+            //conditional=nbConditionalUse((nbCELL)lobject,(nbCELL)lobject,(nbCELL)lobject,(nbCELL)lobject);
+            //lobject=(NB_Object *)conditional;
+            //conditionalState|=4;
+            outMsg(0,'E',"Operator \"%s\" not expected at-->%s",operator,cursave);
+            return(NULL);
             }
           cursave=*cursor;
-          symid=nbParseSymbolInfix(operator,sizeof(operator),cursor);
-          if(symid>='2' && symid<='7'){ // conditional
-            robject=nbParseCell(context,cursor,1);
-            if(robject==NULL){
-              outMsg(0,'E',"Operator \"%s\" right side not valid at-->%s",operator,cursave);
-              return(NULL);
-              }
-            if(!(conditionalState&8)) switch(symid){  // process if we have already decided branch
-              case '2':  // true
-                if(conditionalState&4){
-                  outMsg(0,'E',"Operator \"%s\" repeated at-->%s",operator,cursave);
-                  return(NULL);
-                  }
-                dropObject(conditional->ifTrue);
-                conditional->ifTrue=(nbCELL)grabObject(robject);
-                if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifTrue,(nbCELL)conditional);
-                break;
-              case '3':  // untrue
-                if(conditionalState&3){
-                  outMsg(0,'E',"Operator \"%s\" conflict with prior at-->%s",operator,cursave);
-                  return(NULL);
-                  }
-                dropObject(conditional->ifFalse);
-                conditional->ifFalse=(nbCELL)grabObject(robject);
-                if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifFalse,(nbCELL)conditional);
-                dropObject(conditional->ifUnknown);
-                conditional->ifUnknown=(nbCELL)grabObject(robject);
-                if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifUnknown,(nbCELL)conditional);
-                break;
-              case '4':  // false
-                if(conditionalState&2){
-                  outMsg(0,'E',"Operator \"%s\" repeated at-->%s",operator,cursave);
-                  return(NULL);
-                  }
-                dropObject(conditional->ifFalse);
-                conditional->ifFalse=(nbCELL)grabObject(robject);
-                if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifFalse,(nbCELL)conditional);
-                break;
-              case '5':  // unfalse
-                if(conditionalState&5){
-                  outMsg(0,'E',"Operator \"%s\" conflict with prior at-->%s",operator,cursave);
-                  return(NULL);
-                  }
-                dropObject(conditional->ifTrue);
-                conditional->ifTrue=(nbCELL)grabObject(robject);
-                if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifTrue,(nbCELL)conditional);
-                dropObject(conditional->ifUnknown);
-                conditional->ifUnknown=(nbCELL)grabObject(robject);
-                if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifUnknown,(nbCELL)conditional);
-                 break;
-              case '6':  // known
-                if(conditionalState&6){
-                  outMsg(0,'E',"Operator \"%s\" conflict with prior at-->%s",operator,cursave);
-                  return(NULL);
-                  }
-                dropObject(conditional->ifTrue);
-                conditional->ifTrue=(nbCELL)grabObject(robject);
-                if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifTrue,(nbCELL)conditional);
-                dropObject(conditional->ifFalse);
-                conditional->ifFalse=(nbCELL)grabObject(robject);
-                if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifFalse,(nbCELL)conditional);
-                break;
-              case '7':  // unknown
-                if(conditionalState&1){
-                  outMsg(0,'E',"Operator \"%s\" repeated at-->%s",operator,cursave);
-                  return(NULL);
-                  }
-                dropObject(conditional->ifUnknown);
-                conditional->ifUnknown=(nbCELL)grabObject(robject);
-                if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifUnknown,(nbCELL)conditional);
-                break;
-              }
+          robject=nbParseCell(context,cursor,1);
+          if(robject==NULL){
+            outMsg(0,'E',"Operator \"%s\" right side not valid at-->%s",operator,cursave);
+            return(NULL);
             }
-          else{ // simple else without condition
-            *cursor=cursave; // backup
-            robject=nbParseCell(context,cursor,1);
-            if(robject==NULL){
-              outMsg(0,'E',"Operator \"%s\" right side not valid at-->%s",operator,cursave);
-              return(NULL);
-              }
-            if(!(conditionalState&8)){
-              if(!(conditionalState&4)) conditional->ifTrue=(nbCELL)robject;
-              if(!(conditionalState&2)) conditional->ifFalse=(nbCELL)robject;
-              if(!(conditionalState&1)) conditional->ifUnknown=(nbCELL)robject;
-              }
+          if(!(conditionalState&8)) switch(symid){  // process if we have already decided branch
+            case 'G':  // elsetrue
+              if(conditionalState&4){
+                outMsg(0,'E',"Operator \"%s\" repeated at-->%s",operator,cursave);
+                return(NULL);
+                }
+              dropObject(conditional->ifTrue);
+              conditional->ifTrue=(nbCELL)grabObject(robject);
+              if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifTrue,(nbCELL)conditional);
+              break;
+            case 'H':  // elsefalse
+              if(conditionalState&2){
+                outMsg(0,'E',"Operator \"%s\" repeated at-->%s",operator,cursave);
+                return(NULL);
+                }
+              dropObject(conditional->ifFalse);
+              conditional->ifFalse=(nbCELL)grabObject(robject);
+              if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifFalse,(nbCELL)conditional);
+              break;
+            case 'I':  // elseunknowe 
+              if(conditionalState&1){
+                outMsg(0,'E',"Operator \"%s\" repeated at-->%s",operator,cursave);
+                return(NULL);
+                }
+              dropObject(conditional->ifUnknown);
+              conditional->ifUnknown=(nbCELL)grabObject(robject);
+              if(conditional->cell.object.value!=nb_Disabled) nbCellEnable(conditional->ifUnknown,(nbCELL)conditional);
+              break;
+            case 'J': // else
+              if(!(conditionalState&4)){
+                dropObject(conditional->ifTrue);
+                conditional->ifTrue=(nbCELL)grabObject(robject);
+                }
+              if(!(conditionalState&2)){
+                dropObject(conditional->ifFalse);
+                conditional->ifFalse=(nbCELL)grabObject(robject);
+                }
+              if(!(conditionalState&1)){
+                dropObject(conditional->ifUnknown);
+                conditional->ifUnknown=(nbCELL)grabObject(robject);
+                }
+              break;
             }
           }
         else{  // condtional other than else
@@ -1389,7 +1360,7 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
       symid=nbParseSymbol(ident,sizeof(ident),&cursor);
       }
     else unknown=0;
-    if(symid=='('){  /* allow for null term */
+    if(symid=='(' || symid=='_'){  /* allow for null term */
       *ident=0;
       cursor--;
       }

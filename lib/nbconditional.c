@@ -71,7 +71,7 @@ static void nbConditionalShow(NB_Conditional *conditional){
       else{
         outPut(" true ");
         printObject((NB_Object *)conditional->ifTrue);
-        outPut(" else unknown "); 
+        outPut(" elseunknown "); 
         printObject((NB_Object *)conditional->ifUnknown);
         }
       }
@@ -93,7 +93,7 @@ static void nbConditionalShow(NB_Conditional *conditional){
       outPut(" true ");
       printObject((NB_Object *)conditional->ifTrue);
       if(conditional->ifUnknown!=conditional->ifFalse){
-        outPut(" else false ");
+        outPut(" elsefalse ");
         printObject((NB_Object *)conditional->ifFalse);
         if(conditional->ifUnknown!=conditional->condition){
           outPut(" else ");
@@ -115,7 +115,7 @@ static void nbConditionalShow(NB_Conditional *conditional){
       outPut(" false ");
       printObject((NB_Object *)conditional->ifFalse);
       if(conditional->ifUnknown!=conditional->condition){
-        outPut(" else unknown ");
+        outPut(" elseunknown ");
         printObject((NB_Object *)conditional->ifUnknown);
         }
       }

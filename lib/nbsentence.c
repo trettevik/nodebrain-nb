@@ -66,8 +66,16 @@ static void nbSentenceShow(NB_Sentence *cell){
   }
 
 static void nbSentenceDestroy(NB_Sentence *cell){
+  NB_Sentence *sentence,**sentenceP;
+  NB_Hash *hash=cell->cell.object.type->hash;
+
   dropObject((NB_Object *)cell->term);
   dropObject((NB_Object *)cell->args);
+  sentenceP=(NB_Sentence **)&(hash->vect[cell->cell.object.hashcode&hash->mask]);
+  for(sentence=*sentenceP;sentence!=NULL && sentence!=cell;sentence=*sentenceP)
+    sentenceP=(NB_Sentence **)&sentence->cell.object.next;
+  if(sentence==cell) *sentenceP=(NB_Sentence *)sentence->cell.object.next;
+  hash->objects--;
   nbFree(cell,sizeof(NB_Sentence));
   }
 
@@ -110,13 +118,33 @@ void nbSentenceInit(NB_Stem *stem){
   }
 
 struct NB_SENTENCE *nbSentenceNew(NB_Facet *facet,NB_Term *term,NB_List *args){
-  struct NB_SENTENCE *sentence;
-  // include logic here to make sure sentences are unique - no duplicates
-  // if found, return it and don't create a new one
-  sentence=(struct NB_SENTENCE *)nbCellNew(nb_SentenceType,NULL,sizeof(struct NB_SENTENCE));
+  NB_Sentence *sentence,**sentenceP;
+  NB_Hash *hash=nb_SentenceType->hash;
+  uint32_t hashcode;
+  unsigned long h,*l,*r;
+
+  if(trace) outMsg(0,'T',"nbSentenceNew: called");
+  l=(unsigned long *)&term;
+  r=(unsigned long *)&args;
+  h=((*l>>3)+(*r>>3));
+  h+=(h>>3);
+  hashcode=h;
+  sentenceP=(NB_Sentence **)&(hash->vect[hashcode&hash->mask]);
+  for(sentence=*sentenceP;sentence!=NULL;sentence=*sentenceP){
+    if(sentence->term==term && sentence->facet==facet && sentence->args==args) return(sentence);
+    sentenceP=(NB_Sentence **)&sentence->cell.object.next;
+    }
+  sentence=(NB_Sentence *)nbCellNew(nb_SentenceType,NULL,sizeof(NB_Sentence));
   sentence->facet=facet;  // don't grab because it is a permenant object
   sentence->term=grabObject(term);
   sentence->args=grabObject(args);
+  sentence->cell.object.hashcode=hashcode;
+  sentence->cell.object.next=(NB_Object *)*sentenceP;
+  *sentenceP=sentence;
+  hash->objects++;
+  if(hash->objects>=hash->limit) nbHashGrow(&nb_SentenceType->hash);
+  sentence->cell.level=args->cell.level+1;
+  sentence->cell.object.value=nb_Disabled;
   return(sentence);
   }
 
