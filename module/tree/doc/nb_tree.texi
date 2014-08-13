@@ -11,7 +11,7 @@
 
 @copying
 Tree NodeBrain Module@*
-July 2014@*
+@value{UPDATED-MONTH}@*
 NodeBrain Open Source Projet
 
 @sp 2

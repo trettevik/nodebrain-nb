@@ -18,7 +18,7 @@ Version:     0.9 - Columbo
 
 Release:     0.9.02 
 
-Date:        July 13, 2014
+Date:        August 13, 2014
 
 Reference:   http://www.nodebrain.org
                1) Online documentation

@@ -11,7 +11,7 @@
 
 @copying
 Webster NodeBrain Module@*
-July 2012@*
+@value{UPDATED-MONTH}@*
 NodeBrain Open Source Project
 
 @sp 2

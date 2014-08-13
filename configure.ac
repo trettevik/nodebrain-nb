@@ -130,7 +130,7 @@ LT_SYS_MODULE_EXT
 LT_FUNC_DLSYM_USCORE
 
 # define a release date variable
-AC_DEFINE([NB_RELEASE_DATE],"2014-02-15",[Define release date])
+AC_DEFINE([NB_RELEASE_DATE],"2014-08-13",[Define release date])
 
 # Checks for programs.
 AC_PROG_CC
