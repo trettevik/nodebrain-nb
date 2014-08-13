@@ -11,7 +11,7 @@
 
 @copying
 Webster NodeBrain Module@*
-July 2014*
+@value{UPDATED-MONTH}@*
 NodeBrain Open Soure Project
 
 @sp 2

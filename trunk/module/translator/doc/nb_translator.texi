@@ -11,7 +11,7 @@
 
 @copying
 Translator NodeBrain Module@*
-September 2014@*
+@value{UPDATED-MONTH}@*
 NodeBrain Open Source Porject
 
 @sp 2

@@ -11,7 +11,7 @@
 
 @copying
 Sample NodeBrain Module@*
-July 2014@*
+@value{UPDATED-MONTH}@*
 NodeBrain Open Source Project
 
 @sp 2

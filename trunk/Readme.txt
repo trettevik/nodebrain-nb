@@ -18,7 +18,7 @@ Version:     0.8 - Dopey
 
 Release:     0.8.17 
 
-Date:        July 10, 2014
+Date:        August 13, 2014
 
 Reference:   http://www.nodebrain.org
                1) Online documentation
