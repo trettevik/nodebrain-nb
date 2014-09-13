@@ -99,10 +99,11 @@
 # 2014-02-01 eat 0.8.16 Reduced to a single configure.ac file - handles subordinate directories
 # 2014-02-12 eat 0.9.01 Possible 0.9.x release
 # 2014-05-04 eat 0.9.02 Target 0.9.x release
+# 2014-08-13 eat 0.9.03 Start 0.9.x patch release
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([nodebrain],[0.9.02],[bugs@nodebrain.org])
+AC_INIT([nodebrain],[0.9.03],[bugs@nodebrain.org])
 #AC_CONFIG_SRCDIR([nb.c])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(config)
@@ -112,7 +113,7 @@ AM_INIT_AUTOMAKE
 # define module directory variables
 
 AC_DEFINE_UNQUOTED(NB_API_VERSION,"0",[NodeBrain API version])
-NB_MODULE_PATH=".nb:/usr/local/lib/nb-0.9.02:/usr/lib/nb-0.9.02:/usr/lib64/nb-0.9.02"
+NB_MODULE_PATH=".nb:/usr/local/lib/nb-0.9.03:/usr/lib/nb-0.9.03:/usr/lib64/nb-0.9.03"
 NB_MODULE_PATH_SEPARATOR=":"
 AC_DEFINE_UNQUOTED(NB_MODULE_PATH,"${NB_MODULE_PATH}",[Module path])
 AC_DEFINE_UNQUOTED(NB_MODULE_PATH_SEPARATOR,'${NB_MODULE_PATH_SEPARATOR}',[Module path separator])
@@ -262,7 +263,7 @@ AS_IF([test "x$enable_nb_webster" == xyes -a "x$with_tls" != xno],[NB_MODULES=$N
 
 AC_SUBST([NB_MODULES])
 # Set module subdirectory by minor version - ${libdir}/nb/${NB_MOD_DIR}/
-AC_SUBST([NB_MOD_DIR],[0.9.02])
+AC_SUBST([NB_MOD_DIR],[0.9.03])
 
 # Figure out which nb program to use with "make check".
 #   If we are in a Nodebrain distribution, we'll use

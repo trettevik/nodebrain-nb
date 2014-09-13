@@ -6,17 +6,17 @@
 |_| \_|\___/ \__ _|\___|____/|_|  \__ _|_|_| |_|
 
 
-NodeBrain 0.9.02
+NodeBrain 0.9.03
 
 ========================================================================
 
-File:        README for nodebrain-0.9.02 release files
+File:        README for nodebrain-0.9.03 release files
 
 Package:     NodeBrain (nb)
 
 Version:     0.9 - Columbo
 
-Release:     0.9.02 
+Release:     0.9.03 
 
 Date:        August 13, 2014
 
@@ -35,8 +35,8 @@ Installation instructions for Linux/Unix Platforms
 
 a) From source code distribution - install to /usr/local directories
 
-     $ tar -xzf nodebrain-0.9.02.tar.gz
-     $ cd nodebrain-0.9.02
+     $ tar -xzf nodebrain-0.9.03.tar.gz
+     $ cd nodebrain-0.9.03
      $ ./configure
      $ make
      $ make check
@@ -84,7 +84,7 @@ b) From git repository - requires autoconf/automake/libtools
 
      $ git clone git://git.code.sf.net/p/nodebrain/nb nodebrain-nb
      $ cd nodebrain-nb
-     $ git checkout 0.9.02
+     $ git checkout 0.9.03
      $ ./autogen.sh
      $ ./configure
      $ make
@@ -93,13 +93,13 @@ b) From git repository - requires autoconf/automake/libtools
 
 c) From source RPM file 
 
-     $ rpmbuild --rebuild nodebrain-0.9.02-1.el6.src.rpm
-     $ rpmbuild --rebuild nodebrain-0.9.02-1.src.rpm
+     $ rpmbuild --rebuild nodebrain-0.9.03-1.el6.src.rpm
+     $ rpmbuild --rebuild nodebrain-0.9.03-1.src.rpm
 
 d) From binary RPM file (x86_64 platform example)
 
-     $ rpm --install nodebrain-0.9.02-1.el6.x86_64.rpm
-     $ rpm --install nodebrain-0.9.02-1.x86_64.rpm
+     $ rpm --install nodebrain-0.9.03-1.el6.x86_64.rpm
+     $ rpm --install nodebrain-0.9.03-1.x86_64.rpm
 
 ======================================================================== 
 
