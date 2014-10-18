@@ -11,22 +11,122 @@ NodeBrain 0.9.03 (Columbo) Change Summary
 
 * Released TBD, 2014
 
-* Theme: Patch Release
+* Theme: Implied Nodes and Alert Attribute Transience
 
-    ...
+     This version introduces two assumptions intended to
+     improve handling of rules and alerts. The syntax for
+     referencing terms has been extended to differentiate
+     between navigation of the the node hierarchy and
+     multiple level term glossaries, enabling the interpreter
+     to automatically create nodes implied by commands
+     prior to node definition. All assertions to terms
+     directly defined in the context node of an ALERT
+     command are now transient, eliminating the need to
+     define transient terms.
 
-* Documentation: (none)
+* Documentation:
 
+  o  The NodeBrain Language manual has been updated to 
+     include facets and alert attribute transience.  These
+     topics were not covered previously because their
+     introduction in the prior release was experimental.
+     Because of this, the incompatibilities introduced by
+     this release for these features are expected to have
+     little impact.
+     
 * Incompatibilities: (none)
 
-* New Features: (none)
+  o  Applications using ALERT commands for both event
+     and state monitoring may break under this release,
+     requiring rule changes before upgrading.  You will
+     only have a problem if you depend on some terms
+     defined within a given node that are set by an ALERT
+     to the node, retaining their value when subsequent
+     ALERT commands to the same node do not set a value
+     for the term.  This would mean some of the terms set
+     by an ALERT are intended to express "state", while
+     others express and "event".  Starting with this
+     release, you may need to move all terms used to
+     express "state" within ALERT commands to a different
+     (perhaps subordinate) node. Otherwise, ALERT
+     commands not setting the "state" terms will
+     automatically cause them to revert to Unknown.  This 
+     is not a problem for "state" terms that are set by
+     all ALERT commands to the node. 
+
+       define n node;
+       n. alert a=1,b=2; # a and b may be state or event terms
+       n. alert a=2,b=3; # No problem because same terms set
+       n. alert a=3; # Problem if b is intended for "state"
+       # Prior releases would leave b set to 3
+       # This release resets b to Unknown
+
+     If this is a problem for you, it can be resolved as
+     follows.
+       
+       define b cell; # Define state term in different node
+       define n node;
+       n. alert a=1,b=2; # a is for "event", b is for "state"
+       n. alert a=3; # b is not reset to Unknown
+
+  o  The special syntax for alert attributes has been
+     dropped after introduction in the prior release. Terms
+     starting with "@" are now interpreted as node facets
+     instead of transient alert attributes.  We are making
+     this change now under the assumption that there has
+     been no significant adoption of either alert attribute
+     transient terms or node facets.
+
+  o  The syntax for node facets has changed abruptly under
+     the assumption that there has been no significant
+     adoption of this feature after introduction in the
+     prior release.
+
+       Was:      <node>_<facet>
+       Now:      [<node>]@<facet>
+
+     This freed up "_" for navigation of multiple level
+     glossaries of term within a node, and enables facet
+     reference within the context node without repeating
+     the node term.
+
+* New Features:
+
+  o  The ALERT command now automatically resets terms defined
+     directly within the context node to Unknown if set by 
+     the prior ALERT to the node and not the present ALERT.
+     This eliminates the need to set all event attributes in
+     every alert to avoid unintended values from prior alerts.
+ 
+  o  Node facets can now be referenced within the context
+     node without specifying the node term.
+
+       node@facet(arglist) # previously node_facet(argList)
+       @facet(argList)     # previously unsupported
 
 * Deprecated Syntax: (none)
 
-* Dropped Syntax: (none)
+* Dropped Syntax: 
 
-* Bug Fixes: (TBD)
+  o  "@" no longer used for alert attribute transient terms.
+     Transience is now implied.
 
+  o  "_" no longer used following a node term to reference a
+     node facet.  "@" is used instead.
+
+* Bug Fixes:
+
+  o  Previous versions enabled multiple level term
+     glossaries with subsequent definition of one of the
+     intermediate terms as a node.  However, IF rules were
+     associated with a node based on the node hierarch
+     existing at time of definition, and did not get moved
+     when an intermediate term was subsequently define to
+     be a node. This caused IF rules to respond to alerts
+     to an unintended node, and not respond to alerts to
+     the intended node.  This is fixed by the automatic
+     creation of nodes when "." navigation is used, and
+     multiple level glossaries when "_" navigation is used.
 ============================================================
 
 NodeBrain 0.9.02 (Columbo) Change Summary
@@ -282,7 +382,7 @@ NodeBrain 0.9.02 (Columbo) Change Summary
 
   o  Event attribute terms starting with @ have been
      introducted for use with the ALERT command.  The
-     value of these terms automatically resetis to Unknown
+     value of these terms automatically resets to Unknown
      on the next alert to the same node, unless a value
      is assigned.
 
