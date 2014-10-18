@@ -731,7 +731,7 @@ static int *treeCommand(nbCELL context,BTreeSkill *skillHandle,BTree *tree,nbCEL
 *             define fred node tree;
 *             fred. assert ("abc","def","xyz");
 *             fred. assert ("abc","def","abc");
-*             define r1 on(b && x_prune("abc",def");
+*             define r1 on(b && x@prune("abc",def");
 *             assert b;
 */
 static nbCELL treePruneEvaluate(nbCELL context,BTreeSkill *skillHandle,BTree *tree,nbCELL arglist){
@@ -746,7 +746,7 @@ static nbCELL treePruneEvaluate(nbCELL context,BTreeSkill *skillHandle,BTree *tr
 *             define fred node tree;
 *             fred. assert ("abc","def","xyz");
 *             fred. assert ("abc","def","abc");
-*             assert fred_prune("abc","def");
+*             assert fred@prune("abc","def");
 */
 static int treePruneAssert(nbCELL context,void *skillHandle,BTree *tree,nbCELL arglist,nbCELL value){
   treePrune(context,skillHandle,tree,arglist,"");
@@ -760,7 +760,7 @@ static int treePruneAssert(nbCELL context,void *skillHandle,BTree *tree,nbCELL a
 *             define fred node tree;
 *             fred. assert ("abc","def","xyz");
 *             fred. assert ("abc","def","abc");
-*             fred_prune("abc","def");
+*             fred@prune("abc","def");
 */
 static int *treePruneCommand(nbCELL context,BTreeSkill *skillHandle,BTree *tree,nbCELL arglist,char *text){
   treePrune(context,skillHandle,tree,arglist,text);

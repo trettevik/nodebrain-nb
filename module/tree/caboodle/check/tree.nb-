@@ -4,14 +4,14 @@ x. assert ("abc","def","xyz");
 x. assert ("abc","def","abc");
 x. assert ("abc","def",23);
 show x
-x_prune("abc","def");
+x@prune("abc","def");
 show x
 x. assert ("abc","def","xyz");
 x. assert ("abc","def","abc");
 x. assert ("abc","def",23);
 # This should fire after r1
 define r0 on(?x("abc","def",23));
-define r1 on(a=1) x_prune("abc","def");
+define r1 on(a=1) x@prune("abc","def");
 assert y=1;
 show x
 show r1
@@ -22,11 +22,11 @@ x. assert ("abc","def","xyz");
 x. assert ("abc","def","abc");
 x. assert ("abc","def",23);
 show x
-assert x_prune("abc","def");
+assert x@prune("abc","def");
 show x
 # Not yet implemented
 assert !b;
-define r2 on(b && x_prune("abc","def"));
+define r2 on(b && x@prune("abc","def"));
 show r2
 x. assert ("abc","def","xyz");
 x. assert ("abc","def","abc");
