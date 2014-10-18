@@ -6,8 +6,8 @@ assert a=1,b=2,c=3;
 ~ > assert a=1,b=2,c=3;
 define alder node cache:(~(1m):x{5},y[2],z(2,4,6));
 ~ > define alder node cache:(~(1m):x{5},y[2],z(2,4,6));
-alder. define p cell;
-~ > alder. define p cell;
+define p cell;
+~ > define p cell;
 alder. define r0 if(x._rowState):$ # x row ${x},${y},${z} ${x._rowState} ${p}
 ~ > alder. define r0 if(x._rowState):$ # x row ${x},${y},${z} ${x._rowState} ${p}
 alder. define r1 if(y._kidState):$ # y kid ${x},${y},${z} ${y._kidState} ${p}
