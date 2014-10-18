@@ -2154,7 +2154,7 @@ int nbMedullaQueuePut(nbQUEUE queue,char *msg,size_t size){
 
 int nbMedullaQueueGet(nbQUEUE queue,char *msg,size_t size){
   struct NB_MEDULLA_BUFFER *buf,*buftmp;
-  char *delim;
+  char *delim,*msgout=msg;
   size_t len,fullsize=0,msgleft=size;
   
   
@@ -2175,8 +2175,8 @@ int nbMedullaQueueGet(nbQUEUE queue,char *msg,size_t size){
   //if(delim==NULL) return(-1);
   if(delim==NULL){
     fprintf(stderr,"logic error in nbMedullaQueueGet - newline not found within size of the following return buffer\n");
-    *(msg+size-1)=0;
-    fprintf(stderr,"%s\n",msg);
+    *msg=0;
+    fprintf(stderr,"%s\n",msgout);
     fprintf(stderr,"fatal error - terminating\n");
     exit(NB_EXITCODE_FAIL);
     }
