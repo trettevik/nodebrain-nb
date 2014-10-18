@@ -59,19 +59,27 @@
 * 2014-01-12 eat 0.9.00 nbAssertionInit replaces initAssertion
 * 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 * 2014-06-15 eat 0.9.02 Added support for event transient terms
+* 2014-10-05 eat 0.9.03 Removed code left over from =.= operator no longer supported
 *=============================================================================
 */
 #include <nb/nbi.h>
 
 struct TYPE *assertTypeDef=NULL;
 struct TYPE *assertTypeVal=NULL;
-struct TYPE *assertTypeRef=NULL;
 
 /**********************************************************************
 * Private Object Methods
 **********************************************************************/
 void printAssertion(struct ASSERTION *assertion){
   if(assertion==NULL) outPut("(?)");
+  else if(assertion->object==nb_Unknown){
+    outPut("?");
+    printObject(assertion->target);
+    }
+  else if(assertion->object==nb_False){
+    outPut("!");
+    printObject(assertion->target);
+    }
   else{
     printObject(assertion->target);
     outPut("%s",assertion->cell.object.type->name);
@@ -144,23 +152,18 @@ void nbAssert(nbCELL context,nbSET member,int mode){
       if(mode&2 && term->def!=nb_Unknown);
       else if(assertion->cell.object.type==assertTypeDef)
         nbTermAssign(term,object);
-      else if(assertion->cell.object.type==assertTypeRef){
-        outMsg(0,'T',"assigning reference");
-        ((NB_Node *)term->def)->reference=(NB_Term *)object;
-        }
       else if(object->value==nb_Disabled){
         nbTermAssign(term,object->type->compute(object));
         dropObject(term->def); /* 2004/08/28 eat */
         }
       else nbTermAssign(term,object->value);
-      if(mode==1 && term->cell.mode&NB_CELL_MODE_TRANSIENT){  // switch a cell flag to identify transient term
+      //if(mode==1 && term->cell.mode&NB_CELL_MODE_TRANSIENT){  // switch a cell flag to identify transient term
+      if(mode==1 && assertion->cell.mode&NB_CELL_MODE_TRANSIENT){  // Handle transient assertion
         // remove from old list
         for(transientLinkP=&contextNode->transientLink;*transientLinkP!=NULL && (*transientLinkP)->object!=(NB_Object *)term;transientLinkP=&(*transientLinkP)->next);
         if(*transientLinkP!=NULL){ // found it, so remove and reuse
           transientLink=*transientLinkP;
           *transientLinkP=transientLink->next;
-          //transientLink->next=nb_LinkFree;
-          //nb_LinkFree=transientLink;
           transientLink->next=NULL;
           }
         else{ // not found, so create new
@@ -179,7 +182,8 @@ void nbAssert(nbCELL context,nbSET member,int mode){
         if(object->value==nb_Disabled) object=object->type->compute(object);
         else object=(NB_Object *)grabObject(object->value); /* 2004/08/28 eat - grab added */
         }
-      else if(assertion->cell.object.type!=assertTypeDef){
+      //else if(assertion->cell.object.type!=assertTypeDef){
+      else if(assertion->cell.object.type==assertTypeDef){
         outMsg(0,'L',"Cell definition assertion not support for node %s",term->word->value);
         return;
         }
@@ -236,7 +240,6 @@ void printAssertedValues(NB_Link *member){
 void nbAssertionInit(NB_Stem *stem){
   assertTypeDef=nbObjectType(stem,"==",0,TYPE_IS_ASSERT,printAssertion,destroyAssertion);
   assertTypeVal=nbObjectType(stem,"=",0,TYPE_IS_ASSERT,printAssertion,destroyAssertion);
-  assertTypeRef=nbObjectType(stem,"=.=",0,TYPE_IS_ASSERT,printAssertion,destroyAssertion);
   }
 
 /*
