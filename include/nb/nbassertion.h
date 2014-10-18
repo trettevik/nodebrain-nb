@@ -68,7 +68,7 @@ typedef struct ASSERTION NB_Assertion;
 
 extern struct TYPE *assertTypeDef;
 extern struct TYPE *assertTypeVal;
-extern struct TYPE *assertTypeRef;
+//extern struct TYPE *assertTypeRef;
 
 void nbAssertionInit(NB_Stem *stem);
 void printAssertions(NB_Link *link);
