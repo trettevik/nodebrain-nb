@@ -106,7 +106,7 @@ struct TYPE *contextType;
 NB_Node *nb_NodeFree=NULL; /* free nodes */
 
 /*
-*  Context object constructor
+*  Node object constructor
 */
 NB_Node *nbNodeNew(void){
   NB_Node *node;
@@ -119,8 +119,10 @@ NB_Node *nbNodeNew(void){
   node->ifrule=NULL;
   node->transientLink=NULL;
   node->cmdopt=0;             /* default to no echo for now */
-  node->skill=NULL;
-  node->facet=NULL;
+  //node->skill=NULL; # 2014-09-13 eat - give node at least a default skill
+  node->skill=nb_SkillDefault;
+  //node->facet=NULL; // 2014-09-03 eat - set facet
+  node->facet=node->skill->facet;
   node->knowledge=NULL;       /* e.g. cache table */
   node->alertCount=0;
   return(node);
@@ -217,6 +219,7 @@ NB_Type *nb_NodeType=NULL;
 
 //struct HASH *nb_SkillHash=NULL;    /* skill term hash */
 NB_Term *nb_SkillGloss=NULL;
+NB_Skill *nb_SkillDefault=NULL;
 
 /*
 * We don't hash skill objects because we don't know enough to share them.
@@ -322,9 +325,10 @@ void nbNodeInit(NB_Stem *stem){
   nb_NodeType->showReport=&nbNodeShowReport;
   nb_NodeType->alarm=&alarmNode;
 
-  nb_SkillGloss=nbTermNew(NULL,"skill",nbNodeNew());
   skillType=nbObjectType(stem,"skill",0,0,printSkill,destroySkill);
   facetType=nbObjectType(stem,"facet",0,0,NULL,NULL);
+  nb_SkillDefault=nbSkillNew("",NULL,"");
+  nb_SkillGloss=nbTermNew(NULL,"skill",nbNodeNew());
   }
 
 void *nbSkillNullConstruct(struct NB_TERM *context,void *skillHandle,NB_Cell *arglist,char *text){
@@ -582,7 +586,9 @@ int nbNodeCmd(nbCELL context,char *name,char *cursor){
     outMsg(0,'E',"Node \"%s\" does not have a command method.",name);
     return(-1);
     }
-  if(*cursor=='_'){
+  // 2014-10-05 eat - switched from '_' to '@' for facets
+  //if(*cursor=='_'){
+  if(*cursor=='@'){
     cursor++;
     cursave=cursor;
     symid=nbParseSymbol(ident,sizeof(ident),&cursor);
