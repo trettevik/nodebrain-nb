@@ -134,6 +134,11 @@
 * 2014-04-06 eat 0.9.01 "Assume True" operator +? is new
 * 2014-04-06 eat 0.9.01 Delay false operator ~^!() replaces ~^0()
 * 2014-04-18 eat 0.9.01 Included conditional operators
+* 2014-09-14 eat 0.9.03 Recognizing '_' as alternative to '.' as a term qualifier separator
+*                Under this scheme, a '.' will imply a node and a '_' will imply a
+*                non-node term.  We switched the facet indicator from '_' to '$' for
+*                now because it is still undocumented.
+* 2014-10-05 eat 0.9.03 Removed unused code for old =.= reference operator
 *==============================================================================
 */
 #include <nb/nbi.h>
@@ -236,7 +241,7 @@ char *nbParseQualifier(char *qCursor,size_t size,char *sCursor){
     else if(nbParseTerm(&qCursor,size-1,&sCursor)==0) return(NULL);  // 2012-12-27 eat - CID 751522 - intentional
     }
   else if(nbParseTerm(&qCursor,size,&sCursor)==0) return(NULL);
-  if(*sCursor=='.') sCursor++; /* step over one trailing period */  
+  if(*sCursor=='.' || *sCursor=='_') sCursor++; /* step over one trailing period */  
   return(sCursor);  
   }
 
@@ -424,8 +429,8 @@ char nbParseSymbol(char *symbol,size_t size,char **source){
       if((len=nbParseTerm(&symcur,size,&cursor))==0) return('.');
       size-=len;  // size is always at least one here
       symid='t';
-      if(*cursor=='.'){
-        while(*cursor=='.'){
+      if(*cursor=='.' || *cursor=='_'){
+        while(*cursor=='.' || *cursor=='_'){
           *symcur=*cursor;
           symcur++;
           size--;  // we know size is at least one here
@@ -477,7 +482,7 @@ char nbParseSymbol(char *symbol,size_t size,char **source){
           symid='t';
           if((len=nbParseTerm(&symcur,size,&cursor))>0){
             size-=len;
-            while(*cursor=='.' && (len=nbParseTerm(&symcur,size,&cursor))>0) size-=len;
+            while((*cursor=='.' || *cursor=='_')  && (len=nbParseTerm(&symcur,size,&cursor))>0) size-=len;
             }
           // 2009-10-28 eat - included test on symbol to not treat single period as a trailing period
           if(symcur>symbol+1 && *(symcur-1)=='.'){  // step back from trailing period
@@ -923,7 +928,8 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
         return(term->def);
         }
       *facetIdent=0;     // assume no facet specified
-      if(**cursor=='_'){ // facet assertion
+      //if(**cursor=='_'){ // facet assertion
+      if(**cursor=='@'){ // facet assertion
         (*cursor)++;
         savecursor=*cursor;
         symid=nbParseSymbol(facetIdent,sizeof(facetIdent),cursor);
@@ -962,9 +968,13 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
             return(objType->construct(objType,((NB_List *)right)->link));
             }
           }
+        // 2014-09-13 eat - Term used as node, make it a node with default skill
+        term=nbTermNew(context,ident,nb_Unknown);
+        term->def=(void *)nbNodeNew();
+        return((NB_Object *)nbSentenceNew(((NB_Node *)term->def)->skill->facet,term,right));
         // 2013-12-09 eat - Removing attempt to support sentences before defining the node
-        outMsg(0,'E',"Sentence requires node - \"%s\" not defined as node.",ident);
-        return(NULL);
+        //outMsg(0,'E',"Sentence requires node - \"%s\" not defined as node.",ident);
+        //return(NULL);
         }
       else if(term->def->type==nb_NodeType){
         NB_Facet *facet=nbSkillGetFacet(((NB_Node *)term->def)->skill,facetIdent);
@@ -1360,16 +1370,18 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
       symid=nbParseSymbol(ident,sizeof(ident),&cursor);
       }
     else unknown=0;
-    if(symid=='(' || symid=='_'){  /* allow for null term */
+    // 2014-10-05 eat - switched from "_" to "@" for facets
+    if(symid=='(' || symid=='@'){  /* allow for null term */
       *ident=0;
       cursor--;
       }
     else if(symid!='t'){
-      outMsg(0,'E',"Expecting term at \"%s\".",*curP);
+      outMsg(0,'E',"Expecting term at-->%s",*curP);
       return(NULL);
       }
     *curP=cursor;
-    if(*cursor=='_'){ // facet assertion
+    // 2014-10-05 eat - switched from "_" to "@" for facets
+    if(*cursor=='@'){ // facet assertion
       cursor++;
       cursave=cursor;
       symid=nbParseSymbol(facetIdent,sizeof(facetIdent),&cursor);
@@ -1392,33 +1404,20 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
     *curP=cursor;
     if(*cursor=='='){
       if(not || unknown){
-        outMsg(0,'E',"Unexpected = with ! or ? operator at \"%s\".",cursor);
+        outMsg(0,'E',"Unexpected = with ! or ? operator at-->%s",cursor);
         return(NULL);
         }
       cursor++;
-      if(*cursor=='.' && *(cursor+1)=='='){
-        type=assertTypeRef;
-        cursor+=2;
-        *curP=cursor;
-        symid=nbParseSymbol(ident2,sizeof(ident2),&cursor);
-        if(symid!='t'){
-          outMsg(0,'E',"What? Expecting term at \"%s\".",*curP);
-          return(NULL);
-          }
-        object=(NB_Object *)nbTermFind(termContext,ident2);
+      // $x=a+b is an alternative to x==a+b
+      // this is an experiment---probably not a good idea - don't document
+      if(*ident=='$') type=assertTypeDef;
+      else type=assertTypeVal;
+      if(*cursor=='='){
+        type=assertTypeDef;
+        cursor++;
         }
-      else{
-        /* $x=a+b is an alternative to x==a+b */
-        /* this is an experiment---probably not a good idea - don't document */
-        if(*ident=='$') type=assertTypeDef;
-        else type=assertTypeVal;
-        if(*cursor=='='){
-          type=assertTypeDef;
-          cursor++;
-          }
-        *curP=cursor;
-        object=nbParseCell(cellContext,&cursor,0);
-        }
+      *curP=cursor;
+      object=nbParseCell(cellContext,&cursor,0);
       }
     else if(*cursor==',' || *cursor==':' || *cursor==';' || *cursor==0){
       type=assertTypeVal;
@@ -1427,7 +1426,7 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
       else object=NB_OBJECT_TRUE;
       }
     else{
-      outMsg(0,'E',"Expecting '=' ',' or ';' at \"%s\".",*curP);
+      outMsg(0,'E',"Expecting '=' ',' or ';' at-->\"%s\".",*curP);
       return(NULL);
       }
     if(object==NULL) return(NULL);
@@ -1449,7 +1448,7 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
         }
       else term=nbTermNew(termContext,ident,nb_Unknown);
       }
-    else if((term->def->type->attributes&TYPE_WELDED) && type!=assertTypeRef && *facetIdent==0 && list==NULL){
+    else if((term->def->type->attributes&TYPE_WELDED) && *facetIdent==0 && list==NULL){
       outMsg(0,'E',"Term \"%s\" is not open to assertion.",ident);
       return(NULL);
       }
@@ -1467,7 +1466,12 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
       object=(NB_Object *)useCondition(type,objectL,object);
       list=NULL;
       }
-    else object=(NB_Object *)useCondition(type,term,object);
+    else{
+      object=(NB_Object *)useCondition(type,term,object);
+      // If the term is directly within the context, then make it transient
+      for(term=term->context;term && term->def->type!=nb_NodeType;term=term->context);
+      if(term==termContext) ((NB_Cell *)object)->mode|=NB_CELL_MODE_TRANSIENT;
+      }
     // 2012-10-13 eat - replaced malloc
     if((entry=nb_LinkFree)==NULL) entry=nbAlloc(sizeof(NB_Link));
     else nb_LinkFree=entry->next;
