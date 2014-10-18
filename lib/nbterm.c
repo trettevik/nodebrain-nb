@@ -108,6 +108,9 @@
 * 2012-12-15 eat 0.8.13 Checker updates
 * 2013-01-01 eat 0.8.13 Checker updates
 * 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
+* 2014-09-14 eat 0.9.03 Experimenting with '_' separator for terms within node glossaries
+*            Under this scheme, period '.' represents a node boundary while '_'
+*            represents a term boundary within a node.
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -383,6 +386,7 @@ void disableTerm(NB_Term *term){
 void destroyTerm(NB_Term *term){
   NB_Term **termP;
   NB_Term *context;
+  NB_Link *transientLink,**transientLinkP;
 /*
   NB_TreePath treePath;
   NB_TreeNode *treeNode;
@@ -405,6 +409,14 @@ void destroyTerm(NB_Term *term){
     if(treeNode==NULL) outMsg(0,'L',"destroyTerm() Term \"%s\" not found in context.",term->word->value);  
     else nbTreeRemove(&treePath);
 */
+    // remove from transient term list
+    for(transientLinkP=&((NB_Node *)context->def)->transientLink;*transientLinkP!=NULL && (*transientLinkP)->object!=(NB_Object *)term;transientLinkP=&(*transientLinkP)->next);
+    if(*transientLinkP!=NULL){ // found it, so remove it
+      transientLink=*transientLinkP;
+      *transientLinkP=transientLink->next;
+      transientLink->next=nb_LinkFree;
+      nb_LinkFree=transientLink;
+      }
     }
   term->word=dropObject(term->word);
   term->cell.object.next=(NB_Object *)termFree;
@@ -576,12 +588,12 @@ NB_Term *nbTermFind(NB_Term *term,char *identifier){
       outMsg(0,'W',"The @ is deprecated reference to top glossary.  Use _ instead.");
       term=rootGloss;
       }
-    else if(*qualifier=='@'){ // 2014-06-07 eat - find event attribute transient terms here
-      word=grabObject(useString(qualifier));
-      term=nbTermFindHere(term,word);
-      dropObject(word);
-      if(term==NULL) return(NULL);
-      }
+    //else if(*qualifier=='@'){ // 2014-06-07 eat - find event attribute transient terms here
+    //  word=grabObject(useString(qualifier));
+    //  term=nbTermFindHere(term,word);
+    //  dropObject(word);
+    //  if(term==NULL) return(NULL);
+    //  }
     else if(NULL==(term=nbTermFindInScope(term,qualifier))) return(NULL);
     }
   else{
@@ -629,7 +641,6 @@ NB_Term *makeTerm(NB_Term *context,NB_String *word){
   if(trace) outMsg(0,'T',"makeTerm calling nbCellNew");
   term=nbCellNew(termType,(void **)&termFree,sizeof(NB_Term));
   term->cell.object.hashcode=word->object.hashcode; // inherit hashcode from name
-  if(*word->value=='@') term->cell.mode|=NB_CELL_MODE_TRANSIENT;
   term->context=context; 
   term->gloss=NULL;                                 // glossary of subordinate terms
   term->def=nb_Undefined;  
@@ -882,6 +893,7 @@ void termUndefAll(void){
 // 2012-10-17 eat - added size parameter
 void nbTermName(char *name,size_t size,NB_Term *term,NB_Term *refContext){
   char *qual[50];  
+  char sep[50];
   NB_Term *context;
   int n,level=0;
   char *cursor=name,*curlast=name+size-1;
@@ -907,6 +919,8 @@ void nbTermName(char *name,size_t size,NB_Term *term,NB_Term *refContext){
   context=term->context;
   for(level=1;level<50 && context!=rootGloss && context!=refContext && context!=symContext && context!=NULL;level++){
     qual[level]=context->word->value;
+    if(((NB_Object *)context->def)->type==nb_NodeType) sep[level]='.';
+    else sep[level]='_';
     context=context->context;
     }
   if(context==rootGloss && context!=refContext){
@@ -924,7 +938,8 @@ void nbTermName(char *name,size_t size,NB_Term *term,NB_Term *refContext){
     strncpy(cursor,qual[level],n);
     cursor+=n;
     if(level>0){
-      *cursor='.';
+      //*cursor='.';
+      *cursor=sep[level];
       cursor++;
      }
     }
