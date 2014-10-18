@@ -1570,7 +1570,6 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     }
   cursave=cursor;
   symid=nbParseSymbol(ident,sizeof(ident),&cursor);
-  if(symid=='*') outMsg(0,'T',"Hey an event cell"); // 2014-05-06 eat - experiment
   if(symid!='t'){
     outMsg(0,'E',"Expecting term identifier at-->%s",cursave);
     return(1);
@@ -2258,6 +2257,7 @@ void nbCmd(nbCELL context,char *cursor,unsigned char cmdopt){
           if(*verb==0); // special case of ". " as context prefix
           else if((context=(nbCELL)nbTermFind((NB_Term *)context,verb))==NULL ||
               ((NB_Term *)context)->def->type!=nb_NodeType){
+            outPut("> %s\n",cursave);
             outMsg(0,'E',"Term \"%s\" not defined as node.",verb);
             addrContext=saveContext;
             return;
@@ -2265,7 +2265,9 @@ void nbCmd(nbCELL context,char *cursor,unsigned char cmdopt){
           symid=0;
           }
         // 2013-12-07 eat - included '_' for facets
-        else if(*cursor==':' || *cursor=='(' || *cursor=='_') symid=1;  // node command
+        // 2014-10-05 eat - switched to '@' for facets
+        //else if(*cursor==':' || *cursor=='(' || *cursor=='_') symid=1;  // node command
+        else if(*cursor==':' || *cursor=='(' || *cursor=='@') symid=1;  // node command
         }
       }
     while(*cursor==' ') cursor++;
