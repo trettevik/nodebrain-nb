@@ -812,11 +812,11 @@ void nbParseArgAssertion(char *cursor){
   symid=nbParseSymbol(value,sizeof(value),&cursor);
   if(*cursor==0){
     if(symid=='i' || symid=='r'){
-      nbTermNew(symGloss,ident,parseReal(value));
+      nbTermNew(symGloss,ident,parseReal(value),0);
       return;
       }
     else if(symid=='s'){
-      nbTermNew(symGloss,ident,useString(value));
+      nbTermNew(symGloss,ident,useString(value),0);
       return;
       }
     }
@@ -824,7 +824,7 @@ void nbParseArgAssertion(char *cursor){
     outMsg(0,'E',"Quotes not supported in strings [%s]",valcur);
     return;
     }
-  nbTermNew(symGloss,ident,useString(valcur));
+  nbTermNew(symGloss,ident,useString(valcur),0);
   }
 
 /* 
@@ -1242,71 +1242,6 @@ int nbLet(char *cursor,NB_Term *context,int mode){
   return(0);
   }
 
-
-/*
-*  Set symbolic variables
-*     <parm1>=<value1>,<parm2>="<value2>",...
-*
-*     mode: 0 - update or create [assert] ; 1 - create only [default]
-*
-*  Return Code:
-*   -1 - error
-*    0 - success
-*/   
-int nbLetOld(char *cursor,NB_Term *context,int mode){
-  char ident[256],operator[256],token[4096],*cursave;
-  NB_Term *term;
-  NB_Object *object;
-  int found;
-  char symid=',';
-  
-  if(!(clientIdentity->authority&AUTH_ASSERT)){
-    outMsg(0,'E',"Identity \"%s\" does not have authority to assign symbolic values.",clientIdentity->name->value);
-    return(-1);
-    }
-  while(symid==','){
-    symid=nbParseSymbol(ident,sizeof(ident),&cursor);
-    if(symid!='t'){
-      outMsg(0,'E',"Expecting term \"%s\".",ident);
-      return(-1);
-      }
-    symid=nbParseSymbol(operator,sizeof(ident),&cursor);
-    if(symid!='='){
-      outMsg(0,'E',"Expecting '=' \"%s\".",operator);
-      return(-1);
-      }
-    cursave=cursor;
-    symid=nbParseSymbol(token,sizeof(ident),&cursor);
-    term=nbTermFind(context,ident);
-    if(term==NULL){
-      term=nbTermNew(context,ident,nb_Unknown);
-      found=0;
-      }
-    else found=1;  
-    cursor=cursave;
-    object=nbParseCell((NB_Term *)context,&cursor,0);
-    if(!object){
-      outMsg(0,'E',"Cell expression not recognized at-->%s",cursave);
-      return(-1);
-      }
-    if(found==0 || mode==0){
-      if(strcmp(operator,"==")==0) nbTermAssign(term,object);
-      else{
-        nbTermAssign(term,(NB_Object *)nbCellCompute((NB_Cell *)context,(NB_Cell *)object));
-        dropObject(term->def); /* 2004/08/28 eat */
-        }
-      }
-    /* else dropObjectLight(object) - drop if zero but don't dec */
-    cursave=cursor;
-    symid=nbParseSymbol(ident,sizeof(ident),&cursor);  
-    }
-  if(symid!=';'){
-    outMsg(0,'E',"Expected delimiter ';' not found. [%s]",cursor);
-    return(-1);
-    }
-  return(0);
-  }
-
 /*
 *  Enable or disable an object
 */           
@@ -1529,7 +1464,7 @@ int nbCmdDeclare(nbCELL context,void *handle,char *verb,char *cursor){
       return(1);
       }
     identity->authority=authmask;
-    nbTermNew(identityC,ident,identity);
+    nbTermNew(identityC,ident,identity,0);
     }
   else if(strcmp(type,"module")==0){
     nbModuleDeclare((NB_Term *)context,ident,cursor);
@@ -1537,7 +1472,7 @@ int nbCmdDeclare(nbCELL context,void *handle,char *verb,char *cursor){
   else if(strcmp(type,"skill")==0){
     struct NB_SKILL *skill;
     if((skill=nbSkillParse((NB_Term *)context,cursor))!=NULL)
-      skill->term=nbTermNew(nb_SkillGloss,ident,skill);
+      skill->term=nbTermNew(nb_SkillGloss,ident,skill,0);
     }
   else if(strcmp(type,"calendar")==0){
     if(nbTimeDeclareCalendar(context,ident,&cursor,msg,sizeof(msg))==NULL) outPut("%s\n",msg);
@@ -1694,14 +1629,25 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     else action->command=grabObject(useString(cursor)); /* action is rest of line */
     action->cmdopt=NB_CMDOPT_RULE;     /* do not suppress symbolic substitution */
     action->status='R';   /* ready */
-    action->context=(NB_Term *)context;
+    //action->context=(NB_Term *)context;
     ruleCond=useCondition(rule_type,object,action);
     if(object->type->kind&NB_OBJECT_KIND_CONSTANT && (rule_type==condTypeOnRule || rule_type==condTypeWhenRule))
       outMsg(0,'W',"Rule of this type with a constant condition will never fire");
     action->cond=ruleCond; /* plug the condition pointer into the action */
     if(term) nbTermAssign(term,(NB_Object *)ruleCond);
-    else term=nbTermNew((NB_Term *)context,ident,ruleCond);
+    else term=nbTermNew((NB_Term *)context,ident,ruleCond,1);
     action->term=term;
+    action->context=term->context;
+    while(action->context!=NULL && action->context->def->type!=nb_NodeType)
+      action->context=action->context->context;
+    if(action->context==NULL){
+      outMsg(0,'L',"Unable to locate rule context node, associating rule with command context");
+      action->context=(NB_Term *)context; // this should not happen
+      }
+    // Debug
+    //  outMsg(0,'T',"Defining in node:");
+    //  printObject(action->context);
+    //  outPut(" def=%p\n",action->context->def);
     action->type='R';
     /* If a reused term already has subscribers, enable term and adjust levels */
     if(term->cell.sub!=NULL){
@@ -1713,9 +1659,11 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
       NB_Object *condState=action->cond->cell.object.type->compute(action->cond);
       //if(!(condState->value->type->attributes&TYPE_NOT_TRUE)){
       if(condState->value->type->kind&NB_OBJECT_KIND_TRUE){  // 2014-06-07 eat - converting to kind 
-        action->cell.object.next=(NB_Object *)((NB_Node *)((NB_Term *)context)->def)->ifrule;
+        //action->cell.object.next=(NB_Object *)((NB_Node *)((NB_Term *)context)->def)->ifrule;
+        action->cell.object.next=(NB_Object *)((NB_Node *)(action->context)->def)->ifrule;
         if(action->cell.object.next) ((NB_Action *)action->cell.object.next)->priorIf=action;
-        ((NB_Node *)((NB_Term *)context)->def)->ifrule=action;
+        //((NB_Node *)((NB_Term *)context)->def)->ifrule=action;
+        ((NB_Node *)(action->context)->def)->ifrule=action;
         action->cell.mode|=NB_CELL_MODE_SCHEDULED;
         }
       dropObject(condState->value);
@@ -1729,10 +1677,8 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
       }
     
     ruleCond=useCondition(condTypeNerve,object,useString(ident));
-    //term=nbTermNew((NB_Term *)context,ident,nb_Unknown);
-    //term->def=(NB_Object *)ruleCond;
     if(term) nbTermAssign(term,(NB_Object *)ruleCond);
-    else nbTermNew((NB_Term *)context,ident,ruleCond);
+    else nbTermNew((NB_Term *)context,ident,ruleCond,1);
     }
   else if(strcmp(type,"cell")==0) {
     object=nbParseCell((NB_Term *)context,&cursor,0);
@@ -1741,9 +1687,8 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
       return(1);
       }
     if(object==NULL) object=nb_Unknown;  // accept empty expression here
-    //nbTermNew((NB_Term *)context,ident,object);
     if(term) nbTermAssign(term,(NB_Object *)object);
-    else nbTermNew((NB_Term *)context,ident,object);
+    else nbTermNew((NB_Term *)context,ident,object,1);
     }
   else if(strcmp(type,"translator")==0){
     NB_Translator *translator;
@@ -1754,9 +1699,8 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     translator=(NB_Translator *)nbTranslatorCompile(context,0,cursor);
     outFlush();
     if(translator!=NULL){
-      //nbTermNew((NB_Term *)context,ident,translator);
       if(term) nbTermAssign(term,(NB_Object *)translator);
-      else nbTermNew((NB_Term *)context,ident,translator);
+      else nbTermNew((NB_Term *)context,ident,translator,1);
       }
     }
   else if(strcmp(type,"node")==0){
@@ -1769,9 +1713,8 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
   else if(strcmp(type,"macro")==0){
     NB_Macro *macro;
     if(NULL!=(macro=nbMacroParse(context,&cursor))){
-      //nbTermNew((NB_Term *)context,ident,macro);
       if(term) nbTermAssign(term,(NB_Object *)macro);
-      else nbTermNew((NB_Term *)context,ident,macro);
+      else nbTermNew((NB_Term *)context,ident,macro,1);
       }
     }
   else if(strcmp(type,"text")==0){
@@ -1788,9 +1731,8 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
       text=nbTextLoad(cursor);
       }
     if(text!=NULL){
-      //nbTermNew((NB_Term *)context,ident,text);
       if(term) nbTermAssign(term,(NB_Object *)text);
-      else nbTermNew((NB_Term *)context,ident,text);
+      else nbTermNew((NB_Term *)context,ident,text,1);
       }
     else return(1); // 2012-09-16 eat - notify caller it didn't work
     }
@@ -2255,12 +2197,22 @@ void nbCmd(nbCELL context,char *cursor,unsigned char cmdopt){
             }
           cursor++;
           if(*verb==0); // special case of ". " as context prefix
-          else if((context=(nbCELL)nbTermFind((NB_Term *)context,verb))==NULL ||
-              ((NB_Term *)context)->def->type!=nb_NodeType){
-            outPut("> %s\n",cursave);
-            outMsg(0,'E',"Term \"%s\" not defined as node.",verb);
-            addrContext=saveContext;
-            return;
+          //else if((context=(nbCELL)nbTermFind((NB_Term *)context,verb))==NULL ||
+          //    ((NB_Term *)context)->def->type!=nb_NodeType){
+          //  outPut("> %s\n",cursave);
+          //  outMsg(0,'E',"Term \"%s\" not defined as node.",verb);
+          //  addrContext=saveContext;
+          //  return;
+          //  }
+          else if((context=(nbCELL)nbTermFind((NB_Term *)context,verb))==NULL){
+            // Note: we need nbTermNew to make sure the identity is authorized to define new terms
+            //       before we do this for real
+            context=(nbCELL)nbTermNew((NB_Term *)addrContext,verb,nbNodeNew(),1);
+            if(!context){
+              outMsg(0,'E',"Unable to create context node %s\n",verb);
+              addrContext=saveContext;
+              return;
+              }
             }
           symid=0;
           }

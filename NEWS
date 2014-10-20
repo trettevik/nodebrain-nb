@@ -34,24 +34,23 @@ NodeBrain 0.9.03 (Columbo) Change Summary
      this release for these features are expected to have
      little impact.
      
-* Incompatibilities: (none)
+* Incompatibilities:
 
   o  Applications using ALERT commands for both event
      and state monitoring may break under this release,
      requiring rule changes before upgrading.  You will
      only have a problem if you depend on some terms
-     defined within a given node that are set by an ALERT
+     defined within a given node, that are set by an ALERT
      to the node, retaining their value when subsequent
      ALERT commands to the same node do not set a value
      for the term.  This would mean some of the terms set
      by an ALERT are intended to express "state", while
-     others express and "event".  Starting with this
+     others express an "event".  Starting with this
      release, you may need to move all terms used to
      express "state" within ALERT commands to a different
-     (perhaps subordinate) node. Otherwise, ALERT
-     commands not setting the "state" terms will
-     automatically cause them to revert to Unknown.  This 
-     is not a problem for "state" terms that are set by
+     node. Otherwise, ALERT commands not setting the "state"
+     terms will automatically cause them to revert to Unknown.
+     This is not a problem for "state" terms that are set by
      all ALERT commands to the node. 
 
        define n node;
@@ -86,7 +85,7 @@ NodeBrain 0.9.03 (Columbo) Change Summary
        Now:      [<node>]@<facet>
 
      This freed up "_" for navigation of multiple level
-     glossaries of term within a node, and enables facet
+     glossaries of terms within a node, and enables facet
      reference within the context node without repeating
      the node term.
 
@@ -109,7 +108,8 @@ NodeBrain 0.9.03 (Columbo) Change Summary
 * Dropped Syntax: 
 
   o  "@" no longer used for alert attribute transient terms.
-     Transience is now implied.
+     Transience is now implied within the command context
+     node.
 
   o  "_" no longer used following a node term to reference a
      node facet.  "@" is used instead.
@@ -125,8 +125,10 @@ NodeBrain 0.9.03 (Columbo) Change Summary
      be a node. This caused IF rules to respond to alerts
      to an unintended node, and not respond to alerts to
      the intended node.  This is fixed by the automatic
-     creation of nodes when "." navigation is used, and
-     multiple level glossaries when "_" navigation is used.
+     creation of nodes when "." navigation is used, and a
+     recognition of multiple level glossaries when "_"
+     navigation is used.
+
 ============================================================
 
 NodeBrain 0.9.02 (Columbo) Change Summary

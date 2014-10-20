@@ -241,7 +241,7 @@ char *nbParseQualifier(char *qCursor,size_t size,char *sCursor){
     else if(nbParseTerm(&qCursor,size-1,&sCursor)==0) return(NULL);  // 2012-12-27 eat - CID 751522 - intentional
     }
   else if(nbParseTerm(&qCursor,size,&sCursor)==0) return(NULL);
-  if(*sCursor=='.' || *sCursor=='_') sCursor++; /* step over one trailing period */  
+  //if(*sCursor=='.' || *sCursor=='_') sCursor++; /* step over one trailing period */  
   return(sCursor);  
   }
 
@@ -944,8 +944,8 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
       if(symid!='('){
         (*cursor)=savecursor;
         // 2006-12-22 eat - when ready, experiment with using nb_Disabled definition for "undefined" terms
-        //if(term==NULL) term=nbTermNew(context,ident,nb_Disabled);
-        if(term==NULL) term=nbTermNew(context,ident,nb_Unknown);
+        //if(term==NULL) term=nbTermNew(context,ident,nb_Disabled,1);
+        if(term==NULL) term=nbTermNew(context,ident,nb_Unknown,1);
         return((NB_Object *)term);
         }
       right=parseList(context,cursor);
@@ -969,7 +969,7 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
             }
           }
         // 2014-09-13 eat - Term used as node, make it a node with default skill
-        term=nbTermNew(context,ident,nb_Unknown);
+        term=nbTermNew(context,ident,nb_Unknown,1);
         term->def=(void *)nbNodeNew();
         return((NB_Object *)nbSentenceNew(((NB_Node *)term->def)->skill->facet,term,right));
         // 2013-12-09 eat - Removing attempt to support sentences before defining the node
@@ -1437,16 +1437,16 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
           outMsg(0,'E',"Expecting term after $");
           return(NULL);
           }
-        term=nbTermNew(termContext,ident+1,nb_Unknown);
+        term=nbTermNew(termContext,ident+1,nb_Unknown,1);
         }
       else if(*ident=='%'){
         if(*(ident+1)==0){
           outMsg(0,'E',"Expecting term after %");
           return(NULL);
           } 
-        term=nbTermNew(symContext,ident+1,nb_Unknown);
+        term=nbTermNew(symContext,ident+1,nb_Unknown,1);
         }
-      else term=nbTermNew(termContext,ident,nb_Unknown);
+      else term=nbTermNew(termContext,ident,nb_Unknown,1);
       }
     else if((term->def->type->attributes&TYPE_WELDED) && *facetIdent==0 && list==NULL){
       outMsg(0,'E',"Term \"%s\" is not open to assertion.",ident);

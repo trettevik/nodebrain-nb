@@ -1624,7 +1624,7 @@ void nbTimeDestroyCalendar(NB_Calendar *calendar){
 
 void nbTimeInit(NB_Stem *stem){
   nb_TimeCalendarType=nbObjectType(stem,"calendar",0,0,nbTimePrintCalendar,nbTimeDestroyCalendar);
-  nb_TimeCalendarContext=nbTermNew(NULL,"calendar",nbNodeNew());
+  nb_TimeCalendarContext=nbTermNew(NULL,"calendar",nbNodeNew(),0);
   }
 
 NB_Term *nbTimeLocateCalendar(char *ident){
@@ -1661,7 +1661,7 @@ NB_Term *nbTimeDeclareCalendar(nbCELL context,char *ident,char **source,char *ms
   calendar=grabObject(newObject(nb_TimeCalendarType,(void **)&nb_TimeCalendarFree,sizeof(NB_Calendar)));
   calendar->tcdef=tcDef;
   calendar->text=text;
-  term=nbTermNew(nb_TimeCalendarContext,ident,calendar);
+  term=nbTermNew(nb_TimeCalendarContext,ident,calendar,0);
   return(term);
   } 
   

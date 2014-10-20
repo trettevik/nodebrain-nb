@@ -340,7 +340,7 @@ void nbSource(nbCELL context,int option,char *cursor){
   long fileloc; /* file location test */
   NB_Term *symContextSave=symContext;  /* save symbolic context */
 
-  symContext=nbTermNew(symContext,"%",nbNodeNew());
+  symContext=nbTermNew(symContext,"%",nbNodeNew(),0);
   while(*cursor==' ') cursor++;
   if(*cursor=='~'){
     nb_mode_check=4;  /* flag check mode, will flag 2 bit if check script (name ends with "~") */

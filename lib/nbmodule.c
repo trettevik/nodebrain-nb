@@ -388,7 +388,7 @@ void *nbModuleSearch(char *path,char *filename,char *msg,size_t msglen){
 void nbModuleInit(NB_Stem *stem){
   nb_ModuleFree=NULL;
   moduleType=nbObjectType(stem,"module",0,0,printModule,destroyModule);
-  moduleC=nbTermNew(NULL,"module",nbNodeNew());
+  moduleC=nbTermNew(NULL,"module",nbNodeNew(),0);
   }
 
 NB_Term *nbModuleLocate(char *ident){
@@ -515,7 +515,7 @@ NB_Term *nbModuleDeclare(NB_Term *context,char *ident,char *cursor){
     module->object.next=(NB_Object *)moduleList;
     moduleList=module;
     }
-  term=nbTermNew(moduleC,ident,module);
+  term=nbTermNew(moduleC,ident,module,0);
   return(term);
   }
 
@@ -735,7 +735,7 @@ extern int nbSkillDeclare(nbCELL context,void *(*bindFunction)(),void *moduleHan
     outMsg(0,'L',"nbSkillDeclare:  Unable to create skill \"%s.%s\".",moduleName,skillName);
     return(-1);
     }
-  skill->term=nbTermNew(nb_SkillGloss,ident,skill);
+  skill->term=nbTermNew(nb_SkillGloss,ident,skill,0);
   skill->handle=(*bindFunction)(context,moduleHandle,skill,arglist,text);
   skill->status=1;
   return(0);

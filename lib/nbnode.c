@@ -328,7 +328,7 @@ void nbNodeInit(NB_Stem *stem){
   skillType=nbObjectType(stem,"skill",0,0,printSkill,destroySkill);
   facetType=nbObjectType(stem,"facet",0,0,NULL,NULL);
   nb_SkillDefault=nbSkillNew("",NULL,"");
-  nb_SkillGloss=nbTermNew(NULL,"skill",nbNodeNew());
+  nb_SkillGloss=nbTermNew(NULL,"skill",nbNodeNew(),0);
   }
 
 void *nbSkillNullConstruct(struct NB_TERM *context,void *skillHandle,NB_Cell *arglist,char *text){
@@ -497,7 +497,7 @@ NB_Term *nbNodeParse(NB_Term *context,char *ident,char *cursor){
   void *moduleHandle=NULL;
 
   node=nbNodeNew();
-  term=nbTermNew(context,ident,node);
+  term=nbTermNew(context,ident,node,1);
   node->context=term;
 
   while(*cursor==' ') cursor++;
@@ -527,7 +527,7 @@ NB_Term *nbNodeParse(NB_Term *context,char *ident,char *cursor){
       nbTermUndefine(term);
       return(NULL);
       }
-    else node->skill->term=nbTermNew(nb_SkillGloss,token,node->skill);
+    else node->skill->term=nbTermNew(nb_SkillGloss,token,node->skill,0);
     }
   else node->skill=(NB_Skill *)skillTerm->def;
   if(*cursor=='(') args=grabObject(nbSkillArgs(context,&cursor));

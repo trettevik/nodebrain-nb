@@ -129,7 +129,7 @@ void destroyIdentity(identity) struct IDENTITY *identity;{
 void initIdentity(NB_Stem *stem){
   nb_IdentityFree=NULL;
   identityType=nbObjectType(stem,"identity",0,0,printIdentity,destroyIdentity);
-  identityC=nbTermNew(NULL,"identity",nbNodeNew());
+  identityC=nbTermNew(NULL,"identity",nbNodeNew(),0);
   }
 
 //******************

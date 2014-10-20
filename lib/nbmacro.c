@@ -141,7 +141,7 @@ NB_Link *nbMacroParseTermList(nbCELL context,char **source){
       dropMember(member);
       return(nb_MacroBadMember);
       }
-    object=(NB_Object *)nbTermNew((NB_Term *)context,ident,nb_Unknown);
+    object=(NB_Object *)nbTermNew((NB_Term *)context,ident,nb_Unknown,0);
     if((entry=nb_LinkFree)==NULL) entry=nbAlloc(sizeof(NB_Link));
     else nb_LinkFree=entry->next;
     *next=entry;
@@ -164,7 +164,7 @@ NB_Macro *nbMacroParse(nbCELL context,char **source){
   NB_Term *localContext;
   char buf[NB_BUFSIZE],*bufcur=buf,*bufend=buf+NB_BUFSIZE-3;
 
-  localContext=grabObject(nbTermNew(NULL,"macro",nbNodeNew()));
+  localContext=grabObject(nbTermNew(NULL,"macro",nbNodeNew(),0));
   if(*cursor=='('){
     cursor++;
     if(nb_MacroBadMember==(parms=nbMacroParseTermList((nbCELL)localContext,&cursor))){

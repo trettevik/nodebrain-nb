@@ -32,13 +32,13 @@
 *
 *   #include "nb.h"
 *
-*     NB_Term *nbTermNew(context,name,value);
+*     NB_Term *nbTermNew(context,name,value,option);
 *
 * Description
 *
 *   You can then construct some terms using the nbTermNew() function.
 *
-*     NB_Term *myterm=nbTermNew(context,name,value);
+*     NB_Term *myterm=nbTermNew(context,name,value,option);
 *
 *   The nbTermNew() function will obtain a reservation on the "value" object.
 *   However, if you assign a pointer to the term in another structure, you
@@ -497,21 +497,6 @@ void initTerm(NB_Stem *stem){
 *
 */
 
-// NOTE: Without the trace stuff, this is only three lines.  It
-//       will be better to replace the calls to this with the
-//       three lines to reduce calls.
-
-/*
-NB_Term *nbTermFindHere(NB_Term *term,NB_String *word){
-  NB_TreeNode *treeNode=term->terms;
-
-  NB_TREE_FIND((void *)word,treeNode)
-  if(treeNode==NULL) return(NULL);
-  term=(NB_Term *)(((char *)treeNode)-offsetof(struct NB_TERM,left));
-  return(term);
-  }
-*/
-
 NB_Term *nbTermFindHere(NB_Term *term,NB_String *word){
   NB_Term **termP;
   
@@ -582,6 +567,7 @@ NB_Term *nbTermFind(NB_Term *term,char *identifier){
   char *qursor=qualifier;
 
   if((cursor=nbParseQualifier(qualifier,sizeof(qualifier),cursor))==NULL) return(NULL);
+  if(*cursor=='.' || *cursor=='_') cursor++; // step over separator 
   if(*qualifier!='.'){
     // 2014-06-07 eat - eliminated locGloss - using rootGloss
     if(strcmp("@",qualifier)==0){
@@ -606,6 +592,7 @@ NB_Term *nbTermFind(NB_Term *term,char *identifier){
     } 
   while(*cursor!=0 && *cursor!='}'){
     if((cursor=nbParseQualifier(qualifier,sizeof(qualifier),cursor))==NULL) return(NULL);
+    if(*cursor=='.' || *cursor=='_') cursor++; // step over separator 
     word=grabObject(useString(qualifier));
     term=nbTermFindHere(term,word);
     dropObject(word);
@@ -621,10 +608,8 @@ NB_Term *nbTermFindDown(NB_Term *term,char *identifier){
 
   while(*cursor!=0 && *cursor!='}'){
     if((cursor=nbParseQualifier(qualifier,sizeof(qualifier),cursor))==NULL) return(NULL);
+    if(*cursor=='.' || *cursor=='_') cursor++; // step over separator 
     word=grabObject(useString(qualifier));
-    //if(strcmp(qualifier,"define")==0){
-    //  outMsg(0,'T',"nbTermFindDown: %s - word=%p",qualifier,word);  
-    //  }
     term=nbTermFindHere(term,word);
     dropObject(word);
     if(term==NULL) return(NULL);
@@ -699,17 +684,16 @@ void nbTermAssign(NB_Term *term,NB_Object *new){
 
 /*
 *  Define a new term.
+*
+*  Option: 0 - no implicit nodes, 1 - implicit nodes
 */
-NB_Term *nbTermNew(NB_Term *context,char *ident,void *def){
+NB_Term *nbTermNew(NB_Term *context,char *ident,void *def,int option){
   NB_Term *term=NULL;
   NB_Term **termP;
   NB_String *word=NULL;
-/*
-  NB_TreePath treePath;
-  NB_TreeNode *treeNode;
-*/
-  char qualifier[256],*cursor;
-  //int match;
+  char qualifier[256],*cursor,implicitNodeSeparator='.';
+
+  if(!option) implicitNodeSeparator=0;
 
   if(trace) outMsg(0,'T',"nbTermNew() called.");
   if(ident==NULL){
@@ -748,7 +732,9 @@ NB_Term *nbTermNew(NB_Term *context,char *ident,void *def){
         }
       }
     while(*cursor!=0){
+      char separator='_';
       cursor=nbParseQualifier(qualifier,sizeof(qualifier),cursor);
+      if(*cursor=='.' || *cursor=='_') separator=*cursor,cursor++; // step over separator 
       // This should only be done for the first qualifier, but just checking to see if this is the problem
       // NOTE: nbTermNew gets called when "@" is first defined and we don't yet have locGloss
       if(strcmp("_",qualifier)==0 && *cursor!=0) term=rootGloss;
@@ -758,24 +744,26 @@ NB_Term *nbTermNew(NB_Term *context,char *ident,void *def){
         if(!context->gloss) context->gloss=nbHashNew(4);  // create glossary hash if necessary
         NB_TERM_LOCATE(termP,word,context->gloss)
         term=*termP;
-        if(term && term->word==word) dropObject(word);
+        if(term && term->word==word){
+          dropObject(word);
+          // 2014-10-19 eat - this is needed in normal context - see if we can remove the *cursor!=0 part - see nbcmd.c
+          if(separator==implicitNodeSeparator && *cursor!=0 && term->def->type!=nb_NodeType){
+            outMsg(0,'E',"Term %s referenced as node, but not defined as node",qualifier);
+            return(NULL);
+            }
+          }
         else{
           term=makeTerm(context,word);
+          // 2014-10-19 eat - this is needed in normal context - see if we can remove the *cursor!=0 part - see nbcmd.c
+          if(separator==implicitNodeSeparator && *cursor!=0){
+            term->def=grabObject((NB_Object *)nbNodeNew());
+            //outMsg(0,'T',"Making term %s a node because it was referenced as a node - def=%p",qualifier,term->def);
+            }
           term->cell.object.next=(NB_Object *)*termP;
           *termP=term;
           context->gloss->objects++;
           if(context->gloss->objects>=context->gloss->limit) nbHashGrow(&context->gloss);
           }
-/*
-        if(NULL==(treeNode=nbTreeLocate(&treePath,word,&context->terms))){
-          term=makeTerm(context,word);
-          nbTreeInsert(&treePath,(NB_TreeNode *)&term->left);
-          }
-        else{
-          term=(NB_Term *)(((char *)treeNode)-offsetof(struct NB_TERM,left));
-          dropObject(word);
-          }
-*/
         }
       context=term;
       }
@@ -989,10 +977,13 @@ void nbTermShowItem(NB_Term *term){
   outPut("\n");  
   }
 
+void nbTermShowGloss(NB_Term *context);
+
 void nbTermShowGlossTree(NB_TreeNode *treeNode){
   if(!treeNode) return;
   if(treeNode->left) nbTermShowGlossTree(treeNode->left);
-  nbTermShowItem((NB_Term *)treeNode->key);
+  if(((NB_Term *)treeNode->key)->def!=nb_Undefined) nbTermShowItem((NB_Term *)treeNode->key);
+  if(((NB_Term *)treeNode->key)->def->type!=nb_NodeType) nbTermShowGloss((NB_Term *)treeNode->key);
   if(treeNode->right) nbTermShowGlossTree(treeNode->right);
   }
 
@@ -1110,7 +1101,7 @@ void termPrintGlossHome(NB_Term *term,NB_Type *type,int attr){
 *******************************************************************************************/
 
 NB_Cell *nbTermCreate(NB_Cell *context,char *identifier,NB_Cell *definition){
-  return((NB_Cell *)nbTermNew((NB_Term *)context,identifier,definition));
+  return((NB_Cell *)nbTermNew((NB_Term *)context,identifier,definition,1));
   }
 
 NB_Cell *nbTermLocate(NB_Cell *context,char *identifier){

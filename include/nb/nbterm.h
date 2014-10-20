@@ -89,7 +89,7 @@ NB_Term *nbTermFindHere(NB_Term *term,NB_String *word);
 NB_Term *nbTermFindDot(NB_Term *term,char **qualifier);
 
 
-NB_Term *nbTermNew(NB_Term *context,char *ident,void *def);
+NB_Term *nbTermNew(NB_Term *context,char *ident,void *def,int option);
 
 void nbTermUndefine(NB_Term *term);
 void termUndefAll(void);

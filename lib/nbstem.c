@@ -438,7 +438,7 @@ nbCELL nbStart(int argc,char *argv[]){
   
   /* initialize root context, verbs, and types */
  
-  rootGloss=nbTermNew(NULL,"root",nbNodeNew());
+  rootGloss=nbTermNew(NULL,"root",nbNodeNew(),0);
   
   nbModuleInit(stem);
 
@@ -447,11 +447,11 @@ nbCELL nbStart(int argc,char *argv[]){
   clientIdentity=defaultIdentity; 
   ((NB_Node *)rootGloss->def)->owner=clientIdentity;
   ((NB_Node *)rootGloss->def)->context=rootGloss;
-  nbTermNew(identityC,"default",defaultIdentity);
+  nbTermNew(identityC,"default",defaultIdentity,0);
   
-  //locGloss=nbTermNew(rootGloss,"@",nbNodeNew());
+  //locGloss=nbTermNew(rootGloss,"@",nbNodeNew(),0);
   //((NB_Node *)locGloss->def)->context=locGloss;
-  symGloss=nbTermNew(NULL,"%",nbNodeNew());
+  symGloss=nbTermNew(NULL,"%",nbNodeNew(),0);
   addrContext=rootGloss;
   symContext=symGloss;
   /* 
@@ -463,25 +463,25 @@ nbCELL nbStart(int argc,char *argv[]){
   *  Define some handy terms 
   */
   sprintf(mypid,"%u",getpid());
-  nbTermNew(symGloss,"_pid",useString(mypid));
-  nbTermNew(symGloss,"_username",useString(myusername));
-  nbTermNew(symGloss,"_hostname",useString(nb_hostname));
+  nbTermNew(symGloss,"_pid",useString(mypid),0);
+  nbTermNew(symGloss,"_username",useString(myusername),0);
+  nbTermNew(symGloss,"_hostname",useString(nb_hostname),0);
 
   /*
   *  Define types in separate dictionary for now
   */
-  nb_TypeGloss=nbTermNew(NULL,"type",nbNodeNew());
-  nbTermNew(nb_TypeGloss,"cell",useString("cell"));
-  //nbTermNew(nb_TypeGloss,"file",useString("file"));
-  nbTermNew(nb_TypeGloss,"on",useString("on"));
-  nbTermNew(nb_TypeGloss,"when",useString("when"));
-  nbTermNew(nb_TypeGloss,"if",useString("if"));
-  nbTermNew(nb_TypeGloss,"nerve",useString("nerve"));
-  //nbTermNew(nb_TypeGloss,"translator",useString("translator"));
-  nbTermNew(nb_TypeGloss,"node",useString("node"));
-  nbTermNew(nb_TypeGloss,"macro",useString("macro"));
-  nbTermNew(nb_TypeGloss,"text",useString("text"));
-  //nbTermNew(nb_TypeGloss,"verb",useString("verb"));
+  nb_TypeGloss=nbTermNew(NULL,"type",nbNodeNew(),0);
+  nbTermNew(nb_TypeGloss,"cell",useString("cell"),0);
+  //nbTermNew(nb_TypeGloss,"file",useString("file"),0);
+  nbTermNew(nb_TypeGloss,"on",useString("on"),0);
+  nbTermNew(nb_TypeGloss,"when",useString("when"),0);
+  nbTermNew(nb_TypeGloss,"if",useString("if"),0);
+  nbTermNew(nb_TypeGloss,"nerve",useString("nerve"),0);
+  //nbTermNew(nb_TypeGloss,"translator",useString("translator"),0);
+  nbTermNew(nb_TypeGloss,"node",useString("node"),0);
+  nbTermNew(nb_TypeGloss,"macro",useString("macro"),0);
+  nbTermNew(nb_TypeGloss,"text",useString("text"),0);
+  //nbTermNew(nb_TypeGloss,"verb",useString("verb"),0);
 
   
   nbBind((nbCELL)addrContext);  /* bind imbedded skills */

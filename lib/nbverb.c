@@ -76,7 +76,7 @@ int nbVerbDeclare(nbCELL context,char *ident,int authmask,int flags,void *handle
   verb->handle=handle;
   verb->parse=parse;
   verb->syntax=syntax;
-  verb->term=nbTermNew(context->object.type->stem->verbs,ident,verb);
+  verb->term=nbTermNew(context->object.type->stem->verbs,ident,verb,0);
   if(trace) outMsg(0,'T',"verb created - %s\n",ident);
   //outMsg(0,'T',"verb created - [%d]%s\n",verb->term->word->object.refcnt,ident);
   return(0);
@@ -156,5 +156,5 @@ void nbVerbDestroy(struct NB_VERB *verb){
 void nbVerbInit(NB_Stem *stem){
   nb_verbType=nbObjectType(stem,"verb",0,0,nbVerbPrint,nbVerbDestroy);
   nb_verbType->apicelltype=NB_TYPE_VERB;
-  stem->verbs=nbTermNew(NULL,"verb",useString("verb"));
+  stem->verbs=nbTermNew(NULL,"verb",useString("verb"),0);
   }

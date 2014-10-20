@@ -626,7 +626,7 @@ NB_Rule *nbRuleParse(nbCELL context,int opt,char **source,char *msg,size_t msgle
     nb_RuleFree=(NB_Rule *)rule->cell.object.next;
     rule->id++;
     }
-  rule->localContext=grabObject(nbTermNew(NULL,"rule",nbNodeNew()));
+  rule->localContext=grabObject(nbTermNew(NULL,"rule",nbNodeNew(),0));
   symContext=rule->localContext;
   if(NULL==(rule->plan=nbRuleParsePlan(context,opt,source,msg,msglen))){
     dropObject(rule->localContext);
