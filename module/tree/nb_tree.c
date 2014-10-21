@@ -667,7 +667,7 @@ static void treePrune(nbCELL context,BTreeSkill *skillHandle,BTree *tree,nbCELL 
         ptr=&node->root;   
         }
       if(argCell!=NULL){
-        nbLogMsg(context,0,'E',"Entry not found.");
+        //nbLogMsg(context,0,'E',"Entry not found.");
         return;
         }
       if(node->root!=NULL){

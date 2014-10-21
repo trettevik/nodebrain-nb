@@ -46,6 +46,7 @@
 * 2013-12-20 Ed Trettevik - Introduced in 0.9.00
 * 2014-01-25 eat 0.9.00 - Checker updates
 * 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
+* 2014-10-20 eat 0.9.03 Switch from "_" to "@" for facet identifiers
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -60,7 +61,7 @@ static void nbSentenceShow(NB_Sentence *cell){
   if(cell==NULL) outPut("(?)");
   else{
     printObject((NB_Object *)cell->term);
-    if(*cell->facet->ident->value) outPut("_%s",cell->facet->ident->value);
+    if(*cell->facet->ident->value) outPut("@%s",cell->facet->ident->value);
     printObject((NB_Object *)cell->args);
     }
   }

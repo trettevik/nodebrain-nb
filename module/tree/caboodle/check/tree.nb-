@@ -35,3 +35,10 @@ x. assert ("abc","def");
 show x
 assert b;
 show x
+x. define r3 on(c && @prune("abc","xyz"));
+x. assert ("abc","xyz",1);
+x. assert ("abc","xyz",2);
+x. assert ("abc","xyz",3);
+show x
+x. assert c;
+show x

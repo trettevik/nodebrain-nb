@@ -695,17 +695,17 @@ NB_Term *nbTermNew(NB_Term *context,char *ident,void *def,int option){
 
   if(!option) implicitNodeSeparator=0;
 
-  if(trace) outMsg(0,'T',"nbTermNew() called.");
+  if(trace) outMsg(0,'T',"nbTermNew: called.");
   if(ident==NULL){
-    outMsg(0,'L',"nbTermNew() called with NULL identifier.");
+    outMsg(0,'L',"nbTermNew: called with NULL identifier.");
     return(NULL);
     }
   if(def==NULL){
-    outMsg(0,'L',"nbTermNew() called for \"%s\" with NULL definition - deprecated support will be removed",ident);
+    outMsg(0,'L',"nbTermNew: called for \"%s\" with NULL definition - deprecated support will be removed",ident);
     def=nb_Undefined;
     }
   if(context==NULL){
-    if(trace) outMsg(0,'T',"nbTermNew() called for \"%s\" with NULL context.",ident);
+    if(trace) outMsg(0,'T',"nbTermNew: called for \"%s\" with NULL context.",ident);
     if(strlen(ident)>=sizeof(qualifier)){
       outMsg(0,'E',"Terms may not be longer than 255 characters.");
       return(NULL);
@@ -716,7 +716,7 @@ NB_Term *nbTermNew(NB_Term *context,char *ident,void *def,int option){
     }
   else{ /* locate the qualified term */
     if(trace){
-      outMsg(0,'T',"nbTermNew() called for \"%s\" with context.",ident);
+      outMsg(0,'T',"nbTermNew: called for \"%s\" with context.",ident);
       outPut("Context is ");
       printObject((NB_Object *)context);
       outPut("\n");

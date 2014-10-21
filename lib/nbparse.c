@@ -912,30 +912,39 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
     case 's': // string literal 
       return((NB_Object *)useString(ident));
     case 't': // term identifier 
-      // A single underscore identifies the placeholder cell
-      // Perhaps this determination should be moved to nbParseSymbol
-      if(*ident=='_' && *(ident+1)==0) return(nb_Placeholder);
-  
-      if(parseTrace) outMsg(0,'T',"nbParseObject(): parsed term \"%s\"",ident);
-      term=nbTermFind(context,ident);
-      if(*ident=='$' || *ident=='%'){
-        // 2006-12-22 eat - when ready, experiment with using nb_Disabled as definition for "undefined" terms
-        //if(term==NULL || term->def==nb_Disabled){
-        if(term==NULL || term->def==nb_Unknown){
-          outMsg(0,'E',"Reference to undefined symbolic \"%s\"",ident);
+      if(*ident=='@' && *(ident+1)!=0){
+        term=addrContext;  // term implied if starting with facet references
+        if(strlen(ident)>=sizeof(facetIdent)+1){
+          outMsg(0,'E',"Facet name may not be greater than %d\"",sizeof(facetIdent)-1);
           return(NULL);
           }
-        return(term->def);
+        strcpy(facetIdent,ident+1);
         }
-      *facetIdent=0;     // assume no facet specified
-      //if(**cursor=='_'){ // facet assertion
-      if(**cursor=='@'){ // facet assertion
-        (*cursor)++;
-        savecursor=*cursor;
-        symid=nbParseSymbol(facetIdent,sizeof(facetIdent),cursor);
-        if(symid!='t'){
-          outMsg(0,'E',"Expecting facet at-->%s",savecursor);
-          return(NULL);
+      else{
+        // A single underscore identifies the placeholder cell
+        // Perhaps this determination should be moved to nbParseSymbol
+        if(*ident=='_' && *(ident+1)==0) return(nb_Placeholder);
+  
+        if(parseTrace) outMsg(0,'T',"nbParseObject: parsed term \"%s\"",ident);
+        term=nbTermFind(context,ident);
+        if(*ident=='$' || *ident=='%'){
+          // 2006-12-22 eat - when ready, experiment with using nb_Disabled as definition for "undefined" terms
+          //if(term==NULL || term->def==nb_Disabled){
+          if(term==NULL || term->def==nb_Unknown){
+            outMsg(0,'E',"Reference to undefined symbolic \"%s\"",ident);
+            return(NULL);
+            }
+          return(term->def);
+          }
+        *facetIdent=0;     // assume no facet specified
+        if(**cursor=='@'){ // facet assertion
+          (*cursor)++;
+          savecursor=*cursor;
+          symid=nbParseSymbol(facetIdent,sizeof(facetIdent),cursor);
+          if(symid!='t'){
+            outMsg(0,'E',"Expecting facet at-->%s",savecursor);
+            return(NULL);
+            }
           }
         }
       /* default to cell term if not define */
