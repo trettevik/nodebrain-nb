@@ -146,6 +146,9 @@
 *            state of the time delay using a flag in the cell.mode field.
 * 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 * 2014-07-19 eat 0.9.02 Applied logic change to Lazy AND and OR to match simple operators
+* 2014-10-20 eat 0.9.03 Fixed a mistake in Lazy AND to make it more lazy
+*            The Lazy AND operator was giving the correct result, but (A && B)
+*            was not lazy when A was Unknown.  Now it is again.
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -595,7 +598,8 @@ NB_Object *evalAndMonitor(struct COND *cond){
 NB_Object *evalLazyAnd(struct COND *cond){
   NB_Object *lobject=((NB_Object *)cond->left)->value;
   NB_Object *robject=((NB_Object *)cond->right)->value;
-  if(lobject==NB_OBJECT_FALSE){
+  //if(lobject==NB_OBJECT_FALSE){
+  if(!(lobject->type->kind&NB_OBJECT_KIND_TRUE)){
     nbAxonDisable((NB_Cell *)cond->right,(NB_Cell *)cond);
     return(lobject);
     }
@@ -649,7 +653,8 @@ NB_Object *evalOrMonitor(struct COND *cond){
 NB_Object *evalLazyOr(struct COND *cond){
   NB_Object *lobject=((NB_Object *)cond->left)->value;
   NB_Object *robject=((NB_Object *)cond->right)->value;
-  if(lobject!=NB_OBJECT_FALSE && lobject!=nb_Unknown){
+  //if(lobject!=NB_OBJECT_FALSE && lobject!=nb_Unknown){
+  if(lobject->type->kind&NB_OBJECT_KIND_TRUE){
     nbAxonDisable((NB_Cell *)cond->right,(NB_Cell *)cond);
     //return(lobject);
     return(nb_True);
