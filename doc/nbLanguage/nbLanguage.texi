@@ -473,7 +473,7 @@ In procedural languages, conditional expressions are evaluated when the statemen
 assert A==C+3;
 @end example
        
-If you then make the following assertion, A becomes 8 (5+3) and X becomes 1. To clarify, X is the result of (8>1 & 5=5) or (1 & 1), which is 1.
+If you then make the following assertion, A becomes 8 (5+3) and X becomes True (!!). To clarify, X is the result of (8>1 & 5=5) or (!! & !!), which is !!.
 
 @example 
 assert C=5,B=1;
@@ -1451,7 +1451,7 @@ Let's not forget about the unknown state. If you want to suppress short unknown 
 The following example will respond to the @code{/tmp} file system reaching 90% usage for 15 minutes, resetting after falling below 90% for 30 minutes.
 
 @example
-	define r6 on([]filesys.'/tmp'.percent>90 ~^!(30m) ~^(15m)): @i{action}
+define r6 on([]filesys.'/tmp'.percent>90 ~^!(30m) ~^(15m)): @i{action}
 @end example
 
 The behavior of the state delay operators is summarized in the following tables, where time t is the time C1 takes on a new state. A transition of C1 may change t before t+delay, moving you to a new row in the table.
@@ -1492,8 +1492,8 @@ A node sentence formula looks like a function call in many other languages.
 However this same node sentence syntax can appear in multiple places within NodeBrain syntax. It is only a node sentence formula when it appears in a cell expression. The highlighted strings are node sentence formulas in the examples below. In fact, they are the same node sentence formulas.
 
 @example
-	define @i{term} on(x=2 and @b{process("inetd","running")}) @i{action}
-	assert good==@b{process("inetd","running"),}process("nb","stopped");
+define @i{term} on(x=2 and @b{process("inetd","running")}) @i{action}
+assert good==@b{process("inetd","running"),}process("nb","stopped");
 @end example
 
 The reason process("nb","stopped") is not a node sentence formula is because it is not part of a cell expression. In this case, it is a node sentence assertion instead.
@@ -1505,10 +1505,10 @@ A NodeBrain cache is a table designed for event correlation. It has built-in fea
 Suppose you want to take some action when an event of Type T2 occurs within 5 minutes after an event of Type T1 if both events have the same value for attributes A and B. This could be accomplished with the following rule set.
  
 @example
-	define event node;     # define a node to be alerted
-	event. define t1ab node cache:(~(5m):a,b);		# define cache 
-	event. define r1 if(Type="T1"):t1ab. assert (A,B);	# populate cache 
-       event. define r2 if(Type="T2" and @b{t1ab(A,B)}):@i{action}	# lookup
+define event node;     # define a node to be alerted
+event. define t1ab node cache:(~(5m):a,b);		    # define cache 
+event. define r1 if(Type="T1") t1ab(A,B);                   # populate cache 
+event. define r2 if(Type="T2" and @b{t1ab(A,B)}):@i{action} # reference cache - lookup
 @end example
 
 The highlighted cache condition is True when the t1ab cache contains an entry for the current value of A and B. If either A or B is Unknown, the cache condition is Unknown. Otherwise, the cache condition is False.
@@ -1516,27 +1516,27 @@ The highlighted cache condition is True when the t1ab cache contains an entry fo
 The event stream for this context is generated through a series of commands of the following form.
 
 @example
-	event. alert Type="@i{type}",A="@i{a}",B="@i{b}";
+event. alert Type="@i{type}",A="@i{a}",B="@i{b}";
 @end example
 
 When an event of type T1 occurs, rule r1 asserts (A,B) to the cache. This inserts an entry for the current value A and B. This entry will expire within 5 minutes. When an event of type T2 occurs, rule r2 will fire if the cache contains an entry for the values of A and B. If the following events occur within a 5-minute period, the final event will cause rule r2 to fire.
 
 @example
-	event. alert Type="T1",A="man",B="happy";
-	event. alert Type="T2",A="pilot",B=52;
-	event. alert Type="T1",A="sister",B="good";
-	event. alert Type="T0",A="buddy",B="cool";
-	event. alert Type="T2",A="man",B="happy";
+event. alert Type="T1",A="man",B="happy";
+event. alert Type="T2",A="pilot",B=52;
+event. alert Type="T1",A="sister",B="good";
+event. alert Type="T0",A="buddy",B="cool";
+event. alert Type="T2",A="man",B="happy";
 @end example
 	
 If you defined the cache without scheduled expiration of entries, you must explicitly delete entries when appropriate.
 
 @example
-	event. define t1ab node cache:(a,b);	# define cache
-	event.t1ab. assert ("abc","xyz");	# insert entry if new
-	event.t1ab. assert !("abc","xyz");	# delete entry
-	event.t1ab. assert !("abc");		# delete group of entries
-	event.t1ab. assert !();			# delete all entries
+event. define t1ab node cache:(a,b);	# define cache
+event.t1ab. assert ("abc","xyz");	# insert entry if new
+event.t1ab. assert !("abc","xyz");	# delete entry
+event.t1ab. assert !("abc");		# delete group of entries
+event.t1ab. assert !();			# delete all entries
 @end example
 
 With or without an expiration period, you may want to delete entries based on some condition. This is simply a way of forcing the cache condition to be False, just as asserting an entry forces it to be True. So, you can think of a cache condition as a dynamic set of named Boolean switches. You address a specific switch via the argument list.
@@ -2367,18 +2367,18 @@ You can group a set of rules within the context of a node. Normally when you hav
 
 @example
        define server node;
-       server. define ‘myhost1.enterprise.com' node;
-       server.'myhost1.enterprise.com’. define r1 on(!.pingable) @i{action11};
-       server.'myhost1.enterprise.com’. define r2 on(cpu>95) @i{action12};
-       server.'myhost1.enterprise.com’. define r3 on(disk>80) @i{action13};
+       server. define 'myhost1.enterprise.com' node;
+       server.'myhost1.enterprise.com'. define r1 on(!.pingable) @i{action11};
+       server.'myhost1.enterprise.com'. define r2 on(cpu>95) @i{action12};
+       server.'myhost1.enterprise.com'. define r3 on(disk>80) @i{action13};
 @end example
 
 You might have different rules for each server, organized by creating a node for each one.
 
 @example
-       server. define ‘myhost2.enterprise.com' node;
-       server.'myhost2.enterprise.com’. define r1 on(disk>80) @i{action21};
-       server.'myhost2.enterprise.com’. define r2 on(cpu>92) @i{action22};
+       server. define 'myhost2.enterprise.com' node;
+       server.'myhost2.enterprise.com'. define r1 on(disk>80) @i{action21};
+       server.'myhost2.enterprise.com'. define r2 on(cpu>92) @i{action22};
 @end example
 
 If you find the rule sets for each server are similar, they may be easier to maintain if you create a single source file a server rule set and source the file for each server.
@@ -2388,10 +2388,10 @@ If you find the rule sets for each server are similar, they may be easier to mai
 	#--------------------------
 	%default name="oops",ping=1,disk=80,cpu=95
 	%if(ping);
-	server.'%@{name@}’. define r1 on(!.pingable) action1;
+	server.'%@{name@}'. define r1 on(!.pingable) action1;
 	%endif;
-	server.'%@{name@}’. define r2 on(cpu>%@{cpu@}) action2;
-	server.'%@{name@}’. define r3 on(disk>%@{disk@}) action3;
+	server.'%@{name@}'. define r2 on(cpu>%@{cpu@}) action2;
+	server.'%@{name@}'. define r3 on(disk>%@{disk@}) action3;
 
 	# Main rule file
 	#==================
@@ -2473,7 +2473,7 @@ Now the rules will only take action every 20 minutes on ping problems, 2 hours f
 These two rules work in combination like a flip-flop condition you might elect to use for state monitoring with rules for each server.
 
 @example
-	server.' @i{name}’ define r3 on(.disk>80 ^ .disk<75): @i{action3};
+	server. define r3 on(.disk>80 ^ .disk<75): @i{action3};
 @end example
 
 This is fine, but if the only action is to issue an alarm, you can create an alarm cache node and let it handle the deduplication. Then you can go back to the simple set of rules.
@@ -2508,7 +2508,7 @@ For a real world example, let's assume you have a trouble ticket system with an 
 Your ticket generation script could generate a ticket and define a @code{when} rule to monitor for the condition used to close the ticket.
 
 @example
-	ticket. define ‘@i{ticketNumber}' when(@i{closeCondition}):=@i{ticketCloseScript} "@dots{}"
+	ticket. define '@i{ticketNumber}' when(@i{closeCondition}):=@i{ticketCloseScript} "@dots{}"
 @end example
 
 It is also possible to use @code{when} rules that create @code{when} rules that create @code{when} rules, and so on, to monitor for a sequence of conditions. The next section describes sequence rules as an alternative to this approach.
@@ -3475,33 +3475,33 @@ Macros may be defined to provide a parameter-based notation for generating singl
 @item @i{MacroSequence} @tab ::= @tab @i{MacroItem} [ @i{MacroSequence} ]
 @item @i{MacroItem} @tab ::= @tab @i{MacroSymbol} | @i{MacroCharacter}
 @item @i{MacroSymbol} @tab ::= @tab @b{%@{} @i{identifier} @b{@}}
-@item @i{MacroCharacter} @tab ::= @tab Any character other than \0 and \n, except ‘%‘ followed by "@{"
+@item @i{MacroCharacter} @tab ::= @tab Any character other than \0 and \n, except @code{%} followed by @code{@{}
 @end multitable
 @end cartouche
 
 A macro definition is a one line alternative to the @code{source} command and @code{default} command within a sourced file.
 
 @example
-	define mydef macro(a,b:x=25) :% define %@{a@} cell %@{b@}/%@{z@}; 
-	define myps macro(process="") :% - ps -ef | grep %@{process@}
-	define myassert macro:assert a=1,b=2;
+define mydef macro(a,b:x=25) :% define %@{a@} cell %@{b@}/%@{z@}; 
+define myps macro(process="") :% - ps -ef | grep %@{process@}
+define myassert macro:assert a=1,b=2;
 @end example
 
 When an identifier follows a dollar sign ($) where a verb is expected, macro expansion occurs.
 
 @example
-	define x cell 3;
-	connie. $mydef("sam",x*30:x=10);
-	connie. $myps(:process="inetd");
-	connie. $myassert;
+define x cell 3;
+connie. $mydef("sam",x*30:x=10);
+connie. $myps(:process="inetd");
+connie. $myassert;
 @end example
 
 For these examples, the following commands would be issued to the connie context.
 
 @example
-	define sam cell 90/10; 
-	- ps -ef | grep inetd
-	assert a=1,b=2;
+define sam cell 90/10; 
+- ps -ef | grep inetd
+assert a=1,b=2;
 @end example
 
 While a macro may be used as a shorthand notation for long commands, these examples illustrate that a macro command may not necessarily be simpler than the resulting command. However, macros may still be useful for providing a single point of change for a construct that is repeated frequently within an application.
@@ -3560,12 +3560,12 @@ The @code{exit} command is used to terminate with an exit code from 0 to 255. Th
 Suppose you have a diagnostic script for identifying a creature based on three attributes: (1) number of legs, (2) type of coat, and (3) existence of a tail.
 
 @example
-        #!/usr/local/bin/nb -q
-        # File: creature.nb
-        use : creature.pl
-        define dog on(legs=4 and coat="fur" and tail):exit 1;
-        define human on(legs=2 and (coat="skin" or coat="leather")):exit 2;
-        define bird on(legs=2 and coat="feathers" and tail):exit 3;
+#!/usr/local/bin/nb -q
+# File: creature.nb
+use : creature.pl
+define dog on(legs=4 and coat="fur" and tail):exit 1;
+define human on(legs=2 and (coat="skin" or coat="leather")):exit 2;
+define bird on(legs=2 and coat="feathers" and tail):exit 3;
 @end example
 
 Here's a Perl script that pretends to do the hard work of examining the creature, with fixed values for legs and tail, but somewhat random choice of coat. This will cause the answer to vary between Bird and Human.
@@ -4396,30 +4396,30 @@ Directives are not intended as a procedural scripting language. This feature is 
 The @code{%assert} directive is like an @code{assert} command, only it operates in a special context established for a source file. We call this the @i{local} context. The terms assigned or defined by the @code{%assert} directive are only available to other directives during the processing of a source file. Once a file has been processed, the local context is destroyed.
 
 @example
-	%assert a=1,b="Critical";
+%assert a=1,b="Critical";
 @end example
 
 There are multiple methods of exchanging information between the local context and the active context. (See Chapter 13, Symbolic Substitution.)
 
 @example
-       assert %a=x;           # Assert to local term in active context
-	assert y=%a;		# Assert from local term in active context
-	% assert y="%@{a@}";	# Substituting local term in active context
+assert %a=x;           # Assert to local term in active context
+assert y=%a;		# Assert from local term in active context
+% assert y="%@{a@}";	# Substituting local term in active context
 @end example
 
 Active context symbolic substitution does not apply to directive lines. The following commands do NOT assign "abc" to the local term %a.
 
 @example
-	assert x="abc";
-	%assert a="$@{x@}";
+assert x="abc";
+%assert a="$@{x@}";
 @end example
 
 This actually sets %a to the literal value "$@{x@}". The following command sets the value of y to a string with the value of x at the time the command is interpreted. 
 
 @example
-	% assert y="%@{a@}";	# before local substitution
+% assert y="%@{a@}";	# before local substitution
 
-	assert y="$@{x@}";	# after local substitution
+assert y="$@{x@}";	# after local substitution
 @end example
 
  
@@ -4456,12 +4456,12 @@ In the example above, the local term abc is 1 and the local term xyz is "somethi
 @b{Syntax}
 @multitable {-------------} {---} {------------------------------------------------------}
 @item @i{ifDirective} @tab ::= @tab @b{%if} "@b{(}"@i{condition}"@b{)}"  [ [ s* ] ; [@i{comment} ] ] @b{@bullet{}} 
-     @item @dots{}
-    @item [@b{%elseif} "@b{(}"@i{condition} "@b{)}"  [ [ s* ] ; [@i{comment} ] ] @b{@bullet{}} ]
-      @item @dots{}
-   @item [@b{%else}  [ [ s* ] @b{;} [@i{comment} ] ] @b{@bullet{}} ]
-     @item @dots{}
-     @item @b{%endif}  [ [ s* ] @b{;} [@i{comment} ] ] @b{@bullet{}}
+@item @dots{}
+@item [@b{%elseif} "@b{(}"@i{condition} "@b{)}"  [ [ s* ] ; [@i{comment} ] ] @b{@bullet{}} ]
+@item @dots{}
+@item [@b{%else}  [ [ s* ] @b{;} [@i{comment} ] ] @b{@bullet{}} ]
+@item @dots{}
+@item @b{%endif}  [ [ s* ] @b{;} [@i{comment} ] ] @b{@bullet{}}
 @end multitable
 @end cartouche
 
@@ -4495,33 +4495,33 @@ The @code{%include} directive is used to interpret another NodeBrain (@code{*.nb
 The symbolic terms specified as arguments to the source file are made available in a temporary "symbolic" context.
 
 @example
-	%include myfile.nb,a="abc",b=2; # Include file with symbolic substitution
+%include myfile.nb,a="abc",b=2; # Include file with symbolic substitution
 @end example
 
 References to %@{a@} and %@{b@} are replaced in @code{myfile.nb} text as it is input, before statement interpretation.
 
 @example
-	Before substitution:	%@{a@}=%@{b@};
+Before substitution:	%@{a@}=%@{b@};
 
-	After substitution:	abc=2;
+After substitution:	abc=2;
 @end example
 
 References to %a and %b may be used within cell expressions.
 
 @example
-       define r1 on(a=%a and x>%b);
+define r1 on(a=%a and x>%b);
 @end example
 
 The define command above will produce the same result within @code{myfile.nb} as the following @code{define} command.
 
 @example
-       define r2 on(a="abc" and x>2);
+define r2 on(a="abc" and x>2);
 @end example
 
 The cell expressions used in the argument list to an include file are interpreted within the current symbolic context while the argument identifiers are defined in the symbolic context of the included file. In the following example, you define terms @i{a} and b as arguments to @code{myfile.nb} in a new symbolic context. The cell expressions "a" and "x+5" are interpreted within the current symbolic context. So the left side @i{a} and right side @i{a} are not the same variable.
 
 @example
-       %include myfile.nb,a=a,b=x+5;
+%include myfile.nb,a=a,b=x+5;
 @end example
 
 
@@ -4599,9 +4599,9 @@ Translators are used by various NodeBrain node modules to convert foreign text i
 @item @i{commandStmt} @tab ::= @tab @b{:} @i{projectionExpression}
 @item @i{blockStmt} @tab ::= @tab @b{@{} [@i{comment} ] @b{@bullet{}}@i{translatorSection} @b{@}}
 @item @i{projectionExpression} @tab ::= @tab (@i{text}| @b{$[} @i{stringId} [ , @i{charF charR} ] @b{]} )  [@i{projectionExpression} ]
-@item @i{stringId} @tab ::=  @tab [@i{regexRef} ] ( ‘@i{name} ‘ | @i{number} | @b{<} | @b{>} | ~ | - | @b{=} | )
+@item @i{stringId} @tab ::=  @tab [@i{regexRef} ] ( '@i{name}' | @i{number} | @b{<} | @b{>} | ~ | - | @b{=} | )
 @item @i{regexRef} @tab ::= @tab @b{.} [@i{regexRef} ]
-@item @i{name} @tab ::= @tab Name of group (?' @i{name}’@dots{}) in the referenced regular expression 
+@item @i{name} @tab ::= @tab Name of group (?'@i{name}'@dots{}) in the referenced regular expression 
 @item @i{number} @tab ::= @tab Number of group (@dots{}) in the referenced regular expression
 @item @i{charF} @tab ::= @tab Character to find
 @item @i{charR} @tab ::= @tab Character to replace @i{charF}
@@ -4614,7 +4614,7 @@ For each line of input text, a translator emits zero, one, or more NodeBrain com
 If you define a translator as follows, the translation script (or translator) is the file @code{mytran.nbx}. 
 
 @example
-	define myTranslator node translator("@code{mytran.nbx}");
+define myTranslator node translator("@code{mytran.nbx}");
 @end example
 
 This chapter describes translator syntax and semantics.
@@ -4641,73 +4641,71 @@ Translator syntax is cryptic, but simple in structure when you break it down int
 Let's look at an example of a translator, highlighting the encapsulation characters that identify statements in the translation language. An overview of these statements is provided in the next section.
 
 @example
-	@b{#} Sample translator
-	@b{(}abcdef@b{)}
-	@b{@@(}xyz@b{):}assert zyz;
-	@b{(}error (\d+)@b{):} alert type="error",id="$[1]";
-	@b{(}^ABC00234 (\d+)@b{)@{}
-	  @b{:} assert b=$[1];
-	  @b{: }assert abcError="abend";
-	  @b{[}$[1] $[=]@b{].(}27 critical@b{):} assert a=3;
-	  @b{@}}
+@b{#} Sample translator
+@b{(}abcdef@b{)}
+@b{@@(}xyz@b{):}assert zyz;
+@b{(}error (\d+)@b{):} alert type="error",id="$[1]";
+@b{(}^ABC00234 (\d+)@b{)@{}
+  @b{:} assert b=$[1];
+  @b{: }assert abcError="abend";
+  @b{[}$[1] $[=]@b{].(}27 critical@b{):} assert a=3;
+  @b{@}}
 @end example
 
 Next, highlight the regular expressions. If you are not already familiar with Perl or "Perl compatible" regular expressions, you will need to study up a bit. You will find plenty of help on the web.
 
 @example
-	# Sample translator
-	(@b{abcdef})
-	@@(@b{xyz}):assert zyz;
-	(@b{error (\d+)}): alert type="error",id="$[1]";
-	(@b{^ABC00234 (\d+)})@{
-	  : assert b=$[1];
-	  : assert abcError="abend";
-	  [$[1] $[=]].(@b{27 critical}): assert a=3;
-	  @}
+# Sample translator
+(@b{abcdef})
+@@(@b{xyz}):assert zyz;
+(@b{error (\d+)}): alert type="error",id="$[1]";
+(@b{^ABC00234 (\d+)})@{
+  : assert b=$[1];
+  : assert abcError="abend";
+  [$[1] $[=]].(@b{27 critical}): assert a=3;
+  @}
 @end example
 
 Here the projection expression of an assignment statement is highlighted. Projection expressions are covered as a separate topic later. The important point now is that any confusing symbols in a statement starting with a square bracket "[", up to a balanced "]" can be recognized as an assignment without understanding it further.
 
 @example
-
-	# Sample translator
-	(abcdef)
-	@@(xyz): assert zyz;
-	(error (\d+)): alert type="error",id="$[1]";
-	(^ABC00234 (\d+))@{
-	  : assert b=$[1];
-	  : assert abcError="abend";
-	  [$[1] $[=]].(27 critical): assert a=3;
-	  @}
+# Sample translator
+(abcdef)
+@@(xyz): assert zyz;
+(error (\d+)): alert type="error",id="$[1]";
+(^ABC00234 (\d+))@{
+  : assert b=$[1];
+  : assert abcError="abend";
+  [$[1] $[=]].(27 critical): assert a=3;
+  @}
 @end example
 
 Encapsulated NodeBrain commands are highlight below. They are identified by a statement starting with a colon (:). See Chapter 6, Commands, for a complete list of NodeBrain commands.
 
 @example
-
-	# Sample translator
-	(abcdef)
-    	@@(xyz): assert zyz;
-	(error (\d+)): alert type="error",id="$[1]";
-	(^ABC00234 (\d+))@{
-	  : assert b=$[1];
-	  : assert abcError="abend";
-	  [$[1] $[=]].(27 critical): assert a=3;
-	  @}
+# Sample translator
+(abcdef)
+@@(xyz): assert zyz;
+(error (\d+)): alert type="error",id="$[1]";
+(^ABC00234 (\d+))@{
+  : assert b=$[1];
+  : assert abcError="abend";
+  [$[1] $[=]].(27 critical): assert a=3;
+  @}
 @end example
 
 NodeBrain commands embedded in a translation script are constructed using the same projection expression syntax as assignment statement. This is just a form of symbolic substitution performed during translation. Here we highlight the symbols causing substitution within NodeBrain commands before they are sent to the interpreter.
 
 @example
-	# Sample translator
-	(abcdef)
-	@@(xyz): assert zyz;
-	(error (\d+)): alert type="error",id="@b{$[1] }";
-	(^ABC00234 (\d+))@{
-	  : assert b=@b{$[1] };
-	  : assert abcError="abend";
-	  [$[1] $[=]].(27 critical): assert a=3;
-	  @}
+# Sample translator
+(abcdef)
+@@(xyz): assert zyz;
+(error (\d+)): alert type="error",id="@b{$[1] }";
+(^ABC00234 (\d+))@{
+  : assert b=@b{$[1] };
+  : assert abcError="abend";
+  [$[1] $[=]].(27 critical): assert a=3;
+  @}
 @end example
 
 @section Statement Overview
@@ -4758,14 +4756,14 @@ Once you get the hang of it, a one-page quick reference should be sufficient whe
 Before we launch into a long complicated explaining in the following sections, let's take a look at an example of a compound translation statement.
 
 @example
-	(whatever on port=(?'port’\d+) from=(?’addr’\d+\.\d+\.\d+\.\d+))@{
-	   [$[port]] @{
-                "1443":assert event("whatever","$[port]","$[addr]");
-                "8080":assert event("whatever","$[port]","$[addr]");
-                @}
-	   [$[addr]]~plan/watchedAddr/watchedAddr.nbx
-	   [$[addr]:$[port]]"192.168.1.101:80":assert HomeWebHit;
-             @}
+(whatever on port=(?'port'\d+) from=(?'addr'\d+\.\d+\.\d+\.\d+))@{
+  [$[port]] @{
+    "1443":assert event("whatever","$[port]","$[addr]");
+    "8080":assert event("whatever","$[port]","$[addr]");
+    @}
+  [$[addr]]~plan/watchedAddr/watchedAddr.nbx
+  [$[addr]:$[port]]"192.168.1.101:80":assert HomeWebHit;
+  @}
 @end example
 
 This statement begins with a (@i{regex}) with a subordinate block statement containing two [@i{assign}] statements. The (@code{regex}) extracts a "port" string and an "addr" string from the input text. The assignment statements put one or both of these strings into a buffer for further analysis. The first assignment statement watches for two specific values and reports matches via "assert" commands. The second assignment statement delegates the additional analysis to another translator script. The third assignment statement has a single "value" statement, which you could read as addr="192.168.1.101" and port=80. This illustrates a way of working around the limitation that translator can only test one string at a time. The assignment statements and the first two "assert" commands, all contain projection expressions. This is just symbolic substitution using the matched strings from the regular express.
@@ -4776,21 +4774,21 @@ This statement begins with a (@i{regex}) with a subordinate block statement cont
 Projection expressions specify a symbolic substitution of strings matched within the input text. This concept was introduced in the previous section using the following example.
 
 @example
-	(whatever on port=(?'port’\d+) from=(?’addr’\d+\.\d+\.\d+\.\d+))@{
-	   [$[port]] @{
-                "1443":assert event("whatever","$[port]","$[addr]");
-                "8080":assert event("whatever","$[port]","$[addr]");
-                @}
-	   [$[addr]]~plan/watchedAddr/watchedAddr.nbx
-	   [$[addr]:$[port]]"192.168.1.101:80":assert HomeWebHit;
-             @}
+(whatever on port=(?'port'\d+) from=(?'addr'\d+\.\d+\.\d+\.\d+))@{
+  [$[port]] @{
+    "1443":assert event("whatever","$[port]","$[addr]");
+    "8080":assert event("whatever","$[port]","$[addr]");
+    @}
+  [$[addr]]~plan/watchedAddr/watchedAddr.nbx
+  [$[addr]:$[port]]"192.168.1.101:80":assert HomeWebHit;
+  @}
 @end example
 
 Let's look at two of the projection expressions in this example.
 
 @example
-	$[addr]:$[port]
-	assert event("whatever","$[port]","$[addr]");
+$[addr]:$[port]
+assert event("whatever","$[port]","$[addr]");
 @end example
 
 In both cases, you are constructing a new string by combining constant strings with variable strings extracted from the input text by the regular expression. This is just a form of symbolic substitution.
@@ -4800,8 +4798,8 @@ All you need to learn is what you can put in place of "_" in the extracted strin
 You can reference this same string by number, $[1]. You use 1 because it is the first subexpression. The @code{$[addr]} string could be referenced as @code{$[2]}. Using numbers is sometimes more convenient because you can avoid naming the fields.
 
 @example
-	(let (\w+)=(\d+)):assert $[1]=$[2];
-	(let (?'attribute’\w+)=(?’value’\d+)):assert $[attribute]=$[value];
+(let (\w+)=(\d+)):assert $[1]=$[2];
+(let (?'attribute'\w+)=(?'value'\d+)):assert $[attribute]=$[value];
 @end example
 
 Using names is better when a regular expression may be modified to include more subexpressions and when there are multiple reference to the subexpression strings. It saves having to renumber the references.
@@ -4809,62 +4807,62 @@ Using names is better when a regular expression may be modified to include more 
 Because the output of a translator are NodeBrain commands, a translator quietly performs a usually helpful character substitution---single quote replaces double quote. This means you can a projection like the following without worrying about generating a NodeBrain syntax error when the captured string contains a double quote.
 
 @example
-	assert hostname="$[hostname]";
+assert hostname="$[hostname]";
 @end example
 
 Seldom, but in some cases, you want to override this hidden operation. You can do this by following the string identifier with a comma and two characters. If the characters are identical there is no character replacement.
 
 @example
-	(let (\w+=(d\+|".*?")):assert $[1,..]
+(let (\w+=(d\+|".*?")):assert $[1,..]
 @end example
 
 If you need an alternate character substitution, you specify a "find" character followed by a "replace" character. In the following example, you assert a single quoted term using an extracted value that may contain a single quote. So in this case, you want to replace single quotes with double quotes.
 
 @example
-	(value: "(?'value’.*?)"):assert ‘$[value,’"]’=1;
+(value: "(?'value'.*?)"):assert '$[value,'"]'=1;
 @end example
 
 In addition to using names and numbers to identify matched strings, you can use a few special symbols to extract some strings that are not actually matched.
 
 @example
-	$[-]	- input 	to last regular expression match    $[-] = $[<]$[~]$[>]
-	$[~]	- match 	portion of $[-] that matched last regular expression (@dots{})
-	$[<]	- head 		that portion of $[-] before $[~]    @b{@dots{}} (@dots{})@dots{}
-	$[>]	- tail 		that portion of $[-] after $[~]	@dots{}(@dots{})@b{@dots{}} 
-	$[=]	- buffer 	for next match - defaults to $[>] – set by [assignment]
+$[-]	- input 	to last regular expression match    $[-] = $[<]$[~]$[>]
+$[~]	- match 	portion of $[-] that matched last regular expression (@dots{})
+$[<]	- head 		that portion of $[-] before $[~]    @b{@dots{}} (@dots{})@dots{}
+$[>]	- tail 		that portion of $[-] after $[~]	@dots{}(@dots{})@b{@dots{}} 
+$[=]	- buffer 	for next match - defaults to $[>] - set by [assignment]
 @end example
 
 Suppose you have an input line and translation rule as shown below.
 
 @example
-	Input:		"this tells the story from abc to xyz"
+Input:	"this tells the story from abc to xyz"
 
-	Rule:		(the story from (\w?) )[$[<]] @{
-           "this tells ":assert tail="$[>]"
-           "that tells "
-           "and so ends ":assert found="$[=]";
-           :alert NotRecognized="$[-]",matched="$[~]";
-           @}
+Rule:	(the story from (\w?) )[$[<]] @{
+          "this tells ":assert tail="$[>]"
+          "that tells "
+          "and so ends ":assert found="$[=]";
+          :alert NotRecognized="$[-]",matched="$[~]";
+          @}
 @end example
 
 Within this rule's inner block, the following values are associated with the special variables.
 
 @example
-	$[-]  = "this tells the story from abc to xyz"
-	$[~] = "the story from abc"
-	$[<] = "this tells"
-	$[>] = "to xyz"
-	$[=] = "this tells"
+$[-]  = "this tells the story from abc to xyz"
+$[~] = "the story from abc"
+$[<] = "this tells"
+$[>] = "to xyz"
+$[=] = "this tells"
 @end example
 
 By default, a new buffer $[=] is set to the tail $[>] when a regular expression matches. This is convenient in situations where logs contain messages for multiple events with a common prefix.
 
 @example
-	(^(?'time’\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d) ) @{
-	  (soup spilled)
-	  (nuts eaten)
-	  (salad ready):assert saladReady,at="$[.time]";
-            @} 
+(^(?'time'\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d) )@{
+  (soup spilled)
+  (nuts eaten)
+  (salad ready):assert saladReady,at="$[.time]";
+  @} 
 @end example
 
  
@@ -4879,7 +4877,7 @@ It may be helpful for you to compare the syntax of a translation script with the
 @item Function Call @i{function}(@i{arguments}); ~@i{file} @b{@bullet{}}
 @item Shell Command @tab system(command); @tab : @i{command} @b{@bullet{}}
 @item Assignment @tab a=1; @tab :assert a=1; @b{@bullet{}}
-@item @tab s1="abc"; s2="def"; @tab ((?'s1’abc).*(?’s2’def)) 
+@item @tab s1="abc"; s2="def"; @tab ((?'s1'abc).*(?'s2'def)) 
 @item @tab sprintf(text,"%s%s",s1,s2) @tab [$[s1]$[s2]] @i{statement} @b{@bullet{}}
 @item Block  @tab @{
   @i{statement}
@@ -4936,23 +4934,23 @@ The following diagram shows the logic represented by the script above.
 Translators are intended primarily as a way to uniquely identify a line of text and provide a single response. For this reason, the default behavior on a true condition is to execute the subordinate statement and terminate. A simple translator is just a series of patterns to match to the text buffer. The statement following the first matching pattern is executed and the translator stops.
 
 @example
-	"@i{value}" @i{statement}
-	"@i{value}" @i{statement}
-	@dots{}
-	(@i{regex}) @i{statement}
-	(@i{regex}) @i{statement}
-	@dots{}
+"@i{value}" @i{statement}
+"@i{value}" @i{statement}
+@dots{}
+(@i{regex}) @i{statement}
+(@i{regex}) @i{statement}
+@dots{}
 @end example
 
 However, in some cases you will want to match a line of text to multiple patterns and take the action associated with each. This can be done as follows.
 
 @example
-	@@"@i{value}" @i{statement}
-	@@"@i{value}" @i{statement}
-	@dots{}
-	@@(@i{regex}) @i{statement}
-	@@(@i{regex}) @i{statement}
-	@dots{}
+@@"@i{value}" @i{statement}
+@@"@i{value}" @i{statement}
+@dots{}
+@@(@i{regex}) @i{statement}
+@@(@i{regex}) @i{statement}
+@dots{}
 @end example
 
 The continue statement, @@, performs the subordinate statement and continues to the next statement even if a match was found in the subordinate statement.
@@ -4960,42 +4958,42 @@ The continue statement, @@, performs the subordinate statement and continues to 
 The unconditional branch statements, assign and label, have a slightly different default behavior than the conditional branch statements. The unconditional branch statements continue to the next statement by default if a match is not found in the subordinate statement. In the following example, the statement in the third line will execute if the subordinate statement of the assign and label statements, a (@i{regex}) statement in both cases, doesn't find a match.
 
 @example
-	[@i{assign}](@i{regex}) statement
-	@i{label}(@i{regex}) statement
-	@i{statement}
+[@i{assign}](@i{regex}) statement
+@i{label}(@i{regex}) statement
+@i{statement}
 @end example
 
 However, like the conditional branch statements, you can use a "continue" statement to ensure they continue to the next statement when a match is found in the subordinate statement.
 
 @example
-	@@[@i{assign}](@i{regex}) statement
-	@@@i{label}(@i{regex}) statement
-	@i{statement}
+@@[@i{assign}](@i{regex}) statement
+@@@i{label}(@i{regex}) statement
+@i{statement}
 @end example
 
 The only other flow control statement is the block statement, which groups a list of statements into a single statement.
 
 @example
-	(@i{regex}) @{  # if regex is true, execute block and terminate
-	  @i{statement}
-	  @i{statement}
-	  @}
-       @@(@i{regex}) @{ # if regex is true, execute block and continue
-         @i{statement}
-         @i{statement}
-         @}
+(@i{regex}) @{  # if regex is true, execute block and terminate
+  @i{statement}
+  @i{statement}
+  @}
+@@(@i{regex}) @{ # if regex is true, execute block and continue
+  @i{statement}
+  @i{statement}
+  @}
        
-	@i{label}@{ # execute block and continue if no match
-	  "value" statement
-	  (@i{regex}) statement
-	  (@i{regex}) statement
-	  @}
+@i{label}@{ # execute block and continue if no match
+  "value" statement
+  (@i{regex}) statement
+  (@i{regex}) statement
+  @}
 
-	@@@i{label}@{ # execute block and continue
-	  "value" statement
-	  (@i{regex}) statement
-	  (@i{regex}) statement
-	  @}
+@@@i{label}@{ # execute block and continue
+  "value" statement
+  (@i{regex}) statement
+  (@i{regex}) statement
+  @}
 @end example
 
 The flow of control within a block is the same as it would be outside of a block---the block functions like a subordinate translator.
@@ -5019,9 +5017,9 @@ A subordinate statement refers to a statement within a statement. More specifica
 You can think of the individual elements that make up a complex statement as cells in a table. Imagine a translator script as a table of complex statements, where each complex statement is a row in the table, and each element of a statement is a cell in a row.
 
 @example
-       Statement:	@i{label}(@i{regex})[@i{assign}]"@i{value}":@i{command}
+Statement:	@i{label}(@i{regex})[@i{assign}]"@i{value}":@i{command}
        
-       Table:		 cell   cell       cell       cell      cell
+Table:		 cell   cell       cell       cell      cell
 @end example
        
 Under this model, cells execute left to right, and return True or False values from right to left.
@@ -5029,18 +5027,18 @@ Under this model, cells execute left to right, and return True or False values f
 It gets a bit more complicated when you consider that while a statement has only one subordinate statement; a subordinate statement may be a block statement as illustrated here.
 
 @example
-	@i{label}@{
-                   (@i{regex}) @{
-                                [@i{assign}] @{
-	                                    "@i{value1}" @{
-                                                           : @i{command1}
-                                                           : @i{command2}
-                                                          @}
-	                                    "@i{value2}":@i{command3}
-	                                   @}
-                                : @i{command4}
-                                @}
-		@}
+@i{label}@{
+  (@i{regex}) @{
+    [@i{assign}] @{
+      "@i{value1}" @{
+        : @i{command1}
+        : @i{command2}
+        @}
+      "@i{value2}":@i{command3}
+      @}
+    : @i{command4}
+    @}
+  @}
 @end example
 
 You can adapt to this concept by thinking of a translation table, where the elements are cells, as a translation tree, where the elements are nodes.
@@ -5064,10 +5062,10 @@ Within a branch, you execute nodes in a left to right, top to bottom order. Subo
 You can specify the translation tree above as a table, not using block statements, but may get a little confused about flow of control. Are the last three statements reachable with a common value of (@i{regex})? That topic is addressed in the next section.
 
 @example
-       Statement:	@i{label}(@i{regex})[@i{assign}]"@i{value1}":@i{command1}
-       Statement:	@i{label}(@i{regex})[@i{assign}]"@i{value1}":@i{command2}
-       Statement:	@i{label}(@i{regex})[ @i{assign}]" @i{value2}":@i{command3}
-       Statement:	@i{label}(@i{regex}):@i{command4}
+Statement:	@i{label}(@i{regex})[@i{assign}]"@i{value1}":@i{command1}
+Statement:	@i{label}(@i{regex})[@i{assign}]"@i{value1}":@i{command2}
+Statement:	@i{label}(@i{regex})[ @i{assign}]" @i{value2}":@i{command3}
+Statement:	@i{label}(@i{regex}):@i{command4}
 @end example
 
 @section Statement Reordering
@@ -5077,19 +5075,19 @@ In the previous section, the notion that a translator is a collection of nodes o
 Here's an example of a valid translator script coded as a table, not using block statements.
 
 @example
-	(@i{regex1})[@i{assign1}]"@i{value1}":@i{command1}
-	(@i{regex1})[@i{assign1}]"@i{value1}":@i{command2}
-	(@i{regex2})[@i{assign2}]"@i{value1}":@i{command1}
+(@i{regex1})[@i{assign1}]"@i{value1}":@i{command1}
+(@i{regex1})[@i{assign1}]"@i{value1}":@i{command2}
+(@i{regex2})[@i{assign2}]"@i{value1}":@i{command1}
 @end example
 
 Here's the same translator script after it is compiled (loaded by the interpreter) and organized as a tree.
 
 @example
-	(@i{regex1})[@i{assign1}]" @i{value1}" @{
-	                                         : @i{command1}
-	                                         : @i{command2}
-                                                    @}
-	(@i{regex2})[@i{assign2}]"@i{value1}":@i{command1}
+(@i{regex1})[@i{assign1}]"@i{value1}"@{
+  : @i{command1}
+  : @i{command2}
+  @}
+(@i{regex2})[@i{assign2}]"@i{value1}":@i{command1}
 @end example
 
 If the compiler left the script in the original form, you would not get the desired result. In fact, @i{command2} would be unreachable, because whenever (@i{regex1}) is true NodeBrain would terminate without executing the second statement.
@@ -5097,7 +5095,7 @@ If the compiler left the script in the original form, you would not get the desi
 Instead, the compiler ensures that there is only one branch node with a given specification in the first column of a block. This can cause a "reordering" of statements. Consider the following translator.
 
 @example
-       "abc":assert abc;
+"abc":assert abc;
 "def":assert def;
 "abc":assert cba;
 (abc):assert containsAbc;
@@ -5108,15 +5106,15 @@ Instead, the compiler ensures that there is only one branch node with a given sp
 After it is compiled, it looks like this.
 
 @example
-       "abc" @{
-                 :assert abc;
-                 :assert cba;
-                 @}
+"abc"@{
+  :assert abc;
+  :assert cba;
+  @}
 "def":assert def;
 (abc) @{
-          :assert containsAbc;
-          :assert containsCba;
-          @}
+  :assert containsAbc;
+  :assert containsCba;
+  @}
 (def):assert containsDef;
 @end example
 
@@ -5138,29 +5136,29 @@ Here is an alternate solution for the same intention where you include a second 
 
 @example
 (abc) @{
-   :assert containsAbc;
-   (def):assert containsDef;
-   :assert containsCba;
-   @}
+  :assert containsAbc;
+  (def):assert containsDef;
+  :assert containsCba;
+  @}
 (def):assert containsDef;
 @end example
 
 This isn't all the potentially unhelpful help the compiler demands to provide. It also assumes that you should match values before regular expression. So the following translator is also reordered.
 
 @example
-	(a.*c) @i{statement}
-	(de(f|d)) @i{statement}
-	"abc" @i{statement}
-	"zyz" @i{statement}
+(a.*c) @i{statement}
+(de(f|d)) @i{statement}
+"abc" @i{statement}
+"zyz" @i{statement}
 @end example
 
 Here's what the compiler decides is better.
 
 @example
-	"abc" @i{statement}
-	"zyz" @i{statement}
-	(a.*c) @i{statement}
-	(de(f|d)) @i{statement}
+"abc" @i{statement}
+"zyz" @i{statement}
+(a.*c) @i{statement}
+(de(f|d)) @i{statement}
 @end example
 
 The compiler's preference is usually better because when there is a large number "value" statement, the translation engine can quickly determine, which, if any, value matches the input by performing a binary search. If there is no value match, then it can continue with the less efficient regular expressions.
@@ -5168,33 +5166,33 @@ The compiler's preference is usually better because when there is a large number
 Once again you can force the compiler to preserve the original order by using a labeled blocks as shown below. Now the "value" statements are at the top of their block as the compiler insists, and they are executed after the (regex) statements, as you may insist.
 
 @example
-	@@reStmts@{
-             (a.*c) @i{statement}
-	   (de(f|d)) @i{statement}
-             @}
-	valueStmts@{
-             "abc" @i{statement}
-	   "zyz" @i{statement}
-             @}
+@@reStmts@{
+  (a.*c) @i{statement}
+  (de(f|d)) @i{statement}
+  @}
+valueStmts@{
+  "abc" @i{statement}
+  "zyz" @i{statement}
+  @}
 @end example
 
 You may, or may not, want the "continue" on the "reStmts" block. If not, you could simply remove the block.
 
 @example
-	(a.*c) @i{statement}
-	(de(f|d)) @i{statement}
-	valueStmts@{
-             "abc" @i{statement}
-	   "zyz" @i{statement}
-             @}
+(a.*c) @i{statement}
+(de(f|d)) @i{statement}
+valueStmts@{
+  "abc" @i{statement}
+  "zyz" @i{statement}
+  @}
 @end example
 
 Now the "abc" is unreachable, but that may be intentional, particularly if the value statements are managed as a separate translator. The goal may be to intercept the values matching the regular expressions to prevent the value statements from responding to those cases. Here you have removed to (@code{regex}) subordinate statements to suppress response instead of providing an alternate response. Either would be reasonable.
 
 @example
-	(a.*c)
-	(de(f|d))
-	valueStmts~plan/watchedValues/watchedValues.nbx
+(a.*c)
+(de(f|d))
+valueStmts~plan/watchedValues/watchedValues.nbx
 @end example
 
 The important thing is to understand how the compiler reorganizes a translation script so you can direct it to do what you want.
@@ -5205,32 +5203,32 @@ The important thing is to understand how the compiler reorganizes a translation 
 When a translation script (@code{*.nbx} file) is loaded, each statement is processed as a transaction applied to the translator tree structure, which is initially empty. By default, each statement is an "insert at bottom" transaction. Each element of a statement is used as a key to select an existing branch node or create a new branch node at the bottom of a block. You could explicitly state that you are adding a node at the bottom of a block by preceding it with a greater than symbol (>).
 
 @example
-	# Insert at bottom
-	(abc.*?(\d+))@b{>}"abc"
+# Insert at bottom
+(abc.*?(\d+))@b{>}"abc"
 @end example
 
 If you want to insert a node at the top of a block, use a less than symbol (<).
 
 @example
-	# Insert at top
-	(abc.*?(d\+))@b{<}"abc"
+# Insert at top
+(abc.*?(d\+))@b{<}"abc"
 @end example
 
 The equal symbol (=) is used to replace the contents of a branch or leaf node.
 
 @example
-	# Update transaction
-	(abc.*?(d\+))="abc"
-	"abcdef".27=:assert x=1;
+# Update transaction
+(abc.*?(d\+))="abc"
+"abcdef".27=:assert x=1;
 @end example
 
 A branch node may be deleted ("pruned") by preceding it with a vertical bar (|). The examples below illustrate the deletion of a value node, regex node, and leaf node (command or file link).
 
 @example
-	# Delete transactions
-	(abc.*? (\d+))@b{|}"abc"
-	Fred.(abc.*?(\d+))[$[1]] @b{|} (def (\w+))
-	"abcdef"|5
+# Delete transactions
+(abc.*? (\d+))@b{|}"abc"
+Fred.(abc.*?(\d+))[$[1]] @b{|} (def (\w+))
+"abcdef"|5
 @end example
 
 Note that operations on a leaf node require identification by "line number" within a block. This is because leaf nodes are not uniquely identified by their text since a command may be repeated within a block.
@@ -5267,9 +5265,9 @@ This one page summary is a handy reference. It also seems to validate the claim-
     $[=] - Assigned text buffer                     is $[>] before assignment
     $[1] - String matching first sub-expression (@dots{}(subexpr)@dots{})
     $[n] - String matching n'th sub-expression
-    $[@i{name}] - String matching a named sub-expression  (?' @i{name}’@dots{})
+    $[@i{name}] - String matching a named sub-expression  (?'@i{name}'@dots{})
     $[_,@i{FR}] - Replace character F with character R, where _ is -|~|<|>|=|n
-              F is " and @i{R} is ‘ by default
+              F is " and @i{R} is ' by default
     $[.?]   - One prior to most recent ancestor regex - ? is any of the above
     $[..?]  - Two prior to most recent ancestor regex 	
     $[@dots{}?] - Can continue up from any depth of regex nesting
@@ -5320,21 +5318,21 @@ NodeBrain supports multiple forms of symbolic substitution: preprocessor, substi
 Preprocessor terms are defined in a separate dictionary from rule terms. They may be assigned values as arguments to @code{nb}, as arguments to a rule file, and within a rule file using the @code{%assert} directive or the @code{assert} command.
 
 @example
-	nb a=1 b="abc" myscript	[global process terms "a" and "b"]
+nb a=1 b="abc" myscript	[global process terms "a" and "b"]
        
-       nb myscript,a=2,b=3		[local process terms "a" and "b"]
+nb myscript,a=2,b=3		[local process terms "a" and "b"]
        
-       %assert a="hello";		[directive]
+%assert a="hello";		[directive]
        
-       assert %a="hi";		[preprocessor term defined from rule context]
+assert %a="hi";		[preprocessor term defined from rule context]
        
 @end example
 
 Preprocessor substitution is accomplished by enclosing a term in braces preceded by a percent symbol: "%@{term@}".
 
 @example
-	% define x cell "%@{a@}";
-	% define %@{a@} cell 17;
+% define x cell "%@{a@}";
+% define %@{a@} cell 17;
 @end example
 
 Preprocessor substitution applies to rule files, including standard input (@code{stdin}). It is performed on every line of a file before it is processed in any other way, completely independent of command syntax.
@@ -5356,62 +5354,62 @@ This substitution does not apply to commands received by listeners. This is prim
 String substitution based on cell expressions using terms in the rule dictionary is performed by the substitution command. This step provides a method of composing a command before it is parsed, but an explicit request is required to avoid unnecessary overhead. A symbolic expression of the form $@{@i{cellExpression}@} is replaced by a string representing the value of @i{cellExpression} within the active context. For efficiency in handling most commands that do not use symbolic substitution, NodeBrain requires an explicit request for symbolic substitution by starting a command with $ followed by a space. 
 
 @example
-	assert a="abc",b=123.45,c=0.55;
-	$ assert $@{a@}=$@{b@},xyz="$@{b@}",n=$@{b+c@};
-       assert abc=123.45,xyz="123.45",n=124;   # command after substitution
+assert a="abc",b=123.45,c=0.55;
+$ assert $@{a@}=$@{b@},xyz="$@{b@}",n=$@{b+c@};
+assert abc=123.45,xyz="123.45",n=124;   # command after substitution
 @end example
 
 We elected not to follow the common practice of using an escape character to delay or prevent substitution (e.g., "\\\$a"). Instead, NodeBrain uses multiple dollar signs ("$$@{") to delay substitution, giving the programmer control over when substitution occurs. 
 
 @example
-	@dots{} $@{@i{term}@}	        Symbolic substitution is performed on first request
-	@dots{} $$@{@i{term}@}	Symbolic substitution is performed on second request
-	@dots{} $$$@{@i{term}@}	Symbolic substitution is performed on third request
+@dots{} $@{@i{term}@}	        Symbolic substitution is performed on first request
+@dots{} $$@{@i{term}@}	Symbolic substitution is performed on second request
+@dots{} $$$@{@i{term}@}	Symbolic substitution is performed on third request
 @end example
 
 Each time symbolic substitution is requested the number of $ symbols is reduced by one.
 
 @example
-	$ @dots{} $$@{@i{term}@}	Before substitution
-	@dots{} $@{@i{term}@}		After substitiution
-	$ @dots{} $$$@{@i{term}@}	Before substitution
-	@dots{} $$@{@i{term}@}	After substitution
+$ @dots{} $$@{@i{term}@}	Before substitution
+@dots{} $@{@i{term}@}		After substitiution
+$ @dots{} $$$@{@i{term}@}	Before substitution
+@dots{} $$@{@i{term}@}	After substitution
 @end example
 
 When a substitution request is presented to the interpreter, substitution is performed left to right from the first character to the last character, independent of the statement syntax.
 
 @example
-		> define x cell "def"
-		> define y cell "ine z"
-		> $ $@{x@}$@{y@} cell "abc"
-substitution	   define z cell "abc"
+> define x cell "def"
+> define y cell "ine z"
+> $ $@{x@}$@{y@} cell "abc"
+define z cell "abc"          <-- substitution
 @end example
 
 In context stacks, substitution is performed in the active context. Reduction is followed by symbolic substitution within the new context. When reduction is specified in the action command of a rule, reduction (but not substitution) is preformed in advance (at the time the rule is interpreted).
 
 @example
-		> define x cell "abc" 
-		> $ define r1 on(a="$@{x@}"):$ - echo x=$$@{x@} was $@{x@}
-substitution	   define r1 on(a=1):$ - echo x=$@{x@} was abc
-		> assert a=1,x="xyz";
-		@dots{} rule r1 fires @dots{}
-rule r1 action	> $ - echo x=$@{x@} was abc
-substitution	   - echo x=xyz was abc
-		x=xyz was abc
+> define x cell "abc" 
+> $ define r1 on(a="$@{x@}"):$ - echo x=$$@{x@} was $@{x@}
+define r1 on(a=1):$ - echo x=$@{x@} was abc      <-- substitution
+> assert a=1,x="xyz";
+@dots{} rule r1 fires @dots{}
+$ - echo x=$@{x@} was abc     <-- rule action
+: - echo x=xyz was abc        <-- substitution
+x=xyz was abc
 @end example
 
 This form of symbolic substitution, while normally used with rule dictionary terms, can also be used with terms in the process dictionary. This is because a global process term is accessible from any rule context in the form %@i{term}.
 
 @example
-	%@{@i{term}@}	- Process string substitution only for rule files.
+%@{@i{term}@}	- Process string substitution only for rule files.
 
-	$@{%@i{term}@}	- Cell string substitution available anywhere.
+$@{%@i{term}@}	- Cell string substitution available anywhere.
 @end example
 
 To avoid getting a local process term, your can explicitly specify back up to the global context.
 
 @example
-	$@{%..@i{term}@}	- Bypass local terms if any.
+$@{%..@i{term}@}	- Bypass local terms if any.
 @end example
 
 
@@ -5429,41 +5427,41 @@ To avoid getting a local process term, your can explicitly specify back up to th
 When an identifier in a cell expression is preceded by a dollar sign ($), it is called a symbolic cell name and is interpreted as if the identifier's current definition had been specified. You illustrate this with a sequence of three assertions, first without a $ and then with it.
 
 @example
-	# without "$"
-	assert a=2,b=3,x==a*b;
-	assert y==x+21;
-	assert x==a+b;	# this assertion changes y
+# without "$"
+assert a=2,b=3,x==a*b;
+assert y==x+21;
+assert x==a+b;	# this assertion changes y
 
-	# with "$"
-	assert a=2,b=3,x==a*b;
-	assert y==$x+21;	# same as y==(a*b)+21
-	assert x==a+b;	# no change to y
+# with "$"
+assert a=2,b=3,x==a*b;
+assert y==$x+21;	# same as y==(a*b)+21
+assert x==a+b;	# no change to y
 @end example
 
 Use of symbolic cell names only impacts assertions using == since = resolves the current value of the cell expression anyway.
 
 @example
-	assert a=2,b=3,x==a*b;
-	# The next three statements produce the same result: y=27
-	assert y=$x+21;	
-	assert y=x+21;	
-	assert y=27;	
+assert a=2,b=3,x==a*b;
+# The next three statements produce the same result: y=27
+assert y=$x+21;	
+assert y=x+21;	
+assert y=27;	
 @end example
 
 Statement parsing and execution are two distinct phases. Cell names are replaced by the parser using their current definition. This is illustrated by the following example. The definition of x is not changed to (a*b) until the statement is executed, so $x is replaced by the parser with the current definition of x at parse time: (a+b).
 
 @example
-	assert x==a+b;
-	assert x==a*b,y==$x+21; # y==(a+b)+21
+assert x==a+b;
+assert x==a*b,y==$x+21; # y==(a+b)+21
 @end example
 
 In the previous example, execution directly follows parsing, but this is not the case with rules. In the following example, x may take on many definitions between the time the rule is parsed and the time the rule fires and performs the assertion. Because substitution occurs at parse time, changes to x after the rule is parsed have no impact on the assertion performed when the rule fires.
 
 @example
-	assert x==a+b;
-	define r1 on(a>5 and b<20) x==a*b,y==$x+21; # y==(a+b)+21
-	assert x==a/b;
-	@dots{}
+assert x==a+b;
+define r1 on(a>5 and b<20) x==a*b,y==$x+21; # y==(a+b)+21
+assert x==a/b;
+@dots{}
 @end example
 
 Command actions (e.g., on(@i{condition}):@i{command}) are parsed when the rule fires.
@@ -5482,8 +5480,8 @@ Command actions (e.g., on(@i{condition}):@i{command}) are parsed when the rule f
 When a symbolic cell expression "$(@i{cellExpression})" is specified within a cell expression, it is replaced by the current value of the symbolic cell expression.
 
 @example
-	assert a=2,b=3,?c;
-	assert y==$(a*b)+c;	# same as y==6+c;
+assert a=2,b=3,?c;
+assert y==$(a*b)+c;	# same as y==6+c;
 @end example
 
 Like symbolic cell names, a symbolic cell expression is only useful when defining a term using the == operator, since = resolves the current value of the cell expression anyway.
@@ -5502,7 +5500,7 @@ Like symbolic cell names, a symbolic cell expression is only useful when definin
 @item @i{MacroSequence} @tab ::= @tab @i{MacroItem} [@i{MacroSequence} ]
 @item @i{MacroItem} @tab ::= @tab @i{MacroSymbol} | @i{MacroCharacter}
 @item @i{MacroSymbol} @tab ::= @tab @b{%%} "@b{@{} " @i{identifier} "@b{@}}"
-@item @i{MacroCharacter} @tab ::= @tab Any character other than \0 and \n, except ‘%‘ followed by "%@{"
+@item @i{MacroCharacter} @tab ::= @tab Any character other than \0 and \n, except @code{%} followed by @code{%@{}
 @end multitable
 @end cartouche
 
@@ -5520,24 +5518,24 @@ Like symbolic cell names, a symbolic cell expression is only useful when definin
 A macro is defined to provide a model for macro command expansion. A macro command accepts positional arguments or keyword arguments. In the following example, m1 is defined to have two positional parameters (a and b) and one keyword parameter (c);
 
 @example
-	define m1 macro(a,b:c=5):assert x=%%@{a@}*%%@{b@}/%%@{c@};
+define m1 macro(a,b:c=5):assert x=%%@{a@}*%%@{b@}/%%@{c@};
 @end example
 
 When you use a macro, you must specify the expected number of positional arguments, but the keyword arguments are optional.
 
 @example
-	> $m1(2,7);
-	$ assert x=2*7/5;
-	> $m1(3,5:c=12);
-	$ assert x=3*5/12;
+> $m1(2,7);
+$ assert x=2*7/5;
+> $m1(3,5:c=12);
+$ assert x=3*5/12;
 @end example
 
 Macros may be used as a typing shortcut, a way of making code easier to read, or to provide a common point of maintenance. Consider the following macro for alerting an alarm node.
 
 @example
-       > define myalert macro(text:severity="normal",group="OS") @dots{}
-   @dots{} alarm. alert severity="%%@{severity@}", @dots{}
-   @dots{} group="%%@{group@}",text="%%@{text@}";
+> define myalert macro(text:severity="normal",group="OS")\
+    alarm. alert severity="%%@{severity@}", \
+    group="%%@{group@}",text="%%@{text@}";
 @end example
        
 Here we show the use of this macro and the expansion.
@@ -5693,15 +5691,15 @@ Logging options are supported at the node (context) level. If you don't need or 
 A global "audit" option sets a default option for all nodes. There are eight silly ways to set one option on or off.
 
 @example
-        nb -a   		[audit]
-        nb -A   		[noAudit]
-        nb --audit
-        nb --noAudit
+nb -a   		[audit]
+nb -A   		[noAudit]
+nb --audit
+nb --noAudit
 
-        set a
-        set A
-        set audit
-        set noAudit
+set a
+set A
+set audit
+set noAudit
 @end example
 
 The default is "audit" (on). There is no harm in leaving audit on unless you decide it is just spitting out too much information. Once your rules have been tested, you can switch to the @code{-A} option.
