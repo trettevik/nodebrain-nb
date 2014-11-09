@@ -1409,6 +1409,8 @@ By default, NodeBrain will attempt to solve for all argument cell expressions an
 * nbListenerEnableOnDaemon:: Schedule enable when daemonized
 * nbLogMsg:: Send a message to the log
 * nbLogPut:: Send text to the log
+* nbNodeGlossary:: Get an array of terms defined within a node
+* nbNodeTermName:: Get the name of a term defined within a node
 @end menu
 
 Function described in this chapter interact with nodes and the first argument
@@ -1547,6 +1549,57 @@ You may find this function has no advantage over @code{printf};
 This is often true. But use of this function provides as 
 place to insert additional functionality, like temporarily splitting
 log data out to a second file.
+
+@node nbNodeGlossary
+@section nbNodeGlossary - Get an array of terms defined within a node
+@cindex nbNodeGlossary
+
+@cartouche
+@smallexample
+int nbNodeGlossary(
+  nbCELL context,  // Node context handle
+  size_t size,        // Number of entries in the cell[] array
+  nbCELL cell[]);  // Array of term cells returned - lesser of size and return value
+
+Returns:
+ -1 - Error  (See message)
+  n>=0 - Number of terms defined in the context node
+         This number may be larger than the array size, indicating that
+         not all terms where returned.  If the number returned is larger
+         than size, you must call again with an array of at least size n
+         to get all terms returneed.
+@end smallexample
+@end cartouche
+
+The @code{nbNodeGlossary} function is called to obtain an unordered array of terms
+defined within the context node.
+
+You may use the @code{nbNodeTermName} function
+to get the name of a term relative to the context node.
+Terms are cells, so you may use cell functions
+to obtain the value of a term.
+
+@node nbNodeTermName
+@section nbNodeTermName - Get the name of a term defined within a node
+@cindex nbNodeTermName
+
+@cartouche
+@smallexample
+int nbNodeTermName(
+  nbCELL context,  // Node context handle
+  nbCELL term,     // Term cell
+  char  *name,     // Name buffer for value returned
+  size_t size);    // Size of name buffer - must be at least 1024
+
+Returns:
+ -1 - Error  (See message)
+  0 - Name returned
+@end smallexample
+@end cartouche
+
+The @code{nbNodeTermName} function is called to get the name of a term relative to
+a context node.  The context provided may be the node in which the term is directly
+defined, or a higher level node.
 
 @node Cell Functions
 @chapter Cell Functions
@@ -1839,8 +1892,9 @@ nbCELL nbCellGetValue(
 
 Returns: Constant cell representing cell value
 
-Warning: When you are finished with the returned value cell, you
-         must call nbCellDrop to release it to avoid a memory leak.
+Warning: The returned cell has not been grabbed so you mush call
+         nbCellGrab if you want to retain a reference.  Then call
+         nbCellDrop when you no longer need a reference.
 
 See also: nbCellCompute, nbCellEvaluate, and nbCellSolve.
 @end smallexample
@@ -2038,8 +2092,10 @@ nbCELL @b{nbTermLocate}(
 
 Returns: Term cell handle, or NULL if not found
 
-Warning: The returned cell has been grabbed, so you must
-         call nbCellDrop when it is no longer needed.
+Warning: The returned cell has not been grabbed, so you must
+         call nbCellGrab if you want to retain a reference.
+         Then call nbCellDrop when you no longer need a
+         reference.
 @end smallexample
 @end cartouche
 
