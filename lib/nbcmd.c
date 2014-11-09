@@ -1165,6 +1165,34 @@ int nbCmdSet(nbCELL context,void *handle,char *verb,char *cursor){
   }
 
 /*
+*  Parse Assert (or Alert) Instruction
+*/
+static int nbCmdAssertParse(nbCELL context,void *handle,char *verb,char *cursor,NB_Instruction *instruction){
+  NB_Link *assertion=NULL;
+  int alert=0;
+
+  if(!(clientIdentity->authority&AUTH_ASSERT)){
+    outMsg(0,'E',"Identity \"%s\" does not have authority to issue %s command.",clientIdentity->name->value,verb);
+    return(-1);
+    }
+  if(*(verb+1)=='l') alert=1; // determine if assert or alert
+  while(*cursor==' ') cursor++;
+  if(*cursor!=';' && *cursor!=0 && *cursor!=':'){
+    assertion=nbParseAssertion((NB_Term *)context,(NB_Term *)context,&cursor);
+    if(*cursor!=';' && *cursor!=0 && *cursor!=':'){
+      outMsg(0,'E',"Unrecognized at-->%s",cursor);
+      dropMember(assertion);
+      return(-1);
+      }
+    }
+  if(alert) instruction->operation=NB_OPERATION_ALERT;
+  else instruction->operation=NB_OPERATION_ASSERT;
+  instruction->arg.assert.context=grabObject(context);
+  instruction->arg.assert.assertion=assertion;
+  return(0); 
+  }
+
+/*
 *  Assert (or alert)
 */
 int nbCmdAssert(nbCELL context,void *handle,char *verb,char *cursor){
@@ -1554,6 +1582,7 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
   strncpy(type,((struct STRING *)typeTerm->def)->value,sizeof(type)-1); // 2012-12-15 eat - CID 751633
   *(type+sizeof(type)-1)=0;
   if(strcmp(type,"on")==0 || strcmp(type,"if")==0 || strcmp(type,"when")==0) {
+    int parse=0; // assume not using a parsed parsed instruction
     while(*cursor==' ') cursor++;
     if(*cursor=='('){
       standardRule=1; /* candidate for parsed assertions */
@@ -1606,6 +1635,10 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
       }
     if(*cursor==':'){
       cursor++; /* step over ':' delimiter */
+      if(*cursor==':'){ // protype pre-parsed instructions
+        parse=1;
+        cursor++;
+        }
       while(*cursor==' ') cursor++;
       if(!*cursor || *cursor==';'){
         outMsg(0,'E',"Expecting command after ':' at end of line");
@@ -1625,11 +1658,9 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     else if(strcmp(type,"when")==0) rule_type=condTypeWhenRule; 
     else rule_type=condTypeIfRule;
     action->assert=assertions;
-    if(!cursor) action->command=NULL;
-    else action->command=grabObject(useString(cursor)); /* action is rest of line */
-    action->cmdopt=NB_CMDOPT_RULE;     /* do not suppress symbolic substitution */
+    action->cmdopt=NB_CMDOPT_RULE;
+    
     action->status='R';   /* ready */
-    //action->context=(NB_Term *)context;
     ruleCond=useCondition(rule_type,object,action);
     if(object->type->kind&NB_OBJECT_KIND_CONSTANT && (rule_type==condTypeOnRule || rule_type==condTypeWhenRule))
       outMsg(0,'W',"Rule of this type with a constant condition will never fire");
@@ -1644,10 +1675,21 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
       outMsg(0,'L',"Unable to locate rule context node, associating rule with command context");
       action->context=(NB_Term *)context; // this should not happen
       }
-    // Debug
-    //  outMsg(0,'T',"Defining in node:");
-    //  printObject(action->context);
-    //  outPut(" def=%p\n",action->context->def);
+
+    action->instruction.operation=NB_OPERATION_NULL; // assume no operation
+    if(parse){ // handle parsed instructions
+      if(nbCmdParse(context,cursor,action->cmdopt,&action->instruction)){
+        // clean up here
+        return(1); // parse and return on error
+        }
+      }
+    else if(cursor){ // Create Perform instruction
+      action->instruction.operation=NB_OPERATION_PERFORM;
+      action->instruction.arg.perform.cmdopt=NB_CMDOPT_RULE;     /* do not suppress symbolic substitution */
+      action->instruction.arg.perform.context=(NB_Cell *)action->context;   // this could be different if we parsed the context prefix in advance
+      action->instruction.arg.perform.command=grabObject(useString(cursor)); /* action is rest of line */
+      }
+
     action->type='R';
     /* If a reused term already has subscribers, enable term and adjust levels */
     if(term->cell.sub!=NULL){
@@ -2100,6 +2142,139 @@ char *iWord(cursor,word)
   }
 
 /*
+*  Preprocess command 
+*
+*    context    - command context
+*
+*    cursorP    - command string buffer, new pointer returned
+*
+*    cmdopt     - options
+*
+*    newContext - context after resolving command prefix
+*
+*  Returns: (char) symid, '.' on error.
+*/
+static char nbCmdPreprocess(nbCELL context,char **cursaveP,char **cursorP,unsigned char *cmdoptP,nbCELL *newContext,char *verb,size_t verbSize){
+  char *cursor=*cursorP;
+  char cmdopt=*cmdoptP;
+  char symid,*cmdbuf=cursor,*cursave=cursor;;
+
+  //if(trace) outMsg(0,'T',"nbCmdPreprocess: called with cmdopt=%x :%s",cmdopt,cursor);
+  /* new line char should be stripped off before we are called - stop fussing in the future */
+  if((cursave=strchr(cursor,'\n'))) *cursave=0;
+  while(*cursor==' ') cursor++;   /* ignore leading blanks */
+  if(*cursor==0) return('.');
+  *newContext=context;
+  cmdopt|=((NB_Node *)((NB_Term *)context)->def)->cmdopt; // merge context and caller options
+  symid=0;   // 0 - scan, 1 - stop scanning, else handle symid and verb
+  while(symid==0){  // handle prefix options in a loop until we get down to a verb
+    cursave=cursor;
+    // 2008-05-26 eat 0.7.0 - improving symbolic substitution performance by making it explicit
+    if(*cursor=='$'){
+      if(*(cursor+1)==' ') cmdbuf=nbSymCmd(context,cursor,"${}"); // symbolic substitution with reduction
+      else{ //handle macro substitution
+        cmdbuf=nbMacroSub(context,&cursor);
+        if(cmdbuf==NULL) return('.');
+        while(*cursor==' ') cursor++;
+        if(*cursor!=0 && *cursor!=';' && *cursor!='#'){
+          outMsg(0,'E',"Expecting end of command at \"%s\".",cursor);
+          return('.');
+          }
+        if(symbolicTrace) outPut("$ %s\n",cmdbuf);
+        }
+      if(cmdbuf==NULL){
+        outMsg(0,'L',"Symbolic substitution failed");
+        return('.');
+        }
+      cursor=cmdbuf;
+      }
+    else if(*cursor=='%' && *(cursor+1)==' '){
+      cmdbuf=nbSymCmd((nbCELL)symContext,cursor,"%{}");
+      cursor=cmdbuf;
+      }
+    else if(*cursor==0) return('.');
+    else{
+      symid=nbParseSymbol(verb,verbSize,&cursor);  /* check for a term */
+      //outMsg(0,'T',"symid=%c verb=%s",symid,verb);
+      if(symid!='t'){
+        if(*cursave=='`'){   // accept assert abbreviation
+          symid='t';
+          snprintf(verb,sizeof(verb),"%s","assert"); // note: we let this go down to the lookup for authority checking // 2013-01-16 eat - RC-STR31-C
+          }
+        else{
+          symid=*cursave;
+          cursor=cursave+1;
+          *verb=0;
+          }
+        }
+      if(symid=='t'){
+        if(*cursor=='.'){  // context prefix 
+          cursor++;
+          if(*cursor!=' '){
+            outMsg(0,'E',"Expecting ' ' at-->%s\n",cursor);
+            return('.');
+            }
+          cursor++;
+          if(*verb==0); // special case of ". " as context prefix
+          else if((context=(nbCELL)nbTermFind((NB_Term *)context,verb))==NULL){
+            // Note: we need nbTermNew to make sure the identity is authorized to define new terms
+            //       before we do this for real
+            context=(nbCELL)nbTermNew((NB_Term *)*newContext,verb,nbNodeNew(),1);
+            if(!context){
+              outMsg(0,'E',"Unable to create context node %s\n",verb);
+              return('.');
+              }
+            }
+          symid=0;
+          }
+        else if(*cursor==':' || *cursor=='(' || *cursor=='@') symid=1;  // node command
+        }
+      }
+    while(*cursor==' ') cursor++;
+    *newContext=context;
+    }
+  *cursaveP=cursave;
+  *cursorP=cursor;
+  *cmdoptP=cmdopt;
+  return(symid);
+  }
+
+int nbCmdParse(nbCELL context,char *cursor,unsigned char cmdopt,NB_Instruction *instruction){
+  nbCELL newContext;
+  char verb[256];
+  int rc=-1;  // assume error until we successful parse 
+  char *newCursor=cursor,*cursave;
+  char symid;
+
+  symid=nbCmdPreprocess(context,&cursave,&newCursor,&cmdopt,&newContext,verb,sizeof(verb)); // preprocess the command
+  switch(symid){
+    case '.':
+      break;  // rc=-1
+    case 't':
+      if(strcmp(verb,"assert")==0 || strcmp(verb,"alert")==0)
+      rc=nbCmdAssertParse(newContext,NULL,verb,newCursor,instruction);
+      break;
+    case '-':
+    case '=':
+      instruction->operation=NB_OPERATION_SYSTEM;
+      instruction->arg.perform.cmdopt=NB_CMDOPT_RULE;     /* do not suppress symbolic substitution */
+      instruction->arg.perform.context=context;   // this could be different if we parsed the context prefix in advance
+      instruction->arg.perform.command=grabObject(useString(cursor)); /* action is rest of line */
+      break;
+    default:
+      if(cursor){ // Create Perform instruction
+        instruction->operation=NB_OPERATION_PERFORM;
+        instruction->arg.perform.cmdopt=NB_CMDOPT_RULE;     /* do not suppress symbolic substitution */
+        instruction->arg.perform.context=context;   // this could be different if we parsed the context prefix in advance
+        instruction->arg.perform.command=grabObject(useString(cursor)); /* action is rest of line */
+        outMsg(0,'W',"Rule action command acceleration not supported for --> %s ",cursor);
+        rc=0;
+        }
+    }
+  return(rc);
+  }
+
+/*
 *  Interpret command
 *
 *    cmdopt: 0x00
@@ -2118,18 +2293,16 @@ char *iWord(cursor,word)
 //                       
 //            Note: need to finish verb tree
 
-#if defined(WIN32)
-__declspec(dllexport) 
-#endif    
 void nbCmd(nbCELL context,char *cursor,unsigned char cmdopt){ 
   NB_Stem *stem=context->object.type->stem;
-  char symid,verb[256],*cmdbuf=cursor,*cursave;
+  char symid,verb[256],*cursave;
+  //char *cmdbuf=cursor;
   //NB_Term *term;
   NB_Term *saveContext;
   //int cmdlen;
   struct NB_VERB *verbObject;
 
-  //outMsg(0,'T',"nbCmd() called");
+  if(trace) outMsg(0,'T',"nbCmd: called with cmdopt=%x :%s",cmdopt,cursor);
   // 2008-06-20 eat - this is a good place to check for schedule events
   //            If this was helpful, it just means we need to call nbClockAlert() somewhere else.
   //            Calling it here can cause unwanted output at a client.
@@ -2139,92 +2312,14 @@ void nbCmd(nbCELL context,char *cursor,unsigned char cmdopt){
   while(*cursor==' ') cursor++;   /* ignore leading blanks */
   if(*cursor==0) return;
   saveContext=addrContext;
-  addrContext=(NB_Term *)context;
-  cmdopt|=((NB_Node *)((NB_Term *)context)->def)->cmdopt; // merge context and caller options
-  symid=0;   // 0 - scan, 1 - stop scanning, else handle symid and verb
-  while(symid==0){  // handle prefix options in a loop until we get down to a verb
-    cursave=cursor;
-    // 2008-05-26 eat 0.7.0 - improving symbolic substitution performance by making it explicit
-    if(*cursor=='$'){
-      if(*(cursor+1)==' ') cmdbuf=nbSymCmd(context,cursor,"${}"); // symbolic substitution with reduction
-      else{ //handle macro substitution
-        cmdbuf=nbMacroSub(context,&cursor);
-        if(cmdbuf==NULL) return;
-        while(*cursor==' ') cursor++;
-        if(*cursor!=0 && *cursor!=';' && *cursor!='#'){
-          outMsg(0,'E',"Expecting end of command at \"%s\".",cursor);
-          addrContext=saveContext;
-          return;
-          }
-        if(symbolicTrace) outPut("$ %s\n",cmdbuf);
-        }
-      if(cmdbuf==NULL){
-        outMsg(0,'L',"Symbolic substitution failed");
-        addrContext=saveContext;
-        return;
-        }
-      cursor=cmdbuf;
-      }
-    else if(*cursor=='%' && *(cursor+1)==' '){
-      cmdbuf=nbSymCmd((nbCELL)symContext,cursor,"%{}");
-      cursor=cmdbuf;
-      }
-    else if(*cursor==0){
-      addrContext=saveContext;
-      return;
-      } 
-    else{
-      symid=nbParseSymbol(verb,sizeof(verb),&cursor);  /* check for a term */
-      //outMsg(0,'T',"symid=%c verb=%s",symid,verb);
-      if(symid!='t'){
-        if(*cursave=='`'){   // accept assert abbreviation
-          symid='t';
-          snprintf(verb,sizeof(verb),"%s","assert"); // note: we let this go down to the lookup for authority checking // 2013-01-16 eat - RC-STR31-C
-          }
-        else{
-          symid=*cursave;
-          cursor=cursave+1;
-          *verb=0;
-          }
-        }
-      if(symid=='t'){
-        if(*cursor=='.'){  // context prefix 
-          cursor++;
-          if(*cursor!=' '){
-            outMsg(0,'E',"Expecting ' ' at-->%s\n",cursor);
-            addrContext=saveContext;
-            return;
-            }
-          cursor++;
-          if(*verb==0); // special case of ". " as context prefix
-          //else if((context=(nbCELL)nbTermFind((NB_Term *)context,verb))==NULL ||
-          //    ((NB_Term *)context)->def->type!=nb_NodeType){
-          //  outPut("> %s\n",cursave);
-          //  outMsg(0,'E',"Term \"%s\" not defined as node.",verb);
-          //  addrContext=saveContext;
-          //  return;
-          //  }
-          else if((context=(nbCELL)nbTermFind((NB_Term *)context,verb))==NULL){
-            // Note: we need nbTermNew to make sure the identity is authorized to define new terms
-            //       before we do this for real
-            context=(nbCELL)nbTermNew((NB_Term *)addrContext,verb,nbNodeNew(),1);
-            if(!context){
-              outMsg(0,'E',"Unable to create context node %s\n",verb);
-              addrContext=saveContext;
-              return;
-              }
-            }
-          symid=0;
-          }
-        // 2013-12-07 eat - included '_' for facets
-        // 2014-10-05 eat - switched to '@' for facets
-        //else if(*cursor==':' || *cursor=='(' || *cursor=='_') symid=1;  // node command
-        else if(*cursor==':' || *cursor=='(' || *cursor=='@') symid=1;  // node command
-        }
-      }
-    while(*cursor==' ') cursor++;
-    addrContext=(NB_Term *)context;
+
+  symid=nbCmdPreprocess(context,&cursave,&cursor,&cmdopt,&context,verb,sizeof(verb)); // preprocess the command
+  if(symid=='.'){
+    addrContext=saveContext;
+    return;
     }
+  addrContext=(NB_Term *)context;
+
   //outMsg(0,'T',"nbCmd: symid=%c,verb=%s,cursor=%s",symid,verb,cursor);
   // 2008-05-29 eat 0.7.0 displaying before substitution now - let trace option show resolved command
   if(cmdopt&NB_CMDOPT_ECHO && !(cmdopt&NB_CMDOPT_HUSH)){
@@ -2235,7 +2330,6 @@ void nbCmd(nbCELL context,char *cursor,unsigned char cmdopt){
       nbTermPrintLongName((NB_Term *)context);
       outPut(".");
       }
-    //outPut(" %s\n",cursor);
     outPut(" %s\n",cursave);
     cmdopt|=NB_CMDOPT_HUSH;  /* suppress any futher attempts to echo */
     }
@@ -2268,7 +2362,8 @@ void nbCmd(nbCELL context,char *cursor,unsigned char cmdopt){
       break; 
     case '-':
     case '=':
-      if(!(cmdopt&NB_CMDOPT_HUSH)) outPut("> %s\n",cmdbuf);    /* always echo system commands */
+      //if(!(cmdopt&NB_CMDOPT_HUSH)) outPut("> %s\n",cmdbuf);    /* always echo system commands */
+      if(!(cmdopt&NB_CMDOPT_HUSH)) outPut("> %s\n",cursave);    /* always echo system commands */
       nbSpawnChild(context,0,cursave);                       /* AUTH_SYSTEM  */
       break;
     case '{':

@@ -11,18 +11,18 @@ NodeBrain 0.9.03 (Columbo) Change Summary
 
 * Released TBD, 2014
 
-* Theme: Implied Nodes and Alert Attribute Transience
+* Theme:  Alert Attribute Transience and Implied Nodes
 
      This version introduces two assumptions intended to
-     improve handling of rules and alerts. The syntax for
-     referencing terms has been extended to differentiate
-     between navigation of the the node hierarchy and
-     multiple level term glossaries, enabling the interpreter
-     to automatically create nodes implied by commands
-     prior to node definition. All assertions to terms
-     directly defined in the context node of an ALERT
-     command are now transient, eliminating the need to
-     define transient terms.
+     improve handling of alerts.  All ALERT command
+     assertions to terms directly defined in the context
+     node are now transient, eliminating the need to
+     define transient terms.  The syntax for referencing
+     terms has been extended to differentiate between
+     navigation of the node hierarchy and multiple
+     level term glossaries, enabling the interpreter to
+     automatically create nodes implied by commands prior
+     to node definition.  
 
 * Documentation:
 
@@ -81,8 +81,8 @@ NodeBrain 0.9.03 (Columbo) Change Summary
      adoption of this feature after introduction in the
      prior release.
 
-       Was:      <node>_<facet>
-       Now:      [<node>]@<facet>
+       Was:      node_facet
+       Now:      node@facet  -or-   @facet
 
      This freed up "_" for navigation of multiple level
      glossaries of terms within a node, and enables facet
@@ -103,6 +103,24 @@ NodeBrain 0.9.03 (Columbo) Change Summary
        node@facet(arglist) # previously node_facet(argList)
        @facet(argList)     # previously unsupported
 
+  o  A small set of commands, when used as rule actions,
+     may now be accelerated.  You select this option by
+     using "::" instead of ":" prior to a rule action
+     command.  i
+
+       define r1 on(a=1 and b=2) x=1::fred. alert y=2;
+
+     The commands with acceleration support in
+     this release are:
+    
+       alert
+       assert
+       system   - or =
+
+     If you attempt to accelerate other commands, you will
+     see a warning and the interpreter will revert to
+     normal as if you had said ":" instead of "::".
+
 * Deprecated Syntax: (none)
 
 * Dropped Syntax: 
@@ -119,7 +137,7 @@ NodeBrain 0.9.03 (Columbo) Change Summary
   o  Previous versions enabled multiple level term
      glossaries with subsequent definition of one of the
      intermediate terms as a node.  However, IF rules were
-     associated with a node based on the node hierarch
+     associated with a node based on the node hierarchy
      existing at time of definition, and did not get moved
      when an intermediate term was subsequently define to
      be a node. This caused IF rules to respond to alerts

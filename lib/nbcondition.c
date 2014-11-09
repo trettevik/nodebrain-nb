@@ -280,6 +280,7 @@ void condPrintNerve(struct COND *cond){
 void condPrintRule(struct COND *cond){
   struct ACTION *action;
   int paren=0;
+  int alert=0;
 
   if(((NB_Object *)cond->left)->value==cond->left ||
     ((NB_Object *)cond->left)->type==termType ||
@@ -300,14 +301,36 @@ void condPrintRule(struct COND *cond){
     outPut(" ");
     printAssertions(action->assert);
     }
-  if(action->command==NULL || !*action->command->value) outPut(";"); // 2012-12-27 eat 0.8.13 - CID 751568
-  else{
-    outPut(":");
-    if(addrContext!=action->context){
-      termPrintName(action->context);
-      outPut(". ");
-      }
-    outPut("%s",action->command->value);
+  switch(action->instruction.operation){
+    case NB_OPERATION_NULL: 
+      outPut(";");
+      break;
+    case NB_OPERATION_SYSTEM:  // SYSTEM command shares the PERFORM structure
+    case NB_OPERATION_PERFORM:
+      if(action->instruction.arg.perform.command==NULL || !*action->instruction.arg.perform.command->value) outPut(";"); // 2012-12-27 eat 0.8.13 - CID 751568
+      else{
+        if(action->instruction.operation==NB_OPERATION_PERFORM) outPut(":");
+        else outPut("::");
+        if(addrContext!=(NB_Term *)action->instruction.arg.perform.context){
+          termPrintName((NB_Term *)action->instruction.arg.perform.context);
+          outPut(". ");
+          }
+        outPut("%s",action->instruction.arg.perform.command->value);
+        }
+      break; 
+    case NB_OPERATION_ALERT:  // ALERT shares with ASSERT
+      alert=1;
+    case NB_OPERATION_ASSERT:
+      outPut("::");
+      if(addrContext!=(NB_Term *)action->instruction.arg.assert.context){
+        termPrintName((NB_Term *)action->instruction.arg.assert.context);
+        outPut(". ");
+        }
+      if(alert) outPut("alert ");
+      else outPut("assert ");
+      if(action->instruction.arg.assert.assertion) printAssertions(action->instruction.arg.assert.assertion);
+      outPut(";");
+      break;
     }
   }
   

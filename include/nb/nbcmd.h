@@ -74,6 +74,8 @@ void nbCmdInit(struct NB_STEM *stem);
 void printAbout(void);
 int nbLet(char *cursor,NB_Term *context,int mode);
 
+int nbCmdParse(nbCELL context,char *cursor,unsigned char cmdopt,NB_Instruction *instruction);
+
 #endif // !NB_INTERNAL (external API)
 
 /* Command Control Options

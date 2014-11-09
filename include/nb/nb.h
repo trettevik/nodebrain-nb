@@ -91,7 +91,6 @@
 #include <nb/nbparse.h>       // parsing routines
 #include <nb/nbclock.h>       // clock routines
 #include <nb/nbrule.h>        // rule routines
-//#include <nb/nbnode.h>        // node routines
 #include <nb/nbqueue.h>       // queue routines
 #include <nb/nbverb.h>        /* verb structure */
 

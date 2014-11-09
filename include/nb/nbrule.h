@@ -47,23 +47,60 @@
 
 #include <nb/nbstem.h>
 
+typedef struct NB_ARG_ASSERT{
+  struct NB_CELL *context;
+  struct NB_LINK *assertion;
+  } NB_ArgAssert;
+
+typedef struct NB_ARG_NODE{
+  struct NB_CELL *context;
+  // include argument list here
+  struct STRING  *command;
+  } NB_ArgNode;
+
+typedef struct NB_ARG_PERFORM{
+  char            cmdopt;     // command option - or'd with context command option
+  struct NB_CELL *context;
+  struct STRING  *command;
+  } NB_ArgPerform;
+
+typedef union NB_INSTRUCTION_ARGS{
+  NB_ArgPerform  perform;
+  NB_ArgAssert   assert;
+  NB_ArgNode     node;
+  } NB_InstructionArgs;
+
+typedef struct NB_INSTRUCTION{
+  unsigned char operation;
+  NB_InstructionArgs arg;
+  } NB_Instruction;
+
 // the ACTION structure may be simplified by converting all rules to the NB_RULE structure 
 // We need to keep parts of it for the nbAction() API function
 typedef struct ACTION{               /* rule function object */
   struct NB_CELL cell; 
   struct ACTION  *priorIf;   // prior if rule    // 2014-01-27 eat - added for performance
   struct ACTION  *nextAct;   // next rule (reactive) 
+  struct NB_TERM *context;   /* rule context */
   struct NB_TERM *term;      /* rule term */
   struct COND    *cond;      /* rule condition */
   struct NB_LINK *assert;    /* rule assertion */
-  struct NB_TERM *context;   /* rule command context */
-  struct STRING  *command;   /* rule command text */
+  //struct STRING  *command;   /* rule command text */
   char           cmdopt;     /* rule command option - or'd with context command option */
+                             // NOTE: the cmdopt controls the action - don't confuse with cmdopt for Perform instruction
   char           status;     /* 'R' - ready, 'S' - scheduled, 'A' - ash (fired) */
                              /* 'D' - delete, 'E' - error, 'P' - processing  */
   signed char    priority;   /* action priority */
   char           type;       /* 'R' - rule, 'A' - API */
+  struct NB_INSTRUCTION instruction;
   } NB_Action;
+
+#define NB_OPERATION_NULL    0  // No operation
+#define NB_OPERATION_PERFORM 1  // NB_ArgPerform
+#define NB_OPERATION_ASSERT  2  // NB_ArgAssert
+#define NB_OPERATION_ALERT   3  // NB_ArgAssert
+#define NB_OPERATION_NODE    4  // NB_ArgNode
+#define NB_OPERATION_SYSTEM  5  // NB_ArgPerform
 
 NB_Action *newAction(NB_Cell *context,NB_Term *term,struct COND *cond,char prty,void *assertion,NB_String *cmd,char option);
 void destroyAction(NB_Action *action);

@@ -713,12 +713,21 @@ struct ACTION *newAction(NB_Cell *context,NB_Term *term,struct COND *cond,char p
   action->assert=assertion;
   // 2010-06-12 eat 0.8.2 - we don't grab the context in nbcmd.c when defining a rule, so we shouldn't grap it here
   //action->context=grabObjectNull(context);
+  // 2014-11-08 eat 0.9.02
   action->context=(struct NB_TERM *)context;
-  action->command=grabObjectNull(cmd);      // action command is rest of line
+  //action->command=grabObjectNull(cmd);    // action command is rest of line
   action->cmdopt=option|NB_CMDOPT_RULE;     // command option
   action->status='R';                       // ready 
   action->priority=prty;
   action->type='R';                         // assume Rule action
+
+  if(!cmd) action->instruction.operation=NB_OPERATION_NULL;
+  else{
+    action->instruction.operation=NB_OPERATION_PERFORM;      // No operation
+    action->instruction.arg.perform.cmdopt=action->cmdopt;     // command option
+    action->instruction.arg.perform.context=context;
+    action->instruction.arg.perform.command=grabObject(cmd);      // action command is rest of line
+    }
   return(action);
   }
 
@@ -730,7 +739,21 @@ void destroyAction(struct ACTION *action){
   // 2010-06-12 eat 0.8.2 - we didn't grab action->context - we shouldn't drop it
   //action->context=dropObjectNull(action->context);
   action->context=NULL;
-  action->command=dropObjectNull(action->command);
+  switch(action->instruction.operation){
+    case NB_OPERATION_NULL:
+      break;
+    case NB_OPERATION_SYSTEM:  // Shares with PERFORM
+    case NB_OPERATION_PERFORM:
+      action->instruction.arg.perform.command=dropObjectNull(action->instruction.arg.perform.command);
+      break;
+    case NB_OPERATION_ALERT:   // Shares with ASSERT
+    case NB_OPERATION_ASSERT:
+      dropObject(action->instruction.arg.assert.context);
+      dropMember(action->instruction.arg.assert.assertion);
+      break;
+    default:
+      outMsg(0,'L',"Instruction operation %x not recognized when destroying action - memory leak",action->instruction.operation);
+    }
   action->assert=dropMember(action->assert);
   nbFree(action,sizeof(struct ACTION));
   }
@@ -768,6 +791,8 @@ void nbRuleAct(struct ACTION *action){
   char cmdopt;
   
   action->status='P';
+  // 2014-11-08 eat - need to move action options out of cmdopt
+  //    and consider if all instructions should have a common options operand
   /* action can suppress sumbolic substition - context determines command echo option */
   cmdopt=action->cmdopt | ((NB_Node *)action->context->def)->cmdopt;
   /* if hushed, turn echo off, else if audit requested, turn echo on */
@@ -795,10 +820,36 @@ void nbRuleAct(struct ACTION *action){
       }
     //else assert(action->assert,0);
     else nbAssert((nbCELL)action->context,action->assert,0);
-    if(action->command!=NULL)nbCmdSid((nbCELL)action->context,action->command->value,cmdopt,((NB_Node *)action->context->def)->owner);
-    else nbRuleReact();  // react to changes - this is automatic with nbCmdSid   
     }
-  else if(action->command!=NULL) nbCmdSid((nbCELL)action->context,action->command->value,cmdopt,((NB_Node *)action->context->def)->owner);
+  switch(action->instruction.operation){
+    case NB_OPERATION_NULL:
+      if(action->assert!=NULL) nbRuleReact();  // react to changes - this is automatic with nbCmdSid and other operations
+      break;
+    case NB_OPERATION_PERFORM:
+      nbCmdSid((nbCELL)action->instruction.arg.perform.context,action->instruction.arg.perform.command->value,cmdopt,
+       ((NB_Node *)((NB_Term *)action->instruction.arg.perform.context)->def)->owner);
+      break;
+    case NB_OPERATION_SYSTEM:
+      //if(!(action->instruction.arg.perform.cmdopt&NB_CMDOPT_HUSH)) outPut("> %s\n",action->instruction.arg.perform.command->value);    /* always echo system commands */
+      nbSpawnChild(action->instruction.arg.perform.context,0,action->instruction.arg.perform.command->value);                       /* AUTH_SYSTEM  */
+      break;
+    case NB_OPERATION_ASSERT:
+      if(action->instruction.arg.assert.assertion!=NULL){
+        nbAssert(action->instruction.arg.assert.context,action->instruction.arg.assert.assertion,0);
+        nbRuleReact();
+        }
+      break;
+    case NB_OPERATION_ALERT:
+      if(action->instruction.arg.assert.assertion!=NULL){
+        nbAssert(action->instruction.arg.assert.context,action->instruction.arg.assert.assertion,1);
+        nbRuleReact();
+        }
+      contextAlert((NB_Term *)action->instruction.arg.assert.context);
+      break;
+    default:
+      outMsg(0,'L',"Instruction operation code of %x not recognized",action->instruction.operation);
+    }
+
   /* undefine WHEN rules when they fire */
   cond=action->cond;
   if(cond!=NULL && cond->cell.object.type==condTypeWhenRule) nbTermUndefine(action->term);
