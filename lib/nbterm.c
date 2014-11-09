@@ -993,13 +993,6 @@ void nbTermFreeTree(NB_TreeNode *treeNode){
   nbFree(treeNode,sizeof(NB_TreeNode));
   }
  
-/*
-void nbTermShowGloss(NB_Term *term){
-  if(trace) outMsg(0,'T',"nbTermShowGloss called");
-  nbTermShowGlossTree((NB_TreeNode *)term->terms);
-  }
-*/
-
 void nbTermShowGloss(NB_Term *context){
   NB_Hash *hash;
   NB_Term *term,**termP;
@@ -1029,6 +1022,39 @@ void nbTermShowGloss(NB_Term *context){
   }
 
 
+/*
+*  Logic to return an array of terms defined within a node
+*
+*  context  - term
+*  size     - number of entries in cell[]
+*  cell[]   - arrary populated to lesser of size and return value
+*
+*  Returns: int number of terms in the glossary
+*/
+int nbTermGetGloss(NB_Term *context,size_t size,nbCELL cell[]){
+  NB_Hash *hash;
+  NB_Term *term,**termP;
+  int v;
+  int index=0;
+
+  if(!context) return(0);
+  hash=context->gloss;
+  if(!hash) return(0);
+  termP=(NB_Term **)&hash->vect;
+  for(v=0;v<=hash->mask;v++){
+    for(term=*termP;term!=NULL;term=(NB_Term *)term->cell.object.next){
+      if(term->def!=nb_Undefined){
+        if(index<size) cell[index]=(NB_Cell *)term;
+        index++;
+        }
+      if(term->def->type!=nb_NodeType)
+        index+=nbTermGetGloss(term,size-index,&cell[index]);
+      }
+    termP++;
+    }
+  return(index);
+  }
+
 void nbTermShowReport(NB_Term *term){
   nbTermShowItem(term);
   if(term->def) printObjectReport(term->def);
@@ -1047,15 +1073,6 @@ void termPrintGlossTree(NB_TreeNode *treeNode,NB_Type *type,int attr){
   termPrintGloss((NB_Term *)treeNode->key,type,attr);
   termPrintGlossTree(treeNode->right,type,attr);
   }
-
-/*
-void termPrintGloss(NB_Term *term,NB_Type *type,int attr){
-  // we insist on term->def having a non-NULL and valid value
-  if((type==NULL || term->def->type==type) && (attr==0 || (term->def->type->attributes&attr)))
-    nbTermShowItem(term);
-  termPrintGlossTree((NB_TreeNode *)term->terms,type,attr);
-  }
-*/
 
 /* we insist on term->def having a non-NULL and valid value */
 void termPrintGloss(NB_Term *term,NB_Type *type,int attr){
