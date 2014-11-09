@@ -670,3 +670,11 @@ void nbNodeSetValue(nbCELL context,nbCELL cell){
   if(object->value!=nb_Disabled) dropObject(object->value);
   object->value=grabObject(cell);
   }
+
+int nbNodeGlossary(nbCELL context,size_t size,nbCELL cell[]){
+  return(nbTermGetGloss((NB_Term *)context,size,cell));
+  }
+
+void nbNodeTermName(nbCELL context,nbCELL term,char *name,size_t size){
+  nbTermName(name,size,(NB_Term *)term,(NB_Term *)context);
+  }

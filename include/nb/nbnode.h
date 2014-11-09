@@ -229,5 +229,13 @@ _declspec (dllexport)
 #endif
 extern void nbNodeAlert(nbCELL context,nbCELL node);
 
+#if defined(WIN32)
+_declspec (dllexport)
+#endif
+extern int nbNodeGlossary(nbCELL context,size_t size,nbCELL cell[]);
 
+#if defined(WIN32)
+_declspec (dllexport)
+#endif
+extern void nbNodeTermName(nbCELL context,nbCELL term,char *name,size_t size);
 #endif
