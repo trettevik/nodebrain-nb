@@ -438,7 +438,8 @@ nbCELL nbStart(int argc,char *argv[]){
   
   /* initialize root context, verbs, and types */
  
-  rootGloss=nbTermNew(NULL,"root",nbNodeNew(),0);
+  // 2014-11-01 eat - changed term from "root" to "_" so nbNodeGetName will return the correct value
+  rootGloss=nbTermNew(NULL,"_",nbNodeNew(),0);
   
   nbModuleInit(stem);
 
