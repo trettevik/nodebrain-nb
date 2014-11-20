@@ -763,7 +763,7 @@ NB_Facet *nbSkillGetFacet(NB_Skill *skill,const char *ident){
 *   of a given type (node module skill) can have more than one set of operations.  When a node
 *   has only a primary facet, only one type of assert (for example) is supported.  Additional
 *   facets can be used to support more types of assertions.  This is true for commands and
-*   evalations and other skill methods also. This function is used create a skill facet.
+*   evalations and other skill methods also. This function is used to create a skill facet.
 *   
 *   We do not expect a facet to be redefined, but it is important that facet identifiers are
 *   unique for a given skill.  So this function only creates new facets when the name is unique

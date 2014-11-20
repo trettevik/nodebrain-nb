@@ -121,6 +121,15 @@ void *hashStr(struct HASH *hash,char *cursor){
 /**********************************************************************
 * Object Management Methods
 **********************************************************************/
+size_t stringName(NB_Cell *context,NB_String *string,char **nameP,size_t size){
+  size_t len;
+
+  len=strlen(string->value)+2;
+  if(size>len) sprintf(*nameP,"\"%s\"",string->value),(*nameP)+=len;
+  size-=len;
+  return(size);
+  }
+
 void printStringRaw(struct STRING *string){
   if(string==NULL) outPut("???");
   else outPut("%s",string->value);
@@ -168,7 +177,7 @@ void destroyString(NB_String *str){
 void initString(NB_Stem *stem){
   nb_StringPool=(struct NB_STRING_POOL *)nbAlloc(sizeof(struct NB_STRING_POOL));
   memset(nb_StringPool,0,sizeof(struct NB_STRING_POOL));
-  strType=nbObjectType(stem,"string",NB_OBJECT_KIND_STRING|NB_OBJECT_KIND_CONSTANT|NB_OBJECT_KIND_TRUE,0,printString,destroyString);
+  strType=NbObjectType(stem,"string",NB_OBJECT_KIND_STRING|NB_OBJECT_KIND_CONSTANT|NB_OBJECT_KIND_TRUE,0,stringName,printString,destroyString);
   strType->apicelltype=NB_TYPE_STRING;
   }
 

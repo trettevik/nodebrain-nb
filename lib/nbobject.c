@@ -241,19 +241,46 @@ struct NB_OBJECT_POOL *nb_ObjectPool;  // free object pool vector by length
 /*
 *  Print methods for special objects used by cell routines.
 */
-void nbDisabledShow(NB_Object *object){
+static int disabledName(NB_Object *context,NB_Object *object,char **nameP,int size){
+  if(size>1) strcpy(*nameP,"#"),(*nameP)++;
+  size--;
+  return(size); 
+  }
+
+static void nbDisabledShow(NB_Object *object){
   outPut("#");
   }
+
+static int trueName(NB_Object *context,NB_Object *object,char **nameP,int size){
+  if(size>2) strcpy(*nameP,"!!"),(*nameP)+=2;
+  size-=2;
+  return(size); 
+  }
+
 static void nbTrueShow(NB_Object *object){
   outPut("!!");
   }
-void nbFalseShow(NB_Object *object){
+
+static int falseName(NB_Object *context,NB_Object *object,char **nameP,int size){
+  if(size>1) strcpy(*nameP,"!"),(*nameP)++;
+  size--;
+  return(size); 
+  }
+
+static void nbFalseShow(NB_Object *object){
   outPut("!");
   }
-void nbUnknownShow(NB_Object *object){
+
+static int unknownName(NB_Object *context,NB_Object *object,char **nameP,int size){
+  if(size>1) strcpy(*nameP,"?"),(*nameP)++;
+  size--;
+  return(size); 
+  }
+
+static void nbUnknownShow(NB_Object *object){
   outPut("?");
   }
-void nbUndefinedShow(NB_Object *object){
+static void nbUndefinedShow(NB_Object *object){
   outPut("??");
   }
 void nbPlaceholderShow(NB_Object *object){
@@ -280,24 +307,24 @@ void nbHeap(){
   }
 
 void nbObjectInit(NB_Stem *stem){
-  nb_DisabledType=nbObjectType(stem,"disabled",NB_OBJECT_KIND_CONSTANT|NB_OBJECT_KIND_PERMANENT,TYPE_SPECIAL,nbDisabledShow,NULL);
+  nb_DisabledType=NbObjectType(stem,"disabled",NB_OBJECT_KIND_CONSTANT|NB_OBJECT_KIND_PERMANENT,TYPE_SPECIAL,disabledName,nbDisabledShow,NULL);
   nb_DisabledType->apicelltype=NB_TYPE_DISABLED;
   nb_Disabled=newObject(nb_DisabledType,NULL,sizeof(NB_Object));
   nb_Disabled->refcnt=(unsigned int)-1;   /* flag as perminent object */
 
-  nb_TrueType=nbObjectType(stem,"true",NB_OBJECT_KIND_TRUE|NB_OBJECT_KIND_REAL|NB_OBJECT_KIND_CONSTANT|NB_OBJECT_KIND_PERMANENT,TYPE_SPECIAL,nbTrueShow,NULL);
+  nb_TrueType=NbObjectType(stem,"true",NB_OBJECT_KIND_TRUE|NB_OBJECT_KIND_REAL|NB_OBJECT_KIND_CONSTANT|NB_OBJECT_KIND_PERMANENT,TYPE_SPECIAL,trueName,nbTrueShow,NULL);
   nb_TrueType->apicelltype=NB_TYPE_TRUE;
   nb_True=newObject(nb_TrueType,NULL,sizeof(NB_Real));
   nb_True->refcnt=(unsigned int)-1;    /* flag as perminent object */
   ((NB_Real *)nb_True)->value=1;
 
-  nb_FalseType=nbObjectType(stem,"false",NB_OBJECT_KIND_FALSE|NB_OBJECT_KIND_REAL|NB_OBJECT_KIND_CONSTANT|NB_OBJECT_KIND_PERMANENT,TYPE_SPECIAL,nbFalseShow,NULL);
+  nb_FalseType=NbObjectType(stem,"false",NB_OBJECT_KIND_FALSE|NB_OBJECT_KIND_REAL|NB_OBJECT_KIND_CONSTANT|NB_OBJECT_KIND_PERMANENT,TYPE_SPECIAL,falseName,nbFalseShow,NULL);
   nb_FalseType->apicelltype=NB_TYPE_FALSE;
   nb_False=newObject(nb_FalseType,NULL,sizeof(NB_Real));
   nb_False->refcnt=(unsigned int)-1;    /* flag as perminent object */
   ((NB_Real *)nb_False)->value=0;
 
-  nb_UnknownType=nbObjectType(stem,"unknown",NB_OBJECT_KIND_UNKNOWN|NB_OBJECT_KIND_CONSTANT|NB_OBJECT_KIND_PERMANENT,TYPE_SPECIAL,nbUnknownShow,NULL);
+  nb_UnknownType=NbObjectType(stem,"unknown",NB_OBJECT_KIND_UNKNOWN|NB_OBJECT_KIND_CONSTANT|NB_OBJECT_KIND_PERMANENT,TYPE_SPECIAL,unknownName,nbUnknownShow,NULL);
   nb_UnknownType->apicelltype=NB_TYPE_UNKNOWN;
   nb_Unknown=newObject(nb_UnknownType,NULL,sizeof(NB_Object));
   nb_Unknown->refcnt=(unsigned int)-1;    /* flag as perminent object */
@@ -483,6 +510,47 @@ void *dropObjectNull(void *obj){
   return(NULL);
   }
 
+
+/*
+*  Object Name - returns name of the object within a context
+*
+*  This function relies on the getName method of the object.  If not
+*  specified, a default getName method will return "('?')".  The
+*  getName method is specified using the new type constructor
+*  NbObjectType.
+*
+*  A getName method returns, S, the size remaining in the name buffer,
+*  not including a null terminator.  If S>0, the name has been returned
+*  in the buffer.  Otherwise, the buffer needs to be enlarged by 1-n.
+*
+*  Since a getName method for one object often calls NbObjectName
+*  to get the names of subordinate objects, a getName method
+*  also advances the address of the name buffer as it is populated.
+*  It stops filling the name buffer when there is no space, by
+*  using "if(size>len)" ahead of any instruction that fills the
+*  name buffer.  It continues to compute size by following every
+*  conditional copy into the name buffer with "size-=len".  Calls
+*  are continued to NbObjectName for subordinate objects even
+*  after size is non-positive.
+*
+*  static size_t getName<type>(NB_Cell *context,NB_Object *object,char **nameP,size_t size){
+*    size_t len;
+*
+*    len=...length of something to include
+*    if(size>len) strcpy(*nameP,...),(*nameP)+=len;
+*    size-=len;
+*    size=NbObjectName(context,left,name,size);
+*    len=...length of more stuff
+*    if(size>len) strcpy(*nameP,...),(*nameP)+=len;
+*    size-=len; 
+*    return(size);
+*    }
+*  
+*/
+int NbObjectName(NB_Object *context,NB_Object *object,char **nameP,int size){
+  return(object->type->getName(context,object,nameP,size));
+  }
+
 /*
 *  Object Print
 */
@@ -628,6 +696,16 @@ void disableBug(NB_Object *object){
   printBug(object);
   }
 
+static int getNameBug(NB_Cell *context,NB_Object *object,char **nameP,int size){
+  size_t len;
+  char *bugName="('?')";
+
+  len=strlen(bugName);
+  if(size>len) strcpy(*nameP,bugName),(*nameP)+=len;
+  size-=len;
+  return(size);
+  }
+
 /*
 *  Type Constructor
 */
@@ -645,6 +723,7 @@ struct TYPE *nbObjectType(NB_Stem *stem,char *name,uint32_t kind,int  attributes
   type->kind=kind;
   type->attributes=attributes;
   type->apicelltype=0;
+  type->getName=&getNameBug;
   if(showExpr==NULL) type->showExpr=&nullVoid;
   else type->showExpr=showExpr;
   type->showItem=type->showExpr;
@@ -664,6 +743,23 @@ struct TYPE *nbObjectType(NB_Stem *stem,char *name,uint32_t kind,int  attributes
   type->enable=&enableBug;
   type->disable=&disableBug;
   type->shim=NULL;
+  return(type);
+  }
+
+/*
+*  New Type Constuctor with getName method
+*
+*  Notes:
+*    1) All calls to nbObjectType will be converted to NbObjectType calls and then nbObjectType will be dropped, with the body moving into here
+*    2) This begins a new naming convention where:
+*         a) API function names start with "nb"
+*         b) Internal function names will start with "Nb" when referenced accross files (non-static)
+*         c) Static functions use descriptive names not starting with "nb" or "Nb"
+*       The transition to this convention will occur over multiple releases
+*/
+struct TYPE *NbObjectType(NB_Stem *stem,char *name,uint32_t kind,int  attributes,int (*getName)(),void (*showExpr)(),void (*destroy)()){
+  struct TYPE *type=nbObjectType(stem,name,kind,attributes,showExpr,destroy);
+  type->getName=getName;
   return(type);
   }
 

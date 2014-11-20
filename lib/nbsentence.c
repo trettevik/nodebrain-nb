@@ -47,6 +47,16 @@
 * 2014-01-25 eat 0.9.00 - Checker updates
 * 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 * 2014-10-20 eat 0.9.03 Switch from "_" to "@" for facet identifiers
+* 2014-11-09 eat 0.9.03 Added support for NULL pointer for args
+*            node@facet      - sentence->args=NULL
+*                              API:  nbSET argSet=nbListOpen(arglist) 
+*                              argSet and argList are both NULL
+*            node@facet()    - args is empty list return NULL on first call
+*                              API:  nbSET argSet=nbListOpen(arglist)
+*                              argSet is null, but argList is not
+*            node@facet(x)   - normal args list
+*                              API:  nbSET argSet=nbListOpen(arglist)
+*                              argSet points to cell x on first call
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -62,7 +72,7 @@ static void nbSentenceShow(NB_Sentence *cell){
   else{
     printObject((NB_Object *)cell->term);
     if(*cell->facet->ident->value) outPut("@%s",cell->facet->ident->value);
-    printObject((NB_Object *)cell->args);
+    if(cell->args) printObject((NB_Object *)cell->args);
     }
   }
 
@@ -71,7 +81,7 @@ static void nbSentenceDestroy(NB_Sentence *cell){
   NB_Hash *hash=cell->cell.object.type->hash;
 
   dropObject((NB_Object *)cell->term);
-  dropObject((NB_Object *)cell->args);
+  if(cell->args) dropObject((NB_Object *)cell->args);
   sentenceP=(NB_Sentence **)&(hash->vect[cell->cell.object.hashcode&hash->mask]);
   for(sentence=*sentenceP;sentence!=NULL && sentence!=cell;sentence=*sentenceP)
     sentenceP=(NB_Sentence **)&sentence->cell.object.next;
@@ -92,7 +102,7 @@ static NB_Object *evalSentence(NB_Sentence *cell){
   }
 
 static void solveSentence(NB_Sentence *cell){
-  nbCellSolve_((NB_Cell *)cell->args);
+  if(cell->args) nbCellSolve_((NB_Cell *)cell->args);
   return;
   }
 
@@ -102,11 +112,11 @@ static void solveSentence(NB_Sentence *cell){
 
 static void enableSentence(NB_Sentence *cell){
   nbAxonEnable((NB_Cell *)cell->term,(NB_Cell *)cell);
-  nbAxonEnable((NB_Cell *)cell->args,(NB_Cell *)cell);
+  if(cell->args) nbAxonEnable((NB_Cell *)cell->args,(NB_Cell *)cell);
   }
 static void disableSentence(NB_Sentence *cell){
   nbAxonDisable((NB_Cell *)cell->term,(NB_Cell *)cell);
-  nbAxonDisable((NB_Cell *)cell->args,(NB_Cell *)cell);
+  if(cell->args) nbAxonDisable((NB_Cell *)cell->args,(NB_Cell *)cell);
   }
 
 /**********************************************************************
@@ -114,7 +124,7 @@ static void disableSentence(NB_Sentence *cell){
 **********************************************************************/
 
 void nbSentenceInit(NB_Stem *stem){
-  nb_SentenceType=nbObjectType(stem,"nodeSentence",0,0,nbSentenceShow,nbSentenceDestroy);
+  nb_SentenceType=nbObjectType(stem,"sentence",0,0,nbSentenceShow,nbSentenceDestroy);
   nbCellType(nb_SentenceType,solveSentence,evalSentence,enableSentence,disableSentence);
   }
 
@@ -122,11 +132,12 @@ struct NB_SENTENCE *nbSentenceNew(NB_Facet *facet,NB_Term *term,NB_List *args){
   NB_Sentence *sentence,**sentenceP;
   NB_Hash *hash=nb_SentenceType->hash;
   uint32_t hashcode;
-  unsigned long h,*l,*r;
+  unsigned long h,*l,*r,zero=0;
 
   if(trace) outMsg(0,'T',"nbSentenceNew: called");
   l=(unsigned long *)&term;
-  r=(unsigned long *)&args;
+  if(args) r=(unsigned long *)&args;
+  else r=&zero;
   h=((*l>>3)+(*r>>3));
   h+=(h>>3);
   hashcode=h;
@@ -138,13 +149,15 @@ struct NB_SENTENCE *nbSentenceNew(NB_Facet *facet,NB_Term *term,NB_List *args){
   sentence=(NB_Sentence *)nbCellNew(nb_SentenceType,NULL,sizeof(NB_Sentence));
   sentence->facet=facet;  // don't grab because it is a permenant object
   sentence->term=grabObject(term);
-  sentence->args=grabObject(args);
+  if(args) sentence->args=grabObject(args);
+  else sentence->args=NULL;
   sentence->cell.object.hashcode=hashcode;
   sentence->cell.object.next=(NB_Object *)*sentenceP;
   *sentenceP=sentence;
   hash->objects++;
   if(hash->objects>=hash->limit) nbHashGrow(&nb_SentenceType->hash);
-  sentence->cell.level=args->cell.level+1;
+  if(args) sentence->cell.level=args->cell.level+1;
+  else sentence->cell.level=1;
   sentence->cell.object.value=nb_Disabled;
   return(sentence);
   }

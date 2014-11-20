@@ -152,6 +152,7 @@ extern struct TYPE *skillType;
 extern struct TYPE *nb_NodeType;
 extern struct NB_TERM *nb_SkillGloss;
 struct NB_SKILL *nb_SkillDefault;
+struct NB_SKILL *nb_SkillUnknown;
 
 /* Functions */
 
@@ -232,7 +233,22 @@ extern void nbNodeAlert(nbCELL context,nbCELL node);
 #if defined(WIN32)
 _declspec (dllexport)
 #endif
-extern int nbNodeGlossary(nbCELL context,size_t size,nbCELL cell[]);
+extern int nbNodeGetTermCellArray(nbCELL context,nbCELL cell[],int cells);
+
+#if defined(WIN32)
+_declspec (dllexport)
+#endif
+extern int nbNodeGetTermNameString(nbCELL context,char **bufP,int size);
+
+#if defined(WIN32)
+_declspec (dllexport)
+#endif
+extern int nbNodeGetTermValueString(nbCELL context,char **bufP,int size);
+
+#if defined(WIN32)
+_declspec (dllexport)
+#endif
+extern int nbNodeGetTermFormulaString(nbCELL context,char **bufP,int size);
 
 #if defined(WIN32)
 _declspec (dllexport)

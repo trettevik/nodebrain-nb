@@ -272,12 +272,27 @@ uint32_t hashCondNew(struct TYPE *type,void *left,void *right){
 /*
 *  Condition Print Methods
 */
-void condPrintNerve(struct COND *cond){
+/*
+static int condNameNerve(NB_Cell *context,struct COND *cond,char **nameP,int size){
+  int len;
+  len=strlen(cond->cell.object.type->name)+2;
+  if(size>len) sprintf(*nameP," %s ",cond->cell.object.type->name);
+  size-=len;
+  size=NbObjectName((NB_Object *)context,(NB_Object *)cond->left,nameP,size);
+  return(size);
+  }
+*/
+
+static void condPrintNerve(struct COND *cond){
   outPut(" %s ",cond->cell.object.type->name);
   printObject(cond->left);
   } 
+
+static int condNameRule(NB_Cell *context,struct COND *cond,char **nameP,int size){
+  return(NbObjectName((NB_Object *)context,(NB_Object *)cond->left,nameP,size));
+  }
      
-void condPrintRule(struct COND *cond){
+static void condPrintRule(struct COND *cond){
   struct ACTION *action;
   int paren=0;
   int alert=0;
@@ -335,6 +350,24 @@ void condPrintRule(struct COND *cond){
   }
   
 /*
+*  Get name of infix condition
+*/
+static int condNameInfix(NB_Cell *context,struct COND *cond,char **nameP,int size){
+  int len;
+
+  if(size>1) strcpy(*nameP,"("),(*nameP)++;
+  size--;
+  size=NbObjectName((NB_Object *)context,(NB_Object *)cond->left,nameP,size);
+  len=strlen(cond->cell.object.type->name);
+  if(size>len) strcpy(*nameP,cond->cell.object.type->name),(*nameP)+=len;
+  size-=len;
+  size=NbObjectName((NB_Object *)context,(NB_Object *)cond->right,nameP,size);
+  if(size>1) strcpy(*nameP,")"),(*nameP)++;
+  size--;
+  return(size);
+  }
+
+/*
 *  Print conditions with a left and right operand
 */
 static void condPrintInfix(struct COND *cond){
@@ -353,21 +386,21 @@ static void condPrintDelay(struct COND *cond){
   outPut("))");
   }
   
-void condPrintTime(struct COND *cond){
+static void condPrintTime(struct COND *cond){
   outPut("%s",cond->cell.object.type->name);   // 2012-12-31 eat - VID 5328-0.8.13-1 added format string
   outPut("(");
   schedPrint(cond->right);
   outPut(")");
   }
 
-void condPrintPrefix(struct COND *cond){
+static void condPrintPrefix(struct COND *cond){
   outPut("(");
   outPut("%s",cond->cell.object.type->name);  // 2012-12-31 eat - VID 5328-0.8.13-1 added format string
   printObject(cond->left);
   outPut(")");
   }
    
-void condPrintMatch(struct COND *cond){
+static void condPrintMatch(struct COND *cond){
   outPut("(");
   printObject(cond->left);
   outPut("%s",cond->cell.object.type->name); // 2012-12-31 eat - VID 5328-0.8.13-1 added format string
@@ -375,7 +408,7 @@ void condPrintMatch(struct COND *cond){
   outPut(")");
   }
   
-void condPrintChange(struct COND *cond){
+static void condPrintChange(struct COND *cond){
   outPut("(");
   outPut("%s",cond->cell.object.type->name); // 2012-12-31 eat - VID 5328-0.8.13-1 added format string
   printObject(cond->left);
@@ -470,7 +503,7 @@ void alertRule(NB_Cell *rule){
   if(object==nb_Unknown || object==NB_OBJECT_FALSE){
     if(action->status=='S'){
       char name[1024];
-      nbTermName(name,sizeof(name),action->term,rootGloss);
+      nbTermName(rootGloss,action->term,name,sizeof(name));
       outMsg(0,'E',"Cycle error - %s condition untrue before firing",name);
       action->status='E';
       }
@@ -478,7 +511,7 @@ void alertRule(NB_Cell *rule){
     }
   else if(action->status!='R'){
     char name[1024];
-    nbTermName(name,sizeof(name),action->term,rootGloss);
+    nbTermName(rootGloss,action->term,name,sizeof(name));
     outMsg(0,'E',"Cycle error - %s repetitive firing suppressed - status=%c",name,action->status);
     action->status='E';
     rule->object.value=object;
@@ -1137,13 +1170,13 @@ void nbConditionInit(NB_Stem *stem){
   condTypeNerve=nbObjectType(stem,"nerve",0,TYPE_RULE,condPrintNerve,destroyNerve);
   nbCellType(condTypeNerve,solvePrefix,evalNerve,enableRule,disableRule);
 
-  condTypeOnRule=nbObjectType(stem,"on",0,TYPE_RULE,condPrintRule,destroyRule);
+  condTypeOnRule=NbObjectType(stem,"on",0,TYPE_RULE,condNameRule,condPrintRule,destroyRule);
   nbCellType(condTypeOnRule,solvePrefix,evalRule,enableRule,disableRule);
   condTypeOnRule->alert=alertRule;
-  condTypeWhenRule=nbObjectType(stem,"when",0,TYPE_RULE,condPrintRule,destroyRule);
+  condTypeWhenRule=NbObjectType(stem,"when",0,TYPE_RULE,condNameRule,condPrintRule,destroyRule);
   nbCellType(condTypeWhenRule,solvePrefix,evalRule,enableRule,disableRule);
   condTypeWhenRule->alert=alertRule;
-  condTypeIfRule=nbObjectType(stem,"if",0,TYPE_RULE,condPrintRule,destroyRule);
+  condTypeIfRule=NbObjectType(stem,"if",0,TYPE_RULE,condNameRule,condPrintRule,destroyRule);
   nbCellType(condTypeIfRule,solvePrefix,evalRule,enableRule,disableRule);
   condTypeIfRule->alert=alertRuleIf;
 
@@ -1160,33 +1193,33 @@ void nbConditionInit(NB_Stem *stem){
   condTypeAssumeTrue=nbObjectType(stem,"+?",0,TYPE_BOOL,condPrintPrefix,destroyCondition);
   nbCellType(condTypeAssumeTrue,solvePrefix,evalAssumeTrue,enablePrefix,disablePrefix);
 
-  condTypeDefault=nbObjectType(stem,"?",0,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeDefault=NbObjectType(stem,"?",0,TYPE_BOOL,condNameInfix,condPrintInfix,destroyCondition);
   nbCellType(condTypeDefault,solveInfix1,evalDefault,enableInfix,disableInfix);
-  condTypeLazyAnd=nbObjectType(stem,"&&",0,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeLazyAnd=NbObjectType(stem,"&&",0,TYPE_BOOL,condNameInfix,condPrintInfix,destroyCondition);
   nbCellType(condTypeLazyAnd,solveInfix1,evalLazyAnd,enablePrefix,disablePrefix); // prefix enabling is intentional
-  condTypeAnd=nbObjectType(stem,"&",0,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeAnd=NbObjectType(stem,"&",0,TYPE_BOOL,condNameInfix,condPrintInfix,destroyCondition);
   nbCellType(condTypeAnd,solveInfix1,evalAnd,enableInfix,disableInfix);
-  condTypeNand=nbObjectType(stem,"!&",0,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeNand=NbObjectType(stem,"!&",0,TYPE_BOOL,condNameInfix,condPrintInfix,destroyCondition);
   nbCellType(condTypeNand,solveInfix1,evalNand,enableInfix,disableInfix);
-  condTypeLazyOr=nbObjectType(stem,"||",0,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeLazyOr=NbObjectType(stem,"||",0,TYPE_BOOL,condNameInfix,condPrintInfix,destroyCondition);
   nbCellType(condTypeLazyOr,solveInfix1,evalLazyOr,enablePrefix,disablePrefix);
-  condTypeOr=nbObjectType(stem,"|",0,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeOr=NbObjectType(stem,"|",0,TYPE_BOOL,condNameInfix,condPrintInfix,destroyCondition);
   nbCellType(condTypeOr,solveInfix1,evalOr,enableInfix,disableInfix);
-  condTypeNor=nbObjectType(stem,"!|",0,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeNor=NbObjectType(stem,"!|",0,TYPE_BOOL,condNameInfix,condPrintInfix,destroyCondition);
   nbCellType(condTypeNor,solveInfix1,evalNor,enableInfix,disableInfix);
-  condTypeXor=nbObjectType(stem,"|!&",0,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeXor=NbObjectType(stem,"|!&",0,TYPE_BOOL,condNameInfix,condPrintInfix,destroyCondition);
   nbCellType(condTypeXor,solveInfix1,evalXor,enableInfix,disableInfix);
-  //condTypeAndMonitor=nbObjectType(stem,"&~&",0,TYPE_BOOL,condPrintInfix,destroyCondition);
-  condTypeAndMonitor=nbObjectType(stem," then ",0,TYPE_BOOL,condPrintInfix,destroyCondition);
+  //condTypeAndMonitor=NbObjectType(stem,"&~&",0,TYPE_BOOL,condNameInfix,condPrintInfix,destroyCondition);
+  condTypeAndMonitor=NbObjectType(stem," then ",0,TYPE_BOOL,condNameInfix,condPrintInfix,destroyCondition);
   nbCellType(condTypeAndMonitor,solveInfix2,evalAndMonitor,enableCapture,disableInfix);
-  condTypeOrMonitor=nbObjectType(stem,"|~|",0,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeOrMonitor=NbObjectType(stem,"|~|",0,TYPE_BOOL,condNameInfix,condPrintInfix,destroyCondition);
   nbCellType(condTypeOrMonitor,solveInfix2,evalOrMonitor,enableCapture,disableInfix);
-  //condTypeAndCapture=nbObjectType(stem,"&^&",0,TYPE_BOOL,condPrintInfix,destroyCondition);
-  condTypeAndCapture=nbObjectType(stem," capture ",0,TYPE_BOOL,condPrintInfix,destroyCondition);
+  //condTypeAndCapture=NbObjectType(stem,"&^&",0,TYPE_BOOL,condNameInfix,condPrintInfix,destroyCondition);
+  condTypeAndCapture=NbObjectType(stem," capture ",0,TYPE_BOOL,condNameInfix,condPrintInfix,destroyCondition);
   nbCellType(condTypeAndCapture,solveInfix2,evalAndCapture,enableCapture,disableInfix);
-  condTypeOrCapture=nbObjectType(stem,"|^|",0,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeOrCapture=NbObjectType(stem,"|^|",0,TYPE_BOOL,condNameInfix,condPrintInfix,destroyCondition);
   nbCellType(condTypeOrCapture,solveInfix2,evalOrCapture,enableCapture,disableInfix);
-  condTypeFlipFlop=nbObjectType(stem,"^",0,TYPE_BOOL,condPrintInfix,destroyCondition);
+  condTypeFlipFlop=NbObjectType(stem,"^",0,TYPE_BOOL,condNameInfix,condPrintInfix,destroyCondition);
   nbCellType(condTypeFlipFlop,solveInfix2,evalFlipFlop,enableFlipFlop,disableInfix);
 
   condTypeDelayTrue=nbObjectType(stem,"~^",0,TYPE_DELAY,condPrintDelay,destroyCondition);
@@ -1202,17 +1235,17 @@ void nbConditionInit(NB_Stem *stem){
   condTypeTime=nbObjectType(stem,"~",0,TYPE_TIME,condPrintTime,destroyCondition);
   nbCellType(condTypeTime,solveKnown,evalTime,enableTime,disableTime);
 
-  condTypeRelEQ=nbObjectType(stem,"=",0,TYPE_REL,condPrintInfix,destroyCondition);
+  condTypeRelEQ=NbObjectType(stem,"=",0,TYPE_REL,condNameInfix,condPrintInfix,destroyCondition);
   nbCellType(condTypeRelEQ,solveInfix2,evalRelEQ,enableRelEQ,disableRelEQ);
-  condTypeRelNE=nbObjectType(stem,"<>",0,TYPE_REL,condPrintInfix,destroyCondition);
+  condTypeRelNE=NbObjectType(stem,"<>",0,TYPE_REL,condNameInfix,condPrintInfix,destroyCondition);
   nbCellType(condTypeRelNE,solveInfix2,evalRelNE,enableRelNE,disableRelNE);
-  condTypeRelLT=nbObjectType(stem,"<",0,TYPE_REL,condPrintInfix,destroyCondition);
+  condTypeRelLT=NbObjectType(stem,"<",0,TYPE_REL,condNameInfix,condPrintInfix,destroyCondition);
   nbCellType(condTypeRelLT,solveInfix2,evalRelLT,enableRelRange,disableRelRange);
-  condTypeRelLE=nbObjectType(stem,"<=",0,TYPE_REL,condPrintInfix,destroyCondition);
+  condTypeRelLE=NbObjectType(stem,"<=",0,TYPE_REL,condNameInfix,condPrintInfix,destroyCondition);
   nbCellType(condTypeRelLE,solveInfix2,evalRelLE,enableRelRange,disableRelRange);
-  condTypeRelGT=nbObjectType(stem,">",0,TYPE_REL,condPrintInfix,destroyCondition);
+  condTypeRelGT=NbObjectType(stem,">",0,TYPE_REL,condNameInfix,condPrintInfix,destroyCondition);
   nbCellType(condTypeRelGT,solveInfix2,evalRelGT,enableRelRange,disableRelRange);
-  condTypeRelGE=nbObjectType(stem,">=",0,TYPE_REL,condPrintInfix,destroyCondition);
+  condTypeRelGE=NbObjectType(stem,">=",0,TYPE_REL,condNameInfix,condPrintInfix,destroyCondition);
   nbCellType(condTypeRelGE,solveInfix2,evalRelGE,enableRelRange,disableRelRange);
 
   condTypeMatch=nbObjectType(stem,"~",0,0,condPrintMatch,destroyCondition);

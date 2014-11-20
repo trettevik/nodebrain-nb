@@ -76,6 +76,7 @@ int  nb_opt_user=1;      /* automatically load user profile */
 int  nb_opt_hush=0;      // suppress calls to log routines
 int  nb_opt_stats=0;     // print statistics when terminating
 int  nb_opt_boolnotrel=0;// boolean not relational - a<>1 ==> !(a=1), a<=1 ==> !(a>1), a>=1 ==> !(a<1)
+int  nb_opt_test=0;      // test mode - display pretend time stamps to simplify output diff
 
 int sourceTrace=0;       /* debugging trace flag for source input */
 int symbolicTrace=0;     /* debugging trace flag for symbolic substitution */

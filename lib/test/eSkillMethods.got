@@ -1,0 +1,73 @@
+
+TEST: line   176 - nbSkillDeclare - declare a new skill
+
+TEST: line   178 - nbCmd - define a node that uses the skill
+> define Fire node fire;
+> Fire. define Foo node;
+> Fire.Foo. define bar cell "value of Fire.Foo.bar";
+> Fire. define a cell 1;
+showValue: _.Fire.Foo.bar is string "value of Fire.Foo.bar"
+> define Ice node fire;
+> Ice. define Foo node;
+> Ice.Foo. define bar cell "value of Ice.Foo.bar";
+> Ice. define b cell 2;
+> Ice. define c cell 3;
+> Ice. define d_x cell 3;
+> Ice. define d_y cell 3;
+> Ice. define e cell 3;
+showValue: _.Ice.Foo.bar is string "value of Ice.Foo.bar"
+> define r1 on(y=4) Fire(22)=7,Ice(10)="abc",Fire("abc","def")=1,x=1:show y, x, r1, Fire;
+> define r2 on(y=2) Ice(22,"abc")=99,x=2:show y, x, r2, Fire;
+> assert y=4;
+0000-00-00 00:00:00 NB000I Rule r1 fired (Fire(22)=7,Ice(10)="abc",Fire("abc","def")=1,x=1)
+0000-00-00 00:00:00 NM000T fire Fire: fireAssert handling assertion
+Fire( 22.000000 ) = 7.000000
+0000-00-00 00:00:00 NM000T fire Ice: fireAssert handling assertion
+Ice( 10.000000 ) = "abc"
+0000-00-00 00:00:00 NM000T fire Fire: fireAssert handling assertion
+Fire( "abc" , "def" ) = 1.000000
+: show y, x, r1, Fire;
+y = 4
+x = 1
+r1 = # !! == on(y=4) Fire(22)=7,Ice(10)="abc",Fire("abc","def")=1,x=1:show y, x, r1, Fire;
+Fire = # == node fire
+Fire.Foo = # == node 
+Fire.a = 1
+
+TEST: line   203 - Expecting r2 to fire
+> assert y=2;
+0000-00-00 00:00:00 NB000I Rule r2 fired (Ice(22,"abc")=99,x=2)
+0000-00-00 00:00:00 NM000T fire Ice: fireAssert handling assertion
+Ice( 22.000000 , "abc" ) = 99.000000
+: show y, x, r2, Fire;
+y = 2
+x = 2
+r2 = # !! == on(y=2) Ice(22,"abc")=99,x=2:show y, x, r2, Fire;
+Fire = # == node fire
+Fire.Foo = # == node 
+Fire.a = 1
+
+TEST: line   206 - Expecting r1 to fire
+> assert y=4;
+0000-00-00 00:00:00 NB000I Rule r1 fired (Fire(22)=7,Ice(10)="abc",Fire("abc","def")=1,x=1)
+0000-00-00 00:00:00 NM000T fire Fire: fireAssert handling assertion
+Fire( 22.000000 ) = 7.000000
+0000-00-00 00:00:00 NM000T fire Ice: fireAssert handling assertion
+Ice( 10.000000 ) = "abc"
+0000-00-00 00:00:00 NM000T fire Fire: fireAssert handling assertion
+Fire( "abc" , "def" ) = 1.000000
+: show y, x, r1, Fire;
+y = 4
+x = 1
+r1 = # !! == on(y=4) Fire(22)=7,Ice(10)="abc",Fire("abc","def")=1,x=1:show y, x, r1, Fire;
+Fire = # == node fire
+Fire.Foo = # == node 
+Fire.a = 1
+> Fire(x,y,"abc",x+y):this is command text to Fire node
+0000-00-00 00:00:00 NM000T fire Fire: fireCommand handling command
+Fire( x , y , "abc" , 5.000000 ) : this is command text to Fire node
+showValue: Fire.Foo.bar is string "value of Fire.Foo.bar"
+> Ice(y,x,3.9,4+7):this is command text to Ice node
+0000-00-00 00:00:00 NM000T fire Ice: fireCommand handling command
+Ice( y , x , 3.900000 , 11.000000 ) : this is command text to Ice node
+showValue: Ice.Foo.bar is string "value of Ice.Foo.bar"

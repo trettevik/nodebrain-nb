@@ -72,12 +72,15 @@ struct TYPE *assertTypeVal=NULL;
 **********************************************************************/
 void printAssertion(struct ASSERTION *assertion){
   if(assertion==NULL) outPut("(?)");
-  else if(assertion->object==nb_Unknown){
-    outPut("?");
+  else if(assertion->object==nb_True){
     printObject(assertion->target);
     }
   else if(assertion->object==nb_False){
     outPut("!");
+    printObject(assertion->target);
+    }
+  else if(assertion->object==nb_Unknown){
+    outPut("?");
     printObject(assertion->target);
     }
   else{
@@ -201,7 +204,8 @@ void nbAssert(nbCELL context,nbSET member,int mode){
         return;
         }
       facet=sentence->facet;
-      arglist=(NB_List *)grabObject(sentence->args);
+      if(sentence->args) arglist=(NB_List *)grabObject(sentence->args);
+      else arglist=NULL;
       if(mode&1)(*facet->alert)(term,skill->handle,node->knowledge,(NB_Cell *)arglist,(NB_Cell *)object);
       else (*facet->assert)(term,skill->handle,node->knowledge,(NB_Cell *)arglist,(NB_Cell *)object);
       dropObject(arglist);
@@ -226,12 +230,30 @@ void nbAssert(nbCELL context,nbSET member,int mode){
 
 void printAssertedValues(NB_Link *member){
   struct ASSERTION *assertion;
+  NB_Object *value;
   outPut("(");
   while(member!=NULL){
     assertion=(struct ASSERTION *)member->object;
-    printObject(assertion->target);
-    outPut("=");
-    printObject(assertion->object->value);
+    //if(assertion->object->value==nb_Disabled) value=(*assertion->object->type->eval)(assertion->object);
+    //else value=assertion->object->value;
+    value=assertion->object->value;
+    if(value==nb_True){
+      printObject(assertion->target);
+      }
+    else if(value==nb_False){
+      outPut("!");
+      printObject(assertion->target);
+      }
+    else if(value==nb_Unknown){
+      outPut("?");
+      printObject(assertion->target);
+      }
+    else{
+      printObject(assertion->target);
+      outPut("=");
+      //printObject(value);
+      printObject(assertion->object);
+      }
     if((member=member->next)!=NULL) outPut(",");
     }
   outPut(")");

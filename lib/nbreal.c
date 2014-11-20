@@ -125,6 +125,17 @@ NB_Real **locateReal(double n){
 /**********************************************************************
 * Object Management Methods
 **********************************************************************/
+size_t realName(NB_Cell *context,NB_Real *real,char **nameP,size_t size){
+  char number[20];
+  size_t len;
+
+  sprintf(number,"%.10g",real->value);
+  len=strlen(number);
+  if(size>len) strcpy(*nameP,number),(*nameP)+=len;
+  size-=len;
+  return(size);
+  }
+
 void printReal(NB_Real *real){
   if(real==NULL) outPut("???");
   else outPut("%.10g",real->value);
@@ -162,7 +173,7 @@ void destroyReal(struct REAL *real){
 * Public Methods
 **********************************************************************/
 void nbRealInit(NB_Stem *stem){
-  realType=nbObjectType(stem,"real",NB_OBJECT_KIND_REAL|NB_OBJECT_KIND_CONSTANT|NB_OBJECT_KIND_TRUE,0,printReal,destroyReal);
+  realType=NbObjectType(stem,"real",NB_OBJECT_KIND_REAL|NB_OBJECT_KIND_CONSTANT|NB_OBJECT_KIND_TRUE,0,realName,printReal,destroyReal);
   realType->apicelltype=NB_TYPE_REAL;
   }
 

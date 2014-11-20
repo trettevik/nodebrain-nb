@@ -74,6 +74,7 @@ extern int  nb_opt_user;      /* option to automatically load user profile */
 extern int  nb_opt_hush;      // suppress calls to log routines
 extern int  nb_opt_stats;     // display statistics
 extern int  nb_opt_boolnotrel;// boolean not relational (move not out of relational expressions)
+extern int  nb_opt_test;      // display pretend time to simplify output diff
 
 extern int sourceTrace;       /* debugging trace flag for source input */
 extern int symbolicTrace;     /* debugging trace flag for symbolic sub */

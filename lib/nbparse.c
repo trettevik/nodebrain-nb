@@ -776,7 +776,7 @@ static char nbParseSymbolInfix(char *symbol,size_t size,char **source){
 *   This is level 8 from nbParseCell's perspective
 */
 NB_Object *nbParseObject(NB_Term *context,char **cursor){
-  char ident[NB_BUFSIZE],token[1024],facetIdent[256];
+  char ident[1024],token[1024],facetIdent[256];
   void *right;
   NB_Object *object,*objhold;
   NB_Term *term;
@@ -914,7 +914,7 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
     case 't': // term identifier 
       if(*ident=='@' && *(ident+1)!=0){
         term=addrContext;  // term implied if starting with facet references
-        if(strlen(ident)>=sizeof(facetIdent)+1){
+        if(strlen(ident+1)>=sizeof(facetIdent)){ // 2014-11-19 eat - CID 1251346 fp, rearranged to help checker
           outMsg(0,'E',"Facet name may not be greater than %d\"",sizeof(facetIdent)-1);
           return(NULL);
           }
@@ -949,16 +949,32 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
         }
       /* default to cell term if not define */
       savecursor=*cursor;
-      symid=nbParseSymbol(token,sizeof(ident),cursor);
-      if(symid!='('){
-        (*cursor)=savecursor;
+      //symid=nbParseSymbol(token,sizeof(token),cursor);
+      //if(symid!='('){
+      //  (*cursor)=savecursor;
+      if(**cursor!='('){
+        if(*facetIdent){
+          if(!term){
+            term=nbTermNew(context,ident,nbNodeNew(),1);
+            ((NB_Node *)term->def)->context=term;
+            }
+          NB_Facet *facet=nbSkillGetFacet(((NB_Node *)term->def)->skill,facetIdent);
+          if(!facet) facet=nbSkillGetFacet(nb_SkillDefault,facetIdent);
+          if(!facet) facet=(NB_Facet *)nbSkillFacet((nbCELL)context,(nbCELL)nb_SkillUnknown,facetIdent);
+          if(!facet){
+            outMsg(0,'L',"Unable to create unknown facet \"%s\" for node \"%s\".",facetIdent,ident);
+            return(NULL);
+            }
+          return((NB_Object *)nbSentenceNew(facet,term,NULL));
+          }
         // 2006-12-22 eat - when ready, experiment with using nb_Disabled definition for "undefined" terms
         //if(term==NULL) term=nbTermNew(context,ident,nb_Disabled,1);
         if(term==NULL) term=nbTermNew(context,ident,nb_Unknown,1);
         return((NB_Object *)term);
         }
+      else (*cursor)++;
       right=parseList(context,cursor);
-      symid=nbParseSymbol(token,sizeof(ident),cursor);
+      symid=nbParseSymbol(token,sizeof(token),cursor);
       if(symid!=')'){
         outMsg(0,'E',"Expecting \")\" at end of parameter list.");
         return(NULL);
@@ -978,17 +994,19 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
             }
           }
         // 2014-09-13 eat - Term used as node, make it a node with default skill
-        term=nbTermNew(context,ident,nb_Unknown,1);
-        term->def=(void *)nbNodeNew();
-        return((NB_Object *)nbSentenceNew(((NB_Node *)term->def)->skill->facet,term,right));
+        term=nbTermNew(context,ident,nbNodeNew(),1);
+        ((NB_Node *)term->def)->context=term;
+        //return((NB_Object *)nbSentenceNew(((NB_Node *)term->def)->skill->facet,term,right));
         // 2013-12-09 eat - Removing attempt to support sentences before defining the node
         //outMsg(0,'E',"Sentence requires node - \"%s\" not defined as node.",ident);
         //return(NULL);
         }
-      else if(term->def->type==nb_NodeType){
+      if(term->def->type==nb_NodeType){
         NB_Facet *facet=nbSkillGetFacet(((NB_Node *)term->def)->skill,facetIdent);
+        if(!facet) facet=nbSkillGetFacet(nb_SkillDefault,facetIdent);
+        if(!facet) facet=(NB_Facet *)nbSkillFacet((nbCELL)context,(nbCELL)nb_SkillUnknown,facetIdent);
         if(!facet){
-          outMsg(0,'E',"Facet \"%s\" not defined for term \"%s\".",facetIdent,ident);
+          outMsg(0,'L',"Unable to create unknown facet \"%s\" for node \"%s\".",facetIdent,ident);
           return(NULL);
           }
         return((NB_Object *)nbSentenceNew(facet,term,right));
@@ -1462,13 +1480,19 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
       return(NULL);
       }
     if(*facetIdent || list!=NULL){ // sentence 
-      if(term->def==NULL || term->def->type!=nb_NodeType){
+      if(term->def==nb_Unknown){
+        term->def=grabObject(nbNodeNew());
+        ((NB_Node *)term->def)->context=term;
+        }
+      else if(term->def->type!=nb_NodeType){
         outMsg(0,'E',"Sentence requires node -  \"%s\" not defined as node.",ident);
         return(NULL);
         }
       facet=nbSkillGetFacet(((NB_Node *)term->def)->skill,facetIdent);
+      if(!facet) facet=nbSkillGetFacet(nb_SkillDefault,facetIdent);
+      if(!facet) facet=(NB_Facet *)nbSkillFacet((nbCELL)term,(nbCELL)nb_SkillDefault,facetIdent);
       if(!facet){
-        outMsg(0,'E',"Facet \"%s\" not defined for term \"%s\".",facetIdent,ident);
+        outMsg(0,'E',"Unable to create unknown facet \"%s\" for node \"%s\".",facetIdent,ident);
         return(NULL);
         }
       objectL=(NB_Object *)nbSentenceNew(facet,term,list);

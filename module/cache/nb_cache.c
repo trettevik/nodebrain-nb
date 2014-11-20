@@ -370,7 +370,7 @@ struct CACHE *newCache();
 void printCacheRows();
 void printCache();
 struct CACHE_NODE *cacheFindRow();
-int cacheGetCount();
+static int cacheGetCount();
 void cacheNewTimerElement();
 int cacheInsert();
 void alertCache();
@@ -673,16 +673,15 @@ struct CACHE_NODE *cacheFindRow(nbCELL context,struct CACHE *cache,nbSET argSet,
 *          
 *  The type code indicates which count to return.
 */
-int cacheGetCount(nbCELL context,struct CACHE *cache,nbSET argSet,int type){
+static int cacheGetCount(nbCELL context,struct CACHE *cache,nbSET argSet,int type){
   struct CACHE_NODE *entry;
   struct CACHE_ATTR *attr;
 
-  if(cache->trace) nbLogMsg(cache->context,0,'T',"cacheGetCount(): called");
-  if((entry=cacheFindRow(context,cache,argSet,&attr))==NULL) return(0);
-  if(cache->trace) nbLogMsg(cache->context,0,'T',"cacheGetCount(): found row");
+  if(!argSet) entry=cache->entry;
+  else if((entry=cacheFindRow(context,cache,argSet,&attr))==NULL) return(0);
   if(type==0) return(entry->hits);
-  else if(type==1) return(entry->rows);
-  else if(type==2) return(entry->kids);
+  else if(type==1) return(entry->kids);
+  else if(type==2) return(entry->rows);
   nbLogMsg(cache->context,0,'L',"cacheGetCount: counter type code %d not recognized.",type);
   return(0);
   }
@@ -1095,6 +1094,36 @@ void freeCache(nbCELL context,struct CACHE *cache){
 /******************************************************
 * Skill methods
 ******************************************************/
+static nbCELL cacheHitsEvaluate(nbCELL context,void *skillHandle,NB_Cache *cache,nbCELL arglist){
+  nbSET argSet=nbListOpen(context,arglist);
+  unsigned int count;
+
+  if(!cache) return(NB_CELL_UNKNOWN);
+  count=cacheGetCount(context,cache,argSet,0);      // Get hits count
+  return(nbCellCreateReal(context,(double)count));
+  }
+
+static nbCELL cacheKidsEvaluate(nbCELL context,void *skillHandle,NB_Cache *cache,nbCELL arglist){
+  nbSET argSet=nbListOpen(context,arglist);
+  unsigned int count;
+
+  if(!cache) return(NB_CELL_UNKNOWN);
+  count=cacheGetCount(context,cache,argSet,1);      // Get kids count
+  return(nbCellCreateReal(context,(double)count));
+  }
+
+static nbCELL cacheRowsEvaluate(nbCELL context,void *skillHandle,NB_Cache *cache,nbCELL arglist){
+  nbSET argSet=nbListOpen(context,arglist);
+  unsigned int count;
+
+  if(!cache) return(NB_CELL_UNKNOWN);
+  count=cacheGetCount(context,cache,argSet,2);      // Get rows count
+  return(nbCellCreateReal(context,(double)count));
+  }
+
+/******************************************************
+* Skill methods
+******************************************************/
 void *cacheConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   nbCELL cell;
   nbSET argSet;
@@ -1165,7 +1194,7 @@ int cacheAlert(nbCELL context,void *skillHandle,NB_Cache *cache,nbCELL arglist,n
   return(0);
   }
 
-nbCELL cacheEvaluate(nbCELL context,void *skillHandle,NB_Cache *cache,nbCELL arglist){
+static nbCELL cacheEvaluate(nbCELL context,void *skillHandle,NB_Cache *cache,nbCELL arglist){
   nbSET argSet=nbListOpen(context,arglist);
 
   if(!argSet) return(NB_CELL_UNKNOWN); /* cache itself has no value */
@@ -1264,6 +1293,7 @@ _declspec (dllexport)
 #endif
 extern void *cacheBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
   struct CACHE_SKILL *skillHandle=nbAlloc(sizeof(struct CACHE_SKILL));
+  nbCELL facet;
 
   skillHandle->unknown=nbCellCreate(context,"?");
   skillHandle->stateVal[0]=nbCellCreateString(context,"normal");
@@ -1279,5 +1309,13 @@ extern void *cacheBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arg
   nbSkillSetMethod(context,skill,NB_NODE_DESTROY,cacheDestroy);
   nbSkillSetMethod(context,skill,NB_NODE_ALARM,cacheAlarm);
   nbSkillSetMethod(context,skill,NB_NODE_ALERT,cacheAlert);
+
+  // 2013-12-07 eat - experimenting with facets
+  facet=nbSkillFacet(context,skill,"hits");
+  nbSkillMethod(context,facet,NB_NODE_EVALUATE,cacheHitsEvaluate);
+  facet=nbSkillFacet(context,skill,"kids");
+  nbSkillMethod(context,facet,NB_NODE_EVALUATE,cacheKidsEvaluate);
+  facet=nbSkillFacet(context,skill,"rows");
+  nbSkillMethod(context,facet,NB_NODE_EVALUATE,cacheRowsEvaluate);
   return(skillHandle);
   }

@@ -138,6 +138,7 @@ typedef struct TYPE{
   uint32_t kind;               // 2014-05-04 eat - object kind flags that may apply to more than one type
   int  attributes;             /* see object type attributes above */
   int  apicelltype;            /* cell type code for API */
+  int  (*getName)();           // return name of the object - similar to showExpr, but returns string in name buffer
   void (*showExpr)();          /* show as expression */
   void (*showItem)();          /* show as list item */
   void (*showReport)();        /* show as report - may include \n */
@@ -194,6 +195,8 @@ extern NB_Type *nb_DefinedType;  /* Special object type */
 extern NB_Type *nb_TypeType;     /* Type object type */
 
 struct TYPE *nbObjectType(struct NB_STEM *stem,char *name,uint32_t kind,int  attributes,void (*showExpr)(),void (*destroy)());
+struct TYPE *NbObjectType(struct NB_STEM *stem,char *name,uint32_t kind,int  attributes,int (*getName)(),void (*showExpr)(),void (*destroy)());
+
 void enableBug(NB_Object *object);
 void disableBug(NB_Object *object);
 
@@ -206,6 +209,7 @@ void *dropObjectNull(void *object);
 void printObject(NB_Object *object);
 void printObjectItem(NB_Object *object);
 void printObjectReport(NB_Object *object);
+int NbObjectName(NB_Object *context,NB_Object *object,char **name,int size);
 
 //void nbObjectPrintSpecial();
 void nbObjectInit(struct NB_STEM *stem);

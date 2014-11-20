@@ -937,3 +937,38 @@ NB_Cell *nbCellSolve(NB_Cell *context,NB_Cell *cell){
   return((NB_Cell *)nbCellSolve_(cell));
   }
 
+/*
+*  Return cell name
+*
+*  Parameters:
+*
+*    context  - context used as reference for term names
+*
+*    cell     - cell for which the name is requested
+*
+*    nameP    - pointer to name buffer
+*
+*    size     - size of name buffer
+*
+*  Returns:
+*    n>0  - bytes remaining in name buffer (null terminator is part of this count)
+*           (name is never a null string)
+*    n<=0 - name buffer must be increased by 1-n bytes
+*/
+int nbCellGetName(nbCELL context,nbCELL cell,char **nameP,int size){
+  size=NbObjectName((NB_Object *)context,(NB_Object *)cell,nameP,size);
+  return(size);
+  }
+
+/*
+*  Return cell value name
+*
+*  Like nbCellName above, but returns the name of the cell's value instead 
+*  of the name of the cell itself.  When a cell is disabled, the value is
+*  returned as #. This is consistent with the SHOW command, but an exception
+*  because this name can never be used within cell expressions.
+*  
+*/
+int nbCellGetValueName(nbCELL context,nbCELL cell,char **nameP,int size){
+  return(nbCellGetName(context,(NB_Cell *)cell->object.value,nameP,size));
+  }

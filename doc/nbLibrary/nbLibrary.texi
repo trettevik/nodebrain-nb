@@ -58,11 +58,19 @@ Author: Ed Trettevik <eat@@nodebrain.org>@*
 Publisher: NodeBrain Open Source Project
 
 @item @tab
-Release @value{VERSION}
+Release 0.8.16
 @itemize @bullet
 @item This document replaces @i{NodeBrain API Reference} first drafted in 2003 for release 0.6.3
 @item Converted to texinfo format
 @item Dropped several function to be added back later after more complete testing.
+@end itemize
+
+@item 2014-11-18 @tab
+Release 0.9.03
+@itemize @bullet
+@item Included functions that provide a snapshot of terms within a nodes: nbNodeGetCellArray, nbNodeGetTermNameString,
+nbNodeGetTermValueString, and nbNodeGetTermFormulaString.
+@item Included functions to get the name of a cell or cell value: nbCellGetName, and nbCellGetValueName. 
 @end itemize
 
 @end multitable
@@ -1409,8 +1417,11 @@ By default, NodeBrain will attempt to solve for all argument cell expressions an
 * nbListenerEnableOnDaemon:: Schedule enable when daemonized
 * nbLogMsg:: Send a message to the log
 * nbLogPut:: Send text to the log
-* nbNodeGlossary:: Get an array of terms defined within a node
-* nbNodeTermName:: Get the name of a term defined within a node
+* nbNodeGetName:: Get the simple name of a context node
+* nbNodeGetTermCellArray:: Get an array of terms defined within a node
+* nbNodeGetTermNameString:: Get a string of term names
+* nbNodeGetTermValueString:: Get a string of term names and values within a node
+* nbNodeGetTermFormulaString:: Get a string of term names and definitions within a node
 @end menu
 
 Function described in this chapter interact with nodes and the first argument
@@ -1543,63 +1554,191 @@ Returns:
 @end smallexample
 @end cartouche
 
-The nbLogPut function is called to write to the log, @code{stderr}.
+The @code{nbLogPut} function is called to write to the log, @code{stderr}.
 With this function you have complete control of the output.
-You may find this function has no advantage over @code{printf};
-This is often true. But use of this function provides as 
+You may find this function has no advantage over @code{fprintf};
+This is often true. But use of this function provides a 
 place to insert additional functionality, like temporarily splitting
-log data out to a second file.
+log data out to a second file. More importantly, it handles buffering
+of output to @code{stderr} consistent with other @code{nbLogXXX} functions.
 
-@node nbNodeGlossary
-@section nbNodeGlossary - Get an array of terms defined within a node
-@cindex nbNodeGlossary
-
-@cartouche
-@smallexample
-int nbNodeGlossary(
-  nbCELL context,  // Node context handle
-  size_t size,        // Number of entries in the cell[] array
-  nbCELL cell[]);  // Array of term cells returned - lesser of size and return value
-
-Returns:
- -1 - Error  (See message)
-  n>=0 - Number of terms defined in the context node
-         This number may be larger than the array size, indicating that
-         not all terms where returned.  If the number returned is larger
-         than size, you must call again with an array of at least size n
-         to get all terms returneed.
-@end smallexample
-@end cartouche
-
-The @code{nbNodeGlossary} function is called to obtain an unordered array of terms
-defined within the context node.
-
-You may use the @code{nbNodeTermName} function
-to get the name of a term relative to the context node.
-Terms are cells, so you may use cell functions
-to obtain the value of a term.
-
-@node nbNodeTermName
-@section nbNodeTermName - Get the name of a term defined within a node
-@cindex nbNodeTermName
+@node nbNodeGetName
+@section nbNodeGetName - Get the simple name of a node
+@cindex nbNodeGetName
 
 @cartouche
 @smallexample
-int nbNodeTermName(
-  nbCELL context,  // Node context handle
-  nbCELL term,     // Term cell
-  char  *name,     // Name buffer for value returned
-  size_t size);    // Size of name buffer - must be at least 1024
+char *nbNodeGetName(
+  nbCELL context); // Node context handle
 
-Returns:
- -1 - Error  (See message)
-  0 - Name returned
+Returns: Pointer to a node's simple name, not the full path name.
 @end smallexample
 @end cartouche
 
-The @code{nbNodeTermName} function is called to get the name of a term relative to
-a context node.  The context provided may be the node in which the term is directly
-defined, or a higher level node.
+The @code{nbNodeGetName} function can be used to get the simple name of a node
+when passed as a context perameter to a function.  In the example below,
+the node name is @code{UserTypeHost}.
+
+@cartouche
+@smallexample
+define UserTypeHost node cache:(~(8h):user,type,host);
+@end smallexample
+@end cartouche
+
+If you need the fully qualified path name for a node, use the @code{nbCellGetName}
+function instead.  Use the @code{nbTermLocate} function to get the root cell
+named "_" to use as the context in your call to @code{nbCellGetName}.
+
+@node nbNodeGetTermCellArray
+@section nbNodeGetTermCellArray - Get an array of terms defined within a node
+@cindex nbNodeGetTermCellArray
+
+@cartouche
+@smallexample
+int nbNodeGetTermCellArray(
+  nbCELL context,  // Node context handle
+  nbCELL cell[],   // Array of term cells returned - lesser of size and return value
+  int size);       // Number of entries in the cell[] array
+
+Returns:
+  n>=0 - Number of terms defined in the context node.  This number may be
+         larger than the array size, indicating the array is full and you
+         need to provide a new array with n entries to get all terms. 
+@end smallexample
+@end cartouche
+
+The @code{nbNodeGetTermCellArray} function is called to obtain an unordered array of term
+cells defined within the context node.
+You may use the @code{nbCellGetName} function
+to get the name of a term cell relative to the context node.
+You may use the @code{nbCellGetValueName} function to get the name
+of the term cell's value.  
+Other cell functions may be used to peform other operations appropriate for a term cell.
+
+@node nbNodeGetTermNameString
+@section nbNodeGetTermNameString - Get a string of term names within a node
+@cindex nbNodeGetTermNameString
+
+@cartouche
+@smallexample
+int nbNodeGetTermNameString(
+  nbCELL context,  // Node context handle
+  char  *buffer),  // Buffer to hold term names
+  int    size);    // size of buffer
+
+Returns:
+  n>0  - Bytes remaining in buffer (null terminator is part of this count)
+  n<=0 - Buffer must be increased by 1-n bytes
+@end smallexample
+@end cartouche
+
+The @code{nbNodeGetTermNameString} function is called to capture a single string
+showing the names of all terms defined within a node.  The returned string
+is a comma separated list of names. 
+
+For node @code{x} in the following example, the returned string would be
+@code{a,b,c,d,e,r1} in random order.
+
+@cartouche
+@smallexample
+define x node;
+x. define a cell 5;
+x. define b cell 3;
+x. define c cell a+b;
+x. define d cell a-b;
+x. define e cell "abc";
+x. define r1 on(d);
+@end smallexample
+@end cartouche
+
+
+@node nbNodeGetTermValueString
+@section nbNodeGetTermValueString - Get a string of term names and values within a node
+@cindex nbNodeGetTermValueString
+
+@cartouche
+@smallexample
+int nbNodeGetTermValueString(
+  nbCELL context,  // Node context handle
+  char  *buffer),  // Buffer to hold terms - name and value string
+  int    size);    // size of buffer
+
+Returns:
+  n>0  - Bytes remaining in buffer (null terminator is part of this count)
+  n<=0 - Buffer must be increased by 1-n bytes
+@end smallexample
+@end cartouche
+
+The @code{nbNodeGetTermValueString} function is called to capture a single string
+showing the name and value of all terms defined within a node.  The returned string
+looks similar to an assertion, with comma separated name=value pairs.  However,
+you can not use this string to restore a node to the current state, since that
+would destroy the formulas.  Also, a disabled cells are shown with a value of #, which
+is not valid assertion syntax.  
+
+For node @code{x} in the following example, the returned string would be 
+@code{a=5,b=3,c=#,d=2,e="abc",r1=#} in random order.  Note that @code{c} and @code{r1}
+are not referenced by any rule, causing their value to be disabled.
+
+@cartouche
+@smallexample
+define x node;
+x. define a cell 5;
+x. define b cell 3;
+x. define c cell a+b;
+x. define d cell a-b;
+x. define e cell "abc";
+x. define r1 on(d);
+@end smallexample
+@end cartouche
+
+@node nbNodeGetTermFormulaString
+@section nbNodeGetTermFormulaString - Get a string of term names and formulas within a node
+@cindex nbNodeGetTermFormulaString
+
+@b{Warning}: This function is incomplete in release 0.9.03.  Terms have definitions
+that are objects to the interpreter.  When the object that defines a term is a cell that can be
+represented by a cell expression, it is called a formula, and the cell expression is
+the cell name.
+Many types of cells that qualify as formulas
+have not been updated with a @code{getName} method to return their string representation.  Since they
+all have the ability to print their string representation in support of the @code{show} command,
+it will not be difficult to add the new @code{getName} method for each cell type.  But until that
+is complete, many types of cells will rely on
+a default @code{getName} method that returns "('?')" as the cell name.
+So this function should be treated as experimental for now.
+
+@cartouche
+@smallexample
+int nbNodeGetTermFormulaString(
+  nbCELL context,  // Node context handle
+  char  *buffer),  // Buffer to hold terms - name and definition string
+  int    size);    // size of buffer
+
+Returns:
+  n>0  - Bytes remaining in buffer (null terminator is part of this count)
+  n<=0 - Buffer must be increased by 1-n bytes
+@end smallexample
+@end cartouche
+
+The @code{nbNodeGetTermFormulaString} function is called to capture a single string
+showing the name and formula of all terms defined within a node.  The returned string
+looks similar to an assertion, with comma separated name==formula pairs.
+
+For node @code{x} in the following example, the returned string would be
+@code{a==5,b==3,c==(a+b),d==2,e=="abc",r1==d} in random order.
+
+@cartouche
+@smallexample
+define x node;
+x. define a cell 5;
+x. define b cell 3;
+x. define c cell a+b;
+x. define d cell a-b;
+x. define e cell "abc";
+x. define r1 on(d);
+@end smallexample
+@end cartouche
 
 @node Cell Functions
 @chapter Cell Functions
@@ -1617,13 +1756,16 @@ defined, or a higher level node.
 * nbCellGetType:: Get cell type code
 * nbCellGetValue:: Get enabled cell value
 * nbCellGrab:: Reserve cell
+* nbCellGetName:: Get the name of a cell within a context
 * nbCellSolve:: Solve for value of cell
+* nbCellGetValueName:: Get the name of a cell's value
 * nbListOpen:: Open a cell list to iterate
 * nbListGetCell:: Get next cell in list
 * nbListGetCellValue:: Get value of next cell in list
 * nbSynapseOpen:: Register an Alarm method
 * nbSynapseSetTimer:: Set an alarm
 * nbTermCreate:: Create a new term
+* nbTermGetDefinition:: Get term definition cell
 * nbTermLocate:: Locate an existing term
 * nbTermSetDefinition:: Assign new definition to term
 @end menu
@@ -1946,6 +2088,37 @@ using a call to @code{nbCellGrab}, or that was grabbed for you
 by another function, you must release the cell pointer with a
 call to @code{nbCellDrop} to avoid a memory leak.
 
+@node nbCellGetName
+@section nbCellGetName - Get the name of a cell relative to a given context
+@cindex nbCellGetName
+
+@cartouche
+@smallexample
+int nbCellGetName(
+  nbCELL context,  // Node context handle
+  nbCELL term,     // Cell for which the name is requested
+  char **nameP,    // Pointer to name buffer for value returned
+                   // This is advanced to the end of the name  
+  int    size);    // Size of name buffer
+
+Returns:
+  n>0  - Bytes remaining in name buffer (null terminator is part of this count)
+  n<=0 - Name buffer must be increased by 1-n bytes
+@end smallexample
+@end cartouche
+
+The @code{nbCellGetName} function is called to get the name of a cell relative to
+a context node.  The name of a cell is a string representation, just as
+one might enter it in a cell expression.  In the sample rules below, there are
+six cells with the names foobar, a, b, (a&b), sally, and "abc". 
+
+@cartouche
+@smallexample
+define foobar cell a and b;
+define sally  cell "abc";
+@end smallexample
+@end cartouche
+
 @node nbCellSolve
 @section nbCellSolve - Solve for value of cell
 @cindex nbCellSolve 
@@ -1988,6 +2161,36 @@ tests to be avoided when possible.
 Warning:  This feature of NodeBrain requires additional work to refine the methods by
 which definitions can be obtained.  Currently, prompts in interactive mode and scripts
 in background mode are supported.  
+
+@node nbCellGetValueName
+@section nbCellGetValueName - Get the name of a cell's value
+@cindex nbCellGetValueName
+
+@cartouche
+@smallexample
+int nbCellGetValueName(
+  nbCELL context,  // Node context handle
+  nbCELL term,     // Cell for which the name is requested
+  char **nameP,    // Pointer to name buffer for value returned
+                   // This is advanced to the end of the name  
+  int    size);    // Size of name buffer
+
+Returns:
+  n>0  - Bytes remaining in name buffer (null terminator is part of this count)
+  n<=0 - Name buffer must be increased by 1-n bytes
+@end smallexample
+@end cartouche
+
+The @code{nbCellGetValueName} function is called to get the name of a cell's value
+cell relative to a context node.  Since values are constant cells, they are
+typically strings and real numbers.  The name of a string is a character string
+encoded in double quotes.  The name of real number is a string representation
+of the number.
+
+The name returned by this function is the same as one would get by using
+@code{nbCellGetValue} to get the value cell and then using
+@code{nbCellGetName} on it to get the
+name of the value cell.
 
 @node nbListOpen
 @section nbListOpen - Open a cell list to iterate
@@ -2079,6 +2282,32 @@ The @code{nbTermCreate} function is used to create a new term
 within the specified context.
 The definition of the term is provided by a cell handle
 obtained by another library function, perhaps @code{nbCellCreate}.
+
+@node nbTermGetDefinition
+@section nbTermGetDefinition - Get term definition cell
+@cindex nbTermGetDefinition
+
+@cartouche
+@smallexample
+nbCELL nbTermGetDefinition(
+  nbCELL context,  // Node context handle
+  nbCELL cell);    // Term cell whose definition is requested
+
+Returns: Cell defining the formula for computing the value of
+         the term.  This can also be stated as the cell whose
+         value the term inherits, or for which the term is an
+         alias. 
+
+Warning: The returned cell has not been grabbed so you mush call
+         nbCellGrab if you want to retain a reference.  Then call
+         nbCellDrop when you no longer need a reference.
+
+@end smallexample
+@end cartouche
+
+The @code{nbTermGetDefinition} function is used to get the
+cell referenced by a term, which is the cell that computes
+the value of the term.
 
 @node nbTermLocate
 @section nbTermLocate - Locate an existing term

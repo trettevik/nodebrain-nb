@@ -267,4 +267,14 @@ __declspec(dllexport)
 #endif
 extern double nbCellGetReal(nbCELL context,nbCELL cell);
 
+#if defined(WIN32)
+__declspec(dllexport)
+#endif
+extern int nbCellGetName(nbCELL context,nbCELL cell,char **nameP,int size);
+
+#if defined(WIN32)
+__declspec(dllexport)
+#endif
+extern int nbCellGetValueName(nbCELL context,nbCELL cell,char **nameP,int size);
+
 #endif

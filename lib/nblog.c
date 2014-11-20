@@ -381,17 +381,22 @@ void outStamp(void){
   time_t systemTime;
   struct tm  *localTime;
 
-  if(nb_mode_check>0 && nb_mode_check<8){
-    systemTime=++nb_OutCheckTime;
-    localTime=gmtime(&systemTime);
+  if(nb_opt_test){
+    sprintf(nb_OutCursor,"0000-00-00 00:00:00 ");
     }
   else{
-    time(&systemTime);
-    localTime=localtime(&systemTime);
+    if(nb_mode_check>0 && nb_mode_check<8){
+      systemTime=++nb_OutCheckTime;
+      localTime=gmtime(&systemTime);
+      }
+    else{
+      time(&systemTime);
+      localTime=localtime(&systemTime);
+      }
+    sprintf(nb_OutCursor,"%.4d-%.2d-%.2d %.2d:%.2d:%.2d ",
+      localTime->tm_year+1900,localTime->tm_mon+1,localTime->tm_mday,
+      localTime->tm_hour,localTime->tm_min,localTime->tm_sec);
     }
-  sprintf(nb_OutCursor,"%.4d-%.2d-%.2d %.2d:%.2d:%.2d ",
-    localTime->tm_year+1900,localTime->tm_mon+1,localTime->tm_mday,
-    localTime->tm_hour,localTime->tm_min,localTime->tm_sec);
   nb_OutCursor+=20;
   }  
 
@@ -655,7 +660,7 @@ int nbLogMsg(nbCELL context,int msgNumber,char msgType,char *format,...){
     outMsg(0,'L',"Skill module called nbLogMsg() with invalid context - ignoring call");
     return(-1);
     }
-  nbTermName(termName,sizeof(termName),(NB_Term *)context,rootGloss);
+  nbTermName(rootGloss,(NB_Term *)context,termName,sizeof(termName));
   //termName=((NB_Term *)context)->word->value;
   if(((NB_Node *)(((NB_Term *)context)->def))->cell.object.type!=nb_NodeType){
     outMsg(0,'L',"Skill module called nbLogMsg() with term %s which is not a node - ignoring call",termName);

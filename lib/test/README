@@ -1,0 +1,74 @@
+Directory: lib/test
+
+This directory, introduced in release 0.9.03, contains a set of
+C programs that test the NodeBrain Library, a C API for 
+embedding or extending NodeBrain.
+
+The programs are compiled by the "make" command in the build
+directory, lib directory, or this directory after modifications
+to test program source files.  Similarly, the tests are
+executed by a "make check" command in any of the same three
+directories.
+
+A script named "nbtest" is a simple driver to execute all test
+programs and report any non-zero return codes.  Tests are
+identified by the existence of a *.got file. These files 
+represent a "good old test", what we "got" before.
+
+Status:
+
+This adhoc approach may be replaced by a more robust approach
+like DejaGnu in the future.  However, it is somewhat urgent
+at this time to get a form of API regression testing and
+and API build verification in place quickly.  This is just
+a fast starting point, not the target state.
+
+==============================================================
+Change History:
+
+2014-11-16 eat - introduced in 0.9.03
+==============================================================
+
+File            Description
+--------------  ----------------------------------------------
+nbtest          - test driver script
+
+configure.ac    - autoconf configuration file 
+Makefile.am     - automake configuration file
+
+<test>.c        - test program source code
+<test>.got      - good old test, what we got before and expect
+
+                Generated files - not distributed
+
+<test>          - test program (name matches a *.got file) 
+<test>.out      - test output unmodified
+<test>.get      - what we get after scrubbing <test>.out
+<test>.diff     - a diff of *.get and *.got, which only
+                  exists when there are differences, which
+                  we consider a failed test.
+---------------------------------------------------------------
+
+The first character of a test program name identifies a basic
+catagory for the test objective. 
+
+e - Example  - Short examples using sparce C code formatting
+               All other tests use the dense formatting normal
+               to the NodeBrain project. These example will be
+               included in the NodeBrain Library manual and it
+               important to retest them with each release.
+
+p - Positive - These tests will be methodical in exercising the
+               documented API functions with the focus on what
+               we expect to work.  These tests only verify that
+               the API can work when used as intended, but
+               reveal the consequence of user mistakes. A
+               failure in these test indicates a loss of
+               functionality, 
+
+n - Negative - These tests will be methodical in exercising 
+               calls expected to fail.  For example, a call that
+               provides a buffer too small for the result, is
+               expected to fail. A loss of protection is most
+               likely indicated by a failure of one of these
+               tests.

@@ -271,6 +271,8 @@
 #include <editline/readline.h>
 #endif
 
+static int nbCmdParse(nbCELL context,char *cursor,unsigned char cmdopt,NB_Instruction *instruction);
+
 // Get a command from interactive user.
 //
 // A command starting with "'" is interpreted as a command prefix.  The
@@ -2199,7 +2201,7 @@ static char nbCmdPreprocess(nbCELL context,char **cursaveP,char **cursorP,unsign
       if(symid!='t'){
         if(*cursave=='`'){   // accept assert abbreviation
           symid='t';
-          snprintf(verb,sizeof(verb),"%s","assert"); // note: we let this go down to the lookup for authority checking // 2013-01-16 eat - RC-STR31-C
+          snprintf(verb,verbSize,"%s","assert"); // note: we let this go down to the lookup for authority checking // 2013-01-16 eat - RC-STR31-C
           }
         else{
           symid=*cursave;
@@ -2239,17 +2241,19 @@ static char nbCmdPreprocess(nbCELL context,char **cursaveP,char **cursorP,unsign
   return(symid);
   }
 
-int nbCmdParse(nbCELL context,char *cursor,unsigned char cmdopt,NB_Instruction *instruction){
+static int nbCmdParse(nbCELL context,char *cursor,unsigned char cmdopt,NB_Instruction *instruction){
   nbCELL newContext;
   char verb[256];
-  int rc=-1;  // assume error until we successful parse 
+  int rc=0;  // assume success 
   char *newCursor=cursor,*cursave;
   char symid;
 
+  if(!*cursor) return(';');
   symid=nbCmdPreprocess(context,&cursave,&newCursor,&cmdopt,&newContext,verb,sizeof(verb)); // preprocess the command
   switch(symid){
     case '.':
-      break;  // rc=-1
+      rc=-1;
+      break; 
     case 't':
       if(strcmp(verb,"assert")==0 || strcmp(verb,"alert")==0)
       rc=nbCmdAssertParse(newContext,NULL,verb,newCursor,instruction);
@@ -2262,14 +2266,11 @@ int nbCmdParse(nbCELL context,char *cursor,unsigned char cmdopt,NB_Instruction *
       instruction->arg.perform.command=grabObject(useString(cursor)); /* action is rest of line */
       break;
     default:
-      if(cursor){ // Create Perform instruction
-        instruction->operation=NB_OPERATION_PERFORM;
-        instruction->arg.perform.cmdopt=NB_CMDOPT_RULE;     /* do not suppress symbolic substitution */
-        instruction->arg.perform.context=context;   // this could be different if we parsed the context prefix in advance
-        instruction->arg.perform.command=grabObject(useString(cursor)); /* action is rest of line */
-        outMsg(0,'W',"Rule action command acceleration not supported for --> %s ",cursor);
-        rc=0;
-        }
+      instruction->operation=NB_OPERATION_PERFORM;
+      instruction->arg.perform.cmdopt=NB_CMDOPT_RULE;     /* do not suppress symbolic substitution */
+      instruction->arg.perform.context=context;   // this could be different if we parsed the context prefix in advance
+      instruction->arg.perform.command=grabObject(useString(cursor)); /* action is rest of line */
+      outMsg(0,'W',"Rule action command acceleration not supported for --> %s ",cursor);
     }
   return(rc);
   }

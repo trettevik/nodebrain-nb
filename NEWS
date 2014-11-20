@@ -103,6 +103,28 @@ NodeBrain 0.9.03 (Columbo) Change Summary
        node@facet(arglist) # previously node_facet(argList)
        @facet(argList)     # previously unsupported
 
+  o  Node facets can now be referenced before a node is 
+     associated with a skill that provides the facet.  This
+     enables rules to reference node facets before the node
+     is defined.  This is useful in cases where two nodes
+     have rules that reference facets of the other.
+
+       bill. define r1 on(a) fred@count(a,b)=9;
+       fred. define r1 on(x) bill@measure(x,y)=27;
+
+     After the rule definition above, "fred" is implicitly
+     define to be a node with the "default" skill set.
+     Because @count is not defined by the default skill,
+     this facet is associated with the unknown skill until
+     the node is defined explicitly.
+
+       define fred node foobar:(a,b);
+
+     Once the "fred" node is explicitly defined, the
+     @count facet may be provided by the new skill.  If
+     not, @count will continue to be provided by the
+     unknown skill.
+     
   o  A small set of commands, when used as rule actions,
      may now be accelerated.  You select this option by
      using "::" instead of ":" prior to a rule action
@@ -120,6 +142,15 @@ NodeBrain 0.9.03 (Columbo) Change Summary
      If you attempt to accelerate other commands, you will
      see a warning and the interpreter will revert to
      normal as if you had said ":" instead of "::".
+
+  o  Additional API functions have been included to
+     simplify access to all terms within a node and
+     obtain their name, value, and formula.
+
+  o  The package now includes some API test programs that
+     are invoked by "make check".  This is for build
+     verification, regression testing, and to provide
+     some examples know to work for reference.
 
 * Deprecated Syntax: (none)
 

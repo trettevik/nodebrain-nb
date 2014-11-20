@@ -220,6 +220,7 @@ NB_Type *nb_NodeType=NULL;
 //struct HASH *nb_SkillHash=NULL;    /* skill term hash */
 NB_Term *nb_SkillGloss=NULL;
 NB_Skill *nb_SkillDefault=NULL;
+NB_Skill *nb_SkillUnknown=NULL; // The unknown skill is a holding place for unknown facets
 
 /*
 * We don't hash skill objects because we don't know enough to share them.
@@ -327,7 +328,8 @@ void nbNodeInit(NB_Stem *stem){
 
   skillType=nbObjectType(stem,"skill",0,0,printSkill,destroySkill);
   facetType=nbObjectType(stem,"facet",0,0,NULL,NULL);
-  nb_SkillDefault=nbSkillNew("",NULL,"");
+  nb_SkillDefault=nbSkillNew("",NULL,""); // Default skill for implicitly defined nodes
+  nb_SkillUnknown=nbSkillNew("",NULL,""); // Unknown skill has all unknown facets (facets refernced by not defined
   nb_SkillGloss=nbTermNew(NULL,"skill",nbNodeNew(),0);
   }
 
@@ -571,10 +573,14 @@ int nbNodeCmd(nbCELL context,char *name,char *cursor){
   char *cursave,symid,ident[64];
 
   if(NULL==(term=nbTermFind((NB_Term *)context,name))){
-    outMsg(0,'E',"Node \"%s\" not defined.",name);
-    return(-1);
+    term=nbTermNew((NB_Term *)context,name,nbNodeNew(),1);
+    ((NB_Node *)term->def)->context=term;
     }
-  if(term->def->type!=nb_NodeType){
+  else if(term->def==nb_Unknown){
+    term->def=grabObject(nbNodeNew());
+    ((NB_Node *)term->def)->context=term;
+    }
+  else if(term->def->type!=nb_NodeType){
     outMsg(0,'E',"Term \"%s\" not defined as node.",name);
     return(-1);
     }
@@ -597,8 +603,10 @@ int nbNodeCmd(nbCELL context,char *name,char *cursor){
       return(-1);
       }
     facet=nbSkillGetFacet(skill,ident);
+    if(!facet && skill!=nb_SkillDefault) facet=nbSkillGetFacet(nb_SkillDefault,ident);
+    if(!facet) facet=(NB_Facet *)nbSkillFacet((nbCELL)context,(nbCELL)nb_SkillUnknown,ident);
     if(!facet){
-      outMsg(0,'E',"Expecting facet identifier at->%s",cursave);
+      outMsg(0,'L',"Not able to create unknown facet \"%s\" for node \"%s\".",ident,term->word->value);
       return(-1);
       }
     }
@@ -645,7 +653,7 @@ char *nbNodeGetName(nbCELL context){
   }
 
 char *nbNodeGetNameFull(nbCELL context,char *name,size_t size){
-  nbTermName(name,size,(NB_Term *)context,NULL);
+  nbTermName(NULL,(NB_Term *)context,name,size);
   return(name);
   }
 
@@ -671,10 +679,22 @@ void nbNodeSetValue(nbCELL context,nbCELL cell){
   object->value=grabObject(cell);
   }
 
-int nbNodeGlossary(nbCELL context,size_t size,nbCELL cell[]){
-  return(nbTermGetGloss((NB_Term *)context,size,cell));
+int nbNodeGetTermCellArray(nbCELL context,nbCELL cell[],int cells){
+  return(NbTermGetTermCellArray((NB_Term *)context,cell,cells));
+  }
+
+int nbNodeGetTermNameString(nbCELL context,char **bufP,int size){
+  return(NbTermGetTermNameString((NB_Term *)context,bufP,size));
+  }
+
+int nbNodeGetTermValueString(nbCELL context,char **bufP,int size){
+  return(NbTermGetTermValueString((NB_Term *)context,bufP,size));
+  }
+
+int nbNodeGetTermFormulaString(nbCELL context,char **bufP,int size){
+  return(NbTermGetTermFormulaString((NB_Term *)context,bufP,size));
   }
 
 void nbNodeTermName(nbCELL context,nbCELL term,char *name,size_t size){
-  nbTermName(name,size,(NB_Term *)term,(NB_Term *)context);
+  nbTermName((NB_Term *)context,(NB_Term *)term,name,size);
   }

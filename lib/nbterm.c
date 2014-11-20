@@ -292,7 +292,7 @@ void termResolve(NB_Term *term){
     context=context->context;
 
   if(context==NULL){  /* ask user if we don't find a source command */
-    nbTermName(name,sizeof(name),term,addrContext);
+    nbTermName(addrContext,term,name,sizeof(name));
     if(!nb_opt_prompt){
       outMsg(0,'W',"No consultant for %s",name);
       return;
@@ -303,7 +303,7 @@ void termResolve(NB_Term *term){
     }
   else{
     struct STRING *string=((NB_Node *)context->def)->source; 
-    nbTermName(name,sizeof(name),term,context);
+    nbTermName(context,term,name,sizeof(name));
     if(*(string->value)=='<') termAskFile(name,value,sizeof(value),string->value+1);
     else termAskCommand(name,value,sizeof(value),string->value);
     }
@@ -482,8 +482,10 @@ void printTerm(NB_Term *term){
   termPrintName(term);
   }
 
+static int termName(NB_Term *context,NB_Term *term,char **nameP,int size);
+
 void initTerm(NB_Stem *stem){
-  termType=nbObjectType(stem,"term",0,0,printTerm,destroyTerm);
+  termType=NbObjectType(stem,"term",0,0,termName,printTerm,destroyTerm);
   termType->apicelltype=NB_TYPE_TERM;
   nbCellType(termType,solveTerm,evalTerm,enableTerm,disableTerm);
   }
@@ -877,80 +879,82 @@ void termUndefAll(void){
   */
   }  
   
-// 2012-10-17 eat - changed name from termGetName to nbTermName
-// 2012-10-17 eat - added size parameter
-void nbTermName(char *name,size_t size,NB_Term *term,NB_Term *refContext){
+static int termName(NB_Term *context,NB_Term *term,char **nameP,int size){
   char *qual[50];  
   char sep[50];
-  NB_Term *context;
-  int n,level=0;
-  char *cursor=name,*curlast=name+size-1;
+  int level=0;
+  size_t len;
   
-  *name=0;
   if(term==rootGloss){
-    strcpy(name,"_");
-    return;
+    len=1;
+    if(size>len) strcpy(*nameP,"_"),(*nameP)+=len;
+    size-=len;
+    return(size);
     }
-  if(size<1024){
-    outMsg(0,'L',"nbTermName: name buffer must be at least 1024 characters");
-    exit(NB_EXITCODE_FAIL);
-    }
-  if(term==refContext){ /* special case when term is the reference context */
-    strcpy(name,".");
-    return;
-    }
-  if(term->cell.object.type!=termType){
-    outMsg(0,'L',"nbTermName: term address calculation error");
-    exit(NB_EXITCODE_FAIL);
+  if(term==context){ /* special case when term is the reference context */
+    len=1;
+    if(size>len) strcpy(*nameP,"."),(*nameP)+=len;
+    size-=len;
+    return(size);
     }
   qual[0]=term->word->value;
-  context=term->context;
-  for(level=1;level<50 && context!=rootGloss && context!=refContext && context!=symContext && context!=NULL;level++){
-    qual[level]=context->word->value;
-    if(((NB_Object *)context->def)->type==nb_NodeType) sep[level]='.';
+  term=term->context;
+  for(level=1;level<50 && term!=rootGloss && term!=context && term!=symContext && term!=NULL;level++){
+    qual[level]=term->word->value;
+    if(((NB_Object *)term->def)->type==nb_NodeType) sep[level]='.';
     else sep[level]='_';
-    context=context->context;
+    term=term->context;
     }
-  if(context==rootGloss && context!=refContext){
-    *cursor='_';
-    cursor++;
-    *cursor='.';
-    cursor++;
+  if(term==rootGloss && term!=context){
+    len=2;
+    if(size>len) strcpy(*nameP,"_."),(*nameP)+=len;
+    size-=len;
     }
   for(level=level-1;level>=0;level--){ // 2012-12-28 eat - fixed defect dropping last char of each qualifier
-    n=strlen(qual[level]);
-    if(n+level>=curlast-cursor){       // truncate full name at qualifier if necessary
-      strcpy(cursor,"?");
-      return;
-      }
-    strncpy(cursor,qual[level],n);
-    cursor+=n;
+    len=strlen(qual[level]);
+    if(size>len) strcpy(*nameP,qual[level]),(*nameP)+=len;
+    size-=len;
     if(level>0){
-      //*cursor='.';
-      *cursor=sep[level];
-      cursor++;
+      len=1;
+      if(size>len) *(*nameP)=sep[level],(*nameP)+=len;
+      size-=len;
      }
     }
-  *cursor=0;
+  *(*nameP)=0;
+  return(size);
   }
-  
+
+// Once the termName method is validated, call it from nbTermName to remove duplicate code
+// This function should have a return code - change this soon
+void nbTermName(NB_Term *context,NB_Term *term,char *name,size_t size){
+  if(context->cell.object.type!=termType || term->cell.object.type!=termType){
+    outMsg(0,'L',"nbTermName: context or term parameter not a term object");
+    exit(NB_EXITCODE_FAIL);
+    }
+  size=termName(context,term,&name,size);
+  if(size<=0){
+    outMsg(0,'L',"nbTermName: name is %d characters too large for buffer",1-size);
+    exit(NB_EXITCODE_FAIL);
+    }
+  }
+
 void termPrintName(NB_Term *term){
   char name[1024];
   
-  nbTermName(name,sizeof(name),term,addrContext);
+  nbTermName(addrContext,term,name,sizeof(name));
   outPut("%s",name);
   } 
  
 void termPrintFullName(NB_Term *term){
   char name[1024];
   
-  nbTermName(name,sizeof(name),term,rootGloss);
+  nbTermName(rootGloss,term,name,sizeof(name));
   outPut("%s",name);
   }   
 
 void nbTermPrintLongName(NB_Term *term){
   char name[1024];
-  nbTermName(name,sizeof(name),term,rootGloss);
+  nbTermName(rootGloss,term,name,sizeof(name));
   outPut("%s",name);
   }
 
@@ -1025,13 +1029,19 @@ void nbTermShowGloss(NB_Term *context){
 /*
 *  Logic to return an array of terms defined within a node
 *
-*  context  - term
-*  size     - number of entries in cell[]
-*  cell[]   - arrary populated to lesser of size and return value
+*  Parameters:
+*    context  - term
+*    cell[]   - array populated to lesser of cells and return value
+*    cells    - number of entries in cell[]
+*               It is ok for cells to be zero or negative, the number
+*               of terms is still returned.          
 *
-*  Returns: int number of terms in the glossary
+*  Returns:
+*    Integer number of terms defined in the node.  This may be larger
+*    than the number of cells, in which case the cell array is full and
+*    you need to increase the bounds of cell[] to get all terms.
 */
-int nbTermGetGloss(NB_Term *context,size_t size,nbCELL cell[]){
+int NbTermGetTermCellArray(NB_Term *context,nbCELL cell[],int cells){
   NB_Hash *hash;
   NB_Term *term,**termP;
   int v;
@@ -1044,15 +1054,108 @@ int nbTermGetGloss(NB_Term *context,size_t size,nbCELL cell[]){
   for(v=0;v<=hash->mask;v++){
     for(term=*termP;term!=NULL;term=(NB_Term *)term->cell.object.next){
       if(term->def!=nb_Undefined){
-        if(index<size) cell[index]=(NB_Cell *)term;
+        if(index<cells) cell[index]=(NB_Cell *)term;
         index++;
         }
       if(term->def->type!=nb_NodeType)
-        index+=nbTermGetGloss(term,size-index,&cell[index]);
+        index+=NbTermGetTermCellArray(term,&cell[index],cells-index);
       }
     termP++;
     }
   return(index);
+  }
+
+
+/*
+*  Get a comma separated string of term names
+*
+*  context  - term to use as context
+*  term     - term for which the state is obtained
+*  bufP     - pointer to buffer to hold state (term=value,term=value,...)
+*  size     - buffer size, which may be negative or zero, in which case the
+*             function still returns the size remaining, which can be also
+*             be non-positive.
+*
+*  Returns: Bytes remaining in the buffer
+*    n>0  - full string returned
+*    n<=0 - need to increase buffer size by 1-n bytes
+*/
+int NbTermGetTermNameString(NB_Term *context,char **bufP,int size){
+  nbCELL cell[1024];
+  int n,i;
+
+  n=NbTermGetTermCellArray(context,cell,1024);
+  for(i=0;i<n;i++){
+    if(size>1 && i>0) strcpy(*bufP,","),(*bufP)++,
+    size--;
+    size=nbCellGetName((nbCELL)context,cell[i],bufP,size);
+    }
+  if(size>0) *(*bufP)=0;
+  return(size);
+  }
+
+/*
+*  Get a string representation of term names and values
+*
+*  context  - term to use as context
+*  term     - term for which the state is obtained
+*  bufP     - pointer to buffer to hold state (term=value,term=value,...)
+*  size     - buffer size, which may be negative or zero, in which case the
+*             function still returns the size remaining, which can be also
+*             be non-positive.
+*
+*  Returns: Bytes remaining in the buffer
+*    n>0  - full string returned
+*    n<=0 - need to increase buffer size by 1-n bytes
+*/
+int NbTermGetTermValueString(NB_Term *context,char **bufP,int size){
+  nbCELL cell[1024]; 
+  int n,i;
+
+  n=NbTermGetTermCellArray(context,cell,1024);
+  for(i=0;i<n;i++){
+    if(size>1 && i>0) strcpy(*bufP,","),(*bufP)++,
+    size--;
+    size=nbCellGetName((nbCELL)context,cell[i],bufP,size);
+    if(size>1) strcpy(*bufP,"="),(*bufP)++;
+    size--;
+    size=nbCellGetValueName((nbCELL)context,cell[i],bufP,size);
+    }
+  if(size>0) *(*bufP)=0;
+  return(size);
+  }
+
+/*
+*  Get a string representation of term names and formulas
+*
+*  context  - term to use as context
+*  term     - term for which the state is obtained
+*  bufP     - pointer to buffer to hold state (term=value,term=value,...)
+*  size     - buffer size, which may be negative or zero, in which case the
+*             function still returns the size remaining, which can be also
+*             be non-positive.
+*
+*  Returns: Bytes remaining in the buffer
+*    n>0  - full string returned
+*    n<=0 - need to increase buffer size by 1-n bytes
+*/
+int NbTermGetTermFormulaString(NB_Term *context,char **bufP,int size){
+  nbCELL cell[1024];
+  int n,i;
+  nbCELL defCell;
+
+  n=NbTermGetTermCellArray(context,cell,1024);
+  for(i=0;i<n;i++){
+    if(size>1 && i>0) strcpy(*bufP,","),(*bufP)++,
+    size--;
+    size=nbCellGetName((nbCELL)context,cell[i],bufP,size);
+    if(size>2) strcpy(*bufP,"=="),(*bufP)+=2;
+    size-=2;
+    defCell=nbTermGetDefinition((nbCELL)context,cell[i]);
+    size=nbCellGetName((nbCELL)context,defCell,bufP,size);
+    }
+  if(size>0) *(*bufP)=0;
+  return(size);
   }
 
 void nbTermShowReport(NB_Term *term){
@@ -1061,7 +1164,7 @@ void nbTermShowReport(NB_Term *term){
   if(term->gloss) nbTermShowGloss(term);
   }
 
-void termPrintGlossTree(NB_TreeNode *treeNode,NB_Type *type,int attr){
+static void termPrintGlossTree(NB_TreeNode *treeNode,NB_Type *type,int attr){
   NB_Term *term;
   if(treeNode==NULL) return;
   term=(NB_Term *)treeNode->key;

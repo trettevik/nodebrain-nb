@@ -1,0 +1,46 @@
+#!/bin/sh
+#
+# Name:   nbtest
+#
+# Title:  NodeBrain API Test Driver
+#
+# This is a little script to execute every NodeBrain test
+# identified by a <test>.got file.
+# 
+# 2014/11/16 eat 0.9.03 Introduced
+#============================================================
+
+maxit=0
+ 
+for file in eNodeTerms eSkillMethods; do
+  echo "Test ${file}"
+  ./${file} +bU ++test > ${file}.out 2>&1
+  exit=$?
+  if test $exit -gt 256; then exit=$exit-256; fi
+  if test $exit -ne 0; then
+    echo "    Exit code=${exit} - test failed";
+  else
+    echo "    Get ${file}.get"
+    # Modify later to look for ${file}.sh and use if found
+    #./${file}.sh ${file}.out > ${file}.get
+    # for now, just drop the top 16 lines and bottom 1
+    tail -n +16 ${file}.out | head -n -1 > ${file}.get
+    exit=$?
+    if test $exit -ne 0; then
+      echo "    Exit code=${exit} - problem converting ${file}.out to ${file}.get";
+    else
+      echo "    Diff ${file}.got";
+      diff $file.get $file.got > ${file}.diff
+      exit=$?
+      if test $exit -ne 0; then
+        echo "    Exit code=${exit} -see ${file}.diff";
+      else
+        rm ${file}.get ${file}.diff
+        fi
+      fi
+    fi
+  if test "${exit}" -gt "${maxit}"; then maxit=$exit; fi
+  done
+
+echo "Highest exit code=${maxit}"
+exit ${maxit}

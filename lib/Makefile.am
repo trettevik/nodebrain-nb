@@ -46,6 +46,7 @@
 ## 2013-12-30 eat 0.9.00 included nbset.c and nbset.h
 ## 2014-02-01 eat 0.9.00 adjusted single configure script and header directory move
 ##=============================================================================
+SUBDIRS = . test
      
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 libtool: $(LIBTOOL_DEPS)

@@ -95,11 +95,14 @@ void nbTermUndefine(NB_Term *term);
 void termUndefAll(void);
 void termResolve(NB_Term *term);
 
-extern void nbTermName(char *name,size_t size,NB_Term *term,NB_Term *refContext);
+void nbTermName(NB_Term *context,NB_Term *term,char *name,size_t size);
 void termPrintName(NB_Term *term);
 void termPrintFullName(NB_Term *term);
 void nbTermPrintLongName(NB_Term *term);
-int nbTermGetGloss(NB_Term *context,size_t size,nbCELL cell[]);
+int NbTermGetTermCellArray(NB_Term *context,nbCELL cell[],int cells);
+int NbTermGetTermNameString(NB_Term *context,char **bufP,int size);
+int NbTermGetTermValueString(NB_Term *context,char **bufP,int size);
+int NbTermGetTermFormulaString(NB_Term *context,char **bufP,int size);
 
 #endif  // NB_INTERNAL
 
