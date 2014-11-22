@@ -44,7 +44,7 @@
 ## 2014-11-15 Ed Trettevik - Introduced in version 0.9.03
 ##=============================================================================
      
-noinst_PROGRAMS = eNodeTerms eSkillMethods
+noinst_PROGRAMS = eCellFunctions eNodeTerms eSkillMethods
 
 EXTRA_DIST = \
   eNodeTerms.got \
@@ -54,6 +54,7 @@ EXTRA_DIST = \
 AM_CFLAGS = -Wall -I../../include
 AM_LDFLAGS = -L../.libs -lnb
 
+eCellFunctions_SOURCES = eCellFunctions.c
 eNodeTerms_SOURCES = eNodeTerms.c
 eSkillMethods_SOURCES = eSkillMethods.c
 

@@ -1,0 +1,38 @@
+
+TEST: line    72 - Testing a couple existing cell functions
+> define x cell `math.mod(a,7) + `math.sqrt(b);
+> define r1 on(x>=16);
+> show a,b,x;
+a = ?
+b = ?
+x = ? == (`math.mod(a,7)+`math.sqrt(b))
+> assert a=13,b=100;
+0000-00-00 00:00:00 NB000I Rule r1 fired 
+> show a,b,x;
+a = 13
+b = 100
+x = 16 == (`math.mod(a,7)+`math.sqrt(b))
+> assert a=14;
+> show a,b,x;
+a = 14
+b = 100
+x = 10 == (`math.mod(a,7)+`math.sqrt(b))
+
+TEST: line    81 - Testing a C library function that I register with nbFunctionD_DD
+> assert y=`my.mod(b,7);
+> show b,y;
+b = 100
+y = 2
+
+TEST: line    86 - Testing a silly function of my creation: xyminus2(a,b) returns  (a * b - 2)
+> assert y=`my.xyminus2(a,b);
+> show a,b,y;
+a = 14
+b = 100
+y = 1398
+
+TEST: line    91 - Testing a silly single operand function: xtwice(a) returns (a * 2)
+> assert y=`my.xtwice(a);
+> show a,y;
+a = 14
+y = 28

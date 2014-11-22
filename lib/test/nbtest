@@ -12,7 +12,7 @@
 
 maxit=0
  
-for file in eNodeTerms eSkillMethods; do
+for file in eCellFunctions eNodeTerms eSkillMethods; do
   echo "Test ${file}"
   ./${file} +bU ++test > ${file}.out 2>&1
   exit=$?
