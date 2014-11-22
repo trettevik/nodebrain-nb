@@ -54,7 +54,6 @@ void initString(NB_Stem *stem);
 void printStringRaw(struct STRING *string);
 void printString(struct STRING *string);
 void printStringAll(void);
-void destroyString(struct STRING *str);
 struct STRING *useString(char *value);
 
 #endif

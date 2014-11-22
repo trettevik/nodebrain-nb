@@ -93,6 +93,7 @@
 #include <nb/nbrule.h>        // rule routines
 #include <nb/nbqueue.h>       // queue routines
 #include <nb/nbverb.h>        /* verb structure */
+#include <nb/nbmath.h>        /* math functions */
 
 #ifdef HAVE_OPENSSL
 #include <nb/nbtls.h>         // TLS routines

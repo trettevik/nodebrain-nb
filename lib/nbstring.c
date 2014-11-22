@@ -121,8 +121,8 @@ void *hashStr(struct HASH *hash,char *cursor){
 /**********************************************************************
 * Object Management Methods
 **********************************************************************/
-size_t stringName(NB_Cell *context,NB_String *string,char **nameP,size_t size){
-  size_t len;
+static int stringName(NB_Cell *context,NB_String *string,char **nameP,int size){
+  int len;
 
   len=strlen(string->value)+2;
   if(size>len) sprintf(*nameP,"\"%s\"",string->value),(*nameP)+=len;
@@ -143,7 +143,7 @@ void printStringAll(void){
   nbHashShow(strType->hash,"Strings",NULL);
   }
 
-void destroyString(NB_String *str){
+static void destroyString(NB_String *str){
   struct STRING *string,**stringP,**freeStringP;
   int r=1;  /* temp relation <0, 0, >0 */
   int size;

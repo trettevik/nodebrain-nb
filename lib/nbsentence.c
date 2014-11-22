@@ -94,11 +94,20 @@ static void nbSentenceDestroy(NB_Sentence *cell){
 * Private Cell Calculation Methods
 **********************************************************************/
 
-static NB_Object *evalSentence(NB_Sentence *cell){
-  NB_Node *node=(NB_Node *)cell->term->def;
+static NB_Object *evalSentence(NB_Sentence *sentence){
+  NB_Node *node=(NB_Node *)sentence->term->def;
   if(node->cell.object.type!=nb_NodeType) return(nb_Unknown);
-  if(cell->facet==NULL) return(nb_Unknown);
-  return((*cell->facet->eval)(node->context,node->skill->handle,node->knowledge,cell->args));
+  if(sentence->facet==NULL) return(nb_Unknown);
+  // 2014-11-21 eat - Support node redefinition
+  // If the facet is not associated with the node's current skill, then see if we can fix it
+  // Ideally this change would have been made when the node was redefined with a new skill.
+  // However, a disabled subscription is difficult to find a node redefinition time.
+  if(sentence->facet->skill!=node->skill){
+    NB_Facet *facet;
+    for(facet=node->skill->facet;facet!=NULL && facet->ident!=sentence->facet->ident;facet=(NB_Facet *)facet->object.next);
+    if(facet) sentence->facet=facet; // correct facet 
+    }
+  return((*sentence->facet->eval)(node->context,node->skill->handle,node->knowledge,sentence->args));
   }
 
 static void solveSentence(NB_Sentence *cell){

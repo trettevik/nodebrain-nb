@@ -323,6 +323,10 @@ _declspec (dllexport)
 extern void *nbBind(nbCELL context,char *ident,nbCELL arglist,char *text){
   // nbLogMsg(context,0,'T',"nbBind() called for \"%s\".",ident);
   nbSkillDeclare(context,sumBind,NULL,ident,"add",arglist,text);
+
+  nbFunctionD_DD(context,"toy.mod",fmod);
+  nbFunctionD_D(context,"toy.sqrt",sqrt);
+  nbFunctionD_D(context,"toy.sqrt",sqrt);
   return(NULL);
   }
 

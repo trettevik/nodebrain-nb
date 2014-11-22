@@ -37,6 +37,7 @@
 * 2010-02-28 eat 0.7.9  Cleaned up -Wall warning messages. (gcc 4.5.0)
 *============================================================================
 */
+#ifdef NB_INTERNAL
 #ifndef _NB_MATH_H_
 #define _NB_MATH_H_
 
@@ -57,9 +58,24 @@ extern struct TYPE *mathTypeMul;
 extern struct TYPE *mathTypeDiv;
 
 void initMath(NB_Stem *stem);
-void destroyMath(struct MATH *math);
-struct MATH *useMath(int inverse,struct TYPE *type,NB_Object *left,NB_Object *right);
+NB_Math *useMath(struct TYPE *type,NB_Object *left,NB_Object *right);
 
 void printMathAll(void);
+
+#endif
+#endif
+
+#ifndef _NB_MATH_API_H_
+#define _NB_MATH_API_H_
+
+#if defined(WIN32)
+__declspec(dllexport)
+#endif
+extern int nbFunctionD_D(nbCELL context,char *name,double (*function)(double x));
+
+#if defined(WIN32)
+__declspec(dllexport)
+#endif
+extern int nbFunctionD_DD(nbCELL context,char *name,double (*function)(double x,double y));
 
 #endif

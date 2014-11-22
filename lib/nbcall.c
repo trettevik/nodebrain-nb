@@ -36,11 +36,11 @@
 * Description
 *
 *   The CALL object type provides an easy way to extend nodebrain
-*   functionality.  Function can be included in this file to support any
+*   functionality.  Functions can be included in this file to support any
 *   number of operations on object lists.  The list members may be any
 *   cell expression as illustrated by the following example.
 *
-*      _mod(3*a,b/2)
+*      `mod(3*a,b/2)
 *
 *   The initCall() method has the responsibility of creating an individual
 *   object type for each such function.  The "eval" method for the type
@@ -66,10 +66,10 @@ struct TYPE *callTypeMod=NULL;
 /**********************************************************************
 * Private Object Methods
 **********************************************************************/
-void printCall(call) struct CALL *call;{
+static void printCall(call) struct CALL *call;{
   if(call==NULL) outPut("(?)");
   else{
-    outPut("%s",call->cell.object.type->name);
+    outPut("`%s",call->cell.object.type->name);
     printObject((NB_Object *)call->list);
     }
   }
@@ -82,7 +82,7 @@ void printCall(call) struct CALL *call;{
 * Private Function Calculation Methods
 **********************************************************************/
 
-NB_Object *evalCallMod(struct CALL *call){
+static NB_Object *evalCallMod(struct CALL *call){
   NB_List *list=call->list;
   NB_Link *member;
   struct REAL *lreal,*rreal;
@@ -99,7 +99,7 @@ NB_Object *evalCallMod(struct CALL *call){
   return((NB_Object *)useReal(fmod(lreal->value,rreal->value)));
   }
 
-void solveCall(struct CALL *call){
+static void solveCall(struct CALL *call){
   nbCellSolve_((NB_Cell *)call->list);
   return;
   }
@@ -107,11 +107,11 @@ void solveCall(struct CALL *call){
 /**********************************************************************
 * Private Function Management Methods
 **********************************************************************/
-void enableCall(struct CALL *call){
+static void enableCall(struct CALL *call){
   nbAxonEnable((NB_Cell *)call->list,(NB_Cell *)call);
   }
 
-void disableCall(struct CALL *call){
+static void disableCall(struct CALL *call){
   nbAxonDisable((NB_Cell *)call->list,(NB_Cell *)call);
   }
 
@@ -119,7 +119,7 @@ void disableCall(struct CALL *call){
 * Public Methods
 **********************************************************************/
 void initCall(NB_Stem *stem){
-  callTypeMod=nbObjectType(stem,"_mod",0,0,printCall,destroyCondition);
+  callTypeMod=nbObjectType(stem,"mod",0,0,printCall,destroyCondition);
   nbCellType(callTypeMod,solveCall,evalCallMod,enableCall,disableCall);
   }
 

@@ -125,9 +125,9 @@ NB_Real **locateReal(double n){
 /**********************************************************************
 * Object Management Methods
 **********************************************************************/
-size_t realName(NB_Cell *context,NB_Real *real,char **nameP,size_t size){
+int realName(NB_Cell *context,NB_Real *real,char **nameP,int size){
   char number[20];
-  size_t len;
+  int len;
 
   sprintf(number,"%.10g",real->value);
   len=strlen(number);

@@ -1555,12 +1555,12 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
   //if(NULL!=(term=nbTermFindDown((NB_Term *)context,ident)) && term->def!=nb_Disabled){
   term=nbTermFindDown((NB_Term *)context,ident);
   if(term && term->def!=nb_Undefined){
-    if(strcmp(verb,"redefine")!=0){
+    if(term->def->type==nb_NodeType && ((NB_Node *)term->def)->skill==nb_SkillDefault){
+        //dropObject(term->def);
+        //term->def=nb_Undefined;
+        }
+    else if(strcmp(verb,"redefine")!=0){
       outMsg(0,'E',"Term \"%s\" already defined.",ident);
-      return(1);
-      }
-    if(((NB_Object *)term->def)->type==nb_NodeType){
-      outMsg(0,'E',"Sorry, you may not redefine node \"%s\".",ident);
       return(1);
       }
     }
@@ -1583,6 +1583,10 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     }
   strncpy(type,((struct STRING *)typeTerm->def)->value,sizeof(type)-1); // 2012-12-15 eat - CID 751633
   *(type+sizeof(type)-1)=0;
+  if(term && term->def->type==nb_NodeType && strcmp(type,"node")!=0){
+    outMsg(0,'E',"A node may only be redefined as a node");
+    return(1);
+    }
   if(strcmp(type,"on")==0 || strcmp(type,"if")==0 || strcmp(type,"when")==0) {
     int parse=0; // assume not using a parsed parsed instruction
     while(*cursor==' ') cursor++;
@@ -1748,9 +1752,15 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
       }
     }
   else if(strcmp(type,"node")==0){
-    if(term && term->def!=nb_Undefined){ // 2014-03-20 eat - allow when defined as undefined
-      outMsg(0,'E',"Sorry, you may not redefine a term as node.");
-      return(1);
+    if(term){ // 2014-11-21 eat - if redefining a term as a node, make sure it is already a node
+      if(term->def->type==nb_NodeType){  // redefining a node to a node is ok
+        dropObject(term->def);
+        term->def=nb_Undefined;
+        }
+      else{
+        outMsg(0,'E',"Only a node may be redefined as a node.");
+        return(1);
+        }
       }
     nbNodeParse((NB_Term *)context,ident,cursor);
     }

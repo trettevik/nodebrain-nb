@@ -33,7 +33,7 @@
 *   #include "nbmath.h"
 *
 *   void initMath();
-*   struct STRING *useMath(char *string);
+*   struct MATH *useMath(NB_Type *type,NB_Object *left,NB_Object *right);
 *   void printMath();
 *   void printMathAll();
 * 
@@ -80,6 +80,9 @@
 * 2012-12-27 eat 0.8.13 Checker updates
 * 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
 * 2014-05-04 eat 0.9.02 Replaced references to realType to NB_OBJECT_KIND_REAL
+* 2014-11-20 eat 0.9.03 Included nbFunctionDD and nbFunctionDDD
+*            These API functions enable a module to register additional
+*            math functions.
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -92,68 +95,42 @@ struct TYPE *mathTypeSub;
 struct TYPE *mathTypeMul;
 struct TYPE *mathTypeDiv;
 
-struct TYPE *mathTypeCeil;
-struct TYPE *mathTypeFloor;
-struct TYPE *mathTypeAbs;
-/*
-struct TYPE *mathTypeRint;
-*/
-struct TYPE *mathTypeExp;
-struct TYPE *mathTypeLog;
-struct TYPE *mathTypeLog10;
-struct TYPE *mathTypeSqrt;
-struct TYPE *mathTypeHypot;
-struct TYPE *mathTypeMod;
-struct TYPE *mathTypePow;
-
-
 /**********************************************************************
 * Private Object Methods
 **********************************************************************/
-void printMath(math) struct MATH *math;{
-  if(math==NULL) outPut("(?)");
-/*
-  else if(*math->cell.object.type->name>='a' && *math->cell.object.type->name<='z'){
-    outPut("%s",math->cell.object.type->name);
-    outPut("(");
-    if(math->left!=NULL){
+static void printMath(struct MATH *math){
+  if(math==NULL){
+    outPut("(?)");
+    return;
+    }
+  outPut("(");
+  if(math->left!=NULL){
+    if(math->left==nb_False){
+      outPut("(");
       printObject(math->left);
-      outPut(",");
+      outPut(")");
       }
+    else printObject(math->left);
+    }
+  outPut("%s",math->cell.object.type->name);
+  if(math->right==nb_False || math->right==nb_True){
+    outPut("(");
     printObject(math->right);
     outPut(")");
     }
-*/
-  else{  // 2012-12-27 eat 0.8.13 - CID 751548
-    outPut("(");
-    if(math->left!=NULL){
-      if(math->left==nb_False){
-        outPut("(");
-        printObject(math->left);
-        outPut(")");
-        }
-      else printObject(math->left);
-      }
-    outPut("%s",math->cell.object.type->name);
-    if(math->right==nb_False || math->right==nb_True){
-      outPut("(");
-      printObject(math->right);
-      outPut(")");
-      }
-    else printObject(math->right);
-    outPut(")");
-    }
+  else printObject(math->right);
+  outPut(")");
   }
 
-void printMathX(struct MATH *math){
-  outPut("%s",math->cell.object.type->name);
+static void printMathX(struct MATH *math){
+  outPut("`%s",math->cell.object.type->name);
   outPut("(");
   printObject(math->right);
   outPut(")");
   }
 
-void printMathXY(struct MATH *math){
-  outPut("%s",math->cell.object.type->name);
+static void printMathXY(struct MATH *math){
+  outPut("`%s",math->cell.object.type->name);
   outPut("(");
   printObject(math->left);
   outPut(",");
@@ -164,7 +141,7 @@ void printMathXY(struct MATH *math){
 /*
 *  Math destructor
 */
-void destroyMath(NB_Math *math){
+static void destroyMath(NB_Math *math){
   struct MATH *lmath,**mathP;
   NB_Hash *hash=math->cell.object.type->hash;
   uint32_t hashcode;
@@ -223,7 +200,7 @@ void destroyMath(NB_Math *math){
 *  recognize a change.
 *       
 */
-NB_Object *evalMathX(struct MATH *math){
+static NB_Object *evalMathX(struct MATH *math){
   struct MATH *rmath=(struct MATH *)math->right;
   struct REAL *rreal;
   
@@ -233,7 +210,7 @@ NB_Object *evalMathX(struct MATH *math){
   return(nb_Unknown);
   }
 
-NB_Object *evalMathXY(struct MATH *math){
+static NB_Object *evalMathXY(struct MATH *math){
   struct MATH *lmath=(struct MATH *)math->left,*rmath=(struct MATH *)math->right;
   struct REAL *lreal,*rreal;
 
@@ -244,7 +221,7 @@ NB_Object *evalMathXY(struct MATH *math){
   return(nb_Unknown);
   }
 
-NB_Object *evalMathInv(math) struct MATH *math; {
+static NB_Object *evalMathInv(struct MATH *math){
   struct MATH *rmath=(struct MATH *)math->right;
   struct REAL *rreal;
 
@@ -254,7 +231,7 @@ NB_Object *evalMathInv(math) struct MATH *math; {
   else return(nb_Unknown);
   }
 
-NB_Object *evalMathAdd(math) struct MATH *math; {
+static NB_Object *evalMathAdd(struct MATH *math){
   struct MATH *lmath=(struct MATH *)math->left,*rmath=(struct MATH *)math->right;
   struct REAL *lreal,*rreal;
 
@@ -266,7 +243,7 @@ NB_Object *evalMathAdd(math) struct MATH *math; {
   return(nb_Unknown);
   }
 
-NB_Object *evalMathSub(math) struct MATH *math; {
+static NB_Object *evalMathSub(struct MATH *math){
   struct MATH *lmath=(struct MATH *)math->left,*rmath=(struct MATH *)math->right;
   struct REAL *lreal,*rreal;
 
@@ -278,7 +255,7 @@ NB_Object *evalMathSub(math) struct MATH *math; {
   return(nb_Unknown);
   }
 
-NB_Object *evalMathMul(math) struct MATH *math; {
+static NB_Object *evalMathMul(struct MATH *math){
   struct MATH *lmath=(struct MATH *)math->left,*rmath=(struct MATH *)math->right;
   struct REAL *lreal,*rreal;
 
@@ -290,7 +267,7 @@ NB_Object *evalMathMul(math) struct MATH *math; {
   return(nb_Unknown);
   }
 
-NB_Object *evalMathDiv(math) struct MATH *math; {
+static NB_Object *evalMathDiv(struct MATH *math){
   struct MATH *lmath=(struct MATH *)math->left,*rmath=(struct MATH *)math->right;
   struct REAL *lreal,*rreal;
 
@@ -306,7 +283,7 @@ NB_Object *evalMathDiv(math) struct MATH *math; {
 *   Note: solveMath() is identical to solveInfix2() for conditions
 *         so we could use solveInfix2() instead
 */
-void solveMath(struct MATH *math){
+static void solveMath(struct MATH *math){
   if(((NB_Object *)math->left)->value==nb_Unknown){
     if(nbCellSolve_((NB_Cell *)math->left)==nb_Unknown) return;
     } 
@@ -317,12 +294,12 @@ void solveMath(struct MATH *math){
 /**********************************************************************
 * Private Function Management Methods
 **********************************************************************/
-void enableMath(struct MATH *math){
+static void enableMath(struct MATH *math){
   nbAxonEnable((NB_Cell *)math->left,(NB_Cell *)math);
   nbAxonEnable((NB_Cell *)math->right,(NB_Cell *)math);
   }
 
-void disableMath(struct MATH *math){
+static void disableMath(struct MATH *math){
   nbAxonDisable((NB_Cell *)math->left,(NB_Cell *)math);
   nbAxonDisable((NB_Cell *)math->right,(NB_Cell *)math);
   }
@@ -330,25 +307,43 @@ void disableMath(struct MATH *math){
 /*
 *  Sub Function Constructors
 */
-NB_Object *mathConX(struct TYPE *type,NB_Link *member){
+static NB_Object *mathConX(struct TYPE *type,NB_Link *member){
   NB_Object *right;
   if(member==NULL) return(NULL);
   right=member->object;
-  return((NB_Object *)useMath(0,type,nb_Unknown,right));
+  return((NB_Object *)useMath(type,nb_Unknown,right));
   }
 
-NB_Object *mathConXY(struct TYPE *type,NB_Link *member){
+static NB_Object *mathConXY(struct TYPE *type,NB_Link *member){
   NB_Object *left,*right;
   if(member==NULL) return(NULL);
   left=member->object;
   if((member=member->next)==NULL) return(NULL);
   right=member->object;
-  return((NB_Object *)useMath(0,type,left,right));
+  return((NB_Object *)useMath(type,left,right));
   }
 
 /**********************************************************************
 * Public Methods
 **********************************************************************/
+int nbFunctionD_D(nbCELL context,char *name,double (*function)(double x)){
+  NB_Stem *stem=context->object.type->stem;
+  NB_Type *type;
+  type=nbObjectType(stem,name,0,TYPE_IS_MATH,printMathX,destroyMath);
+  nbCellType(type,solveMath,evalMathX,enableMath,disableMath);
+  nbCellTypeSub(type,1,NULL,mathConX,function,NULL);
+  return(0);
+  }
+
+int nbFunctionD_DD(nbCELL context,char *name,double (*function)(double x,double y)){
+  NB_Stem *stem=context->object.type->stem;
+  NB_Type *type;
+  type=nbObjectType(stem,name,0,TYPE_IS_MATH,printMathXY,destroyMath);
+  nbCellType(type,solveMath,evalMathXY,enableMath,disableMath);
+  nbCellTypeSub(type,1,NULL,mathConXY,function,NULL);
+  return(0);
+  }
+
 void initMath(NB_Stem *stem){
   mathTypeInv=nbObjectType(stem,"-",0,TYPE_IS_MATH,printMath,destroyMath);
   nbCellType(mathTypeInv,solveMath,evalMathInv,enableMath,disableMath);
@@ -361,50 +356,29 @@ void initMath(NB_Stem *stem){
   mathTypeDiv=nbObjectType(stem,"/",0,TYPE_IS_MATH,printMath,destroyMath);
   nbCellType(mathTypeDiv,solveMath,evalMathDiv,enableMath,disableMath);
 
-  mathTypeCeil=nbObjectType(stem,"ceil",0,TYPE_IS_MATH,printMathX,destroyMath);
-  nbCellType(mathTypeCeil,solveMath,evalMathX,enableMath,disableMath);
-  nbCellTypeSub(mathTypeCeil,1,NULL,mathConX,ceil,NULL);
-  mathTypeFloor=nbObjectType(stem,"floor",0,TYPE_IS_MATH,printMathX,destroyMath);
-  nbCellType(mathTypeFloor,solveMath,evalMathX,enableMath,disableMath);
-  nbCellTypeSub(mathTypeFloor,1,NULL,mathConX,floor,NULL);
-  mathTypeAbs=nbObjectType(stem,"abs",0,TYPE_IS_MATH,printMathX,destroyMath);
-  nbCellType(mathTypeAbs,solveMath,evalMathX,enableMath,disableMath);
-  nbCellTypeSub(mathTypeAbs,1,NULL,mathConX,fabs,NULL);
-/*
-  mathTypeRint=nbObjectType(stem,"rint",0,0,printMathX,destroyMath);
-  nbCellType(mathTypeRint,solveMath,evalMathX,enableMath,disableMath);
-  nbCellTypeSub(mathTypeRint,1,NULL,mathConX,rint,NULL);
-*/
-  mathTypeExp=nbObjectType(stem,"exp",0,TYPE_IS_MATH,printMathX,destroyMath);
-  nbCellType(mathTypeExp,solveMath,evalMathX,enableMath,disableMath);
-  nbCellTypeSub(mathTypeExp,1,NULL,mathConX,exp,NULL);
-  mathTypeLog=nbObjectType(stem,"log",0,TYPE_IS_MATH,printMathX,destroyMath);
-  nbCellType(mathTypeLog,solveMath,evalMathX,enableMath,disableMath);
-  nbCellTypeSub(mathTypeLog,1,NULL,mathConX,log,NULL);
-  mathTypeLog10=nbObjectType(stem,"log10",0,TYPE_IS_MATH,printMathX,destroyMath);
-  nbCellType(mathTypeLog10,solveMath,evalMathX,enableMath,disableMath);
-  nbCellTypeSub(mathTypeLog10,1,NULL,mathConX,log10,NULL);
-  mathTypeSqrt=nbObjectType(stem,"sqrt",0,TYPE_IS_MATH,printMathX,destroyMath);
-  nbCellType(mathTypeSqrt,solveMath,evalMathX,enableMath,disableMath);
-  nbCellTypeSub(mathTypeSqrt,1,NULL,mathConX,sqrt,NULL);
-
-#if !defined mpe
-  mathTypeHypot=nbObjectType(stem,"hypot",0,TYPE_IS_MATH,printMathXY,destroyMath);
-  nbCellType(mathTypeHypot,solveMath,evalMathXY,enableMath,disableMath);
-  nbCellTypeSub(mathTypeHypot,1,NULL,mathConXY,hypot,NULL);
-#endif
-  mathTypeMod=nbObjectType(stem,"mod",0,TYPE_IS_MATH,printMathXY,destroyMath);
-  nbCellType(mathTypeMod,solveMath,evalMathXY,enableMath,disableMath);
-  nbCellTypeSub(mathTypeMod,1,NULL,mathConXY,fmod,NULL);
-  mathTypePow=nbObjectType(stem,"pow",0,TYPE_IS_MATH,printMathXY,destroyMath);
-  nbCellType(mathTypePow,solveMath,evalMathXY,enableMath,disableMath);
-  nbCellTypeSub(mathTypePow,1,NULL,mathConXY,pow,NULL);
+  NB_Type *type;
+  // arrary of function defined as:  double f(double x)
+  double (*funcDD[13])()={ceil,floor,fabs,exp,log,log10,sqrt,rint,round,trunc,sin,cos,tan};
+  char *funcNameDD[13]={"math.ceil","math.floor","math.abs","math.exp","math.log","math.log10","math.sqrt","math.rint","math.round","math.trunc","math.sin","math.cos","math.tan"};
+  int i;
+  for(i=0;i<13;i++){
+    type=nbObjectType(stem,funcNameDD[i],0,TYPE_IS_MATH,printMathX,destroyMath);
+    nbCellType(type,solveMath,evalMathX,enableMath,disableMath);
+    nbCellTypeSub(type,1,NULL,mathConX,funcDD[i],NULL);
+    }
+  double (*funcDDD[3])()={fmod,pow,hypot};
+  char *funcNameDDD[3]={"math.mod","math.pow","math.hypot"};
+  for(i=0;i<3;i++){
+    type=nbObjectType(stem,funcNameDDD[i],0,TYPE_IS_MATH,printMathXY,destroyMath);
+    nbCellType(type,solveMath,evalMathXY,enableMath,disableMath);
+    nbCellTypeSub(type,1,NULL,mathConXY,funcDDD[i],NULL);
+    }
   }
 
 /*
 *  Math constructor
 */
-struct MATH * useMath(int inverse,struct TYPE *type,NB_Object *left,NB_Object *right){
+NB_Math *useMath(NB_Type *type,NB_Object *left,NB_Object *right){
   /*
   *  This routine returns a pointer to a math object.  If the
   *  expression is already defined, the existing structure is returned.
@@ -421,13 +395,7 @@ struct MATH * useMath(int inverse,struct TYPE *type,NB_Object *left,NB_Object *r
   NB_Hash *hash=type->hash;
   uint32_t hashcode;
 
-  if(trace) outMsg(0,'T',"useMath called");
-  if(inverse){
-    lmath=useMath(0,type,left,right);
-    return(useMath(0,mathTypeInv,(NB_Object *)lmath,NULL));
-    }
-
-  if(trace) outMsg(0,'T',"destroyMath() called");
+  if(trace) outMsg(0,'T',"useMath: called");
 
   hashcode=hashCond(type,left,right);
   mathP=(struct MATH **)&(hash->vect[hashcode&hash->mask]);

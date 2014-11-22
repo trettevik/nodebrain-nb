@@ -784,6 +784,7 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
   struct TYPE *type;
   //int not=0;
   char symid;
+  char function=0; // assume not function - this is temporary
 
   if(parseTrace) outMsg(0,'T',"nbParseObject(): called -->%s",*cursor);
   symid=nbParseSymbol(ident,sizeof(ident),cursor);
@@ -911,6 +912,44 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
       return((NB_Object *)parseReal(ident));
     case 's': // string literal 
       return((NB_Object *)useString(ident));
+    case '`': // function identifier
+      function=1;  // flag function and continue
+      savecursor=*cursor;
+      symid=nbParseSymbol(ident,sizeof(ident),cursor);
+      if(symid!='t'){
+        outMsg(0,'E',"Expecting function name at-->%s",savecursor);
+        return(NULL);
+        }
+      if(!NB_ISALPHA((int)*ident)){
+        outMsg(0,'E',"Function name must start with alpha character at-->%s",savecursor);
+        return(NULL);
+        }
+      if(**cursor!='('){
+        outMsg(0,'E',"Expecting '(' at-->%s",*cursor);
+        return(NULL);
+        }
+      (*cursor)++;
+      right=parseList(context,cursor);
+      symid=nbParseSymbol(token,sizeof(token),cursor);
+      if(symid!=')'){
+        outMsg(0,'E',"Expecting \")\" at end of parameter list.");
+        return(NULL);
+        }
+      (*cursor)++;
+      if(strcmp(ident,"mod")==0){
+        type=callTypeMod;
+        return((NB_Object *)useCondition(type,useReal(0),right));
+        }
+      NB_Link *member;
+      struct TYPE *objType;
+      for(member=regfun;member!=NULL;member=member->next){
+        objType=((struct TYPE *)member->object);
+        if(strcmp(objType->name,ident)==0){
+          return(objType->construct(objType,((NB_List *)right)->link));
+          }
+        }
+      outMsg(0,'E',"Function %s not defined",ident);
+      return(NULL);
     case 't': // term identifier 
       if(*ident=='@' && *(ident+1)!=0){
         term=addrContext;  // term implied if starting with facet references
@@ -980,26 +1019,10 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
         return(NULL);
         }
       (*cursor)++;
-      if(strcmp(ident,"_mod")==0){
-        type=callTypeMod;
-        return((NB_Object *)useCondition(type,useReal(0),right));
-        }
-      if(term==NULL){  /* included logic to lookup builtin function names */
-        NB_Link *member;
-        struct TYPE *objType;
-        for(member=regfun;member!=NULL;member=member->next){
-          objType=((struct TYPE *)member->object);
-          if(strcmp(objType->name,ident)==0){
-            return(objType->construct(objType,((NB_List *)right)->link));
-            }
-          }
+      if(term==NULL){
         // 2014-09-13 eat - Term used as node, make it a node with default skill
         term=nbTermNew(context,ident,nbNodeNew(),1);
         ((NB_Node *)term->def)->context=term;
-        //return((NB_Object *)nbSentenceNew(((NB_Node *)term->def)->skill->facet,term,right));
-        // 2013-12-09 eat - Removing attempt to support sentences before defining the node
-        //outMsg(0,'E',"Sentence requires node - \"%s\" not defined as node.",ident);
-        //return(NULL);
         }
       if(term->def->type==nb_NodeType){
         NB_Facet *facet=nbSkillGetFacet(((NB_Node *)term->def)->skill,facetIdent);
@@ -1340,13 +1363,13 @@ NB_Object *nbParseCell(NB_Term *context,char **cursor,int level){
         if(symid=='+') type=mathTypeAdd;
         else if(symid=='-') type=mathTypeSub;
         else{*cursor=cursave; return(lobject);}
-        if((robject=nbParseCell(context,cursor,7))!=NULL) lobject=(NB_Object *)useMath(0,type,lobject,robject);
+        if((robject=nbParseCell(context,cursor,7))!=NULL) lobject=(NB_Object *)useMath(type,lobject,robject);
         break;
       case 7:
         if(symid=='*') type=mathTypeMul;
         else if(symid=='/') type=mathTypeDiv;
         else{*cursor=cursave; return(lobject);}
-        if((robject=nbParseObject(context,cursor))!=NULL) lobject=(NB_Object *)useMath(0,type,lobject,robject);
+        if((robject=nbParseObject(context,cursor))!=NULL) lobject=(NB_Object *)useMath(type,lobject,robject);
         break;
       /* level 8 is handled by nbParseObject */
       default:

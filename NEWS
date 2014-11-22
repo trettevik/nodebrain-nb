@@ -9,7 +9,7 @@
 
 NodeBrain 0.9.03 (Columbo) Change Summary
 
-* Released TBD, 2014
+* Released November 23, 2014
 
 * Theme:  Alert Attribute Transience and Implied Nodes
 
@@ -27,12 +27,25 @@ NodeBrain 0.9.03 (Columbo) Change Summary
 * Documentation:
 
   o  The NodeBrain Language manual has been updated to 
-     include facets and alert attribute transience.  These
-     topics were not covered previously because their
-     introduction in the prior release was experimental.
+     cover new topics:
+
+       - Alert attribute transience
+       - Node facets
+       - Cell functions
+       - Redefine command
+
+     These topics were not covered previously because their
+     introduction in the prior releases was experimental.
      Because of this, the incompatibilities introduced by
      this release for these features are expected to have
      little impact.
+
+  o  The NodeBrain Library manual has been updated with
+     additional API functions for:
+
+       - Access to all terms defined within a node
+         glossary.
+       - Registration of simple numerical cell functions.
      
 * Incompatibilities:
 
@@ -152,6 +165,37 @@ NodeBrain 0.9.03 (Columbo) Change Summary
      verification, regression testing, and to provide
      some examples know to work for reference.
 
+  o  This version introduces a method of extending the
+     rule engine by adding "cell functions".  The syntax
+     for referencing a cell function is as follows:
+  
+       `[module.]function(argList)
+
+       `math.mod(a,16)
+       `math.sqrt(b)
+
+     The back-tick distinguishes a cell function formula
+     a node function formula (sentence).  In this
+     release, two API functions have been added for
+     registration of cell functions by a module: 
+
+       nbFunctionD_D   double (*f)(double x)
+       nbFunctionD_DD  double (*f)(double x,double y)
+
+     These API functions enable the registration of C
+     functions that return a double value and have one
+     or two double operands.
+
+     The goal of these API functions is to enable
+     extension without having to worry about the
+     manipulation of NodeBrain data objects.  The
+     registered cell functions accept and return
+     normal C data types.
+
+     Additonal API functions will be added in the
+     future to register cell functions for string 
+     manipulation.
+
 * Deprecated Syntax: (none)
 
 * Dropped Syntax: 
@@ -163,9 +207,17 @@ NodeBrain 0.9.03 (Columbo) Change Summary
   o  "_" no longer used following a node term to reference a
      node facet.  "@" is used instead.
 
+  o  Undocumented math functions may no longer be referenced
+     using a syntax that looks like a node sentence.
+
+        assert x=mod(a,16);
+
+     Since the function were undocumented, this change has
+     been made abruptly, anticipating no impact.
+
 * Bug Fixes:
 
-  o  Previous versions enabled multiple level term
+  o  Previous versions allowed multiple level term
      glossaries with subsequent definition of one of the
      intermediate terms as a node.  However, IF rules were
      associated with a node based on the node hierarchy
@@ -173,10 +225,21 @@ NodeBrain 0.9.03 (Columbo) Change Summary
      when an intermediate term was subsequently define to
      be a node. This caused IF rules to respond to alerts
      to an unintended node, and not respond to alerts to
-     the intended node.  This is fixed by the automatic
+     the intended node.
+
+     This is fixed by preventing a term that is not defined
+     as a node from being defined as a node, an automatic
      creation of nodes when "." navigation is used, and a
      recognition of multiple level glossaries when "_"
      navigation is used.
+
+  o  Previous versions allowed nodes to be redefine as
+     simple cells and other object types.  Similar to the
+     previous defect, this could cause IF rules to be 
+     stranded in a way they could no longer be alerted.
+
+     This is fixed by only allowing a node to be redefined
+     as a node.
 
 ============================================================
 
