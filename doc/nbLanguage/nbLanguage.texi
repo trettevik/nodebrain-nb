@@ -318,23 +318,6 @@ Numbers are stored internally as floating-point values. You represent numbers wi
        +7
 @end example
 
-Addition (+), subtraction (-), multiplication (*), and division (/) operators may be used for calculation.
-
-@example
-	5*2+10
-	21/3-2
-@end example
-
-Some common numeric functions are also recognized by the interpreter. Examples are shown in the table below. A complete list of built-in functions is provided later.
-
-@multitable {-------------------------------} {---------------}
-
-@headitem Function Call Example @tab Result
-@item mod(45,2) @tab 1  
-@item floor(16.2345) @tab 16 
-@item exp(35.5) @tab @math{e^{35.4}} 
-@end multitable
-
 @node Truth
 @section Truth
 @cindex truth
@@ -342,12 +325,13 @@ Some common numeric functions are also recognized by the interpreter. Examples a
 @cindex false
 @cindex unknown
 
-The logical value of True can be represented by any number or string.
-Special symbols are used to represent the logical values of False and Unknown.
+Special symbols are used to represent the logical values of True, False and Unknown.
+Also, the logical value of True can be represented by any number or string.
 @multitable {-----------} {------------}
 @headitem Value @tab Logical
 @item ?     @tab unknown
 @item !     @tab false 
+@item !!    @tab true 
 @item 1     @tab true
 @item 0	    @tab true
 @item "abc" @tab true
@@ -365,7 +349,35 @@ and any formula that could return 0 could not avoid having its value interpreted
 @section Formula
 @cindex Formula
 
-A formula is a simple value (e.g. number, string, False, and Unknown), or an expression that computes a value.
+A formula is a simple value (e.g. number, string, True, False, and Unknown), or an expression that computes a value.
+
+Addition (+), subtraction (-), multiplication (*), and division (/) operators may be used for numeric calculation.
+
+@example
+        5*2+10
+        21/3-2
+@end example
+
+
+Some common numeric functions are also recognized by the interpreter. Examples are shown in the table below. A complete list of built-in functions is provided later.
+
+@multitable {-------------------------------} {---------------}
+
+@headitem Function Call @tab Result
+@item `math.mod(45,2) @tab 1  
+@item `math.floor(16.2345) @tab 16 
+@item `math.exp(35.5) @tab @math{e^{35.4}}
+@end multitable
+
+A formula may also include relational and logical operators.
+
+@multitable {-------------------------------}
+@headitem Logical Expression
+@item `math.floor(a)>17 
+@item a>5 and b<2
+@item a and !b and c="abc"
+@end multitable
+
 
 @node Cell
 @section Cell
@@ -376,7 +388,7 @@ For simple cells, the formula and value are identical.
 
 @multitable {-----------------------}{----------------------}
 
-@headitem Cell Definition @tab Cell Value
+@headitem Cell Formula @tab Cell Value
 @item "abc" @tab "abc"
 @item 0 @tab 0
 @item ? @tab ?
@@ -387,7 +399,7 @@ This concept is illustrated below with multiplication (*) and addition (+) opera
 
 @multitable {-----------------------}{----------------------}
 
-@headitem Cell Definition @tab Cell Value
+@headitem Cell Formula @tab Cell Value
 @item 5*2 @tab 10
 @item 10+5 @tab 15
 @end multitable
@@ -397,7 +409,7 @@ A formula is a unique identifier of a cell. In other words, only one cell exists
 
 @multitable {-----------------------}{----------------------}
 
-@headitem Cell Definition @tab Cell Value
+@headitem Cell Formula @tab Cell Value
 @item 5*2+5 @tab 15
 @end multitable
 
@@ -409,7 +421,7 @@ A formula is a unique identifier of a cell. In other words, only one cell exists
 In general, a term is an identifier used to represent knowledge. For now, let's look at examples of cell terms. These terms reference cells and are themselves cells. In the set of examples below, you assert values for the terms A through E and "fred" by the cell expressions following the equal symbol (=) or double equal symbol (==). A single equal references the value of the cell expression at the time of the assertion. A double equal references the value of the cell expression from the time of the assertion and into the future. In this example, the value of E will automatically change if A or D changes.
 
 @example
-assert A=3,B="abc",C=1.5,D=3*5,E==A*D,fred=mod(E,17)+25.67;
+assert A=3,B="abc",C=1.5,D=3*5,E==A*D,fred=`math.mod(E,17)+25.67;
 @end example 
 It is best to think of a term as an alias, that is, a cell that simply references another cell. A term, like all cells, can be referenced by other cells, and the value of a term is the value of the cell it currently references. So A=3, D=15, and E=45 based on the definitions above.
 
@@ -5413,8 +5425,8 @@ $@{%..@i{term}@}	- Bypass local terms if any.
 @end example
 
 
-@section Cell Definition Substitution
-@cindex Cell Definition Substitution
+@section Cell Formula Substitution
+@cindex Cell Formula Substitution
 
 
 @cartouche
@@ -5424,7 +5436,7 @@ $@{%..@i{term}@}	- Bypass local terms if any.
 @end multitable 
 @end cartouche
 
-When an identifier in a cell expression is preceded by a dollar sign ($), it is called a symbolic cell name and is interpreted as if the identifier's current definition had been specified. You illustrate this with a sequence of three assertions, first without a $ and then with it.
+When an identifier in a formula is preceded by a dollar sign ($), it is called a symbolic cell name and is interpreted as if the identifier's current formula had been specified. You illustrate this with a sequence of three assertions, first without a $ and then with it.
 
 @example
 # without "$"
@@ -5438,7 +5450,7 @@ assert y==$x+21;	# same as y==(a*b)+21
 assert x==a+b;	# no change to y
 @end example
 
-Use of symbolic cell names only impacts assertions using == since = resolves the current value of the cell expression anyway.
+Use of symbolic cell names only impacts assertions using == since = resolves the current value of the formula anyway.
 
 @example
 assert a=2,b=3,x==a*b;

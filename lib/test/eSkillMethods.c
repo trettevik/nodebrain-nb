@@ -49,7 +49,7 @@
 #include <netdb.h>
 #include <time.h>
 
-#define TEST(TITLE) nbLogPut( context, "\nTEST: line %5d - %s\n", __LINE__, TITLE );
+#define TEST( TITLE ) nbLogPut( context, "\nTEST: line %5d - %s\n", __LINE__, TITLE )
 
 void showValue( nbCELL context, char *identifier )
 {
@@ -173,9 +173,9 @@ int main( int argc, char *argv[] )
 
 	context = nbStart( argc, argv );
 
-	TEST("nbSkillDeclare - declare a new skill");
+	TEST( "nbSkillDeclare - declare a new skill" );
 	nbSkillDeclare( context, fireBind, NULL, "", "fire", NULL, "" );	// "fire" is the skill name, which has a hashed association by fireBind 
-	TEST("nbCmd - define a node that uses the skill");
+	TEST( "nbCmd - define a node that uses the skill" );
 	nbCmd( context, "define Fire node fire;", NB_CMDOPT_ECHO );		// creates a node named Fire with fire skill provided by nbSkillDeclare & fireBind
 
         // Illustrate how to get the value of a cell with known identifier
@@ -200,10 +200,10 @@ int main( int argc, char *argv[] )
 	nbCmd( context, "define r2 on(y=2) Ice(22,\"abc\")=99,x=2:show y, x, r2, Fire;", NB_CMDOPT_ECHO );
 	nbCmd( context, "assert y=4;", NB_CMDOPT_ECHO );
 
-	TEST("Expecting r2 to fire")
+	TEST( "Expecting r2 to fire" );
 	nbCmd( context, "assert y=2;", NB_CMDOPT_ECHO );
 
-	TEST("Expecting r1 to fire")
+	TEST( "Expecting r1 to fire" );
 	nbCmd( context, "assert y=4;", NB_CMDOPT_ECHO );
 	nbCmd( context, "Fire(x,y,\"abc\",x+y):this is command text to Fire node", NB_CMDOPT_ECHO );
 	nbCmd( context, "Ice(y,x,3.9,4+7):this is command text to Ice node", NB_CMDOPT_ECHO );

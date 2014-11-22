@@ -49,7 +49,7 @@
 //#include <netdb.h>
 //#include <time.h>
 
-#define TEST(TITLE) nbLogPut( context, "\nTEST: line %5d - %s\n", __LINE__, TITLE );
+#define TEST( TITLE ) nbLogPut( context, "\nTEST: line %5d - %s\n", __LINE__, TITLE )
 
 
 static double xyminus2(double x, double y)
@@ -69,7 +69,7 @@ int main( int argc, char *argv[] )
 
 	context = nbStart( argc, argv );
 
-	TEST("Testing a couple existing cell functions")
+	TEST( "Testing a couple existing cell functions" );
         nbCmd( context, "define x cell `math.mod(a,7) + `math.sqrt(b);", NB_CMDOPT_ECHO );
         nbCmd( context, "define r1 on(x>=16);", NB_CMDOPT_ECHO );
         nbCmd( context, "show a,b,x;", NB_CMDOPT_ECHO );
@@ -78,17 +78,17 @@ int main( int argc, char *argv[] )
         nbCmd( context, "assert a=14;", NB_CMDOPT_ECHO );
         nbCmd( context, "show a,b,x;", NB_CMDOPT_ECHO );
 
-	TEST("Testing a C library function that I register with nbFunctionD_DD")
+	TEST( "Testing a C library function that I register with nbFunctionD_DD" );
         nbFunctionD_DD( context, "my.mod", fmod );
 	nbCmd( context, "assert y=`my.mod(b,7);", NB_CMDOPT_ECHO );
         nbCmd( context, "show b,y;", NB_CMDOPT_ECHO );
 
-	TEST("Testing a silly function of my creation: xyminus2(a,b) returns  (a * b - 2)")
+	TEST( "Testing a silly function of my creation: xyminus2(a,b) returns  (a * b - 2)" );
         nbFunctionD_DD( context, "my.xyminus2", xyminus2 );
 	nbCmd( context, "assert y=`my.xyminus2(a,b);", NB_CMDOPT_ECHO );
         nbCmd( context, "show a,b,y;", NB_CMDOPT_ECHO );
          
-	TEST("Testing a silly single operand function: xtwice(a) returns (a * 2)")
+	TEST( "Testing a silly single operand function: xtwice(a) returns (a * 2)" );
         nbFunctionD_D( context, "my.xtwice", xtwice );
 	nbCmd( context, "assert y=`my.xtwice(a);", NB_CMDOPT_ECHO );
         nbCmd( context, "show a,y;", NB_CMDOPT_ECHO );

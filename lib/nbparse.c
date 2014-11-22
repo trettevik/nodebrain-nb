@@ -152,10 +152,12 @@ void nbParseInit(void){
   unsigned int i;
   char *numChar="0123456789";
   char *alphaChar="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  char *leadingChar="_.@%$";
+  //char *leadingChar="_.@%$";
+  char *leadingChar="_.%$";
   char *relationChar="=<>";
   char *comboChar="&?[|+-"; // single character operators that can start combo operators
-  char *soloChar="^(,{/*`";   // single character operators - consumed
+  //char *soloChar="^(,{/*`";   // single character operators - consumed
+  char *soloChar="^(,{/*`@";   // single character operators - consumed
   char *delimChar="])}:;";   // cell delimiter - not consumed 
 
   memset(nb_CharClass,(unsigned char)255,sizeof(nb_CharClass));
@@ -779,12 +781,12 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
   char ident[1024],token[1024],facetIdent[256];
   void *right;
   NB_Object *object,*objhold;
-  NB_Term *term;
+  NB_Term *term=NULL;
   char *delim,msg[1024],*savecursor=*cursor;
   struct TYPE *type;
   //int not=0;
   char symid;
-  char function=0; // assume not function - this is temporary
+  char isSentence=0;
 
   if(parseTrace) outMsg(0,'T',"nbParseObject(): called -->%s",*cursor);
   symid=nbParseSymbol(ident,sizeof(ident),cursor);
@@ -913,7 +915,6 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
     case 's': // string literal 
       return((NB_Object *)useString(ident));
     case '`': // function identifier
-      function=1;  // flag function and continue
       savecursor=*cursor;
       symid=nbParseSymbol(ident,sizeof(ident),cursor);
       if(symid!='t'){
@@ -950,7 +951,20 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
         }
       outMsg(0,'E',"Function %s not defined",ident);
       return(NULL);
+    case '@': // facet identifier
+      term=addrContext;    // term implied if starting with facet references
+      if(NB_ISALPHA((int)**cursor)){
+      //if(**cursor!='('){
+        savecursor=*cursor;
+        symid=nbParseSymbol(facetIdent,sizeof(facetIdent),cursor);
+        if(symid!='t'){ 
+          outMsg(0,'E',"Expecting facet at-->%s",savecursor);
+          return(NULL);
+          }
+        }
+      isSentence=1;
     case 't': // term identifier 
+/*
       if(*ident=='@' && *(ident+1)!=0){
         term=addrContext;  // term implied if starting with facet references
         if(strlen(ident+1)>=sizeof(facetIdent)){ // 2014-11-19 eat - CID 1251346 fp, rearranged to help checker
@@ -960,6 +974,8 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
         strcpy(facetIdent,ident+1);
         }
       else{
+*/
+      if(!term){ // did not fall through from '@' facet above
         // A single underscore identifies the placeholder cell
         // Perhaps this determination should be moved to nbParseSymbol
         if(*ident=='_' && *(ident+1)==0) return(nb_Placeholder);
@@ -978,21 +994,22 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
         *facetIdent=0;     // assume no facet specified
         if(**cursor=='@'){ // facet assertion
           (*cursor)++;
-          savecursor=*cursor;
-          symid=nbParseSymbol(facetIdent,sizeof(facetIdent),cursor);
-          if(symid!='t'){
-            outMsg(0,'E',"Expecting facet at-->%s",savecursor);
-            return(NULL);
+          isSentence=1;
+          if(NB_ISALPHA((int)**cursor)){
+            savecursor=*cursor;
+            symid=nbParseSymbol(facetIdent,sizeof(facetIdent),cursor);
+            if(symid!='t'){
+              outMsg(0,'E',"Expecting facet at-->%s",savecursor);
+              return(NULL);
+              }
             }
           }
         }
       /* default to cell term if not define */
       savecursor=*cursor;
-      //symid=nbParseSymbol(token,sizeof(token),cursor);
-      //if(symid!='('){
-      //  (*cursor)=savecursor;
       if(**cursor!='('){
-        if(*facetIdent){
+        //if(*facetIdent){
+        if(isSentence){
           if(!term){
             term=nbTermNew(context,ident,nbNodeNew(),1);
             ((NB_Node *)term->def)->context=term;
@@ -1011,7 +1028,7 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
         if(term==NULL) term=nbTermNew(context,ident,nb_Unknown,1);
         return((NB_Object *)term);
         }
-      else (*cursor)++;
+      (*cursor)++;
       right=parseList(context,cursor);
       symid=nbParseSymbol(token,sizeof(token),cursor);
       if(symid!=')'){
@@ -1403,11 +1420,13 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
   NB_Facet  *facet;
   struct TYPE *type;
   char not,unknown;
+  char isSentence=0;
 
   if(parseTrace) outMsg(0,'T',"nbParseAssertion() called");
   next=&member;
   while(symid==','){
     *facetIdent=0;  // clear facet identifier
+    isSentence=0;
     *curP=cursor;
     symid=nbParseSymbol(ident,sizeof(ident),&cursor);
     if(symid=='!'){
@@ -1433,14 +1452,18 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
     // 2014-10-05 eat - switched from "_" to "@" for facets
     if(*cursor=='@'){ // facet assertion
       cursor++;
-      cursave=cursor;
-      symid=nbParseSymbol(facetIdent,sizeof(facetIdent),&cursor);
-      if(symid!='t'){
-        outMsg(0,'E',"Expecting facet at-->%s",cursave);
-        return(NULL);
+      if(NB_ISALPHA((int)*cursor)){
+        cursave=cursor;
+        symid=nbParseSymbol(facetIdent,sizeof(facetIdent),&cursor);
+        if(symid!='t'){
+          outMsg(0,'E',"Expecting facet at-->%s",cursave);
+          return(NULL);
+          }
         }
+      isSentence=1;
       }
     if(*cursor=='('){ /* node assertion */
+      isSentence=1;
       cursor++;
       list=parseList(cellContext,&cursor);
       symid=nbParseSymbol(ident2,sizeof(ident2),&cursor);
@@ -1498,11 +1521,13 @@ NB_Link *nbParseAssertion(NB_Term *termContext,NB_Term *cellContext,char **curP)
         }
       else term=nbTermNew(termContext,ident,nb_Unknown,1);
       }
-    else if((term->def->type->attributes&TYPE_WELDED) && *facetIdent==0 && list==NULL){
+    //else if((term->def->type->attributes&TYPE_WELDED) && *facetIdent==0 && list==NULL){
+    else if((term->def->type->attributes&TYPE_WELDED) && !isSentence){
       outMsg(0,'E',"Term \"%s\" is not open to assertion.",ident);
       return(NULL);
       }
-    if(*facetIdent || list!=NULL){ // sentence 
+    //if(*facetIdent || list!=NULL){ // sentence 
+    if(isSentence){ // sentence 
       if(term->def==nb_Unknown){
         term->def=grabObject(nbNodeNew());
         ((NB_Node *)term->def)->context=term;

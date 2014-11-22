@@ -67,12 +67,12 @@ NB_Type *nb_SentenceType=NULL;
 * Private Object Methods
 **********************************************************************/
 
-static void nbSentenceShow(NB_Sentence *cell){
-  if(cell==NULL) outPut("(?)");
+static void nbSentenceShow(NB_Sentence *sentence){
+  if(sentence==NULL) outPut("(?)");
   else{
-    printObject((NB_Object *)cell->term);
-    if(*cell->facet->ident->value) outPut("@%s",cell->facet->ident->value);
-    if(cell->args) printObject((NB_Object *)cell->args);
+    if(sentence->term!=addrContext) printObject((NB_Object *)sentence->term);
+    if(*sentence->facet->ident->value) outPut("@%s",sentence->facet->ident->value);
+    if(sentence->args) printObject((NB_Object *)sentence->args);
     }
   }
 

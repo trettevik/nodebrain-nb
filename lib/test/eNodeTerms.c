@@ -48,7 +48,7 @@
 #include <netdb.h>
 #include <time.h>
 
-#define TEST(TITLE) nbLogPut( context, "\nTEST: line %5d - %s\n", __LINE__, TITLE );
+#define TEST( TITLE ) nbLogPut( context, "\nTEST: line %5d - %s\n", __LINE__, TITLE )
 
 #define MAX_TERMS 256  // Maximum number of terms we expect in a node
 
@@ -238,16 +238,16 @@ int main( int argc, char *argv[] )
 
 	context = nbStart( argc, argv );
 
-	TEST("Creating a term at the top level context")
+	TEST( "Creating a term at the top level context" );
         nbCmd( context, "define f_a cell 20;", NB_CMDOPT_ECHO );
 
-	TEST("Creating Test node to test ability to access the subordinate terms")
+	TEST( "Creating Test node to test ability to access the subordinate terms" );
         nbCmd( context, "define Test node;",  NB_CMDOPT_ECHO );
         nbCmd( context, "Test. assert .a=1,.b=\"abc\",!.c,?.d,.e,.f_a=1,.f_b=\"abc\",f_c==a and b;", NB_CMDOPT_ECHO );
 	nbCmd( context, "Test. define r1 on(a or b) x=2;", NB_CMDOPT_ECHO );
         nbCmd( context, "Test. define foobar node;",  NB_CMDOPT_ECHO );
 
-	TEST("Locating the Test node")
+	TEST( "Locating the Test node" );
         testContext = nbTermLocate( context, "Test" );
         if( !testContext )
         {
@@ -262,37 +262,37 @@ int main( int argc, char *argv[] )
         	nbLogPut( context, "*** Identifier 'Test' not defined as node\n" );
         	return(1);
 	}
-	TEST("Accessing terms from the top level context")
+	TEST( "Accessing terms from the top level context" );
         showTermValue1( context, "f_a" ); 
         showTermValue1( context, "Test.f_a" ); 
         showTermValue1( context, "Test.f_b" ); 
 
-	TEST("Accessing the same terms from the Test node context")
+	TEST( "Accessing the same terms from the Test node context" );
         showTermValue1( testContext, "..f_a" ); 
         showTermValue1( testContext, "f_a" ); 
         showTermValue1( testContext, ".f_b" ); 
 
-	TEST("Accessing the same terms a harder way with access to cell type codes and C data types")
+	TEST( "Accessing the same terms a harder way with access to cell type codes and C data types" );
         showTermValue2( testContext, "..f_a" ); 
         showTermValue2( testContext, "f_a" ); 
         showTermValue2( testContext, ".f_b" ); 
 
-	TEST("Displaying Test node term names the easy way as single string")
+	TEST( "Displaying Test node term names the easy way as single string" );
         showNodeTerms1( testContext );
 
-	TEST("Displaying Test node terms the hard way using an array of cells")
+	TEST( "Displaying Test node terms the hard way using an array of cells" );
         showNodeTerms2( testContext );
 
-	TEST("Displaying Test node values the easy way")
+	TEST( "Displaying Test node values the easy way" );
         showNodeValues1( testContext );
 
-	TEST("Displaying Test node values a harder way with more control over format")
+	TEST( "Displaying Test node values a harder way with more control over format" );
         showNodeValues2( testContext );
 
-	TEST("Displaying Test node term formulas the easy way")
+	TEST( "Displaying Test node term formulas the easy way" );
         showNodeFormulas1( testContext );
 
-	TEST("Displaying Test node term formulas a slightly harder way with more format control")
+	TEST( "Displaying Test node term formulas a slightly harder way with more format control" );
         showNodeFormulas2( testContext );
 
 	return ( nbStop( context ) );
