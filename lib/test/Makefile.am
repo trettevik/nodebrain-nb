@@ -47,6 +47,7 @@
 noinst_PROGRAMS = eCellFunctions eNodeTerms eSkillMethods
 
 EXTRA_DIST = \
+  eCellFunctions.got \
   eNodeTerms.got \
   eSkillMethods.got \
   nbtest 
