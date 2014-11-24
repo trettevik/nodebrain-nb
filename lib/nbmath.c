@@ -329,7 +329,7 @@ static NB_Object *mathConXY(struct TYPE *type,NB_Link *member){
 int nbFunctionD_D(nbCELL context,char *name,double (*function)(double x)){
   NB_Stem *stem=context->object.type->stem;
   NB_Type *type;
-  type=nbObjectType(stem,name,0,TYPE_IS_MATH,printMathX,destroyMath);
+  type=nbObjectType(stem,name,0,TYPE_IS_MATH|TYPE_NO_PAREN,printMathX,destroyMath);
   nbCellType(type,solveMath,evalMathX,enableMath,disableMath);
   nbCellTypeSub(type,1,NULL,mathConX,function,NULL);
   return(0);
@@ -338,7 +338,7 @@ int nbFunctionD_D(nbCELL context,char *name,double (*function)(double x)){
 int nbFunctionD_DD(nbCELL context,char *name,double (*function)(double x,double y)){
   NB_Stem *stem=context->object.type->stem;
   NB_Type *type;
-  type=nbObjectType(stem,name,0,TYPE_IS_MATH,printMathXY,destroyMath);
+  type=nbObjectType(stem,name,0,TYPE_IS_MATH|TYPE_NO_PAREN,printMathXY,destroyMath);
   nbCellType(type,solveMath,evalMathXY,enableMath,disableMath);
   nbCellTypeSub(type,1,NULL,mathConXY,function,NULL);
   return(0);
@@ -355,24 +355,6 @@ void initMath(NB_Stem *stem){
   nbCellType(mathTypeMul,solveMath,evalMathMul,enableMath,disableMath);
   mathTypeDiv=nbObjectType(stem,"/",0,TYPE_IS_MATH,printMath,destroyMath);
   nbCellType(mathTypeDiv,solveMath,evalMathDiv,enableMath,disableMath);
-
-  NB_Type *type;
-  // arrary of function defined as:  double f(double x)
-  double (*funcDD[13])()={ceil,floor,fabs,exp,log,log10,sqrt,rint,round,trunc,sin,cos,tan};
-  char *funcNameDD[13]={"math.ceil","math.floor","math.abs","math.exp","math.log","math.log10","math.sqrt","math.rint","math.round","math.trunc","math.sin","math.cos","math.tan"};
-  int i;
-  for(i=0;i<13;i++){
-    type=nbObjectType(stem,funcNameDD[i],0,TYPE_IS_MATH,printMathX,destroyMath);
-    nbCellType(type,solveMath,evalMathX,enableMath,disableMath);
-    nbCellTypeSub(type,1,NULL,mathConX,funcDD[i],NULL);
-    }
-  double (*funcDDD[3])()={fmod,pow,hypot};
-  char *funcNameDDD[3]={"math.mod","math.pow","math.hypot"};
-  for(i=0;i<3;i++){
-    type=nbObjectType(stem,funcNameDDD[i],0,TYPE_IS_MATH,printMathXY,destroyMath);
-    nbCellType(type,solveMath,evalMathXY,enableMath,disableMath);
-    nbCellTypeSub(type,1,NULL,mathConXY,funcDDD[i],NULL);
-    }
   }
 
 /*

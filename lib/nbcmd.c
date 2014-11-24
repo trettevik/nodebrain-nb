@@ -1905,7 +1905,7 @@ int nbCmdForecast(nbCELL context,void *handle,char *verb,char *cursor){
   cursave=cursor;
   symid=nbParseSymbol(ident,sizeof(ident),&cursor);
   if(symid!=';'){
-    outMsg(0,'E',"Expecting end of command at \"%s\".",cursave);
+    outMsg(0,'E',"Expecting end of command at-->\"%s\".",cursave);
     return(1);
     }
   schedPrintDump(sched);
@@ -2189,7 +2189,7 @@ static char nbCmdPreprocess(nbCELL context,char **cursaveP,char **cursorP,unsign
         if(cmdbuf==NULL) return('.');
         while(*cursor==' ') cursor++;
         if(*cursor!=0 && *cursor!=';' && *cursor!='#'){
-          outMsg(0,'E',"Expecting end of command at \"%s\".",cursor);
+          outMsg(0,'E',"Expecting end of command at-->\"%s\".",cursor);
           return('.');
           }
         if(symbolicTrace) outPut("$ %s\n",cmdbuf);
@@ -2208,7 +2208,7 @@ static char nbCmdPreprocess(nbCELL context,char **cursaveP,char **cursorP,unsign
     else{
       symid=nbParseSymbol(verb,verbSize,&cursor);  /* check for a term */
       //outMsg(0,'T',"symid=%c verb=%s",symid,verb);
-      if(symid!='t'){
+      if(symid!='t' && symid!='@'){
         if(*cursave=='`'){   // accept assert abbreviation
           symid='t';
           snprintf(verb,verbSize,"%s","assert"); // note: we let this go down to the lookup for authority checking // 2013-01-16 eat - RC-STR31-C
@@ -2241,6 +2241,7 @@ static char nbCmdPreprocess(nbCELL context,char **cursaveP,char **cursorP,unsign
           }
         else if(*cursor==':' || *cursor=='(' || *cursor=='@') symid=1;  // node command
         }
+      else if(symid=='@') symid=1,cursor--,*verb=0;
       }
     while(*cursor==' ') cursor++;
     *newContext=context;

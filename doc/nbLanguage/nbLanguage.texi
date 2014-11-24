@@ -65,10 +65,26 @@ Release 0.8.16
 @item Included @code{show} command option list.
 @end itemize
 
-@item 2014-02-16 @tab
-Release 0.9.01
+@item 2014-08-13 @tab
+Release 0.9.02
 @itemize @bullet
-@item Changed the representation of False from @code{0} to @code{!} in logic tables
+@item Changed representation in logic tables of False from @code{0} to @code{!} and True from @code{1} to @code{!!}.
+This conforms to how NodeBrain now represents these values.
+@item Introduced some cell formula operators specified using words instead of special symbol combinations: true, false, unknown, else, then, and capture. Some of these are new, and some replaced complicated symbols. 
+@item Modified the syntax for time delays.
+@end itemize
+
+@item 2014-11-23 @tab
+Release 0.9.03
+@itemize @bullet
+@item Documented the @code{redefine} command introduced in 0.9.02.
+@item Introduced the simplified terminology for "node functions" related to the topics of "node sentence" and
+"node facets". 
+@item Changed the syntax for referencing cell functions and included the topic in both the @i{Formula} section of the @i{Language Concepts} chapter and
+a new @i{Cell Functions} section of the @i{Formulas} chapter.
+@item Introduced the topic of "alert attribute transience."
+@item Updated the @i{Identifiers} chapter to cover the new syntax for distinguishing between terms directly subordinate to a node "." and terms
+subordinate to other terms within a node "_".
 @end itemize
 
 @end multitable
@@ -280,11 +296,12 @@ See the @i{Licenses} section at the end of this document for details.
 * Term::
 * Condition::
 * Rule::
-* Sequence Rules and Correlation Threads::
+* Node::
+* Module::
 * Command Processing::
 * Cell Evaluation::
 * Cycles and Rule Conflicts::
-* Nodes and Node Modules::
+* Correlation Thread::
 @end menu
 
 This chapter introduces some basic concepts of the NodeBrain language. It is intended as an overview to provide a foundation for understanding, not as a rigorous and complete description. Most of these topics will be covered in more detail in later chapters. 
@@ -292,6 +309,7 @@ This chapter introduces some basic concepts of the NodeBrain language. It is int
 @node String
 @section String
 @cindex string
+
 A string is stored internally as a null terminated sequence of characters. You represent a string by enclosing a sequence of character in quotes.
 
 @example
@@ -299,16 +317,19 @@ A string is stored internally as a null terminated sequence of characters. You r
 	"This is a string."
 @end example
 
-There are no string manipulation operators or functions in NodeBrain, although symbolic substitution is supported and enables symbolic command construction. String comparisons and regular expression matching is supported. (On Windows, you will need to install a regular expression library. Testing has been done with @code{librxspencer.lib}, which you can obtain from @code{gnuwin32.sourceforge.net} package RegEx-Spencer.)
+There are no string manipulation operators in NodeBrain, although symbolic substitution is supported and enables symbolic command construction. String comparisons and regular expression matching is supported.
 
 @example
 	A<"george"	[String comparison]
 	A~"^abc.*d+$"	[Regular expression match]
 @end example
 
+Modules provide cell functions for additional operations on strings.
+
 @node Number
 @section Number
 @cindex number
+
 Numbers are stored internally as floating-point values. You represent numbers with a sequence of decimal digits with an optional plus or minus sign, decimal point, and exponent.
 
 @example
@@ -317,6 +338,9 @@ Numbers are stored internally as floating-point values. You represent numbers wi
        4.5
        +7
 @end example
+
+Only the basic operations of addition, subtraction, multiplication, and division are supported by operators.  
+Modules provide cell functions for additional numerical operations.
 
 @node Truth
 @section Truth
@@ -350,8 +374,8 @@ and any formula that could return 0 could not avoid having its value interpreted
 @cindex Formula
 
 A formula is a simple value (e.g. number, string, True, False, and Unknown), or an expression that computes a value.
-
-Addition (+), subtraction (-), multiplication (*), and division (/) operators may be used for numeric calculation.
+For a simple numerical calcuation, a formula may include the operators for 
+addition (+), subtraction (-), multiplication (*), and division (/).
 
 @example
         5*2+10
@@ -359,25 +383,47 @@ Addition (+), subtraction (-), multiplication (*), and division (/) operators ma
 @end example
 
 
-Some common numeric functions are also recognized by the interpreter. Examples are shown in the table below. A complete list of built-in functions is provided later.
+A formula may also include relational and logical operators.
+
+@multitable {-------------------------------}
+@headitem Logical Expression
+@item a>17 
+@item a>5 and b<2
+@item a and !b and c="abc"
+@end multitable
+
+An extensive set of time related operators are included, with a chapter devoted to the topic.
+The expression below is true from 2:00 AM to 3:00 AM on Tuesday of the week of the last Friday in January and June.
+
+@multitable {-------------------------------}
+@headitem Logical Expression
+@item ~(h(2).tu.w.fr[-1](jan,jun))
+@end multitable
+
+The interpreter enables bindings to external function libraries, making the external functions
+available as @i{cell functions}.
+Several cell functions are provided for common math functions.
+Examples of cell function calls are shown in the table below.
 
 @multitable {-------------------------------} {---------------}
-
-@headitem Function Call @tab Result
+@headitem Cell Function Call @tab Result
 @item `math.mod(45,2) @tab 1  
 @item `math.floor(16.2345) @tab 16 
 @item `math.exp(35.5) @tab @math{e^{35.4}}
 @end multitable
 
-A formula may also include relational and logical operators.
+NodeBrain also supports @i{node function} calls that look like normal function calls,
+but act a bit like class methods in an object oriented language  
+because they operate on an instance of a type of information, where the type 
+determines the functions available.
+The logic for these functions is provided by external modules
+while the interpreter manages the scheduling of the calls to these functions.
 
 @multitable {-------------------------------}
-@headitem Logical Expression
-@item `math.floor(a)>17 
-@item a>5 and b<2
-@item a and !b and c="abc"
+@headitem Node Function Call 
+@item WatchedMachineUser(a,b)
+@item MyTable@@rows(a,b,c) 
 @end multitable
-
 
 @node Cell
 @section Cell
@@ -387,7 +433,6 @@ A cell is a container of both a value and a formula from which the value is comp
 For simple cells, the formula and value are identical. 
 
 @multitable {-----------------------}{----------------------}
-
 @headitem Cell Formula @tab Cell Value
 @item "abc" @tab "abc"
 @item 0 @tab 0
@@ -398,7 +443,6 @@ For more complex cells, the formula includes references to operators that derive
 This concept is illustrated below with multiplication (*) and addition (+) operators.
 
 @multitable {-----------------------}{----------------------}
-
 @headitem Cell Formula @tab Cell Value
 @item 5*2 @tab 10
 @item 10+5 @tab 15
@@ -408,30 +452,33 @@ A formula is a unique identifier of a cell. In other words, only one cell exists
 
 
 @multitable {-----------------------}{----------------------}
-
 @headitem Cell Formula @tab Cell Value
 @item 5*2+5 @tab 15
 @end multitable
 
 @image{langref1-4,,,,png}
 
+A cell formula may be much more complicated, as illustrate in the previous section.  Formulas often include terms that can act like variables or functions.
+
 @node Term
 @section Term
 @cindex term
-In general, a term is an identifier used to represent knowledge. For now, let's look at examples of cell terms. These terms reference cells and are themselves cells. In the set of examples below, you assert values for the terms A through E and "fred" by the cell expressions following the equal symbol (=) or double equal symbol (==). A single equal references the value of the cell expression at the time of the assertion. A double equal references the value of the cell expression from the time of the assertion and into the future. In this example, the value of E will automatically change if A or D changes.
+In general, a term is an identifier used to represent knowledge. For now, let's look at the most common case, where a term is used as a cell. These terms reference cells and are themselves cells. In the set of examples below, you assert values for the terms A through E and "fred" by the cell expressions following the equal symbol (=) or double equal symbol (==). A single equal references the value of the cell expression at the time of the assertion. A double equal references the value of the cell expression from the time of the assertion and into the future. In this example, the value of E will automatically change if A or D changes.
 
 @example
 assert A=3,B="abc",C=1.5,D=3*5,E==A*D,fred=`math.mod(E,17)+25.67;
 @end example 
-It is best to think of a term as an alias, that is, a cell that simply references another cell. A term, like all cells, can be referenced by other cells, and the value of a term is the value of the cell it currently references. So A=3, D=15, and E=45 based on the definitions above.
+It is best to think of a term as an alias.  It is a cell that simply references another cell. A term, like all cells, can be referenced by other cells.  The value of a term is the value of the cell it currently references. So A=3, D=15, and E=45 based on the definitions above.
 
-You change a term's value indirectly by changing the definition---the cell reference. Here you change the values of A and D to the values of 4 and 3*7 respectively. 
+You can change the value of a term by changing the cell it references. Below, you change the values of A and D to the values of 4 and 3*7 respectively by changing
+their formulas to new constants. 
 
 @example
 assert A=4,D=3*7;
 @end example
        
-The new values are A=4, D=21, and E=84. Notice the value of E changed automatically as a result of the change to A and D. This is an important concept in NodeBrain. When you assert that E==A*D, you didn't just assign E the current value of A*D (45), you defined a formula for computing E.
+The new values are A=4, D=21, and E=84. Notice the value of E changed automatically as a result of the change to A and D. This is an important concept in NodeBrain. When you assert that E==A*D, you didn't just assign E the current value of A*D (45), you also defined a formula for computing E.
+It is the same formula as that used by the cell "named" A*D, for which E is currently an alias.
 
 @node Condition
 @section Condition
@@ -441,20 +488,21 @@ A condition is a cell for which the value is reduced to True, False, or Unknown.
 This means any cell may be used as a condition or an operand within a condition.
 
 Some operators are designed specifically for use in conditions.
-Examples include relational operators (=, >, >=, <, <=, and <>) and trinary logic operators (&, |, and !). The words "and", "or" may be used as alternatives to & and | respectively.
+Examples include relational operators (=, >, >=, <, <=, and <>) and trinary logic operators (&, |, and !).
+The words "and" and "or" may be used as alternatives to & and | respectively.
 
 @example
-a>1		[a greater than 1]
-b<>a		[b not equal to a]
-a & !b		[a and !b]
-a and !b	[a & !b]
+a>1            [a greater than 1]
+b<>a           [b not equal to a]
+a & !b         [a and !b]
+a and !b       [a & !b]
 @end example
 
-Trinary logic operators extend Boolean logic, which has only True and False values, to include a third value of Unknown. The following table shows this extension for the logical AND (&) operator.
+Trinary logic operators allow for an Unknown value, extending Boolean logic, which has only True and False values.
+The following table shows this extension for the logical @code{and} (@code{&}) operator.
 The symbol @code{!!} is a special case of True that is returned by some logical operators.
 
 @multitable {-----------------}{------------------}{----------------}
-
 @headitem A @tab B @tab A & B
 @item !  @tab !  @tab !
 @item !  @tab !! @tab !
@@ -472,9 +520,9 @@ Relational operators like >, <, and = always return Unknown when one of their op
 Now let's look at an example.
 
 @example
-	assert X==(A>B & C=5);
-	assert A=7;
- 	assert C=4;
+assert X==(A>B & C=5);
+assert A=7;
+assert C=4;
 @end example
 
 If this is all the information you have, then B is Unknown; that is, B=?. However, the value of B is not needed to determine that X=! because (C=5) is ! and (? & !) is !.
@@ -494,10 +542,10 @@ assert C=5,B=1;
 In addition to the common operators used within conditions, NodeBrain has special operators with memory and time awareness.
 
 @example 
-A ^ B			[flip-flop]
-team(A,B,C)		[node sentence formula]
-~(h(4).su[3]jan)	[time condition]
-A ~^(10m)		[time delay]
+A ^ B                  [flip-flop]
+team(A,B,C)            [node sentence formula]
+~(h(4).su[3]jan)       [time condition]
+A ~^(10m)              [time delay]
 @end example
 
 We won't go into the details of these operators here, but they are important features of the language to cover later.
@@ -509,9 +557,9 @@ We won't go into the details of these operators here, but they are important fea
 Rules are used to define the conditions you want NodeBrain to monitor and the desired actions or responses to specific conditions. There are three types of rules: @code{on}, @code{when}, and @code{if}. Other than the type identifier, the syntax is the same.
 
 @example
-	define @i{term} @b{on}(@i{condition}) @i{assertion: command}
-	define @i{term} @b{when}(@i{condition}) @i{assertion: command}
-	define @i{term} @b{if}(@i{condition}) @i{assertion: command}
+define @i{term} @b{on}(@i{condition}) @i{assertion: command}
+define @i{term} @b{when}(@i{condition}) @i{assertion: command}
+define @i{term} @b{if}(@i{condition}) @i{assertion: command}
 @end example
 
 An @code{on} rule will fire any time the condition transitions to a True value from a non-True value (False or Unknown). When a rule fires, the action may include an assertion and a NodeBrain command. If a condition is True at the time a rule is defined, this does not qualify as a transition to a True state. In that case, the condition must first transition to False or Unknown and then transition to True.
@@ -521,11 +569,11 @@ A @code{when} rule behaves just like an @code{on} rule, except it only fires onc
 The syntax for the optional assertion clause is just like the syntax illustrated for the @code{assert} command, that is, a set of assignments separated by commas. This clause is interpreted with the define statement. An optional command follows the colon (:). This command is not interpreted until the rule fires and is re-interpreted each time the rule fires.
 
 @example
-	define r1 on(a=1 and b=2) c="xyz",x=25;
-	define r2 on(c="xyz"): @i{command2}
-	define r3 when(x>20) e=5.246: @i{command3}
-	define r4 if(a=1 and b=2): @i{command4}
-	define r5 if(a>17); # This rule has no action
+define r1 on(a=1 and b=2) c="xyz",x=25;
+define r2 on(c="xyz"): @i{command2}
+define r3 when(x>20) e=5.246: @i{command3}
+define r4 if(a=1 and b=2): @i{command4}
+define r5 if(a>17); # This rule has no action
 @end example
 
 The value of rule conditions changes in response to @code{assert} and @code{alert} commands and the system clock for time conditions. Except for the verb, the @code{assert} and @code{alert} commands have identical syntax as illustrated by the following examples.
@@ -556,42 +604,51 @@ define r5r on(state=5 and red) ?state;
 define r5g on(state=5 and green) state=1;
 @end example
 
-@node Sequence Rules and Correlation Threads
-@section Sequence Rules and Correlation Threads
-@cindex Sequence Rules and Correlation Threads
-A sequence rule in NodeBrain is a procedural construct expressed within a single command line enclosed in braces, "@{@dots{}@}".
+@node Node
+@section Node
+@cindex Node
+A @i{node} is an object with special knowledge and the skill to use it within the framework provided by NodeBrain.
+In the simplest form, a node is a set of rules and supporting terms that work together to monitor the state of one or more elements,
+or monitor an event stream.  Terms are defined within the context of a node.  Examples in previous sections have defined all terms at the
+top level node.  Here's an example were terms are defined within a subordinate node called @code{my}.
 
 @example
-	@{=8;on(a=2);=5;10m;if(b=7)`c=3; @}
+define my node;
+my. define x cell;
+my. define y cell;
+my. define r1 on(x>y):alert type="InvertedConflugification";
+define tellMy on(a=b) my.x=2,my.y=1;
 @end example
 
-The example above reads like this:
-
-@enumerate
-@item Assert the value of the rule to be 8.
-@item Wait for a=2 and then assert the value of the rule to be 5.
-@item Wait for 10 minutes.
-@item If b=7, then assert c=3;
-@end enumerate
-
-A sequence rule may be used as a command or a cell expression.
+Additional capabilities for a node are often provided by a node module, and additinal knowledge is either asserted using NodeBrain commands or obtained from an external source.
+A node module implements a type of node by providing functions (methods) that NodeBrain calls to handle specific tasks like assertion, evaluation, and command interpretation. For example, suppose you have a node module named @code{myskill}. You could define a node named @code{shania} and reference it as shown below.
 
 @example
-	> @{on(a=1 and b=2)`c=7,b=4;on(a=2 and b=3)`c=2; @}  # command
-	> assert x==@{=8;on(a=2);=5;10m;=9; @}+b;     # cell expression
+define shania node myskill;
+define r1 on(shania("abc",20)) a=7;
+assert shania(1,3,5)=30,shania(5,"ready");
+shania:This is a message handled by myskill
+shania(1,"xyz"):This is another message with arguments
 @end example
 
-You can think of sequence rules (like all NodeBrain rules) as running concurrently under separate threads. These are called "correlation threads" because the primary purpose is to correlate a sequence of events.
+To understand the evaluation of @code{shania("abc",20)} and the assertions @code{shania(1,3,5)=30} and @code{shania(5,"ready")} requires familiarity with the node module named @code{myskill} used to implement @code{shania}. NodeBrain simply asks the node module to handle the assertions and evaluations. When the value the node module returns for @code{shania("abc",20)} transitions to true, rule @code{r1} fires and NodeBrain takes the action of asserting @code{a=7}.
 
-The previous section showed how simple @code{on} rules can be used to implement a state table using a state variable. With sequence rules, a statement pointer provides a built-in state variable. The rule below responds to a sequence of green, blue, and red conditions.
+To send a command (message) to a node, you begin a command with the node name followed by an optional argument list, followed by a colon (:). If a node module implements the command method, the argument list and text following the colon (:) are sent to the skill's command method. The interpretation of node commands is entirely up to the node module.
 
-@image{langref1-8,,,,png}
+Manuals for modules distributed with NodeBrain are available at http://nodebrain.org. See the @i{NodeBrain Library} manual for information needed to write your own node modules.
 
-@example 
-@{on(green);on(blue);on(red);@i{action};@}
-@end example
+@node Module
+@section Module
+@cindex Module
 
-Sequence rules are covered in more detail in Chapter 6, Rules.
+A @i{module} is a plug-in to NodeBrain, normally implemented as a dynamically loaded shared library.
+These components extend NodeBrain by providing additional cell functions and/or node functions using the NodeBrain C API.
+This topic is covered in the @i{NodeBrain Library} manual.
+The model of interaction between modules and the interpreter relies heavily on
+modules registering callback functions when they are first loaded.
+This enables the rule engine (interpreter) to 
+control the timing of calls based on events and state.
+
 
 @node Command Processing
 @section Command Processing
@@ -602,10 +659,10 @@ The NodeBrain language is a declarative language. With the exception of the @cod
 On the other hand, commands are "executed" in the order they are presented to the interpreter. It may be helpful to think of a NodeBrain interpreter as a transaction processor. Each statement is a transaction that does one or more of the following:
 
 @itemize
-	@item Update control variables
-	@item Define or update rules 
-	@item Update cells
-	@item Display the contents of memory
+@item Update control variables
+@item Define or update rules 
+@item Update cells
+@item Display the contents of memory
 @end itemize 
 
 If you think of a NodeBrain interpreter as a transaction processor, you can think of the set of data elements known to the interpreter as a primitive database. If you think of the data elements as simple "factual" knowledge and the cells and rules as more complex knowledge, you can think of the interpreter as a knowledge base. To a large extent, however, the interpreter's memory is volatile. When a NodeBrain process terminates, everything it "learned" (has been told) is forgotten. This can be overcome, to some extent, by writing rules that record information to @code{*.nb} files and load them at startup time. (But we're getting ahead of ourselves here.)
@@ -622,9 +679,9 @@ Now you will see more closely how NodeBrain reacts to assertions. As described e
 Suppose you have a brain with the following definitions.
 
 @example
-	define R1 on(A=1 and B=2);
-	define R2 on(A=1 and B=3);
- 	define R3 on(C=3 and A=1 and B=2);
+define R1 on(A=1 and B=2);
+define R2 on(A=1 and B=3);
+define R3 on(C=3 and A=1 and B=2);
 @end example
 
 If you display the conditions your brain is monitoring, it looks like the following. Seven cells are monitoring conditions. The value of each of these cells is unknown because the values of the terms a, b, and c are unknown.
@@ -718,94 +775,126 @@ Under this limitation, a !A assertion will cause R1 to fire, which will assert A
 You can still have conflicts. Consider these rules.
 
 @example
-	define R1 on(A=1) B=2;
-	define R2 on(A=1) B=3;
+define R1 on(A=1) B=2;
+define R2 on(A=1) B=3;
 @end example
 
 What is the value of B after an assertion that A=1? All you can say is that the rule that fires last wins and, in general, you can't predict the order the rules will fire. You are advised not to create rules like this if you can help it. Currently NodeBrain does not prevent or identify this condition. It is fine and even desirable to allow a given term to change values more than once in a command cycle, so NodeBrain doesn't place a limitation on this like it did on rules firing more than once. But a future version may include logic that prevents (or at least detects) terms changing values multiple times in a single evaluation cycle's action phase.
 
 
-@node Nodes and Node Modules
-@section Nodes and Node Modules
-@cindex Nodes and Node Modules
-A @i{node} is an object with special knowledge and the skill to use it within the framework provided by NodeBrain. The skill is provided by a node module and the knowledge is either asserted using NodeBrain commands or obtained from an external source.
-
-A node module implements a type of node by providing functions (methods) that NodeBrain calls to handle specific tasks like assertion, evaluation, and command interpretation. For example, suppose you have a node module named "myskill." You could define a node named "Shania" and reference it as shown below.
+@node Correlation Thread
+@section Correlation Thread
+@cindex Correlation Thread
+A sequence rule in NodeBrain is a procedural construct expressed within a single command line enclosed in braces, "@{@dots{}@}".
+This feature is in an experimental state, so you should @i{not} rely on it for a production application.  But it is worth
+an introduction, since the concept will be further developed in the future.
 
 @example
-	define shania node myskill;
-	define r1 on(shania("abc",20)) a=7;
-	assert shania(1,3,5)=30,shania(5,"ready");
-	shania:This is a message handled by myskill
-	shania(1,"xyz"):This is another message with arguments
+@{=8;on(a=2);=5;10m;if(b=7)`c=3; @}
 @end example
 
-To understand the evaluation of shania("abc",20) and the assertions shania(1,3,5)=30 and shania(5,"ready") requires familiarity with the node module named "myskill" used to implement shania. NodeBrain simply asks the node module to handle the assertions and evaluations. When the value the node module returns for shania("abc",20) transitions to true, rule r1 fires and NodeBrain takes the action of asserting a=7.
+The example above reads like this:
 
-To send a command (message) to a node, you begin a command with the node name followed by an optional argument list, followed by a colon (:). If a node module implements the command method, the argument list and text following the colon (:) are sent to the skill's command method. The interpretation of node commands is entirely up to the node module.
+@enumerate
+@item Assert the value of the rule to be 8.
+@item Wait for a=2 and then assert the value of the rule to be 5.
+@item Wait for 10 minutes.
+@item If b=7, then assert c=3;
+@end enumerate
 
-Manuals for modules distributed with NodeBrain are available at http://nodebrain.org. See the @i{NodeBrain Library} manual for information needed to write your own node modules.
+A sequence rule may be used as a command or a cell expression.
+
+@example
+> @{on(a=1 and b=2)`c=7,b=4;on(a=2 and b=3)`c=2; @}  # command
+> assert x==@{=8;on(a=2);=5;10m;=9; @}+b;            # cell expression
+@end example
+
+You can think of sequence rules (like all NodeBrain rules) as running concurrently under separate threads. These are called "correlation threads" because the primary purpose is to correlate a sequence of events.
+
+The previous section showed how simple @code{on} rules can be used to implement a state table using a state variable. With sequence rules, a statement pointer provides a built-in state variable. The rule below responds to a sequence of green, blue, and red conditions.
+
+@image{langref1-8,,,,png}
+
+@example 
+@{on(green);on(blue);on(red);@i{action};@}
+@end example
+
+Sequence rules are covered in more detail in Chapter 6, Rules.
+
 
 @node Identifiers
 @chapter Identifiers
 @cindex Identifiers
 
 @menu
-* Term Identifiers::
+* Terms::
 * Glossaries::
 * Dictionaries::
 * Contexts::
-* Literal Identifiers::
+* Constants::
+* Cells::
 @end menu
 
-@i{Identifiers} are used to reference objects ("things") by name, a concept you are familiar with from other programming languages. When the interpreter encounters an identifier, it searches a dictionary of terms to locate the referenced object. For a complete identifier, the search begins at a specified root glossary. For a contextual identifier, the search begins at a glossary understood by the context in which the identifier is used.
+@i{Identifiers} are used to reference objects ("things") by name, a concept you are familiar with from other programming languages. 
+When the interpreter encounters a term identifier, it searches a hierarchical dictionary of terms to locate the referenced object. For a complete identifier,
+the search begins at the top of the dictionary.
+For a contextual identifier, the search is performed starting at a context term, often defined by a command context.
+A context term is aways a node.
 
 @cartouche
 @b{Syntax}
 @multitable {--------------------------} {---} {---------------------------------------------------------------------------------}
 
 @item @i{identifier}  @tab ::= @tab @i{completeIdentifier} | @i{contextualIdentifier}
-@item @i{completeIdentifier}  @tab ::= @tab (@b{%} | @b{@@} ) [@i{term} ] [@b{.} @i{contextualIdentifier} ]
-@item @i{contextualIdentifier}  @tab ::= @tab @i{term} @{@b{ .} @i{term} @}
+@item @i{completeIdentifier}  @tab ::= @tab (@b{%} [@i{term}] | @b{_} ) [@b{.} @i{contextualIdentifier} ]
+@item @i{contextualIdentifier}  @tab ::= @tab @i{term} @{( @b{.} | @b{_} ) @i{term} @}
 @item @i{term}  @tab ::= @tab @i{simpleTerm} | @i{quotedTerm}
-@item @i{simpleTerm}  @tab ::= @tab @i{alphaChar} @{ @i{alphaChar} | @i{digitChar} @} 
-@item @i{alphaChar}  @tab ::= @tab @b{a-z} | @b{A-Z} | _
-@item @i{digitChar}  @tab ::= @tab @b{0-9}
-@item @i{quotedTerm}  @tab ::= @tab  @b{'} @{ character @} @b{'}
+@item @i{simpleTerm}  @tab ::= @tab ( @i{alpha} | _ ) @{ @i{alpha} | @i{digit} @} 
+@item @i{alpha}  @tab ::= @tab @b{a-z} | @b{A-Z}
+@item @i{digit}  @tab ::= @tab @b{0-9}
+@item @i{quotedTerm}  @tab ::= @tab  @b{'} @{ characterNoSingleQuote @} @b{'}
 @end multitable
 @end cartouche
 
-@node Term Identifiers
-@section Term Identifiers
+Constant numbers and strings also have unique identifiers that are distinct from terms.
+Furthermore, a formula is a unique identifier of a cell.
+
+@node Terms
+@section Terms
 @cindex terms
 
-A @i{term} is a word associated with both a definition and a value. A simple term is an alphanumeric string starting with an alpha character, where you define an alpha character as any letter of the alphabet (upper or lower case) or the underscore character. The following are valid terms.
+A @i{term} has a name, value, and definition. The name is the identifier, sometimes called a "term identifier" and more often just called a "term" when it is clear the name component is being discussed.  A simple term is an alphanumeric string starting with an alpha character or an underscore.
+An underscore is not considered to be an alpha character, so may not be used after the first character of a term.
+The following are valid terms.
 
 @example
-	APPLE
-	Orange
-	_blue
-	really_sad
-	happyCamper
-	hikerBikerSurfer2
-	three4five
+APPLE
+Orange
+_blue
+reallySad
+happyCamper
+hikerBikerSurfer2
+three4five
 @end example
 
-When you use a term like a common variable, you assign a value using an @code{assert} statement with a single equal symbol.
+When you use a term like a common variable, you assign a value using an @code{assert} command with a single equal symbol.
 
 @example
-	assert orange="You glad we didn't say banana?";
+assert orange="You glad we didn't say banana?";
 @end example
 
 You can also use a term like a function by assigning a definition. This requires a double equal symbol.
 
 @example 
-       assert Thomas==(ToB or !Tob);
+assert Thomas==(ToB or !Tob);
 @end example
 	
-That is the question, now what is the answer? It is explained later that Thomas is 1 (true) @i{when} ToB is true or Tob is false, and otherwise Thomas is false or unknown. You really don't want to get into a painful discussion about logical expressions here. The point is simply that a term has simultaneously a definition and a value, both of which are NodeBrain objects.
+That is the question, now what is the answer? It is explained later that Thomas is true when ToB is true or Tob is false, and otherwise Thomas is false or unknown.
+You really don't want to get into a painful discussion about logical expressions here.
+The point is simply that a term has simultaneously a definition and a value, both of which are NodeBrain objects.
+The definition of a term associated with cell is a formula.
 
-Terms starting with an underscore (_) are reserved terms the interpreter makes up. You may reference these terms, but you don't get to invent them. (Just wanted to underscore the terms for using underscore terms.) 
+Terms starting with an underscore "_" are reserved terms the interpreter or a module create for special reasons. You may reference these terms, but you don't get to invent them. (Just wanted to underscore the terms for using underscore terms.) 
 
 When you want to use a term that violates the syntax of a simple term, you may use a quoted term. This enables the use of recognizable names from foreign contexts as terms within NodeBrain rules. Any typable character, except a single quote (apostrophe, '), may be used between single quotes. (NodeBrain does not have an escape sequence for special characters.) The following are valid quoted terms.
 
@@ -817,57 +906,105 @@ When you want to use a term that violates the syntax of a simple term, you may u
 It is important not to confuse a quoted term with a string. A quoted term is the name of something. A string is the name of itself. The following example asserts a string value for a quoted term.
 
 @example
-	assert 'http://www.nodebrain.org'="http://nodebrain.sourceforge.net"; 
+assert 'http://www.nodebrain.org'="http://nodebrain.sourceforge.net";
 @end example
 
 @node Glossaries
 @section Glossaries
 @cindex Glossaries
-A @i{glossary} is a set of terms. Every term may have a glossary of subordinate terms. You reference a subordinate term by following a term with a period and the subordinate term.
+
+A @i{glossary} is a set of terms. Every term may have a glossary of subordinate terms.
+You reference a subordinate term by following a term with a period or an underscore and the subordinate term.
+For example, @code{x.A} and @code{x_A} both reference a term @code{A} subordinate to a term @code{x}.
+If @code{x} is, or is intended to be, a node, use @code{x.A}.
+If @code{x} is not, or is intended not to be, a node, use @code{x_A}.
 
 @example
-       @i{term.subordinateTerm}
+@i{term.subordinateTerm}   [term is implied to be a node]
+@i{term_subordinateTerm}   [term is implied to not be a node]
 @end example
-This provides a way to organize information. For example, you might assert some information about employees.
+
+This provides a way to organize information. For example, you might assert some information about employees
+within an employee node.
 
 @example
-	assert employee.'Jane Dough'.salary=200000;
-	assert employee.'Jane Dough'.title="Software Engineer";
-	assert employee.'Jane Dough'.skill.programming.language.perl="expert";
-	assert employee.'John Fawn'.salary=80000;
-	assert employee.'John Fawn'.title="Software Apprentice Toady";
-	assert employee.'John Fawn'.skill.programming.language.perl="novice";
+assert employee.'Jane Dough'_salary=200000;
+assert employee.'Jane Dough'_title="Software Engineer";
+assert employee.'Jane Dough'_skill_programming_language_perl="expert";
+assert employee.'John Fawn'_salary=80000;
+assert employee.'John Fawn'_title="Software Apprentice Toady";
+assert employee.'John Fawn'_skill_programming_language_perl="novice";
 @end example
        
-Oops, bad example. Let's not monitor employees. Well, the concept also applies to things you do want to monitor. Just replace "employee" with "computer" "application" or "process" or something else and then define the appropriate subordinate terms.
+Oops, bad example. Let's not monitor employees. Well, the concept also applies to things you do want to monitor.
+Just replace "employee" with "computer", "application", "process" or something else and then define the appropriate subordinate terms.
+
+The use of underscore within terms was discontinued in release 0.6.4, and the use as separators within a multiple level
+qualified term was introduced in release 0.9.03.  Prior to release 0.9.03, a period was used as the only separator
+and nodes had to be explicitly defined, otherwise they were assumed not to be nodes.  
+
+The use of "." as a separator following a node term, and "_" following non-node terms, enables the interpreter to
+understand your intentions prior to a node being explicitly defined.  Nodes are implicitly defined when a previously
+undefined term is referenced as a node, either by the use of "." following the term or a refence to the term within a function call.
+A function call reference is indicated by
+a following @code{@@} or @code{(} in the context of a formula, assertion or command verb, or a @code{:} in the context of a command verb.
+
+If a node is explicitly defined after an implicit definition, there is no requirement to change the relationship
+of @code{if} rules relative to nodes, since the implicit definition will have already established the intended relationship.
+This is an important for the proper functioning of @code{alert} commands and @code{if} rules.
+
+The @code{define} command may be used to redefine a term that was created implicitly.
+The @code{redefine} command is required to redefine a term that was previously explicitly defined and not undefined.
+
+It is important to remember that an identifier like @code{'John Fawn'_skill_programming_language_perl} is not a single term.
+Instead, it identifies a path to a term @code{perl}, perhaps one of many within the glossary structure (dictionary).
+The followin @code{undefine} command will remove the last three lines in the example above.
+All the subordinate terms of 'John Fawn' (salary, title, and skill)
+and their subordinate terms are removed.
+
+@example
+undefine employee.'John Fawn'
+@end example
+
 
 @node Dictionaries
 @section Dictionaries
 @cindex Dictionaries
-A @i{dictionary} is a complete hierarchy of terms and glossaries. Separate dictionaries are used for rules, calendars, modules, skills, and so on. This simply means there are multiple name spaces. Most terms are defined in the rule dictionary, explicitly with the @code{define} command or implicitly by referencing an undefined term.
+
+A @i{dictionary} is a complete hierarchy of terms and glossaries. Separate dictionaries are used for rules, calendars, modules, skills, symbolic terms, and so on.
+This simply means there are multiple name spaces. Most terms are defined in the rule dictionary, explicitly with the @code{define} command or implicitly by referencing an undefined term.
 
 @example
-define A cell X+Y/Z;  # A is define explicitly---X, Y, and Z implicitly
-assert B==X*Y;	# B is define implicitly
+define A cell X+Y/Z;  # A is defined explicitly, whil X, Y, and Z are define implicitly
+assert B==X*Y;	      # B is defined explicitly, but implicitly with respect the "define" command
+foo. assert C=2;      # C is defined implicitly within an implicitly defined node named "foo"
 @end example
 
-Terms must be defined explicitly in all other dictionaries using the @code{declare} command.
+Terms in dictionaries other than the rule dictionary are defined implicitly in some cases
+and explicitly in others.  However, the @code{define} command is only used for the rule dictionary.
+Other dictionaries use the @code{declare} or @code{%define} command for explicit definitions.
+Other dictionaries also do not use the "_" separator as described in the previous section.
+They only use "." as the term separator
 
 @example
-	declare lunar @b{module} ./nb_moon.so;
+declare lunar @b{module} ./nb_moon.so;
 @end example
 	
 When the interpreter needs to look up a term, the dictionary is understood by the syntax.
 
 @example
-assert x=a+b;  	    # x, a, and b are all looked up in the rule dictionary
-define moony node lunar; # lunar is looked up in the skill or module dictionary
+assert x=a+b;             # x, a, and b are all looked up in the rule dictionary
+define moony node lunar;  # lunar is looked up in the skill or module dictionary
 @end example
 
 @node Contexts
 @section Contexts
 @cindex Contexts
-A @i{context} is a concept associated with nodes and the rule dictionary. Commands are interpreted within a given context. NodeBrain searches for terms up or down the glossary hierarchy starting from the glossary of a given node. You create a new context whenever you define a node.
+
+A @i{context} is a concept associated with nodes and the rule dictionary. 
+Commands are interpreted within a given context.
+NodeBrain searches for terms up or down the glossary hierarchy starting from the glossary of a given node.
+You create a new context whenever you define a node.
 
 @example
 define pie node;
@@ -883,78 +1020,82 @@ You use a context prefix to tell the interpreter which node to use when interpre
 Here you see two statements that would produce the same results, the second with a context prefix ("pie. "). Notice the difference to the right of the verb @code{assert}.
 
 @example 
-    assert pie.apple=5,pie.cherry=2,pie.pumpkin=8;
-    pie. assert .apple=5,.cherry=2,.pumpkin=8;
+assert pie.apple=5,pie.cherry=2,pie.pumpkin=8;
+pie. assert .apple=5,.cherry=2,.pumpkin=8;
 @end example
     
 Defining nodes within a node creates a context hierarchy.
+In the example, the example below, the first line could be removed and the third line would implicitly define @code{fresh} as a node
+because it is first referenced as a node in the context prefix.
 
 @example 
-    pie. define fresh node;
-    pie. define dayold node;
-    pie.fresh. assert .apple=1;  # pie.apple=5; pie.fresh.apple=1;
+pie. define fresh node;
+pie. define dayold node;
+pie.fresh. assert .apple=1;  # pie.apple=5; pie.fresh.apple=1;
 @end example
     
 Prefixing the first term of a context identifier with periods directs the interpreter to a specific context relative to the current context.
     
 @example
-    @i{.identifier}		- search the current context glossary
-    @i{..identifier}		- search the parent context glossary
-    @dots{}@i{identifier}	- search the grandparent context glossary
-    @dots{}@i{.identifier}	- etc.
+@i{.identifier}         - search the current context glossary
+@i{..identifier}        - search the parent context glossary
+@dots{}@i{identifier}   - search the grandparent context glossary
+@dots{}@i{.identifier}  - etc.
 @end example
 
 When searching for a context identifier that is not period-prefixed, the interpreter searches up the context hierarchy for the first term of the identifier, starting in the current context. This search may be resolved on any number of levels up the context hierarchy. The interpreter then resolves the remaining terms of the identifier by stepping down the glossary hierarchy one term at a time.
 
 @example
-    pie.apple  - find "pie" in current or above, and find "apple" in "pie"
+pie.apple  - find "pie" in current or above, and find "apple" in "pie"
 @end example
 
 You can see an unconstrained upward search by modifying the earlier example. These modified commands are not equivalent in the specified order if "apple", "cherry", and "pumpkin" are not already defined in "pie", but are defined at a higher level. In that case, the first command would reference the higher level terms.
 
 @example
-    pie. assert apple=5,cherry=2,pumpkin=8;
-    assert pie.apple=5,pie.cherry=2,pie.pumpkin=8;
+pie. assert apple=5,cherry=2,pumpkin=8;
+assert pie.apple=5,pie.cherry=2,pie.pumpkin=8;
 @end example
 
-The @@ symbol is used to reference the root-addressable context.
+The underscore "_" symbol is used to reference the top level (root) context.
 
 @example
-	@@. assert x=1,y=2;
-	assert @@.x=1, @@.y=2;
+_. assert x=1,y=2;
+assert _.x=1,_.y=2;
 @end example
 
 The context symbols, % and $, are used for contexts that contain special built-in terms or terms that apply only to the scope of the current source file or macro expansion. These are topics for other sections.
 
-@node Literal Identifiers
-@section Literal Identifiers (Strings and Numbers)
-@cindex Literal Identifiers (Strings and Numbers)
-NodeBrain has two basic data types, string and number. NodeBrain uses a self-defining identifier called a literal to reference a specific string or numeric value.  
+@node Constants
+@section Constants
+@cindex Constants
+
+There are two primary constant data types, string and number. 
+Constants have identifiers unique to the data type.  
 
 @cartouche
 @b{Syntax}
 @multitable {--------------------------} {---} {-------------------------------------------------------------------------------------------}
 
-@item @i{literalIdentifier} @tab ::= @tab @i{stringLiteral} | @i{numberLiteral}
-@item @i{stringLiteral} @tab ::= @tab @b{"} @{ @i{character} @} @b{"}
-@item @i{numberLiteral} @tab ::= @tab [@b{+} | @b{-} ] @i{integer} [@b{.} @i{integer} ] [@b{e} [@b{+} | @b{- }] integer ]
+@item @i{constantIdentifier} @tab ::= @tab @i{string} | @i{number}
+@item @i{string} @tab ::= @tab @b{"} @{ @i{character} @} @b{"}
+@item @i{number} @tab ::= @tab [@b{+} | @b{-} ] @i{integer} [@b{.} @i{integer} ] [@b{e} [@b{+} | @b{- }] integer ]
 @item @i{integer} @tab ::= @tab @i{digit}@{ @i{digit} @}
 @item @i{digit} @tab ::= @tab @b{0-9}
 @end multitable
 @end cartouche
 
-A string literal is, no surprise here, a sequence of characters enclosed in quotes. NodeBrain does not support an escape sequence, so there is no way to include a quote in a NodeBrain string object.
+A string identifier is, no surprise here, a sequence of characters enclosed in quotes. There is no escape symbol, so there is no way to include a quote in a string object.
 
 @example
-	"process has failed"
-	"threshold of 5 reached"
-	"http://sourceforge.net"
+"process has failed"
+"threshold of 5 reached"
+"http://sourceforge.net"
 @end example
 
-Numbers are always stored as floating-point objects. The following numeric literal identifiers all reference the same value.
+Numbers are always stored as floating-point objects. The following numeric identifiers all reference the same number.
 
 @example
-	2100	2.1e+3	   21.0e2
+2100	2.1e+3	   21.0e2
 @end example
 
 A number must always start with a numeric digit (0-9) or a sign (+ or -). Here are some more examples.
@@ -967,12 +1108,41 @@ A number must always start with a numeric digit (0-9) or a sign (+ or -). Here a
 +52
 @end example
 
-The interpreter does not reference the context or glossary hierarchies to resolve a literal identifier. Instead, the interpreter uses hashing tables to manage string and number objects. There is only one instance of a string object for any given string value. In the example below, you see the string literal "abc" multiple times. In each case, the interpreter recognizes the literal identifier as a reference to the same object---there is only one "abc" object. There is also only one instance of the 2.5 object. The y and d terms are both associated with the same value by pointers to the same memory location (the address of the 2.5 object).
+When the interpreter encounters a constant, it is converted to an internal form, assigned a hash code,
+and looked up in a hash table specific to the data type.  Since glossaries are also hash tables, and terms are
+assigned the same hash code as their name (term ABC and string "ABC" have a common hash code) one can
+think of constants as residing in a dictionary with only one level.
+
+In the example below, you see the string constant "abc" multiple times. 
+In each case, the interpreter recognizes the constant identifier as a reference to the same object---there is only one "abc" object. There is also only one instance of the 2.5 object. The y and d terms are both associated with the same value by pointers to the same memory location (the address of the 2.5 object).
 
 @example
-	assert x="abc",y=2.5,z="abc";
-	assert a="abc",b=5.345e+9,c="abc",d=2.5;
+assert x="abc",y=2.5,z="abc",x_abc="xyz",y_abc="123";
+assert a="abc",b=5.345e+9,c="abc",d=2.5;
 @end example
+
+It might be interesting, although not important, to know that the name of term @code{abc} is stored in the same memory location as the value and definition
+of terms @code{a}, @code{c}, @code{x} and @code{z}. This is true both for the @code{abc} subordinate to @code{x} and the @code{abc} subordinate to @code{y}. 
+This enables the interpreter to compare pointers to strings instead of comparing strings when checking for equality.
+
+@node Cells
+@section Cells
+@cindex Cells
+
+A cell is identified by a constant, a term, or a formula involving operators and operands, where an operand cell is identified by a constant, term, or another formula.
+In this way, every cell has a name, and the interpreter can ensure there is only one cell performing a given operation on a given set of operands.
+
+Just as there are multiple ways to express a given number, there can be multiple ways to express a given formula---identify a cell.
+The following rule conditions use different identifiers for the same cell.
+The first is expressed at the top context, and the second is expressed in the context of x.
+But the terms in the second rule resolve to the same terms as the first rule.
+Furthermore, the @code{5=b} is normalized to @code{b=5} resulting in a complete match of the two formulas.
+
+@example
+define r2 on(x.a>3 and x.b=5);
+x. define r1 on(a>3 and 5=b);
+@end example
+
 
 @node Formulas
 @chapter Formulas
@@ -987,7 +1157,8 @@ The interpreter does not reference the context or glossary hierarchies to resolv
 * Flip-flop Operator::
 * Time Operator::
 * Delay Operators::
-* Node Sentence Formulas::
+* Cell Functions::
+* Node Functions::
 @end menu
 
 This chapter describes the syntax and semantics of cell formulas.
@@ -1492,38 +1663,183 @@ The behavior of the state delay operators is summarized in the following tables,
 @item T @tab T @tab T
 @end multitable
 
-@node Node Sentence Formulas
-@section Node Sentence Formulas
-@cindex node sentence formulas
-A node sentence formula looks like a function call in many other languages.
+@node Cell Functions
+@section Cell Functions
+@cindex Cell Functions
+
+Cell functions are a way of extending the operations NodeBrain can perform within a cell on the values of subordinate cells.
+To enable extension, modules can provide cell functions, registering them at module load time.
+The name of a cell function should include both the providing module name and short descriptive name of the operation.
+References to cell function calls begin with a backtick to distinguish them from node function calls.
+
+Unlike node functions, which can be referenced in rules before they are defined, cell functions must be known to
+the interpreter at the time they are first referenced. This is accomplished by modules calling an API function that
+binds the cell functions to C functions.  The interpreter currently makes no effort to load a module when first referenced
+in a cell function call.  This will change soon in a future release.  For now, modules providing cell functions
+must be loaded automatically because of a node skill reference containing the module name, or by use of the @code{load}
+command, which can be placed in your application rules ahead of any reference to the provided cell functions.  The
+caboodle @code{.nb/caboodle.nb} and user @code{$HOME/.nb} files are convenient locations for a @code{load} command,
+since commands in these files are executed at @code{nb} startup.
+
+@subheading Math Functions
+
+The math functions are a simple binding of existing C functions.  These functions will return Unknown when the
+arguments are strings, or numbers for which the function can not return a value.  Otherwise, they return the computed number
+as a cell value.  These are well documented functions, so a description is not provided here.  In most cases, a man page on
+the corresponding C function name (e.g. @code{ceil}) will provide a description.
+
+@multitable {--------------------------------------------}
+@headitem  Function 
+@item `math.ceil(x)
+@item `math.floor(x)
+@item `math.abs(x)
+@item `math.exp(x)
+@item `math.log(x)
+@item `math.log10(x)
+@item `math.sqrt(x)
+@item `math.rint(x)
+@item `math.round(x)
+@item `math.trunc(x)
+@item `math.sin(x)
+@item `math.cos(x)
+@item `math.tan(x)
+@item `math.mod(x,y)   maps to fmod
+@item `math.pow(x,y
+@item `math.hypot(x,y)
+@end multitable
+
+@subheading String Functions
+
+String functions will be added in future releases.  The regular expression matching capability of the interpreter,
+provided by the PCRE library, is sufficient for most string matching requirements needed in a monitoring 
+application.  NodeBrain translators can be used to extract information from and reformat input event streams.
+External scripting languages can be used as servants to manipulate strings as well. Tree nodes can be used
+to do lookup translations. Node functions can also be used to manipulate strings.  However, the addition of
+more string functions will simplify some cases where
+the value of individual event attributes or asserted values need minor adjustments.
+
+The idea of string manipulation cell functions is introduced with one sad little string truncation function.
+
+@multitable {------------------------} {------------------------------------------------------------------------}
+@headitem  Function@w{       } @tab Description 
+@item `str.trunc(s,n)          @tab Return up to n characters of string s. 
+@end multitable
+
+@subheading Logic Functions
+
+Functions in this category may produce a logical result from the value of operand cells.  This is a way to
+add new logical operations without additional internal operators.
+
+It is also anticipated that some interactions with the intepreter will be most convenient if implemented as
+cell functions.  The @code{trace} function is a simple logical function that returns the value of the
+single operand cell, with the side effect of writing all "visible" changes in the value of the operand cell
+to the log.  Changes to the value of the operand cell are only visible to the @code{trace} function when
+other cells are subscribers to the @code{`trace(formula)} cell. By enclosing a term definition cell with
+the @code{trace} function, you get visibility of when the value of the term is actually enabled and
+changing without influencing it.
+Although a @code{nerve} cell enables monitoring of changes to a cell, it has
+the properties of a rule in that it enables all subordinate cells itself, forcing them to be managed
+when they might not be otherwise.
+
+@multitable {------------------------} {------------------------------------------------------------------------}
+@headitem  Function@w{       } @tab Description 
+@item `trace(formula)          @tab When enabled, logs all changes to the value of formula
+@end multitable
+
+@node Node Functions
+@section Node Functions
+@cindex node functions
+A simple node function call looks like a function call in many other languages.
 
 @example
-@i{node}(@i{arge1},@i{arge2},@dots{})
+@i{node}(@i{arg1},@i{arg2},@dots{})
 @end example
 
-However this same node sentence syntax can appear in multiple places within NodeBrain syntax. It is only a node sentence formula when it appears in a cell expression. The highlighted strings are node sentence formulas in the examples below. In fact, they are the same node sentence formulas.
+However this same node function call syntax can be used in multiple ways.
+It is only a cell formula when it appears within the context of a formula.
+In the example below, the highlighted strings identify node function calls that are formulas.
+In fact, they are the same formula, the same cell.
+Only one copy exists in memory.  The assignment to @code{good} on the second
+line does not require a call to the underlying function provided by a module.
+This is because the value is already known in support of the @code{foo} rule.
 
 @example
-define @i{term} on(x=2 and @b{process("inetd","running")}) @i{action}
-assert good==@b{process("inetd","running"),}process("nb","stopped");
+define foo on(x=2 and @b{process("inetd","running")}) @i{action}
+assert good==@b{process("inetd","running")},process("nb","stopped");
 @end example
 
-The reason process("nb","stopped") is not a node sentence formula is because it is not part of a cell expression. In this case, it is a node sentence assertion instead.
+The reason @code{process("nb","stopped")} is not a formula is because it is not specified within the context of a formula.
+In this case, it is a node function call
+within an assertion context.
 
-The first type of node to show up in the NodeBrain language was the cache. The generalized notion of a node evolved from the cache, so we use a cache to illustrate the concept here. (You can find more information on cache nodes in the @i{NodeBrain Module Reference}.)
+It may be helpful to think of the syntax of a node function call as a sentence that can be used as an assertion or a question---like people sometimes
+do with tonal inflextion. In NodeBrain, when a sentence is used within the context of a formula, it is a question.  But, the
+same sentence may be used within the context of an assertion or a command, provided the supporting module implements the associated callback functions.
+This is similar to the way the expression @code{A=B} may be used as an assertion or a formula.
 
-A NodeBrain cache is a table designed for event correlation. It has built-in features for monitoring frequency and variation, but may also be used for more general event correlation through cache node sentence formulas.
+A node module may provide a skill for a multifaceted node.  This means a node that has more than one facet that you want to interact with.
+The name of a node function is selected to identify the facet as illustrated below.  When there is only one facet, we get by with the syntax described above, where
+you don't actually specify a name for the function at all, since a reference to the node is sufficient.
+When there are multiple facets, there are multiple functions to address them, and we need to specify a function name to call any function
+other than the "nameless" function.
 
-Suppose you want to take some action when an event of Type T2 occurs within 5 minutes after an event of Type T1 if both events have the same value for attributes A and B. This could be accomplished with the following rule set.
+@example
+@i{node}@@@i{function}(@i{arg1},@i{arg2},@dots{})
+MyTable@@rows(a,b)
+MyTable@@kids(a)
+@end example
+
+The meaning of a sentence in a formula or assertion context is module and function dependent.  To illustrate, let's consider @code{MyTable@@kids(a)}
+in an assertion context. It might be used to set a @code{kids} property on the @code{MyTable} node to the value of @code{a}.
+It might also be used to set the @code{kids} property of member @code{a} within the @code{MyTable} node to True.  Within the context of
+a cell formula, it may be used to ask if the @code{kids} property of the @code{MyTable} is the same as the value of @code{a}.
+It might also be used to ask if the @code{kids} property of member @code{a} within the @code{MyTable} node is True.  It is easier to guess
+at the role @code{a} plays when combined with a @code{=} operator.  For example, the expression below, as an assertion or a formula, is probably
+using the value of @code{a} to access a specific element or property within the node.  But the point is that NodeBrain does not
+dictate what node functions actually do.  However, the NodeBrain model implies they are accepting assertions and responding to questions,
+not formatting a document or preparing a monthly report.
+
+@example
+MyTable@@kids(a)=27
+@end example
+
+
+Within the context of the node whose function you want to call, you can omit the node name.
+
+@example
+@@@i{function}(@i{arg1},@i{arg2},@dots{})
+@i{node}. define r1 on(a=7 and @@ave(x,y)>5)@dots{}
+@end example
+
+This applies to the "nameless" function as well, provided the @@ is specified.
+
+@example
+@@(@i{arg1},@i{arg2},@dots{})
+@i{node}. define r1 on(a=7 and @@(a,b,c))@dots{}
+@end example
+
+So a more complete description of a node function call is as follows, where the node and/or function name
+are not always required when @@ is specified.
+
+@example
+@i{node}(@i{arg1},@i{arg2},@dots{})
+  -or-
+[@i{node}]@@[@i{function}](@i{arg1},@i{arg2},@dots{})
+@end example
+
+The first type of node to show up in the NodeBrain language was the cache. The generalized notion of a node evolved from the cache, so we use a cache to illustrate the concept here. (You can find more information on cache nodes in the @i{Cache NodeBrain Module} manual.)
+
+A NodeBrain cache is a table designed for event correlation. It has built-in features for monitoring frequency and variation, but may also be used for more general event correlation through cache node function calls.
+
+Suppose you want to take some action when an event of type @code{T2} occurs within 5 minutes after an event of type @code{T1} if both events have the same value for attributes A and B. This could be accomplished with the following rule set.
  
 @example
-define event node;     # define a node to be alerted
-event. define t1ab node cache:(~(5m):a,b);		    # define cache 
-event. define r1 if(Type="T1") t1ab(A,B);                   # populate cache 
-event. define r2 if(Type="T2" and @b{t1ab(A,B)}):@i{action} # reference cache - lookup
+event. define Tab node cache:(~(5m):a,b);                  # define cache 
+event. define r1 if(Type="T1") Tab(A,B);                   # populate cache 
+event. define r2 if(Type="T2" and @b{Tab(A,B)}):@i{action} # reference cache - lookup
 @end example
 
-The highlighted cache condition is True when the t1ab cache contains an entry for the current value of A and B. If either A or B is Unknown, the cache condition is Unknown. Otherwise, the cache condition is False.
+The highlighted cache condition is True when the @code{Tab} cache contains an entry for the current value of @code{A} and @code{B}. If either @code{A} or @code{B} is Unknown, the cache condition is Unknown. Otherwise, the cache condition is False.
 
 The event stream for this context is generated through a series of commands of the following form.
 
@@ -1531,7 +1847,9 @@ The event stream for this context is generated through a series of commands of t
 event. alert Type="@i{type}",A="@i{a}",B="@i{b}";
 @end example
 
-When an event of type T1 occurs, rule r1 asserts (A,B) to the cache. This inserts an entry for the current value A and B. This entry will expire within 5 minutes. When an event of type T2 occurs, rule r2 will fire if the cache contains an entry for the values of A and B. If the following events occur within a 5-minute period, the final event will cause rule r2 to fire.
+When an event of type @code{T1} occurs, rule @code{r1} asserts @code{(A,B)} to the @code{Tab} cache.
+This inserts an entry for the current value of @code{A} and @code{B}. This entry will expire within 5 minutes.
+When an event of type @code{T2} occurs, rule @code{r2} will fire if the cache still contains an entry for the values of @code{A} and @code{B}. If the following events occur within a 5-minute period, the final event will cause rule @code{r2} to fire.
 
 @example
 event. alert Type="T1",A="man",B="happy";
@@ -1544,16 +1862,16 @@ event. alert Type="T2",A="man",B="happy";
 If you defined the cache without scheduled expiration of entries, you must explicitly delete entries when appropriate.
 
 @example
-event. define t1ab node cache:(a,b);	# define cache
-event.t1ab. assert ("abc","xyz");	# insert entry if new
-event.t1ab. assert !("abc","xyz");	# delete entry
-event.t1ab. assert !("abc");		# delete group of entries
-event.t1ab. assert !();			# delete all entries
+event. define Tab node cache:(a,b);   # define cache
+event. assert Tab("abc","xyz");       # insert entry if new
+event. assert !Tab("abc","xyz");      # delete entry
+event. assert !Tab("abc");            # delete group of entries
+event. assert !Tab();                 # delete all entries
 @end example
 
 With or without an expiration period, you may want to delete entries based on some condition. This is simply a way of forcing the cache condition to be False, just as asserting an entry forces it to be True. So, you can think of a cache condition as a dynamic set of named Boolean switches. You address a specific switch via the argument list.
 
-The value of a node sentence formula and the relationship of this value to an assertion is determined by a node module. The behavior of a cache node is determined by the cache node module. Other nodes may use different node modules and will behave quit differently. See @i{NodeBrain Module Reference} for information on a set of node modules distributed with NodeBrain.
+The value of a node function formula and the relationship of this value to an assertion is determined by a node module. The behavior of a cache node is determined by the cache node module. Other nodes may use different node modules and will behave quite differently. See online documentation for information on a set of node modules distributed with NodeBrain.
 
 
 @node Time Expressions
@@ -2316,9 +2634,9 @@ When specifying a partitioned set, the false state (\) is assumed at the end of 
 For monitoring applications, you often just need a simple repeating schedule of a specific duration. For that, there is a simplified syntax. The following schedules produce the same results.
 
 @example
-       ~(15m)         Pulse condition
+~(15m)           Pulse condition
        
-       ~@{*@{15m/@}@}   Time sequence 
+~@{*@{15m/@}@}   Time sequence 
 @end example
 
 A pulse conditions resolves to a single number of seconds. For example, "2h1m3s" resolves to 7263 seconds. The value of a pulse condition is not true until the duration is complete. It then remains true, except for the last second of every duration. This provides a leading edge to trigger rule conditions.
@@ -2326,7 +2644,7 @@ A pulse conditions resolves to a single number of seconds. For example, "2h1m3s"
 Here you see a simple rule to run a script every 10 minutes. The script will run for the first time 10 minutes after the rule is defined.
 
 @example
-       define myRule on(~(10m)):=/home/fred/bin/myscript.pl
+define myRule on(~(10m)):=/home/fred/bin/myscript.pl
 @end example
 
 @node Rules
@@ -2335,7 +2653,7 @@ Here you see a simple rule to run a script every 10 minutes. The script will run
 A rule associates an action with a condition. It tells the rule engine what to watch for and what to do if it sees it. In English, you might express a rule using a sentence of the form "If @i{condition}, then @i{action}." For example, "If it starts to rain, then go inside the barn." NodeBrain supports commands with similar structures. 
 
 @example
-define @i{term type}(@i{condition}) action;                          [Simple rule]
+define @i{term type}(@i{condition}) action;                                     [Simple rule]
 @{@i{type}(@i{condition});@i{action};@i{type}(@i{condition});@i{action}; @}     [Sequence rule]
 @end example
 
@@ -2346,13 +2664,13 @@ Simple rules constantly watch for the specified condition and take the specified
 @example
 define @i{term type}(@i{condition}) @i{action};
 
-	define r1 if(a=1 and b=2) c=3:
-	define r2 on(a=2 and b=1) c=7.5;
-	define r3 when(a+b=9) ?c :=/home/fred/niner.pl;
+define r1 if(a=1 and b=2) c=3:
+define r2 on(a=2 and b=1) c=7.5;
+define r3 when(a+b=9) ?c :=/home/fred/niner.pl;
 	
-	disable r1;     # This prevents rule r1 from responding to the condition
-	enable r1;      # This causes rule r1 to start responding again
-	undefined r1;   # This removes r1 from the engine's memory
+disable r1;     # This prevents rule r1 from responding to the condition
+enable r1;      # This causes rule r1 to start responding again
+undefined r1;   # This removes r1 from the engine's memory
 @end example
 
 The different types of conditions (if, on, or when) provide for different behavior.
@@ -2367,134 +2685,134 @@ The different types of conditions (if, on, or when) provide for different behavi
 The action for simple rules may be a compiled assertion or a command that is interpreted each time the rule fires.
 
 @example
-	define @i{term type}(@i{condition}) [@i{assertion}] [:@i{command} | ; ]
+define @i{term type}(@i{condition}) [@i{assertion}] [:@i{command} | ; ]
 
-	define r0 on(a=7);              [no action]
-	define r1 on(a=1) b=2;          [assertion only]
-	define r2 on(a=3):-dir          [command only]
-	define r3 on(a=5) b=3:-dir      [assertion and command]
+define r0 on(a=7);              [no action]
+define r1 on(a=1) b=2;          [assertion only]
+define r2 on(a=3):-dir          [command only]
+define r3 on(a=5) b=3:-dir      [assertion and command]
 @end example
 
 You can group a set of rules within the context of a node. Normally when you have a large number of rules you can organize them into smaller sets by using multiple nodes. For example, suppose you are monitoring 5 servers. The rules for a single server might look something like this.
 
 @example
-       define server node;
-       server. define 'myhost1.enterprise.com' node;
-       server.'myhost1.enterprise.com'. define r1 on(!.pingable) @i{action11};
-       server.'myhost1.enterprise.com'. define r2 on(cpu>95) @i{action12};
-       server.'myhost1.enterprise.com'. define r3 on(disk>80) @i{action13};
+define server node;
+server. define 'myhost1.enterprise.com' node;
+server.'myhost1.enterprise.com'. define r1 on(!.pingable) @i{action11};
+server.'myhost1.enterprise.com'. define r2 on(cpu>95) @i{action12};
+server.'myhost1.enterprise.com'. define r3 on(disk>80) @i{action13};
 @end example
 
 You might have different rules for each server, organized by creating a node for each one.
 
 @example
-       server. define 'myhost2.enterprise.com' node;
-       server.'myhost2.enterprise.com'. define r1 on(disk>80) @i{action21};
-       server.'myhost2.enterprise.com'. define r2 on(cpu>92) @i{action22};
+server. define 'myhost2.enterprise.com' node;
+server.'myhost2.enterprise.com'. define r1 on(disk>80) @i{action21};
+server.'myhost2.enterprise.com'. define r2 on(cpu>92) @i{action22};
 @end example
 
 If you find the rule sets for each server are similar, they may be easier to maintain if you create a single source file a server rule set and source the file for each server.
 
 @example
-	# Source File: Server.nb
-	#--------------------------
-	%default name="oops",ping=1,disk=80,cpu=95
-	%if(ping);
-	server.'%@{name@}'. define r1 on(!.pingable) action1;
-	%endif;
-	server.'%@{name@}'. define r2 on(cpu>%@{cpu@}) action2;
-	server.'%@{name@}'. define r3 on(disk>%@{disk@}) action3;
+# Source File: Server.nb
+#--------------------------
+%default name="oops",ping=1,disk=80,cpu=95
+%if(ping);
+server.'%@{name@}'. define r1 on(!.pingable) action1;
+%endif;
+server.'%@{name@}'. define r2 on(cpu>%@{cpu@}) action2;
+server.'%@{name@}'. define r3 on(disk>%@{disk@}) action3;
 
-	# Main rule file
-	#==================
-	source server.nb,name="myhost1.enterprise.com";
-	source server.nb,name="myhost2.enterprise.com",cpu=92
-	@dots{}
+# Main rule file
+#==================
+source server.nb,name="myhost1.enterprise.com";
+source server.nb,name="myhost2.enterprise.com",cpu=92
+@dots{}
 @end example
 
 In this example, you have been assuming the various elements of state associated with each server are updated independently as shown here.
 
 @example
-	assert server.'myhost1.enterprise.com'.disk=82;
-	assert server.'myhost2.enterprise.com'.cpu=64;
-	assert !server.'myhost1.enterprise.com'.pingable;
+assert server.'myhost1.enterprise.com'.disk=82;
+assert server.'myhost2.enterprise.com'.cpu=64;
+assert !server.'myhost1.enterprise.com'.pingable;
 @end example
 
 You are also assuming that you may have rules with conditions based on more than one variable for a given server or for multiple servers. And, finally, assume you may have different thresholds for each server. When these assumptions are true, you need to maintain the state of all parameters for each server. If these assumptions are not true, you can simplify the rule set by creating just one set of rules for all servers.
 
 @example
-	define server node;
-	server. define r1 on(!pingable) action1;
-	server. define r2 on(cpu>95) action2;
-	server. define r3 on(disk>80) action3;
+define server node;
+server. define r1 on(!pingable) action1;
+server. define r2 on(cpu>95) action2;
+server. define r3 on(disk>80) action3;
 @end example
 
 With this set of rules, assertions might look like this. Notice that the server name is available to be used via symbolic substitution in the rule actions.
 
 @example
-	server. assert name="myhost1.enterprise.com",disk=82;
-	server. assert name="myhost2.enterprise.com",cpu=64;
-	server. assert name="myhost1.enterprise.com",!pingable;
+server. assert name="myhost1.enterprise.com",disk=82;
+server. assert name="myhost2.enterprise.com",cpu=64;
+server. assert name="myhost1.enterprise.com",!pingable;
 @end example
 
 Depending on how you collect the variable values, it may be convenient to report all of the variables at once.
 
 @example
-	server. assert name="myhost1.enterprise.com",disk=82,cpu=95,pingable;
+server. assert name="myhost1.enterprise.com",disk=82,cpu=95,pingable;
 @end example
 
 In this case, you can once again introduce compound conditions based on multiple parameters for a given system.
 
 @example
-	server. define r4 on(disk<20 and cpu<10) @i{action4};
+server. define r4 on(disk<20 and cpu<10) @i{action4};
 @end example
 
 You may notice you are slowly converting this application from a state monitoring system into an event monitoring system. By doing this you have created two new problems. First, the rules fail to respond to a problem on a given server when the same problem existed for the server that reported previously. Remember, @code{on} rules only fire when the condition transitions to True. So you need to change the rules to @code{if} rules and use @code{alert} instead of @code{assert}.
 
 @example
-	define server node;
-	server. define r1 if(!.pingable) action1;
-	server. define r2 if(cpu>95) action2;
-	server. define r3 if(disk>80) action3;
+define server node;
+server. define r1 if(!.pingable) action1;
+server. define r2 if(cpu>95) action2;
+server. define r3 if(disk>80) action3;
 
-	server. alert name="myhost1.enterprise.com",disk=82;
-	server. alert name="myhost2.enterprise.com",cpu=64;
-	server. alert name="myhost1.enterprise.com",!pingable;
+server. alert name="myhost1.enterprise.com",disk=82;
+server. alert name="myhost2.enterprise.com",cpu=64;
+server. alert name="myhost1.enterprise.com",!pingable;
 @end example
 
 Second, the system has become chatty. The rules will respond over and over when you get continued reports of a problem. You can solve this by including some cache nodes.
 
 @example
-	define server node;
-	server. define cPing node cache:(~(20m):server);
-	server. define cCpu node cache:(~(2h):server);
-	server. define cDisk node cache:(~(4h):server);
+define server node;
+server. define cPing node cache:(~(20m):server);
+server. define cCpu node cache:(~(2h):server);
+server. define cDisk node cache:(~(4h):server);
 	
-	server. define r1 if(!cPing(server) and !.pingable) cPing(server): @i{action1};
-	server. define r2 if(!cCpu(server) and cpu>95) cCpu(server): @i{action2};
-	server. define r3 if(!cDisk(server) and disk>80) cDisk(server): @i{action3};
+server. define r1 if(!cPing(server) and !.pingable) cPing(server): @i{action1};
+server. define r2 if(!cCpu(server) and cpu>95) cCpu(server): @i{action2};
+server. define r3 if(!cDisk(server) and disk>80) cDisk(server): @i{action3};
 @end example
 
 Now the rules will only take action every 20 minutes on ping problems, 2 hours for high cpu utilization, and 4 hours for high disk space utilization. This is good, but what if a problem is resolved and then returns within this interval. For example, let's say for @i{action3} you open a trouble ticket for an SA to clean up the disk space and the SA gets it down to 70% used within 90 minutes and closes out the ticket. If the usage goes above 80% again within the 4-hour cache interval, the new problem will not be detected. This can be solved by adding another rule with a reset threshold.
 
 @example
-	server. define r3On if(!cDisk(server) and disk>80) cDisk(server): @i{action3};
-	server. define r3Off if(cDisk(server) and disk<75) !cDisk(server);
+server. define r3On if(!cDisk(server) and disk>80) cDisk(server): @i{action3};
+server. define r3Off if(cDisk(server) and disk<75) !cDisk(server);
 @end example
 
 These two rules work in combination like a flip-flop condition you might elect to use for state monitoring with rules for each server.
 
 @example
-	server. define r3 on(.disk>80 ^ .disk<75): @i{action3};
+server. define r3 on(.disk>80 ^ .disk<75): @i{action3};
 @end example
 
 This is fine, but if the only action is to issue an alarm, you can create an alarm cache node and let it handle the deduplication. Then you can go back to the simple set of rules.
 
 @example
-	define server node;
-	server. define r1 if(!.pingable):alarm. alert ("message1");
-	server. define r2 if(cpu>95):alarm. alert ("message2");
-	server. define r3 if(disk>80):alarm. alert ("message3");
+define server node;
+server. define r1 if(!.pingable):alarm. alert ("message1");
+server. define r2 if(cpu>95):alarm. alert ("message2");
+server. define r3 if(disk>80):alarm. alert ("message3");
 @end example
 
 See Appendix C, section C.1 Sample Alarm Script, for an example of what the alarm cache node might look like.
@@ -2502,25 +2820,25 @@ See Appendix C, section C.1 Sample Alarm Script, for an example of what the alar
 Another type of rule, @code{when}, can be used in situations when you want to detect a condition one time only. This can be used for both state and event monitoring.
 
 @example
-	define r1 when(a=1 and b=2):=/home/me/script.pl
+define r1 when(a=1 and b=2):=/home/me/script.pl
 
-	assert a=1,b=2; # causes r1 to fire and undefined itself
-		-or-
-	alert a=1,b=2;
+assert a=1,b=2; # causes r1 to fire and undefined itself
+  -or-
+alert a=1,b=2;
 @end example
 
 For a real world example, let's assume you have a trouble ticket system with an interface that returns a ticket number when you open a new ticket, and an interface to close a ticket by number. A rule to generate a ticket might look like this.
 
 @example
-	define r1 on(condition):@dots{}
-           =$ @i{ticketGenerationScript} "@i{closeCondition}" "@i{ticketInfo}"
-	define ticket node;
+define r1 on(condition)\
+  :=$ @i{ticketGenerationScript} "@i{closeCondition}" "@i{ticketInfo}"
+define ticket node;
 @end example
 
 Your ticket generation script could generate a ticket and define a @code{when} rule to monitor for the condition used to close the ticket.
 
 @example
-	ticket. define '@i{ticketNumber}' when(@i{closeCondition}):=@i{ticketCloseScript} "@dots{}"
+ticket. define '@i{ticketNumber}' when(@i{closeCondition}):=@i{ticketCloseScript} "@dots{}"
 @end example
 
 It is also possible to use @code{when} rules that create @code{when} rules that create @code{when} rules, and so on, to monitor for a sequence of conditions. The next section describes sequence rules as an alternative to this approach.
@@ -2747,6 +3065,7 @@ We elected to leave sequence rules unfinished in release 0.6.0 because they were
 * Load::
 * Query::
 * Rank::
+* Redefine::
 * Set::
 * Show::
 * Source::
@@ -2828,15 +3147,42 @@ When the value of a cell remains the same, dependent cells are not re-evaluated.
 	alert A=3,B==2*A+1;
 @end example
 
-When cell evaluation is complete, the interpreter takes the actions specified by defined rules. Any @code{on} or @code{when} rule whose condition transitions to true (from false or unknown) will fire. In addition, any @code{if} rule whose condition is true will fire, even if it was already true before the alert.
+When cell evaluation is complete, the interpreter takes the actions specified by defined rules. Any @code{on} or @code{when} rule whose condition transitions to true (from false or unknown) will fire. In addition, any @code{if} rule defined in the node that is the context of the @code{alert} command, whose condition is true, will fire, even if it was already true before the alert. 
+True @code{if} rules defined in other nodes will not fire, even if the @code{alert} command makes assertions to terms within those nodes
+that make the @code{if} rules true.
+An @code{alert} command will only trigger @code{if} rules in the node to which it is directed by the command context prefix.
 
 You can think of an @code{alert} command as a representation of an event. The assertion provides event parameters. Rules within the alerted context (normally @code{if} rules) determine the response.
 
+An @code{alert} command does everything an @code{assert} command does, but has two additional features.  The first is the activation of @code{if} rules as described above.
+The second is a notion called "alert attribute transience".  This means simple terms asserted within the context node by an @code{alert} command are
+assumed to be event attributes and will revert to Unknown if not specified on the next alert to the same context node. This does not apply to terms
+defined in other nodes, even subordinate nodes.  Nor does it apply to node function call assertions.
+The purpose of this feature is to enable an @code{alert} to include both event and state intended assertions. State intended assertions are
+preserved by directing them to a different node, or by simply being node function assertions.  Event intended assertions are
+made to terms in the context node (target of the alert), and are reset to Unknown when not specified on a subsequent alert.
+This ensures that rules are responding only to the event attribute values of the current alert.
+In a special case, this might include the ability to respond to the absence of a known value for an event attribute on the current alert---by monitoring
+for the Unknown value. 
 
-If the alerted node has the skill to accept assertions (i.e., a cache), you may specify an argument list.
+In the example below, @code{a} is intended as a state term, while @code{x.b} and @code{x.c} are intended as event terms.  Because @code{x.c} is not specified
+on the second alert, it reverts to Unknown.  Because @code{a} is not within the alert context, it does not revert to Unknown.
+@example
+define a cell ?;
+x. define r1 if(a=1 and .b=2 and .c=3);
+x. alert a=1,b=2,c=3;  # this will cause rule r1 to fire
+x. alert b=2;          # this will not because a=1,b=2,c=? 
+@end example
+
+If the alerted node has the skill to accept assertions (i.e., a cache), you may specify one or more node function calls by simply providing an argument list.
+The second line below does the same as the first, but the inclusion of the node function symbol @@
+may make it more clear that a node function is being invoked to perform an assertion.
+The third line below uses a different node function of the same node to address a different facet of the node.
 
 @example
-	alert ("goofy","silly"),A=3,B=4;
+alert ("goofy","silly"),A=3,B=4;
+alert @@("goofy","silly"),A=3,B=4;
+alert @@foo("goofy","silly"),A=3,B=4;
 @end example
 
 Using alert arguments with a cache node is useful for establishing thresholds that prevent a duplicate action within some interval of time.
@@ -3171,11 +3517,11 @@ Arguments are not always required when declaring a skill. Perhaps you just want 
 
 @menu
 * Cell Definition::
-* Nerve Definition::
 * Node Definition::
 * If-Rule Definition::
 * On-Rule Definition::
 * When-Rule Definition::
+* Nerve Definition::
 * Macro Definition::
 @end menu
 
@@ -3186,7 +3532,7 @@ The @code{define} command is used to define NodeBrain objects.
 @multitable {-------------} {---} {------------------------------------------------------}
 @item @i{defineCmd} @tab ::= @tab @b{define} s* @i{term} s* @i{objectType} [ s* @i{objectSpec} ] [ @b{;} [@i{comment} ]] @b{@bullet{}} 
 @item @i{term} @tab ::= @tab  see Chapter 3, Identifiers
-@item @i{objectType} @tab ::= @tab @b{cell} | @b{nerve} | @b{node}  | @b{if} | @b{on} | @b{when}
+@item @i{objectType} @tab ::= @tab @b{cell} | @b{node}  | @b{if} | @b{on} | @b{when} | @b{nerve} | @b{macro}
 @item @i{objectSpec} @tab ::= @tab type-specific specification
 @end multitable
 @end cartouche
@@ -3266,22 +3612,6 @@ For compatibility with earlier versions of NodeBrain, the interpreter recognizes
 	define myformula condition B < (A*20) or C=5;
 @end example
  
-@node Nerve Definition
-@subsection Nerve Definition
-@cindex Nerve Definition
-Nerve cells can be defined in NodeBrain to assist in rule debugging. A nerve cell is defined just like a normal cell, except the object type is @code{nerve}.
-
-@cartouche
-@b{Syntax}
-@multitable {-------------} {---} {------------------------------------------------------}
-@item @i{nerveDefineCmd} @tab ::= @tab @b{define} s* @i{term} s* @b{nerve} [ s* @i{condition} ] [ @b{;} [@i{comment} ]] @b{@bullet{}} 
-@item @i{condition} @tab ::= @tab  see Chapter 4, Conditions
-@end multitable
-@end cartouche
-
-
-When the value of a nerve cell is changed by an assertion or cell evaluation, the term and new value are logged. This may be used as an alternative to performing a full trace, providing a trace focused on specific cell conditions.
-
 @node Node Definition
 @subsection Node Definition
 @cindex Node Definition
@@ -3471,6 +3801,25 @@ The variability of the @i{action} will influence the choice between these option
 
 A @code{when} rule may also be injected by an external application component. A trouble ticketing system might request NodeBrain to monitor for a condition and take the action of automatically closing out the trouble ticket. In that case, it is appropriate for the rule to fire once and then disappear.
  
+@node Nerve Definition
+@subsection Nerve Definition
+@cindex Nerve Definition
+Nerve cells can be defined in NodeBrain to assist in rule debugging. A nerve cell is defined just like a normal cell, except the object type is @code{nerve},
+and it acts more like a rule.
+
+@cartouche
+@b{Syntax}
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{nerveDefineCmd} @tab ::= @tab @b{define} s* @i{term} s* @b{nerve} [ s* @i{condition} ] [ @b{;} [@i{comment} ]] @b{@bullet{}} 
+@item @i{condition} @tab ::= @tab  see Chapter 4, Conditions
+@end multitable
+@end cartouche
+
+
+When the value of a nerve cell is changed by an assertion or cell evaluation, the term and new value are logged. This may be used as an alternative to performing a full trace, providing a trace focused on specific cell conditions.
+
+See the @code{`trace} cell function for another way of tracing changes to specific cells.
+
 @node Macro Definition 
 @subsection Macro Definition 
 @cindex Macro Definition
@@ -3758,6 +4107,30 @@ When a rule fires, the action command is attempted under the same identity that 
 We anticipate including @code{grant} and @code{deny} commands in a future release for more granular control of identity permissions. This feature may include regular expressions that enable restrictions to specific commands and parameters.
 
 
+@node Redefine
+@section Redefine
+@cindex Redefine
+The @code{redefine} command is used to redefine a term previously defined.
+
+@cartouche
+@b{Syntax}
+@multitable {-------------} {---} {------------------------------------------------------}
+@item @i{defineCmd} @tab ::= @tab @b{redefine} s* @i{term} s* @i{objectType} [ s* @i{objectSpec} ] [ @b{;} [@i{comment} ]] @b{@bullet{}}
+@item @i{term} @tab ::= @tab  see Chapter 3, Identifiers
+@item @i{objectType} @tab ::= @tab @b{cell} | @b{node}  | @b{if} | @b{on} | @b{when} | @b{nerve} | @b{macro}
+@item @i{objectSpec} @tab ::= @tab type-specific specification
+@end multitable
+@end cartouche
+
+The syntax for @code{redefine} is the same as the @code{define} commands.  It simply reveals your intention to redefine a term previously defined,
+which the @code{define} will not allow.
+
+Cells can also be redefined via the @code{assert} command using the @code{==} assignment operator to change the formula.
+Other object types, like nodes, rules and macros, can only be redefined using the @code{redefine} command.
+(It would not be difficult in a future release to enable rule conditions to be redefined using the @code{assert} command without modifying the rule type or action.
+If you think of it in advance, this can be accomplished currently by making the rule condition a reference to a term defined as a cell. By redefining
+the formula for the referenced term you change the rule condition.)
+
 
 @node Set 
 @section Set 
@@ -3968,6 +4341,8 @@ In diagnostic NodeBrain scripts, you may optionally specify a consultant command
 @node Windows
 @section Windows
 @cindex Windows
+@b{NodeBrain has not been ported to Windows for several releases, so this information only applies to really old releases.}
+
 The @code{windows} command is used only for Windows-specific administration functions. You should think of "windows" as a context instead of a verb. There are multiple verbs that can be used in this context.
 
 @cartouche

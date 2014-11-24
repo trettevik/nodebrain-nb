@@ -129,6 +129,7 @@ extern NB_Object *nb_Placeholder;
 #define TYPE_IS_FACT   0x0800   /* facts */
 #define TYPE_IS_ASSERT 0x2000   /* assertions */
 #define TYPE_IS_MATH   0x4000   // Math functions
+#define TYPE_NO_PAREN  0x8000   // Type displays without parentheses
 
 typedef struct TYPE{
   struct NB_OBJECT object;     /* object header */

@@ -80,7 +80,6 @@
 #include <nb/nbbfi.h>         /* binary function of integer */
 #include <nb/nbtime.h>        /* time conditions */
 #include <nb/nbsched.h>       /* schedule and old time conditions */
-#include <nb/nbcall.h>        /* built-in function calls */
 #include <nb/nbmath.h>        /* math functions */
 
 #include <nb/nbparse.h>       /* parsing functions */

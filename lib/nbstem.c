@@ -93,7 +93,7 @@ void nbStemInit(NB_Stem *stem){
   nbConditionalInit(stem);
   nbAxonInit(stem);
   nbAssertionInit(stem);
-  initCall(stem);              /* must follow initCondition */
+  NbCallInit(stem);              /* must follow initCondition */
   nbNodeInit(stem);
   nbSentenceInit(stem);
   //nbListenerInit(stem);

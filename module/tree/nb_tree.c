@@ -375,7 +375,7 @@ static int treeAssert(nbCELL context,void *skillHandle,BTree *tree,nbCELL arglis
   NB_TreePath path;
   BTreeNode *node=NULL,**nodeP=&tree->root;
   nbCELL argCell;
-  nbSET  argSet;
+  nbSET  argSet=NULL;
 
   if(arglist==NULL) return(0); // perhaps we should set the value of the tree itself
   argSet=nbListOpen(context,arglist);

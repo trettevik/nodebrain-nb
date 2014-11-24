@@ -783,7 +783,7 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
   NB_Object *object,*objhold;
   NB_Term *term=NULL;
   char *delim,msg[1024],*savecursor=*cursor;
-  struct TYPE *type;
+  //struct TYPE *type;
   //int not=0;
   char symid;
   char isSentence=0;
@@ -914,7 +914,7 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
       return((NB_Object *)parseReal(ident));
     case 's': // string literal 
       return((NB_Object *)useString(ident));
-    case '`': // function identifier
+    case '`': // function call identifier
       savecursor=*cursor;
       symid=nbParseSymbol(ident,sizeof(ident),cursor);
       if(symid!='t'){
@@ -937,19 +937,9 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
         return(NULL);
         }
       (*cursor)++;
-      if(strcmp(ident,"mod")==0){
-        type=callTypeMod;
-        return((NB_Object *)useCondition(type,useReal(0),right));
-        }
-      NB_Link *member;
-      struct TYPE *objType;
-      for(member=regfun;member!=NULL;member=member->next){
-        objType=((struct TYPE *)member->object);
-        if(strcmp(objType->name,ident)==0){
-          return(objType->construct(objType,((NB_List *)right)->link));
-          }
-        }
-      outMsg(0,'E',"Function %s not defined",ident);
+      object=NbCallUse((nbCELL)context,ident,(NB_List *)right); // create a new call object
+      if(object) return(object);
+      outMsg(0,'E',"Cell function %s not defined",ident);
       return(NULL);
     case '@': // facet identifier
       term=addrContext;    // term implied if starting with facet references
@@ -964,17 +954,6 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
         }
       isSentence=1;
     case 't': // term identifier 
-/*
-      if(*ident=='@' && *(ident+1)!=0){
-        term=addrContext;  // term implied if starting with facet references
-        if(strlen(ident+1)>=sizeof(facetIdent)){ // 2014-11-19 eat - CID 1251346 fp, rearranged to help checker
-          outMsg(0,'E',"Facet name may not be greater than %d\"",sizeof(facetIdent)-1);
-          return(NULL);
-          }
-        strcpy(facetIdent,ident+1);
-        }
-      else{
-*/
       if(!term){ // did not fall through from '@' facet above
         // A single underscore identifies the placeholder cell
         // Perhaps this determination should be moved to nbParseSymbol
@@ -1008,7 +987,6 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
       /* default to cell term if not define */
       savecursor=*cursor;
       if(**cursor!='('){
-        //if(*facetIdent){
         if(isSentence){
           if(!term){
             term=nbTermNew(context,ident,nbNodeNew(),1);
@@ -1037,7 +1015,15 @@ NB_Object *nbParseObject(NB_Term *context,char **cursor){
         }
       (*cursor)++;
       if(term==NULL){
-        // 2014-09-13 eat - Term used as node, make it a node with default skill
+        // 2014-09-13 eat - undefined term used as node, make it a node with default skill
+        if(!isSentence){  // support deprecated syntax first
+          // 2014-11-22 eat - This should be removed after a couple releases
+          object=NbCallUse((nbCELL)context,ident,(NB_List *)right); // create a new call object
+          if(object && !strchr(ident,'.') && strcmp(ident,"trace")!=0){
+            outMsg(0,'W',"Deprecated syntax for built-in function.  Use `math.%s(...) instead.",ident);
+            return(object);
+            }
+          }
         term=nbTermNew(context,ident,nbNodeNew(),1);
         ((NB_Node *)term->def)->context=term;
         }

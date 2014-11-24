@@ -478,7 +478,7 @@ struct NB_SKILL *nbSkillParse(NB_Term *context,char *cursor){
     }
   else{
     if(*cursor!=0 && *cursor!=';'){
-      outMsg(0,'E',"Expecting colon ':' or end of command at:%s",cursor);
+      outMsg(0,'E',"Expecting colon ':' or end of command at-->%s",cursor);
       if(args!=NULL) dropObject(args);
       return(NULL);
       }
@@ -535,7 +535,7 @@ NB_Term *nbNodeParse(NB_Term *context,char *ident,char *cursor){
   if(*cursor=='(') args=grabObject(nbSkillArgs(context,&cursor));
   if(*cursor==':') cursor++;
   else if(*cursor!=0 && *cursor!=';'){
-    outMsg(0,'E',"Expecting colon ':' or end of command at:%s",cursor);
+    outMsg(0,'E',"Expecting colon ':' or end of command at-->%s",cursor);
     dropObject(args);
     nbTermUndefine(term);
     return(NULL);
@@ -570,16 +570,19 @@ int nbNodeCmd(nbCELL context,char *name,char *cursor){
   NB_Facet *facet=NULL;
   NB_List *args=NULL;
   NB_Term *term;
-  char *cursave,symid,ident[64];
+  char *cursave,symid,ident[256];
 
-  if(NULL==(term=nbTermFind((NB_Term *)context,name))){
+  if(*name==0) term=(NB_Term *)context;
+  else if(NULL==(term=nbTermFind((NB_Term *)context,name))){
     term=nbTermNew((NB_Term *)context,name,nbNodeNew(),1);
     ((NB_Node *)term->def)->context=term;
     }
+/* Can no longer make a term defined as undefined a node - must be completely undefined or already a node
   else if(term->def==nb_Unknown){
     term->def=grabObject(nbNodeNew());
     ((NB_Node *)term->def)->context=term;
     }
+*/
   else if(term->def->type!=nb_NodeType){
     outMsg(0,'E',"Term \"%s\" not defined as node.",name);
     return(-1);
@@ -599,8 +602,10 @@ int nbNodeCmd(nbCELL context,char *name,char *cursor){
     cursave=cursor;
     symid=nbParseSymbol(ident,sizeof(ident),&cursor);
     if(symid!='t'){
-      outMsg(0,'E',"Expecting facet identifier at->%s",cursave);
-      return(-1);
+      *ident=0;
+      cursor=cursave;
+      //outMsg(0,'E',"Expecting facet identifier at->%s",cursave);
+      //return(-1);
       }
     facet=nbSkillGetFacet(skill,ident);
     if(!facet && skill!=nb_SkillDefault) facet=nbSkillGetFacet(nb_SkillDefault,ident);
@@ -614,11 +619,13 @@ int nbNodeCmd(nbCELL context,char *name,char *cursor){
   if(*cursor==':') cursor++;
   else if(*cursor==';') cursor="";
   else if(*cursor!=0){
-    outMsg(0,'E',"Expecting colon ':' or end of command at:%s",cursor);
+    outMsg(0,'E',"Expecting colon ':' or end of command at-->%s",cursor);
     dropObject(args);
     return(-1);
     }
-  (*facet->command)(term,skill->handle,node->knowledge,args,cursor);
+  if(facet->skill==nb_SkillUnknown)
+    outMsg(0,'E',"Facet \"%s\" is currently unrecognized for node \"%s\"",ident,nbNodeGetName((nbCELL)term));
+  else (*facet->command)(term,skill->handle,node->knowledge,args,cursor);
   if(args!=NULL) dropObject(args);
   return(0);
   }

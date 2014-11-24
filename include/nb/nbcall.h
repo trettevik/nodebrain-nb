@@ -39,23 +39,18 @@
 #ifndef _NB_CALL_H_
 #define _NB_CALL_H_
 
+#ifdef NB_INTERNAL
 #include <nb/nbstem.h>
 
-/* 
-* NOTE: 
-*
-*   Effectively, we are extending COND with call by adding more types
-*   and associated evaluation methods.  This structure must have the
-*   same basic structure as COND (cell and two pointers).
-*/
-struct CALL{                /* Call cell - one or two operands */
-  struct NB_CELL   cell;     /* cell header */
-  /*struct NB_OBJECT *object;*/  /* return object */
-  void *pad;
-  struct NB_LIST   *list;    /* parameter list */
-  };
-
+extern struct TYPE *callType;
 extern struct TYPE *callTypeMod;
-void initCall(NB_Stem *stem);
+extern struct TYPE *callTypeTrace;
+
+void NbCallInit(NB_Stem *stem);
+
+NB_Object *NbCallUse(nbCELL context,char *ident,struct NB_LIST *list);
+#endif // internal
+
+extern int nbBindCellFunction(nbCELL context,char *name,void *function,char *bindingName);
 
 #endif

@@ -300,6 +300,7 @@ static void condPrintRule(struct COND *cond){
   if(((NB_Object *)cond->left)->value==cond->left ||
     ((NB_Object *)cond->left)->type==termType ||
     ((NB_Object *)cond->left)->type==nb_SentenceType ||
+    ((NB_Object *)cond->left)->type->attributes&TYPE_NO_PAREN ||
     ((NB_Object *)cond->left)->type==condTypeTime) paren=1;
   outPut("%s",cond->cell.object.type->name);
   if(paren) outPut("(");
@@ -1143,14 +1144,14 @@ void destroyCondition(struct COND *cond){
   freeCondition(cond);
   }
 
-void destroyNerve(struct COND *cond){
+static void destroyNerve(struct COND *cond){
   nbAxonDisable(cond->left,(NB_Cell *)cond);  
   dropObject(cond->left);
   dropObject(cond->right);
   freeCondition(cond);
   }
 
-void destroyRule(struct COND *cond){
+static void destroyRule(struct COND *cond){
   struct ACTION *action=cond->right;
   nbAxonDisable(cond->left,(NB_Cell *)cond);
   dropObject(cond->left);
@@ -1299,10 +1300,8 @@ struct COND * useCondition(struct TYPE *type,void *left,void *right){
       nbAxonEnable((NB_Cell *)left,(NB_Cell *)cond);
       left=loper->cell.object.value;
       }
-    // 2013-09-29 - Set the value of a rule term to the value of the condition
-    //if(left==nb_Unknown || left==NB_OBJECT_FALSE) cond->cell.object.value=left;
-    //else cond->cell.object.value=NB_OBJECT_TRUE;
-    cond->cell.object.value=loper->cell.object.value;
+    // 2014-11-22 eat - fixed bug - was lacking grabObject here
+    cond->cell.object.value=grabObject(loper->cell.object.value); 
     }
   else{                     /* other conditions */
     if(loper->cell.object.value!=(NB_Object *)loper)

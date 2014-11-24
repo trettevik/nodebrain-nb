@@ -94,6 +94,7 @@
 #include <nb/nbqueue.h>       // queue routines
 #include <nb/nbverb.h>        /* verb structure */
 #include <nb/nbmath.h>        /* math functions */
+#include <nb/nbcall.h>        // cell function calls
 
 #ifdef HAVE_OPENSSL
 #include <nb/nbtls.h>         // TLS routines

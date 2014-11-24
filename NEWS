@@ -30,9 +30,9 @@ NodeBrain 0.9.03 (Columbo) Change Summary
      cover new topics:
 
        - Alert attribute transience
-       - Node facets
+       - Node functions
        - Cell functions
-       - Redefine command
+       - Redefine command (new in release 0.9.02)
 
      These topics were not covered previously because their
      introduction in the prior releases was experimental.
@@ -45,7 +45,7 @@ NodeBrain 0.9.03 (Columbo) Change Summary
 
        - Access to all terms defined within a node
          glossary.
-       - Registration of simple numerical cell functions.
+       - Registration of simple cell functions.
      
 * Incompatibilities:
 
@@ -83,22 +83,25 @@ NodeBrain 0.9.03 (Columbo) Change Summary
 
   o  The special syntax for alert attributes has been
      dropped after introduction in the prior release. Terms
-     starting with "@" are now interpreted as node facets
+     starting with "@" are now interpreted as node functions
      instead of transient alert attributes.  We are making
      this change now under the assumption that there has
      been no significant adoption of either alert attribute
-     transient terms or node facets.
+     transient terms or node functions.
 
-  o  The syntax for node facets has changed abruptly under
+  o  The syntax for node functions has changed abruptly under
      the assumption that there has been no significant
      adoption of this feature after introduction in the
-     prior release.
+     prior release. Node functions were briefly called "facets"
+     because they are named after the facet of a node that they
+     manage or access.  But it seems more natural to call them
+     functions that access facets of a node.
 
        Was:      node_facet
-       Now:      node@facet  -or-   @facet
+       Now:      node@function  -or-   @function
 
      This freed up "_" for navigation of multiple level
-     glossaries of terms within a node, and enables facet
+     glossaries of terms within a node, and enables function
      reference within the context node without repeating
      the node term.
 
@@ -110,31 +113,31 @@ NodeBrain 0.9.03 (Columbo) Change Summary
      This eliminates the need to set all event attributes in
      every alert to avoid unintended values from prior alerts.
  
-  o  Node facets can now be referenced within the context
+  o  Node functions can now be referenced within the context
      node without specifying the node term.
 
-       node@facet(arglist) # previously node_facet(argList)
-       @facet(argList)     # previously unsupported
+       node@function(arglist) # previously node_facet(argList)
+       @function(argList)     # previously unsupported
 
-  o  Node facets can now be referenced before a node is 
-     associated with a skill that provides the facet.  This
-     enables rules to reference node facets before the node
+  o  Node functions can now be referenced before a node is 
+     associated with a skill that provides the function.  This
+     enables rules to reference node function before the node
      is defined.  This is useful in cases where two nodes
-     have rules that reference facets of the other.
+     have rules that reference a function of the other.
 
        bill. define r1 on(a) fred@count(a,b)=9;
        fred. define r1 on(x) bill@measure(x,y)=27;
 
-     After the rule definition above, "fred" is implicitly
-     define to be a node with the "default" skill set.
-     Because @count is not defined by the default skill,
-     this facet is associated with the unknown skill until
-     the node is defined explicitly.
+     After the rule definitions above, "fred" is implicitly
+     defined to be a node with the "default" skill set.
+     Since @count is not defined by the default skill, this
+     function is associated with the unknown skill until the
+     node is defined explicitly.
 
        define fred node foobar:(a,b);
 
      Once the "fred" node is explicitly defined, the
-     @count facet may be provided by the new skill.  If
+     @count function may be provided by the new skill.  If
      not, @count will continue to be provided by the
      unknown skill.
      
@@ -165,38 +168,20 @@ NodeBrain 0.9.03 (Columbo) Change Summary
      verification, regression testing, and to provide
      some examples know to work for reference.
 
-  o  This version introduces a method of extending the
-     rule engine by adding "cell functions".  The syntax
-     for referencing a cell function is as follows:
-  
-       `[module.]function(argList)
-
-       `math.mod(a,16)
-       `math.sqrt(b)
-
-     The back-tick distinguishes a cell function formula
-     a node function formula (sentence).  In this
-     release, two API functions have been added for
-     registration of cell functions by a module: 
-
-       nbFunctionD_D   double (*f)(double x)
-       nbFunctionD_DD  double (*f)(double x,double y)
-
-     These API functions enable the registration of C
-     functions that return a double value and have one
-     or two double operands.
-
-     The goal of these API functions is to enable
-     extension without having to worry about the
-     manipulation of NodeBrain data objects.  The
-     registered cell functions accept and return
-     normal C data types.
-
-     Additonal API functions will be added in the
-     future to register cell functions for string 
-     manipulation.
-
 * Deprecated Syntax: (none)
+
+  o  Built-in math function calls should  no longer be 
+     referenced using a syntax that looks like a node
+     function call. Instead, use the backtick notation
+     and the qualified name.
+
+        assert x=mod(a,16);        <== old syntax
+	assert x=`math.mod(a,16);  <== new syntax
+
+     Under this version you will get a warning.  In a
+     future release the old syntax will no longer be
+     recognized.  This will eliminate name collisions
+     with node function calls.
 
 * Dropped Syntax: 
 
@@ -205,15 +190,7 @@ NodeBrain 0.9.03 (Columbo) Change Summary
      node.
 
   o  "_" no longer used following a node term to reference a
-     node facet.  "@" is used instead.
-
-  o  Undocumented math functions may no longer be referenced
-     using a syntax that looks like a node sentence.
-
-        assert x=mod(a,16);
-
-     Since the function were undocumented, this change has
-     been made abruptly, anticipating no impact.
+     node function.  "@" is used instead.
 
 * Bug Fixes:
 
@@ -240,6 +217,11 @@ NodeBrain 0.9.03 (Columbo) Change Summary
 
      This is fixed by only allowing a node to be redefined
      as a node.
+
+  o  When rules are defined they now properly put a reserve
+     on the current value of the condition.  This was not
+     done previously, causing unpredictable results under
+     some patterns of defining and undefining rules.
 
 ============================================================
 

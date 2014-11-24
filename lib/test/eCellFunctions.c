@@ -52,15 +52,42 @@
 #define TEST( TITLE ) nbLogPut( context, "\nTEST: line %5d - %s\n", __LINE__, TITLE )
 
 
-static double xyminus2(double x, double y)
+static double xyminus2( double x, double y )
 {
-	return(x*y-2);
+	return( x * y - 2 );
 }
 
 
-static double xtwice(double x)
+static double xtwice( double x )
 {
-	return(x*2);
+	return( x*2 );
+}
+
+
+/*
+*  This is a function to return a truncation of the input string.
+*  The buffer size is adjust to
+*/
+char *buffer = NULL;
+int   buflen = 0;
+
+static char *strTruncate(char *str,int len)
+{
+	if( strlen( str ) < len ) len = strlen( str ); // will copy the lesser of the two
+
+        if( buffer && len >= buflen )
+	{
+		free( buffer );
+		buflen = 0;
+	}
+	if( !buffer )
+	{
+		buffer = malloc( len + 1 );
+		buflen = len + 1;	
+	}
+        strncpy( buffer, str, len );
+	buffer[ len ] = 0;
+        return( buffer );  // The binding will dup from our buffer
 }
 
 int main( int argc, char *argv[] )
@@ -78,19 +105,25 @@ int main( int argc, char *argv[] )
         nbCmd( context, "assert a=14;", NB_CMDOPT_ECHO );
         nbCmd( context, "show a,b,x;", NB_CMDOPT_ECHO );
 
-	TEST( "Testing a C library function that I register with nbFunctionD_DD" );
-        nbFunctionD_DD( context, "my.mod", fmod );
+	TEST( "Testing a C library function that I register" );
+        nbBindCellFunction( context, "my.mod", fmod, "nb.d(d,d)" );
 	nbCmd( context, "assert y=`my.mod(b,7);", NB_CMDOPT_ECHO );
         nbCmd( context, "show b,y;", NB_CMDOPT_ECHO );
 
 	TEST( "Testing a silly function of my creation: xyminus2(a,b) returns  (a * b - 2)" );
-        nbFunctionD_DD( context, "my.xyminus2", xyminus2 );
+        nbBindCellFunction( context, "my.xyminus2", xyminus2, "nb.d(d,d)" );
 	nbCmd( context, "assert y=`my.xyminus2(a,b);", NB_CMDOPT_ECHO );
         nbCmd( context, "show a,b,y;", NB_CMDOPT_ECHO );
          
 	TEST( "Testing a silly single operand function: xtwice(a) returns (a * 2)" );
-        nbFunctionD_D( context, "my.xtwice", xtwice );
+        nbBindCellFunction( context, "my.xtwice", xtwice, "nb.d(d)" );
 	nbCmd( context, "assert y=`my.xtwice(a);", NB_CMDOPT_ECHO );
+        nbCmd( context, "show a,y;", NB_CMDOPT_ECHO );
+         
+	TEST( "Testing a string truncation function: str.trunc(s,n) returns up to n characters of s" );
+        nbBindCellFunction( context, "str.trunc", strTruncate, "nb.s(s,i)" );
+	nbCmd( context, "assert a=\"01234567890123456789\";", NB_CMDOPT_ECHO );
+	nbCmd( context, "assert y=`str.trunc(a,10);", NB_CMDOPT_ECHO );
         nbCmd( context, "show a,y;", NB_CMDOPT_ECHO );
          
 	return ( nbStop( context ) );

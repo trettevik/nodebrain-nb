@@ -489,7 +489,7 @@ static NB_Object *evalAxonRelGeString(NB_AxonRel *axon){
 /*
 *  Solve Axon - dummy function to let us know if it is attempted
 */
-static void solveAxon(struct CALL *call){
+static void solveAxon(NB_Cell *cell){
   outMsg(0,'L',"Logic error - solveAxonRelEq called - axon cells should not be referenced like this");
   return;
   }

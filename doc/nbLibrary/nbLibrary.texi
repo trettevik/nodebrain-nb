@@ -62,15 +62,28 @@ Release 0.8.16
 @itemize @bullet
 @item This document replaces @i{NodeBrain API Reference} first drafted in 2003 for release 0.6.3
 @item Converted to texinfo format
-@item Dropped several function to be added back later after more complete testing.
+@item Dropped several functions to be added back later after more complete testing.
 @end itemize
 
-@item 2014-11-18 @tab
+@item 2014-11-23 @tab
 Release 0.9.03
 @itemize @bullet
-@item Included functions that provide a snapshot of terms within a nodes: nbNodeGetCellArray, nbNodeGetTermNameString,
-nbNodeGetTermValueString, and nbNodeGetTermFormulaString.
-@item Included functions to get the name of a cell or cell value: nbCellGetName, and nbCellGetValueName. 
+@item Included functions that provide a snapshot of terms within a node:
+@itemize
+@item nbNodeGetTermCellArray
+@item nbNodeGetTermNameString
+@item nbNodeGetTermValueString
+@item nbNodeGetTermFormulaString
+@end itemize
+@item Included functions to get the name of a cell or cell value:
+@itemize
+@item nbCellGetName
+@item nbCellGetValueName 
+@end itemize
+@item Included a function to bind cell functions to simple C functions:
+@itemize
+@item nbBindCellFunction
+@end itemize
 @end itemize
 
 @end multitable
@@ -577,7 +590,7 @@ will not return until a @code{stop} command is issued in daemon mode, or an end-
 @cartouche
 @smallexample
 int @b{nbStop}(
-  nbCELL context); // Context handle returned by nbStart
+  nbCELL context); // Context handle 
 
 Returns: Rule engine exit code
 @end smallexample
@@ -593,6 +606,7 @@ The nbStop function closes files and releases memory allocated by NodeBrain.
 
 @menu
 * nbBind Method:: Initialize module
+* nbBindCellFunction:: Bind a cell function to a C function
 * nbSkillDeclare:: Register a skill
 * nbSkillFacet:: Register a skill facet
 * nbSkillMethod:: Register a skill facet method
@@ -667,7 +681,7 @@ extern void *nbBind(nbCELL context,char *module,nbCELL argList,char *text)@{
 @cartouche
 @smallexample
 extern void *@b{nbBind}(
-  nbCELL context,  // Context handle returned by nbStart
+  nbCELL context,  // Context handle
   char *module,    // Name of module implicitly or explicitly declared
   nbCELL *argList, // Argument cells if explicitly declared - may be NULL
   char *text);     // Text options if explicitly declared - may be null string
@@ -692,6 +706,98 @@ declare @i{module} module @i{dynamic_load_library}[[(@i{argList})]:@i{text}][;]
 @end smallexample
 @end cartouche
 
+@node nbBindCellFunction
+@section nbBindCellFunction - Bind a cell function to a C function
+@cindex nbBindCellFunction
+
+@cartouche
+@smallexample
+int @b{nbBindCellFunction}(
+  nbCELL context,          // Context handle
+  char *name,              // Name of cell function
+  void *function,          // C function pointer
+  char *binding);          // Name of binding to use for this function
+
+Returns:
+  0 - success 
+ -1 - error (see message) - the cell function was not registered for use
+@end smallexample
+@end cartouche
+
+This function is used to make a C function available for use as a cell function.
+When an appropriate binding is already defined, this can simplify reuse of
+existing libraries of C functions.  It can also simplify the creation of new cell
+functions, since the new function can be written in C, often without reference to
+any NodeBrain API functions.
+
+The name of the cell function is prefixed by the name of the module that provides it.
+This is intended to avoid name collisions.  The name is exactly as you want to reference
+it in a formula, excluding the backtick that tells the interpreter you are referencing a
+cell function.
+
+@cartouche
+@smallexample
+@i{module}.@i{function}
+math.sqrt
+@end smallexample
+@end cartouche
+
+The name of a binding starts with the name of the module that provides it, followed by a space,
+and then a simplified data type specification.  The use of "nb" as a module name is reserved for
+built-in bindings.
+
+@cartouche
+@smallexample
+@i{module} @i{ReturnType}(@i{Arg1Type},@i{Arg2Type},...)
+nb d(d,d)
+@end smallexample
+@end cartouche
+
+The types are represented by single characters.
+
+@cartouche
+@multitable {-----------------} {----------------------------------------------------------------------------------}
+@headitem Type@w{        } @tab C Data Type
+@item d @tab double
+@item i @tab int
+@item s @tab char *  [string]
+@item c @tab char
+@item C @tab nbCELL  [no transformation]
+@end multitable
+@end cartouche
+
+The following bindings are provided initially. 
+
+@cartouche
+@multitable {-----------------} {----------------------------------------------------------------------------------}
+@headitem Binding@w{      } @tab C Function Type
+@item nb d(d) @tab double f(double)
+@item nb d(d,d) @tab double f(double,double)
+@item nb s(s,i) @tab char *f(char *,int)
+@end multitable
+@end cartouche
+
+The following additional bindings can be anticipated in future releases,
+along with an API function for declaring new bindings.
+
+@cartouche
+@multitable {-----------------} {----------------------------------------------------------------------------------}
+@headitem Binding@w{      } @tab C Function Type
+@item nb d(d[],i) @tab double f(double[],int)
+@item nb s(s,c) @tab char *f(char *,char)
+@item nb s(s,s) @tab char *f(char *,char *)
+@item nb s(s[],i) @tab char *f(char *[],int)
+@item nb i(s,s) @tab int f(char *,char *)
+@item nb i(s[],i) @tab int f(char *[],int)
+@item nb C() @tab nbCELL f()
+@item nb C(C) @tab nbCELL f(nbCELL)
+@item nb C(C,C) @tab nbCELL f(nbCELL,nbCELL)
+@item nb C(C[],i) @tab nbCELL f(nbCELL[],i)
+@end multitable
+@end cartouche
+
+This function is used in example @code{eCellFunctions.c}, which you will find in the lib/test directory in the online git repository.
+
 @node nbSkillDeclare
 @section nbSkillDeclare - Register a skill
 @cindex nbSkillDeclare
@@ -699,7 +805,7 @@ declare @i{module} module @i{dynamic_load_library}[[(@i{argList})]:@i{text}][;]
 @cartouche
 @smallexample
 int @b{nbSkillDeclare}(
-  nbCELL context,          // Context handle returned by nbStart
+  nbCELL context,          // Context handle
   void *(*bindFunction)(), //
   void *moduleHandle,      // Point to dynamic load module or NULL
   char *moduleName,        // Name of module or null string
@@ -733,7 +839,7 @@ A common bind function may be used for multiple skills using different
 @cartouche
 @smallexample
 nbCELL @b{nbSkillFacet}(
-  nbCELL context, // Context handle returned by nbStart
+  nbCELL context, // Context handle
   nbCELL skill,   // Skill cell
   char  *name);   // Facet name - null string for primary facet
 
@@ -768,7 +874,7 @@ define r1 on(bob_jack(10)>17) bob("abc");
 @cartouche
 @smallexample
 int @b{nbSkillMethod}(
-  nbCELL context,  // Context handle returned by nbStart
+  nbCELL context,  // Context handle
   nbCELL facet,    // Facet cell
   int methodId,    // Method identifier code
   void *function); // Method callback function
@@ -808,7 +914,7 @@ the skill cell provided as an argument to the Bind method.
 @cartouche
 @smallexample
 int @b{nbSkillSetMethod}(
-  nbCELL context,   // Context handle returned by nbStart
+  nbCELL context,   // Context handle
   NB_Skill *skill,  // Skill cell
   int methodId,     // Method identifier code
   void *function);  // Method callback function
@@ -1420,13 +1526,13 @@ By default, NodeBrain will attempt to solve for all argument cell expressions an
 * nbNodeGetName:: Get the simple name of a context node
 * nbNodeGetTermCellArray:: Get an array of terms defined within a node
 * nbNodeGetTermNameString:: Get a string of term names
-* nbNodeGetTermValueString:: Get a string of term names and values within a node
-* nbNodeGetTermFormulaString:: Get a string of term names and definitions within a node
+* nbNodeGetTermValueString:: Get a string of term names and their values within a node
+* nbNodeGetTermFormulaString:: Get a string of term names and their formulas within a node
 @end menu
 
-Function described in this chapter interact with nodes and the first argument
+API functions described in this chapter interact with nodes and the first argument
 is a node context handle.  
-You may use the context returned by nbStart and the first argument
+You may use the context returned by nbStart or the first argument
 passed to a skill method as the node context handle. You may also use a node
 context handle returned by other API functions.
 
