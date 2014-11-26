@@ -1,16 +1,16 @@
 .\" Process this file with "groff -man -Tascii foo.1" or "nbman2ht foo.1"
 .\" See NodeBrain Developer Guide for project standards
 .\"
-.TH nb.lib 3 "August 2014" "NodeBrain 0.9.02" "NodeBrain Administrator Guide"
+.TH nb.lib 3 "November 2014" "NodeBrain 0.9.03" "NodeBrain Administrator Guide"
 .SH NAME
 nb.lib - NodeBrain Library
 .SH SYNOPSIS
 .B #include <nb/nb.h>
 
-\fBgcc\fP \fImain_pgm\fP\fB.c -lnb\fP [ -lm -ldl ]
+\fBgcc\fP \fImain_pgm\fP\fB.c -lnb\fP
 .SH DESCRIPTION
 The NodeBrain library, \fBlibnb.so\fP, makes the NodeBrain C API
-available to main routines.  This is the same API provided to node modules (plug-ins).
+available to programs and modules that plug-in to the NodeBrain Rule Engine.
 .SH EXAMPLE
 If you want to experiment with embedding the NodeBrain interpreter in your
 own program, you can use nb.c and various modules in the source distribution as
@@ -38,9 +38,7 @@ Here's a trivial example.
     }
 .fi
 
-The \fINodeBrain Library\fP manual describing the API needs a lot of work,
-and the API will be unstable prior to a 1.0 release. So consider it experimental
-only.
+The \fINodeBrain Library\fP manual describing the C API functions.
 
 .SH FILES
 .IP nb.h
@@ -57,10 +55,18 @@ See
 \fBnb.mod\fP(3).
 .P
 .SH BUGS
-The NodeBrain library is untested except for the API functions that
-are exercised by \fBnb\fP(1) and the distributed node modules.
+See
+.\"ht page
+\fBnb\fP(1).
+Please report bugs to <bugs@nodebrain.org>, or link to the SourceForge
+project from http://nodebrain.org to enter a bug report.
 .SH AUTHOR
 Ed Trettevik <eat@nodebrain.org>
+.SH DOCUMENTATION
+Online documentation is available at http://nodebrain.org.
+Manuals are also available in TexInfo (texi) format in the
+git repository.  These documents are included in source
+distribution files.
 .SH "SEE ALSO"
 .\"ht page
 \fBnodebrain\fP(7),
@@ -72,28 +78,7 @@ Ed Trettevik <eat@nodebrain.org>
 \fBnb.syn\fP(5),
 .\"ht page
 \fBnb.mod\fP(7) 
-
-.\"ht doc
-[1]
-.I NodeBrain Home Page
-- http://www.nodebrain.org  
-
-.\"ht doc
-[2]
-.I NodeBrain Guide 
-- http://www.nodebrain.org  
-
-.\"ht doc
-[3]
-.I NodeBrain Tutorial 
-- http://www.nodebrain.org  
-
-.\"ht doc
-[4]
-.I NodeBrain Language
-- http://www.nodebrain.org  
-
-.\"ht doc
-[5]
-.I NodeBrain Library
-- http://www.nodebrain.org  
+.\"ht page
+\fBnbkit\fP(1),
+.\"ht page
+\fBnbkit.caboodle\fP(7)

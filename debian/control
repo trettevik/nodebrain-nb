@@ -9,7 +9,7 @@ Homepage: http://www.nodebrain.org
 Package: nodebrain
 Architecture: any
 Depends: libedit, libpcre3, libssl
-Description: NodeBrain Program, Library and Base Modules
+Description: NodeBrain Rule Engine
  NodeBrain is an interpreter of a declarative rule-based language
  designed for construction of state and event monitoring applications.
  It interacts with other monitoring components to perform simple element

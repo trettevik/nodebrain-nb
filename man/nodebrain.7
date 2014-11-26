@@ -1,9 +1,9 @@
 .\" Process this file with "groff -man -Tascii foo.1" or "nbman2ht foo.1"
 .\" See NodeBrain Developer Guide for project standards
 .\"
-.TH nb.man 7 "August 2014" "NodeBrain 0.9.02" "NodeBrain Administrator Guide"
+.TH nb.man 7 "November 2014" "NodeBrain 0.9.03" "NodeBrain Administrator Guide"
 .SH NAME
-\fBnodebrain\fP - NodeBrain State and Event Monitoring Agent
+\fBnodebrain\fP - NodeBrain Overview
 .SH TOPICS
 Broad topics are covered by separate manual pages.  If you are looking for something more specific
 than the overview provided here, select the page of interest.
@@ -12,7 +12,7 @@ than the overview provided here, select the page of interest.
 \fBnodebrain\fP      - Overview
 
 .\"ht page
-\fBnb\fP             - Interpreter, Agent, Client, Utility
+\fBnb\fP             - Rule Engine
 
 .\"ht page
 \fBnb.cfg\fP         - Configuration Files
@@ -21,10 +21,10 @@ than the overview provided here, select the page of interest.
 \fBnb.syn\fP         - Rule Language Command Syntax
 
 .\"ht page
-\fBnb.mod\fP         - Node Modules (nb_<module>.so plugins)
+\fBnb.mod\fP         - Modules (nb_<module>.so plugins)
 
 .\"ht page
-\fBnb.lib\fP         - C API Function Library (libnb.so)
+\fBnb.lib\fP         - C API Library (libnb.so)
 
 .\"ht page
 \fBnbkit\fP          - Kit Utility
@@ -378,13 +378,13 @@ and modify all references just because we change the language.  But this
 is the perspective of a lazy programmer.
 .IP \fIname\fP\fB.nbx\fP
 Text translation rules to convert a foreign text stream into a NodeBrain command steam.
-.P
+
 .SH ENVIRONMENT
 .IP NB_MODULE_PATH
 See
 .\"ht page
 \fBnb.mod\fP(5).
-.P
+
 .SH DIAGNOSTICS
 See
 .\"ht page
@@ -393,12 +393,21 @@ See
 See
 .\"ht page
 \fBnb\fP(1).
+
 .SH BUGS
 See
 .\"ht page
 \fBnb\fP(1).
+Please report bugs to <bugs@nodebrain.org>, or link to the SourceForge
+project from http://nodebrain.org to enter a bug report.
+
 .SH AUTHOR
 Ed Trettevik <eat@nodebrain.org>
+.SH DOCUMENTATION
+Online documentation is available at http://nodebrain.org.
+Manuals are also available in TexInfo (texi) format in the
+git repository.  These documents are included in source
+distribution files.
 .SH "SEE ALSO"
 .\"ht page
 \fBnb\fP(1),    
@@ -414,18 +423,3 @@ Ed Trettevik <eat@nodebrain.org>
 \fBnbkit\fP(1), 
 .\"ht page
 \fBnbkit-caboodle\fP(7) 
-
-.\"ht doc
-[1]
-.I NodeBrain Home Page
-- http://www.nodebrain.org  
-
-.\"ht doc
-[2]
-.I NodeBrain Tutorial 
-- http://www.nodebrain.org  
-
-.\"ht doc
-[3]
-.I NodeBrain Language Reference
-- http://www.nodebrain.org  

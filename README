@@ -18,7 +18,7 @@ Version:     0.9 - Columbo
 
 Release:     0.9.03 
 
-Date:        August 13, 2014
+Date:        November 30, 2014
 
 Reference:   http://www.nodebrain.org
                1) Online documentation
@@ -91,25 +91,59 @@ b) From git repository - requires autoconf/automake/libtools
      $ make check
      $ make install
 
-c) From source RPM file 
+c) To install to an alternate location (replace last step of a or b)
+
+     $ make install DESTDIR=$HOME/usr
+     $ make install DESTDIR=/usr
+
+d) To create an RPM file instead of installing
+
+     $ make rpm      [this replaces the make install step]
+
+e) Build binary RPM for source RPM file 
 
      $ rpmbuild --rebuild nodebrain-0.9.03-1.el6.src.rpm
      $ rpmbuild --rebuild nodebrain-0.9.03-1.src.rpm
 
-d) From binary RPM file (x86_64 platform example)
+f) Install from binary RPM file (x86_64 platform example)
 
      $ rpm --install nodebrain-0.9.03-1.el6.x86_64.rpm
      $ rpm --install nodebrain-0.9.03-1.x86_64.rpm
 
 ======================================================================== 
 
-Although prior releases of NodeBrain were tested on various platforms,
-at time of release, this version has only been tested on RHEL 6.4, x86_64.
-It should work on other Linux platforms, and be relatively easy to port
-to Unix platforms.  The project has stopped porting to Windows, and the
-conditional compilation for Windows is no longer expected to work.  We
-hope to support Windows again at some future release, but it is not a
-high priority at this time.  
+This release was tested on a CentOS 6.5 x86_64 platform.
+
+The Coverity Scan service is used to check for defects.
+
+The openSUSE Build Service is used to test builds for varius Linux
+distributions on i586 and x86_64 architectures. The results are shown
+below.  There are still some package policy warning to be cleaned up
+on the platforms where the build was successful.  
+
+Success:
+
+  rpm Fedora        20, 19, 18, 17
+  rpm CentOS        7, 6
+  rpm Scientific    7, 6
+  rpm openSUSE      TumbleWeed
+  rpm openSUSE      Factory
+  rpm openSUSE      13.2, 13.1, 12.3, 12.2, 12.1
+  rpm SLE           11 SP1
+
+  deb Debian        7, 6
+  deb xUbuntu       14.10, 14.04 13.10, 12.10, 12.04
+  deb Univention    3.2, 3.1
+
+Fail:
+
+  rpm RHEL          7, 6, 5                 - libedit unresolvable
+  rpm CentOS        5                       - libedit unresolvable
+  rpm SLE           12, 11 SP3, 11 SP2, 10  - libedit 
+
+The project has stopped porting to Windows, and the conditional
+compilation for Windows is no longer expected to work.  We may support
+Windows again in the future, but it is not a high priority at this time.  
 
 ======================================================================== 
 

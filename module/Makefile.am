@@ -52,11 +52,11 @@ SUBDIRS = @NB_MODULES@
 EXTRA_DIST = \
   README
 
+#	cp model/Makefile.nm $$subdir/Makefile.nm-; \
 .PHONY: model
 model:
 	list='$(SUBDIRS)'; for subdir in $$list; do \
 	  cp model/Makefile.am $$subdir/Makefile.am; \
-	  cp model/Makefile.nm $$subdir/Makefile.nm-; \
 	  mkdir -p $$subdir/caboodle/bin; \
 	  cp model/caboodle/bin/nbcheck $$subdir/caboodle/bin/nbcheck; \
 	  if test -h "$$subdir/caboodle/bin/nb"; then rm $$subdir/caboodle/bin/nb; fi; \

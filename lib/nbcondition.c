@@ -875,8 +875,9 @@ static NB_Object *evalRelEQ(struct COND *cond){
   NB_Object *right=((NB_Object *)cond->right)->value;
   if(left==nb_Unknown || right==nb_Unknown) return(nb_Unknown);
   if(left==right) return(NB_OBJECT_TRUE); 
-  if(left->type->kind&NB_OBJECT_KIND_REAL && right->type->kind&NB_OBJECT_KIND_REAL &&
-    ((struct REAL *)left)->value==((struct REAL *)right)->value) return(NB_OBJECT_TRUE);
+  // 2014-11-25 eat - this makes !=0 which is not logical since 0 is true
+  //if(left->type->kind&NB_OBJECT_KIND_REAL && right->type->kind&NB_OBJECT_KIND_REAL &&
+  //  ((struct REAL *)left)->value==((struct REAL *)right)->value) return(NB_OBJECT_TRUE);
   return(NB_OBJECT_FALSE);
   }
 
@@ -885,8 +886,9 @@ static NB_Object *evalRelNE(struct COND *cond){
   NB_Object *right=((NB_Object *)cond->right)->value;
   if(left==nb_Unknown || right==nb_Unknown) return(nb_Unknown);
   if(left==right) return(NB_OBJECT_FALSE);
-  if(left->type->kind&NB_OBJECT_KIND_REAL && right->type->kind&NB_OBJECT_KIND_REAL &&
-    ((struct REAL *)left)->value==((struct REAL *)right)->value) return(NB_OBJECT_FALSE);
+  // 2014-11-25 eat - this makes !=0 which is not logical since 0 is true
+  //if(left->type->kind&NB_OBJECT_KIND_REAL && right->type->kind&NB_OBJECT_KIND_REAL &&
+  //  ((struct REAL *)left)->value==((struct REAL *)right)->value) return(NB_OBJECT_FALSE);
   return(NB_OBJECT_TRUE);
   }
   

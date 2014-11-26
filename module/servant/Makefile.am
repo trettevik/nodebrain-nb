@@ -80,9 +80,10 @@
 ## ---------- -----------------------------------------------------------------
 ## 2008-10-18 Ed Trettevik (version 0.7.2)
 ## 2013-03-10 eat 0.8.15 Modified nblibdir to place module in minor version directory
+## 2014-11-24 eat 0.9.03 Modified nblibdir to put full control of module directory
 ##=============================================================================
 
-nblibdir = ${libdir}/nb-${NB_MOD_DIR}
+nblibdir = ${libdir}/${NB_MOD_DIR}
 include Makefile.nm
 
 EXTRA_DIST += \

@@ -1,7 +1,7 @@
 .\" Process this file with "groff -man -Tascii foo.1" or "nbman2ht foo.1"
 .\" See NodeBrain Developer Guide for project standards
 .\"
-.TH nb.cfg 5 "August 2014" "NodeBrain 0.9.02" "NodeBrain Administrator Guide"
+.TH nb.cfg 5 "November 2014" "NodeBrain 0.9.03" "NodeBrain Administrator Guide"
 .SH NAME
 nb.cfg - NodeBrain Configuration Files
 .SH SYNOPSIS
@@ -14,7 +14,7 @@ nb.cfg - NodeBrain Configuration Files
 .SH DESCRIPTION
 This primer describes basic NodeBrain configuration concepts.  For a
 more complete understanding of individual commands, refer to the
-\fINodeBrain Language Reference\fP available at http://www.nodebrain.org. 
+\fINodeBrain Language\fP manual available at http://www.nodebrain.org. 
 
 We call a NodeBrain application directory a \fBcaboodle\fP.  NodeBrain does not dictate
 the structure of a caboodle, but we assume it is organized logically as a set of sub-directories
@@ -103,11 +103,11 @@ under the new name.
 .IP
 .nf
 $ cd ~/.nb
-$ mv user.nb user.nb%
-$ nb user.nb%      ... find the problem
-$ vi user.nb%      ... resolve the problem
-$ nb user.nb%      ... verify 
-$ mv user.nb% user.nb
+$ mv user.nb user.nb.
+$ nb user.nb.      ... find the problem
+$ vi user.nb.      ... resolve the problem
+$ nb user.nb.      ... verify 
+$ mv user.nb. user.nb
 .fi
 .P
 See
@@ -124,6 +124,11 @@ Please report bugs by linking to the project page from the home page,
 http://www.nodebrain.org, or send email to <bugs@nodebrain.org>.
 .SH AUTHOR
 Ed Trettevik <eat@nodebrain.org>
+.SH DOCUMENTATION
+Online documentation is available at http://nodebrain.org.
+Manuals are also available in TexInfo (texi) format in the
+git repository.  These documents are included in source
+distribution files.
 .SH "SEE ALSO"
 .\"ht page
 \fBnodebrain\fP(7),
@@ -135,18 +140,7 @@ Ed Trettevik <eat@nodebrain.org>
 \fBnb.mod\fP(7),
 .\"ht page
 \fBnb.lib\fP(3) 
-
-.\"ht doc
-[1]
-.I NodeBrain Home Page 
-- http://www.nodebrain.org
-
-.\"ht doc
-[2]
-.I NodeBrain Tutorial 
-- http://www.nodebrain.org
-
-.\"ht doc
-[3]
-.I NodeBrain Language Reference 
-- http://www.nodebrain.org
+.\"ht page
+\fBnbkit\fP(1),
+.\"ht page
+\fBnbkit.caboodle\fP(7)

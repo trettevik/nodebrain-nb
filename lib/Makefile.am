@@ -212,9 +212,9 @@ libnb_la_SOURCES = \
   ../include/nb/nbtranslator.h \
   ../include/nb/nbtree.h
 
-noinst_PROGRAMS = nb
+#noinst_PROGRAMS = nb
 
-#bin_PROGRAMS = nb
+bin_PROGRAMS = nb
 
 nb_CFLAGS = -Wall -I../include
 nb_SOURCES = nb.c
@@ -229,6 +229,8 @@ EXTRA_DIST = nbcfgw.h
 EXTRA_DIST+= \
   caboodle/.nb/caboodle.nb \
   caboodle/bin/nbcheck \
+  caboodle/check/alert.nb~ \
+  caboodle/check/build.nb \
   caboodle/check/cellStaticBoolFalse.nb~ \
   caboodle/check/cellStaticBoolTrue.nb~ \
   caboodle/check/cellStaticBoolUnknown.nb~ \
@@ -239,8 +241,11 @@ EXTRA_DIST+= \
   caboodle/check/modules.nb \
   caboodle/check/ruleFireBoolRelEq.nb~ \
   caboodle/check/ruleFireBoolSimple.nb~ \
-  caboodle/check/build.nb \
-  caboodle/check/README
+  caboodle/check/ruleFireSeq.nb~ \
+  caboodle/check/README \
+  caboodle/check/solve.nb~ \
+  caboodle/check/solve.pl \
+  caboodle/check/term.nb~
 
 ## Run a set of tests to check out a build
 

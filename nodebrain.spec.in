@@ -1,6 +1,6 @@
 Name: @PACKAGE_NAME@
 Version: @PACKAGE_VERSION@
-Release: 1%{?dist}
+Release: 2%{?dist}
 
 %define _disable_ld_no_undefined 1
 %define is_mandriva %(test -e /etc/mandriva-release && echo 1 || echo 0)
@@ -14,7 +14,7 @@ URL: http://www.nodebrain.org/
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires: libedit-devel pcre-devel openssl-devel gettext pkgconfig
-Requires: libedit pcre
+Requires: pcre
 Requires(post): /sbin/install-info
 Requires(preun): /sbin/install-info
 
@@ -64,15 +64,14 @@ browser interface for administrators.
 %files
 %defattr(-,root,root,-)
 %doc AUTHORS COPYING ChangeLog NEWS README THANKS
-%dir %{_libdir}/nb-%{version}
+%dir %{_libdir}/nb
 %{_bindir}/nb
-%{_bindir}/nb-%{version}
 %{_bindir}/nbkit
 %{_libdir}/libnb-%{version}.so
 %{_libdir}/libnb.so
-%{_libdir}/nb-%{version}/*.so
+%{_libdir}/nb/*.so
 %exclude %{_libdir}/*.a
-%exclude %{_libdir}/nb-%{version}/*.a
+%exclude %{_libdir}/nb/*.a
 %{_mandir}/man1/*.1*
 %{_mandir}/man3/*.3*
 %{_mandir}/man5/*.5*
@@ -96,10 +95,10 @@ This package contains development files for nodebrain.
 %{_includedir}/nb/*
 %if %is_mandriva
 %ghost %{_libdir}/*.so
-%ghost %{_libdir}/nb-%{version}
+%ghost %{_libdir}/nb
 %else
 %exclude %{_libdir}/*.so
-%exclude %{_libdir}/nb-%{version}
+%exclude %{_libdir}/nb
 %endif
 %{_libdir}/pkgconfig/*.pc
 
@@ -117,12 +116,16 @@ This package contains static libraies for nodebrain.
 %files static
 %defattr(-,root,root,-)
 %{_libdir}/*.a
-%exclude %{_libdir}/nb-%{version}
+%exclude %{_libdir}/nb
 
 
 #-------------------------------------------------------------------------
 
 %changelog
+* Mon Nov 24 2014 Ed Trettevik <eat@nodebrain.org> - 0.9.03-2
+- Eliminating the symbolic from /usr/bin/nb to /usr/bin/nb-0.9.03
+- Removed version number from libdir/nb
+
 * Wed Jul 9 2014 Ed Trettevik <eat@nodebrain.org> - 0.9.02-1
 - Update for 0.9.02
 

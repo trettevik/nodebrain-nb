@@ -151,6 +151,7 @@ EXTRA_DIST = \
   debian/control \
   debian/rules \
   debian/changelog \
+  debian/copyright \
   doc/documents.texi \
   doc/licenses.texi \
   doc/style.css \
@@ -179,26 +180,27 @@ EXTRA_DIST = \
 
 include tutmake.inc
 
-bin_PROGRAMS = nodebrain
+## bin_PROGRAMS = nodebrain
 
-nodebrain:
-	if test -f lib/.libs/nb; then cp lib/.libs/nb nodebrain; else cp lib/nb nodebrain; fi 
-	if test -f nb; then rm -f nb; fi
-	ln -s lib/nb nb
+## nodebrain:
+##	if test -f lib/.libs/nb; then cp lib/.libs/nb nodebrain; else cp lib/nb nodebrain; fi 
+##	if test -f nb; then rm -f nb; fi
+##	ln -s lib/nb nb
 
-nodebrain_SOURCES = 
+## nodebrain_SOURCES = 
 
 ## Rename nodebrain to nb-x.x.x and create symbolic link from nb if not already defined
 
+##	cd ${DESTDIR}@bindir@ && mv -f nodebrain nb-$(VERSION)$(EXEEXT)
+##	cd ${DESTDIR}@bindir@ && if test ! -f nb -a ! -h nb; then ln -s nb-$(VERSION)$(EXEEXT) nb; fi
 install-exec-hook:
-	cd ${DESTDIR}@bindir@ && mv -f nodebrain nb-$(VERSION)$(EXEEXT)
-	cd ${DESTDIR}@bindir@ && if test ! -f nb -a ! -h nb; then ln -s nb-$(VERSION)$(EXEEXT) nb; fi
 	cd ${DESTDIR}@bindir@ && if test ! -f nbkit -a ! -h nbkit; then ln -s nb nbkit; fi
 
 ## Remove $(bindir)/nb-x.x.x program and $(libdir)/nb/x.x.x directory
 
+##	rm @bindir@/nb-$(VERSION)$(EXEEXT)
 uninstall-local:
-	rm @bindir@/nb-$(VERSION)$(EXEEXT)
+	rm @bindir@/nbkit
 
 ## Run a set of tests to check out a build
 

@@ -1,3 +1,9 @@
+nodebrain (0.9.03-2) unstable; urgency=low
+
+  * Implied nodes and alert attribute transience
+
+ -- Ed Trettevik <eat@nodebrain.org>  Mon, 25 Nov 2014 08:16:57 -0000
+
 nodebrain (0.9.02-1) unstable; urgency=low
 
   * Performance enhancements

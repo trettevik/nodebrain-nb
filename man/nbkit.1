@@ -1,7 +1,7 @@
 .\" Process this file with "groff -man -Tascii foo.1" or "nbman2ht foo.1"
 .\" See NodeBrain Developer's Guide for project standards
 .\"
-.TH nbkit 1 "August 2014" "NodeBrain 0.9.02" "NodeBrain Administrator Guide"
+.TH nbkit 1 "November 2014" "NodeBrain 0.9.03" "NodeBrain Administrator Guide"
 .SH NAME
 \fBnbkit\fP - NodeBrain Kit Utility
 .SH SYNOPSIS
@@ -18,10 +18,10 @@
 \fBnbkit\fP \fIcaboodle\fP \fBunlink\fP
 
 .P
-\fBnbkit\fP \fIcaboodle\fP \fBuse\fP \fIkit-directory\fP
+\fBnbkit\fP \fIcaboodle\fP \fBuse\fP \fIkit\fP
 
 .P
-\fBnbkit\fP \fIcaboodle\fP { \fBexport\fP | \fBimport\fP }
+\fBnbkit\fP \fIcaboodle\fP { \fBexport\fP | \fBimport\fP | \fBupgrade\fP } \fIarchive-file\fP
 
 .P
 .B nbkit
@@ -120,7 +120,7 @@ Display a list of installed NodeBrain kits.
 .IP \fIcaboodle\fP
 This argument is specified on most nbkit commands to identify the caboodle upon which to operate.
 The value specified is a single word alias for the caboodle path.
-See the "link" in the next section.
+See the \fBlink\fP command in the next section.
 
 .IP \fIverb\fP
 This argument identifies the operation to be performed on the specified caboodle.
@@ -333,11 +333,17 @@ NodeBrain in 1998 called the System Monitor Kit or Sysmon.
 .SH BUGS
 For a complete and current list of known bugs, refer to the project web site, http://nodebrain.org.
 
-Please report bugs by linking to the project page from the home page, 
-http://www.nodebrain.org, or send email to <bugs@nodebrain.org>.
+Please report bugs to <bugs@nodebrain.org>, or link to the SourceForge
+project from http://nodebrain.org to enter a bug report.
 
 .SH AUTHOR
 Ed Trettevik <eat@nodebrain.org>
+
+.SH DOCUMENTATION
+Online documentation is available at http://nodebrain.org.
+Manuals are also available in TexInfo (texi) format in the
+git repository.  These documents are included in source
+distribution files.
 
 .SH SEE ALSO
 .\"ht page
@@ -346,13 +352,3 @@ Ed Trettevik <eat@nodebrain.org>
 \fBnodebrain\fP(7),
 .\"ht page
 \fBnb\fP(1)
-
-.\"ht doc
-[1]
-.I NodeBrain Home Page 
-- http://www.nodebrain.org 
-
-.\"ht doc
-[2]
-.I Caboodle NodeBrain Kit Manual 
-- http://www.nodebrain.org 
