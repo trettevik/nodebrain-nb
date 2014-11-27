@@ -9,7 +9,7 @@ Summary: A declarative rule-based language for state and event monitoring
 License: MIT
 Group: Development/Languages
 Source: @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
-URL: http://www.nodebrain.org/
+URL: http://nodebrain.org/
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
@@ -50,16 +50,14 @@ fi
 rm -rf $RPM_BUILD_ROOT
 
 %description
-NodeBrain is an interpreter of a declarative rule-based language designed
-for construction of state and event monitoring applications. It interacts
-with other monitoring components to perform simple element state monitoring
-or complex event correlation based on user specified rules. It is extended
-through the development of node modules (plug-ins) using NodeBrain's C API,
-and servants (programs written in any language) that interact with
-NodeBrain via stdin, stdout, and stderr. A small set of plug-ins are
-distributed with NodeBrain to provide commonly needed features such as
-peer-to-peer communication, log monitoring, event caching, and a web
-browser interface for administrators. 
+NodeBrain is a rule engine for construction of state and event monitoring
+applications. It interacts with other monitoring components to perform
+simple element state monitoring or complex event correlation based on user
+specified rules. It is extended through the development of plug-in modules
+using the C API, and servant programs written in any language that interact
+with the rule engine via stdin, stdout, and stderr. The package includes a
+small set of plug-in modules to provide capabilities typically required for
+monitoring applications.
 
 %files
 %defattr(-,root,root,-)

@@ -20,7 +20,7 @@ Release:     0.9.03
 
 Date:        November 30, 2014
 
-Reference:   http://www.nodebrain.org
+Reference:   http://nodebrain.org
                1) Online documentation
                2) Signatures to verify release file integrity
 

@@ -409,33 +409,25 @@ In February of 2013, NodeBrain 0.8 was released, adding a message feature that e
 shared between agents more quickly, statistical anomaly detection, and security patches.
 
 .SH BUGS
-For a complete and current list of known bugs, refer to the project web site.  The bugs listed
-here are worth noting because they are not high on our list to resolve, so they may 
-survive a few releases.
+See the project website, http://nodebrain.org, for a current list of known bugs.
 .IP o
 Time expressions will sometimes not produce the expected results because of what we
 call "the boundary problem" in our scheduling algorithm. There are normally ways to
-work around this problem by forcing a larger interval on the right side of an expression or sub-expression. You should 
+work around this problem by forcing a larger interval on the right side of an expression or sub-expression. You should
 use the FORECAST command to verify time expressions before using them in a rule.
 .P
-Since this is a prototype 0.x version, you can expect to encounter a few bugs that are
-unknown to the author. We have only started to developed a test suite for exercising individual
-features in a structured systematic way. Regression testing
-is primarily performed using the author's own applications by comparing
-the response of two different versions receiving a common (parallel) event stream.
-While this is useful for discovering bugs that might impact the
-author's applications, it does not test the variety of rules
-and event streams you might invent. 
+Please report bugs to <bugs@nodebrain.org> or enter a bug report
+at http://nodebrain.org.
 
-Please report bugs by linking to the project page from the home page, 
-http://www.nodebrain.org, or send email to <bugs@nodebrain.org>.
 .SH AUTHOR
 Ed Trettevik <eat@nodebrain.org>
+
 .SH DOCUMENTATION
 Online documentation is available at http://nodebrain.org.
-Manuals are also available in TexInfo (texi) format in the
+Manuals are also available in Texinfo format in the
 git repository.  These documents are included in source
 distribution files.
+
 .SH SEE ALSO
 .\"ht page
 \fBnodebrain\fP(7),
