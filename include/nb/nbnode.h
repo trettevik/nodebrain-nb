@@ -151,8 +151,8 @@ typedef struct NB_FACET_SHIM{
 extern struct TYPE *skillType;
 extern struct TYPE *nb_NodeType;
 extern struct NB_TERM *nb_SkillGloss;
-struct NB_SKILL *nb_SkillDefault;
-struct NB_SKILL *nb_SkillUnknown;
+extern struct NB_SKILL *nb_SkillDefault;
+extern struct NB_SKILL *nb_SkillUnknown;
 
 /* Functions */
 

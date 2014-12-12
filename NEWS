@@ -9,20 +9,42 @@
 
 NodeBrain 0.9.03 (Columbo) Change Summary
 
-* Released November 23, 2014
+* Released December 14, 2014
 
-* Theme:  Alert Attribute Transience and Implied Nodes
+* Theme:  Reduced Sensitivity to Command Arrival Order
 
-     This version introduces two assumptions intended to
-     improve handling of alerts.  All ALERT command
-     assertions to terms directly defined in the context
-     node are now transient, eliminating the need to
-     define transient terms.  The syntax for referencing
-     terms has been extended to differentiate between
-     navigation of the node hierarchy and multiple
-     level term glossaries, enabling the interpreter to
-     automatically create nodes implied by commands prior
-     to node definition.  
+     This version provides more flexibility in referencing
+     nodes before they are defined. It also automatically
+     resets event attributes to the unknown state when not
+     specified on an alert, eliminating the need to specify
+     all event attributes on every alert---required under
+     prior versions to avoid event attribute values from
+     impacting rule response to a subsequent alert.
+
+* Packaging:
+
+  o  The version scheme for the NodeBrain Library (libnb)
+     has switched to using the Application Binary Interface
+     version, instead of the release version based scheme
+     used previously.  The release version approach was
+     intended to require application to build for every
+     release, assuming there might be incompatibilities in
+     every release. The change to an ABI based version is
+     being made in preparation for a 1.0 release and 
+     subsequent 1.x releases that will not require using
+     applications to rebuild until release 2.0, except to
+     gain access to enhancements in a 1.x release.
+
+        libnb-0.9.02.so    [0.9.02 prior release]
+        libnb.so.0.0.903   [0.9.03 this release]
+        libnb.so.1.0.1000  [1.0.00 future release]
+
+  o  The rpm spec file, and debian packaging files have 
+     been modified to get better build results on various
+     platforms after the switch from readline to libedit.
+     The effort to make the project friendly to package
+     maintainers for various Linux distributions is still
+     in progress.
 
 * Documentation:
 

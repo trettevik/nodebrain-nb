@@ -90,12 +90,12 @@ typedef struct NB_MOD_AUDIT nbAudit;
 // Functions used by skill methods
 //==================================================================================
 
-int auditDisable(nbCELL context,void *skillHandle,nbAudit *audit);
+static int auditDisable(nbCELL context,void *skillHandle,nbAudit *audit);
 
 // Check for new lines in the file
 //   This function is scheduled by auditEnable() using nbSynapseOpen()
 
-void auditAlarm(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL cell){
+static void auditAlarm(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL cell){
   nbAudit *audit=(nbAudit *)nodeHandle;
   nbCELL value=nbCellGetValue(context,cell);
   char logbuf[2048],*cursor;
@@ -161,7 +161,7 @@ void auditAlarm(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL cell){
 *
 *    define <term> node audit("<filename>","<translator>",<schedule>);
 */
-void *auditConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+static void *auditConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   nbAudit *audit;
   nbCELL fileNameCell,translatorNameCell,scheduleCell,nullCell;
   nbSET argSet;
@@ -231,7 +231,7 @@ void *auditConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text)
 *    enable <node>
 *
 */
-int auditEnable(nbCELL context,void *skillHandle,nbAudit *audit){
+static int auditEnable(nbCELL context,void *skillHandle,nbAudit *audit){
   if(audit->trace) nbLogMsg(context,0,'T',"auditEnable() called %s using",audit->fileName,audit->translatorName);
   if((audit->file=fopen(audit->fileName,"r"))==NULL){
     nbLogMsg(context,0,'E',"Unable to open audit file \"%s\".",audit->fileName);
@@ -258,7 +258,7 @@ int auditEnable(nbCELL context,void *skillHandle,nbAudit *audit){
 * 
 *    disable <node>
 */
-int auditDisable(nbCELL context,void *skillHandle,nbAudit *audit){
+static int auditDisable(nbCELL context,void *skillHandle,nbAudit *audit){
   if(audit->trace) nbLogMsg(context,0,'T',"auditDisable() called");
   if(audit->synapseCell) audit->synapseCell=nbSynapseClose(context,audit->synapseCell);  // release the synapse
   else return(0);  // already disabled
@@ -278,7 +278,7 @@ int auditDisable(nbCELL context,void *skillHandle,nbAudit *audit){
 *
 *    table:trace,notrace
 */
-int *auditCommand(nbCELL context,void *skillHandle,nbAudit *audit,nbCELL arglist,char *text){
+static int *auditCommand(nbCELL context,void *skillHandle,nbAudit *audit,nbCELL arglist,char *text){
   if(strstr(text,"notrace")) audit->trace=0;
   else if(strstr(text,"trace")) audit->trace=1;
   else nbLogMsg(context,0,'E',"Command not recognized.");
@@ -291,7 +291,7 @@ int *auditCommand(nbCELL context,void *skillHandle,nbAudit *audit,nbCELL arglist
 *    undefine <node>
 *
 */
-int auditDestroy(nbCELL context,void *skillHandle,nbAudit *audit){
+static int auditDestroy(nbCELL context,void *skillHandle,nbAudit *audit){
   if(audit->trace) nbLogMsg(context,0,'T',"auditDestroy called");
   auditDisable(context,skillHandle,audit);
   nbCellDrop(context,audit->fileNameCell);

@@ -71,12 +71,15 @@ int  nb_opt_daemon=2;    /* daemonized at end of arguments - 2=default */
 int  nb_opt_prompt=0;    /* prompt for commands at end of arguments */
 int  nb_opt_query=0;     /* automatically query at end of arguments */
 int  nb_opt_servant=0;   /* enter servant mode at end of arguments */
+
 int  nb_opt_shim=0;      /* shim object methods to enable tracing */
 int  nb_opt_user=1;      /* automatically load user profile */
 int  nb_opt_hush=0;      // suppress calls to log routines
 int  nb_opt_stats=0;     // print statistics when terminating
 int  nb_opt_boolnotrel=0;// boolean not relational - a<>1 ==> !(a=1), a<=1 ==> !(a>1), a>=1 ==> !(a<1)
 int  nb_opt_test=0;      // test mode - display pretend time stamps to simplify output diff
+int  nb_opt_safe=0;      // safe mode prevents unsaf interactions with host environment
+                         // e.g. spawning child processes, source command, modules other than tree, and cache
 
 int sourceTrace=0;       /* debugging trace flag for source input */
 int symbolicTrace=0;     /* debugging trace flag for symbolic substitution */

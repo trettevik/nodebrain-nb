@@ -105,7 +105,7 @@ libtool: $(LIBTOOL_DEPS)
 
 .PHONY: check
 check: all 
-	@LD_LIBRARY_PATH=${NB_LIBRARY_PATH}:${LD_LIBRARY_PATH}; export LD_LIBRARY_PATH; \
+	LD_LIBRARY_PATH=${NB_LIBRARY_PATH}:${LD_LIBRARY_PATH}; export LD_LIBRARY_PATH; \
 	NB_MODULE_PATH=${NB_MOD_PATH}:${NB_MODULE_PATH}; export NB_MODULE_PATH; \
 	if test ! -d "caboodle"; then \
 	  tar -C $(srcdir) -cho caboodle | tar -xf -; \

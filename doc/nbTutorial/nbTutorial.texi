@@ -291,17 +291,6 @@ $ @b{nb}
 @end smallexample
 @end cartouche
 
-At a Windows command prompt, it looks like this.
-
-@cartouche
-@smallexample
-C:> @b{nb}
-> 
-@end smallexample
-@end cartouche
-
-For the examples in this tutorial, use a Unix-style shell command prompt.
-
 To end an interactive session, just tell NodeBrain you want to quit.
 
 @cartouche
@@ -334,11 +323,9 @@ To verify that NodeBrain is willing to accept your assertions, ask it to show yo
 
 @cartouche
 @smallexample
-> @b{show a}
+> @b{show a,b,mood}
 a = 1
-> @b{show b}
 b = 2
-> @b{show mood}
 mood = "happy"
 > quit
 @end smallexample
@@ -1187,19 +1174,18 @@ That's it---you have a working agent.  But clearly this example was not designed
 ---Dr. Seuss (1904--1991)
 @end quotation
 
-What could be more nonsensical than a program called NodeBrain?  And of course, if I claim this program is a brain, there must be brain cells and a way to wake them up.  So here goes.
+What could be more nonsensical than a program called NodeBrain?  And of course, if this program is a brain, there must be brain cells and a way to wake them up.  So here goes.
 
-You can think of a cell as a structure capable of storing a value and optionally a formula for computing a value.  You may be familiar with this notion if you use a spreadsheet program.  A NodeBrain cell is vary similar to a spreadsheet cell, but without the tabular model.  There is no physical relationship between NodeBrain cells; no notions like "two to the left" or "one cell up."  NodeBrain cells are referenced only by their formula, which is called a cell formula.
+You can think of a cell as a structure capable of storing a value and a formula for computing a value.  You may be familiar with this notion if you use a spreadsheet program.  A NodeBrain cell is vary similar to a spreadsheet cell, but without the tabular model.  There is no physical relationship between NodeBrain cells; no notions like "two to the left" or "one cell up."  NodeBrain cells are referenced only by their formula.
 
-Cell formulas are allowed in various places within the command syntax.
-I can't tell you where exactly because I promised not to get BNF (Backus-Naur Form) on you here, but I can say cell definitions, assertions, and rule conditions are the primary places where cell formulas are used.
+Cell formulas appear in cell definitions, assertions, and rule conditions.
 
 @menu
 * Numbers and Strings::
 * Arithmetic::
 * Logic::
 * Time Conditions::
-* Node Sentence Formulas::
+* Node Sentences::
 * Complex Formulas::
 @end menu
 
@@ -1432,17 +1418,19 @@ Operators (@code{,} @code{.} @code{(n)} @code{[n]}) that operate on time interva
 
 The operators are based on formal concepts like intersection, union, selection, rejection, inverse, and so on.        
 
-@node Node Sentence Formulas
-@section Node Sentence Formulas 
+@node Node Sentences
+@section Node Sentences 
 
 @quotation
 @i{An expert knows all the answers---if you ask the right questions.}
 ---Unknown
 @end quotation
 
-A NodeBrain node is an expert, with a set of knowledge and associated skill.  The skill is provided by a node module (plug-in) that extends NodeBrain functionality.  Since NodeBrain is not a general purpose scripting language, many things are simply inappropriate to attempt without help from a node module.  It is the combination of skill and knowledge that makes a node an expert.  Of course, you need to know how to ask the right questions.
+A node is an expert, with a set of knowledge and associated skill.  The skill is provided by a node module that extends NodeBrain functionality.  Since NodeBrain is not a general purpose scripting language, many things are simply inappropriate to attempt without help from a node module.  It is the combination of skill and knowledge that makes a node an expert.  Of course, you need to know how to ask the right questions.
 
-Node modules can be developed to perform any function imaginable, but within the context of a cell formula they only provide the value of node sentence formulas.  These formulas look like a function call.  In rule @code{r1} below, @code{sally(x)} is a node sentence formula and @code{sally} is a node with the skills provided by the tree module.
+Within the context of a cell formula, a node function call, also called a node sentence formula, asks a question.
+In rule @code{r1} below, @code{sally(x)} is a node sentence formula and @code{sally} is a node with the skills provided by the tree module
+to accept node sentence assertions and evaluate node sentence formulas.
 
 @cartouche
 @smallexample
@@ -1462,7 +1450,9 @@ sally = # == node tree
 @end smallexample
 @end cartouche
 
-Do you see why rule @code{r1} fired when you asserted that @code{x="abc"}? It is because @code{sally("abc")} was asserted to be true, so @code{sally(x)} is true when @code{x="abc"}.  What a node module does with assertions and how it computes the value of node sentence formulas is entirely up to it.  In this case, the @code{tree} node module keeps track of assertions and returns a value for formulas by doing a lookup.  When the value of @code{x} changes, the interpreter reports a change to the node module and it computes a new value for the cell.
+Do you see why rule @code{r1} fired when you asserted that @code{x="abc"}?
+It is because @code{sally("abc")} is a node sentence that was asserted to be true, so @code{sally(x)} is true when @code{x="abc"}.
+What a node module does with node sentence assertions and how it computes the value of node sentence formulas is entirely up to it.  In this case, the @code{tree} node module keeps track of assertions and returns a value for formulas by doing a lookup.  When the value of @code{x} changes, the interpreter reports a change to the node module and it computes a new value for the cell.
 When the cell value changes, it reports a change to the referencing cells, in this case rule @code{r1}, which fired.
 
 @node Complex Formulas
@@ -1493,7 +1483,7 @@ $ nb complex.nb
 If the complex rule doesn't fire when you run @code{complex.nb}, perhaps you are not running it on a Friday.
 If you try it on a Friday, it will fire because @code{y<7} is true and @code{sally(x,y)=a+b} is true.  
 The fact that this condition is true may not be so obvious, so let's break it down.  The command @code{assert a,b;}
-sets @code{a} and @code{b} to 1 (true).  That means the cell @code{a+b} is 2.  Since @code{x} is @code{"def"} and @code{y} is 5, the cell @code{sally(x,y)=a+b} is the same as @code{sally("def",5)=2}, which you assert to be true.
+sets @code{a} and @code{b} to true (!!), which in a numerical context is 1.  That means the cell @code{a+b} is 2.  Since @code{x} is @code{"def"} and @code{y} is 5, the cell @code{sally(x,y)=a+b} is the same as @code{sally("def",5)=2}, which you assert to be true.
 
 @node Ignorance
 @chapter Ignorance
@@ -1529,7 +1519,9 @@ How NodeBrain deals with that condition is the topic of this tutorial.
 ---Sir Arthur Eddington (1882--1944)
 @end quotation
 
-The NodeBrain interpreter recognizes three logical states: true, false, and unknown.  These states are represented as follows.
+It has been said there are 10 kinds of people: those who understand binary and those who don’t.  And when asked if they understand trinary logic, people give one of 10 responses: “yes”, “no”, and “I don’t know.”
+
+The rule engine uses trinary logic, recognizing three logical states: true, false, and unknown.  These states are represented as follows.
 
 @quotation
 @multitable {-------------} {-----------------------------------------------------------------------}
@@ -1542,7 +1534,7 @@ The NodeBrain interpreter recognizes three logical states: true, false, and unkn
 
 You can test for these states by using the @code{=} relational operator or a prefix operator with no space between
 the prefix operator and expression being tested.
-A space after the prefix operator will cause it to be interpretted as a value instead of an operator, causing
+A space after the prefix operator will cause it to be interpreted as a value instead of an operator, causing
 a syntax error.
 
 The symbol @code{!!} is more complicated than @code{!} and @code{?}.
@@ -1630,7 +1622,7 @@ x = 19 == (a+b)
 @end smallexample
 @end cartouche
 
-Let's pause to make sure you know what just happened here. The condition @code{?x} is true when @code{x} is unknown.  This was true when @code{r1} was defined because @code{x} is @code{a+b}and both @code{a} and @code{b} are unknown at that time.  Hey, the arithmetic operators understand the unknown value also.  When you assert that @code{a=7} and @code{b=12}, @code{x} was known to be 19 and @code{?x} was false.  Then you assert @code{?b}, making @code{a+b} unknown, making @code{x} unknown, making @code{?x} true and @code{r1} fired.
+Let's pause to make sure you know what just happened here. The condition @code{?x} is true when @code{x} is unknown.  This was true when @code{r1} was defined because @code{x} is @code{a+b} and both @code{a} and @code{b} are unknown at that time.  Hey, the arithmetic operators understand the unknown value also.  When you assert that @code{a=7} and @code{b=12}, @code{x} was known to be 19 and @code{?x} was false.  Then you assert @code{?b}, making @code{a+b} unknown, making @code{x} unknown, making @code{?x} true and @code{r1} fired.
  
 @node Closed World Assumption
 @section Closed World Assumption
@@ -1676,7 +1668,7 @@ When you assert that @code{soup="Tomato"}, there is still no change.  A value of
 
 Next, you assert that @code{soup="Chicken"}.  Both @code{myTree(soup)} and @code{myCache(soup)} transition to true and the corresponding rules @code{rMyCacheHasSoup} and @code{rMyTreeHasSoup} fire.
 
-This is followed by an assertion that @code{myTree("Chicken")} and @code{myCache("Chicken")} are unknown.  Because the @code{cach} skill uses the closed world assumption, this is the same as asserting that @code{myCache("Chicken")} is false.  Consequently, @code{rMyCacheHasNotSoup} fires while @code{myTreeKnowsNotSoup} fires.
+This is followed by an assertion that @code{myTree("Chicken")} and @code{myCache("Chicken")} are unknown.  Because the @code{cache} skill uses the closed world assumption, this is the same as asserting that @code{myCache("Chicken")} is false.  Consequently, @code{rMyCacheHasNotSoup} fires while @code{myTreeKnowsNotSoup} fires.
 
 Finally, you assert @code{myTree("Chicken")} and @code{myCache("Chicken")} to be false.  This causes the rule @code{rMyTreeHasNotSoup} to fire.
 There is no change to @code{myCache("Chicken")}, so no cache-related rule fires.
@@ -1756,7 +1748,7 @@ Enter cell soreThroat==@b{!!}
 @end smallexample
 @end cartouche
 
-Since you are running in interactive mode and have not provided any alternate methods for NodeBrain to solve for unknown values, the interpreter prompts the user to resolve unknown values.  If you study the rule file, you will find five unknown terms in the two rule conditions: @code{cough}, @code{soreThroat}, @code{fever}, @code{achy}, and @code{upsetStomach}.  However, the interpreter only prompted the user for values of three of these terms.  This is because requesting values for the other two terms would not have changed the result.  Since @code{fever=0}, the @code{flu} condition is false for any value of the other two terms in the condition.
+Since you are running in interactive mode and have not provided any alternate methods to solve for unknown values, the rule engine prompts the user to resolve unknown values.  If you study the rule file, you will find five unknown terms in the two rule conditions: @code{cough}, @code{soreThroat}, @code{fever}, @code{achy}, and @code{upsetStomach}.  However, the interpreter only prompted the user for values of three of these terms.  This is because requesting values for the other two terms would not have changed the result.  Since @code{fever=0}, the @code{flu} condition is false for any value of the other two terms in the condition.
 
 The response to each query may be any valid cell formula.  This means you must enclose strings in quotes and have the option of introducing new terms for which the interpreter does not have a value.  When new terms are introduced, the interpreter attempts to resolve them as necessary.  If you respond with @code{5 or soreEye}, the interpreter will not attempt to solve for @code{soreEye} because it knows the condition is true without knowledge of @code{soreEye}.
 
@@ -1826,7 +1818,7 @@ $
 @end smallexample
 @end cartouche
 
-In this example, the consulted script @code{illnessConsult.pl} returned simple 0 and 1 values.  The interpreter will accept any valid cell formula and will attempt to resolve any term whose value is both unknown and needed.
+In this example, the consulted script @code{illnessConsult.pl} returned simple true (!!) and false (!) values.  The interpreter will accept any valid cell formula and will attempt to resolve any term whose value is both unknown and needed.
 
 @node Rules
 @chapter Rules
@@ -1912,7 +1904,9 @@ A: Because @code{if} rules fire on every @code{alert} command that leaves their 
 In the previous example, you may have noticed that NodeBrain supports both state and event monitoring.  The difference between the two is subtle.
 The @code{assert} command and @code{on} rule are designed for state monitoring.
 The @code{alert} command and @code{if} rule are designed for event monitoring.  But it isn't that simple.
-The @code{on} rule responds to both @code{assert} and @code{alert} commands.  To an @code{on} rule, @code{alert} is just an alias for @code{assert}.  In fact, everything about the way an @code{alert} command is processed is identical to the way an @code{assert} command is processed, except @code{alert} brings @code{if} rules into play.  In other words, @code{alert} makes an assertion, and then says, "Oh, and by the way, this is an event to be considered by the @code{if} rules."
+The @code{on} rule responds to both @code{assert} and @code{alert} commands.  To an @code{on} rule, @code{alert} is just an alias for @code{assert}.  In fact, everything about the way an @code{alert} command is processed is identical to the way an @code{assert} command is processed, except @code{alert} makes event attributes transient and brings @code{if} rules into play within the event context.
+In other words, @code{alert} makes an assertion, reverts unspecified event attributes to Unknown, and then says, "Oh, and by the way, this is an event to be considered by the @code{if} rules
+in the event context.  In this section we'll use an example for which you don't need to worry about event attribute transience and the event context.
 
 What makes the notion of state and event monitoring hard to untangle is that an event is described in the same way as a state, an event is interpreted as a new state, a state change is recognized as an event, and a state change can trigger an event.
 Let's look at these confusing statements individually.
@@ -1939,6 +1933,80 @@ define r1 on(a=1 and b=2): alert x="abc",y="def";
 assert a=1,b=2;       # r1 translated state change into event(alert)
 @end smallexample
 @end cartouche
+
+@section Event Context
+@cindex Event Context
+
+The node to which an @code{alert} command is directed via a command context prefix is called the @i{event context}.
+An @code{alert} command only activates the @code{if} rules in the event context.  In the example below, the two @code{if} rules,
+@code{vehicle.r1} and @code{car.r1} have identical conditions, but only @code{vehicle.r1} is triggered by the alert.
+
+@cartouche
+@example
+2014-12-01 00:48:06 NB000I Argument [1] eventContext.nb
+> vehicle. define r1 if(.make="ford" and .model="edsel");
+> car. define r1 if(vehicle.make="ford" and vehicle.model="edsel");
+> vehicle. alert make="ford",model="edsel";
+2014-12-01 00:48:06 NB000I Rule vehicle.r1 fired 
+@end example
+@end cartouche
+
+If the rules have identical conditions they will always be true at the same time.  So why did only one fire?
+It is because the @code{alert} command is issued within the context of the @code{vehicle} node, making the event context @code{vehicle}, and
+this means @code{if} rules defined in other nodes will not trigger even when their condition is true.
+So remember that an @code{alert} command activates only a set of @code{if} rules, not all @code{if} rules.
+Put another way, @code{if} rules only respond to @code{alert} commands directed to the node in which they are defined.
+
+@section Event Attribute Transience
+@cindex event attribute transience
+
+An @i{event attribute} is any term asserted by an @code{alert} command that is defined within the event context.
+Assertions for event attributes are @i{transient}, meaning they will revert to Unknown (?) on the next @code{alert} to the
+same event context if a value is not asserted.
+
+This is illustrated by the following example, where @code{vihicle.model} is reset to Unknown when not specified on the second @code{alert}.
+
+@cartouche
+@example
+2014-12-01 01:01:45 NB000I Argument [1] eventTransience.nb
+> define year cell;
+> vehicle. define r1 if(.make="ford" and .model="edsel");
+> car. define r1 if(vehicle.make="ford" and vehicle.model="edsel");
+> show year,vehicle
+year = ?
+vehicle = # == node 
+vehicle.make = ?
+vehicle.model = ?
+vehicle.r1 = # ? == if((vehicle.make="ford")&(vehicle.model="edsel"));
+> vehicle. alert make="ford",model="edsel";
+2014-12-01 01:01:45 NB000I Rule vehicle.r1 fired 
+> show year,vehicle
+year = ?
+vehicle = # == node 
+vehicle.make = "ford"
+vehicle.model = "edsel"
+vehicle.r1 = # !! == if((vehicle.make="ford")&(vehicle.model="edsel"));
+> vehicle. alert make="chevy",year="1954";
+> show year,vehicle
+year = "1954"
+vehicle = # == node 
+vehicle.make = "chevy"
+@b{vehicle.model = ?}
+vehicle.r1 = # ! == if((vehicle.make="ford")&(vehicle.model="edsel"));
+> vehicle. alert make="ford",model="edsel";
+2014-12-01 01:01:45 NB000I Rule vehicle.r1 fired 
+> show year,vehicle
+year = "1954"
+vehicle = # == node 
+vehicle.make = "ford"
+vehicle.model = "edsel"
+vehicle.r1 = # !! == if((vehicle.make="ford")&(vehicle.model="edsel"));
+2014-12-01 01:01:45 NB000I Source file "eventTransience.nb" included. size=341
+@end example
+@end cartouche 
+
+Notice that @code{year} is not reset by the third @code{alert}.
+This is because @code{year} is not an event attribute, because it is not defined in the event context.
 
 @section Actions as Reactions
 @cindex actions
@@ -2086,7 +2154,7 @@ You can not put two commands on one line.
 @end smallexample
 @end cartouche
 
-In some cases, a NodeBrain command ends with a command directed to another interpreter.  In those cases, you must follow the syntax rules of the other interpreter.  The following rule that uses a host shell command as the action is illustrated in this concept.
+In some cases, a NodeBrain command ends with a command directed to another interpreter.  In those cases, you must follow the syntax rules of the other interpreter.  The following rule that uses a host shell command as the action illustrates this concept.
 
 @cartouche
 @smallexample
@@ -2096,7 +2164,10 @@ In some cases, a NodeBrain command ends with a command directed to another inter
 
 @section How do I continue a command onto the next line?
 
-There is no support for multiple line commands.  A new-line character (@code{\n}) is always interpreted as the end of a command.
+There is no support for multiple line commands from most input sources.  A new-line character (@code{\n}) is always interpreted as the end of a command.
+
+However, within a file processed by the @code{source} command, you may use a back-slash "\" at the end of a line to continue the specification of
+a command on the next line.  In this case, the multiple lines are assembled into a single command line before being processed by the interpreter.
 
 @section How can I specify multiple commands for a rule action?
 
@@ -2108,11 +2179,11 @@ If you are specifying multiple shell commands, the shell supports semi-colon (@c
 @end smallexample
 @end cartouche
 
-You may also include multiple comma-separated NodeBrain assertions.
+You may also include multiple comma-separated assertions.
 
 @cartouche
 @smallexample
-> define r1 on(a=1 and b=2) x=5,y="abc",z=20 := @b{myscript1.pl;rm *.foo; myscript2.pl}
+> define r1 on(a=1 and b=2) @b{x=5,y="abc",z=20} := myscript1.pl;rm *.foo; myscript2.pl
 @end smallexample
 @end cartouche
 
@@ -2125,6 +2196,7 @@ If order is important, and you want to specify several commands, place the comma
 > define r1 on(a=1 and b=2):source r1Action.nb
 @end smallexample
 @end cartouche
+
 You may also use a @code{-:} or @code{=:} (servant) command and have a servant script present multiple commands to the interpreter.
 
 @cartouche
@@ -2132,6 +2204,7 @@ You may also use a @code{-:} or @code{=:} (servant) command and have a servant s
 > define r1 on(a=1 and b=2):-:r1Action.pl
 @end smallexample
 @end cartouche
+
 If the order of the commands is not important and the number is relatively small, you can use multiple rules with the same condition. To avoid typing the condition multiple times, specify the name of the first rule as the second rule's condition.
 
 @cartouche

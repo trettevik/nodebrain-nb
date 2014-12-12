@@ -255,7 +255,7 @@ When a cache assertion is a rule action, avoiding the context prefix enables the
 
 @cartouche
 @smallexample
-define failedNode node cache:(~(20m):node);
+define failedSystem node cache:(~(20m):system);
 define event node;
 event. assert ?.type,?.system,?.text;
 

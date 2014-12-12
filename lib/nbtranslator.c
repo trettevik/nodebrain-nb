@@ -359,7 +359,7 @@ struct REGEXP_STACK{
 *    by name.  If we can't find a name for the index, we just display
 *    the index number, which is equally valid syntax.
 */
-void nbProjectionShowWithNames(NB_Projection *projection,struct REGEXP_STACK *reStackP){
+static void nbProjectionShowWithNames(NB_Projection *projection,struct REGEXP_STACK *reStackP){
   unsigned char *cursor;
   char text[NB_BUFSIZE],*textcur=text;
   int index,expDec,reIndex,foundname,namecount,namesize;
@@ -436,7 +436,7 @@ void nbProjectionShowWithNames(NB_Projection *projection,struct REGEXP_STACK *re
 *    nbProjectionShowWithNames() function above can be used as an
 *    alternative to display subexpression names instead of numbers.
 */
-void nbProjectionShow(NB_Projection *projection){
+static void nbProjectionShow(NB_Projection *projection){
   unsigned char *cursor;
   char text[NB_BUFSIZE],*textcur=text;
   int index;
@@ -505,7 +505,7 @@ void nbProjectionShowAll(void){
   showcount=saveshowcount;
   }
 
-void nbProjectionDestroy(NB_Projection *projection){
+static void nbProjectionDestroy(NB_Projection *projection){
   NB_Projection **projectionP;
   NB_Hash *hash=nb_ProjectionType->hash;
 
@@ -543,7 +543,7 @@ static char *nbProjectionEncodeLiteral(char *bufcur,char *cursor,uint32_t len){ 
 *    nfr          where n is pattern index, f is find char and r is replacement
 *
 */
-int nbProjectionEncode(char *buffer,int buflen,struct REGEXP_STACK *reStackP,int nsub[],int level,char *source){
+static int nbProjectionEncode(char *buffer,int buflen,struct REGEXP_STACK *reStackP,int nsub[],int level,char *source){
   char *subcur,*bufcur=buffer,*cursor=source,*cursave;
   char exp,find,replace;
   size_t len;
@@ -649,7 +649,7 @@ int nbProjectionEncode(char *buffer,int buflen,struct REGEXP_STACK *reStackP,int
 *    We return a projection or a string.  Code that uses projection objects
 *    must test the object type and treat appropriately.
 */
-NB_Projection *nbProjectionParse(char *projectionBuffer,int len,struct REGEXP_STACK *reStackP,int nsub[],int level,char *cursor){
+static NB_Projection *nbProjectionParse(char *projectionBuffer,int len,struct REGEXP_STACK *reStackP,int nsub[],int level,char *cursor){
   NB_Projection *projection,**projectionP;
   int plen,match=1;
   NB_Hash *hash=nb_ProjectionType->hash;
@@ -677,9 +677,9 @@ NB_Projection *nbProjectionParse(char *projectionBuffer,int len,struct REGEXP_ST
 
 //=================================================================
 
-void nbTranslatorShowList(struct NB_XI *xi,int level,struct REGEXP_STACK *reStackP);
+static void nbTranslatorShowList(struct NB_XI *xi,int level,struct REGEXP_STACK *reStackP);
   
-void nbTranslatorShowInstruction(struct NB_XI *xi,int level,struct REGEXP_STACK *reStackP){
+static void nbTranslatorShowInstruction(struct NB_XI *xi,int level,struct REGEXP_STACK *reStackP){
   int i,reCount;
   if(xi->oper&NB_XI_OPER_DISABLED) outPut("!");
   if(xi->flag&NB_XI_FLAG_MATCHTHRU) outPut("@");
@@ -740,7 +740,7 @@ void nbTranslatorShowInstruction(struct NB_XI *xi,int level,struct REGEXP_STACK 
     }
   }
 
-void nbTranslatorShowList(struct NB_XI *xi,int level,struct REGEXP_STACK *reStackP){
+static void nbTranslatorShowList(struct NB_XI *xi,int level,struct REGEXP_STACK *reStackP){
   int i,n=0,oper;
   if(xi==NULL) return;
   if(xi->next==NULL){
@@ -784,7 +784,7 @@ void nbTranslatorShow(nbCELL translatorCell){
 *  A file node points to another translator, so we do not free the subordinate branch
 */
 
-void nbTranslatorFreeList(struct NB_XI *xi){
+static void nbTranslatorFreeList(struct NB_XI *xi){
   struct NB_XI *xiNext;
   while(xi!=NULL){
     if(xi->nest!=NULL && (xi->oper&NB_XI_OPER_STATIC)!=NB_XI_OPER_FILE) nbTranslatorFreeList(xi->nest);
@@ -795,7 +795,7 @@ void nbTranslatorFreeList(struct NB_XI *xi){
     }
   }
 
-void nbTranslatorDestroy(NB_Translator *translator){
+static void nbTranslatorDestroy(NB_Translator *translator){
   NB_Translator **translatorP;
   struct NB_XI *xiFile;
 

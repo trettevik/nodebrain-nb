@@ -319,8 +319,13 @@ nbCHILD nbChildOpen(int options,int uid,int gid,char *pgm,char *parms,nbFILE cld
       else for(fd=getdtablesize();fd>2;fd--) close(fd);
       }
     if(getuid()==0){  // if we are running as root, optionally set gid and uid
-      if(gid!=0) setgid(gid); // set group id if requested
-      if(uid!=0) setuid(uid); // set user id if requested
+      //if(gid!=0) setgid(gid); // set group id if requested
+      //if(uid!=0) setuid(uid); // set user id if requested
+      // 2014-12-06 eat - always do them together
+      if(uid!=0 || gid!=0){
+        setgid(gid);
+        setuid(uid);
+        }
       }
 
     // switch major signals to SIG_IGN or SIG_DFT

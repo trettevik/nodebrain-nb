@@ -137,6 +137,10 @@ int nbSpawnChild(nbCELL context,int options,char *cursor){
     outMsg(0,'E',"Identity \"%s\" does not have system authority.",clientIdentity->name->value);
     return(0);
     }
+  if(nb_opt_safe){
+    outMsg(0,'E',"Spawning of child process is not allowed in safe mode.");
+    return(0);
+    }
   if(strlen(outdir)>=512){  // 2013-01-01 eat - VID 5539-0.8.13-1
     outMsg(0,'L',"Output directory name is too large - %s.",outdir);
     nbExit("Fatal error");

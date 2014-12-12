@@ -112,6 +112,7 @@
 * 2010/02/25 eat 0.7.9  Cleaned up -Wall warning messages
 * 2012-12-18 eat 0.8.13 Checker updates
 * 2013-12-27 eat 0.8.13 Removed commented out function treeFind
+* 2014-12-05 eat 0.9.03 Added safe mode restriction on store command
 *=============================================================================
 */
 #include "config.h"
@@ -596,6 +597,10 @@ static void treeStore(nbCELL context,BTreeSkill *skillHandle,BTree *tree,nbCELL 
   void *ptr;
 
 
+  if(nb_opt_safe){ // 2014-12-05 eat - prevent store in safe mode for demo
+    nbLogMsg(context,0,'E',"Tree store command not allowed in safe mode.");
+    return;
+    }
   while(*cursor!=0 && strchr(" ;",*cursor)==NULL) cursor++;
   len=cursor-text;
   if(len>sizeof(filename)-1){

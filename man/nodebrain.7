@@ -1,7 +1,7 @@
 .\" Process this file with "groff -man -Tascii foo.1" or "nbman2ht foo.1"
 .\" See NodeBrain Developer Guide for project standards
 .\"
-.TH nb.man 7 "November 2014" "NodeBrain 0.9.03" "NodeBrain Administrator Guide"
+.TH nb.man 7 "December 2014" "NodeBrain 0.9.03" "NodeBrain Administrator Guide"
 .SH NAME
 \fBnodebrain\fP - NodeBrain Overview
 .SH TOPICS
@@ -18,10 +18,10 @@ than the overview provided here, select the page of interest.
 \fBnb.syn\fP         - Rule Language Command Syntax
 
 .\"ht page
-\fBnb.mod\fP         - Modules (nb_<module>.so plugins)
+\fBnb.mod\fP         - Modules 
 
 .\"ht page
-\fBnb.lib\fP         - C API Library (libnb.so)
+\fBnb.lib\fP         - C API Library
 
 .\"ht page
 \fBnbkit\fP          - Kit Utility
@@ -73,7 +73,7 @@ to some extent, but NodeBrain is a language you can use to write scripts.
 Here is a script called HelloWorld.
 
 .nf
-  #!/usr/local/bin/nb
+  #!/usr/bin/nb
   ^Hello World
 .fi
 
@@ -106,7 +106,7 @@ Monitoring applications typically watch for, and react to, predefined conditions
 Here is a simple reactive NodeBrain script.
 
 .nf
-  #!/usr/local/bin/nb -p
+  #!/usr/bin/nb -p
   define r1 on(a=1 and b=2) x=25;
 .fi
 
@@ -124,14 +124,14 @@ Copyright (C) 2014 Ed Trettevik <eat@nodebrain.org>
 MIT or Nodebrain License
 ----------------------------------------------------------------
 
-/usr/local/bin/nb -p ./reactor
+/usr/bin/nb -p ./reactor
 
 Date       Time     Message
 ---------- -------- --------------------------------------------
 2014-06-27 09:38:03 NB000I NodeBrain nb[23246] me@myserver
 2014-06-27 09:38:03 NB000I Argument [1] -p
 2014-06-27 09:38:03 NB000I Argument [2] ./reactor
-> #!/usr/local/bin/nb -p
+> #!/usr/bin/nb -p
 > define r1 on(a=1 and b=2) x=25;
 2014-06-27 09:38:03 NB000I Source file "./reactor" included. size=57
 2014-06-27 09:38:03 NB000I Reading from standard input.
@@ -155,7 +155,7 @@ You should think "baby expert system tool".  NodeBrain has a diagnostic mode tha
 enables it to solve for unknown conditions.  Here is a trivial and silly example.
 
 .nf
-  #!/usr/local/bin/nb -p
+  #!/usr/bin/nb -p
   define dog on(legs=4 and coat="fur" and tail);
   define cow on(legs=4 and coat="leather" and tail);
   define person on(legs=2 and (coat="skin" or coat="leather"));
@@ -180,7 +180,7 @@ Copyright (C) 2014 Ed Trettevik <eat@nodebrain.org>
 MIT or NodeBrain License
 ----------------------------------------------------------------
 
-./nb -p ./creature
+ ./nb -p ./creature
 
 Date       Time     Message
 ---------- -------- --------------------------------------------
@@ -375,13 +375,13 @@ and modify all references just because we change the language.  But this
 is the perspective of a lazy programmer.
 .IP \fIname\fP\fB.nbx\fP
 Text translation rules to convert a foreign text stream into a NodeBrain command steam.
-
+.P
 .SH ENVIRONMENT
 .IP NB_MODULE_PATH
 See
 .\"ht page
 \fBnb.mod\fP(5).
-
+.P
 .SH DIAGNOSTICS
 See
 .\"ht page
@@ -400,6 +400,7 @@ at http://nodebrain.org.
 
 .SH AUTHOR
 Ed Trettevik <eat@nodebrain.org>
+
 .SH DOCUMENTATION
 Online documentation is available at http://nodebrain.org.
 Manuals are also available in Texinfo format in the

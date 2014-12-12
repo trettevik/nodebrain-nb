@@ -59,6 +59,7 @@ libnb_a_HEADERS = \
   ../include/nb/nb.h \
   ../include/nb/nbassertion.h \
   ../include/nb/nbaxon.h \
+  ../include/nb/nbcall.h \
   ../include/nb/nbcell.h \
   ../include/nb/nbclock.h \
   ../include/nb/nbcmd.h \
@@ -69,6 +70,7 @@ libnb_a_HEADERS = \
   ../include/nb/nblistener.h \
   ../include/nb/nblog.h \
   ../include/nb/nbmail.h \
+  ../include/nb/nbmath.h \
   ../include/nb/nbmedulla.h \
   ../include/nb/nbmodule.h \
   ../include/nb/nbmsg.h \
@@ -101,7 +103,60 @@ libnb_a_HEADERS = \
 lib_LTLIBRARIES = libnb.la
 
 libnb_la_CFLAGS = -I../include -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-all -fno-strict-aliasing
-libnb_la_LDFLAGS = -release ${PACKAGE_VERSION}
+#
+# In preparation for a 1.0 release, we are switching the library to an
+# Application Binary Interface (ABI) versioning scheme. Previously we used
+# release based versioning for the library because it was safer to assume
+# every release was incompatible.:
+#
+#   libnb_la_LDFLAGS = -release ${PACKAGE_VERSION}
+#   ${libdir}/libnb.so -> libnb-${PACKAGE_VERSION}.so
+#   ${libdir}/libnb.so -> libnb-0.9.02.so  [for release 0.9.02]
+#
+# The new scheme looks like this:
+#
+#   libnb_la_LDFLAGS = -version-info <version>:<revision>:<age>
+#   ${libdir}/libnb.so -> libnb.so.<version>.<age>.<revision>
+#   ${libdir}/libnb.so -> libnb.so.0.0.903  [for release 0.9.03]
+#
+# The library version will be maintained as follows:
+#
+#    <version> increases when there are incompatibilities
+#
+#    <age>      Increases when there are no incompatibilities, but there
+#               are new features some applications may start to depend on.
+#               Resets to 0 when <version> increases. An application may
+#               specify that it requires library version <version>.<age>
+#               or above.
+#
+#    <revision> We deviate from the normal practice of resetting the
+#               Revision when the <version> changes.  Instead, our 
+#               revision is always the release version with periods
+#               removed:  0.9.03 => 903,  1.2.10 => 1210
+#
+#    Release    -version-info  Library
+#    -------    -------------  -----------------
+#    0.9.03     0.903.0        libnb.so.0.0.903  Library version 0.0 
+#    0.9.04     0.904.0        libnb.so.0.0.904  If no change to ABI
+#    0.9.04     0.904.1        libnb.so.0.1.904  If new ABI features
+#    1.0.00     1.1000.0       libnb.so.1.0.1000 Incompatibilities
+#    1.1.00     1.1100.0       libnb.so.1.0.1100 If no change to ABI
+#
+# Starting with release 0.9.03, any intentional incompatibility will be
+# combined with a major release version increment as well as library
+# major version increment.  At lease the following incompatibilities
+# apply:
+#  
+#   a) API function change
+#      1) return value format change
+#      2) parameter change
+#      3) function removal
+#      4) return value difference for same argument values
+#   b) Rule change
+#      1) rule syntax change
+#      2) rule behavior change
+#
+libnb_la_LDFLAGS = -version-info 0:903:0
 
 libnb_la_SOURCES = \
   nbassertion.c \

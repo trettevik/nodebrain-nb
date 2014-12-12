@@ -144,7 +144,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL,DWORD fdwReason,LPVOID lpvReserved){
 
 /* Evaluation Method */
 
-nbCELL timeEvaluate(nbCELL context,void *skillHandle,void *knowledgeHandle,nbCELL arglist){
+static nbCELL timeEvaluate(nbCELL context,void *skillHandle,void *knowledgeHandle,nbCELL arglist){
   double r=(double)time(NULL);
   return(nbCellCreateReal(context,r));
   }
@@ -153,10 +153,8 @@ nbCELL timeEvaluate(nbCELL context,void *skillHandle,void *knowledgeHandle,nbCEL
 
 #if defined(_WINDOWS)
 _declspec (dllexport)
-#else
-extern
 #endif
-void *timeBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
+extern void *timeBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
   nbSkillSetMethod(context,skill,NB_NODE_EVALUATE,timeEvaluate);
   return(NULL);
   }
@@ -186,7 +184,7 @@ void *timeBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,cha
 
 /* Evaluation Method */
 
-nbCELL padIpAddrEvaluate(nbCELL context,void *skillHandle,void *knowledgeHandle,nbCELL arglist){
+static nbCELL padIpAddrEvaluate(nbCELL context,void *skillHandle,void *knowledgeHandle,nbCELL arglist){
   nbCELL cell;
   void *ptr;
   int type,i,len,b[4];
@@ -222,10 +220,8 @@ nbCELL padIpAddrEvaluate(nbCELL context,void *skillHandle,void *knowledgeHandle,
 
 #if defined(_WINDOWS)
 _declspec (dllexport)
-#else
-extern
 #endif
-void *padIpAddrBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
+extern void *padIpAddrBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
   nbSkillSetMethod(context,skill,NB_NODE_EVALUATE,padIpAddrEvaluate);
   return(NULL);
   }
@@ -263,7 +259,7 @@ void *padIpAddrBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglis
 
 /* Evaluation Method */
 
-nbCELL sumEvaluate(nbCELL context,void *skillHandle,void *knowledgeHandle,nbCELL arglist){
+static nbCELL sumEvaluate(nbCELL context,void *skillHandle,void *knowledgeHandle,nbCELL arglist){
   nbCELL cell;
   void *ptr;
   double r=0;
@@ -283,10 +279,8 @@ nbCELL sumEvaluate(nbCELL context,void *skillHandle,void *knowledgeHandle,nbCELL
 
 #if defined(_WINDOWS)
 _declspec (dllexport)
-#else
-extern 
 #endif
-void *sumBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
+extern void *sumBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
   nbSkillSetMethod(context,skill,NB_NODE_EVALUATE,sumEvaluate);
   return(NULL);
   }
@@ -376,7 +370,7 @@ typedef struct NB_MOD_COUNTER NB_MOD_Counter;
 *
 *    define aisoneCounter node count(a=1);
 */
-void *countConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+static void *countConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   struct NB_MOD_COUNTER *counter;
   nbCELL cell=NULL;
   nbSET argSet;
@@ -401,7 +395,7 @@ void *countConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text)
 *
 *    assert aisoneCounter()=0;
 */
-int countAssert(nbCELL context,void *skillHandle,NB_MOD_Counter *counter,nbCELL arglist,nbCELL value){
+static int countAssert(nbCELL context,void *skillHandle,NB_MOD_Counter *counter,nbCELL arglist,nbCELL value){
   int cellType;
   char *counterName;
 
@@ -425,7 +419,7 @@ int countAssert(nbCELL context,void *skillHandle,NB_MOD_Counter *counter,nbCELL 
 *
 *    define r1 on(aisoneCount>5);
 */
-nbCELL countEvaluate(nbCELL context,void *skillHandle,NB_MOD_Counter *counter,nbCELL arglist){
+static nbCELL countEvaluate(nbCELL context,void *skillHandle,NB_MOD_Counter *counter,nbCELL arglist){
   double r=counter->count;
   nbCELL argCell,*expVal;
   void *pointer;
@@ -466,7 +460,7 @@ nbCELL countEvaluate(nbCELL context,void *skillHandle,NB_MOD_Counter *counter,nb
 *
 *    enable aisoneCounter;
 */
-int countEnable(nbCELL context,void *skillHandle,NB_MOD_Counter *counter){
+static int countEnable(nbCELL context,void *skillHandle,NB_MOD_Counter *counter){
   nbCELL node;
   node=nbTermGetDefinition(context,context);
   nbCellEnable(counter->cell,node);
@@ -482,7 +476,7 @@ int countEnable(nbCELL context,void *skillHandle,NB_MOD_Counter *counter){
 *
 *    disable aisoneCounter;
 */
-int countDisable(nbCELL context,void *skillHandle,NB_MOD_Counter *counter){
+static int countDisable(nbCELL context,void *skillHandle,NB_MOD_Counter *counter){
   nbCELL node;
   node=nbTermGetDefinition(context,context);
   nbCellDisable(counter->cell,node);
@@ -497,7 +491,7 @@ int countDisable(nbCELL context,void *skillHandle,NB_MOD_Counter *counter){
 *
 *    show aisoneCounter;
 */
-int countShow(nbCELL context,void *skillHandle,NB_MOD_Counter *counter,int option){
+static int countShow(nbCELL context,void *skillHandle,NB_MOD_Counter *counter,int option){
   /* if(option!=NB_SHOW_REPORT) return(0); */
   switch(option){
     case NB_SHOW_ITEM: 
@@ -518,7 +512,7 @@ int countShow(nbCELL context,void *skillHandle,NB_MOD_Counter *counter,int optio
 *    undefine r1;
 *    undefine aisoneCounter;
 */
-int countDestroy(nbCELL context,void *skillHandle,NB_MOD_Counter *counter){
+static int countDestroy(nbCELL context,void *skillHandle,NB_MOD_Counter *counter){
   nbLogMsg(context,0,'T',"counterDestroy called");
   if(counter->cell!=NULL) nbCellDrop(context,counter->cell);
   nbFree(counter,sizeof(NB_MOD_Counter));
@@ -541,10 +535,8 @@ int countDestroy(nbCELL context,void *skillHandle,NB_MOD_Counter *counter){
 */
 #if defined(_WINDOWS)
 _declspec (dllexport)
-#else
-extern 
 #endif
-void *countBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
+extern void *countBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
   nbSkillSetMethod(context,skill,NB_NODE_ASSERT,countAssert);
   nbSkillSetMethod(context,skill,NB_NODE_CONSTRUCT,countConstruct);
   nbSkillSetMethod(context,skill,NB_NODE_DISABLE,countDisable);

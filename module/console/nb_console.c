@@ -80,18 +80,18 @@ typedef struct NB_MOD_CONSOLE_SESSION{
   } NB_MOD_ConsoleSession;
 
 /*================================================================================*/
-void consoleOutputHandler(nbCELL context,void *session,char *buffer){
+static void consoleOutputHandler(nbCELL context,void *session,char *buffer){
   nbIpPut(((NB_MOD_ConsoleSession *)session)->channel,buffer,strlen(buffer));
   }
 
-void consoleStreamHandler(nbCELL context,void *session,char *buffer){
+static void consoleStreamHandler(nbCELL context,void *session,char *buffer){
   nbIpPutMsg(((NB_MOD_ConsoleSession *)session)->channel,buffer,strlen(buffer));
   }
 
 /*
 *  Handle console commands
 */
-void consoleCmdHandler(nbCELL context,NB_MOD_ConsoleSession *session,char *cursor){
+static void consoleCmdHandler(nbCELL context,NB_MOD_ConsoleSession *session,char *cursor){
   char *verb=cursor;
 
   while(*verb==' ') verb++;      // find verb
@@ -117,7 +117,7 @@ void consoleCmdHandler(nbCELL context,NB_MOD_ConsoleSession *session,char *curso
 /*
 *  Service a console conversation 
 */
-void consoleService(nbCELL context,int socket,void *handle){
+static void consoleService(nbCELL context,int socket,void *handle){
   NB_MOD_ConsoleSession *session=handle;
   char buffer[NB_BUFSIZE];
   int  len;
@@ -143,7 +143,7 @@ void consoleService(nbCELL context,int socket,void *handle){
 /*
 *  Accept console session requests
 */
-void consoleAccept(nbCELL context,int serverSocket,void *handle){
+static void consoleAccept(nbCELL context,int serverSocket,void *handle){
   NB_MOD_Console *console=handle;
   NB_IpChannel *channel;
   NB_MOD_ConsoleSession *session;
@@ -184,7 +184,7 @@ void consoleAccept(nbCELL context,int serverSocket,void *handle){
 *
 *    define console node console(<port>,<directory>);
 */
-void *consoleConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+static void *consoleConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   NB_MOD_Console *console;
   nbCELL cell=NULL;
   nbSET argSet;
@@ -250,7 +250,7 @@ void *consoleConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *tex
 *
 *    enable <node>
 */
-int consoleEnable(nbCELL context,void *skillHandle,NB_MOD_Console *console){
+static int consoleEnable(nbCELL context,void *skillHandle,NB_MOD_Console *console){
   if((console->serverSocket=nbIpListen("0.0.0.0",console->port))<0){
     nbLogMsg(context,0,'E',"Unable to listen on port %s\n",console->port);
     return(1);
@@ -265,7 +265,7 @@ int consoleEnable(nbCELL context,void *skillHandle,NB_MOD_Console *console){
 * 
 *    disable <node>
 */
-int consoleDisable(nbCELL context,void *skillHandle,NB_MOD_Console *console){
+static int consoleDisable(nbCELL context,void *skillHandle,NB_MOD_Console *console){
   NB_MOD_ConsoleSession *session;
   nbListenerRemove(context,console->serverSocket);
   nbIpCloseSocket(console->serverSocket);
@@ -290,7 +290,7 @@ int consoleDisable(nbCELL context,void *skillHandle,NB_MOD_Console *console){
 *
 *    <node>:trace
 */
-int *consoleCommand(nbCELL context,void *skillHandle,NB_MOD_Console *console,nbCELL arglist,char *text){
+static int *consoleCommand(nbCELL context,void *skillHandle,NB_MOD_Console *console,nbCELL arglist,char *text){
   if(console->trace){
     nbLogMsg(context,0,'T',"nb_console:consoleCommand() text=[%s]\n",text);
     }
@@ -304,7 +304,7 @@ int *consoleCommand(nbCELL context,void *skillHandle,NB_MOD_Console *console,nbC
 *
 *    undefine <node>
 */
-int consoleDestroy(nbCELL context,void *skillHandle,NB_MOD_Console *console){
+static int consoleDestroy(nbCELL context,void *skillHandle,NB_MOD_Console *console){
   nbLogMsg(context,0,'T',"consoleDestroy called");
   if(console->serverSocket!=0) consoleDisable(context,skillHandle,console);
   nbFree(console,sizeof(NB_MOD_Console));

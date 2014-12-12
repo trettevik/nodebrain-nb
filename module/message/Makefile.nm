@@ -6,7 +6,7 @@ nblib_LTLIBRARIES = nb_message.la
 nb_message_la_SOURCES = nb_message.c
 nb_message_la_CFLAGS  = $(NB_MOD_CFLAGS)
 #nb_message_la_LDFLAGS = -module -version-info 0:1
-nb_message_la_LDFLAGS = -module -avoid-version
+nb_message_la_LDFLAGS = -module -avoid-version -L../../lib/.libs -lnb
 
 EXTRA_DIST = \
   caboodle/check/message.nb- \

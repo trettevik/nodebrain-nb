@@ -18,7 +18,7 @@ Version:     0.9 - Columbo
 
 Release:     0.9.03 
 
-Date:        November 30, 2014
+Date:        December 14, 2014
 
 Reference:   http://nodebrain.org
                1) Online documentation
@@ -112,38 +112,44 @@ f) Install from binary RPM file (x86_64 platform example)
 
 ======================================================================== 
 
-This release was tested on a CentOS 6.5 x86_64 platform.
+This release was tested primarily on a CentOS 6.5 x86_64 platform.
 
-The Coverity Scan service is used to check for defects.
+The Coverity Scan service is used to check for common defects.
 
 The openSUSE Build Service is used to test builds for varius Linux
-distributions on i586 and x86_64 architectures. The results are shown
-below.  There are still some package policy warning to be cleaned up
-on the platforms where the build was successful.  
+distributions on x86_64, i586, and armv7I architectures. There are
+still some package policy warnings to resolve.  A "make check" is
+part of the package build process, providing a light level of testing
+on each platform.
 
-Success:
+Architecture:
 
-  rpm Fedora        20, 19, 18, 17
-  rpm CentOS        7, 6
-  rpm Scientific    7, 6
-  rpm openSUSE      TumbleWeed
-  rpm openSUSE      Factory
-  rpm openSUSE      13.2, 13.1, 12.3, 12.2, 12.1
-  rpm SLE           11 SP1
+  x86_64          Pass - All OS's showing pass below
+  i586            Pass 
+  armv7I          Pass - build only - openSUSE cache segfault
 
-  deb Debian        7, 6
-  deb xUbuntu       14.10, 14.04 13.10, 12.10, 12.04
-  deb Univention    3.2, 3.1
+Operating System:
 
-Fail:
+  rpm Fedora      Pass 20, 19, 18, 17
+  rpm RHEL        Pass 7, 6, 5 
+  rpm CentOS      Pass 7, 6, 5
+  rpm Scientific  Pass 7, 6
 
-  rpm RHEL          7, 6, 5                 - libedit unresolvable
-  rpm CentOS        5                       - libedit unresolvable
-  rpm SLE           12, 11 SP3, 11 SP2, 10  - libedit 
+**All SuSE platforms are getting a segfault in mail if not the libedit issue
+  rpm openSUSE    Pass TumbleWeed
+  rpm openSUSE    Pass Factory, Factory-Arm
+  rpm openSUSE    Pass 13.2, 13.1, 12.3, 12.2, 12.1
+  rpm SLE         Pass 12, 11 SP1, 11
+  rpm SLE         FAIL 11 SP3, 11 SP2, 10   - libedit issues 
 
-The project has stopped porting to Windows, and the conditional
-compilation for Windows is no longer expected to work.  We may support
-Windows again in the future, but it is not a high priority at this time.  
+  deb Debian      Pass 7, 6
+  deb xUbuntu     Pass 14.10, 14.04 13.10, 12.10, 12.04
+  deb Univention  Pass 3.2, 3.1
+
+      Mac OS X    Pass 10.10.1 Yosemite outside Xcode
+                  FAIL 10.10.1 Yosemite using Xcode
+
+  msi Windows     Stopped porting, need to start again
 
 ======================================================================== 
 

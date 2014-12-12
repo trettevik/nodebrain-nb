@@ -348,6 +348,10 @@ extern int nbListenerStart(nbCELL context){
       }
     // switch user if requested
     if(pwd){ 
+      if(setgid(pwd->pw_gid)<0){ // 2014-12-06 eat - Included setgid per POS36-C 
+        outMsg(0,'E',"Unable to set user to %s - %s",serveuser,strerror(errno));
+        exit(NB_EXITCODE_FAIL);
+        }
       if(setuid(pwd->pw_uid)<0){
         outMsg(0,'E',"Unable to set user to %s - %s",serveuser,strerror(errno));
         exit(NB_EXITCODE_FAIL);

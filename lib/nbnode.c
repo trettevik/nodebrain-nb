@@ -424,6 +424,7 @@ struct NB_FACET *nbFacetNew(NB_Skill *skill,const char *ident){
   NB_Facet *facet;
 
   facet=(NB_Facet *)newObject(facetType,NULL,sizeof(NB_Facet));
+  facet->object.next=NULL;
   facet->skill=skill;
   facet->ident=grabObject(useString((char *)ident));
   facet->construct=&nbSkillNullConstruct;

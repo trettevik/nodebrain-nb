@@ -68,7 +68,8 @@ struct NB_XI{
   // next four fields must conform to NB_TreeNode structure
   struct NB_XI *left;        // left entry in this tree */
   struct NB_XI *right;       // right entry in this tree */
-  signed int   balance;     // AVL balance code (-1 left tall, 0 - balanced, +1 right tall)
+  signed char  balance;      // AVL balance code (-1 left tall, 0 - balanced, +1 right tall)
+  unsigned char reserved[7];
   union{
     struct NB_CELL *cell;        // common name */
     struct STRING *label;        // label - NB_XI_OPER_LABEL 

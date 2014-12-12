@@ -570,7 +570,7 @@ static void treeAlarm(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL c
 *    enable <node>
 *
 */
-int baselineEnable(nbCELL context,void *skillHandle,BTree *tree){
+static int baselineEnable(nbCELL context,void *skillHandle,BTree *tree){
   int remaining;
   time_t utime;
   if(tree->options&BTREE_OPTION_TRACE) nbLogMsg(context,0,'T',"baselineEnable() called for baseline %s",tree->directory);

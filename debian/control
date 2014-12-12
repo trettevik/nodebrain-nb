@@ -2,19 +2,19 @@ Source: nodebrain
 Section: interpreters
 Priority: optional
 Maintainer: Ed Trettevik <eat@nodebrain.org>
-Build-Depends: debhelper (>=7.0.50~), libedit-dev, libpcre3-dev, libssl-dev
-Standards-Version: 3.8.4
+Build-Depends: debhelper (>=8), libedit-dev, libpcre3-dev, libssl-dev
+Standards-Version: 3.9.3
 Homepage: http://nodebrain.org
 
-Package: nodebrain
+Package: nodebrain-0.9.03
 Architecture: any
-Depends: libedit, libpcre3, libssl
+Depends: ${shlibs:Depends}, ${misc:Depends}, libedit, libpcre3, libssl libcrypto
 Description: NodeBrain Rule Engine
  NodeBrain is a rule engine for construction of state and event monitoring
  applications. It interacts with other monitoring components to perform
  simple element state monitoring or complex event correlation based on user
  specified rules. It is extended through the development of plug-in modules
- using the C API, and servant programs written in any language that interact
- with the rule engine via stdin, stdout, and stderr. The package includes a
- small set of plug-in modules to provide capabilities typically required for
- monitoring applications.
+ using the C API, and servant programs that may be written in any language
+ to interact with the rule engine via stdin, stdout, and stderr. The package 
+ includes a small set of plug-in modules to provide capabilities typically 
+ required for monitoring applications.

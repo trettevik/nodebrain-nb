@@ -4,7 +4,7 @@ libdir=@libdir@
 includedir=@includedir@
 
 Name: NodeBrain
-Description: A declarative rule-based language for state and event monitoring
+Description: A rule engine for state and event monitoring
 Version: @VERSION@
 Requires.private: edit openssl pcre
 Libs: -L${libdir} @LIBS@ -lnb 

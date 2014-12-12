@@ -317,7 +317,7 @@ typedef struct NB_MOD_SERVER{      /* syslog.server node descriptor */
 /*
 *  Read incoming packets
 */
-void serverRead(nbCELL context,int serverSocket,void *handle){
+static void serverRead(nbCELL context,int serverSocket,void *handle){
   NB_MOD_Server *server=handle;
   char buffer[NB_BUFSIZE];
   size_t buflen=NB_BUFSIZE;
@@ -354,7 +354,7 @@ void serverRead(nbCELL context,int serverSocket,void *handle){
 *    define syslog node syslog.server("syslog.nbx","127.0.0.1:50162");
 *    define syslog node syslog.server("syslog.nbx","127.0.0.1:50162"):silent;
 */
-void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+static void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   NB_MOD_Server *server;
   nbCELL cell=NULL;
   nbSET argSet;
@@ -601,7 +601,7 @@ typedef struct NB_MOD_CLIENT{      // syslog.client node descriptor
 *
 *    define syslog node syslog.client("foobar");
 */
-void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+static void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   NB_MOD_Client *client;
   nbCELL cell=NULL;
   nbSET argSet;
@@ -773,7 +773,7 @@ typedef struct NB_MOD_LOGGER{      // syslog.logger node descriptor
 *
 *    define logger node syslog.logger("foobar");
 */
-void *loggerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+static void *loggerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   NB_MOD_Logger *logger;
   nbCELL cell=NULL;
   nbSET argSet;

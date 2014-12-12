@@ -140,7 +140,7 @@ static int smtpGet(NB_IpChannel *channel){
 *    0 - Unable to complete delivery
 *   -n - Unable to communicate with sender
 */
-int smtpData(NB_IpChannel *channel,char *clienthost,char *directory,char *user){
+static int smtpData(NB_IpChannel *channel,char *clienthost,char *directory,char *user){
   FILE *file;
   int len;
   char *buffer=(char *)channel->buffer; //buffer is sizeof NB_BUFSIZE
@@ -190,7 +190,7 @@ int smtpData(NB_IpChannel *channel,char *clienthost,char *directory,char *user){
 /*
 *  Reject a connection
 */
-void smtpReject(NB_IpChannel *channel){
+static void smtpReject(NB_IpChannel *channel){
   char *buffer=(char *)channel->buffer;
 
   sprintf(buffer,"421 anonymous NodeBrain SMTP Alert Server unavailable - too busy\n");
@@ -202,7 +202,7 @@ void smtpReject(NB_IpChannel *channel){
 /*
 *  Serve a connection
 */
-void smtpServe(nbSession *session){
+static void smtpServe(nbSession *session){
   nbServer *server=session->server;
   NB_IpChannel *channel=session->channel;
   int len,state=1;
@@ -296,13 +296,13 @@ void smtpServe(nbSession *session){
 
 
 #if defined(WIN32)
-DWORD WINAPI ThreadFunc(nbSession *session){
+static DWORD WINAPI ThreadFunc(nbSession *session){
   smtpServe(session);
   return(0);
   }
 
 //void smtpFork(nbCELL context,NB_IpChannel *channel){
-void smtpFork(nbCELL context,nbSession *session){
+static void smtpFork(nbCELL context,nbSession *session){
   DWORD dwThreadId;
   HANDLE hThread;
 
@@ -324,9 +324,10 @@ void smtpFork(nbCELL context,nbSession *session){
 /*
 *  Fork a child process to serve a connection
 */
-void smtpFork(nbCELL context,nbSession *session){
+static void smtpFork(nbCELL context,nbSession *session){
   int pid;
 
+  nbLogMsg(context,0,'T',"smtpFork: forking");
 #if defined(mpe) || defined(ANYBSD)
   if((pid=fork())<0){
 #else
@@ -398,8 +399,8 @@ void smtpFork(nbCELL context,nbSession *session){
 // Create new server structure from server specification
 //
 //    identity@address:port
-#define MSG_SIZE  1024   //msg has size at least 1024
-nbServer *smtpServer(nbCELL context,char *cursor,char *qDir,char *msg){
+
+static nbServer *smtpServer(nbCELL context,char *cursor,char *qDir,char *msg,size_t msglen){
   nbServer *server;
   char *inCursor;
   char *interfaceAddr;
@@ -410,6 +411,7 @@ nbServer *smtpServer(nbCELL context,char *cursor,char *qDir,char *msg){
     return(NULL);
     }
   server=(nbServer *)nbAlloc(sizeof(nbServer));
+  memset(server,0,sizeof(nbServer));
   snprintf(server->qDir,sizeof(server->qDir),"%s",qDir);  // 2013-01-17 eat - VID 6525 FP but changed from strcpy to snprintf
   inCursor=server->idName;
   while(*cursor==' ') cursor++;
@@ -427,7 +429,7 @@ nbServer *smtpServer(nbCELL context,char *cursor,char *qDir,char *msg){
   cursor++;
   server->identity=nbIdentityGet(context,server->idName);
   if(server->identity==NULL){
-    snprintf(msg,(size_t)MSG_SIZE,"Identity '%s' not defined",server->idName); //2012-01-31 dtl: replaced sprintf 
+    snprintf(msg,msglen,"Identity '%s' not defined",server->idName);
     nbFree(server,sizeof(nbServer));
     return(NULL);
     }
@@ -462,7 +464,7 @@ nbServer *smtpServer(nbCELL context,char *cursor,char *qDir,char *msg){
   if(*server->address<'0' || *server->address>'9'){
     interfaceAddr=nbIpGetAddrByName(server->address);
     if(interfaceAddr==NULL){
-      snprintf(msg,(size_t)MSG_SIZE,"Hostname %s not resolved",server->address); //2012-02-07 dtl: replaced sprintf
+      snprintf(msg,msglen,"Hostname %s not resolved",server->address); //2012-02-07 dtl: replaced sprintf
       nbFree(server,sizeof(nbServer));
       return(NULL);
       }
@@ -476,13 +478,14 @@ nbServer *smtpServer(nbCELL context,char *cursor,char *qDir,char *msg){
 //
 // Handle connection requests
 //
-void smtpAccept(nbCELL context,int serverSocket,void *handle){
+static void smtpAccept(nbCELL context,int serverSocket,void *handle){
   nbServer *server=handle;
   NB_IpChannel *channel;
   static time_t now,until=0;
   static long count=0,max=10;  /* accept 10 connections per second */
   nbSession *session;
   session=nbAlloc(sizeof(nbSession));
+  memset(session,0,sizeof(nbSession));
   channel=nbIpAlloc();  /* get a channel for a new thread */
   if(nbIpAccept(channel,(int)server->socket)<0){
     if(errno!=EINTR) nbLogMsg(context,0,'E',"smtpAccept: chaccept failed");
@@ -520,9 +523,9 @@ void smtpAccept(nbCELL context,int serverSocket,void *handle){
 *
 *    define <term> node <skill>[(<args>)][:<text>]
 *
-*    define mailbox node mail.reader("<identity>@<address>:port");
+*    define mailbox node mail.server("<identity>@<address>:port");
 */
-void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+static void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   nbServer *server;
   nbCELL cell=NULL,qCell=NULL;
   nbSET argSet;
@@ -543,7 +546,7 @@ void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
     return(NULL);
     }
   qDir=nbCellGetString(context,qCell);
-  server=smtpServer(context,serverSpec,qDir,msg);
+  server=smtpServer(context,serverSpec,qDir,msg,sizeof(msg));
   if(server==NULL){
     nbLogMsg(context,0,'E',msg);
     return(NULL);
@@ -561,7 +564,7 @@ void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
 *
 *    enable <node>
 */
-int serverEnable(nbCELL context,void *skillHandle,nbServer *server){
+static int serverEnable(nbCELL context,void *skillHandle,nbServer *server){
   // we should use an API function here
   if((server->socket=nbIpListen(server->address,server->port))<0){
     nbLogMsg(context,0,'E',"Unable to listen on %s:%u",server->address,server->port);
@@ -577,7 +580,7 @@ int serverEnable(nbCELL context,void *skillHandle,nbServer *server){
 * 
 *    disable <node>
 */
-int serverDisable(nbCELL context,void *skillHandle,nbServer *server){
+static int serverDisable(nbCELL context,void *skillHandle,nbServer *server){
   nbListenerRemove(context,server->socket);
 #if defined(WIN32)
   closesocket(server->socket);
@@ -593,7 +596,7 @@ int serverDisable(nbCELL context,void *skillHandle,nbServer *server){
 *
 *    <node>[(<args>)][:<text>]
 */
-int *serverCommand(nbCELL context,void *skillHandle,nbServer *server,nbCELL arglist,char *text){
+static int *serverCommand(nbCELL context,void *skillHandle,nbServer *server,nbCELL arglist,char *text){
   /* process commands here */
   return(0);
   }
@@ -604,7 +607,7 @@ int *serverCommand(nbCELL context,void *skillHandle,nbServer *server,nbCELL argl
 *    undefine <node>
 *
 */
-int serverDestroy(nbCELL context,void *skillHandle,nbServer *server){
+static int serverDestroy(nbCELL context,void *skillHandle,nbServer *server){
   nbLogMsg(context,0,'T',"serverDestroy called");
   if(server->socket!=0) serverDisable(context,skillHandle,server);
   nbFree(server,sizeof(nbServer));
@@ -685,7 +688,7 @@ typedef struct NB_MOD_MAIL_CLIENT{      // mailer node descriptor
 *    define <term> node mail.client("<cabal>",<node>,<port>);
 *    <term>. define filelines cell <filelines>; # number of lines per file
 */
-void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+static void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   nbModMailClient *client;
   nbCELL cell=NULL;
   nbSET argSet;
@@ -724,7 +727,7 @@ void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
 *
 *    enable <node>
 */
-int clientEnable(nbCELL context,void *skillHandle,nbModMailClient *client){
+static int clientEnable(nbCELL context,void *skillHandle,nbModMailClient *client){
   if(!client->mailClient) client->mailClient=nbMailClientCreate(context);
   if(!client->mailClient){
     nbLogMsg(context,0,'E',"Unable to create mail client - terminating");
@@ -739,7 +742,7 @@ int clientEnable(nbCELL context,void *skillHandle,nbModMailClient *client){
 *
 *    disable <node>
 */
-int clientDisable(nbCELL context,void *skillHandle,nbModMailClient *client){
+static int clientDisable(nbCELL context,void *skillHandle,nbModMailClient *client){
   return(0);
   }
 
@@ -748,7 +751,7 @@ int clientDisable(nbCELL context,void *skillHandle,nbModMailClient *client){
 *
 *    <node>[(<args>)][:<text>]
 */
-int *clientCommand(nbCELL context,void *skillHandle,nbModMailClient *client,nbCELL arglist,char *text){
+static int *clientCommand(nbCELL context,void *skillHandle,nbModMailClient *client,nbCELL arglist,char *text){
   if(client->trace) nbLogMsg(context,0,'T',"clientCommand() text=[%s]\n",text);
   nbCmd(context,text,1);
   nbMailSendAlarm(context,client->mailClient);
@@ -761,7 +764,7 @@ int *clientCommand(nbCELL context,void *skillHandle,nbModMailClient *client,nbCE
 *
 *    undefine <node>
 */
-int clientDestroy(nbCELL context,void *skillHandle,nbModMailClient *client){
+static int clientDestroy(nbCELL context,void *skillHandle,nbModMailClient *client){
   nbLogMsg(context,0,'T',"clientDestroy called");
   nbFree(client,sizeof(nbModMailClient));
   return(0);

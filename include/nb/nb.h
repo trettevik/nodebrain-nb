@@ -50,10 +50,16 @@
 * 2009-12-12 eat 0.7.7  Included nbmsg.h
 * 2011-11-05 eat 0.8.6  Included nbmail.h
 * 2014-02-16 eat 0.9.01 Conditional OpenSSL headers (also in 0.8.16)
+* 2014-12-05 eat 0.9.03 Include safe option for demo site - may change this
 *============================================================================
 */
 #ifndef _NB_H_
 #define _NB_H_
+
+extern int nb_opt_safe;       // prevent access to host environment
+	                      // e.g. spawning child, source cmd, 
+                              // modules other tree and cache,
+                              // tree store command
 
 #include <nb/nbstd.h>         // define some standard system stuff
 

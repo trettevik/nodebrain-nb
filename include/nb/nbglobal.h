@@ -69,6 +69,7 @@ extern int  nb_opt_daemon;    /* option to daemonize at end of arguments */
 extern int  nb_opt_prompt;    /* option to prompt for commands at end of arguments */
 extern int  nb_opt_query;     /* option to automatically query at end of arguments */
 extern int  nb_opt_servant;   /* option to enter servant mode at end of arguments */
+
 extern int  nb_opt_shim;      /* shim object methods to enable tracing */
 extern int  nb_opt_user;      /* option to automatically load user profile */
 extern int  nb_opt_hush;      // suppress calls to log routines

@@ -1,8 +1,9 @@
-nodebrain (0.9.03-2) unstable; urgency=low
+nodebrain (0.9.03-1) unstable; urgency=low
 
-  * Implied nodes and alert attribute transience
+  * New upstream version
+  * Changes to achieve Debian policy compliance
 
- -- Ed Trettevik <eat@nodebrain.org>  Mon, 25 Nov 2014 08:16:57 -0000
+ -- Ed Trettevik <eat@nodebrain.org>  Sun, 7 Dec 2014 10:55:02 -0800
 
 nodebrain (0.9.02-1) unstable; urgency=low
 

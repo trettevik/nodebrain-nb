@@ -6,7 +6,7 @@ nblib_LTLIBRARIES = nb_tree.la
 nb_tree_la_SOURCES = nb_tree.c
 nb_tree_la_CFLAGS  = $(NB_MOD_CFLAGS)
 #nb_tree_la_LDFLAGS = -module -version-info 0:4
-nb_tree_la_LDFLAGS = -module -avoid-version
+nb_tree_la_LDFLAGS = -module -avoid-version  -L../../lib/.libs -lnb
 
 EXTRA_DIST = \
   caboodle/check/tree.nb~ \

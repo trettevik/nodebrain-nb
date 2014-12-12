@@ -16,6 +16,7 @@
 # 2008/10/20 eat 0.7.3  modified to support "make distcheck"
 # 2008/10/20 eat 0.7.3  modified to execute nb via bin/nb caboodle symbolic link
 # 2009/02/28 eat 0.7.5  modified to work with older bourne shell
+# 2014-12-08 eat 0.9.03 added display of *.out file on error
 #============================================================
 
 #set -x
@@ -39,6 +40,9 @@ for file in ${dir}/*.nb- ${dir}/*.nb~; do
     if test $exit -gt 256; then exit=$exit-256; fi
     if test $exit -ne 0; then
       echo "exit code=${exit}";
+      echo "---------------------------------------------------------"
+      cat ${file}.out
+      echo "---------------------------------------------------------"
       if test -f "${file}~" && test `expr "$file" : "$checkpat"` != 0 ; then rm ${file}~; fi
     else 
       if test `expr "$file" : "$checkpat"` = 0 ; then if test -f "${file}.out"; then rm ${file}.out; fi 

@@ -561,6 +561,20 @@ void *nbModuleSymbol(NB_Term *context,char *ident,char *suffix,void **moduleHand
   void *(*symbol)();
   size_t size;
 
+  // 2014-12-04 eat - prototyping control over what modules can be loaded.
+  // This will be enhanced in the future.  For now, a ++safe option restricts
+  // modules Cache, Set, String, Toy, Translator, and Tree.  The Tree module
+  // is aware of the safe mode and prevents use of the "store" command.
+  if(nb_opt_safe &&
+      strcmp(ident,"cache")!=0 &&
+      strcmp(ident,"set")!=0 &&
+      strcmp(ident,"string")!=0 &&
+      strcmp(ident,"toy")!=0 &&
+      strcmp(ident,"translator")!=0 &&
+      strcmp(ident,"tree")!=0){
+    snprintf(msg,msglen,"Module \"%s\" not allowed in safe mode",ident);
+    return(NULL);
+    }
   delim=strchr(ident,'.');
   if(delim) sym=delim+1;
   else delim=ident+strlen(ident);
@@ -778,7 +792,6 @@ nbCELL nbSkillFacet(nbCELL context,nbCELL skillHandle,const char *ident){
   NB_Skill *skill=(NB_Skill *)skillHandle;
   NB_Facet *facet;
   
-  //outMsg(0,'T',"nbSkillFacet: called with ident='%s'",ident);
   if(*ident==0) return((nbCELL)skill->facet); // 2013-12-07 eat - special case for now
   for(facet=skill->facet;facet && strcmp(facet->ident->value,ident);facet=(NB_Facet *)facet->object.next);
   if(!facet){
@@ -787,7 +800,6 @@ nbCELL nbSkillFacet(nbCELL context,nbCELL skillHandle,const char *ident){
     facet->object.next=skill->facet->object.next;
     skill->facet->object.next=(NB_Object *)facet;
     }
-  //outMsg(0,'T',"nbSkillFacet: returning facet %p",facet);
   return((nbCELL)facet);
   }
 

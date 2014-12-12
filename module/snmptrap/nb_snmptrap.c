@@ -1066,7 +1066,7 @@ typedef struct NB_MOD_CLIENT{      /* SNMP Trap client descriptor */
 *   Initially we are using a fixed OID to do some debugging on some packets
 *   that are causing a problem.
 */
-int translateText2Varbinding(nbCELL context,char **packetCursorP,char **textP){
+static int translateText2Varbinding(nbCELL context,char **packetCursorP,char **textP){
   char *packetCursor=*packetCursorP,*cursor=*textP,*delim;
   size_t len,lbyte;
   char *varLenP;
@@ -1149,7 +1149,7 @@ int translateText2Varbinding(nbCELL context,char **packetCursorP,char **textP){
 *   Initially we are using a fixed OID to do some debugging on some packets
 *   that are causing a problem.
 */
-int translateText2VarbindingList(nbCELL context,NB_MOD_Client *client,char **packetCursorP,char *text){
+static int translateText2VarbindingList(nbCELL context,NB_MOD_Client *client,char **packetCursorP,char *text){
   char *packetCursor=*packetCursorP,*cursor=text;
   int len; 
   char *bindingLenP;

@@ -115,9 +115,9 @@
 *                If there are N attributes, there are N*3+1 counters and
 *                states revealed to the context rules.
 *
-*                  _hits,_rows,_kids,A._hits,A._rows,A._kids,B._hits,...
+*                  _hits,_rows,_kids,A__hits,A__rows,A__kids,B__hits,...
 *
-*                  _hitState,_rowState,_kidState,A._hitState,A._rowState,...
+*                  _hitState,_rowState,_kidState,A__hitState,A__rowState,...
 *                    
 *                A state variable has a value of "unknown", 0, "minor",
 *                "major", and "critical" by
@@ -289,7 +289,8 @@ struct CACHE_NODE{                 /* attribute value counter entry */
   // next four fields must conform to NB_TreeNode structure
   struct CACHE_NODE *left;         // left entry in this tree */
   struct CACHE_NODE *right;        // right entry in this tree */
-  signed int        balance;       // AVL balance code (-1 left tall, 0 - balanced, +1 right tall)
+  signed char       balance;       // AVL balance code (-1 left tall, 0 - balanced, +1 right tall)
+  unsigned char reserved[7];
   nbCELL            object;        // object pointer - NULL on free list 
   //
   struct CACHE_NODE *root;         /* root entry of this list */
@@ -309,12 +310,12 @@ struct CACHE_ATTR{                  /* Attribute definition */
   struct CACHE_ATTR  *next;         /* next attribute */
   struct CACHE_ATTR  *prev;         /* prev attribute */
   nbCELL             term;         /* attribute term */
-  nbCELL             hitsTerm;     /* attribute._hits term */
-  nbCELL             rowsTerm;     /* attribute._rows term */
-  nbCELL             kidsTerm;     /* attribute._kids term */
-  nbCELL             hitState;      /* attribute._hitState term */
-  nbCELL             rowState;      /* attribute._rowState term */
-  nbCELL             kidState;      /* attribute._kidState term */
+  nbCELL             hitsTerm;     /* attribute__hits term */
+  nbCELL             rowsTerm;     /* attribute__rows term */
+  nbCELL             kidsTerm;     /* attribute__kids term */
+  nbCELL             hitState;      /* attribute__hitState term */
+  nbCELL             rowState;      /* attribute__rowState term */
+  nbCELL             kidState;      /* attribute__kidState term */
   unsigned int       hitThresh[CACHE_THRESHOLD_INDEX_LIMIT+1];/* hit thresholds */
   unsigned int       rowThresh[CACHE_THRESHOLD_INDEX_LIMIT+1];/* row thresholds */
   unsigned int       kidThresh[CACHE_THRESHOLD_INDEX_LIMIT+1];/* kid thresholds */
@@ -364,29 +365,29 @@ struct CACHE_NODE    *cacheEntryFree=NULL;
 struct CACHE_ATTR    *cacheAttrFree=NULL;
 struct CACHE         *cacheFree=NULL;
 
-int cacheParseThreshold();
-struct CACHE_ATTR *newCacheAttr();
-struct CACHE *newCache();
-void printCacheRows();
-void printCache();
-struct CACHE_NODE *cacheFindRow();
-static int cacheGetCount();
-void cacheNewTimerElement();
-int cacheInsert();
-void alertCache();
-int cacheAssertParse();
-void cacheFreeNode();
-void cacheEmptyNode();
-void cacheRemoveNode();
-void cacheDecNode(nbCELL context,struct CACHE *cache,struct CACHE_NODE *entry,struct CACHE_ATTR *attr);
-int cacheRemove();
-void cacheEmpty(nbCELL context,struct CACHE *cache);
-void freeCache();
+static int cacheParseThreshold();
+static struct CACHE_ATTR *newCacheAttr();
+static struct CACHE *newCache();
+static void printCacheRows();
+//static void printCache();
+static struct CACHE_NODE *cacheFindRow();
+static unsigned int cacheGetCount();
+static void cacheNewTimerElement();
+static int cacheInsert();
+//static void alertCache();
+//static int cacheAssertParse();
+static void cacheFreeNode();
+static void cacheEmptyNode();
+static void cacheRemoveNode();
+static void cacheDecNode(nbCELL context,struct CACHE *cache,struct CACHE_NODE *entry,struct CACHE_ATTR *attr);
+static int cacheRemove();
+static void cacheEmpty(nbCELL context,struct CACHE *cache);
+static void freeCache();
 
 /*
 *  Parse threshold list
 */
-int cacheParseThreshold(context,threshold,source)
+static int cacheParseThreshold(context,threshold,source)
   nbCELL context;
   unsigned int threshold[CACHE_THRESHOLD_INDEX_LIMIT];
   char **source; {
@@ -434,7 +435,7 @@ int cacheParseThreshold(context,threshold,source)
 *    <term>(h,.){r,.}[k,.]
 *
 */
-struct CACHE_ATTR *newCacheAttr(nbCELL context,char **source,int level,struct CACHE_ATTR **backattr,int *threshflag){ 
+static struct CACHE_ATTR *newCacheAttr(nbCELL context,char **source,int level,struct CACHE_ATTR **backattr,int *threshflag){ 
   char symid,*cursor=*source,*cursave,ident[256];
   struct CACHE_ATTR *attr=NULL;
   int prefix=1;
@@ -523,7 +524,7 @@ struct CACHE_ATTR *newCacheAttr(nbCELL context,char **source,int level,struct CA
 *     (~(4h)(1000,2000):a,b,c)
 *     (~(8h)(1000,2000){600,900,1000}[20]:source(200,250)[2],type(50,100))
 */
-struct CACHE *newCache(nbCELL context,char *cursor){
+static struct CACHE *newCache(nbCELL context,char *cursor){
   int  interval=0,threshflag=0;
   char intervalStr[32];
   char symid,token[256]; 
@@ -559,7 +560,6 @@ struct CACHE *newCache(nbCELL context,char *cursor){
   else cacheFree=cache->next;
   cache->context=context;
   cache->node=nbTermGetDefinition(context,context);
-  //cache->action=NULL;
   cache->attr=NULL;
   cache->lastattr=NULL;
   cache->entry=entry;
@@ -574,6 +574,8 @@ struct CACHE *newCache(nbCELL context,char *cursor){
   cache->addCell=nbCellCreateString(context,"add");
   cache->deleteCell=nbCellCreateString(context,"delete");
   cache->action=nbTermCreate(context,"_action",cache->insertCell);
+  cache->releaseCell=NULL;
+  cache->releaseSynapse=NULL;
 
   /* parse definition string */
   if(*cursor=='?'){
@@ -615,7 +617,7 @@ struct CACHE *newCache(nbCELL context,char *cursor){
       }
     cursor++;
     if(*cursor!=')'){
-      nbLogMsg(context,0,'E',"Expecting right parenthisis to close interval specification.");
+      nbLogMsg(context,0,'E',"Expecting right parenthesis to close interval specification.");
       return(NULL);
       }
     cache->interval=interval;
@@ -647,7 +649,7 @@ struct CACHE *newCache(nbCELL context,char *cursor){
   return(cache);
   }
 
-struct CACHE_NODE *cacheFindRow(nbCELL context,struct CACHE *cache,nbSET argSet,struct CACHE_ATTR **attrP){
+static struct CACHE_NODE *cacheFindRow(nbCELL context,struct CACHE *cache,nbSET argSet,struct CACHE_ATTR **attrP){
   struct CACHE_NODE *entry;
   //NB_Object *object;
   //nbCELL object;
@@ -664,7 +666,7 @@ struct CACHE_NODE *cacheFindRow(nbCELL context,struct CACHE *cache,nbSET argSet,
     argCell=nbListGetCellValue(context,&argSet);
     *attrP=(*attrP)->next;
     }
-  if(cache->trace) nbLogMsg(cache->context,0,'T',"cacheFindRow() found an entry");
+  if(cache->trace) nbLogMsg(cache->context,0,'T',"cacheFindRow: found an entry");
   return(entry);
   }
 
@@ -673,7 +675,7 @@ struct CACHE_NODE *cacheFindRow(nbCELL context,struct CACHE *cache,nbSET argSet,
 *          
 *  The type code indicates which count to return.
 */
-static int cacheGetCount(nbCELL context,struct CACHE *cache,nbSET argSet,int type){
+static unsigned int cacheGetCount(nbCELL context,struct CACHE *cache,nbSET argSet,int type){
   struct CACHE_NODE *entry;
   struct CACHE_ATTR *attr;
 
@@ -689,7 +691,7 @@ static int cacheGetCount(nbCELL context,struct CACHE *cache,nbSET argSet,int typ
 /*
 *  Create new timer element
 */
-void cacheNewTimerElement(struct CACHE *cache,struct CACHE_NODE *entry){ 
+static void cacheNewTimerElement(struct CACHE *cache,struct CACHE_NODE *entry){ 
   struct CACHE_TIMER *timer,*oldtimer;
   time_t now;
 
@@ -730,7 +732,7 @@ void cacheNewTimerElement(struct CACHE *cache,struct CACHE_NODE *entry){
 *    0 - entry already existed
 *    1 - new entry added
 */
-int cacheInsert(nbCELL context,struct CACHE_SKILL *skillHandle,struct CACHE *cache,struct CACHE_NODE *root,nbSET argSet,struct CACHE_ATTR *attr,int mode){
+static int cacheInsert(nbCELL context,struct CACHE_SKILL *skillHandle,struct CACHE *cache,struct CACHE_NODE *root,nbSET argSet,struct CACHE_ATTR *attr,int mode){
   NB_TreePath treePath;
   nbCELL object;
   //NB_Cell *pub;
@@ -747,7 +749,7 @@ int cacheInsert(nbCELL context,struct CACHE_SKILL *skillHandle,struct CACHE *cac
   if(cache->options&CACHE_OPTION_COUNT){
     root->hits++;
     if(attr->hitsTerm!=NULL){
-      /* assign value to attribute._hits */
+      /* assign value to attribute__hits */
       nbAssertionAddTermValue(context,&cache->assertion,(nbCELL)attr->hitsTerm,nbCellCreateReal(context,(double)root->hits));
       if(attr->hitState!=NULL){
         // compute new state and assign value to attribute._hitState
@@ -824,7 +826,6 @@ int cacheInsert(nbCELL context,struct CACHE_SKILL *skillHandle,struct CACHE *cac
       else nbAssertionAddTermValue(context,&cache->assertion,(nbCELL)attr->kidState,NB_CELL_UNKNOWN);
       }
     }
-
   if(attr->kidsTerm!=NULL) nbAssertionAddTermValue(context,&cache->assertion,(nbCELL)attr->kidsTerm,nbCellCreateReal(context,(double)root->kids));
 
   /* handle next attribute */
@@ -862,7 +863,7 @@ int cacheInsert(nbCELL context,struct CACHE_SKILL *skillHandle,struct CACHE *cac
 *  Cache reset alarm handler
 */
 
-void cacheResetAlarm(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL cell){
+static void cacheResetAlarm(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL cell){
   NB_Cache *cache=(NB_Cache *)nodeHandle;
   nbCELL value=nbCellGetValue(context,cell);
 
@@ -880,7 +881,7 @@ void cacheResetAlarm(nbCELL context,void *skillHandle,void *nodeHandle,nbCELL ce
 *      cache, and rescheduled by alertCache if not emptied.
 *    o This only applies to a cache with an expiration interval.
 */
-void cacheAlarm(nbCELL context,void *skillHandle,NB_Cache *cache){
+static void cacheAlarm(nbCELL context,void *skillHandle,NB_Cache *cache){
   struct CACHE_TIMER *timer,*timerRoot=cache->timer;
   struct CACHE_NODE *entry;
   struct CACHE_ATTR *attr;
@@ -931,7 +932,7 @@ void cacheAlarm(nbCELL context,void *skillHandle,NB_Cache *cache){
 /*
 *  Free entry - this should be done in-line after validation
 */
-void cacheFreeNode(nbCELL context,struct CACHE_NODE *entry){
+static void cacheFreeNode(nbCELL context,struct CACHE_NODE *entry){
 /*
   outMsg(0,'T',"cacheFreeNode called");
   printObject(entry->object);
@@ -951,7 +952,7 @@ void cacheFreeNode(nbCELL context,struct CACHE_NODE *entry){
 /*
 *  Empty a cache entry's object tree without worrying about counters
 */
-void cacheEmptyNode(nbCELL context,struct CACHE_NODE *entry){
+static void cacheEmptyNode(nbCELL context,struct CACHE_NODE *entry){
   struct CACHE_NODE *subEntry;
   NB_TreeIterator treeIterator;
   NB_TreeNode *treeNode;
@@ -972,11 +973,11 @@ void cacheEmptyNode(nbCELL context,struct CACHE_NODE *entry){
 /*
 *  Remove a cache entry worrying about counters up the root list       
 */
-void cacheRemoveNode(nbCELL context,struct CACHE *cache,struct CACHE_NODE *entry,struct CACHE_ATTR *attr){
+static void cacheRemoveNode(nbCELL context,struct CACHE *cache,struct CACHE_NODE *entry,struct CACHE_ATTR *attr){
   NB_TreePath treePath;
   NB_TreeNode *treeNode;
   struct CACHE_NODE *root;
-  int hits=entry->hits,rows=entry->rows;
+  unsigned int hits=entry->hits,rows=entry->rows;
 
   while(entry->root!=NULL){  /* until we get to the top */
     root=entry->root;
@@ -1010,7 +1011,7 @@ void cacheRemoveNode(nbCELL context,struct CACHE *cache,struct CACHE_NODE *entry
     }
   }
 
-void cacheDecNode(nbCELL context,struct CACHE *cache,struct CACHE_NODE *entry,struct CACHE_ATTR *attr){
+static void cacheDecNode(nbCELL context,struct CACHE *cache,struct CACHE_NODE *entry,struct CACHE_ATTR *attr){
   if(entry->hits<2) cacheRemoveNode(context,cache,entry,attr);
   else if(cache->options&CACHE_OPTION_COUNT) while(entry!=NULL){
     entry->hits--;
@@ -1022,7 +1023,7 @@ void cacheDecNode(nbCELL context,struct CACHE *cache,struct CACHE_NODE *entry,st
 /*
 *  Remove a cache row 
 */
-int cacheRemove(nbCELL context,struct CACHE *cache,nbSET argSet){
+static int cacheRemove(nbCELL context,struct CACHE *cache,nbSET argSet){
   struct CACHE_TIMER *timer;
   struct CACHE_NODE *entry;
   struct CACHE_ATTR *attr;
@@ -1052,7 +1053,7 @@ int cacheRemove(nbCELL context,struct CACHE *cache,nbSET argSet){
 /*
 *  Empty a cache - delete all counter entries and timer elements
 */
-void cacheEmpty(nbCELL context,struct CACHE *cache){
+static void cacheEmpty(nbCELL context,struct CACHE *cache){
   struct CACHE_TIMER *timer,*timerNext;
   struct CACHE_NODE *entry;
   
@@ -1085,7 +1086,7 @@ void cacheEmpty(nbCELL context,struct CACHE *cache){
 /* 
 *  Free a cache - let nbNodeDestroy() do this
 */
-void freeCache(nbCELL context,struct CACHE *cache){
+static void freeCache(nbCELL context,struct CACHE *cache){
   if(cache==NULL) return;
   cacheEmpty(context,cache);
   nbFree(cache,sizeof(struct CACHE));  
@@ -1124,7 +1125,7 @@ static nbCELL cacheRowsEvaluate(nbCELL context,void *skillHandle,NB_Cache *cache
 /******************************************************
 * Skill methods
 ******************************************************/
-void *cacheConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+static void *cacheConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   nbCELL cell;
   nbSET argSet;
   struct CACHE *cache=newCache(context,text);
@@ -1142,7 +1143,7 @@ void *cacheConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text)
   return(cache);
   }
 
-int cacheAssert(nbCELL context,void *skillHandle,NB_Cache *cache,nbCELL arglist,nbCELL value){
+static int cacheAssert(nbCELL context,void *skillHandle,NB_Cache *cache,nbCELL arglist,nbCELL value){
   int mode=0;  // we only assert via standard interface
   nbSET argSet;
   int inserted=0,removed=0;  // flag indicated if known state was inverted
@@ -1177,7 +1178,7 @@ int cacheAssert(nbCELL context,void *skillHandle,NB_Cache *cache,nbCELL arglist,
 // This is just a test to see if the alert method is going to solve our problem
 // If it works, break out a subroutine to be called by both cacheAssert and cacheAlert
 // The only difference is the mode value call to contextAlert
-int cacheAlert(nbCELL context,void *skillHandle,NB_Cache *cache,nbCELL arglist,nbCELL value){
+static int cacheAlert(nbCELL context,void *skillHandle,NB_Cache *cache,nbCELL arglist,nbCELL value){
   int mode=1;  /* we only assert via standard interface */
   nbSET argSet=nbListOpen(context,arglist);
 
@@ -1206,12 +1207,12 @@ static nbCELL cacheEvaluate(nbCELL context,void *skillHandle,NB_Cache *cache,nbC
   return(NB_CELL_FALSE);
   }
 
-void cacheSolve(nbCELL context,void *skillHandle,NB_Cache *cache,nbCELL arglist){
+static void cacheSolve(nbCELL context,void *skillHandle,NB_Cache *cache,nbCELL arglist){
   nbCellSolve(context,arglist);
   return;
   }
 
-void printCacheRows(nbCELL context,struct CACHE_NODE *entry,int column){
+static void printCacheRows(nbCELL context,struct CACHE_NODE *entry,int column){
   NB_TreeIterator treeIterator;
   NB_TreeNode *treeNode;
   int i;
@@ -1221,11 +1222,11 @@ void printCacheRows(nbCELL context,struct CACHE_NODE *entry,int column){
     entry=(struct CACHE_NODE *)treeNode;
     for(i=0;i<column;i++) nbLogPut(context,"  ");
     nbCellShow(context,entry->object);
-    nbLogPut(context,"(%d:%d)",entry->hits,entry->hitIndex);
+    nbLogPut(context,"(%u:%u)",entry->hits,entry->hitIndex);
     //if(entry->entry!=NULL){
     if(entry->flags^CACHE_NODE_FLAG_LASTCOL){
-      nbLogPut(context,"{%d:%d}",entry->rows,entry->rowIndex);
-      nbLogPut(context,"[%d:%d],",entry->kids,entry->kidIndex);
+      nbLogPut(context,"{%u:%u}",entry->rows,entry->rowIndex);
+      nbLogPut(context,"[%u:%u],",entry->kids,entry->kidIndex);
       printCacheRows(context,entry->entry,column+1);
       }
     else nbLogPut(context,"\n");
@@ -1283,7 +1284,7 @@ static int cacheShow(nbCELL context,void *skillHandle,NB_Cache *cache,int option
   }
 
 
-void *cacheDestroy(nbCELL context,void *skillHandle,NB_Cache *cache,int option){
+static void *cacheDestroy(nbCELL context,void *skillHandle,NB_Cache *cache,int option){
   freeCache(context,cache);
   return(NULL);
   }

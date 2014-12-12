@@ -268,35 +268,36 @@
 #include <nb/nbi.h>
 
 #if !defined(WIN32)
+#if defined(HAVE_EDITLINE_READLINE_H)
 #include <editline/readline.h>
+#elif defined(HAVE_READLINE_READLINE_H)
+#include <readline/readline.h>
+#endif
 #endif
 
 static int nbCmdParse(nbCELL context,char *cursor,unsigned char cmdopt,NB_Instruction *instruction);
 
 // Get a command from interactive user.
 //
-// A command starting with "'" is interpreted as a command prefix.  The
+// A command starting with ">" is interpreted as a command prefix.  The
 // prefix is used for subsequent prompts and commands.
 //
 // Returns:
 //   1 - have command (may be empty)
 //   0 - eof
 //
-// 2012-10-26 eat 0.8.12 - Experimenting with using > for prompt lines.
-//            This is because "'" was a poor choice.  A term can be a
-//            singled quoted string.  When using such a term for a node
-//            and directing commands to the node, the command will start
-//            with a single quote.  By using a single quote for the prompt
-//            assignment, quoted terms have to start in column two or 
-//            higher.  That's too weird, so we will introduce ">" for
-//            setting the prompt and then drop the single quote later.
+// 2014-12-05 eat 0.9.03 - have made libedit (readline replacement) optional
+//            Attempts to build on RHEL on the OpenSUSE Build Server are failing with
+//            "nothing provides libedit-devel", so the call to readline (provided by libedit)
+//            has been made conditional on having the readline.h file.  If not available,
+//            we handle it like Windows and go without readline functionality.
 
 static int nbGetCmdInteractive(char *cmd,size_t cmdlen){  // 2012-12-31 eat - VID 614 - included cmdlen
   static char *lastInput="";
   static char *userInput="";
   char *cursor;
   int len;
-#if defined(WIN32)
+#if defined(WIN32) || (!defined(HAVE_EDITLINE_READLINE_H) && !defined(HAVE_READLINE_READLINE_H))
   char buffer[NB_BUFSIZE];
 #endif
 
@@ -308,7 +309,7 @@ static int nbGetCmdInteractive(char *cmd,size_t cmdlen){  // 2012-12-31 eat - VI
   lastInput=userInput;            // get current last command
   userInput=">";
   while(userInput && *userInput=='>'){;
-#if defined(WIN32)
+#if defined(WIN32) || (!defined(HAVE_EDITLINE_READLINE_H) && !defined(HAVE_READLINE_READLINE_H))
     printf("%s",nb_cmd_prompt);
     userInput=fgets(buffer,sizeof(buffer),stdin);
     //userInput=buffer;
@@ -331,14 +332,14 @@ static int nbGetCmdInteractive(char *cmd,size_t cmdlen){  // 2012-12-31 eat - VI
         strcpy(nb_cmd_prefix,cursor);
         sprintf(nb_cmd_prompt,"%s> ",nb_cmd_prefix);
         }
-#if !defined(WIN32)
+#if !defined(WIN32) && (defined(HAVE_EDITLINE_READLINE_H) || defined(HAVE_READLINE_READLINE_H))
       free(userInput);
 #endif
       userInput=">";
       }
     }
   if(*userInput){
-#if !defined(WIN32)
+#if !defined(WIN32) && (defined(HAVE_EDITLINE_READLINE_H) || defined(HAVE_READLINE_READLINE_H))
     if(strcmp(lastInput,userInput)) add_history(userInput);  // add to history
 #endif
     if(!*nb_cmd_prefix) len=snprintf(cmd,cmdlen,"%s",userInput);   // 2012-12-31 eat - VID 614
@@ -416,7 +417,7 @@ void printAbout(void){
 
 void showVersion(void){
   outPut("\nN o d e B r a i n   %s (Columbo) %s\n\n",PACKAGE_VERSION,NB_RELEASE_DATE);
-  outPut("Compiled %s %s %s\n\n",__DATE__,__TIME__,NB_COMPILE_PLATFORM);
+  outPut("Spec 0.0.903 built for %s\n\n",NB_COMPILE_PLATFORM);
   }
 
 void showCopyright(void){
@@ -748,7 +749,10 @@ int nbCmdShow(nbCELL context,void *handle,char *verb,char *cursor){
         outPut("  Term:          %d\n",sizeof(NB_Term));
         }
       }
-    if(*cursor==';' || *cursor==',') cursor++;
+    // 2014-12-05 eat - replaced following line with next two - wasn't stopping on ';'
+    //if(*cursor==';' || *cursor==',') cursor++;
+    if(*cursor==';') return(0);
+    if(*cursor==',') cursor++;
     while(*cursor==' ') cursor++;
     }
   if(*cursor){
@@ -1570,13 +1574,6 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     outMsg(0,'E',"Expecting type identifier at \"%s\"",cursave);
     return(1);
     }
-
-  // 2013-01-16 eat - time for this to go
-  //if(strcmp(type,"expert")==0){
-  //  outMsg(0,'W',"Deprecated type - use \"node\" instead of \"expert\"");
-  //  strcpy(type,"node");
-  //  }
-
   if((typeTerm=nbTermFind(nb_TypeGloss,type))==NULL){
     outMsg(0,'E',"Type \"%s\" not defined.",type);
     return(1);
@@ -2010,6 +2007,8 @@ char *nbGets(int file,char *strbuf,size_t strbuflen){
   strncpy(strcur,bufcur,seglen);
   strcur+=seglen;
   *strcur=0; /* insert end of string */
+  strcur--; // 2012-12-05 eat - added 2 lines to remove trailing stuff
+  while(strcur>=strbuf && strchr(" \n\r",*strcur)) *strcur=0,strcur--; 
   bufcur=bufnew+1;
   return(strbuf);
   }
@@ -2054,7 +2053,7 @@ void nbParseStdin(int prompt){
 #endif
       addrContext=contextSave;
       if(lfile!=NULL) logPrintNl(bufin);
-      if(!prompt) outPut("| %s\n",bufin);
+      if(!prompt && *bufin) outPut("| %s\n",bufin);
       buffer=nbSymSource((nbCELL)symContext,bufin);
       if(buffer!=NULL){
         if(sourceTrace) outPut("] %s\n",buffer);

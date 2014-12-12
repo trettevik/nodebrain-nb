@@ -86,8 +86,9 @@ static char *nbSourceGet(char *buffer,size_t buflen,FILE *file){
     len=strlen(buf);
     if(len<1) return(buffer);
     last=buf+len-1;
-    while(last>buf && strchr(" \n\r",*last)) last--;
+    while(last>buf && strchr(" \n\r",*last)) *last=0,last--; // 2014-12-05 eat - added the set to null
     }
+  if(strchr(" \n\r",*last)) *last=0;
   return(buffer);
   }
 
@@ -340,6 +341,10 @@ void nbSource(nbCELL context,int option,char *cursor){
   long fileloc; /* file location test */
   NB_Term *symContextSave=symContext;  /* save symbolic context */
 
+  if(nb_opt_safe && strcmp(cursor,"-")!=0 && strcmp(cursor,"=")!=0){
+    outMsg(0,'E',"Commands source, %%include, and %%use, not allowed in safe mode.");
+    return;
+    }
   symContext=nbTermNew(symContext,"%",nbNodeNew(),0);
   while(*cursor==' ') cursor++;
   if(*cursor=='~'){

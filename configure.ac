@@ -112,10 +112,11 @@ AM_INIT_AUTOMAKE
 
 # define module directory variables
 
+AC_SUBST([NB_MOD_DIR],[nb-0])
 AC_DEFINE_UNQUOTED(NB_API_VERSION,"0",[NodeBrain API version])
-NB_MODULE_PATH=".nb:/usr/local/lib/nb:/usr/lib/nb:/usr/lib64/nb"
-NB_MODULE_PATH_SEPARATOR=":"
+NB_MODULE_PATH=".nb:/usr/local/lib/nb-0:/usr/lib/nb-0:/usr/lib64/nb-0"
 AC_DEFINE_UNQUOTED(NB_MODULE_PATH,"${NB_MODULE_PATH}",[Module path])
+NB_MODULE_PATH_SEPARATOR=":"
 AC_DEFINE_UNQUOTED(NB_MODULE_PATH_SEPARATOR,'${NB_MODULE_PATH_SEPARATOR}',[Module path separator])
 
 #AC_CONFIG_SUBDIRS([module])
@@ -131,7 +132,7 @@ LT_SYS_MODULE_EXT
 LT_FUNC_DLSYM_USCORE
 
 # define a release date variable
-AC_DEFINE([NB_RELEASE_DATE],"2014-11-23",[Define release date])
+AC_DEFINE([NB_RELEASE_DATE],"2014-12-07",[Define release date])
 
 # Checks for programs.
 AC_PROG_CC
@@ -147,7 +148,7 @@ AC_CHECK_FUNCS([setenv])
 # Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_STDC
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h netinet/in.h stdlib.h string.h sys/socket.h sys/time.h time.h sys/limits.h limits.h machine/limits.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h netinet/in.h stdlib.h string.h sys/socket.h sys/time.h time.h sys/limits.h limits.h machine/limits.h editline/readline.h readline/readline.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -172,7 +173,8 @@ AC_SUBST([NB_MOD_PATH],[../.libs])
 
 AC_CHECK_LIB(pcre,pcre_compile,,[AC_MSG_ERROR(Required library -lpcre not found.  Specify path in LDFLAGS.)])
 #AC_SEARCH_LIBS(initscr,ncurses)
-AC_CHECK_LIB(edit,readline,,[AC_MSG_ERROR(Required library -ledit not found. Specify path in LDFLAGS.)])
+#AC_CHECK_LIB(edit,readline,,[AC_MSG_ERROR(Required library -ledit not found. Specify path in LDFLAGS.)])
+AC_SEARCH_LIBS(readline,edit)
 
 AC_SEARCH_LIBS(socket,socket)
 AC_SEARCH_LIBS(inet_ntoa,nsl)
@@ -205,18 +207,17 @@ AS_IF([test "x$with_tls" != xno],
   [AS_IF([test "x$with_tls" == xgnutls],
     [AC_SEARCH_LIBS([SSL_library_init],[gnutls],
       [AC_DEFINE([HAVE_OPENSSL],[1],[Define if you have libgnutls-openssl])
-       AC_SEARCH_LIBS(X509_get_subject_name,gnutls-openssl)
-       ],
-      [AC_MSG_FAILURE([--with-tls=xgnutls was given, but test for gnutls-openssl failed])
-       ])
+       AC_SEARCH_LIBS(X509_get_subject_name,gnutls-openssl)],
+      [AC_MSG_FAILURE([--with-tls=xgnutls was given, but test for gnutls-openssl failed])])
      ],
     [AS_IF([test "x$with_tls" == xopenssl],
       [AC_SEARCH_LIBS([SSL_library_init],[ssl],
         [AC_DEFINE([HAVE_OPENSSL],[1],[Define if you have libssl])
-         AC_SEARCH_LIBS(X509_get_subject_name,crypto)
+         AC_SEARCH_LIBS([X509_get_subject_name],[ssl crypto],
+          [AC_DEFINE([HAVE_CRYPTO],[1],[Define if you have crypto])],
+          [AC_MSG_FAILURE([--with-tls=openssl was given, but test for openssl failed])])
          ],
-        [AC_MSG_FAILURE([--with-tls=openssl was given, but test for openssl failed])
-         ])
+        [AC_MSG_FAILURE([--with-tls=openssl was given, but test for openssl failed])])
        ])
      ])
    ])
@@ -264,14 +265,16 @@ AS_IF([test "x$enable_nb_webster" == xyes -a "x$with_tls" != xno],[NB_MODULES=$N
 AC_SUBST([NB_MODULES])
 # Set module subdirectory by minor version - was ${libdir}/${NB_MOD_DIR}/
 # AC_SUBST([NB_MOD_DIR],[0.9.03])
-AC_SUBST([NB_MOD_DIR],[nb])
+#AC_SUBST([NB_MOD_DIR],[nb])
 
 # Figure out which nb program to use with "make check".
 #   If we are in a Nodebrain distribution, we'll use
 #   the one we created in the top directory.  Otherwise,
 #   we look for a compatible installed program.
 
-AC_SUBST([NB],[../../../../lib/.libs/lt-nb])
+#AC_SUBST([NB],[../../../../lib/.libs/lt-nb])
+#AC_SUBST([NB],[../../../../lib/.libs/nb])
+AC_SUBST([NB],[../../../../lib/nb])
 AC_SUBST([NB_MOD_CFLAGS],["-I../../include -Wall -fstack-protector-all -Wno-strict-aliasing"])
 
 AC_CONFIG_FILES([Makefile nodebrain.spec nodebrain.dsc nb.pc lib/Makefile module/Makefile module/audit/Makefile module/baseline/Makefile module/cache/Makefile module/console/Makefile module/mail/Makefile module/message/Makefile module/netflow/Makefile module/peer/Makefile module/pipe/Makefile module/servant/Makefile module/set/Makefile module/snmptrap/Makefile module/string/Makefile module/syslog/Makefile module/toy/Makefile module/translator/Makefile module/tree/Makefile module/udp/Makefile module/webster/Makefile lib/test/Makefile])

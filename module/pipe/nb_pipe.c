@@ -88,7 +88,7 @@ typedef struct NB_MOD_SERVER{
 //
 //   this routine replaces fifoAlertListener
 //
-void serverRead(nbCELL context,int serverSocket,void *handle){
+static void serverRead(nbCELL context,int serverSocket,void *handle){
   NB_MOD_Server *server=handle;
   long len,used;
   //size_t size;
@@ -189,7 +189,7 @@ void serverRead(nbCELL context,int serverSocket,void *handle){
 *
 *    define <term> node pipe.server("<identity>@<filename>");
 */
-void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+static void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   NB_MOD_Server *server;
   nbCELL cell=NULL;
   nbSET argSet;
@@ -250,7 +250,7 @@ void *serverConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
 *
 *    enable <node>
 */
-int serverEnable(nbCELL context,void *skillHandle,NB_MOD_Server *server){
+static int serverEnable(nbCELL context,void *skillHandle,NB_MOD_Server *server){
 #if defined(WIN32)
   if((server->fildes=open(server->filename,O_RDONLY))<0){
     // insert windows CreateNamedPipe here, unless we have to make separate funtions
@@ -280,7 +280,7 @@ int serverEnable(nbCELL context,void *skillHandle,NB_MOD_Server *server){
 * 
 *    disable <node>
 */
-int serverDisable(nbCELL context,void *skillHandle,NB_MOD_Server *server){
+static int serverDisable(nbCELL context,void *skillHandle,NB_MOD_Server *server){
   nbListenerRemove(context,server->fildes);
   close(server->fildes);
   server->fildes=0;
@@ -295,7 +295,7 @@ int serverDisable(nbCELL context,void *skillHandle,NB_MOD_Server *server){
 *
 *    <node>:trace,notrace
 */
-int *serverCommand(nbCELL context,void *skillHandle,NB_MOD_Server *server,nbCELL arglist,char *text){
+static int *serverCommand(nbCELL context,void *skillHandle,NB_MOD_Server *server,nbCELL arglist,char *text){
   if(strstr(text,"notrace")) server->trace=0;
   else if(strstr(text,"trace")) server->trace=1;
   return(0);
@@ -307,7 +307,7 @@ int *serverCommand(nbCELL context,void *skillHandle,NB_MOD_Server *server,nbCELL
 *    undefine <node>
 *
 */
-int serverDestroy(nbCELL context,void *skillHandle,NB_MOD_Server *server){
+static int serverDestroy(nbCELL context,void *skillHandle,NB_MOD_Server *server){
   if(server->trace) nbLogMsg(context,0,'T',"serverDestroy called");
   if(server->fildes!=0) serverDisable(context,skillHandle,server);
   nbFree(server,sizeof(NB_MOD_Server));
@@ -354,7 +354,7 @@ typedef struct NB_MOD_CLIENT{
 *
 *    define <term> node pipe.reader("<identity>@<filename>");
 */
-void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+static void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   NB_MOD_Client *client;
   nbCELL cell;
   nbSET argSet;
@@ -376,7 +376,7 @@ void *clientConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text
 *
 *    <node>[(<args>)][:<text>]
 */
-int clientCommand(nbCELL context,void *skillHandle,NB_MOD_Client *client,nbCELL arglist,char *text){
+static int clientCommand(nbCELL context,void *skillHandle,NB_MOD_Client *client,nbCELL arglist,char *text){
   int wrote;
   size_t size;
 
@@ -405,7 +405,7 @@ int clientCommand(nbCELL context,void *skillHandle,NB_MOD_Client *client,nbCELL 
 *
 *    undefine <node>
 */
-int clientDestroy(nbCELL context,void *skillHandle,NB_MOD_Client *client){
+static int clientDestroy(nbCELL context,void *skillHandle,NB_MOD_Client *client){
   nbCellDrop(context,client->filenamecell);
   nbFree(client,sizeof(NB_MOD_Client));
   return(0);

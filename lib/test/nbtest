@@ -23,7 +23,14 @@ for file in eCellFunctions eNodeTerms eSkillMethods; do
     echo "    Get ${file}.get"
     # Modify later to look for ${file}.sh and use if found
     #./${file}.sh ${file}.out > ${file}.get
-    # for now, just drop the top 16 lines and bottom 1
+    # for now, just drop the top 15 lines and bottom 1
+    #
+    # On Mac OS X replace with this because it can't make
+    # heads or tails out of the tail and head parameters
+    #   lines=`wc -l < ${file}.out`
+    #   let bottom=lines-15
+    #   let top=bottom-1
+    #   tail -n $bottom ${file}.out | head -n $top > ${file}.get
     tail -n +16 ${file}.out | head -n -1 > ${file}.get
     exit=$?
     if test $exit -ne 0; then

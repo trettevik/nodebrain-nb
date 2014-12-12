@@ -62,6 +62,8 @@
 * 2014-11-23 eat 0.9.03 Added functions for declaring cell bindings and functions
 *=============================================================================
 */
+#define _XOPEN_SOURCE 600   // 2014-12-06 eat - for trunc and round
+
 #include <nb/nbi.h>
 #include <limits.h>
 

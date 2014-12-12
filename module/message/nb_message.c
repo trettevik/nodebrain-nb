@@ -139,7 +139,7 @@ typedef struct NB_MOD_PRODUCER{    // message.producer node descriptor
 *
 *    define <term> node message.producer("<cabal>","<node>",<number>);
 */
-void *producerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+static void *producerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   nbModProducer *producer;
   nbCELL cell=NULL;
   nbSET argSet;
@@ -242,7 +242,7 @@ void *producerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *te
 *
 *    enable <node>
 */
-int producerEnable(nbCELL context,void *skillHandle,nbModProducer *producer){
+static int producerEnable(nbCELL context,void *skillHandle,nbModProducer *producer){
   nbMsgLog *msglog;
   nbMsgState *msgstate;
   int state;
@@ -280,7 +280,7 @@ int producerEnable(nbCELL context,void *skillHandle,nbModProducer *producer){
 * 
 *    disable <node>
 */
-int producerDisable(nbCELL context,void *skillHandle,nbModProducer *producer){
+static int producerDisable(nbCELL context,void *skillHandle,nbModProducer *producer){
   nbMsgLogClose(context,producer->msglog);
   producer->msglog=NULL;
   return(0);
@@ -291,7 +291,7 @@ int producerDisable(nbCELL context,void *skillHandle,nbModProducer *producer){
 *
 *    <node>[(<args>)][:<text>]
 */
-int *producerCommand(nbCELL context,void *skillHandle,nbModProducer *producer,nbCELL arglist,char *text){
+static int *producerCommand(nbCELL context,void *skillHandle,nbModProducer *producer,nbCELL arglist,char *text){
   if(producer->trace){
     nbLogMsg(context,0,'T',"nb_message:producerCommand() text=[%s]\n",text);
     }
@@ -306,7 +306,7 @@ int *producerCommand(nbCELL context,void *skillHandle,nbModProducer *producer,nb
 *
 *    undefine <node>
 */
-int producerDestroy(nbCELL context,void *skillHandle,nbModProducer *producer){
+static int producerDestroy(nbCELL context,void *skillHandle,nbModProducer *producer){
   nbLogMsg(context,0,'T',"producerDestroy called");
   if(producer->msglog) producerDisable(context,skillHandle,producer);
   nbFree(producer,sizeof(nbModProducer));
@@ -350,7 +350,7 @@ typedef struct NB_MOD_CONSUMER{  // message.consumer node descriptor
   unsigned char  echo;             // echo option
   } nbModConsumer;
 
-int consumerMessageHandler(nbCELL context,void *handle,nbMsgRec *msgrec){
+static int consumerMessageHandler(nbCELL context,void *handle,nbMsgRec *msgrec){
   nbModConsumer *consumer=handle;
   char *cmd;
   int cmdlen;
@@ -379,7 +379,7 @@ int consumerMessageHandler(nbCELL context,void *handle,nbMsgRec *msgrec){
 *
 *    define <term> node message.consumer("<cabal>","<nodeName>",<nodeNumber>,"<consumerName>");
 */
-void *consumerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+static void *consumerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   nbModConsumer *consumer;
   nbCELL cell=NULL;
   nbSET argSet;
@@ -507,7 +507,7 @@ void *consumerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *te
 *
 *    enable <node>
 */
-int consumerEnable(nbCELL context,void *skillHandle,nbModConsumer *consumer){
+static int consumerEnable(nbCELL context,void *skillHandle,nbModConsumer *consumer){
   //consumer->msgstate=nbMsgStateCreate(context);
   //consumer->msglog=nbMsgLogOpen(context,consumer->cabalName,consumer->nodeName,consumer->cabalNode,"",NB_MSG_MODE_CONSUMER,consumer->msgstate);
   consumer->msglog=nbMsgLogOpen(context,consumer->cabalName,consumer->nodeName,consumer->cabalNode,consumer->name,NB_MSG_MODE_CURSOR,NULL);
@@ -528,7 +528,7 @@ int consumerEnable(nbCELL context,void *skillHandle,nbModConsumer *consumer){
 * 
 *    disable <node>
 */
-int consumerDisable(nbCELL context,void *skillHandle,nbModConsumer *consumer){
+static int consumerDisable(nbCELL context,void *skillHandle,nbModConsumer *consumer){
   //nbMsgCacheClose(context,consumer->msgcache);
   // take care of TLS structures here
   return(0);
@@ -539,7 +539,7 @@ int consumerDisable(nbCELL context,void *skillHandle,nbModConsumer *consumer){
 *
 *    <node>[(<args>)][:<text>]
 */
-int *consumerCommand(nbCELL context,void *skillHandle,nbModConsumer *consumer,nbCELL arglist,char *text){
+static int *consumerCommand(nbCELL context,void *skillHandle,nbModConsumer *consumer,nbCELL arglist,char *text){
   if(consumer->trace){
     nbLogMsg(context,0,'T',"nb_message:consumerCommand() text=[%s]\n",text);
     }
@@ -553,7 +553,7 @@ int *consumerCommand(nbCELL context,void *skillHandle,nbModConsumer *consumer,nb
 *
 *    undefine <node>
 */
-int consumerDestroy(nbCELL context,void *skillHandle,nbModConsumer *consumer){
+static int consumerDestroy(nbCELL context,void *skillHandle,nbModConsumer *consumer){
   nbLogMsg(context,0,'T',"consumerDestroy called");
   consumerDisable(context,skillHandle,consumer);
   nbFree(consumer,sizeof(nbModConsumer));
@@ -604,7 +604,7 @@ typedef struct NB_MOD_PEER{        // message.client node descriptor
 /*
 *  Peer message handler
 */
-int peerMessageHandler(nbCELL context,void *handle,nbMsgRec *msgrec){
+static int peerMessageHandler(nbCELL context,void *handle,nbMsgRec *msgrec){
   nbModPeer *peer=handle;
   char *cmd;
   int cmdlen;
@@ -618,7 +618,7 @@ int peerMessageHandler(nbCELL context,void *handle,nbMsgRec *msgrec){
 /*
 *  Client message handler
 */
-int clientMessageHandler(nbCELL context,void *handle,nbMsgRec *msgrec){
+static int clientMessageHandler(nbCELL context,void *handle,nbMsgRec *msgrec){
   nbModPeer *client=handle;
   char *cmd;
   int cmdlen;
@@ -648,7 +648,7 @@ int clientMessageHandler(nbCELL context,void *handle,nbMsgRec *msgrec){
 *    define <term> node message.peer("<cabal>","<nodeName>");
 *    <term>. define filelines cell <filelines>; # number of lines per file
 */
-void *peerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+static void *peerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   nbModPeer *peer;
   nbCELL cell=NULL;
   nbSET argSet;
@@ -732,7 +732,7 @@ void *peerConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
 *
 *    enable <node>
 */
-int peerEnable(nbCELL context,void *skillHandle,nbModPeer *server){
+static int peerEnable(nbCELL context,void *skillHandle,nbModPeer *server){
   if(!server->msgpeer) server->msgpeer=nbMsgCabalOpen(context,NB_MSG_CABAL_MODE_PEER,server->cabalName,server->nodeName,NULL,NULL,peerMessageHandler);
   if(!server->msgpeer){
     nbLogMsg(context,0,'E',"Unable to instantiate message peer for cabal \"%s\" node \"%s\"",server->cabalName,server->nodeName);
@@ -748,7 +748,7 @@ int peerEnable(nbCELL context,void *skillHandle,nbModPeer *server){
 * 
 *    disable <node>
 */
-int peerDisable(nbCELL context,void *skillHandle,nbModPeer *peer){
+static int peerDisable(nbCELL context,void *skillHandle,nbModPeer *peer){
   nbMsgCabalDisable(context,peer->msgpeer);
   return(0);
   }
@@ -758,7 +758,7 @@ int peerDisable(nbCELL context,void *skillHandle,nbModPeer *peer){
 *
 *    <node>[(<args>)][:<text>]
 */
-int *peerCommand(nbCELL context,void *skillHandle,nbModPeer *peer,nbCELL arglist,char *text){
+static int *peerCommand(nbCELL context,void *skillHandle,nbModPeer *peer,nbCELL arglist,char *text){
   if(peer->trace){
     nbLogMsg(context,0,'T',"nb_message:peerCommand() text=[%s]\n",text);
     }
@@ -771,7 +771,7 @@ int *peerCommand(nbCELL context,void *skillHandle,nbModPeer *peer,nbCELL arglist
 *
 *    undefine <node>
 */
-int peerDestroy(nbCELL context,void *skillHandle,nbModPeer *peer){
+static int peerDestroy(nbCELL context,void *skillHandle,nbModPeer *peer){
   nbLogMsg(context,0,'T',"peerDestroy called");
   if(peer->msgpeer) peerDisable(context,skillHandle,peer);
   nbFree(peer,sizeof(nbModPeer));
@@ -799,7 +799,7 @@ extern void *peerBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL argl
 *
 *    enable <node>
 */
-int clientEnable(nbCELL context,void *skillHandle,nbModPeer *client){
+static int clientEnable(nbCELL context,void *skillHandle,nbModPeer *client){
   // We call nbMsgCabalClient with a NULL message state to let the message log
   // define our state.  For other applications we may want to set the message state
   // from another source, and reprocess message from the log to resynchronize.
@@ -822,7 +822,7 @@ int clientEnable(nbCELL context,void *skillHandle,nbModPeer *client){
 *
 *    <node>[(<args>)][:<text>]
 */
-int clientCommand(nbCELL context,void *skillHandle,nbModPeer *client,nbCELL arglist,char *text){
+static int clientCommand(nbCELL context,void *skillHandle,nbModPeer *client,nbCELL arglist,char *text){
   if(!client || !client->msgpeer || !client->msgpeer->msglog){
     nbLogMsg(context,0,'T',"nb_message: clientCommand() text: %s",text);
     nbLogMsg(context,0,'T',"nb_message: client is not properly enabled - check prior messages");
@@ -858,7 +858,7 @@ extern void *clientBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL ar
 *
 *    enable <node>
 */
-int serverEnable(nbCELL context,void *skillHandle,nbModPeer *server){
+static int serverEnable(nbCELL context,void *skillHandle,nbModPeer *server){
   if(!server->msgpeer) server->msgpeer=nbMsgCabalServer(context,server->cabalName,server->nodeName);
   if(!server->msgpeer){
     nbLogMsg(context,0,'E',"Unable to instantiate message peer server for cabal \"%s\" node \"%s\"",server->cabalName,server->nodeName);
@@ -874,7 +874,7 @@ int serverEnable(nbCELL context,void *skillHandle,nbModPeer *server){
 *
 *    <node>[(<args>)][:<text>]
 */
-int *serverCommand(nbCELL context,void *skillHandle,nbModPeer *server,nbCELL arglist,char *text){
+static int *serverCommand(nbCELL context,void *skillHandle,nbModPeer *server,nbCELL arglist,char *text){
   if(server->trace){
     nbLogMsg(context,0,'T',"nb_message:serverCommand() text=[%s]\n",text);
     }
@@ -897,7 +897,7 @@ extern void *serverBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL ar
 //=====================================================================
 // Commands
 
-int messageCmdParseLogIdentifiers(nbCELL context,char **cursorP,char *cabalName,char *nodeName,int *instance){
+static int messageCmdParseLogIdentifiers(nbCELL context,char **cursorP,char *cabalName,char *nodeName,int *instance){
   char *cursor=*cursorP;
   char instanceStr[4];
   char *delim;
@@ -942,7 +942,7 @@ int messageCmdParseLogIdentifiers(nbCELL context,char **cursorP,char *cabalName,
   return(0);
   }
 
-int messageCmdInitialize(nbCELL context,void *handle,char *verb,char *cursor){
+static int messageCmdInitialize(nbCELL context,void *handle,char *verb,char *cursor){
   char cabalName[64],nodeName[64];
   int instance;
   char *delim;
@@ -991,7 +991,7 @@ int messageCmdInitialize(nbCELL context,void *handle,char *verb,char *cursor){
 *  At least one file will always be retained, and may be open for
 *  writing by the owning process. 
 */
-int messageCmdRetire(nbCELL context,void *handle,char *verb,char *cursor){
+static int messageCmdRetire(nbCELL context,void *handle,char *verb,char *cursor){
   char cabalName[64],nodeName[64];
   int instance;
   char *delim;
@@ -1032,7 +1032,7 @@ int messageCmdRetire(nbCELL context,void *handle,char *verb,char *cursor){
 /*
 *  Export a message file converting to text.
 */
-int messageCmdExport(nbCELL context,void *handle,char *verb,char *cursor){
+static int messageCmdExport(nbCELL context,void *handle,char *verb,char *cursor){
   char cabalName[64],nodeName[64],instanceStr[4],filename[64];
   int instance;
   char *delim;

@@ -115,7 +115,7 @@ See www.nodebrain.org for more information and the latest update to this documen
 @c Not printed document
 
 @ifnottex
-@node Top, Concepts, (nodebrain), (nodebrain)
+@node Top, Introduction, (nodebrain), (nodebrain)
 @top NodeBrain Library 
 
 This document is for the NodeBrain Library. It describes the NodeBrain C API,
@@ -139,6 +139,7 @@ See the @i{Licenses} section at the end of this document for details.
 @b{Short Table of Contents}
 @end ifnotplaintext
 @menu
+* Introduction:: Getting Started
 * Concepts:: The library's place
 * Skull Functions:: Embedding the rule engine
 * Module Functions:: Extending the rule engine
@@ -170,6 +171,81 @@ See the @i{Licenses} section at the end of this document for details.
 @c Set page headings for document
 @oddheading @thischapter @| @| @value{UPDATED-MONTH}
 @evenheading @value{UPDATED-MONTH} @| @| @thischapter
+
+@node Introduction
+@chapter Introduction
+@cindex introduction
+
+The NodeBrain Library provides the core logic of the NodeBrain Rule Engine, and a C API
+used to interact with the rule engine, either as a program that uses the rule engine,
+or as a plugin module that extends the functionality of the rule engine.
+
+The library (libnb) is provided by the nodebrain package, bundled with the @i{nb} program and a set
+of modules.  The library is versioned based on changes to the API, rule syntax, and rule
+behavior.  This is different than, but related to, package versions.
+
+Prior to release 0.9.03, every release produced a unique file name (e.g. @code{libnb-0.9.02.so}) and
+there was no implied binary compatibility.  Starting with release 0.9.03, the library has switched
+to the libtool versioning scheme in preparation for a 1.0 release to start a series of compatible
+releases for which upgrades can be performed without rebuilding or modifying using applications.
+
+@multitable {------------}  {------------}  {-----------------------------------------------}
+@headitem Package@w{    } @tab Example@w{    } @tab Description
+@item Version    @tab   1.2.03    @tab @i{major.minor.patch} [patch is 2 digit]
+@item Release    @tab   1.2.03    @tab Released version [not all versions are released]
+@item Downstream @tab   1.2.03-1  @tab version-@i{DownstreamRelease} 
+@item
+@headitem Library@w{    } @tab Example@w{    } @tab Description
+@item Revision   @tab  1203      @tab Package version with periods removed
+@item Edition    @tab  1.0       @tab Interface and behavior number
+@item Series     @tab  1         @tab Compatibility series number
+@item Spec       @tab  1.0.1203	 @tab @i{edition}.@i{revision}
+@end multitable
+
+On Linux, the library revision number is included in the file name, revealing the package version number.
+
+@itemize @bullet
+@item  @i{libdir}/libnb.so.1.0.1203@w{   }- Provided by 1.2.03
+@item  @i{libdir}/libnb.so.1 -> libnb.so.1.0.1203
+@item  @i{libdir}/libnb.so.@i{series} -> libnb.so.@i{spec}
+@item  @i{libdir}/nb-@i{series}/nb_@i{module}.so@w{   }- uses libnb.so.@i{series} 
+@end itemize
+
+On other platforms the revision is not included in the file name, in which case, you will need to execute
+@code{nb} to display the package version and library spec.  On Mac OS X, the library and module files
+look like this.
+
+@itemize @bullet
+@item  @i{libdir}/libnb.1.dylib   Provided by a series 1 release
+@item  @i{libdir}/nb-@i{series}/nb_@i{module}.dylib   uses libnb.@i{series}.dylib 
+@end itemize
+
+The following rules determine how the spec will change for a new release.
+
+@itemize
+@item A new series release is created when there are incompatibilities in the API, rule syntax, or rule behavior.
+Applications need to rebuild or modify rule syntax when upgrading to a new series.
+@item A new edition release is created when a release introduces new features that an application may subsequently depend on.
+Applications do not need to rebuild or modify rule syntax when upgrading to a new edition within the same series.
+An application may rebuild or modify rule syntax to take advantage of new edition features.  If so, a dependency the
+new edition is established, which can be expressed in terms of the edition or the release that introduces the edition.
+@item A patch release is created to fix one or more defects, changing the revision without changing the edition.
+Application do not need to rebuild or modify rule syntax when upgrading to a patch release.
+@item All releases define a new spec, increasing at least the revision, and perhaps the edition.
+@end itemize
+
+The following rules apply to release numbers.
+
+@itemize
+@item A new series requires the major release version to increase.  This is intended to give visibility
+to the incompatibilities.
+@item The major component of the release version could increase without an increase in the series, but this is unlikely.
+The major release number and the spec series are expected to increment together in most cases.
+@item The minor release number may increment without a change to the edition if the release contains purely internal enhancements,
+including experimental new features not ready for application dependence.
+@item A patch release will not increment the major and minor release numbers, nor will it change the edition.
+@end itemize
+
 
 @node Concepts 
 @chapter Concepts

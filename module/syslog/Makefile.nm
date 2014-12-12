@@ -6,7 +6,7 @@ nblib_LTLIBRARIES = nb_syslog.la
 nb_syslog_la_SOURCES = nb_syslog.c
 nb_syslog_la_CFLAGS  = $(NB_MOD_CFLAGS)
 #nb_syslog_la_LDFLAGS = -module -version-info 0:1
-nb_syslog_la_LDFLAGS = -module -avoid-version
+nb_syslog_la_LDFLAGS = -module -avoid-version -L../../lib/.libs -lnb
 
 EXTRA_DIST = \
   caboodle/check/syslog.nb~ \

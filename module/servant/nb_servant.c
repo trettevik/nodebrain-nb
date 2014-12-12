@@ -99,7 +99,7 @@ typedef struct NB_MOD_SERVANT{
   } nbServant;
 
 // read a stderr line and write it to the log
-int logMsgReader(nbPROCESS process,int pid,void *session,char *msg){
+static int logMsgReader(nbPROCESS process,int pid,void *session,char *msg){
   nbServant *servant=session;
   //nbLogMsg(servant->context,0,'T',"logMsgReader called");
   nbLogMsg(servant->context,0,'W',"%s",msg);
@@ -107,7 +107,7 @@ int logMsgReader(nbPROCESS process,int pid,void *session,char *msg){
   }
 
 // read a command and pass it to the interpreter
-int cmdMsgReader(nbPROCESS process,int pid,void *session,char *msg){
+static int cmdMsgReader(nbPROCESS process,int pid,void *session,char *msg){
   nbServant *servant=session;
   //nbLogMsg(servant->context,0,'T',"cmdMsgReader called");
   nbCmd(servant->context,msg,1);
@@ -115,7 +115,7 @@ int cmdMsgReader(nbPROCESS process,int pid,void *session,char *msg){
   }
 
 // message writer stub - see servantCommand() method for actual writer
-int cmdMsgWriter(nbPROCESS process,int pid,void *session){
+static int cmdMsgWriter(nbPROCESS process,int pid,void *session){
   return(0);
   }
 
@@ -123,7 +123,7 @@ int cmdMsgWriter(nbPROCESS process,int pid,void *session){
 // Skill methods
 //******************************************************
 // Construct a servant
-void *servantConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+static void *servantConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   nbServant *servant;
   static unsigned char filecount=0;
   //int len;
@@ -142,11 +142,11 @@ void *servantConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *tex
   return(servant);
   }
 
-int servantAssert(nbCELL context,void *skillHandle,nbServant *servant,nbCELL arglist,nbCELL value){
+static int servantAssert(nbCELL context,void *skillHandle,nbServant *servant,nbCELL arglist,nbCELL value){
   return(0);
   }
 
-int servantEnable(nbCELL context,void *skillHandle,nbServant *servant,nbCELL arglist,nbCELL value){
+static int servantEnable(nbCELL context,void *skillHandle,nbServant *servant,nbCELL arglist,nbCELL value){
   char msg[NB_MSGSIZE];
   nbLogMsg(context,0,'I',"Enabling %s",servant->cmd);
   servant->process=nbMedullaProcessOpen(NB_CHILD_TERM|NB_CHILD_SESSION,servant->cmd,servant->log,servant,NULL,cmdMsgWriter,cmdMsgReader,logMsgReader,msg,sizeof(msg));
@@ -158,11 +158,11 @@ int servantEnable(nbCELL context,void *skillHandle,nbServant *servant,nbCELL arg
   return(0);
   }
 
-int servantDisable(nbCELL context,void *skillHandle,nbServant *servant,nbCELL arglist,nbCELL value){
+static int servantDisable(nbCELL context,void *skillHandle,nbServant *servant,nbCELL arglist,nbCELL value){
   return(0);
   }
 
-int servantCommand(nbCELL context,void *skillHandle,nbServant *servant,nbCELL arglist,char *text){
+static int servantCommand(nbCELL context,void *skillHandle,nbServant *servant,nbCELL arglist,char *text){
   char msgbuf[NB_BUFSIZE];
   int len;
 
@@ -191,11 +191,11 @@ int servantCommand(nbCELL context,void *skillHandle,nbServant *servant,nbCELL ar
 /*
 *  Show skull
 */
-int servantShow(nbCELL context,void *skillHandle,nbServant *servant,int option){
+static int servantShow(nbCELL context,void *skillHandle,nbServant *servant,int option){
   return(0);
   }
 
-void *servantDestroy(nbCELL context,void *skillHandle,nbServant *servant,int option){
+static void *servantDestroy(nbCELL context,void *skillHandle,nbServant *servant,int option){
   nbFree(servant,sizeof(nbServant));
   return(NULL);
   }

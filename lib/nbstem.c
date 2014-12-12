@@ -416,6 +416,7 @@ nbCELL nbStart(int argc,char *argv[]){
       else if(strcmp(argv[i],"++stats")==0) nb_opt_stats=1;
       else if(strcmp(argv[i],"++bnr")==0) nb_opt_boolnotrel=1;
       else if(strcmp(argv[i],"++test")==0) nb_opt_test=1;
+      else if(strcmp(argv[i],"++safe")==0) nb_opt_safe=1;
       else fprintf(stderr,"Startup setting %s not recognized.\n",argv[i]);
       }
     }

@@ -10,6 +10,12 @@ define translator node translator("plan/translator/translator.nbx");
 ~ ()
 ~ ---------- --------
 ~ 1970-01-01 00:00:02 NB000I Translator "plan/translator/translator.nbx" loaded successfully.
+show translator;
+~ > show translator;
+~ translator = # == node translator
+~   Source: plan/translator/translator.nbx
+~   (abc def (.*)):assert a="$[1]";
+~   ()
 translator: abc def hij
 ~ > translator: abc def hij
 ~ > translator. assert a="hij";

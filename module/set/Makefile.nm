@@ -6,7 +6,7 @@ nblib_LTLIBRARIES = nb_set.la
 nb_set_la_SOURCES = nb_set.c
 nb_set_la_CFLAGS  = $(NB_MOD_CFLAGS)
 #nb_set_la_LDFLAGS = -module -version-info 0:4
-nb_set_la_LDFLAGS = -module -avoid-version
+nb_set_la_LDFLAGS = -module -avoid-version -L../../lib/.libs -lnb
 
 EXTRA_DIST = \
   caboodle/check/set.nb- \

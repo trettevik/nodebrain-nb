@@ -6,7 +6,7 @@ nblib_LTLIBRARIES = nb_snmptrap.la
 nb_snmptrap_la_SOURCES = nb_snmptrap.c
 nb_snmptrap_la_CFLAGS  = $(NB_MOD_CFLAGS)
 #nb_snmptrap_la_LDFLAGS = -module -version-info 0:1
-nb_snmptrap_la_LDFLAGS = -module -avoid-version
+nb_snmptrap_la_LDFLAGS = -module -avoid-version -L../../lib/.libs -lnb
 
 EXTRA_DIST = \
   caboodle/check/snmptrap.nb~ \

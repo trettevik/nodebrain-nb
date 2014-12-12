@@ -83,7 +83,7 @@
 
 #define strcasecmp _stricmp  // map unix strcasecmp to win stricmp
 
-int setenv(char *name,char *value,int option){  // wrap win function
+static int setenv(char *name,char *value,int option){  // wrap win function
   if(SetEnvironmentVariable(name,value)) return(0);
   else return(-1);
   }
@@ -91,7 +91,7 @@ int setenv(char *name,char *value,int option){  // wrap win function
 #else
 
 #if !defined(HAVE_SETENV)
-int setenv(char *name,char *value,int option){
+static int setenv(char *name,char *value,int option){
   char buf[1024];
   char *var;
   sprintf(buf,"%s=%s",name,value);
@@ -717,7 +717,7 @@ static void webHelpTopic(nbCELL context,nbWebSession *session,char *topic){
   nbWebsterPutText(context,session,html);
   }
 
-void webLinkDirRow(nbCELL context,nbWebSession *session,char *class,int row,char *path){
+static void webLinkDirRow(nbCELL context,nbWebSession *session,char *class,int row,char *path){
   char text[1024];
   char *name=path+strlen(path)-1;
   while(name>=path && *name!='/') name--;

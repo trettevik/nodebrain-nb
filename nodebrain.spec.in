@@ -1,20 +1,22 @@
 Name: @PACKAGE_NAME@
 Version: @PACKAGE_VERSION@
-Release: 2%{?dist}
+Release: 3%{?dist}
 
 %define _disable_ld_no_undefined 1
-%define is_mandriva %(test -e /etc/mandriva-release && echo 1 || echo 0)
 
-Summary: A declarative rule-based language for state and event monitoring
+Summary: A rule engine for state and event monitoring
 License: MIT
-Group: Development/Languages
+Group: Development/Languages/Other
 Source: @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
 URL: http://nodebrain.org/
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
+%if 0%{?rhel} || 0%{?centos} < 6
+BuildRequires: pcre-devel openssl-devel gettext pkgconfig
+%else
 BuildRequires: libedit-devel pcre-devel openssl-devel gettext pkgconfig
-Requires: pcre
+%endif
 Requires(post): /sbin/install-info
 Requires(preun): /sbin/install-info
 
@@ -24,6 +26,9 @@ Requires(preun): /sbin/install-info
 %build
 %configure 
 make %{?_smp_mflags} CFLAGS="$CFLAGS"
+
+%check
+make check
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -35,6 +40,7 @@ find %{buildroot} -type f -name "*.la" -exec rm -f {} ';'
 rm -f %{buildroot}/%{_infodir}/dir
 
 %post
+ldconfig
 if [ -f %{_infodir}/nodebrain.info.gz ]; then # for --excludedocs
    /sbin/install-info %{_infodir}/nodebrain.info.gz %{_infodir}/dir ||:
 fi
@@ -46,6 +52,9 @@ if [ $1 = 0 ]; then
     fi
 fi
 
+%postun
+ldconfig
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
@@ -54,22 +63,22 @@ NodeBrain is a rule engine for construction of state and event monitoring
 applications. It interacts with other monitoring components to perform
 simple element state monitoring or complex event correlation based on user
 specified rules. It is extended through the development of plug-in modules
-using the C API, and servant programs written in any language that interact
-with the rule engine via stdin, stdout, and stderr. The package includes a
-small set of plug-in modules to provide capabilities typically required for
-monitoring applications.
+using the C API, and servant programs that may be written in any language
+to interact with the rule engine via stdin, stdout, and stderr. The package 
+includes a small set of plug-in modules to provide capabilities typically 
+required for monitoring applications.
 
 %files
 %defattr(-,root,root,-)
 %doc AUTHORS COPYING ChangeLog NEWS README THANKS
-%dir %{_libdir}/nb
+%dir %{_libdir}/@NB_MOD_DIR@
 %{_bindir}/nb
 %{_bindir}/nbkit
-%{_libdir}/libnb-%{version}.so
-%{_libdir}/libnb.so
-%{_libdir}/nb/*.so
+%{_libdir}/libnb.so.*
+%{_libdir}/@NB_MOD_DIR@/*.so
+%exclude %{_libdir}/libnb.so
 %exclude %{_libdir}/*.a
-%exclude %{_libdir}/nb/*.a
+%exclude %{_libdir}/@NB_MOD_DIR@/*.a
 %{_mandir}/man1/*.1*
 %{_mandir}/man3/*.3*
 %{_mandir}/man5/*.5*
@@ -79,7 +88,7 @@ monitoring applications.
 #-- nodebrain-devel rpm --------------------------------------------------
 
 %package devel
-Group:          Development/Libraries
+Group:          Development/Libraries/Other
 Summary:        Development package for nodebrain
 Requires:       pkgconfig
 Requires:       nodebrain = %{version}-%{release}
@@ -91,20 +100,16 @@ This package contains development files for nodebrain.
 %defattr(-,root,root,-)
 %dir %{_includedir}/nb
 %{_includedir}/nb/*
-%if %is_mandriva
-%ghost %{_libdir}/*.so
-%ghost %{_libdir}/nb
-%else
-%exclude %{_libdir}/*.so
-%exclude %{_libdir}/nb
-%endif
+%{_libdir}/libnb.so
+%exclude %{_libdir}/*.so.*
+%exclude %{_libdir}/@NB_MOD_DIR@
 %{_libdir}/pkgconfig/*.pc
 
 
 #-- nodebrain-static rpm --------------------------------------------------
 
 %package static
-Group:          Development/Libraries
+Group:          Development/Libraries/Other
 Summary:        Static libraries for nodebrain
 Requires:       nodebrain-devel = %{version}-%{release}
 
@@ -114,12 +119,17 @@ This package contains static libraies for nodebrain.
 %files static
 %defattr(-,root,root,-)
 %{_libdir}/*.a
-%exclude %{_libdir}/nb
+%exclude %{_libdir}/@NB_MOD_DIR@
 
 
 #-------------------------------------------------------------------------
 
 %changelog
+* Sat Dec 6 2014 Ed Trettevik <eat@nodebrain.org> - 0.9.03-3
+- Changed description and summary
+- Changed library versioning scheme
+- Dropped mandriva conditionals
+
 * Mon Nov 24 2014 Ed Trettevik <eat@nodebrain.org> - 0.9.03-2
 - Eliminating the symbolic from /usr/bin/nb to /usr/bin/nb-0.9.03
 - Removed version number from libdir/nb

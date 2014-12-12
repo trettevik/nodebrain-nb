@@ -286,8 +286,8 @@ root directory.
 @section Modules
 @cindex modules
 
-A node @i{module} is a plugin to the rule engine that provides added capabilities
-using an API provided the NodeBrain Library.  Unlike servants that are loosely coupled,
+A @i{module} is a plugin to the rule engine that provides added capabilities
+using a C API provided by the NodeBrain Library.  Unlike servants that are loosely coupled,
 modules tightly couple with the rule engine.  This has both advantages and 
 disadvantages.  The obvious disadvantages are: 1) modules require more effort
 to build, and 2) modules may require a rebuild or even revision to take advantage
@@ -359,9 +359,7 @@ the @code{nb} command which is actually just a small main routine the uses the C
 start the engine, and a collection of plugins that use the C API to extend
 the engine.  
 
-The C API documentation has not been released because it is incomplete and out of date.
-Until the document is released, reference the source code for nb.c and the plugin modules
-for examples of calls to API functions.
+The C API is described by the NodeBrain Library manual.
 
 @node Installing
 @chapter Installing
@@ -452,18 +450,18 @@ As root, issue the following command on the downloaded tar.gz file.
 @cindex installing to user home
 
 If you don't have root access on the box, and want to install NodeBrain in your home
-directory, specify a @code{--prefix} option on the configure command.
+directory, specify a @code{DESTDIR} option on the @code{make install} command.
 
 @cartouche
 @example
 $ tar -xf nodebrain-@i{version}.tar.gz
 $ cd nodebrain-@i{version}
-$ ./configure --prefix=$HOME/usr
+$ ./configure
 $ make
 $ make check
-$ make install
+$ make install DESTDIR=$HOME
 $ export PATH=$PATH:$HOME/usr/local/bin
-$ export NB_MODULE_PATH=$HOME/usr/local/lib/nb
+$ export NB_MODULE_PATH=$HOME/usr/local/lib/nb-<spec-level>>
 @end example
 @end cartouche
 

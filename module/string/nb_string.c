@@ -97,7 +97,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL,DWORD fdwReason,LPVOID lpvReserved){
 
 /* Evaluation Method */
 
-nbCELL chrsubEvaluate(nbCELL context,void *skillHandle,void *knowledgeHandle,nbCELL arglist){
+static nbCELL chrsubEvaluate(nbCELL context,void *skillHandle,void *knowledgeHandle,nbCELL arglist){
   nbCELL cell,argCell1,argCell2;
   nbSET argSet;
   int i,type,len,sublen;
@@ -146,10 +146,8 @@ nbCELL chrsubEvaluate(nbCELL context,void *skillHandle,void *knowledgeHandle,nbC
 
 #if defined(_WINDOWS)
 _declspec (dllexport)
-#else
-extern
 #endif
-void *chrsubBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
+extern void *chrsubBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
   nbSkillSetMethod(context,skill,NB_NODE_EVALUATE,chrsubEvaluate);
   return(NULL);
   }
@@ -191,7 +189,7 @@ void *chrsubBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,c
 
 /* Evaluation Method */
 
-nbCELL utcEvaluate(nbCELL context,void *skillHandle,void *knowledgeHandle,nbCELL arglist){
+static nbCELL utcEvaluate(nbCELL context,void *skillHandle,void *knowledgeHandle,nbCELL arglist){
   nbCELL argCell1,argCell2;
   nbSET argSet;
   int type;
@@ -269,10 +267,8 @@ nbCELL utcEvaluate(nbCELL context,void *skillHandle,void *knowledgeHandle,nbCELL
 
 #if defined(_WINDOWS)
 _declspec (dllexport)
-#else
-extern
 #endif
-void *utcBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
+extern void *utcBind(nbCELL context,void *moduleHandle,nbCELL skill,nbCELL arglist,char *text){
   nbSkillSetMethod(context,skill,NB_NODE_EVALUATE,utcEvaluate);
   return(NULL);
   }

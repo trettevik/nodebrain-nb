@@ -10,7 +10,10 @@ define peer node peer("default@socket/peer");
 
 # Start a server to send commands to
 
-=|:agent/server.nb
+# 2014-12-08 eat - On Mac OS X shebang can't be another script
+#            And libtool makes nb a script before install
+#=|:agent/server.nb
+=|:bin/nb -d agent/server.nb
 
 -sleep 1
 

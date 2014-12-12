@@ -291,7 +291,7 @@ struct nfv7flow{
 *
 *      open(logname,O_CREAT|O_RDWR,S_IREAD|S_IWRITE);
 */
-int openHistory(char *filename,int periods,size_t len){
+static int openHistory(char *filename,int periods,size_t len){
   int file;  
   char *buffer;
   int wrote;
@@ -361,7 +361,7 @@ static int writeHistory(int file,char *buffer,int period,size_t len){
 /*
 *  Format a Version 5 Netflow Export Datagram to the log file
 */
-void format5(nbCELL context,unsigned char *buf,int len){
+static void format5(nbCELL context,unsigned char *buf,int len){
   struct nfv5hdr *hdr=(void *)buf;
   struct nfv5flow *flow=(void *)(buf+24);
   int f,n;
@@ -387,7 +387,7 @@ void format5(nbCELL context,unsigned char *buf,int len){
 /*
 *  Format a version 7 Netflow Export Datagram to the log file
 */
-void format7(nbCELL context,unsigned char *buf,int len){
+static void format7(nbCELL context,unsigned char *buf,int len){
   struct nfv7hdr *hdr=(void *)buf;
   struct nfv7flow *flow=(void *)(buf+24);
   int f,n;
@@ -413,7 +413,7 @@ void format7(nbCELL context,unsigned char *buf,int len){
 /***********************************************************************************
 *  Hash routines 
 ***********************************************************************************/
-void *hashNew(int modulo){
+static void *hashNew(int modulo){
   struct NB_MOD_NETFLOW_HASH *hash;
   int vectsize=modulo*sizeof(void *);
   hash=nbAlloc(sizeof(struct NB_MOD_NETFLOW_HASH)-sizeof(void *)+vectsize);
@@ -429,7 +429,7 @@ void *hashNew(int modulo){
 *    Note: This works for both ADDR and FLOW hashes because the next pointer
 *          is the first element of both structures.
 */
-void hashReset(struct NB_MOD_NETFLOW_HASH *hash){
+static void hashReset(struct NB_MOD_NETFLOW_HASH *hash){
   struct NB_MOD_NETFLOW_ADDR **entryP=(struct NB_MOD_NETFLOW_ADDR **)&(hash->vector),*entry,*next;
   int i;
   
@@ -444,7 +444,7 @@ void hashReset(struct NB_MOD_NETFLOW_HASH *hash){
     }
   }
 
-void hashFreeAddr(struct NB_MOD_NETFLOW_HASH *hash){
+static void hashFreeAddr(struct NB_MOD_NETFLOW_HASH *hash){
   //struct NB_MOD_NETFLOW_ADDR **entryP=(struct NB_MOD_NETFLOW_ADDR **)&(hash->free),*entry,*next;
   struct NB_MOD_NETFLOW_ADDR *entry,*next;
   hashReset(hash);
@@ -455,7 +455,7 @@ void hashFreeAddr(struct NB_MOD_NETFLOW_HASH *hash){
   nbFree(hash,sizeof(struct NB_MOD_NETFLOW_HASH)-sizeof(void *)+hash->modulo*sizeof(void *));
   }
 
-void hashFreeFlow(struct NB_MOD_NETFLOW_HASH *hash){
+static void hashFreeFlow(struct NB_MOD_NETFLOW_HASH *hash){
   //struct NB_MOD_NETFLOW_ADDR **entryP=(struct NB_MOD_NETFLOW_ADDR **)&(hash->free),*entry,*next;
   struct NB_MOD_NETFLOW_FLOW *entry,*next;
   hashReset(hash);
@@ -474,7 +474,7 @@ void hashFreeFlow(struct NB_MOD_NETFLOW_HASH *hash){
 /*
 *  increment volume counters
 */
-void incrementVolume(nbCELL context,NB_MOD_Netflow *netflow,unsigned char protocol,unsigned short port,unsigned int packets,unsigned int bytes){
+static void incrementVolume(nbCELL context,NB_MOD_Netflow *netflow,unsigned char protocol,unsigned short port,unsigned int packets,unsigned int bytes){
   static int spud=0;
   if(spud<30){ 
     nbLogMsg(context,0,'T',"incrementVolume called: protocol=%u,port=%u,packets=%u,bytes=%u",protocol,port,packets,bytes);
@@ -495,7 +495,7 @@ void incrementVolume(nbCELL context,NB_MOD_Netflow *netflow,unsigned char protoc
 /*
 *  Set flow sequence number
 */
-void setSeq(NB_MOD_Netflow *netflow,unsigned int address,unsigned char engineid,unsigned int seq,unsigned short count,short version){
+static void setSeq(NB_MOD_Netflow *netflow,unsigned int address,unsigned char engineid,unsigned int seq,unsigned short count,short version){
   struct NB_MOD_NETFLOW_DEVICE *device,**deviceP;
   deviceP=&(netflow->device);
   for(device=*deviceP;device!=NULL && (address>device->address || (address==device->address && engineid>device->engineid));device=*deviceP)
@@ -536,7 +536,7 @@ void setSeq(NB_MOD_Netflow *netflow,unsigned int address,unsigned char engineid,
 /*
 *  Sum sequence numbers
 */
-unsigned int getSeq(nbCELL context,NB_MOD_Netflow *netflow){
+static unsigned int getSeq(nbCELL context,NB_MOD_Netflow *netflow){
   char streamMsg[1024];
   struct NB_MOD_NETFLOW_DEVICE *device;
   char caddr[16];
@@ -568,7 +568,7 @@ unsigned int getSeq(nbCELL context,NB_MOD_Netflow *netflow){
 /*
 *  Set address attribute flags
 */
-unsigned short setAttr(NB_MOD_Netflow *netflow,unsigned int address,unsigned short maskOn,unsigned short maskOff){
+static unsigned short setAttr(NB_MOD_Netflow *netflow,unsigned int address,unsigned short maskOn,unsigned short maskOff){
   struct NB_MOD_NETFLOW_HASH *hash=netflow->hashAttr;
   struct NB_MOD_NETFLOW_ATTR *attr,**attrP;
   unsigned long index;
@@ -592,7 +592,7 @@ unsigned short setAttr(NB_MOD_Netflow *netflow,unsigned int address,unsigned sho
 /*
 *  Get address attribute flags
 */
-unsigned short getAttr(NB_MOD_Netflow *netflow,unsigned int address){
+static unsigned short getAttr(NB_MOD_Netflow *netflow,unsigned int address){
   struct NB_MOD_NETFLOW_HASH *hash=netflow->hashAttr;
   struct NB_MOD_NETFLOW_ATTR *attr,**attrP;
   unsigned long index;
@@ -607,7 +607,7 @@ unsigned short getAttr(NB_MOD_Netflow *netflow,unsigned int address){
 /*
 *  Analyze flows for a given address
 */
-void analyzeFlows(nbCELL context,NB_MOD_Netflow *netflow,unsigned int address){
+static void analyzeFlows(nbCELL context,NB_MOD_Netflow *netflow,unsigned int address){
   struct NB_MOD_NETFLOW_HASH *flowHash=netflow->hashFlow;
   struct NB_MOD_NETFLOW_FLOW *flow,**flowP;
   int i;
@@ -698,7 +698,7 @@ void analyzeFlows(nbCELL context,NB_MOD_Netflow *netflow,unsigned int address){
 /*
 *  Check partial sums for anomalies
 */
-void partialSum(nbCELL context,char *title,struct NB_MOD_NETFLOW_VOLUME *volume,int n,double min,struct NB_MOD_NETFLOW_MEASURE *packets,struct NB_MOD_NETFLOW_MEASURE *bytes){
+static void partialSum(nbCELL context,char *title,struct NB_MOD_NETFLOW_VOLUME *volume,int n,double min,struct NB_MOD_NETFLOW_MEASURE *packets,struct NB_MOD_NETFLOW_MEASURE *bytes){
   int i;
   char packetLcFlag,packetUcFlag,byteUcFlag,byteLcFlag;
 
@@ -726,7 +726,7 @@ void partialSum(nbCELL context,char *title,struct NB_MOD_NETFLOW_VOLUME *volume,
 /*
 *  Display volume sum table
 */
-void displaySum(nbCELL context,char *title,struct NB_MOD_NETFLOW_VOLUME *volume,int n,double min){
+static void displaySum(nbCELL context,char *title,struct NB_MOD_NETFLOW_VOLUME *volume,int n,double min){
   int i;
 
   nbLogMsg(context,0,'T',"%s Table:",title);
@@ -743,7 +743,7 @@ void displaySum(nbCELL context,char *title,struct NB_MOD_NETFLOW_VOLUME *volume,
 /*
 *  Display variation distribution
 */
-void displayDist(nbCELL context,struct NB_MOD_NETFLOW_HASH *hash){
+static void displayDist(nbCELL context,struct NB_MOD_NETFLOW_HASH *hash){
   struct NB_MOD_NETFLOW_ADDR **entryP=(struct NB_MOD_NETFLOW_ADDR **)&(hash->vector),*entry;
   int i;
   int dist[256];
@@ -763,7 +763,7 @@ void displayDist(nbCELL context,struct NB_MOD_NETFLOW_HASH *hash){
 /*
 *  Increment a flow counter for an address
 */
-struct NB_MOD_NETFLOW_ADDR *assertAddr(nbCELL context,NB_MOD_Netflow *netflow,unsigned int address,int to,u_int peerAddr,u_char protocol,u_short port){
+static struct NB_MOD_NETFLOW_ADDR *assertAddr(nbCELL context,NB_MOD_Netflow *netflow,unsigned int address,int to,u_int peerAddr,u_char protocol,u_short port){
   struct NB_MOD_NETFLOW_HASH *hash=netflow->hashAddr;
   struct NB_MOD_NETFLOW_ADDR *addr,**addrP;  
   unsigned long index;
@@ -811,7 +811,7 @@ struct NB_MOD_NETFLOW_ADDR *assertAddr(nbCELL context,NB_MOD_Netflow *netflow,un
 /*
 *  Assert a flow
 */
-struct NB_MOD_NETFLOW_FLOW *assertFlow(nbCELL context,NB_MOD_Netflow *netflow,unsigned int packets,unsigned int bytes,unsigned int fromAddr,unsigned int toAddr,unsigned char protocol,unsigned short toPort){
+static struct NB_MOD_NETFLOW_FLOW *assertFlow(nbCELL context,NB_MOD_Netflow *netflow,unsigned int packets,unsigned int bytes,unsigned int fromAddr,unsigned int toAddr,unsigned char protocol,unsigned short toPort){
   struct NB_MOD_NETFLOW_HASH *hash=netflow->hashFlow;
   struct NB_MOD_NETFLOW_FLOW *flow,**flowP;
   //struct NB_MOD_NETFLOW_ADDR *sAddr,*dAddr;
@@ -848,7 +848,7 @@ struct NB_MOD_NETFLOW_FLOW *assertFlow(nbCELL context,NB_MOD_Netflow *netflow,un
 /*
 *  Display the address and flow cache table
 */
-void displayFlow(nbCELL context,NB_MOD_Netflow *netflow){
+static void displayFlow(nbCELL context,NB_MOD_Netflow *netflow){
   struct NB_MOD_NETFLOW_HASH *flowHash=netflow->hashFlow,*addrHash=netflow->hashAddr;
   struct NB_MOD_NETFLOW_ADDR *addr,**addrP;
   struct NB_MOD_NETFLOW_FLOW *flow,**flowP;
@@ -875,7 +875,7 @@ void displayFlow(nbCELL context,NB_MOD_Netflow *netflow){
 /*
 *  Display the address and flow cache table
 */
-void streamFlows(nbCELL context,NB_MOD_Netflow *netflow){
+static void streamFlows(nbCELL context,NB_MOD_Netflow *netflow){
   struct NB_MOD_NETFLOW_HASH *flowHash=netflow->hashFlow;
   struct NB_MOD_NETFLOW_FLOW *flow,**flowP;
   int i;
@@ -897,7 +897,7 @@ void streamFlows(nbCELL context,NB_MOD_Netflow *netflow){
 /*
 *  Reset flow cache
 */
-void resetFlow(nbCELL context,NB_MOD_Netflow *netflow){
+static void resetFlow(nbCELL context,NB_MOD_Netflow *netflow){
   unsigned int seqCount;
 
   seqCount=getSeq(context,netflow);
@@ -920,7 +920,7 @@ void resetFlow(nbCELL context,NB_MOD_Netflow *netflow){
   netflow->flowCountPrev=netflow->flowCount;
   }
 
-void loadPeriod(nbCELL context,NB_MOD_Netflow *netflow){
+static void loadPeriod(nbCELL context,NB_MOD_Netflow *netflow){
   long weektime,period;
   
   weektime=time(NULL)%(7*24*60*60); /* compute time within week */
@@ -932,13 +932,13 @@ void loadPeriod(nbCELL context,NB_MOD_Netflow *netflow){
     } 
   }
 
-void sumInterval(nbCELL context,NB_MOD_Netflow *netflow){
+static void sumInterval(nbCELL context,NB_MOD_Netflow *netflow){
   }
  
 /*
 *  Check for statistical anomalies
 */
-void checkInterval(nbCELL context,NB_MOD_Netflow *netflow){
+static void checkInterval(nbCELL context,NB_MOD_Netflow *netflow){
   static int first=1;
   static int n=5,N=5;  /* test at 5 minute sum interval */
  
@@ -960,7 +960,7 @@ void checkInterval(nbCELL context,NB_MOD_Netflow *netflow){
     }
   }
 
-void handleV5(nbCELL context,NB_MOD_Netflow *netflow,void *buffer,int len){
+static void handleV5(nbCELL context,NB_MOD_Netflow *netflow,void *buffer,int len){
   struct nfv5hdr *hdr=(void *)buffer;
   struct nfv5flow *flow=(struct nfv5flow *)((char *)buffer+sizeof(struct nfv5hdr));
   int f;
@@ -974,7 +974,7 @@ void handleV5(nbCELL context,NB_MOD_Netflow *netflow,void *buffer,int len){
     }
   }
 
-void handleV7(nbCELL context,NB_MOD_Netflow *netflow,void *buffer,int len){
+static void handleV7(nbCELL context,NB_MOD_Netflow *netflow,void *buffer,int len){
   struct nfv7hdr *hdr=(void *)buffer;
   struct nfv7flow *flow=(void *)((char *)buffer+sizeof(struct nfv7hdr));
   int f;
@@ -993,7 +993,7 @@ void handleV7(nbCELL context,NB_MOD_Netflow *netflow,void *buffer,int len){
 /*
 *  Read incoming packets
 */
-void netflowRead(nbCELL context,int serverSocket,void *handle){
+static void netflowRead(nbCELL context,int serverSocket,void *handle){
   NB_MOD_Netflow *netflow=handle;
   unsigned char buffer[NB_BUFSIZE];
   size_t buflen=NB_BUFSIZE;
@@ -1033,7 +1033,7 @@ void netflowRead(nbCELL context,int serverSocket,void *handle){
 /*
 *  Subscription handler for EngineStats (and possibly others if it is just a stub)
 */
-void netflowSubscribe(nbCELL context,void *handle,char *topic,int state){
+static void netflowSubscribe(nbCELL context,void *handle,char *topic,int state){
   /* ignore subscriptions for now */
   }
 
@@ -1044,7 +1044,7 @@ void netflowSubscribe(nbCELL context,void *handle,char *topic,int state){
 *
 *    define netflow node netflow(9985);
 */
-void *netflowConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+static void *netflowConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   NB_MOD_Netflow *netflow;
   nbCELL cell=NULL;
   nbSET argSet;
@@ -1156,7 +1156,7 @@ void *netflowConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *tex
 *
 *    enable <node>
 */
-int netflowEnable(nbCELL context,void *skillHandle,NB_MOD_Netflow *netflow){
+static int netflowEnable(nbCELL context,void *skillHandle,NB_MOD_Netflow *netflow){
   int fd;
   if((fd=nbIpGetUdpServerSocket(context,"",netflow->port))<0){  // 2012-12-27 eat 0.8.13 - CID 751570
     nbLogMsg(context,0,'E',"Unable to listen on port %s\n",netflow->port);
@@ -1173,7 +1173,7 @@ int netflowEnable(nbCELL context,void *skillHandle,NB_MOD_Netflow *netflow){
 * 
 *    disable <node>
 */
-int netflowDisable(nbCELL context,void *skillHandle,NB_MOD_Netflow *netflow){
+static int netflowDisable(nbCELL context,void *skillHandle,NB_MOD_Netflow *netflow){
   nbListenerRemove(context,netflow->socket);
   close(netflow->socket);
   netflow->socket=0;
@@ -1187,7 +1187,7 @@ int netflowDisable(nbCELL context,void *skillHandle,NB_MOD_Netflow *netflow){
 *
 *    <node>:check,reset,display
 */
-int *netflowCommand(nbCELL context,void *skillHandle,NB_MOD_Netflow *netflow,nbCELL arglist,char *text){
+static int *netflowCommand(nbCELL context,void *skillHandle,NB_MOD_Netflow *netflow,nbCELL arglist,char *text){
   if(netflow->trace){
     nbLogMsg(context,0,'T',"nb_netflow:netflowCommand() text=[%s]\n",text);
     }
@@ -1204,7 +1204,7 @@ int *netflowCommand(nbCELL context,void *skillHandle,NB_MOD_Netflow *netflow,nbC
 *
 *    undefine <node>
 */
-int netflowDestroy(nbCELL context,void *skillHandle,NB_MOD_Netflow *netflow){
+static int netflowDestroy(nbCELL context,void *skillHandle,NB_MOD_Netflow *netflow){
   nbLogMsg(context,0,'T',"netflowDestroy called");
   if(netflow->socket!=0) netflowDisable(context,skillHandle,netflow);
   hashFreeFlow(netflow->hashFlow);

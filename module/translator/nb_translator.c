@@ -163,7 +163,7 @@ typedef struct NB_MOD_TRANSLATOR{           /* translator node descriptor */
 *
 *    define translate node translate("syslog.nbx");
 */
-void *translatorConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
+static void *translatorConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *text){
   NB_MOD_Translator *translate;
   nbCELL cell=NULL;
   nbSET argSet;
@@ -232,7 +232,7 @@ void *translatorConstruct(nbCELL context,void *skillHandle,nbCELL arglist,char *
 *    disable <node>
 *
 */
-int translatorAssert(nbCELL context,void *skillHandle,NB_MOD_Translator *translate,nbCELL arglist){
+static int translatorAssert(nbCELL context,void *skillHandle,NB_MOD_Translator *translate,nbCELL arglist){
   nbCELL cell=NULL;
   nbSET argSet;
   int type;
@@ -290,7 +290,7 @@ static nbCELL translatorEvaluate(nbCELL context,void *skillHandle,NB_MOD_Transla
 *    <node>[(<args>)][:<text>]
 *
 */
-int translatorCommand(nbCELL context,NB_MOD_TranslatorSkill *skillHandle,NB_MOD_Translator *translate,nbCELL arglist,char *text){
+static int translatorCommand(nbCELL context,NB_MOD_TranslatorSkill *skillHandle,NB_MOD_Translator *translate,nbCELL arglist,char *text){
   nbCELL cell=NULL;
   nbSET argSet;
 //  int type;
@@ -309,6 +309,10 @@ int translatorCommand(nbCELL context,NB_MOD_TranslatorSkill *skillHandle,NB_MOD_
     if(text!=NULL && *text) nbTranslatorExecute(context,translate->translator,text);
     }
   else if(cell==skillHandle->translateStr){
+    if(nb_opt_safe){
+      nbLogMsg(context,0,'E',"translate command not supported in safe mode");
+      return(1);
+      }
     if(text==NULL || *text==0){
       nbLogMsg(context,0,'E',"Expecting file name as text argument");
       return(1);
@@ -344,13 +348,13 @@ int translatorCommand(nbCELL context,NB_MOD_TranslatorSkill *skillHandle,NB_MOD_
 *    undefine <node>
 *
 */
-int translatorDestroy(nbCELL context,void *skillHandle,NB_MOD_Translator *translate){
+static int translatorDestroy(nbCELL context,void *skillHandle,NB_MOD_Translator *translate){
   nbLogMsg(context,0,'T',"translatorDestroy called");
   nbFree(translate,sizeof(NB_MOD_Translator));
   return(0);
   }
 
-int translatorShow(nbCELL context,void *skillHandle,NB_MOD_Translator *translate,int option){
+static int translatorShow(nbCELL context,void *skillHandle,NB_MOD_Translator *translate,int option){
   if(option!=NB_SHOW_REPORT) return(0);
   //nbLogPut(context,"\n");
   if(translate && translate->translator!=NULL) nbTranslatorShow(translate->translator);
