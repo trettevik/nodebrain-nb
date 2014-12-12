@@ -293,34 +293,45 @@ static int nbCmdParse(nbCELL context,char *cursor,unsigned char cmdopt,NB_Instru
 //            we handle it like Windows and go without readline functionality.
 
 static int nbGetCmdInteractive(char *cmd,size_t cmdlen){  // 2012-12-31 eat - VID 614 - included cmdlen
-  static char *lastInput="";
-  static char *userInput="";
+  static char *userInput=NULL;
   char *cursor;
   int len;
-#if defined(WIN32) || (!defined(HAVE_EDITLINE_READLINE_H) && !defined(HAVE_READLINE_READLINE_H))
-  char buffer[NB_BUFSIZE];
+  outFlush();
+#if !defined(WIN32) && (defined(HAVE_EDITLINE_READLINE_H) || defined(HAVE_READLINE_READLINE_H))
+  static char *lastInput=NULL;
+#else
+  char *buffer=NULL;
 #endif
 
   outPut("\n");
   outFlush();
-#if !defined(WIN32)
-  if(*lastInput) free(lastInput); // free up previous last command
-#endif
+#if !defined(WIN32) && (defined(HAVE_EDITLINE_READLINE_H) || defined(HAVE_READLINE_READLINE_H))
+  if(lastInput) free(lastInput); // free up previous last command
   lastInput=userInput;            // get current last command
+#else
+  if(userInput) free(userInput);
+#endif
   userInput=">";
   while(userInput && *userInput=='>'){;
-#if defined(WIN32) || (!defined(HAVE_EDITLINE_READLINE_H) && !defined(HAVE_READLINE_READLINE_H))
-    printf("%s",nb_cmd_prompt);
-    userInput=fgets(buffer,sizeof(buffer),stdin);
-    //userInput=buffer;
+#if !defined(WIN32) && (defined(HAVE_EDITLINE_READLINE_H) || defined(HAVE_READLINE_READLINE_H))
+    userInput=readline(nb_cmd_prompt);  // get a line from the user
     if(!userInput) return(0);
+#else
+    printf("%s",nb_cmd_prompt);
+    buffer=malloc(NB_BUFSIZE);
+    if(!buffer){
+      fprintf(stderr,"NodeBrain out of memory.  Terminating\n");
+      exit(NB_EXITCODE_FAIL);
+      }
+    userInput=fgets(buffer,NB_BUFSIZE,stdin);
+    if(!userInput){
+      free(buffer);
+      return(0);
+      }
     cursor=strchr(buffer,10);
     if(cursor) *cursor=0;
     cursor=strchr(buffer,13);
     if(cursor) *cursor=0;
-#else
-    userInput=readline(nb_cmd_prompt);  // get a line from the user
-    if(!userInput) return(0);
 #endif
     if(*userInput=='>'){  // 2012-10-26 eat - switched to >
       cursor=userInput+1;
@@ -332,15 +343,13 @@ static int nbGetCmdInteractive(char *cmd,size_t cmdlen){  // 2012-12-31 eat - VI
         strcpy(nb_cmd_prefix,cursor);
         sprintf(nb_cmd_prompt,"%s> ",nb_cmd_prefix);
         }
-#if !defined(WIN32) && (defined(HAVE_EDITLINE_READLINE_H) || defined(HAVE_READLINE_READLINE_H))
       free(userInput);
-#endif
       userInput=">";
       }
     }
   if(*userInput){
 #if !defined(WIN32) && (defined(HAVE_EDITLINE_READLINE_H) || defined(HAVE_READLINE_READLINE_H))
-    if(strcmp(lastInput,userInput)) add_history(userInput);  // add to history
+    if(!lastInput || strcmp(lastInput,userInput)) add_history(userInput);  // add to history
 #endif
     if(!*nb_cmd_prefix) len=snprintf(cmd,cmdlen,"%s",userInput);   // 2012-12-31 eat - VID 614
     else len=snprintf(cmd,cmdlen,"%s %s",nb_cmd_prefix,userInput);
