@@ -2,6 +2,7 @@ Format-Specification: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?op=file&
 Name: nodebrain
 Maintainer: Ed Trettevik <eat@nodebrain.org>
 Source: http://svn.code.sf.net/p/nodebrain/code/nb
+Source: https://trettevik@git.code.sf.net/p/nodebrain/nb
 
 Copyright: 2014 Ed Trettevik <eat@nodebrain.org>
 License: MIT

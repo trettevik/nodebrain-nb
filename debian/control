@@ -8,7 +8,7 @@ Homepage: http://nodebrain.org
 
 Package: nodebrain-0.9.03
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libedit, libpcre3, libssl libcrypto
+Depends: ${shlibs:Depends}, ${misc:Depends}, libedit, libpcre3, libssl, libcrypto
 Description: NodeBrain Rule Engine
  NodeBrain is a rule engine for construction of state and event monitoring
  applications. It interacts with other monitoring components to perform

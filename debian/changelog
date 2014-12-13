@@ -1,7 +1,7 @@
 nodebrain (0.9.03-1) unstable; urgency=low
 
   * New upstream version
-  * Changes to achieve Debian policy compliance
+  * Changes to attempt Debian policy compliance
 
  -- Ed Trettevik <eat@nodebrain.org>  Sun, 7 Dec 2014 10:55:02 -0800
 
