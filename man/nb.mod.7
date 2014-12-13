@@ -17,7 +17,7 @@ NodeBrain Rule Engine,
 \fBnb\fP(1).
 Modules may by used to provide "cell functions" for use in formulas.  The API is
 called to bind a C function to a cell function that may then be referenced within
-a formulas in NodeBrain rules.  A cell function call that binds to the C sqrt function
+formulas in NodeBrain rules.  A cell function call that binds to the C sqrt function
 looks like this.
 
    \`math.sqrt(a)
@@ -37,20 +37,20 @@ describes the API.
 
 See http://nodebrain.org for more information.
 .SH FILES
-.IP \fB/usr/local/include/nb/nb.h\fP
+.IP \fB/usr/include/nb/nb.h\fP
 NodeBrain API header file.
-.IP \fB/usr/local/lib/nb/x.x/nb_\fP\fImodule.suffix\fP
+.IP \fB/usr/lib64/nb-\fIseries\fP/nb_\fP\fImodule.suffix\fP
 NodeBrain modules may be located anywhere, provided you direct nb to them using the
 NB_MODULE_PATH environment variable or a path in a module declaration command.  If no path
 is specified and a module is not found using the native search path, NodeBrain checks
-in /usr/local/lib/nb/x.x as show above, where \fIsuffix\fP is determined by the platform.
-.IP \fBnb_mod_\fP\fImodule\fP\fB.so\fP
+in \fIlibdir\fP/nb/x.x as show above, where \fIlibdir\fP and  \fIsuffix\fP are determined by the platform.
+.IP \fBnb_\fP\fImodule\fP\fB.so\fP
 [Solaris and Linux]
-.IP \fBnb_mod_\fP\fImodule\fP\fB.sl\fP
+.IP \fBnb_\fP\fImodule\fP\fB.sl\fP
 [HP-UX]
-.IP \fBnb_mod_\fP\fImodule\fP\fB.dylib\fP
+.IP \fBnb_\fP\fImodule\fP\fB.dylib\fP
 [Mac OS x]
-.IP \fBnb_mod_\fP\fImodule\fP\fB.dll\fP
+.IP \fBnb_\fP\fImodule\fP\fB.dll\fP
 [Windows]     
 .P
 .SH RULES
