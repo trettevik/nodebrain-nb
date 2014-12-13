@@ -143,6 +143,7 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = nb.pc
 
 EXTRA_DIST = \
+  API \
   LICENSE.txt \
   Readme.txt \
   nodebrain.spec.in \
