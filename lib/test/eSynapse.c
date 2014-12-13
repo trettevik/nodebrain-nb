@@ -85,7 +85,6 @@ static void myAlert( nbCELL context, void *skillHandle, void *nodeHandle, nbCELL
 
 static void myAlarm( nbCELL context, void *skillHandle, void *nodeHandle, nbCELL cell )
 {
-        static int w = 2;
 	nbLogMsg( context, 0, 'T', "myAlarm was called");
 }
 
