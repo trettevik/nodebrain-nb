@@ -40,14 +40,6 @@
 *=============================================================================
 */
 #include <nb/nb.h>
-//#include <stdio.h>
-//#include <errno.h>
-//#include <stdlib.h>
-
-//#include <unistd.h>
-//#include <fcntl.h>
-//#include <netdb.h>
-//#include <time.h>
 
 #define TEST( TITLE ) nbLogPut( context, "\nTEST: line %5d - %s\n", __LINE__, TITLE )
 

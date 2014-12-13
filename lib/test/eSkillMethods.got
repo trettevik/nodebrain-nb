@@ -1,7 +1,7 @@
 
-TEST: line   176 - nbSkillDeclare - declare a new skill
+TEST: line   168 - nbSkillDeclare - declare a new skill
 
-TEST: line   178 - nbCmd - define a node that uses the skill
+TEST: line   170 - nbCmd - define a node that uses the skill
 > define Fire node fire;
 > Fire. define Foo node;
 > Fire.Foo. define bar cell "value of Fire.Foo.bar";
@@ -34,7 +34,7 @@ Fire = # == node fire
 Fire.Foo = # == node 
 Fire.a = 1
 
-TEST: line   203 - Expecting r2 to fire
+TEST: line   195 - Expecting r2 to fire
 > assert y=2;
 0000-00-00 00:00:00 NB000I Rule r2 fired (Ice(22,"abc")=99,x=2)
 0000-00-00 00:00:00 NM000T fire Ice: fireAssert handling assertion
@@ -47,7 +47,7 @@ Fire = # == node fire
 Fire.Foo = # == node 
 Fire.a = 1
 
-TEST: line   206 - Expecting r1 to fire
+TEST: line   198 - Expecting r1 to fire
 > assert y=4;
 0000-00-00 00:00:00 NB000I Rule r1 fired (Fire(22)=7,Ice(10)="abc",Fire("abc","def")=1,x=1)
 0000-00-00 00:00:00 NM000T fire Fire: fireAssert handling assertion

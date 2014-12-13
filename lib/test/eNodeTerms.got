@@ -1,35 +1,35 @@
 
-TEST: line   241 - Creating a term at the top level context
+TEST: line   233 - Creating a term at the top level context
 > define f_a cell 20;
 
-TEST: line   244 - Creating Test node to test ability to access the subordinate terms
+TEST: line   236 - Creating Test node to test ability to access the subordinate terms
 > define Test node;
 > Test. assert .a=1,.b="abc",!.c,?.d,.e,.f_a=1,.f_b="abc",f_c==a and b;
 > Test. define r1 on(a or b) x=2;
 > Test. define foobar node;
 
-TEST: line   250 - Locating the Test node
+TEST: line   242 - Locating the Test node
 
-TEST: line   265 - Accessing terms from the top level context
+TEST: line   257 - Accessing terms from the top level context
 At _ f_a is 20
 At _ Test.f_a is 1
 At _ Test.f_b is "abc"
 
-TEST: line   270 - Accessing the same terms from the Test node context
+TEST: line   262 - Accessing the same terms from the Test node context
 At Test ..f_a is 20
 At Test f_a is 1
 At Test .f_b is "abc"
 
-TEST: line   275 - Accessing the same terms a harder way with access to cell type codes and C data types
+TEST: line   267 - Accessing the same terms a harder way with access to cell type codes and C data types
 At Test ..f_a is number 20.000000
 At Test f_a is number 1.000000
 At Test .f_b is string "abc"
 
-TEST: line   280 - Displaying Test node term names the easy way as single string
+TEST: line   272 - Displaying Test node term names the easy way as single string
 Test terms:
 e,d,foobar,f_a,f_c,f_b,a,c,r1,b,x
 
-TEST: line   283 - Displaying Test node terms the hard way using an array of cells
+TEST: line   275 - Displaying Test node terms the hard way using an array of cells
 Test terms:
   e
   d
@@ -44,18 +44,18 @@ Test terms:
   x
 11 - terms
 
-TEST: line   286 - Displaying Test node values the easy way
+TEST: line   278 - Displaying Test node values the easy way
 Test values:
 e=!!,d=?,foobar=#,f_a=1,f_c=#,f_b="abc",a=1,c=!,r1=#,b="abc",x=?
 
-TEST: line   289 - Displaying Test node values a harder way with more control over format
+TEST: line   281 - Displaying Test node values a harder way with more control over format
 Test values:
 {e:!!;d:?;foobar:#;f_a:1;f_c:#;f_b:"abc";a:1;c:!;r1:#;b:"abc";x:?}
 
-TEST: line   292 - Displaying Test node term formulas the easy way
+TEST: line   284 - Displaying Test node term formulas the easy way
 Test formulas:
 e==!!,d==?,foobar==('?'),f_a==1,f_c==(a&b),f_b=="abc",a==1,c==!,r1==(a|b),b=="abc",x==?
 
-TEST: line   295 - Displaying Test node term formulas a slightly harder way with more format control
+TEST: line   287 - Displaying Test node term formulas a slightly harder way with more format control
 Test formulas:
 {e:!!;d:?;foobar:('?');f_a:1;f_c:(a&b);f_b:"abc";a:1;c:!;r1:(a|b);b:"abc";x:?}

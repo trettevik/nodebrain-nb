@@ -1,5 +1,5 @@
 
-TEST: line    99 - Testing a couple existing cell functions
+TEST: line    91 - Testing a couple existing cell functions
 > define x cell `math.mod(a,7) + `math.sqrt(b);
 > define r1 on(x>=16);
 > show a,b,x;
@@ -18,26 +18,26 @@ a = 14
 b = 100
 x = 10 == (`math.mod(a,7)+`math.sqrt(b))
 
-TEST: line   108 - Testing a C library function that I register
+TEST: line   100 - Testing a C library function that I register
 > assert y=`my.mod(b,7);
 > show b,y;
 b = 100
 y = 2
 
-TEST: line   113 - Testing a silly function of my creation: xyminus2(a,b) returns  (a * b - 2)
+TEST: line   105 - Testing a silly function of my creation: xyminus2(a,b) returns  (a * b - 2)
 > assert y=`my.xyminus2(a,b);
 > show a,b,y;
 a = 14
 b = 100
 y = 1398
 
-TEST: line   118 - Testing a silly single operand function: xtwice(a) returns (a * 2)
+TEST: line   110 - Testing a silly single operand function: xtwice(a) returns (a * 2)
 > assert y=`my.xtwice(a);
 > show a,y;
 a = 14
 y = 28
 
-TEST: line   123 - Testing a string truncation function: str.trunc(s,n) returns up to n characters of s
+TEST: line   115 - Testing a string truncation function: str.trunc(s,n) returns up to n characters of s
 > assert a="01234567890123456789";
 > assert y=`str.trunc(a,10);
 > show a,y;

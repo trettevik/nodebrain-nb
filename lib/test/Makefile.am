@@ -44,7 +44,7 @@
 ## 2014-11-15 Ed Trettevik - Introduced in version 0.9.03
 ##=============================================================================
      
-noinst_PROGRAMS = eCellFunctions eNodeTerms eSkillMethods
+noinst_PROGRAMS = eCellFunctions eNodeTerms eSkillMethods eSynapse
 
 EXTRA_DIST = \
   eCellFunctions.got \
@@ -58,6 +58,7 @@ AM_LDFLAGS = -L../.libs -lnb
 eCellFunctions_SOURCES = eCellFunctions.c
 eNodeTerms_SOURCES = eNodeTerms.c
 eSkillMethods_SOURCES = eSkillMethods.c
+eSynapse_SOURCES = eSynapse.c
 
 ## Run a set of tests to check out a build
 
