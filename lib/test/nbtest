@@ -7,7 +7,8 @@
 # This is a little script to execute every NodeBrain test
 # identified by a <test>.got file.
 # 
-# 2014/11/16 eat 0.9.03 Introduced
+# 2014-11-16 eat 0.9.03 Introduced
+# 2014-12-13 eat 0.9.03 Adjusted for OS X
 #============================================================
 
 maxit=0
@@ -25,13 +26,17 @@ for file in eCellFunctions eNodeTerms eSkillMethods; do
     #./${file}.sh ${file}.out > ${file}.get
     # for now, just drop the top 15 lines and bottom 1
     #
-    # On Mac OS X replace with this because it can't make
+    # On Mac OS X we fuss around a bit because it can't make
     # heads or tails out of the tail and head parameters
-    #   lines=`wc -l < ${file}.out`
-    #   let bottom=lines-15
-    #   let top=bottom-1
-    #   tail -n $bottom ${file}.out | head -n $top > ${file}.get
-    tail -n +16 ${file}.out | head -n -1 > ${file}.get
+    os=`uname`
+    if test "$os" == "Darwin"; then
+      lines=`wc -l < ${file}.out`
+      let bottom=lines-15
+      let top=bottom-1
+      tail -n $bottom ${file}.out | head -n $top > ${file}.get
+    else
+      tail -n +16 ${file}.out | head -n -1 > ${file}.get
+      fi
     exit=$?
     if test $exit -ne 0; then
       echo "    Exit code=${exit} - problem converting ${file}.out to ${file}.get";
