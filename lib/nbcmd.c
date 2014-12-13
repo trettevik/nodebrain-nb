@@ -2386,6 +2386,9 @@ void nbCmd(nbCELL context,char *cursor,unsigned char cmdopt){
       if(!(cmdopt&NB_CMDOPT_HUSH)) outPut("> %s\n",cursave);    /* always echo system commands */
       nbSpawnChild(context,0,cursave);                       /* AUTH_SYSTEM  */
       break;
+    case '+':
+      nbPlus(context,cursor,0);
+      break;
     case '{':
       nbRuleExec(context,cursor);                           /* AUTH_DEFINE */
       break;
