@@ -1,0 +1,34 @@
+declare tree module {"../.libs"};
+
+define Sensor node;           # Input events
+define MaxReading node;       # Output events
+MaxReading. define r1 if(!!):$ # type=${type},device=${device},measure=${measure},confidence=${confidence}
+define Measure node tree;       # (device,type)=measure
+define Confidence node tree;    # (device,type)=confidence
+define MaxMeasure node tree;    # (type)=measure      - to avoid duplicates
+define MaxConfidence node tree; # (type)=confidence   - to avoid duplicates
+
+# This node computes the highier of the two device measurements of a given type and alerts on a change
+# 
+define Max node;
+Max. define type       cell;
+Max. define deviceAB   cell (?Measure("B",type) or Measure("A",type)>=Measure("B",type)) true "A" else "B";
+Max. define deviceABC  cell (?Measure("C",type) or Measure(deviceAB,type)>=Measure("C",type)) true deviceAB else "C";
+Max. define device     cell (?Measure("D",type) or Measure(deviceABC,type)>=Measure("D",type)) true deviceABC else "D";
+Max. define measure    cell Measure(device,type);
+Max. define confidence cell Confidence(device,type);
+Max. define Output if((measure<>MaxMeasure(type) or confidence<>MaxConfidence(type)) unknown !!) \
+ MaxMeasure(type)=measure,MaxConfidence(type)=confidence\
+ :MaxReading. alert type=Max.type,device=Max.device,\
+ measure=Max.measure,confidence=Max.confidence;
+
+Sensor. define Save if(!!) Measure(device,type)=measure,Confidence(device,type)=confidence:Max. alert type=Sensor.type;
+
+Sensor. alert id=1,type="Temperature",device="A",measure=51,confidence=94.5;
+Sensor. alert id=2,type="Temperature",device="A",measure=57,confidence=95.5;
+Sensor. alert id=3,type="Humidity",device="B",measure=29,confidence=67.5;
+Sensor. alert id=4,type="Temperature",device="B",measure=55,confidence=88.0;
+Sensor. alert id=5,type="Temperature",device="B",measure=65,confidence=85.0;
+Sensor. alert id=6,type="Temperature",device="B",measure=49,confidence=87.0;
+Sensor. alert id=7,type="Temperature",device="A",measure=51,confidence=99.5;
+

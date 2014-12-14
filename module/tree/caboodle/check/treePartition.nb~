@@ -1,0 +1,7 @@
+define range node tree:partition;
+~ > define range node tree:partition;
+assert range("abc")=1,range("def")=2;
+~ > assert range("abc")=1,range("def")=2;
+show (range("az"));
+~ > show (range("az"));
+~ () = 1 == range("az")
