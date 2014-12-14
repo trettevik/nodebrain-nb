@@ -1,0 +1,45 @@
+N o d e B r a i n   L i b r a r y
+
+This document applies to the nodebrain-devel and nodebrain-static packages
+that support developer use of the NodeBrain Library (libnb). Reference the
+NodeBrain Library manual at http://nodebrain.org for details.
+
+The libnb library provides the NodeBrain Rule Engine, which is typically
+used by executing the nb command.  The library also provides an API for
+making use of the rule engine in other programs and for writing plugin
+modules that extend the capabilities of the rule engine. 
+
+Writing Skulls
+--------------
+
+You may use the rule engine in your own programs by including the header
+and calling the API functions as described in the NodeBrain Library manual.
+We call this type of program a "skull" because it contains NodeBrain.
+
+#include <nb/nb.h>
+
+int main(int argc,char *argv[]){
+  nbCELL context;
+
+  //...
+  context=nbStart(argc,argv); // start the rule engine but retain control
+  //...
+  // call API functions that register callback functions for my application
+  //...
+  nbServe(context,argc,argv); // give control to the rule engine
+  //... 
+  nbStop(context);            // stop the rule engine
+  //...
+  return(0);
+  }
+
+Writing Modules
+---------------
+
+Modules are dynamically loaded shared objects that implement a set of
+callback functions defined by the API.  A module my add cell functions and
+node functions to the rule language.  This topic is covered in the NodeBrain
+Library manual.
+
+Ed Trettevik
+December 13, 2014
