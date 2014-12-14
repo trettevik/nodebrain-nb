@@ -1,3 +1,51 @@
+commit 30343052d608231aece6ceae19160ba010877b5d
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sat Dec 13 22:49:39 2014 -0500
+
+    touched up documents for release
+
+commit 3ac67c7ae6947a2c74dd2145b2d80090319cdea4
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sat Dec 13 22:47:05 2014 -0500
+
+    set release date
+
+commit 15337e02b05f6249c733ef8bb8830a8c464621ce
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sat Dec 13 22:46:16 2014 -0500
+
+    fixed some lint warnings
+
+commit 3f17b396f5e2436184ccb7b96d5673b13f4634aa
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sat Dec 13 19:23:34 2014 -0500
+
+    trace comment fix
+
+commit fcc43f7f7aaf000f54f94816a742d7330d3bc539
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sat Dec 13 19:23:10 2014 -0500
+
+    memset added after nbAlloc calls
+
+commit b5a0065c13621899b29a188452a4603b16c5f343
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sat Dec 13 18:46:02 2014 -0500
+
+    debian packaging files updated for lint warnings
+
+commit ee069ff88c6c524906ca5248f556ad92be4ee166
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sat Dec 13 18:44:07 2014 -0500
+
+    touchup man pages a bit before release
+
+commit 47712d9de52d3ffff3ef690db7c0a1c9b5f2f4ac
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Sat Dec 13 18:43:11 2014 -0500
+
+    adjusted for OS X
+
 commit 62a3ab5db65b8b56608cf96cf264b5745a958739
 Author: Ed Trettevik <eat@nodebrain.org>
 Date:   Sat Dec 13 11:37:33 2014 -0500
