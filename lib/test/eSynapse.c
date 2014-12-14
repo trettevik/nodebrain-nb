@@ -146,8 +146,8 @@ int main( int argc, char *argv[] )
 
         nbServe( context, 2, argvServe );
 
-        synapseAlertCell = nbSynapseClose( context, synapseAlertCell );  // release the synapse
-        synapseAlarmCell = nbSynapseClose( context, synapseAlarmCell );  // release the synapse
+        nbSynapseClose( context, synapseAlertCell );  // release the synapse
+        nbSynapseClose( context, synapseAlarmCell );  // release the synapse
 
 	return ( nbStop( context ) );
 }
