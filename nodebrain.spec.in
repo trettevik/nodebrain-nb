@@ -1,13 +1,17 @@
 Name: @PACKAGE_NAME@
 Version: @PACKAGE_VERSION@
-Release: 3%{?dist}
+Release: 1%{?dist}
 
 %define _disable_ld_no_undefined 1
 
 Summary: A rule engine for state and event monitoring
 License: MIT
+%if 0%{?fedora} || 0%{?rhel} || 0%{?centos} 
+Group: Development/Languages
+%else
 Group: Development/Languages/Other
-Source: @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
+%endif
+Source: http://downloads.sourceforge.net/nodebrain/@PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
 URL: http://nodebrain.org/
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
@@ -35,7 +39,7 @@ rm -rf $RPM_BUILD_ROOT
 make DESTDIR=%{buildroot} \
     docdir=%{buildroot}%{_docdir}/%{name} \
     pkgconfigdir=%{_libdir}/pkgconfig \
-    install
+    install-strip
 find %{buildroot} -type f -name "*.la" -exec rm -f {} ';'
 rm -f %{buildroot}/%{_infodir}/dir
 
@@ -52,8 +56,7 @@ if [ $1 = 0 ]; then
     fi
 fi
 
-%postun
-ldconfig
+%postun -p /sbin/ldconfig
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -64,9 +67,9 @@ applications. It interacts with other monitoring components to perform
 simple element state monitoring or complex event correlation based on user
 specified rules. It is extended through the development of plug-in modules
 using the C API, and servant programs that may be written in any language
-to interact with the rule engine via stdin, stdout, and stderr. The package 
-includes a small set of plug-in modules to provide capabilities typically 
-required for monitoring applications.
+to interact with the rule engine via standard input, output, and error. The
+The package includes a small set of plug-in modules to provide capabilities
+typically required for monitoring applications.
 
 %files
 %defattr(-,root,root,-)
@@ -88,7 +91,11 @@ required for monitoring applications.
 #-- nodebrain-devel rpm --------------------------------------------------
 
 %package devel
+%if 0%{?fedora} || 0%{?rhel} || 0%{?centos} 
+Group:          Development/Libraries
+%else
 Group:          Development/Libraries/Other
+%endif
 Summary:        Development package for nodebrain
 Requires:       pkgconfig
 Requires:       nodebrain = %{version}-%{release}
@@ -98,6 +105,7 @@ This package contains development files for nodebrain.
 
 %files devel
 %defattr(-,root,root,-)
+%doc API
 %dir %{_includedir}/nb
 %{_includedir}/nb/*
 %{_libdir}/libnb.so
@@ -109,15 +117,20 @@ This package contains development files for nodebrain.
 #-- nodebrain-static rpm --------------------------------------------------
 
 %package static
+%if 0%{?fedora} || 0%{?rhel} || 0%{?centos} 
+Group:          Development/Libraries
+%else
 Group:          Development/Libraries/Other
+%endif
 Summary:        Static libraries for nodebrain
 Requires:       nodebrain-devel = %{version}-%{release}
 
 %description static
-This package contains static libraies for nodebrain.
+This package contains static libraries for nodebrain.
 
 %files static
 %defattr(-,root,root,-)
+%doc API
 %{_libdir}/*.a
 %exclude %{_libdir}/@NB_MOD_DIR@
 
@@ -125,14 +138,12 @@ This package contains static libraies for nodebrain.
 #-------------------------------------------------------------------------
 
 %changelog
-* Sat Dec 6 2014 Ed Trettevik <eat@nodebrain.org> - 0.9.03-3
+* Sat Dec 13 2014 Ed Trettevik <eat@nodebrain.org> - 0.9.03-1
 - Changed description and summary
-- Changed library versioning scheme
+- Changed library versioning to the libtool scheme
 - Dropped mandriva conditionals
-
-* Mon Nov 24 2014 Ed Trettevik <eat@nodebrain.org> - 0.9.03-2
-- Eliminating the symbolic from /usr/bin/nb to /usr/bin/nb-0.9.03
-- Removed version number from libdir/nb
+- Eliminating the versioned bindir/nb-0.9.03 and bindir/nb symbolic
+- Removed minor and patch version number from module path libdir/nb-x
 
 * Wed Jul 9 2014 Ed Trettevik <eat@nodebrain.org> - 0.9.02-1
 - Update for 0.9.02
