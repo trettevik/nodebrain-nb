@@ -10,6 +10,9 @@ nb_tree_la_LDFLAGS = -module -avoid-version  -L../../lib/.libs -lnb
 
 EXTRA_DIST = \
   caboodle/check/tree.nb~ \
+  caboodle/check/maxAB.nb- \
+  caboodle/check/maxABpair.nb- \
+  caboodle/check/treePartition.nb~ \
   doc/makedoc \
   doc/nb_tree.texi \
   doc/nb_tree_tutorial.texi \

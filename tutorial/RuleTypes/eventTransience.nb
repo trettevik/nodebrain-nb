@@ -1,0 +1,10 @@
+define year cell;
+vehicle. define r1 if(.make="ford" and .model="edsel");
+car.     define r1 if(vehicle.make="ford" and vehicle.model="edsel");
+show year,vehicle
+vehicle. alert make="ford",model="edsel";
+show year,vehicle
+vehicle. alert make="chevy",year="1954";
+show year,vehicle
+vehicle. alert make="ford",model="edsel";
+show year,vehicle

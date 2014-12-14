@@ -1,0 +1,3 @@
+vehicle. define r1 if(.make="ford" and .model="edsel");
+car.     define r1 if(vehicle.make="ford" and vehicle.model="edsel");
+vehicle. alert make="ford",model="edsel";

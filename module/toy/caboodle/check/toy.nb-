@@ -1,0 +1,5 @@
+#!bin/nb
+declare toy module {"../.libs"}; # for checking only
+define sum node toy.sum;
+assert a==`toy.mod(17,5);
+assert b==`toy.sqrt(400);

@@ -1,0 +1,39 @@
+#!../nb
+~ > #!../nb
+declare cache module {"../.libs"};
+~ > declare cache module {"../.libs"};
+define HostUser node cache(~(5m)):(a,b,c(0));
+define r1 on(HostUser@kids(x)>3);
+assert x="abc";
+HostUser. assert ("abc","bill",1);
+HostUser. assert ("abc","joe",2);
+HostUser. assert ("def","joe",3);
+HostUser. assert ("def","joe",4);
+HostUser. assert ("def","joe",5);
+HostUser. assert ("def","joe",6);
+HostUser. assert ("def","joe",6);
+HostUser. assert ("abc","sam",1);
+HostUser. assert ("abc","sally",2);
+HostUser. assert ("def","sally",3);
+HostUser. assert ("abc","sally",4);
+HostUser. assert ("abc","sally",5);
+HostUser. assert ("abc","sally",6);
+HostUser. assert ("abc","sally",6);
+show (HostUser@hits(x))
+show (HostUser@kids(x))
+show (HostUser@rows(x))
+assert x="def";
+show (HostUser@hits(x))
+show (HostUser@kids(x))
+show (HostUser@rows(x))
+assert x="abc";
+show (HostUser@hits(x,"sally"))
+show (HostUser@kids(x,"sally"))
+show (HostUser@rows(x,"sally"))
+show (HostUser@hits())
+show (HostUser@kids())
+show (HostUser@rows())
+show (HostUser@hits)
+show (HostUser@kids)
+show (HostUser@rows)
+#show HostUser
