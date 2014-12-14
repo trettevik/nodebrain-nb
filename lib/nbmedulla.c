@@ -111,6 +111,7 @@
 *            it we had a deadly embrace.  Now stdout and stderr are read concurrently
 *            and the problem is resolved.
 * 2014-01-25 eat 0.9.00 Checker updates
+* 2014-12-13 eat 0.9.03 Include memset after nbAlloc for cases that might need it
 *=============================================================================
 */
 #define NB_INTERNAL
@@ -180,6 +181,7 @@ void nbMedullaEventSchedule(void *session,char *msg,int (*handler)(void *session
     EnterCriticalSection(&nb_medulla_event_section);
     if((event=nb_medulla_event_free)==NULL) event=nbAlloc(sizeof(struct NB_MEDULLA_EVENT));
     else nb_medulla_event_free=event->next;
+    memset(event,0,sizeof(struct NB_MEDULLA_EVENT)); // 2014-12-13 eat - investigate later
     event->next=nb_medulla_event_used;
     event->session=session;
     *event->msg=0;
@@ -466,6 +468,7 @@ int nbMedullaOpen(void *session,int (*scheduler)(void *session),int (*processHan
   nbMedullaEventInit();
 #endif
   nb_medulla=nbAlloc(sizeof(struct NB_MEDULLA));
+  memset(nb_medulla,0,sizeof(struct NB_MEDULLA)); // 2014-12-13 eat - investigate later
 #if defined(WIN32)
   nb_medulla->waitCount=0;
 #else
@@ -482,6 +485,7 @@ int nbMedullaOpen(void *session,int (*scheduler)(void *session),int (*processHan
 
   // Initialize a header entry for the thread list
   thread=nbAlloc(sizeof(NB_Thread));
+  memset(thread,0,sizeof(NB_Thread)); // 2014-12-13 eat - investigate later
   thread->handler=NULL;
   thread->session=NULL;
   thread->next=thread;
@@ -490,6 +494,7 @@ int nbMedullaOpen(void *session,int (*scheduler)(void *session),int (*processHan
   nb_medulla->thread_count=0;
 
   nb_process=nbAlloc(sizeof(struct NB_MEDULLA_PROCESS));
+  memset(nb_process,0,sizeof(struct NB_MEDULLA_PROCESS)); // 2014-12-13 eat - investigate later
   nb_process->pid=getpid();
 #if defined(WIN32)
   nb_process->getpipe=nbMedullaFileOpen(1,GetStdHandle(STD_INPUT_HANDLE),nb_process,nbMedullaProcessWriter);
@@ -587,6 +592,7 @@ int nbMedullaWaitEnable(int type,nbFILE fildes,void *session,NB_MEDULLA_WAIT_HAN
   if(medfile==NULL){
     if((medfile=nb_medulla->handled)==NULL) medfile=nbAlloc(sizeof(struct NB_MEDULLA_WAIT));
     else nb_medulla->handled=nb_medulla->handled->next;
+    memset(medfile,0,sizeof(struct NB_MEDULLA_WAIT)); // 2014-12-13 eat - investigate later
     medfile->type=type;
     medfile->fildes=fildes;
     medfile->next=nb_medulla->handler;
@@ -1736,6 +1742,7 @@ nbPROCESS nbMedullaProcessOpen(
     return(NULL);
     }  
   process=nbAlloc(sizeof(struct NB_MEDULLA_PROCESS));
+  memset(process,0,sizeof(struct NB_MEDULLA_PROCESS)); // 2014-12-13 eat - investigate later
   process->status=0;
   if(outspec==3 || errspec==3) process->status|=NB_MEDULLA_PROCESS_STATUS_GENFILE;
   *process->exittype=0;
@@ -1910,6 +1917,7 @@ nbPROCESS nbMedullaProcessOpen(
 nbPROCESS nbMedullaProcessAdd(int pid,char *cmd){
   nbPROCESS process;
   process=nbAlloc(sizeof(struct NB_MEDULLA_PROCESS));
+  memset(process,0,sizeof(struct NB_MEDULLA_PROCESS)); // 2014-12-13 eat - investigate later
   process->pid=pid;
 #if defined(WIN32)
   process->putfile=NULL;
@@ -2220,6 +2228,7 @@ NB_MedullaFile *nbMedullaFileOpen(int option,nbFILE file,void *session,int (*han
   NB_MedullaFile *mfile;
 
   mfile=nbAlloc(sizeof(NB_MedullaFile));
+  memset(mfile,0,sizeof(NB_MedullaFile)); // 2014-12-13 eat - investigate later
   mfile->option=option;
 #if defined(WIN32)
   memset(&mfile->olap,0,sizeof(OVERLAPPED));
@@ -2281,6 +2290,7 @@ void nbMedullaThreadCreate(NB_MEDULLA_WAIT_HANDLER handler,void *session){
   NB_Thread *thread;
 
   thread=nbAlloc(sizeof(NB_Thread));
+  memset(thread,0,sizeof(NB_Thread)); // 2014-12-13 eat - investigate later
   thread->handler=handler;
   thread->session=session;
   thread->next=nb_medulla->thread;
