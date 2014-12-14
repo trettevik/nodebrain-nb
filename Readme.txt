@@ -18,7 +18,7 @@ Version:     0.9 - Columbo
 
 Release:     0.9.03 
 
-Date:        November 30, 2014
+Date:        December 14, 2014
 
 Reference:   http://nodebrain.org
                1) Online documentation
@@ -76,7 +76,7 @@ a) From source code distribution - install to /usr/local directories
 
      nb_mail    - SMTP send and receive
 
-     nb_message - Message steam producer, consumer, client and server
+     nb_message - Message stream producer, consumer, client and server
  
      nb_webster - Minimal web server for caboodle administration
 
@@ -94,13 +94,12 @@ b) From git repository - requires autoconf/automake/libtools
 c) To install to an alternate location (replace last step of a or b)
 
      $ make install DESTDIR=$HOME/usr
-     $ make install DESTDIR=/usr
 
-d) To create an RPM file instead of installing
+d) To create an RPM file instead of installing (on rpm based build machine)
 
      $ make rpm      [this replaces the make install step]
 
-e) Build binary RPM for source RPM file 
+e) Build binary RPM from source RPM file 
 
      $ rpmbuild --rebuild nodebrain-0.9.03-1.el6.src.rpm
      $ rpmbuild --rebuild nodebrain-0.9.03-1.src.rpm
@@ -112,38 +111,36 @@ f) Install from binary RPM file (x86_64 platform example)
 
 ======================================================================== 
 
-This release was tested on a CentOS 6.5 x86_64 platform.
+This release was tested primarily on a CentOS 6.5 x86_64 platform.
 
-The Coverity Scan service is used to check for defects.
+The Coverity Scan service is used to check for common defects.
 
 The openSUSE Build Service is used to test builds for varius Linux
-distributions on i586 and x86_64 architectures. The results are shown
-below.  There are still some package policy warning to be cleaned up
-on the platforms where the build was successful.  
+distributions on x86_64, i586, and armv7I architectures. There are
+still some package policy warnings to resolve.  A "make check" is
+part of the package build process, providing a light level of testing
+on each platform.
 
-Success:
+Architecture:
 
-  rpm Fedora        20, 19, 18, 17
-  rpm CentOS        7, 6
-  rpm Scientific    7, 6
-  rpm openSUSE      TumbleWeed
-  rpm openSUSE      Factory
-  rpm openSUSE      13.2, 13.1, 12.3, 12.2, 12.1
-  rpm SLE           11 SP1
+  x86_64          Pass - All OS's showing pass below
+  i586            Pass 
 
-  deb Debian        7, 6
-  deb xUbuntu       14.10, 14.04 13.10, 12.10, 12.04
-  deb Univention    3.2, 3.1
+Operating System:
 
-Fail:
+  rpm Fedora      Pass 20, 19, 18, 17
+  rpm RHEL        Pass 7, 6, 5 
+  rpm CentOS      Pass 7, 6, 5
+  rpm Scientific  Pass 7, 6
 
-  rpm RHEL          7, 6, 5                 - libedit unresolvable
-  rpm CentOS        5                       - libedit unresolvable
-  rpm SLE           12, 11 SP3, 11 SP2, 10  - libedit 
+  deb Debian      Pass 7, 6
+  deb xUbuntu     Pass 14.10, 14.04 13.10, 12.10, 12.04
+  deb Univention  Pass 3.2, 3.1
 
-The project has stopped porting to Windows, and the conditional
-compilation for Windows is no longer expected to work.  We may support
-Windows again in the future, but it is not a high priority at this time.  
+      Mac OS X    Pass 10.10.1 Yosemite outside Xcode
+                  FAIL 10.10.1 Yosemite using Xcode
+
+  msi Windows     Stopped porting, need to start again
 
 ======================================================================== 
 

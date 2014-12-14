@@ -58,6 +58,12 @@ Release 0.8.10
 @item This is a first edition.
 @end itemize
 
+@item 2014-12-13 @tab
+Release 0.9.03
+@itemize @bullet
+@item Included prune node function and fixed some obselete statements.
+@end itemize
+
 @end multitable
 
 @page
@@ -179,8 +185,8 @@ assert table1(a,b)=25;	# table1(1,4) is now 25
 assert table1(a,b)="abc";	# table1(1,4) is now .abc.
 assert table1(a,b)=a+b;	# table1(1,4) is now 5
 assert table1(a,b)=1;	# table1(1,4) is still True
-assert table1(a,b)=0;	# table1(1,4) is now False
-assert table1(a,b)=??;	# table1(1,4) is now Unknown
+assert table1(a,b)=!;	# table1(1,4) is now False
+assert table1(a,b)=?;	# table1(1,4) is now Unknown
 @end smallexample
 @end cartouche
 
@@ -245,7 +251,7 @@ define r1 if(!cacheTable(server) and ?treeTable(server)):action
 @end smallexample
 @end cartouche
 
-The cache and tree skills are not aware of the operators we are using here.  We are simply choosing the appropriate operator based on our awareness of what value these skills return when an entry is not defined---cache returns False (0) and tree returns Unknown (?)
+The cache and tree skills are not aware of the operators we are using here.  We are simply choosing the appropriate operator based on our awareness of what value these skills return when an entry is not defined---cache returns False (!) and tree returns Unknown (?)
 
 @node Tutorial
 @chapter Tutorial
@@ -300,6 +306,15 @@ assert @i{node}(@i{arg1}[,@i{arg2},...])[=@i{value}];
 @end cartouche
 If an unkown value ("?") is assigned, the element is removed.
 
+A @@prune node function may also be used in a node sentence assertion to remove all subordinate elements without
+removing the argument element.
+
+@cartouche
+@smallexample
+assert @i{node}@@prune(@i{arg1}[,@i{arg2},...]);
+@end smallexample
+@end cartouche
+
 @section Cell Expressions
 @cindex cell
 @cindex cell expression
@@ -340,7 +355,7 @@ The @code{balance} command is used to rebalance the trees within a Tree node aft
 @subsection Flatten
 @cindex flatten
 
-The @code{balance} command is used to completely unbalance the trees within a Baseline node so they effectively become lists.
+The @code{balance} command is used to completely unbalance the trees within a Tree node so they effectively become lists.
 
 @cartouche
 @smallexample
@@ -351,7 +366,7 @@ The @code{balance} command is used to completely unbalance the trees within a Ba
 @subsection Prune
 @cindex prune
 
-The @code{prune} command is used to remove elements from a Baseline node.
+The @code{prune} command is used to remove elements from a Tree node.
 
 @cartouche
 @smallexample
@@ -361,19 +376,20 @@ The @code{prune} command is used to remove elements from a Baseline node.
 
 Unlike an assertion that an element is unknown, which removes the identified element and the subordinate tree, the @code{prune} command only removes the subordinate tree.  Using a table model, it deletes the subordinate table, emptying the cells to the right of the identified cell and deleting all rows represented by the subordinate table.
 
+The @code{@@prune} node function performs the same operation, and can be used on both a command and an assertion context.  In a future release, more of the commands in this section will be available as node functions.  Some or all of these commands will then be deprecated.
+
 @subsection Store
 @cindex store
 
-The @code{store} command is used to write the current measures within a Baseline node to a file in the form of assertions.
+The @code{store} command is used to write the current measures within a Tree node to a file in the form of assertions.
 
 @cartouche
 @smallexample
-assert (@i{arg1}[,@i{arg2},...])=@i{value};
-...
+@i{node}[(@i{arg1}[,@i{arg2},...])]:store @i{filename};
 @end smallexample
 @end cartouche
 
-The node name is not included in the assertions.  This enables the assertions to be easily applied to a different node---perhaps not even a Baseline node.
+The node name is not included in the assertions.  This enables the assertions to be easily applied to a different node---perhaps not even a Tree node.
 
 @subsection Trace
 @cindex trace

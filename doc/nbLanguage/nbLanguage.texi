@@ -1791,9 +1791,9 @@ MyTable@@kids(a)
 
 The meaning of a sentence in a formula or assertion context is module and function dependent.  To illustrate, let's consider @code{MyTable@@kids(a)}
 in an assertion context. It might be used to set a @code{kids} property on the @code{MyTable} node to the value of @code{a}.
-It might also be used to set the @code{kids} property of member @code{a} within the @code{MyTable} node to True.  Within the context of
+Or it might be used to set the @code{kids} property of member @code{a} within the @code{MyTable} node to True.  Within the context of
 a cell formula, it may be used to ask if the @code{kids} property of the @code{MyTable} is the same as the value of @code{a}.
-It might also be used to ask if the @code{kids} property of member @code{a} within the @code{MyTable} node is True.  It is easier to guess
+Or it might be used to ask if the @code{kids} property of member @code{a} within the @code{MyTable} node is True.  It is easier to guess
 at the role @code{a} plays when combined with a @code{=} operator.  For example, the expression below, as an assertion or a formula, is probably
 using the value of @code{a} to access a specific element or property within the node.  But the point is that NodeBrain does not
 dictate what node functions actually do.  However, the NodeBrain model implies they are accepting assertions and responding to questions,
@@ -1802,7 +1802,6 @@ not formatting a document or preparing a monthly report.
 @example
 MyTable@@kids(a)=27
 @end example
-
 
 Within the context of the node whose function you want to call, you can omit the node name.
 
@@ -1819,7 +1818,7 @@ This applies to the "nameless" function as well, provided the @@ is specified.
 @end example
 
 So a more complete description of a node function call is as follows, where the node and/or function name
-are not always required when @@ is specified.
+is not always required when @@ is specified.
 
 @example
 @i{node}(@i{arg1},@i{arg2},@dots{})
@@ -1864,9 +1863,9 @@ If you defined the cache without scheduled expiration of entries, you must expli
 @example
 event. define Tab node cache:(a,b);   # define cache
 event. assert Tab("abc","xyz");       # insert entry if new
-event. assert !Tab("abc","xyz");      # delete entry
-event. assert !Tab("abc");            # delete group of entries
-event. assert !Tab();                 # delete all entries
+event. assert ?Tab("abc","xyz");      # delete entry
+event. assert ?Tab("abc");            # delete group of entries
+event. assert ?Tab();                 # delete all entries
 @end example
 
 With or without an expiration period, you may want to delete entries based on some condition. This is simply a way of forcing the cache condition to be False, just as asserting an entry forces it to be True. So, you can think of a cache condition as a dynamic set of named Boolean switches. You address a specific switch via the argument list.

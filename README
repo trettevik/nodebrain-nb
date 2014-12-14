@@ -76,7 +76,7 @@ a) From source code distribution - install to /usr/local directories
 
      nb_mail    - SMTP send and receive
 
-     nb_message - Message steam producer, consumer, client and server
+     nb_message - Message stream producer, consumer, client and server
  
      nb_webster - Minimal web server for caboodle administration
 
@@ -94,13 +94,12 @@ b) From git repository - requires autoconf/automake/libtools
 c) To install to an alternate location (replace last step of a or b)
 
      $ make install DESTDIR=$HOME/usr
-     $ make install DESTDIR=/usr
 
-d) To create an RPM file instead of installing
+d) To create an RPM file instead of installing (on rpm based build machine)
 
      $ make rpm      [this replaces the make install step]
 
-e) Build binary RPM for source RPM file 
+e) Build binary RPM from source RPM file 
 
      $ rpmbuild --rebuild nodebrain-0.9.03-1.el6.src.rpm
      $ rpmbuild --rebuild nodebrain-0.9.03-1.src.rpm
@@ -125,31 +124,39 @@ on each platform.
 Architecture:
 
   x86_64          Pass - All OS's showing pass below
-  i586            Pass 
-  armv7I          Pass - build only - openSUSE cache segfault
+  i586            Pass - RHEL 7, CentOS 7, Scientific Linux 7, and
+                         SLE_12 not tested
+  armv7i          Pass - only openSUSE Factory tested
 
-Operating System:
+Build Tested Operating Systems:
 
-  rpm Fedora      Pass 20, 19, 18, 17
-  rpm RHEL        Pass 7, 6, 5 
-  rpm CentOS      Pass 7, 6, 5
-  rpm Scientific  Pass 7, 6
+  rpm Fedora      Pass - 20, 19, 18, 17
+  rpm RHEL        Pass - 7, 6, 5 
+  rpm CentOS      Pass - 7, 6, 5
+  rpm Scientific  Pass - 7, 6
 
-**All SuSE platforms are getting a segfault in mail if not the libedit issue
-  rpm openSUSE    Pass TumbleWeed
-  rpm openSUSE    Pass Factory, Factory-Arm
-  rpm openSUSE    Pass 13.2, 13.1, 12.3, 12.2, 12.1
-  rpm SLE         Pass 12, 11 SP1, 11
-  rpm SLE         FAIL 11 SP3, 11 SP2, 10   - libedit issues 
+  rpm openSUSE    Pass - 13.2, 13.1, 12.3, 12.2, Factory, Factory_ARM
+  rpm SLE         Pass - 12, 11_SP3, 11_SP2, 11_SP1, 11, 10_SDK
 
-  deb Debian      Pass 7, 6
-  deb xUbuntu     Pass 14.10, 14.04 13.10, 12.10, 12.04
-  deb Univention  Pass 3.2, 3.1
+  deb Debian      Pass - 7, 6
+  deb xUbuntu     Pass - 14.10, 14.04 13.10, 12.10, 12.04, 11.10
+  deb Univention  Pass - 3.2, 3.1
 
-      Mac OS X    Pass 10.10.1 Yosemite outside Xcode
-                  FAIL 10.10.1 Yosemite using Xcode
+      Mac OS X    Pass - 10.10.1 Yosemite outside Xcode
 
-  msi Windows     Stopped porting, need to start again
+UNIX Operating Systems:
+
+Early versions were tested on serveral flavors of UNIX include HP-UX,
+Solaris, NCR Teradata, Sequent, IRIX, FreeBSD, OpenBSD, NetBSD, and
+more.  So you can probably build on today's UNIX systems, with the
+successful Max OS X build providing additional evidence. Please give 
+it a try and provide feedback.  Would be happy to make adjustments
+if needed.
+
+Windows Not Currently Supported:
+
+The Windows port has fallen behind and is not current supported.  Will
+start porting again if there is sufficient interest.
 
 ======================================================================== 
 

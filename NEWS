@@ -27,7 +27,7 @@ NodeBrain 0.9.03 (Columbo) Change Summary
      has switched to using the Application Binary Interface
      version, instead of the release version based scheme
      used previously.  The release version approach was
-     intended to require application to build for every
+     intended to require applications to build for every
      release, assuming there might be incompatibilities in
      every release. The change to an ABI based version is
      being made in preparation for a 1.0 release and 
@@ -44,7 +44,8 @@ NodeBrain 0.9.03 (Columbo) Change Summary
      platforms after the switch from readline to libedit.
      The effort to make the project friendly to package
      maintainers for various Linux distributions is still
-     in progress.
+     in progress. However, rpmlint is silent on CentOS so
+     the package will be submit to Fedora for review.
 
 * Documentation:
 
@@ -75,13 +76,13 @@ NodeBrain 0.9.03 (Columbo) Change Summary
      and state monitoring may break under this release,
      requiring rule changes before upgrading.  You will
      only have a problem if you depend on some terms
-     defined within a given node, that are set by an ALERT
+     defined within a given node that are set by an ALERT
      to the node, retaining their value when subsequent
      ALERT commands to the same node do not set a value
      for the term.  This would mean some of the terms set
      by an ALERT are intended to express "state", while
      others express an "event".  Starting with this
-     release, you may need to move all terms used to
+     release, you will need to move all terms used to
      express "state" within ALERT commands to a different
      node. Otherwise, ALERT commands not setting the "state"
      terms will automatically cause them to revert to Unknown.
@@ -143,7 +144,7 @@ NodeBrain 0.9.03 (Columbo) Change Summary
 
   o  Node functions can now be referenced before a node is 
      associated with a skill that provides the function.  This
-     enables rules to reference node function before the node
+     enables rules to reference node functions before the node
      is defined.  This is useful in cases where two nodes
      have rules that reference a function of the other.
 
@@ -166,7 +167,7 @@ NodeBrain 0.9.03 (Columbo) Change Summary
   o  A small set of commands, when used as rule actions,
      may now be accelerated.  You select this option by
      using "::" instead of ":" prior to a rule action
-     command.  i
+     command. 
 
        define r1 on(a=1 and b=2) x=1::fred. alert y=2;
 
@@ -181,6 +182,10 @@ NodeBrain 0.9.03 (Columbo) Change Summary
      see a warning and the interpreter will revert to
      normal as if you had said ":" instead of "::".
 
+     This feature is experimental and not yet included
+     in the NodeBrain Language manual.  So it should only
+     be used to experiment with the performance impact.
+
   o  Additional API functions have been included to
      simplify access to all terms within a node and
      obtain their name, value, and formula.
@@ -188,11 +193,11 @@ NodeBrain 0.9.03 (Columbo) Change Summary
   o  The package now includes some API test programs that
      are invoked by "make check".  This is for build
      verification, regression testing, and to provide
-     some examples know to work for reference.
+     some examples for reference that are known to work.
 
-* Deprecated Syntax: (none)
+* Deprecated Syntax:
 
-  o  Built-in math function calls should  no longer be 
+  o  Built-in math function calls should no longer be 
      referenced using a syntax that looks like a node
      function call. Instead, use the backtick notation
      and the qualified name.

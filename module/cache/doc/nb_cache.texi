@@ -52,12 +52,11 @@ Title: @i{NodeBrain  Tutorial}@*
 Author: Ed  Trettevik <eat@@nodebrain.org>@*
 Publisher: NodeBrain Open Source Project
 
-@item 2010-12-31 @tab
-Release 0.8.3
+@item 2014-12-14 @tab
+Release 0.9.03
 @itemize @bullet
-@item Updates - still needed
+@item Included node kids, rows, and hits node functions.
 @end itemize
-
 @end multitable
 
 @page
@@ -128,6 +127,19 @@ See the @i{Licenses} section at the end of this document for details.
 @chapter Concepts
 @cindex concepts
 
+@menu
+* Cache Definition::
+* Cache Attributes::
+* Cache Assertions::
+* Cache Intervals::
+* Cache Thresholds::
+* Cache Rules::
+* Cache Terms::
+* Cache Conditions::
+* Cache Facet Conditions::
+* Cache Release Condition::
+@end menu
+
 The Cache module implements a single skill by the same name.  A cache node is a table whose rows can be set to expire if not refreshed within some interval of time.  
 @*@*
 To perform real-time event correlation on a stream of events, you compare the parameters of each new event with parameters of prior events.  For this purpose, NodeBrain provides a simple structure called an @i{event cache}, a memory resident table for relatively short-term storage of events.
@@ -169,6 +181,7 @@ Up to three thresholds may be defined for each type of counter (hits, kids, rows
 
 When a counter crosses a threshold for the first time, it triggers a response.  A trigger point is represented with a vertical bar in the figure above.  The actual response is determined by rules that are described later.  For now, let's just say the cache triggers the response rules.  Any given threshold (minor, major, or critical) will not trigger a second time for a given counter until the count has dropped to the reset threshold.  The reset threshold is used as evidence that an abnormal episode ended and was returned to a normal state.  If a threshold is crossed again, it is treated as a new episode.  If a reset threshold is not specified, it defaults to zero.
 
+@node Cache Definition
 @section Cache Definition
 @cindex cache definition
 
@@ -182,6 +195,7 @@ define connie node cache(~(d)):(~(3h):x(100,200,300)[3,6,9]@{10,20,30@},y);
 
 The individual parameters are covered in the following sections on related topics.
 
+@node Cache Attributes
 @section Cache Attributes
 @cindex cache attributes
 
@@ -203,6 +217,7 @@ abc. define c cell;
 @end smallexample
 @end cartouche
 
+@node Cache Assertions
 @section Cache Assertions
 @cindex cache assertions
 
@@ -268,6 +283,7 @@ event. alert type="Failed",system="happynode.com";
 @end cartouche
 
 
+@node Cache Intervals
 @section Cache Intervals
 @cindex cache intervals
 
@@ -300,6 +316,7 @@ define abc node cache:(!~(4h):a,b,c);
 @end cartouche
 
 
+@node Cache Thresholds
 @section Cache Thresholds
 @cindex cache thresholds
 
@@ -361,6 +378,7 @@ define abc node cache:((1000)[3]:a,b[3,9,27],c);
 @end cartouche
 
 
+@node Cache Rules
 @section Cache Rules
 @cindex cache rules
 
@@ -370,8 +388,8 @@ Cache rules operate like any other rule within a context, but you need to base t
 @smallexample
 define abc node cache:(~(4h):a,b[10,20],c(40,60));
 
-abc. define r1 if(b._kidState):$ @i{action} including $$@{a@} $$@{b@} $$@{b._kids@}
-abc. define r2 if(c._hitState):$ @i{action} including $$@{a@} $$@{b@} $$@{c@} $$@{c._hits@}
+abc. define r1 if(b__kidState):$ @i{action} including $$@{a@} $$@{b@} $$@{b__kids@}
+abc. define r2 if(c__hitState):$ @i{action} including $$@{a@} $$@{b@} $$@{c@} $$@{c__hits@}
 @end smallexample
 @end cartouche
 
@@ -387,10 +405,11 @@ The internal alert is equivalent to the following.
 
 @cartouche
 @smallexample
-abc. alert a="fred", b="joe", c="sam", b._kidState=1, b._kids=10;
+abc. alert a="fred", b="joe", c="sam", b__kidState=1, b__kids=10;
 @end smallexample
 @end cartouche
 
+@node Cache Terms
 @section Cache Terms
 @cindex cache terms
 
@@ -398,22 +417,22 @@ The referenced terms are automatically defined when a cache is defined and asser
 
 @table @samp
 
-@item @i{attribute}._hits		
+@item @i{attribute}__hits		
 number of times the node has been asserted
 
-@item @i{attribute}._kids	
+@item @i{attribute}__kids	
 number of nodes in the next column
 
-@item @i{attribute}._rows	
+@item @i{attribute}__rows	
 number of rows a node participates in
 
-@item @i{attribute}._hit	
+@item @i{attribute}__hit	
 State	hit threshold reached
 
-@item @i{attribute}._kid	
+@item @i{attribute}__kid	
 State	kid threshold reached
 
-@item @i{attribute}._row	
+@item @i{attribute}__row	
 State	row threshold reached
 			
 @item _interval		
@@ -425,6 +444,7 @@ cache interval in text appropriate for a message
 @end table 
 
 
+@node Cache Conditions
 @section Cache Conditions
 @cindex cache conditions
 
@@ -490,6 +510,43 @@ assert ?@i{cache}(x);  # make the condition @i{cache}(x) false
 
 This is consistent with the closed world assumption.  Once you no longer know something to be True, it is immediately assumed to be False.
 
+@node Cache Facet Conditions
+@section Cache Facet Conditions
+@cindex cache Facet conditions
+
+Facets are different aspects of a node the you can operate on in some way using node functions.  The Cache module provides three functions that can be used
+in the context of an evaluation (formula), but not assertions or commands.
+
+@itemize @bullet
+@item @@kids(@i{argList}) - returns the number of unique values directly subordinate to the element identifed by the argument list. 
+@item @@rows(@i{argList}) - returns the number of unique rows subordinate to the element identified by the arument list.
+@item @@hits(@i{argList}) - returns the number of assertions for the element identified by the arument list.
+@end itemize
+
+In the example below, we set a useless threshold of (0) on @code{c} just to force the cache to maintain hit counts.  This is because the
+cache wants to be lazy. (This requirement may be removed in a future release.) 
+See if you agree with the comments indicating the number assigned to @code{x} in each of the assertions.
+
+@cartouche
+@smallexample 
+define payday node cache:(a,b,c(0));
+payday. assert (1,2,3);
+payday. assert (1,3,3);
+payday. assert (1,4,3);
+payday. assert (1,4,4);
+payday. assert (1,4,4);
+assert y=1,z=4;;
+assert x=payday@@kids(y);     # 3  (2,3,4)
+assert x=payday@@rows(y);     # 4  ((2,3),(3,3),(4,3),(4,4))
+assert x=payday@@hits(y);     # 5  Number of assertions starting with 1
+assert x=payday@@kids(y,z);   # 2  (3,4)
+assert x=payday@@rows(y,z);   # 2  (3,4)
+assert x=payday@@hits(y,z);   # 3  Number of assertions starting with (1,4)
+assert x=payday@@hits(y,z,4); # 2  Number of assertions for (1,4,4)
+@end smallexample
+@end cartouche
+
+@node Cache Release Condition
 @section Cache Release Condition
 @cindex cache release condition
 

@@ -1,5 +1,5 @@
-@set UPDATED 13 August 2014
-@set UPDATED-MONTH August 2014
-@set EDITION 0.2
-@set VERSION 0.2
-@set RELEASE 0.9.02
+@set UPDATED 14 December 2014
+@set UPDATED-MONTH December 2014
+@set EDITION 0.9
+@set VERSION 0.9.03
+@set RELEASE 0.9.03

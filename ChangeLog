@@ -1,335 +1,227 @@
-commit 94f8206c0d83773878dc811e01954d60c44dfbd9
+commit 62a3ab5db65b8b56608cf96cf264b5745a958739
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Tue Mar 18 13:19:28 2014 -0400
+Date:   Sat Dec 13 11:37:33 2014 -0500
 
-    misc 0.9.01 updates
+    added devel and static package doc file
 
-commit 7a10ca8224f387b789b95a8710b27480d69a462b
+commit f46ad3e28950c38fa920936ba688f77d136a7e8e
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Mon Mar 17 19:35:19 2014 -0400
+Date:   Sat Dec 13 03:54:23 2014 -0500
 
-    incomplete 09.01 doc updates
+    removed unused variable
 
-commit 8dadc6192f18685c5c93dfe168c04aa782afa639
+commit dd142c7fde25a8a3b544354240cf432b34d89939
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Mon Mar 17 19:17:21 2014 -0400
+Date:   Sat Dec 13 03:50:16 2014 -0500
 
-    minor progress on Library document
+    example cleanup
 
-commit d330f241a55ff05dc272dca025ba3b1f91f58704
+commit 30d8b013dfd8eb6668408b9d78f8446ae2de4683
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Mon Mar 17 19:14:33 2014 -0400
+Date:   Sat Dec 13 03:48:49 2014 -0500
 
-    moved .gitignore entries up to doc level
+    restored factory + command in preparation for registered + command in next release
 
-commit 18abc0f36d839628a4cd9e85e5acffc99686abe9
+commit 8824c8919be98f9527cd5b3ef3fe58eb37b2c4a0
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Mon Mar 17 19:08:48 2014 -0400
+Date:   Fri Dec 12 03:07:50 2014 -0500
 
-    stop tracking auto generated version file
+    fixed bug for systems without libedit
 
-commit d4014edb3a8df3ceafc94f5b22a7ba7c1eabc2a8
+commit 3d7875f4b0a99b1ebab8407abd60f551565a9a7f
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Mon Mar 17 18:25:10 2014 -0400
+Date:   Thu Dec 11 21:13:57 2014 -0500
 
-    stop tracking auto generated version file
+    addressing various platform build issues
 
-commit f3bbf4af34cd3a23e9b5821f1899bc30a460bf49
+commit cb2dd57ccd6910e6404deb4dc69c6ca6c32faf01
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Mon Mar 17 18:21:05 2014 -0400
+Date:   Thu Nov 27 16:00:33 2014 -0500
 
-    stop tracking auto generated version file
+    man page updates
 
-commit 596846b21b133df2202aa95e83763b2409ba42f7
+commit e74277cc25d42587a42fba1b3cbc87f2de3ef4da
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Mon Mar 17 18:06:56 2014 -0400
+Date:   Wed Nov 26 03:35:25 2014 -0500
 
-    stop tracking generated version file
+    updated man pages for syntax changes
 
-commit 6c983f46fc0be987ee043d9a761849e23a2335b9
+commit c27637da4622f7837f3e918a6cf096cb7a917a3f
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sun Feb 23 22:46:57 2014 -0500
+Date:   Mon Nov 24 16:22:45 2014 -0500
 
-    drafting api doc
+    added got file
 
-commit 3170ed864b6003ab6d16026dd8bb3977b917b95e
+commit afd2b46b8a9e32634cc0388965486e57a4b3f7d6
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Wed Feb 19 18:01:38 2014 -0500
+Date:   Mon Nov 24 15:54:38 2014 -0500
 
-    partitioned corrected to partition
+    update binding function
 
-commit 040885e9462b046ee2a6a4321224d98c4f935a46
+commit c9944c31722cfaa2ec18a3e0d0f9d0ee7321f5c2
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sat Feb 15 23:02:14 2014 -0500
+Date:   Sat Nov 22 14:30:25 2014 -0500
 
-    fixed alert test - was showing assert
+    changed TEST macro
 
-commit a2889616d6e3f7ba87b55d2f566086412af6ccee
+commit 443eee5a3c80e518d257b4ce8df9f520965ec019
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sat Feb 15 22:52:16 2014 -0500
+Date:   Fri Nov 21 22:59:42 2014 -0500
 
-    New version of NodeBrain Guide
+    added nbFunctionD* API functions and fixed node redefinition
 
-commit b2aee7f25f8d663c5d1c6b931ffc4ae7d0392fa7
+commit dad88972da123a2edd8c02196eef12777317ecec
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sun Feb 2 04:03:58 2014 -0500
+Date:   Fri Nov 21 22:58:02 2014 -0500
 
-    dropped features that did not make the cut
+    added eCellFunctions text
 
-commit 0c9f346c4c60befdb02397567ebdecf328cb7a90
+commit f2b85c02f444f8706458c605f1dd1327eb65a9af
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sun Feb 2 03:40:19 2014 -0500
+Date:   Wed Nov 19 23:01:53 2014 -0500
 
-    included module and TLS disable options
+    api functions to access node terms
 
-commit c317851d115fc83dce98c579465a4c35bdaed712
+commit e7b482cea8b0e371e9eff62ceba899410791d674
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sun Feb 2 03:38:46 2014 -0500
+Date:   Sun Nov 9 01:20:22 2014 -0500
 
-    option to disable each module
+    added rule action command acceleration
 
-commit 0e8d1b30d6c147fc2a96c406f53520e2196b741d
+commit 4385b9e9f600a9c6bdc36298a5768f0b6ef49824
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sun Feb 2 03:37:52 2014 -0500
+Date:   Sun Nov 9 01:19:39 2014 -0500
 
-    repared Source parameter
+    clean up indendation and ms characters
 
-commit d24b29f019d2e3a8d9cbf97c31e6e861f66563dd
+commit 0a6567975a51447d29670a5bac08669fe69d11f7
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sun Feb 2 01:45:18 2014 -0500
+Date:   Sun Nov 9 01:17:53 2014 -0500
 
-    removed module README
+    added nbNodeGlossary and nbNodeTermName
 
-commit 77e8ee104cc3eddd58e1a956e007d52a2443a295
+commit 690525a48c20481ba3943291b62e218aeff516f3
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sun Feb 2 00:50:16 2014 -0500
+Date:   Sun Nov 9 01:16:04 2014 -0500
 
-    cleaned up module directory
+    added nbNodeGlossary and nbNodeTermName
 
-commit 96042cae9ec51530693eafaa8e19c8b4f0cbd18c
+commit a189cc0a834130d97533d5bff03d1b9eef9d08f4
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sun Feb 2 00:02:30 2014 -0500
+Date:   Sun Nov 9 01:14:52 2014 -0500
 
-    bin file changes
+    changed name of root node to _
 
-commit 93bdb249e6f57348a01d893d7b295d482921013a
+commit e6a2353b6bf74a793acd4d318b8057cf7d4f001f
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sat Feb 1 23:44:40 2014 -0500
+Date:   Sun Nov 9 01:14:15 2014 -0500
 
-    single configure script
+    added nbTermGetGloss
 
-commit 9f6952d609055fee05e9ddcd289a72b1b9e0ed79
+commit 3114ca94c524df72789a48fddde15a300ae9ef0c
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sat Feb 1 22:49:00 2014 -0500
+Date:   Sun Nov 9 01:13:57 2014 -0500
 
-    eliminated sub directory configure scripts
+    added nbTermGetGloss
 
-commit 663883ad1f596e55c5cadee2e0b96477447d14ab
+commit 060378f8cbfdd7c60312644fc7d23fcc04c49084
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sat Feb 1 20:52:59 2014 -0500
+Date:   Mon Oct 20 22:04:38 2014 -0400
 
-    optional tls
+    more transition to @ for facets
 
-commit 7eac9fbf25d7297a37d91d7fe236099a5476a764
+commit 0ee76ad1145c245da1bd8f1d85debca0e1a6d2a3
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sat Feb 1 00:50:55 2014 -0500
+Date:   Mon Oct 20 22:03:36 2014 -0400
 
-    cleaned up package bin
+    made lazy AND more lazy as intended
 
-commit f347f2e98cc15c8dc687cff626e06a5fea89ce1b
+commit 5fe6b2ba83b897b284d0ba0d826219305c3e8601
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sat Feb 1 00:46:36 2014 -0500
+Date:   Mon Oct 20 19:45:55 2014 -0400
 
-    comment change
+    added new option argument to nbTermNew so implicit nodes do not impact all name spaces
 
-commit fdec89219790b78625b21df26666332ada197a00
+commit 52886740e68f02e7ecbe0ea192c51d4de1d15a59
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Fri Jan 31 14:11:58 2014 -0500
+Date:   Fri Oct 17 21:16:31 2014 -0400
 
-    example
+    draft 0.9.03 news
 
-commit 52516a1beff7887628e1e584004ab9e6d7748f9e
+commit 5d8d3e24a1e864ee00981b794672f7e7756cb290
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Fri Jan 31 10:21:33 2014 -0500
+Date:   Fri Oct 17 20:44:23 2014 -0400
 
-    glossary back to hash and double link IF rule list
+    changed from explicit to implicit transient terms
 
-commit 6713baa5fd7d073d9a9d8e7694b1139072c0af32
+commit 94d75e4cf05f7d33442b39122a176ec3ac3d750f
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sun Jan 26 03:36:45 2014 -0500
+Date:   Fri Oct 17 20:43:18 2014 -0400
 
-    evaluation schedule tree to list
+    moved state term out of event node
 
-commit 87ead4d9d46cc8678b6e0d041c3cda9a9054d10e
+commit db7248bc9cb32bc8733bf689a2cbeba14a51b8a3
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sat Jan 25 21:49:49 2014 -0500
+Date:   Fri Oct 17 20:39:52 2014 -0400
 
-    hash and checker changes
+    @ replaces _ for facets
 
-commit 3d3413539a8ada9bea919da9b12e05540ba43a44
+commit 4c59e5bf1518724aee76f2255898fbc206a348d6
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Mon Jan 20 01:15:19 2014 -0500
+Date:   Fri Oct 17 20:35:32 2014 -0400
 
-    growing hash size and axon for relational operator
+    adjusted transient mode comment
 
-commit 8411686c8148582d49f70805f6e0e860df5cace6
+commit 56cd4f5f2e10e103aa35abadbb70f0a14f837751
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Thu Jan 2 18:23:31 2014 -0500
+Date:   Fri Oct 17 20:34:45 2014 -0400
 
-    checker
+    add default node skill
 
-commit 04b8f3eb766dbf5917423b7a8ecafa678926df7c
+commit db81dffb68d9dda03692a6771edbad8ca2d336d9
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Thu Jan 2 18:16:59 2014 -0500
+Date:   Fri Oct 17 20:33:39 2014 -0400
 
-    set node
+    drop reference assertion
 
-commit 42ab08c962f291758128f30f498eadc8a4d98f61
+commit 3826b8875653458d7036000ad2579fc38b022539
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Thu Jan 2 14:15:41 2014 -0500
+Date:   Fri Oct 17 20:32:32 2014 -0400
 
-    set routines
+    print simplier form of Unknown and False assertion, remove reference assertion, and handle transient assertion
 
-commit db28eb0e9c63f618e7b326ca168e9a6b012387d3
+commit c0bd3c833680539f02042e7a36dc6b6843da7570
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Thu Jan 2 14:13:21 2014 -0500
+Date:   Fri Oct 17 20:29:15 2014 -0400
 
-    set module
+    queue error message fix
 
-commit a97a7bd16da2753a19c4054c642b8cd5908b520f
+commit c30d946cd837247ea221e4f455bf6b632b90c727
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Thu Jan 2 13:38:06 2014 -0500
+Date:   Fri Oct 17 20:26:29 2014 -0400
 
-    switch cond cells from hash to tree
+    @ replaces _ for facets and _ is glossary term separator
 
-commit e6f07d6ae9d644cbe0247bd6a68a81fe9e0653dd
+commit 570af967822305044c19f641cb8a342134da33e5
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sun Dec 22 03:24:07 2013 -0500
+Date:   Fri Oct 17 20:24:47 2014 -0400
 
-    hash with conflict tree
+    implicit transient event attribute terms
 
-commit 47b64bd7064fd3a40aad25105c5afe4faf4601de
+commit 9d045d2f600b95ebcc746e292ee43ac5700f4e3e
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Fri Dec 20 22:08:28 2013 -0500
+Date:   Fri Oct 17 20:22:57 2014 -0400
 
-    version change
+    @ for facets
 
-commit fced301d82ed6094e123b06f7b5f3938fedd269e
+commit 60ad7808da8ef68f31fef5af32395aa90735a830
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Fri Dec 20 21:57:29 2013 -0500
+Date:   Fri Oct 17 20:22:26 2014 -0400
 
-    dropping trunk directory
+    @ for facets and default node skill
 
-commit 1646c8072b985b3366f5687515a3ba14f8be96fd
+commit b80b3978674991f127eb447723c2d82219d5809b
 Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Fri Dec 20 18:41:18 2013 -0500
+Date:   Sat Sep 13 16:09:13 2014 -0400
 
-    removing svn tag directory
-
-commit e5107721e6033cc62cc7c80837b264c14dc76ea8
-Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Thu Dec 19 19:47:31 2013 -0700
-
-    quicker compare on eq
-
-commit 9d3b4b5d5404562e091d0c2af77ff7e475ff7e64
-Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Wed Dec 18 19:52:37 2013 -0700
-
-    fixed trick cell
-
-commit ab36d792b844a7c8e95f20c72432f3a839a9e664
-Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Wed Dec 18 20:54:14 2013 -0500
-
-    test
-
-commit 61c3643c1f437b8847366787498f34e8c50c1eb7
-Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Wed Dec 18 18:28:55 2013 -0700
-
-    test
-
-commit 3e622e60c577097ac521747548296a6b36705be6
-Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Wed Dec 18 13:03:39 2013 -0500
-
-    fix .gitignore for include/nb
-
-commit a3c00fe3fae3503e31493efb602b1f9456f5a0e3
-Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Wed Dec 18 12:54:36 2013 -0500
-
-    redefine
-
-commit 81c673ed2439108644ac92dd5912e6f5186bc632
-Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Wed Dec 18 12:06:39 2013 -0500
-
-    more
-
-commit 8a46425ee54ca206c9f554a5681573657acc3544
-Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Tue Dec 10 20:00:40 2013 -0500
-
-    removed debug stuff
-
-commit 1db09a25aaf1eb43fc05bbda7d27348fc601bdf5
-Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Tue Dec 10 19:47:52 2013 -0500
-
-    rel eq trick
-
-commit 40faa1a94e3761f7e998c0964b8c236f0bb04cde
-Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sat Dec 7 21:48:05 2013 -0500
-
-    facet cell evaluation added
-
-commit 14a578a256c0ce500532405ff930c2b574de7d1e
-Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sat Dec 7 20:55:47 2013 -0500
-
-    facet assertions
-
-commit daa5928f38341fed281efb15d2eb5612f5fbbd56
-Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sat Dec 7 16:25:10 2013 -0500
-
-    cleaning up status a bit
-
-commit 08a6c41d02c8623f9239c5a75772bf43ebf4aec2
-Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sat Dec 7 16:19:31 2013 -0500
-
-    facet command support added
-
-commit 666e8d40112677d9117b251fb10aa964def83d10
-Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sat Dec 7 12:36:12 2013 -0500
-
-    module check scripts modified for false disabled symbol change
-
-commit cb7a87f3478c628bd8b8e875eda46d06d5e6699e
-Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sat Dec 7 12:35:07 2013 -0500
-
-    added nbSkillMethod function
-
-commit 78f9bf2912c686529fa3fa3a428650c493407e5a
-Author: Ed Trettevik <eat@nodebrain.org>
-Date:   Sat Dec 7 11:42:12 2013 -0500
-
-    false not zero and rule true not mapped to one
-
-commit 54c6a91c4be37a7a9594b9c9111d447b68bbc0eb
-Author: eat <eat@vps-1109825-12005.manage.myhosting.com>
-Date:   Fri Dec 6 16:17:38 2013 -0500
-
-    removed commented code
-
-commit bd6d6c54a3ca4d700eb9095a9c420192618449e9
-Author: Trettevik <eat@nodebrain.org>
-Date:   Sat Jun 22 18:54:46 2013 -0400
-
-    adding readme because git does not like empty directory
+    start 0.9.03

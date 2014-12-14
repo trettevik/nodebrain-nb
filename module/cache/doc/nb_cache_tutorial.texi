@@ -29,13 +29,13 @@ Here's a 24-hour cache node with four thresholds and four rules to respond when 
 #!/usr/local/bin/nb
 # File: tutorial/cache/cache.nb
 @b{define horace node cache:(~(24h):type(20),city@{10@}[5],customer,item,quantity(3));}
-horace. define r1 if(type._hitState): $ # There have been $@{type._hits@} $@{type@} events
-horace. define r2 if(city._rowState): \
-  $ # ($@{type@},$@{city@}) had $@{city._rows@} different events
-horace. define r3 if(city._kidState): \
-  $ # ($@{type@},$@{city@}) had $@{city._kids@} different customers
-horace. define r4 if(quantity._hitState): \
-  $ # ($@{type@},$@{city@},$@{customer@},$@{item@},$@{quantity@}) happened $@{quantity._hits@} times
+horace. define r1 if(type__hitState): $ # There have been $@{type__hits@} $@{type@} events
+horace. define r2 if(city__rowState): \
+  $ # ($@{type@},$@{city@}) had $@{city__rows@} different events
+horace. define r3 if(city__kidState): \
+  $ # ($@{type@},$@{city@}) had $@{city__kids@} different customers
+horace. define r4 if(quantity__hitState): \
+  $ # ($@{type@},$@{city@},$@{customer@},$@{item@},$@{quantity@}) happened $@{quantity__hits@} times
 @end smallexample
 @end cartouche
 
@@ -79,14 +79,14 @@ $ ./cache.nb events.nb
 > #!/usr/local/bin/nb
 > # File: tutorial/cache/cache.nb
 @b{> define horace node cache:(~(24h):type(20),city@{10@}[5],customer,item,quantity(3));}
-> horace. define r1 if(type._hitState): \
-  $ # There have been $@{type._hits@} $@{type@} events
-> horace. define r2 if(city._rowState): \
-  $ # ($@{type@},$@{city@}) had $@{city._rows@} different events
-> horace. define r3 if(city._kidState): \
-  $ # ($@{type@},$@{city@}) had $@{city._kids@} different customers
-> horace. define r4 if(quantity._hitState): \
-  $ # ($@{type@},$@{city@},$@{customer@},$@{item@},$@{quantity@}) happened $@{quantity._hits@} times
+> horace. define r1 if(type__hitState): \
+  $ # There have been $@{type__hits@} $@{type@} events
+> horace. define r2 if(city__rowState): \
+  $ # ($@{type@},$@{city@}) had $@{city__rows@} different events
+> horace. define r3 if(city__kidState): \
+  $ # ($@{type@},$@{city@}) had $@{city__kids@} different customers
+> horace. define r4 if(quantity__hitState): \
+  $ # ($@{type@},$@{city@},$@{customer@},$@{item@},$@{quantity@}) happened $@{quantity__hits@} times
 2014-07-20 22:04:46 NB000I Source file "./cache.nb" included. size=537
 2014-07-20 22:04:46 NB000I Argument [2] events.nb
 > # Filte: tutorial/cache/events.nb
@@ -140,7 +140,7 @@ In the example above, when @code{r4} fired, it was responding to an invisible al
 
 @cartouche
 @smallexample
-horace. alert quantity._hitState,quantity._hits=3,type="purchase",city="Paris", \
+horace. alert quantity__hitState,quantity__hits=3,type="purchase",city="Paris", \
   customer="Bruno",item="iPod",quantity=5;
 @end smallexample
 @end cartouche

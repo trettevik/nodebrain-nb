@@ -137,9 +137,9 @@ Use of this module is not recommended if a standard mail server (e.g., sendmail)
 
 @item You need to collect events from a sensor tool that is able to generate plain text email when conditions of interest are detected, but not capable of delivering alerts via a more convenient method.
 
-@item You don’t want the email delivered from the sensor product to a mail server over the network in plain text.
+@item You don't want the email delivered from the sensor product to a mail server over the network in plain text.
 
-@item The sensor tool runs on a server without a standard mail server, and for some reason you don’t want to install one.
+@item The sensor tool runs on a server without a standard mail server, and for some reason you don't want to install one.
 
 @item You are able to install NodeBrain on the server hosting the sensor tool. 
 @end enumerate
