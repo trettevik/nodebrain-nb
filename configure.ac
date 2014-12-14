@@ -99,7 +99,7 @@
 # 2014-02-01 eat 0.8.16 Reduced to a single configure.ac file - handles subordinate directories
 # 2014-02-12 eat 0.9.01 Possible 0.9.x release
 # 2014-05-04 eat 0.9.02 Target 0.9.x release
-# 2014-08-13 eat 0.9.03 Start 0.9.x patch release
+# 2014-08-13 eat 0.9.03 New release
 #=============================================================================
 
 AC_PREREQ(2.62)
@@ -132,7 +132,7 @@ LT_SYS_MODULE_EXT
 LT_FUNC_DLSYM_USCORE
 
 # define a release date variable
-AC_DEFINE([NB_RELEASE_DATE],"2014-12-07",[Define release date])
+AC_DEFINE([NB_RELEASE_DATE],"2014-12-14",[Define release date])
 
 # Checks for programs.
 AC_PROG_CC
