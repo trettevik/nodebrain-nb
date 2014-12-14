@@ -286,7 +286,7 @@ extern int nbListenerStart(nbCELL context){
   struct group  *grp=NULL;
 #endif
  
-  if(trace) outMsg(0,'T',"selectListener() called");
+  if(trace) outMsg(0,'T',"nbListenerStart: called");
   // enable listeners in nb_Disabled state
   for(sel=selectPending;sel!=NULL;sel=selnext){
     selnext=sel->next;      // Get pointer to next pending entry
