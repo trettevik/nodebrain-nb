@@ -4959,7 +4959,7 @@ NodeBrain commands are presented to the interpreter as single lines. A newline c
 @node Translators
 @chapter Translators
 @cindex Translators
-Translators are used by various NodeBrain node modules to convert foreign text into NodeBrain commands. The syntax of a translator file is relatively simple if you are comfortable with regular expressions. NodeBrain uses the Perl Compatible Regular Expression (PCRE) library. See @url{www.pcre.org} for documentation on the supported regular expressions.
+Translators are used by various NodeBrain node modules to convert foreign text into NodeBrain commands. The syntax of a translator file is relatively simple if you are comfortable with regular expressions. NodeBrain uses the Perl Compatible Regular Expression (PCRE) library. See @url{http://www.pcre.org} for documentation on the supported regular expressions.
 
 @cartouche
 @b{Syntax}

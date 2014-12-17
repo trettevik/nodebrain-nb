@@ -85,7 +85,7 @@ Version 0.6.8 (not released)
 @item 2008-08-20 @tab   
 Version 0.7.1 (not released)
 @itemize @bullet
-@item Updated with 0.7 syntax changes (see @i{NodeBrain Language Reference})
+@item Updated with 0.7 syntax changes (see @i{NodeBrain Language})
 @item Included translator, servant, pipe, audit, peer, and webster node tutorials
 @end itemize
 
@@ -159,7 +159,7 @@ See www.nodebrain.org for more information and the latest update to this documen
 This tutorial is for the NodeBrain rule engine, an open source agent
 for state and event monitoring applications.
 The tutorial is intended for programmers new to NodeBrain rule development.
-After completing this tutorial, refer to the @i{NodeBrain Language Reference} and
+After completing this tutorial, refer to the @i{NodeBrain Language} manual and
 node module manuals for additional information.
 
 Release @value{VERSION}, @value{UPDATED-MONTH}
@@ -1334,7 +1334,7 @@ It has an extensive algebra for expressing schedules called time conditions.
 A time condition is a function of time that is true or false at any given second.  
 
 In the spirit of this tutorial, I have been deliberately incomplete here and give you a sense of it.
-I'm somewhat proud of this feature, so I've exercised conscious restraint.  (If you need a cure for insomnia, read about time conditions in the @i{NodeBrain Language Reference}.)
+I'm somewhat proud of this feature, so I've exercised conscious restraint.  (If you need a cure for insomnia, read about time conditions in the @i{NodeBrain Language} manual.)
 
 I'll just jump into it with a few examples.  The following script, @code{schedule.nb}, has rules with names describing their time condition. Let's start it in interactive mode.
 
