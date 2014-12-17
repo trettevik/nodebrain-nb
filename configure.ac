@@ -100,10 +100,11 @@
 # 2014-02-12 eat 0.9.01 Possible 0.9.x release
 # 2014-05-04 eat 0.9.02 Target 0.9.x release
 # 2014-08-13 eat 0.9.03 New release
+# 2014-12-14 eat 0.9.04 Starting release
 #=============================================================================
 
 AC_PREREQ(2.62)
-AC_INIT([nodebrain],[0.9.03],[bugs@nodebrain.org])
+AC_INIT([nodebrain],[0.9.04],[bugs@nodebrain.org])
 #AC_CONFIG_SRCDIR([nb.c])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(config)
@@ -132,7 +133,7 @@ LT_SYS_MODULE_EXT
 LT_FUNC_DLSYM_USCORE
 
 # define a release date variable
-AC_DEFINE([NB_RELEASE_DATE],"2014-12-14",[Define release date])
+AC_DEFINE([NB_RELEASE_DATE],"2014-03-01",[Define release date])
 
 # Checks for programs.
 AC_PROG_CC
@@ -263,9 +264,6 @@ AC_ARG_ENABLE([nb_webster],[AS_HELP_STRING([--disable-nb_webster],[exclude webst
 AS_IF([test "x$enable_nb_webster" == xyes -a "x$with_tls" != xno],[NB_MODULES=$NB_MODULES" webster"])
 
 AC_SUBST([NB_MODULES])
-# Set module subdirectory by minor version - was ${libdir}/${NB_MOD_DIR}/
-# AC_SUBST([NB_MOD_DIR],[0.9.03])
-#AC_SUBST([NB_MOD_DIR],[nb])
 
 # Figure out which nb program to use with "make check".
 #   If we are in a Nodebrain distribution, we'll use
