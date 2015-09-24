@@ -57,7 +57,7 @@
 * 2014-01-13 eat 0.9.00 Removed hash pointer - referenced via type
 *            Rule objects are not assigned keys currently
 * 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
-* 2015-09-22 eat 0.10.0 Fixed defect causing infinite loop in node's action list
+* 2015-09-22 eat 0.9.04 Fixed defect causing infinite loop in node's action list
 *            It was possible under a specific sequence of rule creation, deletion
 *            and firing to create an endless loop in the list of actions
 *            associated with a node.  This has been fixed in destroyAction.
