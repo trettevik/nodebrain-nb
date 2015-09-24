@@ -100,7 +100,7 @@
 # 2014-02-12 eat 0.9.01 Possible 0.9.x release
 # 2014-05-04 eat 0.9.02 Target 0.9.x release
 # 2014-08-13 eat 0.9.03 New release
-# 2014-12-14 eat 0.9.04 Starting release
+# 2015-09-24 eat 0.9.04 Patch release
 #=============================================================================
 
 AC_PREREQ(2.62)
@@ -133,7 +133,7 @@ LT_SYS_MODULE_EXT
 LT_FUNC_DLSYM_USCORE
 
 # define a release date variable
-AC_DEFINE([NB_RELEASE_DATE],"2014-03-01",[Define release date])
+AC_DEFINE([NB_RELEASE_DATE],"2015-09-24",[Define release date])
 
 # Checks for programs.
 AC_PROG_CC

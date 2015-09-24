@@ -6,7 +6,7 @@ Build-Depends: debhelper (>=8), libedit-dev, libpcre3-dev, libssl-dev
 Standards-Version: 3.9.3
 Homepage: http://nodebrain.org
 
-Package: nodebrain-0.9.03
+Package: nodebrain-0.9.04
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libedit, libpcre3, libssl, libcrypto
 Description: NodeBrain Rule Engine

@@ -7,6 +7,44 @@
 
 ============================================================
 
+NodeBrain 0.9.04 (Columbo) Change Summary
+
+* Released September 24, 2015
+
+* Theme:  Patch Release
+
+     This version resolves a single defect that caused
+     an infinate loop after encountering a specific
+     sequence of commands.
+     
+* Packaging:
+
+  o  Standard version related updates only
+
+* Documentation: 
+
+  o  Package document file updates only - no texinfo 
+     document or manual page updates
+
+* Incompatibilities: (None)
+
+* New Features: (None)
+
+* Deprecated Syntax: (None)
+
+* Dropped Syntax: (None)
+
+* Bug Fixes:
+
+  o  #8 Corrupted Action List Loop
+
+     A special sequence of rule definition, firing,
+     redefition, and firing again, caused a corrupted
+     action list that resulted in an endless loop. This
+     has been fixed with a minor change.
+
+============================================================
+
 NodeBrain 0.9.03 (Columbo) Change Summary
 
 * Released December 14, 2014
@@ -565,6 +603,35 @@ NodeBrain 0.9.02 (Columbo) Change Summary
   o  State transition time delays didn't work properly
      when multiple types of delays were placed on a
      common condition. This has been fixed.
+
+============================================================
+
+NodeBrain 0.8.17 (Dopey) Change Summary
+
+* Released August 13, 2014
+
+* Theme: License Change
+
+     This version is released under the MIT License or the
+     NodeBrain License which is designed to be a combination
+     of the MIT Lisense (Expat) and 2-clause BSD License.
+
+* Documentation:
+
+  o  All documents modified to identify new license.
+
+* Incompatibilities:
+
+  o  Line editing is now handled by libedit instead of
+     readline.  This is only a build incompatibility. The
+     new library provides the same functionality as the
+     old.
+
+* New Features: (none)
+
+* Deprecated Syntax: (none)
+
+* Bug Fixes: (none)
 
 ============================================================
 
