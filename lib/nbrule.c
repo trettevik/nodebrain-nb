@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2014 Ed Trettevik <eat@nodebrain.org>
+* Copyright (C) 2014-2015 Ed Trettevik <eat@nodebrain.org>
 *
 * NodeBrain is free software; you can modify and/or redistribute it under the
 * terms of either the MIT License (Expat) or the following NodeBrain License.
@@ -57,6 +57,11 @@
 * 2014-01-13 eat 0.9.00 Removed hash pointer - referenced via type
 *            Rule objects are not assigned keys currently
 * 2014-05-04 eat 0.9.02 Replaced newType with nbObjectType
+* 2015-09-22 eat 0.10.0 Fixed defect causing infinite loop in node's action list
+*            It was possible under a specific sequence of rule creation, deletion
+*            and firing to create an endless loop in the list of actions
+*            associated with a node.  This has been fixed in destroyAction.
+*            Reference: Defect #8 - Corrupted Action List Loop
 *=============================================================================
 */
 #include <nb/nbi.h>
@@ -755,12 +760,16 @@ void destroyAction(struct ACTION *action){
       outMsg(0,'L',"Instruction operation %x not recognized when destroying action - memory leak",action->instruction.operation);
     }
   action->assert=dropMember(action->assert);
+  // 2015-09-22 eat - remove from node's action list - don't worry about active list right now
+  if(action->cell.object.next) ((NB_Action *)action->cell.object.next)->priorIf=NULL;
+  if(action->priorIf) action->priorIf->cell.object.next=NULL;
   nbFree(action,sizeof(struct ACTION));
   }
 
 void nbActionAssert(nbCELL context,nbSET assertion){
   struct ACTION *action;
   action=newAction(context,(NB_Term *)context,NULL,0,assertion,NULL,0);
+  memset(action,0,sizeof(struct ACTION)); // 2015-09-22 eat - zero action block - e.g. action->cell.object.next,action->priorIf,action->nextAct
   action->type='A';   // flag action from API
   scheduleAction(action);
   }

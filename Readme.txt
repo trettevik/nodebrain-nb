@@ -6,19 +6,19 @@
 |_| \_|\___/ \__ _|\___|____/|_|  \__ _|_|_| |_|
 
 
-NodeBrain 0.9.03
+NodeBrain 0.9.04
 
 ========================================================================
 
-File:        README for nodebrain-0.9.03 release files
+File:        README for nodebrain-0.9.04 release files
 
 Package:     NodeBrain (nb)
 
 Version:     0.9 - Columbo
 
-Release:     0.9.03 
+Release:     0.9.04 
 
-Date:        December 14, 2014
+Date:        September 24, 2015
 
 Reference:   http://nodebrain.org
                1) Online documentation
@@ -35,8 +35,8 @@ Installation instructions for Linux/Unix Platforms
 
 a) From source code distribution - install to /usr/local directories
 
-     $ tar -xzf nodebrain-0.9.03.tar.gz
-     $ cd nodebrain-0.9.03
+     $ tar -xzf nodebrain-0.9.04.tar.gz
+     $ cd nodebrain-0.9.04
      $ ./configure
      $ make
      $ make check
@@ -84,7 +84,7 @@ b) From git repository - requires autoconf/automake/libtools
 
      $ git clone git://git.code.sf.net/p/nodebrain/nb nodebrain-nb
      $ cd nodebrain-nb
-     $ git checkout 0.9.03
+     $ git checkout 0.9.04
      $ ./autogen.sh
      $ ./configure
      $ make
@@ -101,13 +101,13 @@ d) To create an RPM file instead of installing (on rpm based build machine)
 
 e) Build binary RPM from source RPM file 
 
-     $ rpmbuild --rebuild nodebrain-0.9.03-1.el6.src.rpm
-     $ rpmbuild --rebuild nodebrain-0.9.03-1.src.rpm
+     $ rpmbuild --rebuild nodebrain-0.9.04-1.el6.src.rpm
+     $ rpmbuild --rebuild nodebrain-0.9.04-1.src.rpm
 
 f) Install from binary RPM file (x86_64 platform example)
 
-     $ rpm --install nodebrain-0.9.03-1.el6.x86_64.rpm
-     $ rpm --install nodebrain-0.9.03-1.x86_64.rpm
+     $ rpm --install nodebrain-0.9.04-1.el6.x86_64.rpm
+     $ rpm --install nodebrain-0.9.04-1.x86_64.rpm
 
 ======================================================================== 
 
@@ -124,27 +124,43 @@ on each platform.
 Architecture:
 
   x86_64          Pass - All OS's showing pass below
-  i586            Pass 
+  i586            Pass - RHEL 7, CentOS 7, Scientific Linux 7, and
+                         SLE_12 not tested
+  armv7i          Pass - only openSUSE Factory tested
 
-Operating System:
+Build Tested Operating Systems:
 
-  rpm Fedora      Pass 20, 19, 18, 17
-  rpm RHEL        Pass 7, 6, 5 
-  rpm CentOS      Pass 7, 6, 5
-  rpm Scientific  Pass 7, 6
+  rpm Fedora      Pass - 20, 19, 18, 17
+  rpm RHEL        Pass - 7, 6, 5 
+  rpm CentOS      Pass - 7, 6, 5
+  rpm Scientific  Pass - 7, 6
 
-  deb Debian      Pass 7, 6
-  deb xUbuntu     Pass 14.10, 14.04 13.10, 12.10, 12.04
-  deb Univention  Pass 3.2, 3.1
+  rpm openSUSE    Pass - 13.2, 13.1, 12.3, 12.2, Factory, Factory_ARM
+  rpm SLE         Pass - 12, 11_SP3, 11_SP2, 11_SP1, 11, 10_SDK
 
-      Mac OS X    Pass 10.10.1 Yosemite outside Xcode
-                  FAIL 10.10.1 Yosemite using Xcode
+  deb Debian      Pass - 7, 6
+  deb xUbuntu     Pass - 14.10, 14.04 13.10, 12.10, 12.04, 11.10
+  deb Univention  Pass - 3.2, 3.1
 
-  msi Windows     Stopped porting, need to start again
+      Mac OS X    Pass - 10.10.1 Yosemite outside Xcode
+
+UNIX Operating Systems:
+
+Early versions were tested on serveral flavors of UNIX include HP-UX,
+Solaris, NCR Teradata, Sequent, IRIX, FreeBSD, OpenBSD, NetBSD, and
+more.  So you can probably build on today's UNIX systems, with the
+successful Max OS X build providing additional evidence. Please give 
+it a try and provide feedback.  Would be happy to make adjustments
+if needed.
+
+Windows Not Currently Supported:
+
+The Windows port has fallen behind and is not current supported.  Will
+start porting again if there is sufficient interest.
 
 ======================================================================== 
 
-Copyright (C) 2014 Ed Trettevik <eat@nodebrain.org>
+Copyright (C) 2014-2015 Ed Trettevik <eat@nodebrain.org>
 
 NodeBrain is free software; you can modify and/or redistribute it under the
 terms of either the MIT License (Expat) or the NodeBrain License.

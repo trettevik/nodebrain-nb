@@ -156,7 +156,7 @@ libnb_la_CFLAGS = -I../include -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstac
 #      1) rule syntax change
 #      2) rule behavior change
 #
-libnb_la_LDFLAGS = -version-info 0:903:0
+libnb_la_LDFLAGS = -version-info 0:904:0
 
 libnb_la_SOURCES = \
   nbassertion.c \

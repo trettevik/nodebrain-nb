@@ -369,7 +369,7 @@ static int nbGetCmdInteractive(char *cmd,size_t cmdlen){  // 2012-12-31 eat - VI
 void printVersion(void){
   printf("nb %s\n\n",PACKAGE_VERSION);
   printf("N o d e B r a i n\n");
-  printf("Copyright (C) 2014 Ed Trettevik <eat@nodebrain.org>\n");
+  printf("Copyright (C) 2014-2015 Ed Trettevik <eat@nodebrain.org>\n");
   printf("MIT or NodeBrain License\n\n");
   }
 
@@ -426,12 +426,12 @@ void printAbout(void){
 
 void showVersion(void){
   outPut("\nN o d e B r a i n   %s (Columbo) %s\n\n",PACKAGE_VERSION,NB_RELEASE_DATE);
-  outPut("Spec 0.0.903 built for %s\n\n",NB_COMPILE_PLATFORM);
+  outPut("Spec 0.0.904 built for %s\n\n",NB_COMPILE_PLATFORM);
   }
 
 void showCopyright(void){
   showVersion();
-  outPut("Copyright (C) 2014 Ed Trettevik <eat@nodebrain.org>\n");
+  outPut("Copyright (C) 2014-2015 Ed Trettevik <eat@nodebrain.org>\n");
   outPut("MIT or NodeBrain License\n");
   outPut("----------------------------------------------------------------\n\n");
   }
@@ -1664,6 +1664,7 @@ int nbCmdDefine(nbCELL context,void *handle,char *verb,char *cursor){
     else cursor=NULL;  // rule has no action
     // 2012-10-13 eat - replaced malloc
     action=nbAlloc(sizeof(struct ACTION));
+    memset(action,0,sizeof(struct ACTION)); // 2015-09-23 eat - initialize to zero
     action->nextAct=NULL;
     action->priority=rulePrty;
     if(strcmp(type,"on")==0) rule_type=condTypeOnRule;
