@@ -1,0 +1,11 @@
+commit 0e1a75a1eb96d5663a9c420324c9a63a0aba1c4f
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Thu Sep 24 16:12:12 2015 -0400
+
+    fixed defect #8 Corrupted Action List
+
+commit 4d221aee4ee5190f117abeb8f06c3e6556a10eef
+Author: Ed Trettevik <eat@nodebrain.org>
+Date:   Thu Sep 24 16:08:43 2015 -0400
+
+    patch release 0.9.04
